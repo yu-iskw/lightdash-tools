@@ -1,0 +1,21 @@
+{
+  "name": "@lightdash-tools/client",
+  "version": "1.0.0",
+  "description": "Client library for Lightdash AI.",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@lightdash-tools/common": "workspace:*",
+    "axios": "^1.7.0",
+    "bottleneck": "^2.19.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}

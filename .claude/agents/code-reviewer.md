@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Expert code reviewer. Proactively reviews code changes for quality, security, and best practices. Use after implementing features or fixing bugs to ensure code quality.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: inherit
 ---
 
 # Code Reviewer Agent

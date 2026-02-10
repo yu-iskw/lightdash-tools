@@ -1,0 +1,23 @@
+---
+alwaysApply: true
+---
+# Project Management
+
+For project management (changelog, ADR, OpenSpec, issues), read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md). When a task matches a description below, read the linked file and follow its instructions.
+
+## Track work in GitHub Project
+
+ADR, changelog, OpenSpec specs/changes, and GitHub issues must be tracked in the default GitHub Project. When creating or updating any of these, ensure there is a corresponding issue on the project: create or link an issue and add it via [gh-adding-items-to-projects](.claude/skills/gh-adding-items-to-projects/SKILL.md) or the github-project-manager agent.
+
+## Agents
+
+- **Project management** (changelog, ADR, OpenSpec, issues; routes to specialists): read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md).
+- **GitHub Project boards** (sync issues, status, fields, milestones): read and follow [.claude/agents/github-project-manager.md](.claude/agents/github-project-manager.md).
+  - **Default Project**: <https://github.com/users/yu-iskw/projects/3/views/1> (Owner: `yu-iskw`, Project Number: `3`)
+- **Issue triage** (label, assign, categorize, request info): read and follow [.claude/agents/github-triage-agent.md](.claude/agents/github-triage-agent.md).
+- **Spec-driven development** (OpenSpec: proposal → specs → design → tasks → implementation → archive): read and follow [.claude/agents/openspec-manager.md](.claude/agents/openspec-manager.md). OpenSpec root is `docs/openspec/`; run the OpenSpec CLI from `docs/` or use `pnpm openspec --` from repo root.
+
+## Skills
+
+- **Architecture Decision Records** (init, create, list, link ADRs in `docs/adr`; requires `adr-tools`): use the [manage-adr](.claude/skills/manage-adr/SKILL.md) skill.
+- **Changelog** (init, add fragments, batch releases, merge into CHANGELOG; requires `changie`): use the [manage-changelog](.claude/skills/manage-changelog/SKILL.md) skill.

@@ -1,13 +1,18 @@
 {
-  "name": "@typescript-template/common",
+  "name": "@lightdash-tools/common",
   "version": "1.0.0",
-  "description": "Common utilities and types for the TypeScript template project.",
+  "description": "Shared utilities and types for Lightdash AI.",
   "keywords": [],
   "license": "ISC",
   "author": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "generate:types": "openapi-typescript https://raw.githubusercontent.com/lightdash/lightdash/refs/heads/main/packages/backend/src/generated/swagger.json -o src/types/generated/openapi-types.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0"
   }
 }

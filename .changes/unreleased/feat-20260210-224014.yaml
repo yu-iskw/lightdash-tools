@@ -1,0 +1,3 @@
+kind: feat
+body: 'Common package: add types/v1 and types/v2 barrel modules for version-reflecting file layout (ADR-0008 follow-up).'
+time: 2026-02-10T22:40:14.252471+09:00

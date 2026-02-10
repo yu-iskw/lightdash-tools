@@ -1,0 +1,3 @@
+kind: refactor
+body: split space and space-access types in common package (new space-access.ts, slim spaces.ts; flat exports preserved)
+time: 2026-02-10T21:54:00.000000+09:00

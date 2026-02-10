@@ -1,0 +1,3 @@
+kind: feat
+body: Extract Lightdash API models to @lightdash-tools/common for cross-package reuse. Models organized by domain (Projects, Organizations, Queries, etc.). Client package uses models from common. Other packages can import types without client dependency.
+time: 2026-02-10T16:01:52.236074+09:00

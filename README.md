@@ -35,6 +35,10 @@ trunk install
 pnpm dev
 ```
 
+### Agent Instructions
+
+For shared agent and contributor instructions (setup, commands, workflow, subagents, and key skills), see `AGENTS.md`.
+
 ### Build
 
 ```bash

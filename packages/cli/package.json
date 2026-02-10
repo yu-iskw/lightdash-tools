@@ -1,0 +1,24 @@
+{
+  "name": "@lightdash-tools/cli",
+  "version": "1.0.0",
+  "description": "CLI for Lightdash AI.",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "lightdash-tools": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@lightdash-tools/client": "workspace:*",
+    "@lightdash-tools/common": "workspace:*",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
