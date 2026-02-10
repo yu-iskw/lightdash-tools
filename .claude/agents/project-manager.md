@@ -45,19 +45,20 @@ The following actions are PROHIBITED and will bypass security guardrails:
 
 Delegate by task type:
 
-| Task                                                           | Delegate to                                                                |
-| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Issue triage / labeling / assignment / requesting info**     | **MUST delegate to** [github-triage-agent](./github-triage-agent.md)       |
-| **Issues / board sync / fields / sub-issues / add to project** | **MUST delegate to** [github-project-manager](./github-project-manager.md) |
-| **Spec-driven work (OpenSpec)**                                | Read and follow [openspec-manager](./openspec-manager.md).                 |
-| **Changelog** (init, add fragment, batch, merge)               | Use the [manage-changelog](../skills/manage-changelog/SKILL.md) skill.     |
-| **ADR** (init, create, list, link)                             | Use the [manage-adr](../skills/manage-adr/SKILL.md) skill.                 |
+| Task                                                                 | Delegate to                                                                |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Issue triage / labeling / assignment / requesting info**           | **MUST delegate to** [github-triage-agent](./github-triage-agent.md)       |
+| **Issues / board sync / fields / sub-issues / add to project**       | **MUST delegate to** [github-project-manager](./github-project-manager.md) |
+| **Update issue/project item status when work completes or advances** | **MUST delegate to** [github-project-manager](./github-project-manager.md) |
+| **Spec-driven work (OpenSpec)**                                      | Read and follow [openspec-manager](./openspec-manager.md).                 |
+| **Changelog** (init, add fragment, batch, merge)                     | Use the [manage-changelog](../skills/manage-changelog/SKILL.md) skill.     |
+| **ADR** (init, create, list, link)                                   | Use the [manage-adr](../skills/manage-adr/SKILL.md) skill.                 |
 
 ## After Delegating
 
 When the task creates or updates an ADR, changelog entry, OpenSpec change, or issue:
 
-- For GitHub issues/projects: Delegated agents (github-project-manager, github-triage-agent) handle project tracking automatically. No manual project tracking steps are needed.
+- For GitHub issues/projects: Delegated agents (github-project-manager, github-triage-agent) handle project tracking automatically. When work tied to an issue completes or advances, you MUST ensure the project item's status is updated by delegating to github-project-manager (which handles context verification and human approval). No direct project tracking steps are needed.
 - For other work: Ensure there is a corresponding issue on the default project. Use [gh-adding-items-to-projects](../skills/gh-adding-items-to-projects/SKILL.md) or hand off to the github-project-manager agent as needed.
 
 ## Checklist (release or major change)
@@ -66,3 +67,4 @@ When the task creates or updates an ADR, changelog entry, OpenSpec change, or is
 2. **ADR if architectural**: If the change is architectural, consider creating or updating an ADR (manage-adr).
 3. **OpenSpec if spec'd**: If the change is covered by an OpenSpec change, follow openspec-manager.
 4. **Changelog when done**: Add a changelog fragment when the work is complete (manage-changelog).
+5. **Update project item status**: When work is complete or advanced, delegate to github-project-manager to update the issue's Status (e.g. move to Done or In Progress as appropriate).

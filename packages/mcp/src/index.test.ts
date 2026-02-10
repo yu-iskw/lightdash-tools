@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { greet } from './index';
+import { registerTools } from './tools';
 
-describe('greet', () => {
-  it('should return a greeting message', () => {
-    expect(greet('World')).toBe('Hello, World!');
+describe('MCP tools', () => {
+  it('registerTools is a function', () => {
+    expect(typeof registerTools).toBe('function');
   });
 });
