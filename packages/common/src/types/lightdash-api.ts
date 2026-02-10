@@ -152,6 +152,204 @@ export namespace LightdashApi {
     export type UpdateAiOrganizationSettingsResult =
       components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
   }
+
+  /** Types for Lightdash API v1 endpoints (ADR-0008). */
+  export namespace V1 {
+    export namespace Projects {
+      export type Project = components['schemas']['Project'];
+      export type OrganizationProject = components['schemas']['OrganizationProject'];
+    }
+    export namespace Organizations {
+      export type Organization = components['schemas']['Organization'];
+    }
+    export namespace Queries {
+      export namespace Requests {
+        export type MetricQuery = components['schemas']['MetricQueryRequest'];
+        export type ExecuteAsyncMetricQuery =
+          components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
+        export type ExecuteAsyncSqlQuery =
+          components['schemas']['ExecuteAsyncSqlQueryRequestParams'];
+        export type ExecuteAsyncSavedChart =
+          components['schemas']['ExecuteAsyncSavedChartRequestParams'];
+        export type ExecuteAsyncDashboardChart =
+          components['schemas']['ExecuteAsyncDashboardChartRequestParams'];
+        export type ExecuteAsyncUnderlyingData =
+          components['schemas']['ExecuteAsyncUnderlyingDataRequestParams'];
+      }
+      export namespace Responses {
+        export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+        export type ExecuteAsyncMetricQueryResults =
+          components['schemas']['ApiExecuteAsyncMetricQueryResults'];
+        export type ExecuteAsyncDashboardChartResults =
+          components['schemas']['ApiExecuteAsyncDashboardChartQueryResults'];
+        export type ExecuteAsyncSqlQueryResults =
+          components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+      }
+    }
+    export namespace Charts {
+      export type SpaceQuery = components['schemas']['SpaceQuery'];
+    }
+    export namespace Dashboards {
+      export type DashboardBasicDetailsWithTileTypes =
+        components['schemas']['DashboardBasicDetailsWithTileTypes'];
+    }
+    export namespace Spaces {
+      export type SpaceSummary = components['schemas']['SpaceSummary'];
+      export type Space = components['schemas']['Space'];
+      export type CreateSpace = components['schemas']['CreateSpace'];
+      export type UpdateSpace = components['schemas']['UpdateSpace'];
+    }
+    export namespace SpaceAccess {
+      export type AddSpaceUserAccess = components['schemas']['AddSpaceUserAccess'];
+      export type AddSpaceGroupAccess = components['schemas']['AddSpaceGroupAccess'];
+      export type SpaceMemberRole = components['schemas']['SpaceMemberRole'];
+    }
+    export namespace ProjectAccess {
+      export type ProjectMemberProfile = components['schemas']['ProjectMemberProfile'];
+      export type ProjectMemberRole = components['schemas']['ProjectMemberRole'];
+      export type CreateProjectMember = components['schemas']['CreateProjectMember'];
+      export type UpdateProjectMember = components['schemas']['UpdateProjectMember'];
+      export type ProjectGroupAccess = components['schemas']['ProjectGroupAccess'];
+      export type CreateProjectGroupAccessBody =
+        components['schemas']['Pick_CreateProjectGroupAccess.role_'];
+      export type UpdateProjectGroupAccess = components['schemas']['UpdateDBProjectGroupAccess'];
+    }
+    export namespace Users {
+      export type OrganizationMemberProfile = components['schemas']['OrganizationMemberProfile'];
+      export type OrganizationMemberProfilesResult =
+        components['schemas']['KnexPaginatedData_OrganizationMemberProfile-Array_'];
+      export type ApiOrganizationMemberProfile =
+        components['schemas']['ApiOrganizationMemberProfile'];
+      export type ApiOrganizationMemberProfiles =
+        components['schemas']['ApiOrganizationMemberProfiles'];
+      export type OrganizationMemberProfileUpdate =
+        components['schemas']['OrganizationMemberProfileUpdate'];
+    }
+    export namespace Groups {
+      export type Group = components['schemas']['Group'];
+      export type GroupWithMembers = components['schemas']['GroupWithMembers'];
+      export type CreateGroup = components['schemas']['CreateGroup'];
+      export type UpdateGroupWithMembers = components['schemas']['UpdateGroupWithMembers'];
+      export type GroupListResult =
+        components['schemas']['KnexPaginatedData_Group-Array-or-GroupWithMembers-Array_'];
+      export type ApiGroupResponse = components['schemas']['ApiGroupResponse'];
+      export type ApiGroupListResponse = components['schemas']['ApiGroupListResponse'];
+      export type ApiCreateGroupResponse = components['schemas']['ApiCreateGroupResponse'];
+      export type ApiGroupMembersResponse = components['schemas']['ApiGroupMembersResponse'];
+      export type GroupMember = components['schemas']['GroupMember'];
+    }
+    export namespace AiAgents {
+      export type AiAgentSummary = components['schemas']['AiAgentSummary'];
+      export type AiAgentAdminSortField = components['schemas']['AiAgentAdminSortField'];
+      export type AdminThreadsResult =
+        components['schemas']['ApiAiAgentAdminConversationsResponse']['results'];
+      export type GetAiOrganizationSettingsResult =
+        components['schemas']['ApiAiOrganizationSettingsResponse']['results'];
+      export type UpdateAiOrganizationSettings =
+        components['schemas']['UpdateAiOrganizationSettings'];
+      export type UpdateAiOrganizationSettingsResult =
+        components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
+    }
+  }
+
+  /** Types for Lightdash API v2 endpoints (ADR-0008). */
+  export namespace V2 {
+    export namespace Projects {
+      export type Project = components['schemas']['Project'];
+      export type OrganizationProject = components['schemas']['OrganizationProject'];
+    }
+    export namespace Organizations {
+      export type Organization = components['schemas']['Organization'];
+    }
+    export namespace Queries {
+      export namespace Requests {
+        export type MetricQuery = components['schemas']['MetricQueryRequest'];
+        export type ExecuteAsyncMetricQuery =
+          components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
+        export type ExecuteAsyncSqlQuery =
+          components['schemas']['ExecuteAsyncSqlQueryRequestParams'];
+        export type ExecuteAsyncSavedChart =
+          components['schemas']['ExecuteAsyncSavedChartRequestParams'];
+        export type ExecuteAsyncDashboardChart =
+          components['schemas']['ExecuteAsyncDashboardChartRequestParams'];
+        export type ExecuteAsyncUnderlyingData =
+          components['schemas']['ExecuteAsyncUnderlyingDataRequestParams'];
+      }
+      export namespace Responses {
+        export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+        export type ExecuteAsyncMetricQueryResults =
+          components['schemas']['ApiExecuteAsyncMetricQueryResults'];
+        export type ExecuteAsyncDashboardChartResults =
+          components['schemas']['ApiExecuteAsyncDashboardChartQueryResults'];
+        export type ExecuteAsyncSqlQueryResults =
+          components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+      }
+    }
+    export namespace Charts {
+      export type SpaceQuery = components['schemas']['SpaceQuery'];
+    }
+    export namespace Dashboards {
+      export type DashboardBasicDetailsWithTileTypes =
+        components['schemas']['DashboardBasicDetailsWithTileTypes'];
+    }
+    export namespace Spaces {
+      export type SpaceSummary = components['schemas']['SpaceSummary'];
+      export type Space = components['schemas']['Space'];
+      export type CreateSpace = components['schemas']['CreateSpace'];
+      export type UpdateSpace = components['schemas']['UpdateSpace'];
+    }
+    export namespace SpaceAccess {
+      export type AddSpaceUserAccess = components['schemas']['AddSpaceUserAccess'];
+      export type AddSpaceGroupAccess = components['schemas']['AddSpaceGroupAccess'];
+      export type SpaceMemberRole = components['schemas']['SpaceMemberRole'];
+    }
+    export namespace ProjectAccess {
+      export type ProjectMemberProfile = components['schemas']['ProjectMemberProfile'];
+      export type ProjectMemberRole = components['schemas']['ProjectMemberRole'];
+      export type CreateProjectMember = components['schemas']['CreateProjectMember'];
+      export type UpdateProjectMember = components['schemas']['UpdateProjectMember'];
+      export type ProjectGroupAccess = components['schemas']['ProjectGroupAccess'];
+      export type CreateProjectGroupAccessBody =
+        components['schemas']['Pick_CreateProjectGroupAccess.role_'];
+      export type UpdateProjectGroupAccess = components['schemas']['UpdateDBProjectGroupAccess'];
+    }
+    export namespace Users {
+      export type OrganizationMemberProfile = components['schemas']['OrganizationMemberProfile'];
+      export type OrganizationMemberProfilesResult =
+        components['schemas']['KnexPaginatedData_OrganizationMemberProfile-Array_'];
+      export type ApiOrganizationMemberProfile =
+        components['schemas']['ApiOrganizationMemberProfile'];
+      export type ApiOrganizationMemberProfiles =
+        components['schemas']['ApiOrganizationMemberProfiles'];
+      export type OrganizationMemberProfileUpdate =
+        components['schemas']['OrganizationMemberProfileUpdate'];
+    }
+    export namespace Groups {
+      export type Group = components['schemas']['Group'];
+      export type GroupWithMembers = components['schemas']['GroupWithMembers'];
+      export type CreateGroup = components['schemas']['CreateGroup'];
+      export type UpdateGroupWithMembers = components['schemas']['UpdateGroupWithMembers'];
+      export type GroupListResult =
+        components['schemas']['KnexPaginatedData_Group-Array-or-GroupWithMembers-Array_'];
+      export type ApiGroupResponse = components['schemas']['ApiGroupResponse'];
+      export type ApiGroupListResponse = components['schemas']['ApiGroupListResponse'];
+      export type ApiCreateGroupResponse = components['schemas']['ApiCreateGroupResponse'];
+      export type ApiGroupMembersResponse = components['schemas']['ApiGroupMembersResponse'];
+      export type GroupMember = components['schemas']['GroupMember'];
+    }
+    export namespace AiAgents {
+      export type AiAgentSummary = components['schemas']['AiAgentSummary'];
+      export type AiAgentAdminSortField = components['schemas']['AiAgentAdminSortField'];
+      export type AdminThreadsResult =
+        components['schemas']['ApiAiAgentAdminConversationsResponse']['results'];
+      export type GetAiOrganizationSettingsResult =
+        components['schemas']['ApiAiOrganizationSettingsResponse']['results'];
+      export type UpdateAiOrganizationSettings =
+        components['schemas']['UpdateAiOrganizationSettings'];
+      export type UpdateAiOrganizationSettingsResult =
+        components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
+    }
+  }
 }
 
 // Flat exports for convenience (alternative to namespace access)

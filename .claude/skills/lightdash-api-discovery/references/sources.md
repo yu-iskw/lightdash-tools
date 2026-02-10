@@ -16,11 +16,23 @@ Fetch the complete documentation index to discover all available pages:
 
 ## Base path
 
-All public API endpoints use the base path:
+All public API endpoints use a versioned base path. See **API versions** below.
 
-- **Base path**: `/api/v1`
-- Full URL: `{Lightdash instance base URL}/api/v1/...`  
-  Example: `https://app.lightdash.cloud/api/v1/projects/{projectUuid}`
+## API versions
+
+The public API is versioned. The same OpenAPI spec (Swagger JSON) contains both v1 and v2 paths; filter by path prefix `/api/v1` or `/api/v2` when discovering by version.
+
+- **v1**
+  - Base path: `/api/v1`
+  - Full URL: `{Lightdash instance base URL}/api/v1/...`
+    Example: `https://app.lightdash.cloud/api/v1/projects/{projectUuid}`
+  - Docs intro and recipes: `api-reference/v1/` (e.g. introduction, recipes).
+- **v2**
+  - Base path: `/api/v2`
+  - Example paths: `/api/v2/projects/{projectUuid}/query/metric-query`, `/api/v2/projects/{projectUuid}/query/sql`, `/api/v2/orgs/...`, `/api/v2/saved/...`, `/api/v2/dashboards/...`, `/api/v2/content`, etc.
+  - Same Swagger JSON URL lists all paths; use the path prefix to scope to v2.
+
+Authentication is the same for all versions. Client and types in this repo use versioned namespaces (see ADR-0007, ADR-0008).
 
 ## Authentication
 

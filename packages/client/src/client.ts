@@ -7,17 +7,19 @@ import { mergeConfig } from './utils/env';
 import { createAxiosInstanceV1, createAxiosInstanceV2 } from './http/axios-client';
 import { RateLimiter } from './http/rate-limiter';
 import { HttpClient } from './http/http-client';
-import { ProjectsClient } from './api/projects';
-import { OrganizationsClient } from './api/organizations';
-import { ChartsClient } from './api/charts';
-import { DashboardsClient } from './api/dashboards';
-import { SpacesClient } from './api/spaces';
-import { QueryClient } from './api/query';
+import { ProjectsClient } from './api/v1/projects';
+import { OrganizationsClient } from './api/v1/organizations';
+import { ChartsClient } from './api/v1/charts';
+import { DashboardsClient } from './api/v1/dashboards';
+import { SpacesClient } from './api/v1/spaces';
+import { QueryClient } from './api/v1/query';
 import { QueryClientV2 } from './api/v2/query';
-import { UsersClient } from './api/users';
-import { GroupsClient } from './api/groups';
-import { AiAgentsClient } from './api/ai-agents';
-import { ProjectAccessClient } from './api/project-access';
+import { OrganizationRolesClient } from './api/v2/organization-roles';
+import { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
+import { UsersClient } from './api/v1/users';
+import { GroupsClient } from './api/v1/groups';
+import { AiAgentsClient } from './api/v1/ai-agents';
+import { ProjectAccessClient } from './api/v1/project-access';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -53,9 +55,13 @@ export class V1ApiClients {
  */
 export class V2ApiClients {
   readonly query: QueryClientV2;
+  readonly organizationRoles: OrganizationRolesClient;
+  readonly projectRoleAssignments: ProjectRoleAssignmentsClient;
 
   constructor(http: HttpClient) {
     this.query = new QueryClientV2(http);
+    this.organizationRoles = new OrganizationRolesClient(http);
+    this.projectRoleAssignments = new ProjectRoleAssignmentsClient(http);
   }
 }
 

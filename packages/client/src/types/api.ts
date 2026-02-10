@@ -5,7 +5,7 @@
  * Use this module for advanced types (paths, components, operations) or response helpers.
  */
 
-import type { components, paths, operations } from '@lightdash-ai/common';
+import type { components } from '@lightdash-ai/common';
 
 export type { paths, components, operations } from '@lightdash-ai/common';
 

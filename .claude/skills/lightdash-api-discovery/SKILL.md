@@ -15,10 +15,12 @@ Understand the Lightdash API completely and precisely so the team can implement 
   - [ ] Read [references/sources.md](references/sources.md) for base URL, auth, and where to find the full spec and recipes.
 - [ ] **Step 2: Scope**
   - [ ] Use [references/api-areas.md](references/api-areas.md) to choose which API area(s) the client must support (e.g. Projects, Query).
+  - [ ] Decide which API version(s) the client will use (v1, v2, or both) and scope areas accordingly.
 - [ ] **Step 3: Discover spec**
   - [ ] Fetch the docs index (e.g. llms.txt) and/or the OpenAPI spec for the chosen area; open the relevant API reference pages.
 - [ ] **Step 4: Summarize for client**
   - [ ] For each endpoint needed: method, path, path/query/body parameters, request/response schemas, and error shape; cite OpenAPI or docs. Optionally fill [assets/endpoint-summary-template.md](assets/endpoint-summary-template.md).
+  - [ ] Tag each endpoint with its API version (v1 or v2) and use the matching base path and types namespace (`LightdashApi.V1` or `LightdashApi.V2`) when implementing. Use the endpoint-summary template and set **API version** for every endpoint.
 - [ ] **Step 5: Recipes**
   - [ ] If the use case involves multi-step flows (e.g. SQL from a saved chart, dashboard audit), follow or reference the [recipes](https://docs.lightdash.com/api-reference/v1/recipes) and [lightdash-api-examples](https://github.com/lightdash/lightdash-api-examples).
 - [ ] **Step 6: Validation**
@@ -74,3 +76,4 @@ Before finishing, confirm that every endpoint the client will implement has:
 
 - Output is a structured summary (and optionally a filled endpoint-summary template) that is sufficient to implement or extend the HTTP client in this repo without guessing at contracts.
 - All referenced endpoints are traceable to the OpenAPI spec or official docs.
+- Endpoint summaries and client implementation notes clearly indicate which API version each endpoint belongs to (v1 vs v2).

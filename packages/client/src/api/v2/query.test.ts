@@ -1,6 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClientV2 } from './query';
 import type { HttpClient } from '../../http/http-client';
+import type {
+  ExecuteAsyncMetricQueryRequestParams,
+  ExecuteAsyncSavedChartRequestParams,
+  ExecuteAsyncDashboardChartRequestParams,
+  ExecuteAsyncUnderlyingDataRequestParams,
+} from '@lightdash-ai/common';
 
 describe('QueryClientV2', () => {
   let mockHttp: HttpClient;
@@ -17,7 +23,10 @@ describe('QueryClientV2', () => {
 
   it('runMetricQuery should call POST /projects/{projectUuid}/query/metric-query with body', async () => {
     const client = new QueryClientV2(mockHttp);
-    const body = { exploreName: 'e1', metricQuery: {} };
+    const body = {
+      exploreName: 'e1',
+      metricQuery: {},
+    } as unknown as ExecuteAsyncMetricQueryRequestParams;
     const results = { queryId: 'q1', status: 'running' };
     vi.mocked(mockHttp.post).mockResolvedValue(results);
     const result = await client.runMetricQuery('p1', body);
@@ -37,7 +46,7 @@ describe('QueryClientV2', () => {
 
   it('runChartQuery should call POST /projects/{projectUuid}/query/chart with body', async () => {
     const client = new QueryClientV2(mockHttp);
-    const body = { chartUuid: 'c1' };
+    const body = { chartUuid: 'c1' } as unknown as ExecuteAsyncSavedChartRequestParams;
     const results = { queryId: 'q1', status: 'running' };
     vi.mocked(mockHttp.post).mockResolvedValue(results);
     const result = await client.runChartQuery('p1', body);
@@ -47,7 +56,9 @@ describe('QueryClientV2', () => {
 
   it('runDashboardChartQuery should call POST /projects/{projectUuid}/query/dashboard-chart with body', async () => {
     const client = new QueryClientV2(mockHttp);
-    const body = { dashboardChartUuid: 'dc1' };
+    const body = {
+      dashboardChartUuid: 'dc1',
+    } as unknown as ExecuteAsyncDashboardChartRequestParams;
     const results = { queryId: 'q1', status: 'running' };
     vi.mocked(mockHttp.post).mockResolvedValue(results);
     const result = await client.runDashboardChartQuery('p1', body);
@@ -57,7 +68,10 @@ describe('QueryClientV2', () => {
 
   it('runUnderlyingDataQuery should call POST /projects/{projectUuid}/query/underlying-data with body', async () => {
     const client = new QueryClientV2(mockHttp);
-    const body = { exploreName: 'e1', metricQuery: {} };
+    const body = {
+      exploreName: 'e1',
+      metricQuery: {},
+    } as unknown as ExecuteAsyncUnderlyingDataRequestParams;
     const results = { queryId: 'q1', status: 'running' };
     vi.mocked(mockHttp.post).mockResolvedValue(results);
     const result = await client.runUnderlyingDataQuery('p1', body);

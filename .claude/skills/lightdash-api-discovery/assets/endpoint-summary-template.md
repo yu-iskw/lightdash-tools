@@ -6,8 +6,9 @@ Fill this in for each endpoint the HTTP client will implement. Copy the block pe
 
 ## Endpoint: [OperationId or short name]
 
+- **API version**: `v1` | `v2`
 - **Method**: `GET` | `POST` | `PUT` | `PATCH` | `DELETE`
-- **Path**: `/api/v1/...` (with path parameters in `{braces}`)
+- **Path**: `/api/v1/...` or `/api/v2/...` (use the base segment for the endpoint's API version; path parameters in `{braces}`)
 
 ### Path parameters
 

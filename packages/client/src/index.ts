@@ -1,10 +1,17 @@
 export { LightdashClient, V1ApiClients, V2ApiClients } from './client';
-export { UsersClient } from './api/users';
-export { GroupsClient } from './api/groups';
-export { AiAgentsClient } from './api/ai-agents';
-export { ProjectAccessClient } from './api/project-access';
-export type { ListMembersParams } from './api/users';
-export type { ListGroupsParams, GetGroupParams } from './api/groups';
+export { UsersClient } from './api/v1/users';
+export { GroupsClient } from './api/v1/groups';
+export { OrganizationRolesClient } from './api/v2/organization-roles';
+export { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
+export { AiAgentsClient } from './api/v1/ai-agents';
+export { ProjectAccessClient } from './api/v1/project-access';
+export type { ListMembersParams } from './api/v1/users';
+export type { ListGroupsParams, GetGroupParams } from './api/v1/groups';
+export type {
+  GetRolesResult,
+  GetRolesParams,
+  AssignOrgRoleToUserBody,
+} from './api/v2/organization-roles';
 export type { PartialLightdashClientConfig } from './config';
 export type {
   LightdashClientConfig,
