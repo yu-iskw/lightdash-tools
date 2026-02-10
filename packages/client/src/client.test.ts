@@ -21,6 +21,8 @@ describe('LightdashClient', () => {
       expect(client.v1.dashboards).toBeDefined();
       expect(client.v1.spaces).toBeDefined();
       expect(client.v1.query).toBeDefined();
+      expect(client.v1.users).toBeDefined();
+      expect(client.v1.groups).toBeDefined();
     });
 
     it('v1.projects.getProject should be a function', () => {
@@ -61,6 +63,8 @@ describe('LightdashClient', () => {
       expect(client.dashboards).toBeDefined();
       expect(client.spaces).toBeDefined();
       expect(client.query).toBeDefined();
+      expect(client.users).toBeDefined();
+      expect(client.groups).toBeDefined();
     });
 
     it('deprecated aliases should reference v1 clients', () => {
@@ -71,6 +75,8 @@ describe('LightdashClient', () => {
       expect(client.dashboards).toBe(client.v1.dashboards);
       expect(client.spaces).toBe(client.v1.spaces);
       expect(client.query).toBe(client.v1.query);
+      expect(client.users).toBe(client.v1.users);
+      expect(client.groups).toBe(client.v1.groups);
     });
 
     it('deprecated projects.getProject should work', () => {

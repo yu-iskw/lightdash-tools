@@ -64,5 +64,6 @@ export function mergeConfig(
     timeout: explicit?.timeout,
     retry: explicit?.retry,
     logger: explicit?.logger,
+    observability: explicit?.observability,
   };
 }

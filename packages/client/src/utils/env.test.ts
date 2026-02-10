@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   loadConfigFromEnv,
   mergeConfig,
@@ -74,5 +74,15 @@ describe('mergeConfig', () => {
   it('should throw when baseUrl and personalAccessToken cannot be resolved', () => {
     expect(() => mergeConfig(undefined)).toThrow(/baseUrl and personalAccessToken/);
     expect(() => mergeConfig({})).toThrow();
+  });
+
+  it('should preserve observability when provided in explicit config', () => {
+    const onRequestComplete = vi.fn();
+    const merged = mergeConfig({
+      baseUrl: 'https://app.lightdash.cloud',
+      personalAccessToken: 'test-token',
+      observability: { onRequestComplete },
+    });
+    expect(merged.observability?.onRequestComplete).toBe(onRequestComplete);
   });
 });

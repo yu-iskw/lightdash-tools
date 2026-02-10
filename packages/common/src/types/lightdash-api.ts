@@ -13,9 +13,22 @@ import type { Queries } from './queries';
 import type { Charts } from './charts';
 import type { Dashboards } from './dashboards';
 import type { Spaces } from './spaces';
+import type { Users } from './users';
+import type { Groups } from './groups';
+import type { AiAgents } from './ai-agents';
 
 // Re-export domain namespaces
-export type { Projects, Organizations, Queries, Charts, Dashboards, Spaces };
+export type {
+  Projects,
+  Organizations,
+  Queries,
+  Charts,
+  Dashboards,
+  Spaces,
+  Users,
+  Groups,
+  AiAgents,
+};
 
 // Import generated types for LightdashApi namespace assembly
 import type { components } from './generated/openapi-types';
@@ -76,6 +89,45 @@ export namespace LightdashApi {
   export namespace Spaces {
     export type SpaceSummary = components['schemas']['SpaceSummary'];
   }
+
+  export namespace Users {
+    export type OrganizationMemberProfile = components['schemas']['OrganizationMemberProfile'];
+    export type OrganizationMemberProfilesResult =
+      components['schemas']['KnexPaginatedData_OrganizationMemberProfile-Array_'];
+    export type ApiOrganizationMemberProfile =
+      components['schemas']['ApiOrganizationMemberProfile'];
+    export type ApiOrganizationMemberProfiles =
+      components['schemas']['ApiOrganizationMemberProfiles'];
+    export type OrganizationMemberProfileUpdate =
+      components['schemas']['OrganizationMemberProfileUpdate'];
+  }
+
+  export namespace Groups {
+    export type Group = components['schemas']['Group'];
+    export type GroupWithMembers = components['schemas']['GroupWithMembers'];
+    export type CreateGroup = components['schemas']['CreateGroup'];
+    export type UpdateGroupWithMembers = components['schemas']['UpdateGroupWithMembers'];
+    export type GroupListResult =
+      components['schemas']['KnexPaginatedData_Group-Array-or-GroupWithMembers-Array_'];
+    export type ApiGroupResponse = components['schemas']['ApiGroupResponse'];
+    export type ApiGroupListResponse = components['schemas']['ApiGroupListResponse'];
+    export type ApiCreateGroupResponse = components['schemas']['ApiCreateGroupResponse'];
+    export type ApiGroupMembersResponse = components['schemas']['ApiGroupMembersResponse'];
+    export type GroupMember = components['schemas']['GroupMember'];
+  }
+
+  export namespace AiAgents {
+    export type AiAgentSummary = components['schemas']['AiAgentSummary'];
+    export type AiAgentAdminSortField = components['schemas']['AiAgentAdminSortField'];
+    export type AdminThreadsResult =
+      components['schemas']['ApiAiAgentAdminConversationsResponse']['results'];
+    export type GetAiOrganizationSettingsResult =
+      components['schemas']['ApiAiOrganizationSettingsResponse']['results'];
+    export type UpdateAiOrganizationSettings =
+      components['schemas']['UpdateAiOrganizationSettings'];
+    export type UpdateAiOrganizationSettingsResult =
+      components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
+  }
 }
 
 // Flat exports for convenience (alternative to namespace access)
@@ -99,3 +151,12 @@ export type RunQueryResults = Queries.Responses.RunQueryResults;
 export type ExecuteAsyncMetricQueryResults = Queries.Responses.ExecuteAsyncMetricQueryResults;
 export type ExecuteAsyncDashboardChartResults = Queries.Responses.ExecuteAsyncDashboardChartResults;
 export type ExecuteAsyncSqlQueryResults = Queries.Responses.ExecuteAsyncSqlQueryResults;
+
+// AI agents (flat exports)
+export type AiAgentSummary = AiAgents.AiAgentSummary;
+export type AiAgentAdminSortField = AiAgents.AiAgentAdminSortField;
+export type AiAgentsAdminThreadsResult = AiAgents.AdminThreadsResult;
+export type GetAiOrganizationSettingsResult = AiAgents.GetAiOrganizationSettingsResult;
+export type UpdateAiOrganizationSettings = AiAgents.UpdateAiOrganizationSettings;
+export type UpdateAiOrganizationSettingsResult = AiAgents.UpdateAiOrganizationSettingsResult;
+export type GetAdminThreadsParams = AiAgents.GetAdminThreadsParams;

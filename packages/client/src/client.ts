@@ -14,6 +14,9 @@ import { DashboardsClient } from './api/dashboards';
 import { SpacesClient } from './api/spaces';
 import { QueryClient } from './api/query';
 import { QueryClientV2 } from './api/v2/query';
+import { UsersClient } from './api/users';
+import { GroupsClient } from './api/groups';
+import { AiAgentsClient } from './api/ai-agents';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -25,6 +28,9 @@ export class V1ApiClients {
   readonly dashboards: DashboardsClient;
   readonly spaces: SpacesClient;
   readonly query: QueryClient;
+  readonly users: UsersClient;
+  readonly groups: GroupsClient;
+  readonly aiAgents: AiAgentsClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -33,6 +39,9 @@ export class V1ApiClients {
     this.dashboards = new DashboardsClient(http);
     this.spaces = new SpacesClient(http);
     this.query = new QueryClient(http);
+    this.users = new UsersClient(http);
+    this.groups = new GroupsClient(http);
+    this.aiAgents = new AiAgentsClient(http);
   }
 }
 
@@ -91,6 +100,18 @@ export class LightdashClient {
    * @deprecated Use `client.v1.query` instead. This alias will be removed in a future major version.
    */
   readonly query: QueryClient;
+  /**
+   * @deprecated Use `client.v1.users` instead. This alias will be removed in a future major version.
+   */
+  readonly users: UsersClient;
+  /**
+   * @deprecated Use `client.v1.groups` instead. This alias will be removed in a future major version.
+   */
+  readonly groups: GroupsClient;
+  /**
+   * @deprecated Use `client.v1.aiAgents` instead. This alias will be removed in a future major version.
+   */
+  readonly aiAgents: AiAgentsClient;
 
   constructor(config?: PartialLightdashClientConfig) {
     const merged = mergeConfig(config);
@@ -115,6 +136,9 @@ export class LightdashClient {
     this.dashboards = this.v1.dashboards;
     this.spaces = this.v1.spaces;
     this.query = this.v1.query;
+    this.users = this.v1.users;
+    this.groups = this.v1.groups;
+    this.aiAgents = this.v1.aiAgents;
   }
 
   /**

@@ -89,14 +89,19 @@ const client = new LightdashClient({
 
 ## API areas
 
-- `client.projects` – get project, list projects, list charts
-- `client.organizations` – get current organization
-- `client.charts` – list charts
-- `client.dashboards` – list dashboards
-- `client.spaces` – list spaces
-- `client.query` – run metric queries
+- `client.v1.projects` – get project, list projects, list charts
+- `client.v1.organizations` – get current organization
+- `client.v1.charts` – list charts
+- `client.v1.dashboards` – list dashboards
+- `client.v1.spaces` – list spaces
+- `client.v1.query` – run metric queries
+- `client.v1.users` – list/get/update organization members
+- `client.v1.groups` – list/create/update groups
+- `client.v1.aiAgents` – list AI agents (admin), list threads (admin), get/update AI organization settings
 
-For custom endpoints use `client.getHttpClient()` and call `get`, `post`, `put`, `patch`, `delete` with the path (relative to `/api/v1`).
+Deprecated top-level aliases (`client.projects`, `client.organizations`, etc.) are still available but will be removed in a future major version.
+
+For custom endpoints use `client.getHttpClientV1()` and call `get`, `post`, `put`, `patch`, `delete` with the path (relative to `/api/v1`).
 
 ## Package dependency
 
