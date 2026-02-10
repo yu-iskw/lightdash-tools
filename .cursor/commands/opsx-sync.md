@@ -5,6 +5,8 @@ category: Workflow
 description: Sync delta specs from a change to main specs
 ---
 
+# OPSX: Sync
+
 Sync delta specs from a change to main specs.
 
 This is an **agent-driven** operation - you will read delta specs and directly edit main specs to apply the changes. This allows intelligent merging (e.g., adding a scenario without copying the entire requirement).

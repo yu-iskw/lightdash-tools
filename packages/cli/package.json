@@ -7,7 +7,18 @@
   "author": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "bin": {
+    "lightdash-ai": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "@lightdash-ai/client": "workspace:*",
+    "@lightdash-ai/common": "workspace:*",
+    "commander": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0"
   }
 }

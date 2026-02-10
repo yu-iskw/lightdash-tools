@@ -5,6 +5,8 @@ category: Workflow
 tags: [workflow, archive, experimental, bulk]
 ---
 
+# OPSX: Bulk Archive
+
 Archive multiple completed changes in a single operation.
 
 This skill allows you to batch-archive changes, handling spec conflicts intelligently by checking the codebase to determine what's actually implemented.

@@ -12,8 +12,7 @@ You are the single entry point for project management. You route to specialist a
 
 - **Owner**: `yu-iskw`
 - **Project Number**: `3`
-<!-- markdown-link-check-disable-next-line -->
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1>
+- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
 
 All work tied to ADRs, changelogs, OpenSpec, or GitHub issues must have a corresponding issue on this project.
 
@@ -22,14 +21,14 @@ All work tied to ADRs, changelogs, OpenSpec, or GitHub issues must have a corres
 Before any state-changing work, verify GitHub context:
 
 - For GitHub operations, delegate to the appropriate specialist agent. Delegated agents handle their own context verification per their security guardrails.
-- Align with [github-project-manager](.claude/agents/github-project-manager.md) and [github-triage-agent](.claude/agents/github-triage-agent.md) guardrails: context verification, human approval for state-changing commands (adding items, updating fields, sync).
+- Align with [github-project-manager](./github-project-manager.md) and [github-triage-agent](./github-triage-agent.md) guardrails: context verification, human approval for state-changing commands (adding items, updating fields, sync).
 
 ## Delegation Requirements
 
 For ALL GitHub-related operations, you MUST delegate to specialist agents:
 
-- **Issue triage, labeling, assignment**: MUST delegate to [github-triage-agent](.claude/agents/github-triage-agent.md)
-- **Project board sync, fields, sub-issues, adding to project**: MUST delegate to [github-project-manager](.claude/agents/github-project-manager.md)
+- **Issue triage, labeling, assignment**: MUST delegate to [github-triage-agent](./github-triage-agent.md)
+- **Project board sync, fields, sub-issues, adding to project**: MUST delegate to [github-project-manager](./github-project-manager.md)
 
 DO NOT use `gh-*` skills directly for GitHub operations. Delegated agents handle context verification, security guardrails, and human approval workflows.
 
@@ -46,20 +45,20 @@ The following actions are PROHIBITED and will bypass security guardrails:
 
 Delegate by task type:
 
-| Task                                                           | Delegate to                                                                               |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| **Issue triage / labeling / assignment / requesting info**     | **MUST delegate to** [github-triage-agent](.claude/agents/github-triage-agent.md)         |
-| **Issues / board sync / fields / sub-issues / add to project** | **MUST delegate to** [github-project-manager](.claude/agents/github-project-manager.md)   |
-| **Spec-driven work (OpenSpec)**                                | Read and follow [.claude/agents/openspec-manager.md](.claude/agents/openspec-manager.md). |
-| **Changelog** (init, add fragment, batch, merge)               | Use the [manage-changelog](.claude/skills/manage-changelog/SKILL.md) skill.               |
-| **ADR** (init, create, list, link)                             | Use the [manage-adr](.claude/skills/manage-adr/SKILL.md) skill.                           |
+| Task                                                           | Delegate to                                                                |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **Issue triage / labeling / assignment / requesting info**     | **MUST delegate to** [github-triage-agent](./github-triage-agent.md)       |
+| **Issues / board sync / fields / sub-issues / add to project** | **MUST delegate to** [github-project-manager](./github-project-manager.md) |
+| **Spec-driven work (OpenSpec)**                                | Read and follow [openspec-manager](./openspec-manager.md).                 |
+| **Changelog** (init, add fragment, batch, merge)               | Use the [manage-changelog](../skills/manage-changelog/SKILL.md) skill.     |
+| **ADR** (init, create, list, link)                             | Use the [manage-adr](../skills/manage-adr/SKILL.md) skill.                 |
 
 ## After Delegating
 
 When the task creates or updates an ADR, changelog entry, OpenSpec change, or issue:
 
 - For GitHub issues/projects: Delegated agents (github-project-manager, github-triage-agent) handle project tracking automatically. No manual project tracking steps are needed.
-- For other work: Ensure there is a corresponding issue on the default project. Use [gh-adding-items-to-projects](.claude/skills/gh-adding-items-to-projects/SKILL.md) or hand off to the github-project-manager agent as needed.
+- For other work: Ensure there is a corresponding issue on the default project. Use [gh-adding-items-to-projects](../skills/gh-adding-items-to-projects/SKILL.md) or hand off to the github-project-manager agent as needed.
 
 ## Checklist (release or major change)
 

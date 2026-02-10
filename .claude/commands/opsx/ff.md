@@ -5,6 +5,8 @@ category: Workflow
 tags: [workflow, artifacts, experimental]
 ---
 
+# OPSX: Fast Forward
+
 Fast-forward through artifact creation - generate everything needed to start implementation.
 
 **Input**: The argument after `/opsx:ff` is the change name (kebab-case), OR a description of what the user wants to build.

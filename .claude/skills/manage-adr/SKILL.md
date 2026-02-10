@@ -62,12 +62,66 @@ adr link 12 Amends 10 "Amended by"
 - Generate a Table of Contents: `adr generate toc`
 - Generate a dependency graph (requires Graphviz): `adr generate graph | dot -Tpng -o adr-graph.png`
 
+### 7. Adding Visualizations with Mermaid
+
+Use Mermaid diagrams to visualize architectural decisions, system designs, and relationships. Diagrams render automatically in GitHub and most Markdown viewers.
+
+#### When to Add Diagrams
+
+- **System Architecture**: Show component relationships, data flow, and system boundaries
+- **Software Architecture**: Illustrate module organization, package dependencies, and code structure
+- **Sequence Diagrams**: Document interaction flows, API call sequences, or decision processes
+- **Concept Diagrams**: Visualize abstract concepts, relationships, or decision trees
+- **State Diagrams**: Show state transitions, workflows, or lifecycle processes
+- **Class/Type Diagrams**: Document type relationships, hierarchies, or interfaces
+
+#### How to Add Diagrams
+
+1. **Place diagrams** in the "Decision" or "Architecture" section of your ADR
+2. **Use code blocks** with `mermaid` language identifier:
+
+```markdown
+### Architecture
+
+\`\`\`mermaid
+graph TB
+A[Component A] --> B[Component B]
+B --> C[Component C]
+\`\`\`
+```
+
+3. **Provide context**: Add a brief description before the diagram explaining what it visualizes
+4. **Keep focused**: One diagram per concept - create multiple diagrams if needed
+
+#### Diagram Examples
+
+See `references/mermaid-diagrams.md` for comprehensive examples including:
+
+- System architecture diagrams
+- Software architecture diagrams
+- Sequence diagrams
+- Concept diagrams
+- Component diagrams
+- State diagrams
+- Class/type diagrams
+- Common patterns (before/after, decision flows, dependency graphs)
+
+#### Quick Reference
+
+Common diagram types for ADRs:
+
+- **`graph TB`** or **`graph LR`**: System/software architecture, component relationships
+- **`sequenceDiagram`**: Interaction flows, API sequences, decision processes
+- **`flowchart TD`**: Decision trees, workflows, process flows
+- **`stateDiagram-v2`**: State transitions, lifecycle processes
+- **`classDiagram`**: Type relationships, class hierarchies
+
 ## Best Practices
 
 - Keep ADRs focused on a single decision.
 - Write for future maintainers who lack current context.
 - Update the status and links when decisions change.
-- Refer to `references/adr-concepts.md` for more details on the ADR philosophy.
-- Use the template in `assets/template.md` as a guide.
-- Draw a diagram with Mermaid to visualize the decision.
-- If needed, draw a system diagram, sequence diagram(s) and other diagrams with Mermaid.
+- **Use Mermaid diagrams** to visualize complex decisions, architectures, and relationships. See section 7 above for guidance.
+- Refer to `references/mermaid-diagrams.md` for diagram examples and patterns.
+- Refer to `references/adr-concepts.md` for more details on the ADR philosophy (if available).
+- Use the template in `assets/template.md` as a guide (if available).

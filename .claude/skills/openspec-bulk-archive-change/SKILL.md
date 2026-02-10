@@ -9,6 +9,8 @@ metadata:
   generatedBy: '1.1.1'
 ---
 
+# OpenSpec Bulk Archive Change
+
 Archive multiple completed changes in a single operation.
 
 This skill allows you to batch-archive changes, handling spec conflicts intelligently by checking the codebase to determine what's actually implemented.

@@ -5,6 +5,8 @@ category: Workflow
 tags: [workflow, onboarding, tutorial, learning]
 ---
 
+# OPSX: Onboard
+
 Guide the user through their first complete OpenSpec workflow cycle. This is a teaching experience—you'll do real work in their codebase while explaining each step.
 
 ---
