@@ -36,9 +36,9 @@ The new v2 clients SHALL be exposed on `LightdashClient` via the existing `clien
 
 ### Requirement: Types from common package
 
-The new v2 client methods SHALL use request and response types from `@lightdash-ai/common` (generated OpenAPI components or `LightdashApi` domain types) where applicable, and SHALL NOT define duplicate type shapes for API contracts.
+The new v2 client methods SHALL use request and response types from `@lightdash-tools/common` (generated OpenAPI components or `LightdashApi` domain types) where applicable, and SHALL NOT define duplicate type shapes for API contracts.
 
 #### Scenario: Role request types from common
 
 - **WHEN** a v2 client method accepts a request body for create role, update role, or add scopes
-- **THEN** the parameter type SHALL be imported from `@lightdash-ai/common` (e.g. CreateRole, UpdateRole, AddScopesToRole) and SHALL NOT be redefined in the client package
+- **THEN** the parameter type SHALL be imported from `@lightdash-tools/common` (e.g. CreateRole, UpdateRole, AddScopesToRole) and SHALL NOT be redefined in the client package

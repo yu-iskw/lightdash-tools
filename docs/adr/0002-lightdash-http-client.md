@@ -22,5 +22,5 @@ Full design, requirements, and scenarios are specified in OpenSpec: [docs/opensp
 
 ## Consequences
 
-- API contracts and auth live in one place; other packages (cli, mcp) will depend on `@lightdash-ai/client` for Lightdash API access.
+- API contracts and auth live in one place; other packages (cli, mcp) will depend on `@lightdash-tools/client` for Lightdash API access.
 - Implementation will follow the OpenSpec change (proposal, specs, design); tasks and code are not yet written.

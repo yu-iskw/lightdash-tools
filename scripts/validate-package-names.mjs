@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validates that root and workspace package names follow @lightdash-ai scope
+ * Validates that root and workspace package names follow @lightdash-tools scope
  * and that descriptions do not contain template placeholder text.
  * Exit 0 if all checks pass, non-zero otherwise.
  */
@@ -11,8 +11,8 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
-const EXPECTED_ROOT_NAME = '@lightdash-ai';
-const SCOPE = '@lightdash-ai';
+const EXPECTED_ROOT_NAME = '@lightdash-tools';
+const SCOPE = '@lightdash-tools';
 const TEMPLATE_PLACEHOLDER = 'TypeScript template project';
 const PACKAGES_DIR = path.join(ROOT, 'packages');
 

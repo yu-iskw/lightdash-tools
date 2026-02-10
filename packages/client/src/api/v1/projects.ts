@@ -2,7 +2,7 @@
  * Projects API client. Endpoints for project and project-scoped resources.
  */
 
-import type { Project, OrganizationProject, SpaceQuery } from '@lightdash-ai/common';
+import type { Project, OrganizationProject, SpaceQuery } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class ProjectsClient extends BaseApiClient {

@@ -39,7 +39,7 @@ export LIGHTDASH_API_KEY=your-token-here
 Get current organization:
 
 ```bash
-lightdash-ai organization get
+lightdash-tools organization get
 ```
 
 #### Projects
@@ -47,13 +47,13 @@ lightdash-ai organization get
 Get a project by UUID:
 
 ```bash
-lightdash-ai projects get <projectUuid>
+lightdash-tools projects get <projectUuid>
 ```
 
 List all projects:
 
 ```bash
-lightdash-ai projects list
+lightdash-tools projects list
 ```
 
 #### Groups
@@ -61,7 +61,7 @@ lightdash-ai projects list
 List all groups in the organization:
 
 ```bash
-lightdash-ai groups list
+lightdash-tools groups list
 ```
 
 #### Users
@@ -69,7 +69,7 @@ lightdash-ai groups list
 List all users in the organization:
 
 ```bash
-lightdash-ai users list
+lightdash-tools users list
 ```
 
 ### Help
@@ -77,9 +77,9 @@ lightdash-ai users list
 Get help for any command:
 
 ```bash
-lightdash-ai --help
-lightdash-ai organization --help
-lightdash-ai projects --help
+lightdash-tools --help
+lightdash-tools organization --help
+lightdash-tools projects --help
 ```
 
 ## Output Format

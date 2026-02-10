@@ -8,12 +8,12 @@ The system SHALL extract Lightdash API domain models from generated OpenAPI type
 
 #### Scenario: Models available in common package
 
-- **WHEN** a package imports from `@lightdash-ai/common`
+- **WHEN** a package imports from `@lightdash-tools/common`
 - **THEN** domain models (Project, Organization, etc.) SHALL be accessible
 
 #### Scenario: Models organized by domain
 
-- **WHEN** models are accessed from `@lightdash-ai/common`
+- **WHEN** models are accessed from `@lightdash-tools/common`
 - **THEN** models SHALL be organized into domain namespaces (Projects, Organizations, Queries, etc.)
 
 ### Requirement: Type aliases align with OpenAPI spec
@@ -32,16 +32,16 @@ Extracted models SHALL be type aliases to the generated OpenAPI types, ensuring 
 
 ### Requirement: Cross-package type reuse
 
-Other packages (`cli`, `mcp`) SHALL be able to import types from `@lightdash-ai/common` without requiring a dependency on `@lightdash-ai/client`.
+Other packages (`cli`, `mcp`) SHALL be able to import types from `@lightdash-tools/common` without requiring a dependency on `@lightdash-tools/client`.
 
 #### Scenario: CLI package imports types
 
-- **WHEN** `packages/cli` imports types from `@lightdash-ai/common`
+- **WHEN** `packages/cli` imports types from `@lightdash-tools/common`
 - **THEN** it SHALL be able to use domain models without depending on client package
 
 #### Scenario: MCP package imports types
 
-- **WHEN** `packages/mcp` imports types from `@lightdash-ai/common`
+- **WHEN** `packages/mcp` imports types from `@lightdash-tools/common`
 - **THEN** it SHALL be able to use domain models without depending on client package
 
 ### Requirement: Models exported from common index
@@ -50,10 +50,10 @@ All models SHALL be exported from `packages/common/src/index.ts` to enable conve
 
 #### Scenario: Direct type import
 
-- **WHEN** a package imports `import type { Project } from '@lightdash-ai/common'`
+- **WHEN** a package imports `import type { Project } from '@lightdash-tools/common'`
 - **THEN** the Project type SHALL be available
 
 #### Scenario: Namespace import
 
-- **WHEN** a package imports `import type { LightdashApi } from '@lightdash-ai/common'`
+- **WHEN** a package imports `import type { LightdashApi } from '@lightdash-tools/common'`
 - **THEN** models SHALL be accessible via `LightdashApi.Projects.Project`

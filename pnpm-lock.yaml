@@ -35,10 +35,10 @@ importers:
 
   packages/cli:
     dependencies:
-      '@lightdash-ai/client':
+      '@lightdash-tools/client':
         specifier: workspace:*
         version: link:../client
-      '@lightdash-ai/common':
+      '@lightdash-tools/common':
         specifier: workspace:*
         version: link:../common
       commander:
@@ -51,7 +51,7 @@ importers:
 
   packages/client:
     dependencies:
-      '@lightdash-ai/common':
+      '@lightdash-tools/common':
         specifier: workspace:*
         version: link:../common
       axios:

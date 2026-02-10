@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient } from './query';
 import type { HttpClient } from '../../http/http-client';
-import type { MetricQueryRequest } from '@lightdash-ai/common';
+import type { MetricQueryRequest } from '@lightdash-tools/common';
 
 describe('QueryClient', () => {
   let mockHttp: HttpClient;

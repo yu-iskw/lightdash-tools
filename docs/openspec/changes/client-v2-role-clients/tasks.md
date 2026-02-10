@@ -13,7 +13,7 @@
   - `duplicateRole(orgUuid, roleId, body?)` – POST duplicate
   - `listRoleAssignments(orgUuid)` – GET `/orgs/{orgUuid}/roles/assignments`
   - `assignRoleToUser(orgUuid, userId, body?)` – POST `/orgs/{orgUuid}/roles/assignments/user/{userId}`
-- [x] 1.2 Use request/response types from `@lightdash-ai/common` (components schemas or LightdashApi) where applicable.
+- [x] 1.2 Use request/response types from `@lightdash-tools/common` (components schemas or LightdashApi) where applicable.
 
 ## 2. Project role assignments client
 
@@ -24,7 +24,7 @@
   - `upsertGroupAssignment(projectId, groupId, body)` – POST group
   - `deleteGroupAssignment(projectId, groupId)` – DELETE group
   - `updateGroupAssignment(projectId, groupId, body)` – PATCH group
-- [x] 2.2 Use request/response types from `@lightdash-ai/common` where applicable.
+- [x] 2.2 Use request/response types from `@lightdash-tools/common` where applicable.
 
 ## 3. Wire into client and exports
 

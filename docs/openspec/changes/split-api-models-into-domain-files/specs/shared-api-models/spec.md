@@ -8,12 +8,12 @@ The system SHALL extract Lightdash API domain models from generated OpenAPI type
 
 #### Scenario: Models available in common package
 
-- **WHEN** a package imports from `@lightdash-ai/common`
+- **WHEN** a package imports from `@lightdash-tools/common`
 - **THEN** domain models (Project, Organization, etc.) SHALL be accessible
 
 #### Scenario: Models organized by domain files
 
-- **WHEN** models are accessed from `@lightdash-ai/common`
+- **WHEN** models are accessed from `@lightdash-tools/common`
 - **THEN** models SHALL be organized into domain files, with each domain in its own file
 
 #### Scenario: Main file assembles namespace

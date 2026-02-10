@@ -3,7 +3,7 @@
 ## Context
 
 - This repo will call the Lightdash API from CLI, MCP, and other tooling. Organization API discovery is complete: base path `/api/v1`, PAT auth, and core org endpoints are documented (see `.claude/skills/lightdash-api-discovery/references/sources.md` and `api-areas.md`).
-- `packages/client` currently exposes a stub (`greet`); it will become the single HTTP client for Lightdash. Other packages (cli, mcp) will depend on `@lightdash-ai/client`.
+- `packages/client` currently exposes a stub (`greet`); it will become the single HTTP client for Lightdash. Other packages (cli, mcp) will depend on `@lightdash-tools/client`.
 - Constraints: no session-based auth for the API (PAT only); Node 18+ or modern runtimes so native `fetch` is available; types must align with the Lightdash OpenAPI spec for the covered areas.
 
 ## Goals / Non-Goals

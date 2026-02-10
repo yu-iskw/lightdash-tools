@@ -2,7 +2,7 @@
  * Organizations API client.
  */
 
-import type { Organization } from '@lightdash-ai/common';
+import type { Organization } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class OrganizationsClient extends BaseApiClient {

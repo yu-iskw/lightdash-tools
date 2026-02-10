@@ -11,7 +11,7 @@ import type {
   ExecuteAsyncMetricQueryResults,
   ExecuteAsyncDashboardChartResults,
   ExecuteAsyncSqlQueryResults,
-} from '@lightdash-ai/common';
+} from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class QueryClientV2 extends BaseApiClient {

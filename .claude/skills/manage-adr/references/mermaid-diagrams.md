@@ -52,16 +52,16 @@ Use to show module organization and package dependencies:
 
 ```mermaid
 graph LR
-    subgraph commonPkg [@lightdash-ai/common]
+    subgraph commonPkg [@lightdash-tools/common]
         Types[Types]
         Utils[Utils]
     end
 
-    subgraph clientPkg [@lightdash-ai/client]
+    subgraph clientPkg [@lightdash-tools/client]
         Client[HTTP Client]
     end
 
-    subgraph cliPkg [@lightdash-ai/cli]
+    subgraph cliPkg [@lightdash-tools/cli]
         CLI[CLI Commands]
     end
 

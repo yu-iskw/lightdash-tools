@@ -2,7 +2,7 @@
  * Groups API client.
  */
 
-import type { LightdashApi } from '@lightdash-ai/common';
+import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 import { fetchAllPages } from '../../pagination/fetch-all-pages';
 

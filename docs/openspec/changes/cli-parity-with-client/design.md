@@ -2,7 +2,7 @@
 
 ## Context
 
-- The CLI lives in `packages/cli` and uses `@lightdash-ai/client`. It currently has commands: `organization get`, `projects get` / `projects list`, `groups list`, `users list`. Organization and projects use typed clients (`client.v1.organizations`, `client.v1.projects`). Groups and users use raw HTTP via `client.getHttpClientV1().get('/org/groups')` and `get('/org/users')` (see `docs/openspec/changes/lightdash-cli/design.md` Decision 5).
+- The CLI lives in `packages/cli` and uses `@lightdash-tools/client`. It currently has commands: `organization get`, `projects get` / `projects list`, `groups list`, `users list`. Organization and projects use typed clients (`client.v1.organizations`, `client.v1.projects`). Groups and users use raw HTTP via `client.getHttpClientV1().get('/org/groups')` and `get('/org/users')` (see `docs/openspec/changes/lightdash-cli/design.md` Decision 5).
 - The client package exposes `UsersClient` and `GroupsClient` with `listMembers(params?)`, `listGroups(params?)`, `getMemberByUuid`, `getMemberByEmail`, `getGroup(uuid, params?)`, etc. Types: `ListMembersParams`, `ListGroupsParams` (page, pageSize, searchQuery, etc.).
 
 ## Goals / Non-Goals
@@ -59,7 +59,7 @@
 ## Command tree (Phase 1)
 
 ```
-lightdash-ai
+lightdash-tools
 ├── organization get
 ├── projects get <projectUuid>
 ├── projects list
@@ -89,7 +89,7 @@ lightdash-ai
 ### Phase 2 command tree
 
 ```
-lightdash-ai
+lightdash-tools
 ├── organization get
 ├── organization roles list [--load] [--role-type-filter]
 ├── organization roles get <roleUuid>
@@ -128,7 +128,7 @@ lightdash-ai
 ### Phase 3 command tree
 
 ```
-lightdash-ai
+lightdash-tools
 ├── ...
 ├── projects charts list <projectUuid>
 ├── projects dashboards list <projectUuid>

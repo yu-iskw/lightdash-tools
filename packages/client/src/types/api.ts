@@ -1,13 +1,13 @@
 /**
  * Helper types for Lightdash API. Re-exports generated OpenAPI types and adds response helpers.
  *
- * Note: Domain models (Project, Organization, etc.) are available from @lightdash-ai/common.
+ * Note: Domain models (Project, Organization, etc.) are available from @lightdash-tools/common.
  * Use this module for advanced types (paths, components, operations) or response helpers.
  */
 
-import type { components } from '@lightdash-ai/common';
+import type { components } from '@lightdash-tools/common';
 
-export type { paths, components, operations } from '@lightdash-ai/common';
+export type { paths, components, operations } from '@lightdash-tools/common';
 
 /** API error schema from OpenAPI. */
 export type ApiError = components['schemas']['ApiErrorPayload'];

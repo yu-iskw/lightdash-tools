@@ -18,13 +18,13 @@ The CLI SHALL support an `organization` command with a `get` subcommand that ret
 
 #### Scenario: Get organization
 
-- **WHEN** user runs `lightdash-ai organization get`
+- **WHEN** user runs `lightdash-tools organization get`
 - **THEN** the CLI SHALL call `client.v1.organizations.getCurrentOrganization()`
 - **AND** it SHALL output the organization data (JSON or formatted)
 
 #### Scenario: Organization command help
 
-- **WHEN** user runs `lightdash-ai organization --help`
+- **WHEN** user runs `lightdash-tools organization --help`
 - **THEN** the CLI SHALL display help text for the organization command and its subcommands
 
 ### Requirement: Projects command
@@ -33,19 +33,19 @@ The CLI SHALL support a `projects` command with `get` and `list` subcommands.
 
 #### Scenario: Get project
 
-- **WHEN** user runs `lightdash-ai projects get <projectUuid>`
+- **WHEN** user runs `lightdash-tools projects get <projectUuid>`
 - **THEN** the CLI SHALL call `client.v1.projects.getProject(projectUuid)`
 - **AND** it SHALL output the project data
 
 #### Scenario: List projects
 
-- **WHEN** user runs `lightdash-ai projects list`
+- **WHEN** user runs `lightdash-tools projects list`
 - **THEN** the CLI SHALL call `client.v1.projects.listProjects()`
 - **AND** it SHALL output the list of projects
 
 #### Scenario: Projects command help
 
-- **WHEN** user runs `lightdash-ai projects --help`
+- **WHEN** user runs `lightdash-tools projects --help`
 - **THEN** the CLI SHALL display help text for the projects command and its subcommands
 
 ### Requirement: Groups command
@@ -54,13 +54,13 @@ The CLI SHALL support a `groups` command with a `list` subcommand that lists gro
 
 #### Scenario: List groups
 
-- **WHEN** user runs `lightdash-ai groups list`
+- **WHEN** user runs `lightdash-tools groups list`
 - **THEN** the CLI SHALL call the HTTP client to get `/org/groups`
 - **AND** it SHALL output the list of groups
 
 #### Scenario: Groups command help
 
-- **WHEN** user runs `lightdash-ai groups --help`
+- **WHEN** user runs `lightdash-tools groups --help`
 - **THEN** the CLI SHALL display help text for the groups command and its subcommands
 
 ### Requirement: Users command
@@ -69,13 +69,13 @@ The CLI SHALL support a `users` command with a `list` subcommand that lists user
 
 #### Scenario: List users
 
-- **WHEN** user runs `lightdash-ai users list`
+- **WHEN** user runs `lightdash-tools users list`
 - **THEN** the CLI SHALL call the HTTP client to get `/org/users`
 - **AND** it SHALL output the list of users
 
 #### Scenario: Users command help
 
-- **WHEN** user runs `lightdash-ai users --help`
+- **WHEN** user runs `lightdash-tools users --help`
 - **THEN** the CLI SHALL display help text for the users command and its subcommands
 
 ### Requirement: Client initialization from environment variables
@@ -132,10 +132,10 @@ All commands SHALL provide help documentation accessible via `--help` flag.
 
 #### Scenario: Main help
 
-- **WHEN** user runs `lightdash-ai --help`
+- **WHEN** user runs `lightdash-tools --help`
 - **THEN** the CLI SHALL display available commands and usage information
 
 #### Scenario: Command help
 
-- **WHEN** user runs `lightdash-ai <command> --help`
+- **WHEN** user runs `lightdash-tools <command> --help`
 - **THEN** the CLI SHALL display help for that specific command and its subcommands

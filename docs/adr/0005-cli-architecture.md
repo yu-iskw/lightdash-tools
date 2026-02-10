@@ -10,7 +10,7 @@ Implements [10. CLI parity with client package (phased by domain)](0010-cli-pari
 
 ## Context
 
-We need a command-line interface (CLI) for Lightdash AI that allows users to interact with the Lightdash API without writing code. The CLI should support nested subcommands (e.g., `organization get`, `projects get`, `projects list`, `groups list`, `users list`) and use the existing HTTP client package (`@lightdash-ai/client`).
+We need a command-line interface (CLI) for Lightdash AI that allows users to interact with the Lightdash API without writing code. The CLI should support nested subcommands (e.g., `organization get`, `projects get`, `projects list`, `groups list`, `users list`) and use the existing HTTP client package (`@lightdash-tools/client`).
 
 A problem-solving analysis evaluated 5 approaches:
 
@@ -30,7 +30,7 @@ We will implement **Approach 1: Commander.js with Programmatic Command Registrat
 - Single entry point (`src/index.ts`) that programmatically registers all commands
 - Modular command files in `src/commands/` directory for maintainability
 - Shared client initialization utility that uses environment variables (`LIGHTDASH_URL`, `LIGHTDASH_API_KEY`)
-- Commands use `@lightdash-ai/client` for API calls
+- Commands use `@lightdash-tools/client` for API calls
 - Support nested subcommands: `organization get`, `projects get/list`, `groups list`, `users list`
 
 ### Architecture

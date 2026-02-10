@@ -2,7 +2,7 @@
  * Organization roles API client (v2). Manage org-level roles and role assignments.
  */
 
-import type { components } from '@lightdash-ai/common';
+import type { components } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 type CreateRole = components['schemas']['CreateRole'];

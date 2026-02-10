@@ -8,14 +8,14 @@ The CLI SHALL use the typed clients `client.v1.groups` and `client.v1.users` for
 
 #### Scenario: groups list uses GroupsClient
 
-- **GIVEN** the user runs `lightdash-ai groups list`
+- **GIVEN** the user runs `lightdash-tools groups list`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL call `client.v1.groups.listGroups(params)` with optional params derived from CLI options
 - **AND** SHALL NOT use `client.getHttpClientV1().get(...)` for groups
 
 #### Scenario: users list uses UsersClient
 
-- **GIVEN** the user runs `lightdash-ai users list`
+- **GIVEN** the user runs `lightdash-tools users list`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL call `client.v1.users.listMembers(params)` with optional params derived from CLI options
 - **AND** SHALL NOT use `client.getHttpClientV1().get(...)` for users
@@ -27,13 +27,13 @@ Where the client supports query parameters for list methods, the CLI SHALL expos
 #### Scenario: groups list options
 
 - **GIVEN** `GroupsClient.listGroups` accepts `ListGroupsParams` (e.g. page, pageSize, includeMembers, searchQuery)
-- **WHEN** the user runs `lightdash-ai groups list`
+- **WHEN** the user runs `lightdash-tools groups list`
 - **THEN** the CLI SHALL accept optional options (e.g. `--page-size`, `--page`, `--search`) and pass them to `listGroups(params)`
 
 #### Scenario: users list options
 
 - **GIVEN** `UsersClient.listMembers` accepts `ListMembersParams` (e.g. page, pageSize, searchQuery, projectUuid)
-- **WHEN** the user runs `lightdash-ai users list`
+- **WHEN** the user runs `lightdash-tools users list`
 - **THEN** the CLI SHALL accept optional options (e.g. `--page-size`, `--page`, `--search`) and pass them to `listMembers(params)`
 
 ### Requirement: Optional get subcommands (Phase 1)
@@ -42,13 +42,13 @@ The CLI SHALL provide `groups get <uuid>` and `users get <uuid>` that call `clie
 
 #### Scenario: groups get subcommand
 
-- **GIVEN** the user runs `lightdash-ai groups get <groupUuid>`
+- **GIVEN** the user runs `lightdash-tools groups get <groupUuid>`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL call `client.v1.groups.getGroup(groupUuid, params?)` and output the result as JSON
 
 #### Scenario: users get by UUID
 
-- **GIVEN** the user runs `lightdash-ai users get <userUuid>`
+- **GIVEN** the user runs `lightdash-tools users get <userUuid>`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL call `client.v1.users.getMemberByUuid(userUuid)` and output the result as JSON
 
@@ -69,13 +69,13 @@ The CLI SHALL provide `organization roles` subcommands that call `client.v2.orga
 
 #### Scenario: organization roles list
 
-- **GIVEN** the user runs `lightdash-ai organization roles list`
+- **GIVEN** the user runs `lightdash-tools organization roles list`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL resolve org UUID via `getCurrentOrganization().organizationUuid` and call `client.v2.organizationRoles.getRoles(orgUuid, params?)` and output JSON
 
 #### Scenario: organization roles assign
 
-- **GIVEN** the user runs `lightdash-ai organization roles assign <userUuid> --role-id <roleId>`
+- **GIVEN** the user runs `lightdash-tools organization roles assign <userUuid> --role-id <roleId>`
 - **WHEN** the command executes
 - **THEN** the implementation SHALL call `client.v2.organizationRoles.assignRoleToUser(orgUuid, userUuid, { roleId })` and output JSON
 
@@ -85,12 +85,12 @@ The CLI SHALL provide `projects roles`, `projects access`, and `projects spaces`
 
 #### Scenario: projects roles list
 
-- **GIVEN** the user runs `lightdash-ai projects roles list <projectUuid>`
+- **GIVEN** the user runs `lightdash-tools projects roles list <projectUuid>`
 - **THEN** the implementation SHALL call `client.v2.projectRoleAssignments.listAssignments(projectUuid)` and output JSON
 
 #### Scenario: projects spaces list
 
-- **GIVEN** the user runs `lightdash-ai projects spaces list <projectUuid>`
+- **GIVEN** the user runs `lightdash-tools projects spaces list <projectUuid>`
 - **THEN** the implementation SHALL call `client.v1.spaces.listSpacesInProject(projectUuid)` and output JSON
 
 ### Requirement: Phase 3 charts, dashboards, ai-agents
@@ -99,12 +99,12 @@ The CLI SHALL provide `projects charts list`, `projects dashboards list`, and to
 
 #### Scenario: projects charts list
 
-- **GIVEN** the user runs `lightdash-ai projects charts list <projectUuid>`
+- **GIVEN** the user runs `lightdash-tools projects charts list <projectUuid>`
 - **THEN** the implementation SHALL call `client.v1.charts.listCharts(projectUuid)` and output JSON
 
 #### Scenario: ai-agents list
 
-- **GIVEN** the user runs `lightdash-ai ai-agents list`
+- **GIVEN** the user runs `lightdash-tools ai-agents list`
 - **THEN** the implementation SHALL call `client.v1.aiAgents.listAdminAgents()` and output JSON
 
 ## References

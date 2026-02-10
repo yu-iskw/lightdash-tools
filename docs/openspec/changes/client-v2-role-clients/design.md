@@ -38,7 +38,7 @@
 
 ### Decision 3: Types
 
-**Choice:** Import types from `@lightdash-ai/common`. Use `components['schemas']['CreateRole']`, `UpdateRole`, `AddScopesToRole`, `Role`, `RoleWithScopes`, and assignment request/response types from the generated openapi-types. If the common package does not re-export these under a domain namespace, the client may import from the generated types via the common package’s export of `components` or from a dedicated common export added in this or a follow-up change.
+**Choice:** Import types from `@lightdash-tools/common`. Use `components['schemas']['CreateRole']`, `UpdateRole`, `AddScopesToRole`, `Role`, `RoleWithScopes`, and assignment request/response types from the generated openapi-types. If the common package does not re-export these under a domain namespace, the client may import from the generated types via the common package’s export of `components` or from a dedicated common export added in this or a follow-up change.
 
 **Rationale:** Single source of truth for API contracts; no duplicate type definitions in the client.
 
@@ -51,7 +51,7 @@
 ## Risks / Trade-offs
 
 - **projectId vs projectUuid:** Callers used to `projectUuid` elsewhere must pass the same value as `projectId` for project role assignment methods; we document this in JSDoc.
-- **Types not in common:** If a role or assignment type is not exported from `@lightdash-ai/common`, we add a minimal re-export in the common package or use the generated path; preference is to keep client free of openapi-types path details if possible.
+- **Types not in common:** If a role or assignment type is not exported from `@lightdash-tools/common`, we add a minimal re-export in the common package or use the generated path; preference is to keep client free of openapi-types path details if possible.
 
 ## Migration Plan
 

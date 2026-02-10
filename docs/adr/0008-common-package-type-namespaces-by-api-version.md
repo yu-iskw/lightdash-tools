@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-Types in `@lightdash-ai/common` are organized by domain (Projects, Queries, Charts, etc.) and re-exported from a single `LightdashApi` namespace and as flat exports. The OpenAPI spec includes both v1 and v2 paths (e.g. `/api/v1/projects/*`, `/api/v2/projects/{projectUuid}/query/*`), but the generated types are a single `components.schemas` with no version split. The client already exposes runtime version separation (`client.v1.*`, `client.v2.*` per ADR-0003) and uses version-specific endpoints, yet type imports do not indicate which API version a type belongs to. This makes it easy to use a v2 request type on a v1 endpoint or vice versa, and complicates discovery and refactoring.
+Types in `@lightdash-tools/common` are organized by domain (Projects, Queries, Charts, etc.) and re-exported from a single `LightdashApi` namespace and as flat exports. The OpenAPI spec includes both v1 and v2 paths (e.g. `/api/v1/projects/*`, `/api/v2/projects/{projectUuid}/query/*`), but the generated types are a single `components.schemas` with no version split. The client already exposes runtime version separation (`client.v1.*`, `client.v2.*` per ADR-0003) and uses version-specific endpoints, yet type imports do not indicate which API version a type belongs to. This makes it easy to use a v2 request type on a v1 endpoint or vice versa, and complicates discovery and refactoring.
 
 We need type-level distinction so that consumers can import v1-only or v2-only types explicitly and the type system reflects the API version boundary.
 

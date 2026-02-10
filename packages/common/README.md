@@ -1,11 +1,11 @@
-# @lightdash-ai/common
+# @lightdash-tools/common
 
 Shared utilities and types for Lightdash AI packages.
 
 ## Installation
 
 ```bash
-pnpm add @lightdash-ai/common
+pnpm add @lightdash-tools/common
 ```
 
 ## Lightdash API Models
@@ -28,7 +28,7 @@ The main `types/lightdash-api.ts` file imports all domains and assembles the `Li
 #### Flat Imports (Recommended)
 
 ```typescript
-import type { Project, Organization, SpaceQuery } from '@lightdash-ai/common';
+import type { Project, Organization, SpaceQuery } from '@lightdash-tools/common';
 
 const project: Project = ...;
 const org: Organization = ...;
@@ -37,7 +37,7 @@ const org: Organization = ...;
 #### Namespace Imports
 
 ```typescript
-import type { LightdashApi } from '@lightdash-ai/common';
+import type { LightdashApi } from '@lightdash-tools/common';
 
 const project: LightdashApi.Projects.Project = ...;
 const org: LightdashApi.Organizations.Organization = ...;
@@ -88,7 +88,7 @@ const query: LightdashApi.Queries.Requests.MetricQuery = ...;
 ### Example: Using Models in CLI Package
 
 ```typescript
-import type { Project, Organization } from '@lightdash-ai/common';
+import type { Project, Organization } from '@lightdash-tools/common';
 
 function displayProject(project: Project) {
   console.log(`Project: ${project.name}`);
@@ -104,7 +104,7 @@ function displayOrganization(org: Organization) {
 ### Example: Using Models in MCP Package
 
 ```typescript
-import type { LightdashApi } from '@lightdash-ai/common';
+import type { LightdashApi } from '@lightdash-tools/common';
 
 type Project = LightdashApi.Projects.Project;
 type QueryRequest = LightdashApi.Queries.Requests.MetricQuery;

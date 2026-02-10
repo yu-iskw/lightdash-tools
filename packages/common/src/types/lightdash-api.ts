@@ -43,7 +43,7 @@ import type { components } from './generated/openapi-types';
  *
  * Usage:
  * ```typescript
- * import type { LightdashApi } from '@lightdash-ai/common';
+ * import type { LightdashApi } from '@lightdash-tools/common';
  * const project: LightdashApi.Projects.Project = ...;
  * ```
  */

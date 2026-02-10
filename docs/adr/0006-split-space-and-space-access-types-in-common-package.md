@@ -27,7 +27,7 @@ In `packages/common/src/types/lightdash-api.ts` we will:
 ## Consequences
 
 - **Consistency:** Space types are organized the same way as Projects vs ProjectAccess, making the codebase easier to navigate and extend.
-- **No breaking changes:** Flat exports are preserved; consumers can continue to import from `@lightdash-ai/common` as before.
+- **No breaking changes:** Flat exports are preserved; consumers can continue to import from `@lightdash-tools/common` as before.
 - **One new file:** `space-access.ts` is added; `spaces.ts` is reduced to core types only.
 - **Traceability:** This refactor is tracked via GitHub issue and optional OpenSpec change.
 

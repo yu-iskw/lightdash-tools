@@ -98,13 +98,13 @@ export namespace LightdashApi {
 **Implementation:**
 
 ```typescript
-import type { components } from '@lightdash-ai/client/types/generated/openapi-types';
+import type { components } from '@lightdash-tools/client/types/generated/openapi-types';
 export type Project = components['schemas']['Project'];
 ```
 
 ### Decision 4: Client Depends on Common
 
-**Choice:** Client package depends on `@lightdash-ai/common` for domain types.
+**Choice:** Client package depends on `@lightdash-tools/common` for domain types.
 
 **Rationale:**
 
@@ -119,7 +119,7 @@ export type Project = components['schemas']['Project'];
 
 **Implementation:**
 
-- Add `@lightdash-ai/common` to client's dependencies
+- Add `@lightdash-tools/common` to client's dependencies
 - Update client imports to use common types
 
 ## Risks / Trade-offs
@@ -170,7 +170,7 @@ export type Project = components['schemas']['Project'];
 
 ### Phase 2: Update Client
 
-1. Add `@lightdash-ai/common` dependency to client
+1. Add `@lightdash-tools/common` dependency to client
 2. Update client API classes to import from common
 3. Replace `components['schemas']['Type']` with imported types
 

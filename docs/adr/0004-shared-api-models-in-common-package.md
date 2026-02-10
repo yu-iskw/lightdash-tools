@@ -25,20 +25,20 @@ A problem-solving analysis evaluated 5 approaches:
 
 ## Decision
 
-We will implement **Approach 2: Shared Models in `@lightdash-ai/common`**.
+We will implement **Approach 2: Shared Models in `@lightdash-tools/common`**.
 
 ### Implementation Details
 
 - Extract core domain models to `packages/common/src/types/lightdash-api.ts`
 - Organize models by domain namespace (Projects, Organizations, Queries, Charts, Dashboards, Spaces)
-- Client package depends on `@lightdash-ai/common` for domain types
-- Other packages can import types from `@lightdash-ai/common` without client dependency
+- Client package depends on `@lightdash-tools/common` for domain types
+- Other packages can import types from `@lightdash-tools/common` without client dependency
 - Models are type aliases to generated OpenAPI types, ensuring alignment with the spec
 
 ### Architecture
 
 ```
-@lightdash-ai/common
+@lightdash-tools/common
 └── types/
     └── lightdash-api.ts
         ├── Projects namespace (Project, OrganizationProject)
@@ -83,9 +83,9 @@ We will implement **Approach 2: Shared Models in `@lightdash-ai/common`**.
 
 **Current state:**
 
-- Common generates types via `pnpm --filter @lightdash-ai/common generate:types`
+- Common generates types via `pnpm --filter @lightdash-tools/common generate:types`
 - Common exports raw OpenAPI types (`paths`, `components`, `operations`) from its main entry point
-- Client imports OpenAPI types from `@lightdash-ai/common` instead of generating them locally
+- Client imports OpenAPI types from `@lightdash-tools/common` instead of generating them locally
 - Build order is now well-defined: common builds first, then client
 
 ### Additional Model Organization
@@ -126,12 +126,12 @@ packages/common/src/types/
 
 ### Verification and enforcement (2026-02-10)
 
-**Rule:** `@lightdash-ai/common` must not depend on `@lightdash-ai/client`. Dependency direction is one-way: client → common only.
+**Rule:** `@lightdash-tools/common` must not depend on `@lightdash-tools/client`. Dependency direction is one-way: client → common only.
 
 **Enforcement:** A CI check runs on every build:
 
-1. **Package dependency:** The script fails if `packages/common/package.json` lists `@lightdash-ai/client` in `dependencies` or `devDependencies`.
-2. **Import audit:** The script fails if any file under `packages/common` imports from `@lightdash-ai/client` or from path segments that resolve to the client package (e.g. `from '@lightdash-ai/client'` or `from '../client'`).
+1. **Package dependency:** The script fails if `packages/common/package.json` lists `@lightdash-tools/client` in `dependencies` or `devDependencies`.
+2. **Import audit:** The script fails if any file under `packages/common` imports from `@lightdash-tools/client` or from path segments that resolve to the client package (e.g. `from '@lightdash-tools/client'` or `from '../client'`).
 
 **Implementation:** The check lives in `scripts/check-common-no-client.mjs` and is invoked via the root script `validate:deps`. The Build workflow (`.github/workflows/build.yml`) runs `pnpm validate:deps` so that introducing a reverse dependency causes the build to fail.
 

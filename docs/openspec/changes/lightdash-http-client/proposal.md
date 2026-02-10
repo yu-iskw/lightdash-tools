@@ -24,5 +24,5 @@ This repository needs a supported, typed way to call the Lightdash API from tool
 ## Impact
 
 - **Future code:** `packages/client` will implement this design; current stub (`greet`) will be replaced or repurposed.
-- **Future consumers:** `packages/cli`, `packages/mcp`, and other workspace packages may depend on `@lightdash-ai/client` for Lightdash API access.
+- **Future consumers:** `packages/cli`, `packages/mcp`, and other workspace packages may depend on `@lightdash-tools/client` for Lightdash API access.
 - **Dependencies:** No new runtime dependencies planned (native `fetch` on Node 18+). No impact in this docs-only change.

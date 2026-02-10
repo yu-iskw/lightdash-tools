@@ -2,7 +2,7 @@
 
 ## Context
 
-Users need command-line access to Lightdash API operations. The CLI should be intuitive, well-documented, and easy to extend. We have an existing HTTP client package (`@lightdash-ai/client`) that handles authentication, rate limiting, and API calls.
+Users need command-line access to Lightdash API operations. The CLI should be intuitive, well-documented, and easy to extend. We have an existing HTTP client package (`@lightdash-tools/client`) that handles authentication, rate limiting, and API calls.
 
 Current state:
 
@@ -117,7 +117,7 @@ program.parse(process.argv);
 
 ```typescript
 // src/utils/client.ts
-import { LightdashClient } from '@lightdash-ai/client';
+import { LightdashClient } from '@lightdash-tools/client';
 
 export function getClient(): LightdashClient {
   return new LightdashClient(); // Uses env vars automatically
@@ -170,7 +170,7 @@ const result = await client.v1.users.listMembers(params);
 ### Phase 1: Setup
 
 1. Create CLI package structure
-2. Install dependencies (commander, @lightdash-ai/client, @lightdash-ai/common)
+2. Install dependencies (commander, @lightdash-tools/client, @lightdash-tools/common)
 3. Create client utility
 
 ### Phase 2: Core Commands

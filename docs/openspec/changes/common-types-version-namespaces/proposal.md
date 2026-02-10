@@ -2,7 +2,7 @@
 
 ## Why
 
-Types in `@lightdash-ai/common` are organized by domain but not by API version. The OpenAPI spec and runtime client expose both v1 and v2 endpoints, yet consumers cannot tell from the type system which types belong to which API version. This increases the risk of using a v2 request type on a v1 endpoint or vice versa, and complicates discovery and refactoring. We need type-level distinction so that models are clearly associated with v1 or v2.
+Types in `@lightdash-tools/common` are organized by domain but not by API version. The OpenAPI spec and runtime client expose both v1 and v2 endpoints, yet consumers cannot tell from the type system which types belong to which API version. This increases the risk of using a v2 request type on a v1 endpoint or vice versa, and complicates discovery and refactoring. We need type-level distinction so that models are clearly associated with v1 or v2.
 
 ## What Changes
 
@@ -10,7 +10,7 @@ Types in `@lightdash-ai/common` are organized by domain but not by API version. 
 - Optionally implement the split using existing empty `types/v1/` and `types/v2/` folders (e.g. `v1/index.ts`, `v2/index.ts` re-exporting from domain files).
 - Preserve **backward compatibility**: keep existing `LightdashApi.Projects`, `LightdashApi.Queries`, and all flat exports so client and other consumers can migrate incrementally.
 
-**NON-BREAKING**: All existing imports from `@lightdash-ai/common` continue to work.
+**NON-BREAKING**: All existing imports from `@lightdash-tools/common` continue to work.
 
 ## Capabilities
 

@@ -1,5 +1,5 @@
 {
-  "name": "@lightdash-ai/client",
+  "name": "@lightdash-tools/client",
   "version": "1.0.0",
   "description": "Client library for Lightdash AI.",
   "keywords": [],
@@ -11,7 +11,7 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@lightdash-ai/common": "workspace:*",
+    "@lightdash-tools/common": "workspace:*",
     "axios": "^1.7.0",
     "bottleneck": "^2.19.5"
   },

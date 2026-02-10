@@ -8,8 +8,8 @@ const rootDir = path.resolve(__dirname);
 export default defineConfig({
   resolve: {
     alias: {
-      '@lightdash-ai/client': path.resolve(rootDir, 'packages/client/src/index.ts'),
-      '@lightdash-ai/common': path.resolve(rootDir, 'packages/common/src/index.ts'),
+      '@lightdash-tools/client': path.resolve(rootDir, 'packages/client/src/index.ts'),
+      '@lightdash-tools/common': path.resolve(rootDir, 'packages/common/src/index.ts'),
     },
   },
   test: {

@@ -2,7 +2,7 @@
  * Query API client. Run metric/SQL/underlying data queries.
  */
 
-import type { MetricQueryRequest, RunQueryResults } from '@lightdash-ai/common';
+import type { MetricQueryRequest, RunQueryResults } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class QueryClient extends BaseApiClient {

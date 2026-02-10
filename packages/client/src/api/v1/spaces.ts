@@ -9,7 +9,7 @@ import type {
   UpdateSpace,
   AddSpaceUserAccess,
   AddSpaceGroupAccess,
-} from '@lightdash-ai/common';
+} from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class SpacesClient extends BaseApiClient {

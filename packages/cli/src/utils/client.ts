@@ -2,7 +2,7 @@
  * Client utility for initializing LightdashClient from environment variables.
  */
 
-import { LightdashClient } from '@lightdash-ai/client';
+import { LightdashClient } from '@lightdash-tools/client';
 
 /**
  * Gets a LightdashClient instance initialized from environment variables.

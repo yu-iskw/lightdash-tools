@@ -10,7 +10,7 @@ Implements [5. CLI Architecture Decision](0005-cli-architecture.md)
 
 ## Context
 
-The CLI (`packages/cli`) currently uses raw HTTP for `groups list` and `users list` (e.g. `client.getHttpClientV1().get('/org/groups')`). The client package (`packages/client`) already provides `UsersClient` and `GroupsClient` with typed methods and query parameters. ADR-0005 anticipated refactoring to these clients when available. Several client domains have no CLI coverage: v2 organization roles and project role assignments, project-access, spaces, charts, dashboards, query, and ai-agents. Users who need these operations must use `@lightdash-ai/client` in scripts instead of the CLI.
+The CLI (`packages/cli`) currently uses raw HTTP for `groups list` and `users list` (e.g. `client.getHttpClientV1().get('/org/groups')`). The client package (`packages/client`) already provides `UsersClient` and `GroupsClient` with typed methods and query parameters. ADR-0005 anticipated refactoring to these clients when available. Several client domains have no CLI coverage: v2 organization roles and project role assignments, project-access, spaces, charts, dashboards, query, and ai-agents. Users who need these operations must use `@lightdash-tools/client` in scripts instead of the CLI.
 
 ## Decision
 

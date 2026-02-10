@@ -2,7 +2,7 @@
  * Charts API client. Endpoints for saved charts and chart-related operations.
  */
 
-import type { SpaceQuery } from '@lightdash-ai/common';
+import type { SpaceQuery } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class ChartsClient extends BaseApiClient {

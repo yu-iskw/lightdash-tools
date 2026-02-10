@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Ensures @lightdash-ai/common does not depend on @lightdash-ai/client.
+ * Ensures @lightdash-tools/common does not depend on @lightdash-tools/client.
  * Exit 0 if the rule is satisfied, non-zero otherwise.
  *
  * Checks:
- * 1. packages/common/package.json must not list @lightdash-ai/client in dependencies or devDependencies.
- * 2. No file under packages/common may import or require @lightdash-ai/client or path segments that resolve to the client package.
+ * 1. packages/common/package.json must not list @lightdash-tools/client in dependencies or devDependencies.
+ * 2. No file under packages/common may import or require @lightdash-tools/client or path segments that resolve to the client package.
  */
 
 import fs from 'fs';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const COMMON_DIR = path.join(ROOT, 'packages', 'common');
-const CLIENT_PKG = '@lightdash-ai/client';
+const CLIENT_PKG = '@lightdash-tools/client';
 
 const errors = [];
 
@@ -38,9 +38,10 @@ if (!fs.existsSync(commonPkgPath)) {
   }
 }
 
-// 2. Import scan: match import/require of @lightdash-ai/client or path ending in /client
-const IMPORT_CLIENT_RE = /(?:from|import)\s+['"](@lightdash-ai\/client|[\w./-]*\/client)['"]/g;
-const REQUIRE_CLIENT_RE = /require\s*\(\s*['"](@lightdash-ai\/client|[\w./-]*\/client)['"]\s*\)/g;
+// 2. Import scan: match import/require of @lightdash-tools/client or path ending in /client
+const IMPORT_CLIENT_RE = /(?:from|import)\s+['"](@lightdash-tools\/client|[\w./-]*\/client)['"]/g;
+const REQUIRE_CLIENT_RE =
+  /require\s*\(\s*['"](@lightdash-tools\/client|[\w./-]*\/client)['"]\s*\)/g;
 const EXTENSIONS = new Set(['.ts', '.js', '.mts', '.cts']);
 
 function scanDir(dir) {
@@ -60,13 +61,13 @@ function scanDir(dir) {
     IMPORT_CLIENT_RE.lastIndex = 0;
     while ((m = IMPORT_CLIENT_RE.exec(content)) !== null) {
       errors.push(
-        `${relPath}: forbidden import/require of "${m[1]}". @lightdash-ai/common must not depend on @lightdash-ai/client.`,
+        `${relPath}: forbidden import/require of "${m[1]}". @lightdash-tools/common must not depend on @lightdash-tools/client.`,
       );
     }
     REQUIRE_CLIENT_RE.lastIndex = 0;
     while ((m = REQUIRE_CLIENT_RE.exec(content)) !== null) {
       errors.push(
-        `${relPath}: forbidden require of "${m[1]}". @lightdash-ai/common must not depend on @lightdash-ai/client.`,
+        `${relPath}: forbidden require of "${m[1]}". @lightdash-tools/common must not depend on @lightdash-tools/client.`,
       );
     }
   }

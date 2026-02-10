@@ -8,7 +8,7 @@ The common package SHALL expose a top-level namespace `LightdashApi.V1` that re-
 
 #### Scenario: V1 namespace exists
 
-- **WHEN** a consumer imports from `@lightdash-ai/common` and accesses `LightdashApi.V1`
+- **WHEN** a consumer imports from `@lightdash-tools/common` and accesses `LightdashApi.V1`
 - **THEN** the type namespace SHALL be defined and SHALL contain domain sub-namespaces or types (e.g. Queries, Projects) whose types are used by v1 API paths
 
 #### Scenario: V1 query types
@@ -22,7 +22,7 @@ The common package SHALL expose a top-level namespace `LightdashApi.V2` that re-
 
 #### Scenario: V2 namespace exists
 
-- **WHEN** a consumer imports from `@lightdash-ai/common` and accesses `LightdashApi.V2`
+- **WHEN** a consumer imports from `@lightdash-tools/common` and accesses `LightdashApi.V2`
 - **THEN** the type namespace SHALL be defined and SHALL contain domain sub-namespaces or types whose types are used by v2 API paths
 
 #### Scenario: V2 query types
@@ -36,10 +36,10 @@ The common package SHALL retain the existing unversioned `LightdashApi` domain n
 
 #### Scenario: Unversioned namespace still available
 
-- **WHEN** a consumer imports `LightdashApi.Projects` or `LightdashApi.Queries` from `@lightdash-ai/common`
+- **WHEN** a consumer imports `LightdashApi.Projects` or `LightdashApi.Queries` from `@lightdash-tools/common`
 - **THEN** those namespaces SHALL remain defined and SHALL resolve to the same types as before the change
 
 #### Scenario: Flat exports still available
 
-- **WHEN** a consumer imports a flat export (e.g. `MetricQueryRequest`, `ExecuteAsyncMetricQueryRequestParams`) from `@lightdash-ai/common`
+- **WHEN** a consumer imports a flat export (e.g. `MetricQueryRequest`, `ExecuteAsyncMetricQueryRequestParams`) from `@lightdash-tools/common`
 - **THEN** those exports SHALL remain defined and SHALL resolve to the same types as before the change

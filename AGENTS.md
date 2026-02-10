@@ -50,8 +50,8 @@ pnpm clean      # Clean build artifacts
 
 ## Package Naming
 
-- Project scope is `@lightdash-ai`; root package name is `@lightdash-ai`.
-- Workspace packages must be named `@lightdash-ai/<dirname>` (for example, `packages/common` → `@lightdash-ai/common`).
+- Project scope is `@lightdash-tools`; root package name is `@lightdash-tools`.
+- Workspace packages must be named `@lightdash-tools/<dirname>` (for example, `packages/common` → `@lightdash-tools/common`).
 - Run `pnpm validate:names` before submitting PRs that touch package names or add packages.
 
 ## Default GitHub Project

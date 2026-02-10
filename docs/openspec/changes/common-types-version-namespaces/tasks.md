@@ -15,4 +15,4 @@
 ## 3. Verification
 
 - [x] 3.1 Run `pnpm build` and `pnpm test` from repo root; ensure `pnpm validate:deps` passes
-- [x] 3.2 Confirm existing client imports from `@lightdash-ai/common` (flat and namespace) still resolve
+- [x] 3.2 Confirm existing client imports from `@lightdash-tools/common` (flat and namespace) still resolve

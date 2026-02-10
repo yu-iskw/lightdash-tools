@@ -9,7 +9,7 @@ import type {
   GetAiOrganizationSettingsResult,
   UpdateAiOrganizationSettings,
   UpdateAiOrganizationSettingsResult,
-} from '@lightdash-ai/common';
+} from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
 
 export class AiAgentsClient extends BaseApiClient {

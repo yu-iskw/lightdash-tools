@@ -32,7 +32,7 @@ Each barrel imports from `../projects`, `../queries`, etc., and re-exports using
 
 ### Decision 3: Optional package exports
 
-Subpath exports (e.g. `@lightdash-ai/common/types/v1`) can be added later in package.json if desired; not required for this change.
+Subpath exports (e.g. `@lightdash-tools/common/types/v1`) can be added later in package.json if desired; not required for this change.
 
 ## Risks / Trade-offs
 

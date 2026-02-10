@@ -1,4 +1,4 @@
-# @lightdash-ai/client
+# @lightdash-tools/client
 
 HTTP client for the [Lightdash API](https://docs.lightdash.com/api-reference/v1/introduction) with centralized rate limiting, async calls, and TypeScript types generated from the OpenAPI spec.
 
@@ -10,12 +10,12 @@ HTTP client for the [Lightdash API](https://docs.lightdash.com/api-reference/v1/
 - **Environment variables**: Zero-config in CI using `LIGHTDASH_URL` and `LIGHTDASH_API_KEY`
 - **Retries**: Exponential backoff for 5xx and network errors
 - **Errors**: Typed `LightdashApiError`, `RateLimitError`, `NetworkError`
-- **Shared models**: Domain models available from `@lightdash-ai/common` for cross-package reuse
+- **Shared models**: Domain models available from `@lightdash-tools/common` for cross-package reuse
 
 ## Installation
 
 ```bash
-pnpm add @lightdash-ai/client
+pnpm add @lightdash-tools/client
 ```
 
 ## Configuration
@@ -35,7 +35,7 @@ Explicit config overrides environment variables.
 ### With explicit config
 
 ```typescript
-import { LightdashClient } from '@lightdash-ai/client';
+import { LightdashClient } from '@lightdash-tools/client';
 
 const client = new LightdashClient({
   baseUrl: 'https://app.lightdash.cloud',
@@ -73,7 +73,7 @@ controller.abort(); // cancels the request
 ### Logging and observability
 
 ```typescript
-import { LightdashClient, consoleLogger } from '@lightdash-ai/client';
+import { LightdashClient, consoleLogger } from '@lightdash-tools/client';
 
 const client = new LightdashClient({
   baseUrl: 'https://app.lightdash.cloud',
@@ -108,35 +108,35 @@ For custom endpoints use `client.getHttpClientV1()` and call `get`, `post`, `put
 
 - Commander.js: <https://www.npmjs.com/package/commander> <!-- markdown-link-check-disable-line -->
 
-This package depends on `@lightdash-ai/common` only (one-way: client → common). Types and API models are consumed from common; see [ADR 0004](../../docs/adr/0004-shared-api-models-in-common-package.md) for the architecture.
+This package depends on `@lightdash-tools/common` only (one-way: client → common). Types and API models are consumed from common; see [ADR 0004](../../docs/adr/0004-shared-api-models-in-common-package.md) for the architecture.
 
 ## Type Imports
 
-Domain models (Project, Organization, etc.) are available from `@lightdash-ai/common`:
+Domain models (Project, Organization, etc.) are available from `@lightdash-tools/common`:
 
 ```typescript
-import type { Project, Organization } from '@lightdash-ai/common';
+import type { Project, Organization } from '@lightdash-tools/common';
 ```
 
 Advanced types (`paths`, `components`, `operations`) are available from the client package:
 
 ```typescript
-import type { paths, components, operations } from '@lightdash-ai/client';
+import type { paths, components, operations } from '@lightdash-tools/client';
 ```
 
 ## Regenerating types
 
-OpenAPI types are generated in the `@lightdash-ai/common` package. To regenerate:
+OpenAPI types are generated in the `@lightdash-tools/common` package. To regenerate:
 
 ```bash
-pnpm --filter @lightdash-ai/common generate:types
+pnpm --filter @lightdash-tools/common generate:types
 ```
 
 After regenerating types, rebuild both common and client packages:
 
 ```bash
-pnpm build --filter @lightdash-ai/common
-pnpm build --filter @lightdash-ai/client
+pnpm build --filter @lightdash-tools/common
+pnpm build --filter @lightdash-tools/client
 ```
 
 ## License

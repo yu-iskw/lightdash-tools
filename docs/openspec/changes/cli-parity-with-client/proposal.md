@@ -16,7 +16,7 @@ The CLI (`packages/cli`) should offer the same capabilities as the client packag
 
 ### New Capabilities
 
-- **cli-parity-with-client**: The CLI SHALL use typed clients from `@lightdash-ai/client` for every domain it exposes (no raw HTTP for groups/users). Phase 1 SHALL add optional `groups get` and `users get` subcommands and pass through list options (e.g. page-size, search) where the client supports them.
+- **cli-parity-with-client**: The CLI SHALL use typed clients from `@lightdash-tools/client` for every domain it exposes (no raw HTTP for groups/users). Phase 1 SHALL add optional `groups get` and `users get` subcommands and pass through list options (e.g. page-size, search) where the client supports them.
 
 ### Modified Capabilities
 

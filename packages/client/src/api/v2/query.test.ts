@@ -6,7 +6,7 @@ import type {
   ExecuteAsyncSavedChartRequestParams,
   ExecuteAsyncDashboardChartRequestParams,
   ExecuteAsyncUnderlyingDataRequestParams,
-} from '@lightdash-ai/common';
+} from '@lightdash-tools/common';
 
 describe('QueryClientV2', () => {
   let mockHttp: HttpClient;

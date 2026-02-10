@@ -37,5 +37,5 @@ The main `lightdash-api.ts` file SHALL import all domain namespaces and assemble
 
 #### Scenario: Flat exports available
 
-- **WHEN** flat exports are used (e.g., `import type { Project } from '@lightdash-ai/common'`)
+- **WHEN** flat exports are used (e.g., `import type { Project } from '@lightdash-tools/common'`)
 - **THEN** they SHALL continue to work (backward compatible)
