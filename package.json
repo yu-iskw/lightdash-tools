@@ -1,13 +1,14 @@
 {
-  "name": "typescript-template",
+  "name": "@lightdash-ai",
   "version": "1.0.0",
   "private": true,
   "description": "",
   "keywords": [],
   "license": "Apache-2.0",
-  "author": "",
+  "author": "yu-iskw",
   "main": "index.js",
   "scripts": {
+    "prebuild": "pnpm validate:names",
     "build": "pnpm --recursive build",
     "format": "pnpm format:trunk",
     "format:all": "pnpm format:trunk-all",
@@ -21,7 +22,9 @@
     "lint:security": "trunk check --all --scope security",
     "lint:trunk": "trunk check",
     "lint:trunk-all": "trunk check --all",
-    "test": "vitest run"
+    "openspec": "cd docs && npx @fission-ai/openspec@latest",
+    "test": "vitest run",
+    "validate:names": "node scripts/validate-package-names.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+# Agent Context
+
+For project overview, setup, build and test commands, code style, git workflow, architecture, subagents, and key skills, read the root `AGENTS.md`.

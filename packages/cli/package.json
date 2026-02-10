@@ -1,0 +1,13 @@
+{
+  "name": "@lightdash-ai/cli",
+  "version": "1.0.0",
+  "description": "CLI for Lightdash AI.",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}

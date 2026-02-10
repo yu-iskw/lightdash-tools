@@ -1,0 +1,13 @@
+{
+  "name": "@lightdash-ai/mcp",
+  "version": "1.0.0",
+  "description": "MCP server and utilities for Lightdash AI.",
+  "keywords": [],
+  "license": "ISC",
+  "author": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  }
+}

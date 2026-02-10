@@ -1,7 +1,7 @@
 {
-  "name": "@typescript-template/common",
+  "name": "@lightdash-ai/common",
   "version": "1.0.0",
-  "description": "Common utilities and types for the TypeScript template project.",
+  "description": "Shared utilities and types for Lightdash AI.",
   "keywords": [],
   "license": "ISC",
   "author": "",
