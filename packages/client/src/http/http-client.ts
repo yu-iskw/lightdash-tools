@@ -5,9 +5,8 @@
 
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import type { LightdashClientConfig } from '../config';
-import type { ApiErrorPayload } from '../errors';
-import { LightdashApiError } from '../errors';
-import { RateLimiter } from './rate-limiter';
+import { type ApiErrorPayload, LightdashApiError } from '../errors';
+import { type RateLimiter } from './rate-limiter';
 import { withRetry } from '../utils/retry';
 
 /** Lightdash API success response shape. */

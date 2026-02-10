@@ -6,8 +6,34 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   prettierConfig,
+  // Incremental recommended-plus (ADR-0016): consistent types, promises, no explicit any
   {
-    ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', '.trunk/**'],
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        allowDefaultProject: ['scripts/**/*.mjs'],
+      },
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+      ],
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+    },
+  },
+  {
+    ignores: [
+      '**/dist/**',
+      '**/node_modules/**',
+      '**/coverage/**',
+      '.trunk/**',
+      '.claude/**',
+      'vitest.config.ts',
+    ],
   },
   // Node scripts: process is a global
   {
