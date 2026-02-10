@@ -5,8 +5,13 @@ export { OrganizationRolesClient } from './api/v2/organization-roles';
 export { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
 export { AiAgentsClient } from './api/v1/ai-agents';
 export { ProjectAccessClient } from './api/v1/project-access';
-export type { ListMembersParams } from './api/v1/users';
-export type { ListGroupsParams, GetGroupParams } from './api/v1/groups';
+export type { ListMembersParams, ListAllMembersParams } from './api/v1/users';
+export type {
+  ListGroupsParams,
+  ListAllGroupsParams,
+  GetGroupParams,
+  GroupOrGroupWithMembers,
+} from './api/v1/groups';
 export type {
   GetRolesResult,
   GetRolesParams,

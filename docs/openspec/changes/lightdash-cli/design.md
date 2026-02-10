@@ -124,41 +124,30 @@ export function getClient(): LightdashClient {
 }
 ```
 
-### Decision 5: Use HTTP Client Directly for Groups/Users
+### Decision 5: Use typed clients for groups and users
 
-**Choice:** Use HTTP client directly (`client.getHttpClientV1()`) for groups and users endpoints since dedicated clients don't exist yet.
+**Choice:** Use the typed clients `client.v1.groups` and `client.v1.users` for all groups and users operations. Do not use raw HTTP (`client.getHttpClientV1()`) for these domains.
 
 **Rationale:**
 
-- GroupsClient and UsersClient don't exist in client package yet
-- HTTP client provides direct access to endpoints
-- Can refactor later when dedicated clients are added
-- Keeps CLI implementation unblocked
-
-**Alternatives Considered:**
-
-- Create GroupsClient/UsersClient first: Would delay CLI implementation
-- Wait for clients: Blocks CLI feature
+- GroupsClient and UsersClient exist in the client package; the CLI uses them for type safety and a single source of truth.
+- Aligns with ADR-0010 (CLI parity with client package, phased by domain) and OpenSpec change `cli-parity-with-client`.
+- List commands support optional query params (e.g. `--page-size`, `--search`); get subcommands (`groups get <uuid>`, `users get <uuid>`) are available.
 
 **Implementation:**
 
 ```typescript
 // src/commands/groups.ts
-const http = client.getHttpClientV1();
-const groups = await http.get('/org/groups');
+const result = await client.v1.groups.listGroups(params);
+// src/commands/users.ts
+const result = await client.v1.users.listMembers(params);
 ```
 
 ## Risks / Trade-offs
 
 ### Risk: Groups/Users Implementation
 
-**Issue:** Using HTTP client directly for groups/users is less type-safe than dedicated clients.
-
-**Mitigation:**
-
-- Document this as temporary
-- Refactor when GroupsClient/UsersClient are added
-- Type safety still provided by OpenAPI types
+**Issue:** (Resolved.) The CLI previously used raw HTTP for groups/users; it now uses typed clients only. See ADR-0010 and OpenSpec change `cli-parity-with-client`.
 
 ### Risk: Error Handling
 

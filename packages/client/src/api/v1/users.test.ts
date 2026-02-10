@@ -78,4 +78,48 @@ describe('UsersClient', () => {
     await client.deleteMember('u1');
     expect(mockHttp.delete).toHaveBeenCalledWith('/org/user/u1');
   });
+
+  it('listAllMembers should fetch all pages and return concatenated array', async () => {
+    const client = new UsersClient(mockHttp);
+    const page1 = {
+      data: [
+        { userUuid: 'u1', email: 'a@example.com', firstName: 'A', lastName: 'One', role: 'editor' },
+      ],
+      pagination: { page: 1, pageSize: 1, totalResults: 2, totalPageCount: 2 },
+    };
+    const page2 = {
+      data: [
+        { userUuid: 'u2', email: 'b@example.com', firstName: 'B', lastName: 'Two', role: 'viewer' },
+      ],
+      pagination: { page: 2, pageSize: 1, totalResults: 2, totalPageCount: 2 },
+    };
+    vi.mocked(mockHttp.get).mockResolvedValueOnce(page1).mockResolvedValueOnce(page2);
+
+    const result = await client.listAllMembers(undefined, { pageSize: 1 });
+
+    expect(result).toHaveLength(2);
+    expect(result[0]).toMatchObject({ userUuid: 'u1', email: 'a@example.com' });
+    expect(result[1]).toMatchObject({ userUuid: 'u2', email: 'b@example.com' });
+    expect(mockHttp.get).toHaveBeenCalledTimes(2);
+    expect(mockHttp.get).toHaveBeenNthCalledWith(1, '/org/users', {
+      params: { page: 1, pageSize: 1 },
+    });
+    expect(mockHttp.get).toHaveBeenNthCalledWith(2, '/org/users', {
+      params: { page: 2, pageSize: 1 },
+    });
+  });
+
+  it('listAllMembers should pass through list params (e.g. searchQuery)', async () => {
+    const client = new UsersClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValueOnce({
+      data: [],
+      pagination: { page: 1, pageSize: 100, totalResults: 0, totalPageCount: 1 },
+    });
+
+    await client.listAllMembers({ searchQuery: 'foo' });
+
+    expect(mockHttp.get).toHaveBeenCalledWith('/org/users', {
+      params: { searchQuery: 'foo', page: 1, pageSize: 100 },
+    });
+  });
 });

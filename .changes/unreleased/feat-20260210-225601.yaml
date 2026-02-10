@@ -1,0 +1,3 @@
+kind: feat
+body: 'cli: use typed clients for groups and users; add groups get and users get subcommands and list options (--page, --page-size, --search)'
+time: 2026-02-10T22:56:01.726716+09:00

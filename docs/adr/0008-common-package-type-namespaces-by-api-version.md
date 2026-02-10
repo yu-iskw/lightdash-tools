@@ -56,3 +56,4 @@ We will expose **versioned namespaces** `LightdashApi.V1` and `LightdashApi.V2` 
 - ADR-0003 (API Version Namespaces): runtime client.v1 / client.v2
 - ADR-0004 (Shared API Models in Common Package): domain namespaces and lightdash-api.ts
 - OpenSpec: `docs/openspec/changes/common-types-version-namespaces/`
+- OpenSpec (file layout barrels): `docs/openspec/changes/common-types-version-barrels/`

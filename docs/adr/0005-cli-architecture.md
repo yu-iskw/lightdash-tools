@@ -6,6 +6,8 @@ Date: 2026-02-10
 
 Accepted
 
+Implements [10. CLI parity with client package (phased by domain)](0010-cli-parity-with-client-package-phased-by-domain.md)
+
 ## Context
 
 We need a command-line interface (CLI) for Lightdash AI that allows users to interact with the Lightdash API without writing code. The CLI should support nested subcommands (e.g., `organization get`, `projects get`, `projects list`, `groups list`, `users list`) and use the existing HTTP client package (`@lightdash-ai/client`).

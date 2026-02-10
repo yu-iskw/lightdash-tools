@@ -4,6 +4,7 @@
 
 import type { LightdashApi } from '@lightdash-ai/common';
 import { BaseApiClient } from '../base-client';
+import { fetchAllPages } from '../../pagination/fetch-all-pages';
 
 /** Query params for listing organization groups. */
 export interface ListGroupsParams {
@@ -13,17 +14,38 @@ export interface ListGroupsParams {
   searchQuery?: string;
 }
 
+/** Params for listAllGroups (page and pageSize are controlled by the helper). */
+export type ListAllGroupsParams = Omit<ListGroupsParams, 'page' | 'pageSize'>;
+
 /** Query params for getGroup. */
 export interface GetGroupParams {
   includeMembers?: number;
   offset?: number;
 }
 
+export type GroupOrGroupWithMembers =
+  | LightdashApi.Groups.Group
+  | LightdashApi.Groups.GroupWithMembers;
+
 export class GroupsClient extends BaseApiClient {
-  /** List all groups in the current organization. */
+  /** List one page of groups (use listAllGroups for all pages). */
   async listGroups(params?: ListGroupsParams): Promise<LightdashApi.Groups.GroupListResult> {
     return this.http.get<LightdashApi.Groups.GroupListResult>('/org/groups', {
       params,
+    });
+  }
+
+  /** List all groups in the current organization (fetches all pages). */
+  async listAllGroups(
+    params?: ListAllGroupsParams,
+    options?: { pageSize?: number },
+  ): Promise<GroupOrGroupWithMembers[]> {
+    return fetchAllPages<GroupOrGroupWithMembers>({
+      fetchPage: (page, pageSize) =>
+        this.http.get<LightdashApi.Groups.GroupListResult>('/org/groups', {
+          params: { ...params, page, pageSize },
+        }),
+      pageSize: options?.pageSize,
     });
   }
 
