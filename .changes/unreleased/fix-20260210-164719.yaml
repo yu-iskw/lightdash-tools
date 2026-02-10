@@ -1,0 +1,3 @@
+kind: fix
+body: Resolve workspace packages to source in Vitest so CLI tests pass in CI without prior build
+time: 2026-02-10T16:47:19.912583+09:00

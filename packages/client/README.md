@@ -98,6 +98,12 @@ const client = new LightdashClient({
 
 For custom endpoints use `client.getHttpClient()` and call `get`, `post`, `put`, `patch`, `delete` with the path (relative to `/api/v1`).
 
+## Package dependency
+
+- Commander.js: <https://www.npmjs.com/package/commander> <!-- markdown-link-check-disable-line -->
+
+This package depends on `@lightdash-ai/common` only (one-way: client → common). Types and API models are consumed from common; see [ADR 0004](../../docs/adr/0004-shared-api-models-in-common-package.md) for the architecture.
+
 ## Type Imports
 
 Domain models (Project, Organization, etc.) are available from `@lightdash-ai/common`:
@@ -114,17 +120,17 @@ import type { paths, components, operations } from '@lightdash-ai/client';
 
 ## Regenerating types
 
-Types are generated from the Lightdash OpenAPI spec. To regenerate:
+OpenAPI types are generated in the `@lightdash-ai/common` package. To regenerate:
 
 ```bash
-cd packages/client
-pnpm run generate:types
+pnpm --filter @lightdash-ai/common generate:types
 ```
 
-Note: After regenerating types, rebuild the common package to ensure models remain aligned:
+After regenerating types, rebuild both common and client packages:
 
 ```bash
 pnpm build --filter @lightdash-ai/common
+pnpm build --filter @lightdash-ai/client
 ```
 
 ## License

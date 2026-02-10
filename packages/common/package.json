@@ -8,9 +8,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "generate:types": "openapi-typescript https://raw.githubusercontent.com/lightdash/lightdash/refs/heads/main/packages/backend/src/generated/swagger.json -o src/types/generated/openapi-types.ts"
   },
-  "dependencies": {
-    "@lightdash-ai/client": "workspace:*"
+  "dependencies": {},
+  "devDependencies": {
+    "openapi-typescript": "^7.0.0"
   }
 }

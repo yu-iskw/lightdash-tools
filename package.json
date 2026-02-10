@@ -24,6 +24,7 @@
     "lint:trunk-all": "trunk check --all",
     "openspec": "cd docs && npx @fission-ai/openspec@latest",
     "test": "vitest run",
+    "validate:deps": "node scripts/check-common-no-client.mjs",
     "validate:names": "node scripts/validate-package-names.mjs"
   },
   "devDependencies": {
@@ -33,7 +34,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0",
+    "typescript-eslint": "^8.55.0",
     "vitest": "^4.0.18"
   },
   "packageManager": "pnpm@10.28.1",

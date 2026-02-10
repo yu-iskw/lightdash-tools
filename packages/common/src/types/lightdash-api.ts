@@ -18,7 +18,7 @@ import type { Spaces } from './spaces';
 export type { Projects, Organizations, Queries, Charts, Dashboards, Spaces };
 
 // Import generated types for LightdashApi namespace assembly
-import type { components } from '@lightdash-ai/client/types/generated/openapi-types';
+import type { components } from './generated/openapi-types';
 
 /**
  * Main namespace for all Lightdash API models.

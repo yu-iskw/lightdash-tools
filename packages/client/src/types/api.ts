@@ -5,9 +5,9 @@
  * Use this module for advanced types (paths, components, operations) or response helpers.
  */
 
-import type { components } from './generated/openapi-types';
+import type { components, paths, operations } from '@lightdash-ai/common';
 
-export type { paths, components, operations } from './generated/openapi-types';
+export type { paths, components, operations } from '@lightdash-ai/common';
 
 /** API error schema from OpenAPI. */
 export type ApiError = components['schemas']['ApiErrorPayload'];

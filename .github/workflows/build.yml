@@ -51,6 +51,9 @@ jobs:
       - name: Validate package names
         run: pnpm validate:names
 
+      - name: Validate dependency direction (common must not depend on client)
+        run: pnpm validate:deps
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
