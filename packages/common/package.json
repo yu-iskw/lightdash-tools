@@ -9,5 +9,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
+  },
+  "dependencies": {
+    "@lightdash-ai/client": "workspace:*"
   }
 }

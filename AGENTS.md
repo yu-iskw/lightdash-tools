@@ -58,7 +58,7 @@ pnpm clean      # Clean build artifacts
 
 This repository uses the following GitHub Project for tracking work:
 
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1>
+- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
 - **Owner**: `yu-iskw`
 - **Project Number**: `3`
 

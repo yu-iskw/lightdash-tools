@@ -1,0 +1,3 @@
+kind: refactor
+body: Split Lightdash API models into domain-specific files for better maintainability
+time: 2026-02-10T16:06:35.088457+09:00

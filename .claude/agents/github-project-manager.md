@@ -37,7 +37,8 @@ Before proceeding with any synchronization or update tasks, you MUST ensure you 
 - **Default Project**: If no project is specified, use the default project:
   - Owner: `yu-iskw`
   - Project Number: `3`
-  - URL: https://github.com/users/yu-iskw/projects/3/views/1
+  <!-- markdown-link-check-disable-next-line -->
+  - URL: <https://github.com/users/yu-iskw/projects/3/views/1>
 - If the user explicitly provided a project name or ID, verify it exists and use that instead.
 - If multiple projects exist and the target is ambiguous, use `gh-listing-projects` to see available boards and ask the user for confirmation.
 - DO NOT operate on a project unless you are 100% certain it is the correct one.
