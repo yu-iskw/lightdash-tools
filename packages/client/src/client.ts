@@ -17,6 +17,7 @@ import { QueryClientV2 } from './api/v2/query';
 import { UsersClient } from './api/users';
 import { GroupsClient } from './api/groups';
 import { AiAgentsClient } from './api/ai-agents';
+import { ProjectAccessClient } from './api/project-access';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -31,6 +32,7 @@ export class V1ApiClients {
   readonly users: UsersClient;
   readonly groups: GroupsClient;
   readonly aiAgents: AiAgentsClient;
+  readonly projectAccess: ProjectAccessClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -42,6 +44,7 @@ export class V1ApiClients {
     this.users = new UsersClient(http);
     this.groups = new GroupsClient(http);
     this.aiAgents = new AiAgentsClient(http);
+    this.projectAccess = new ProjectAccessClient(http);
   }
 }
 

@@ -13,9 +13,11 @@ import type { Queries } from './queries';
 import type { Charts } from './charts';
 import type { Dashboards } from './dashboards';
 import type { Spaces } from './spaces';
+import type { SpaceAccess } from './space-access';
 import type { Users } from './users';
 import type { Groups } from './groups';
 import type { AiAgents } from './ai-agents';
+import type { ProjectAccess } from './project-access';
 
 // Re-export domain namespaces
 export type {
@@ -25,9 +27,11 @@ export type {
   Charts,
   Dashboards,
   Spaces,
+  SpaceAccess,
   Users,
   Groups,
   AiAgents,
+  ProjectAccess,
 };
 
 // Import generated types for LightdashApi namespace assembly
@@ -88,6 +92,26 @@ export namespace LightdashApi {
 
   export namespace Spaces {
     export type SpaceSummary = components['schemas']['SpaceSummary'];
+    export type Space = components['schemas']['Space'];
+    export type CreateSpace = components['schemas']['CreateSpace'];
+    export type UpdateSpace = components['schemas']['UpdateSpace'];
+  }
+
+  export namespace SpaceAccess {
+    export type AddSpaceUserAccess = components['schemas']['AddSpaceUserAccess'];
+    export type AddSpaceGroupAccess = components['schemas']['AddSpaceGroupAccess'];
+    export type SpaceMemberRole = components['schemas']['SpaceMemberRole'];
+  }
+
+  export namespace ProjectAccess {
+    export type ProjectMemberProfile = components['schemas']['ProjectMemberProfile'];
+    export type ProjectMemberRole = components['schemas']['ProjectMemberRole'];
+    export type CreateProjectMember = components['schemas']['CreateProjectMember'];
+    export type UpdateProjectMember = components['schemas']['UpdateProjectMember'];
+    export type ProjectGroupAccess = components['schemas']['ProjectGroupAccess'];
+    export type CreateProjectGroupAccessBody =
+      components['schemas']['Pick_CreateProjectGroupAccess.role_'];
+    export type UpdateProjectGroupAccess = components['schemas']['UpdateDBProjectGroupAccess'];
   }
 
   export namespace Users {
@@ -138,6 +162,19 @@ export type Organization = Organizations.Organization;
 export type SpaceQuery = Charts.SpaceQuery;
 export type DashboardBasicDetailsWithTileTypes = Dashboards.DashboardBasicDetailsWithTileTypes;
 export type SpaceSummary = Spaces.SpaceSummary;
+export type Space = Spaces.Space;
+export type CreateSpace = Spaces.CreateSpace;
+export type UpdateSpace = Spaces.UpdateSpace;
+export type AddSpaceUserAccess = SpaceAccess.AddSpaceUserAccess;
+export type AddSpaceGroupAccess = SpaceAccess.AddSpaceGroupAccess;
+export type SpaceMemberRole = SpaceAccess.SpaceMemberRole;
+export type ProjectMemberProfile = ProjectAccess.ProjectMemberProfile;
+export type ProjectMemberRole = ProjectAccess.ProjectMemberRole;
+export type CreateProjectMember = ProjectAccess.CreateProjectMember;
+export type UpdateProjectMember = ProjectAccess.UpdateProjectMember;
+export type ProjectGroupAccess = ProjectAccess.ProjectGroupAccess;
+export type CreateProjectGroupAccessBody = ProjectAccess.CreateProjectGroupAccessBody;
+export type UpdateProjectGroupAccess = ProjectAccess.UpdateProjectGroupAccess;
 
 // Query types (flat exports)
 export type MetricQueryRequest = Queries.Requests.MetricQuery;

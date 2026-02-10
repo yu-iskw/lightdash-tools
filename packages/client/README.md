@@ -93,7 +93,8 @@ const client = new LightdashClient({
 - `client.v1.organizations` – get current organization
 - `client.v1.charts` – list charts
 - `client.v1.dashboards` – list dashboards
-- `client.v1.spaces` – list spaces
+- `client.v1.spaces` – list/get/create/update/delete spaces; grant/revoke user and group access to spaces
+- `client.v1.projectAccess` – list/grant/get/update/revoke project access for users; list/add/remove/update project access for groups (see [Assign or update project access for a list of users](https://docs.lightdash.com/api-reference/v1/recipes))
 - `client.v1.query` – run metric queries
 - `client.v1.users` – list/get/update organization members
 - `client.v1.groups` – list/create/update groups

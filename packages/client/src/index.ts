@@ -2,6 +2,7 @@ export { LightdashClient, V1ApiClients, V2ApiClients } from './client';
 export { UsersClient } from './api/users';
 export { GroupsClient } from './api/groups';
 export { AiAgentsClient } from './api/ai-agents';
+export { ProjectAccessClient } from './api/project-access';
 export type { ListMembersParams } from './api/users';
 export type { ListGroupsParams, GetGroupParams } from './api/groups';
 export type { PartialLightdashClientConfig } from './config';

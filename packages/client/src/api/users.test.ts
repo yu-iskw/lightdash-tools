@@ -41,6 +41,37 @@ describe('UsersClient', () => {
     expect(result).toEqual(member);
   });
 
+  it('getMemberByEmail should call GET /org/users/email/{encodedEmail}', async () => {
+    const client = new UsersClient(mockHttp);
+    const member = {
+      userUuid: 'u1',
+      email: 'user+test@example.com',
+      firstName: 'U',
+      lastName: 'Ser',
+      role: 'editor',
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(member);
+    const result = await client.getMemberByEmail('user+test@example.com');
+    expect(mockHttp.get).toHaveBeenCalledWith('/org/users/email/user%2Btest%40example.com');
+    expect(result).toEqual(member);
+  });
+
+  it('updateMember should call PATCH /org/users/{userUuid} with body', async () => {
+    const client = new UsersClient(mockHttp);
+    const body = { role: 'admin' as const };
+    const updated = {
+      userUuid: 'u1',
+      email: 'u@example.com',
+      firstName: 'U',
+      lastName: 'Ser',
+      role: 'admin',
+    };
+    vi.mocked(mockHttp.patch).mockResolvedValue(updated);
+    const result = await client.updateMember('u1', body);
+    expect(mockHttp.patch).toHaveBeenCalledWith('/org/users/u1', body);
+    expect(result).toEqual(updated);
+  });
+
   it('deleteMember should call DELETE /org/user/{userUuid}', async () => {
     const client = new UsersClient(mockHttp);
     vi.mocked(mockHttp.delete).mockResolvedValue(undefined);
