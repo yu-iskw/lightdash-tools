@@ -11,6 +11,7 @@ import { registerDashboardsCommand } from './commands/dashboards';
 import { registerAiAgentsCommand } from './commands/ai-agents';
 import { registerGroupsCommand } from './commands/groups';
 import { registerUsersCommand } from './commands/users';
+import { registerExploresCommand } from './commands/explores';
 
 describe('CLI Command Registration', () => {
   it('should register organization command', () => {
@@ -127,6 +128,32 @@ describe('CLI Command Registration', () => {
     expect(projectsCmd?.commands.some((c) => c.name() === 'dashboards')).toBe(true);
   });
 
+  it('should register projects charts code list and upsert subcommands', () => {
+    const program = new Command();
+    registerProjectsCommand(program);
+    registerChartsCommand(program);
+
+    const projectsCmd = program.commands.find((cmd) => cmd.name() === 'projects');
+    const chartsCmd = projectsCmd?.commands.find((cmd) => cmd.name() === 'charts');
+    expect(chartsCmd).toBeDefined();
+    const codeCmd = chartsCmd?.commands.find((cmd) => cmd.name() === 'code');
+    expect(codeCmd).toBeDefined();
+    expect(codeCmd?.commands.some((c) => c.name() === 'list')).toBe(true);
+    expect(codeCmd?.commands.some((c) => c.name() === 'upsert')).toBe(true);
+  });
+
+  it('should register projects explores subcommands', () => {
+    const program = new Command();
+    registerProjectsCommand(program);
+    registerExploresCommand(program);
+
+    const projectsCmd = program.commands.find((cmd) => cmd.name() === 'projects');
+    const exploresCmd = projectsCmd?.commands.find((cmd) => cmd.name() === 'explores');
+    expect(exploresCmd).toBeDefined();
+    expect(exploresCmd?.commands.some((c) => c.name() === 'list')).toBe(true);
+    expect(exploresCmd?.commands.some((c) => c.name() === 'get')).toBe(true);
+  });
+
   it('should register ai-agents command with list, threads, settings', () => {
     const program = new Command();
     registerAiAgentsCommand(program);
@@ -151,6 +178,7 @@ describe('CLI Command Registration', () => {
     registerAiAgentsCommand(program);
     registerGroupsCommand(program);
     registerUsersCommand(program);
+    registerExploresCommand(program);
 
     expect(program.commands).toHaveLength(5);
     expect(program.commands.map((cmd) => cmd.name()).sort()).toEqual([

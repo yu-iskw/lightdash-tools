@@ -1,3 +1,0 @@
-kind: feat
-body: Add UsersClient and GroupsClient to the Lightdash API client. Support org REST endpoints for listing/getting/updating/deleting organization members and for listing/creating/updating/deleting groups and managing group membership. Add Users and Groups domain types in @lightdash-tools/common.
-time: 2026-02-10T21:30:31.62392+09:00

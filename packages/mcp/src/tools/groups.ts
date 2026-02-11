@@ -5,7 +5,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
-import { wrapTool, registerToolSafe } from './shared.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 type ListGroupsParams = {
   page?: number;
@@ -25,6 +25,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
         pageSize: z.number().optional().describe('Page size'),
         searchQuery: z.string().optional().describe('Search query'),
       },
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async (params: ListGroupsParams) => {
       const result = await c.v1.groups.listGroups(params ?? {});
@@ -38,6 +39,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'Get group',
       description: 'Get a group by UUID',
       inputSchema: { groupUuid: z.string().describe('Group UUID') },
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ groupUuid }: { groupUuid: string }) => {
       const group = await c.v1.groups.getGroup(groupUuid);

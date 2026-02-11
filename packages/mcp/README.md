@@ -46,4 +46,8 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 
 ## Tools
 
-Same set in both modes: `list_projects`, `get_project`, `list_charts`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `list_groups`, `get_group`.
+Same set in both modes: `list_projects`, `get_project`, `list_charts`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`.
+
+### Destructive tools
+
+Tools with `destructiveHint: true` (e.g. `delete_member`) perform irreversible or high-impact actions. MCP clients should show a warning and/or require user confirmation before executing them. AI agents should ask the user for explicit confirmation before calling such tools.

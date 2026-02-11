@@ -1,3 +1,0 @@
-kind: refactor
-body: Move v1 API client modules to api/v1/ for clear version layout
-time: 2026-02-10T22:13:11.301352+09:00

@@ -10,6 +10,8 @@ import { registerDashboardTools } from './dashboards.js';
 import { registerSpaceTools } from './spaces.js';
 import { registerUserTools } from './users.js';
 import { registerGroupTools } from './groups.js';
+import { registerQueryTools } from './query.js';
+import { registerExploresTools } from './explores.js';
 
 export function registerTools(server: McpServer, client: LightdashClient): void {
   registerProjectTools(server, client);
@@ -18,4 +20,6 @@ export function registerTools(server: McpServer, client: LightdashClient): void 
   registerSpaceTools(server, client);
   registerUserTools(server, client);
   registerGroupTools(server, client);
+  registerQueryTools(server, client);
+  registerExploresTools(server, client);
 }

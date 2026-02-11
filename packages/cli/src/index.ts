@@ -15,6 +15,8 @@ import { registerDashboardsCommand } from './commands/dashboards';
 import { registerAiAgentsCommand } from './commands/ai-agents';
 import { registerGroupsCommand } from './commands/groups';
 import { registerUsersCommand } from './commands/users';
+import { registerQueryCommand } from './commands/query';
+import { registerExploresCommand } from './commands/explores';
 
 const program = new Command();
 
@@ -32,6 +34,8 @@ registerDashboardsCommand(program);
 registerAiAgentsCommand(program);
 registerGroupsCommand(program);
 registerUsersCommand(program);
+registerQueryCommand(program);
+registerExploresCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

@@ -12,6 +12,11 @@ export namespace Queries {
   export namespace Requests {
     /** V1 metric query request. */
     export type MetricQuery = components['schemas']['MetricQueryRequest'];
+    /** V1 compile query request (MetricQuery with optional pivotConfiguration and parameters). */
+    export type CompileQuery = components['schemas']['MetricQuery'] & {
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      parameters?: components['schemas']['ParametersValuesMap'];
+    };
     /** V2 async metric query request parameters. */
     export type ExecuteAsyncMetricQuery =
       components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
@@ -34,6 +39,8 @@ export namespace Queries {
   export namespace Responses {
     /** V1 query response results. */
     export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+    /** V1 compile query response results. */
+    export type CompiledQueryResults = components['schemas']['ApiCompiledQueryResults'];
     /** V2 async metric query results. */
     export type ExecuteAsyncMetricQueryResults =
       components['schemas']['ApiExecuteAsyncMetricQueryResults'];

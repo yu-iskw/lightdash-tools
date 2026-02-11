@@ -5,7 +5,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
-import { wrapTool, registerToolSafe } from './shared.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 export function registerProjectTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -15,6 +15,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       title: 'List projects',
       description: 'List all projects in the current organization',
       inputSchema: {},
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, () => async () => {
       const projects = await client.v1.projects.listProjects();
@@ -28,6 +29,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       title: 'Get project',
       description: 'Get a project by UUID',
       inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const project = await c.v1.projects.getProject(projectUuid);
