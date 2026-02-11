@@ -18,7 +18,7 @@ export function registerQueryTools(server: McpServer, client: LightdashClient): 
         projectUuid: z.string().describe('Project UUID'),
         exploreId: z.string().describe('Explore ID'),
         metricQuery: z
-          .record(z.unknown())
+          .record(z.string(), z.unknown())
           .describe('Metric query object (dimensions, metrics, filters, etc.)'),
       },
       annotations: READ_ONLY_DEFAULT,
