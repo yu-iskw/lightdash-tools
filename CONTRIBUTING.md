@@ -15,6 +15,21 @@ pnpm install
 trunk install
 ```
 
+## Building from source
+
+After cloning and running the setup above:
+
+```bash
+pnpm build
+```
+
+## Project structure
+
+- `packages/cli/` — CLI for Lightdash APIs
+- `packages/client/` — HTTP client for Lightdash APIs
+- `packages/common/` — Shared types and utilities
+- `packages/mcp/` — MCP server exposing Lightdash tools
+
 ## Before committing
 
 Run lint and tests:
