@@ -1,0 +1,3 @@
+kind: feat
+body: 'MCP tools: explicit annotation presets at call site for visibility (READ_ONLY_DEFAULT, WRITE_IDEMPOTENT)'
+time: 2026-02-11T09:38:40.610703+09:00

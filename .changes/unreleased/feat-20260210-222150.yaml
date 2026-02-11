@@ -1,3 +1,0 @@
-kind: feat
-body: 'Common package: add LightdashApi.V1 and LightdashApi.V2 type namespaces to distinguish models by API version'
-time: 2026-02-10T22:21:50.21307+09:00

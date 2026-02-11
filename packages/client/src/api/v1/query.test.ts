@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient } from './query';
 import type { HttpClient } from '../../http/http-client';
-import type { MetricQueryRequest } from '@lightdash-tools/common';
+import type { MetricQueryRequest, CompileQueryRequest } from '@lightdash-tools/common';
 
 describe('QueryClient', () => {
   let mockHttp: HttpClient;
@@ -23,6 +23,24 @@ describe('QueryClient', () => {
     vi.mocked(mockHttp.post).mockResolvedValue(results);
     const result = await client.runQuery('p1', 'explore1', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/explores/explore1/runQuery', body);
+    expect(result).toEqual(results);
+  });
+
+  it('compileQuery should call POST /projects/{projectUuid}/explores/{exploreId}/compileQuery with body', async () => {
+    const client = new QueryClient(mockHttp);
+    const body = {
+      dimensions: [],
+      metrics: [],
+      filters: {},
+      exploreName: 'test',
+      limit: 100,
+      sorts: [],
+      tableCalculations: [],
+    } as unknown as CompileQueryRequest;
+    const results = { query: 'SELECT ...', parameterReferences: [] };
+    vi.mocked(mockHttp.post).mockResolvedValue(results);
+    const result = await client.compileQuery('p1', 'explore1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/explores/explore1/compileQuery', body);
     expect(result).toEqual(results);
   });
 });

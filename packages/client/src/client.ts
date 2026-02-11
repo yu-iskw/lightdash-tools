@@ -20,6 +20,7 @@ import { UsersClient } from './api/v1/users';
 import { GroupsClient } from './api/v1/groups';
 import { AiAgentsClient } from './api/v1/ai-agents';
 import { ProjectAccessClient } from './api/v1/project-access';
+import { ExploresClient } from './api/v1/explores';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -35,6 +36,7 @@ export class V1ApiClients {
   readonly groups: GroupsClient;
   readonly aiAgents: AiAgentsClient;
   readonly projectAccess: ProjectAccessClient;
+  readonly explores: ExploresClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -47,6 +49,7 @@ export class V1ApiClients {
     this.groups = new GroupsClient(http);
     this.aiAgents = new AiAgentsClient(http);
     this.projectAccess = new ProjectAccessClient(http);
+    this.explores = new ExploresClient(http);
   }
 }
 
@@ -121,6 +124,10 @@ export class LightdashClient {
    * @deprecated Use `client.v1.aiAgents` instead. This alias will be removed in a future major version.
    */
   readonly aiAgents: AiAgentsClient;
+  /**
+   * @deprecated Use `client.v1.explores` instead. This alias will be removed in a future major version.
+   */
+  readonly explores: ExploresClient;
 
   constructor(config?: PartialLightdashClientConfig) {
     const merged = mergeConfig(config);
@@ -148,6 +155,7 @@ export class LightdashClient {
     this.users = this.v1.users;
     this.groups = this.v1.groups;
     this.aiAgents = this.v1.aiAgents;
+    this.explores = this.v1.explores;
   }
 
   /**

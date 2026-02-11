@@ -2,7 +2,7 @@
 changesDir: .changes
 unreleasedDir: unreleased
 configDir: .changes/config
-headerPath: .changes/header.md
+headerPath: header.md
 changelogPath: CHANGELOG.md
 versionPrefix: v
 

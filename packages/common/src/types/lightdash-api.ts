@@ -18,6 +18,7 @@ import type { Users } from './users';
 import type { Groups } from './groups';
 import type { AiAgents } from './ai-agents';
 import type { ProjectAccess } from './project-access';
+import type { Explores } from './explores';
 
 // Re-export domain namespaces
 export type {
@@ -32,6 +33,7 @@ export type {
   Groups,
   AiAgents,
   ProjectAccess,
+  Explores,
 };
 
 // Import generated types for LightdashApi namespace assembly
@@ -60,6 +62,10 @@ export namespace LightdashApi {
   export namespace Queries {
     export namespace Requests {
       export type MetricQuery = components['schemas']['MetricQueryRequest'];
+      export type CompileQuery = components['schemas']['MetricQuery'] & {
+        pivotConfiguration?: components['schemas']['PivotConfiguration'];
+        parameters?: components['schemas']['ParametersValuesMap'];
+      };
       export type ExecuteAsyncMetricQuery =
         components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
       export type ExecuteAsyncSqlQuery = components['schemas']['ExecuteAsyncSqlQueryRequestParams'];
@@ -72,6 +78,7 @@ export namespace LightdashApi {
     }
     export namespace Responses {
       export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+      export type CompiledQueryResults = components['schemas']['ApiCompiledQueryResults'];
       export type ExecuteAsyncMetricQueryResults =
         components['schemas']['ApiExecuteAsyncMetricQueryResults'];
       export type ExecuteAsyncDashboardChartResults =
@@ -83,6 +90,17 @@ export namespace LightdashApi {
 
   export namespace Charts {
     export type SpaceQuery = components['schemas']['SpaceQuery'];
+    export type ChartAsCodeListResults =
+      components['schemas']['ApiChartAsCodeListResponse']['results'];
+    export type ChartAsCodeUpsertResults =
+      components['schemas']['ApiChartAsCodeUpsertResponse']['results'];
+    export type UpsertChartAsCodeBody =
+      components['schemas']['Omit_ChartAsCode.chartConfig-or-description_'] & {
+        description?: string | null;
+        chartConfig: components['schemas']['AnyType'];
+        publicSpaceCreate?: boolean;
+        skipSpaceCreate?: boolean;
+      };
   }
 
   export namespace Dashboards {
@@ -153,6 +171,11 @@ export namespace LightdashApi {
       components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
   }
 
+  export namespace Explores {
+    export type ApiExploresResults = components['schemas']['ApiExploresResults'];
+    export type ApiExploreResults = components['schemas']['ApiExploreResults'];
+  }
+
   /** Types for Lightdash API v1 endpoints (ADR-0008). */
   export namespace V1 {
     export namespace Projects {
@@ -165,6 +188,10 @@ export namespace LightdashApi {
     export namespace Queries {
       export namespace Requests {
         export type MetricQuery = components['schemas']['MetricQueryRequest'];
+        export type CompileQuery = components['schemas']['MetricQuery'] & {
+          pivotConfiguration?: components['schemas']['PivotConfiguration'];
+          parameters?: components['schemas']['ParametersValuesMap'];
+        };
         export type ExecuteAsyncMetricQuery =
           components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
         export type ExecuteAsyncSqlQuery =
@@ -178,6 +205,7 @@ export namespace LightdashApi {
       }
       export namespace Responses {
         export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+        export type CompiledQueryResults = components['schemas']['ApiCompiledQueryResults'];
         export type ExecuteAsyncMetricQueryResults =
           components['schemas']['ApiExecuteAsyncMetricQueryResults'];
         export type ExecuteAsyncDashboardChartResults =
@@ -264,6 +292,10 @@ export namespace LightdashApi {
     export namespace Queries {
       export namespace Requests {
         export type MetricQuery = components['schemas']['MetricQueryRequest'];
+        export type CompileQuery = components['schemas']['MetricQuery'] & {
+          pivotConfiguration?: components['schemas']['PivotConfiguration'];
+          parameters?: components['schemas']['ParametersValuesMap'];
+        };
         export type ExecuteAsyncMetricQuery =
           components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
         export type ExecuteAsyncSqlQuery =
@@ -277,6 +309,7 @@ export namespace LightdashApi {
       }
       export namespace Responses {
         export type RunQueryResults = components['schemas']['ApiRunQueryResponse']['results'];
+        export type CompiledQueryResults = components['schemas']['ApiCompiledQueryResults'];
         export type ExecuteAsyncMetricQueryResults =
           components['schemas']['ApiExecuteAsyncMetricQueryResults'];
         export type ExecuteAsyncDashboardChartResults =
@@ -358,6 +391,9 @@ export type Project = Projects.Project;
 export type OrganizationProject = Projects.OrganizationProject;
 export type Organization = Organizations.Organization;
 export type SpaceQuery = Charts.SpaceQuery;
+export type ChartAsCodeListResults = Charts.ChartAsCodeListResults;
+export type ChartAsCodeUpsertResults = Charts.ChartAsCodeUpsertResults;
+export type UpsertChartAsCodeBody = Charts.UpsertChartAsCodeBody;
 export type DashboardBasicDetailsWithTileTypes = Dashboards.DashboardBasicDetailsWithTileTypes;
 export type SpaceSummary = Spaces.SpaceSummary;
 export type Space = Spaces.Space;
@@ -376,6 +412,7 @@ export type UpdateProjectGroupAccess = ProjectAccess.UpdateProjectGroupAccess;
 
 // Query types (flat exports)
 export type MetricQueryRequest = Queries.Requests.MetricQuery;
+export type CompileQueryRequest = Queries.Requests.CompileQuery;
 export type ExecuteAsyncMetricQueryRequestParams = Queries.Requests.ExecuteAsyncMetricQuery;
 export type ExecuteAsyncSqlQueryRequestParams = Queries.Requests.ExecuteAsyncSqlQuery;
 export type ExecuteAsyncSavedChartRequestParams = Queries.Requests.ExecuteAsyncSavedChart;
@@ -383,6 +420,7 @@ export type ExecuteAsyncDashboardChartRequestParams = Queries.Requests.ExecuteAs
 export type ExecuteAsyncUnderlyingDataRequestParams = Queries.Requests.ExecuteAsyncUnderlyingData;
 
 export type RunQueryResults = Queries.Responses.RunQueryResults;
+export type CompiledQueryResults = Queries.Responses.CompiledQueryResults;
 export type ExecuteAsyncMetricQueryResults = Queries.Responses.ExecuteAsyncMetricQueryResults;
 export type ExecuteAsyncDashboardChartResults = Queries.Responses.ExecuteAsyncDashboardChartResults;
 export type ExecuteAsyncSqlQueryResults = Queries.Responses.ExecuteAsyncSqlQueryResults;
@@ -395,3 +433,7 @@ export type GetAiOrganizationSettingsResult = AiAgents.GetAiOrganizationSettings
 export type UpdateAiOrganizationSettings = AiAgents.UpdateAiOrganizationSettings;
 export type UpdateAiOrganizationSettingsResult = AiAgents.UpdateAiOrganizationSettingsResult;
 export type GetAdminThreadsParams = AiAgents.GetAdminThreadsParams;
+
+// Explores (flat exports)
+export type ApiExploresResults = Explores.ApiExploresResults;
+export type ApiExploreResults = Explores.ApiExploreResults;

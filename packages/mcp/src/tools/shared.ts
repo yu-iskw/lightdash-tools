@@ -25,7 +25,7 @@ export type ToolAnnotations = {
   openWorldHint?: boolean;
 };
 
-/** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. */
+/** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT or WRITE_IDEMPOTENT) for visibility. */
 export type ToolOptions = {
   description: string;
   inputSchema: Record<string, z.ZodTypeAny>;
@@ -33,13 +33,32 @@ export type ToolOptions = {
   annotations?: ToolAnnotations;
 };
 
-/** Default annotations for current tools (read-only, non-destructive, idempotent, closed-world). */
-const DEFAULT_ANNOTATIONS: ToolAnnotations = {
+/** Preset: read-only, non-destructive, idempotent, closed-world. Use for list/get/compile tools. */
+export const READ_ONLY_DEFAULT: ToolAnnotations = {
   readOnlyHint: true,
   openWorldHint: false,
   destructiveHint: false,
   idempotentHint: true,
 };
+
+/** Preset: write, non-destructive, idempotent (e.g. upsert by slug). Use for create/update tools. */
+export const WRITE_IDEMPOTENT: ToolAnnotations = {
+  readOnlyHint: false,
+  openWorldHint: false,
+  destructiveHint: false,
+  idempotentHint: true,
+};
+
+/** Preset: write, destructive, non-idempotent. Use for delete/remove tools; clients should prompt for user confirmation. */
+export const WRITE_DESTRUCTIVE: ToolAnnotations = {
+  readOnlyHint: false,
+  openWorldHint: false,
+  destructiveHint: true,
+  idempotentHint: false,
+};
+
+/** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
+const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
 
 type RegisterToolFn = (name: string, options: ToolOptions, handler: ToolHandler) => void;
 
@@ -48,7 +67,7 @@ function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
   return { ...DEFAULT_ANNOTATIONS, ...overrides };
 }
 
-/** Registers a tool with prefix and optional annotations. shortName is used as TOOL_PREFIX + shortName. */
+/** Registers a tool with prefix and annotations. shortName is TOOL_PREFIX + shortName. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE). */
 export function registerToolSafe(
   server: unknown,
   shortName: string,

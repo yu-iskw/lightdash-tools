@@ -1,3 +1,0 @@
-kind: feat
-body: add Roles & Permissions and Spaces (deep) API support to HTTP client (project access, space CRUD, space sharing)
-time: 2026-02-10T21:47:00.000000+09:00

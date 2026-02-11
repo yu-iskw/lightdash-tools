@@ -5,7 +5,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
-import { wrapTool, registerToolSafe } from './shared.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 export function registerSpaceTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -15,6 +15,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'List spaces',
       description: 'List spaces in a project',
       inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const spaces = await c.v1.spaces.listSpacesInProject(projectUuid);
@@ -31,6 +32,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
         projectUuid: z.string().describe('Project UUID'),
         spaceUuid: z.string().describe('Space UUID'),
       },
+      annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
       client,

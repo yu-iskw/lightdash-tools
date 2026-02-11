@@ -1,3 +1,0 @@
-kind: test
-body: Add unit tests for charts, dashboards, organizations, query, and v2/query API clients; extend users client tests (getMemberByEmail, updateMember).
-time: 2026-02-10T21:59:19.630417+09:00

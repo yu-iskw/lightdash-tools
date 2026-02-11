@@ -1,3 +1,0 @@
-kind: refactor
-body: Enforce one-way dependency client→common via CI check
-time: 2026-02-10T21:14:37.235184+09:00

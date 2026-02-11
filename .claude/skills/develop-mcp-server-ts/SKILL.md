@@ -21,6 +21,7 @@ Provide a repeatable, documented workflow for building MCP servers with the offi
 - [ ] **Step 3: Implementation patterns**
   - [ ] Use [references/typescript-sdk-cheatsheet.md](references/typescript-sdk-cheatsheet.md) for McpServer, transport, registerTool (with Zod inputSchema), and registerResource.
   - [ ] Consider **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) so clients can present tools and users can approve them; see cheatsheet “Tool annotations” and [MCP Tool annotations](https://modelcontextprotocol.io/legacy/concepts/tools#tool-annotations).
+  - [ ] For tools that delete or permanently change data, set **destructiveHint: true**; clients should prompt for confirmation before executing, and agent instructions should require asking the user before invoking destructive tools.
   - [ ] For **Stdio**: Use only `console.error` (or stderr) for logging; never `console.log` (stdout corrupts JSON-RPC).
   - [ ] Optionally copy from [assets/templates/server-stdio.ts](assets/templates/server-stdio.ts) or [assets/templates/server-http.ts](assets/templates/server-http.ts).
 - [ ] **Step 4: Testing**
@@ -51,7 +52,7 @@ Decide which primitives your server needs and whether it will run locally (Stdio
 Use the [TypeScript SDK cheatsheet](references/typescript-sdk-cheatsheet.md) for:
 
 - Creating an `McpServer` and connecting a transport (`StdioServerTransport` or `StreamableHTTPServerTransport`).
-- Registering tools with `server.registerTool(name, { description, inputSchema }, handler)`. Use Zod for `inputSchema` (e.g. `{ id: z.string() }`). Return `{ content: [{ type: "text", text: "..." }] }`. Add **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) when they help clients present or approve tools.
+- Registering tools with `server.registerTool(name, { description, inputSchema }, handler)`. Use Zod for `inputSchema` (e.g. `{ id: z.string() }`). Return `{ content: [{ type: "text", text: "..." }] }`. Add **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) when they help clients present or approve tools. For destructive operations (e.g. delete), set **destructiveHint: true**; clients should prompt for user confirmation and agent instructions should require asking the user before calling such tools.
 - Registering resources if needed (URI templates and read handler).
 - **Logging**: For Stdio transport, never write to stdout; use `console.error` or a logger that writes to stderr.
 

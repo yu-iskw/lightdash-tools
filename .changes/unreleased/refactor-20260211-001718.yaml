@@ -1,3 +1,0 @@
-kind: refactor
-body: Organize MCP tools by domain under packages/mcp/src/tools/
-time: 2026-02-11T00:17:18.773899+09:00
