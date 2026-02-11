@@ -53,7 +53,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
         projectUuid: z.string().describe('Project UUID'),
         slug: z.string().describe('Chart slug'),
         chart: z
-          .record(z.unknown())
+          .record(z.string(), z.unknown())
           .describe('Chart-as-code payload (name, metricQuery, chartConfig, etc.)'),
       },
       annotations: WRITE_IDEMPOTENT,
