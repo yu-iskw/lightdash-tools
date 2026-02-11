@@ -1,6 +1,6 @@
-# {PROJECT_NAME}
+# @lightdash-tools
 
-{PROJECT_DESCRIPTION}
+TypeScript monorepo: Lightdash API client, CLI, and MCP server.
 
 ## Getting Started
 
@@ -37,7 +37,7 @@ pnpm dev
 
 ### Agent Instructions
 
-For shared agent and contributor instructions (setup, commands, workflow, subagents, and key skills), see `AGENTS.md`.
+For shared agent and contributor instructions (setup, commands, workflow, subagents, and key skills), see [AGENTS.md](AGENTS.md). See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute.
 
 ### Build
 
@@ -55,8 +55,11 @@ pnpm format
 ## Project Structure
 
 - `packages/`: Monorepo packages
-  - `common/`: Shared utilities and types
+  - `cli/`: CLI for Lightdash APIs
+  - `client/`: HTTP client for Lightdash APIs
+  - `common/`: Shared types and utilities
+  - `mcp/`: MCP server exposing Lightdash tools
 
 ## License
 
-{LICENSE}
+Apache-2.0
