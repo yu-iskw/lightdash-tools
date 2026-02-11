@@ -16,9 +16,9 @@
   "dependencies": {
     "@lightdash-tools/client": "workspace:*",
     "@lightdash-tools/common": "workspace:*",
-    "commander": "^12.0.0"
+    "commander": "^14.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^25.2.3"
   }
 }

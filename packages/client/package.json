@@ -12,10 +12,10 @@
   },
   "dependencies": {
     "@lightdash-tools/common": "workspace:*",
-    "axios": "^1.7.0",
+    "axios": "^1.13.5",
     "bottleneck": "^2.19.5"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0"
+    "@types/node": "^25.2.3"
   }
 }
