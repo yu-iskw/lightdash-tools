@@ -29,6 +29,6 @@ Phase 2 of the MCP server adds Streamable HTTP as a second transport and optiona
 
 ## References
 
-- ADR-0013: Implement Lightdash MCP server in packages/mcp using HTTP client (phased transport)
+- ADR-0013: Implement Lightdash MCP server in packages/mcp using HTTP client (phased transport) (Phase 2 implementation)
 - GitHub: Issue #26 (parent), Issue #29 (Phase 2), sub-issues #37–#40
 - OpenSpec: `docs/openspec/changes/mcp-server-lightdash-client/`

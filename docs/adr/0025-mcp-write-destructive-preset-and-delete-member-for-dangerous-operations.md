@@ -25,8 +25,7 @@ Dangerous operations (e.g. delete user) need to be clearly marked so MCP clients
 
 ## References
 
-- OpenSpec: `docs/openspec/changes/mcp-tools-destructive-preset-and-delete-member/`
-- GitHub: Issue #55
 - ADR-0018: MCP tool naming prefix and tool annotations
-- ADR-0024: Explicit MCP tool annotation presets at call site for visibility
+- ADR-0024: Explicit MCP tool annotation presets at call site for visibility (destructive preset uses this system)
+- OpenSpec: `docs/openspec/changes/mcp-tools-destructive-preset-and-delete-member/`
 - [MCP Tool annotations](https://modelcontextprotocol.io/legacy/concepts/tools#tool-annotations)

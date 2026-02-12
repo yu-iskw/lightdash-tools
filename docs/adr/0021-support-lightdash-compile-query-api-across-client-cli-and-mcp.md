@@ -69,3 +69,8 @@ flowchart TB
 ### Risks
 
 - **OpenAPI drift**: Request/response types are derived from generated OpenAPI types. If the upstream spec changes, types must be regenerated and adjusted. Mitigated by using type aliases that reference the generated schemas directly.
+
+## References
+
+- ADR-0003: API Version Namespaces (runtime namespaces used by this feature)
+- OpenSpec: `docs/openspec/changes/lightdash-compile-query-api/`

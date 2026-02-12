@@ -24,6 +24,6 @@ ADR-0018 and ADR-0020 introduced MCP tool annotations and full default annotatio
 
 ## References
 
+- ADR-0018: MCP tool naming prefix and tool annotations (refined by this ADR)
+- ADR-0020: MCP tool full annotation defaults (refined by this ADR)
 - OpenSpec: `docs/openspec/changes/mcp-tools-explicit-annotation-presets/`
-- ADR-0018: MCP tool naming prefix and tool annotations
-- ADR-0020: MCP tool full annotation defaults

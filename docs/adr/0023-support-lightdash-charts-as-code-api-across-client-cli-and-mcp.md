@@ -72,5 +72,6 @@ flowchart LR
 
 ## References
 
+- ADR-0003: API Version Namespaces (runtime namespaces used by this feature)
 - GitHub Issue: [#53](https://github.com/yu-iskw/lightdash-tools/issues/53) <!-- markdown-link-check-disable-line -->
 - OpenSpec: `docs/openspec/changes/charts-as-code-api-client-cli-mcp/`

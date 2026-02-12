@@ -4,7 +4,7 @@ Date: 2026-02-11
 
 ## Status
 
-Accepted
+Amended by [24. Explicit MCP tool annotation presets at call site for visibility](0024-explicit-mcp-tool-annotation-presets-at-call-site-for-visibility.md)
 
 ## Context
 
