@@ -80,16 +80,17 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 
 ## Key Skills
 
-| Skill              | Purpose                                                       |
-| :----------------- | :------------------------------------------------------------ |
-| `manage-adr`       | Manage ADRs in `docs/adr` (`adr-tools` required).             |
-| `manage-changelog` | Manage changelog workflows with Changie (`changie` required). |
-| `build-and-fix`    | Build the repo and resolve build/type errors quickly.         |
-| `lint-and-fix`     | Run linting/formatting checks and fix violations.             |
-| `fix-issue`        | Handle a GitHub issue end-to-end.                             |
-| `setup-dev-env`    | Prepare local Node.js, pnpm, and Trunk tooling.               |
-| `test-and-fix`     | Run tests and fix regressions or failing cases.               |
-| `problem-solving`  | Run structured issue analysis and reporting.                  |
+| Skill                     | Purpose                                                       |
+| :------------------------ | :------------------------------------------------------------ |
+| `manage-adr`              | Manage ADRs in `docs/adr` (`adr-tools` required).             |
+| `manage-changelog`        | Manage changelog workflows with Changie (`changie` required). |
+| `build-and-fix`           | Build the repo and resolve build/type errors quickly.         |
+| `lint-and-fix`            | Run linting/formatting checks and fix violations.             |
+| `fix-issue`               | Handle a GitHub issue end-to-end.                             |
+| `setup-dev-env`           | Prepare local Node.js, pnpm, and Trunk tooling.               |
+| `test-and-fix`            | Run tests and fix regressions or failing cases.               |
+| `manage-package-versions` | Consistently manage package versions across the monorepo.     |
+| `problem-solving`         | Run structured issue analysis and reporting.                  |
 
 When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues are on the default GitHub Project. Additional specialized skills are documented in `CLAUDE.md`.
 
