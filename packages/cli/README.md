@@ -125,7 +125,7 @@ If you are developing the CLI itself:
 1. Install dependencies: `pnpm install`
 2. Build: `pnpm build`
 3. Run tests: `pnpm test`
-4. Run locally: `node dist/index.js`
+4. Run locally: `node dist/index.jst`
 
 ## License
 
