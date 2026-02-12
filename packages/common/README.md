@@ -12,6 +12,8 @@ pnpm add @lightdash-tools/common
 
 This package provides shared Lightdash API request/response models extracted from the OpenAPI specification. Models are organized by domain for better discoverability and can be used across packages without requiring a dependency on the client package.
 
+Domain models are type aliases to generated OpenAPI types (using `openapi-typescript`), ensuring they remain aligned with the Lightdash API specification. Types are automatically updated when the OpenAPI spec changes.
+
 Models are split into domain-specific files for better maintainability:
 
 - `types/projects.ts` - Projects domain models
@@ -116,4 +118,4 @@ Models are type aliases to generated OpenAPI types, ensuring they remain aligned
 
 ## License
 
-ISC
+Apache-2.0

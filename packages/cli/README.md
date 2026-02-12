@@ -4,26 +4,27 @@ Command-line interface for interacting with the Lightdash API.
 
 ## Installation
 
-Install dependencies:
+You can run the CLI directly without installation using `npx`:
 
 ```bash
-pnpm install
+npx @lightdash-tools/cli --help
 ```
 
-Build the CLI:
+Or install it globally:
 
 ```bash
-pnpm build
+npm install -g @lightdash-tools/cli
 ```
 
 ## Usage
 
 ### Environment Variables
 
-The CLI requires the following environment variables:
+The CLI requires the following environment variables (consistent with `@lightdash-tools/client`):
 
 - `LIGHTDASH_URL` - Lightdash server base URL (e.g., `https://app.lightdash.cloud`)
-- `LIGHTDASH_API_KEY` - Personal access token (without `ldpat_` prefix)
+- `LIGHTDASH_API_KEY` - Personal access token (PAT)
+- `LIGHTDASH_PROXY_AUTHORIZATION` - Optional proxy authorization header
 
 Example:
 
@@ -34,9 +35,9 @@ export LIGHTDASH_API_KEY=your-token-here
 
 ### Commands
 
-#### Organization
+The CLI provides subcommands grouped by domain. All commands output JSON by default. If you are using `npx`, replace `lightdash-tools` with `npx @lightdash-tools/cli`.
 
-Get current organization:
+#### Organization
 
 ```bash
 lightdash-tools organization get
@@ -44,21 +45,40 @@ lightdash-tools organization get
 
 #### Projects
 
-Get a project by UUID:
-
 ```bash
+lightdash-tools projects list
 lightdash-tools projects get <projectUuid>
 ```
 
-List all projects:
+#### Explores
 
 ```bash
-lightdash-tools projects list
+lightdash-tools explores list <projectUuid>
+lightdash-tools explores get <projectUuid> <exploreId>
+```
+
+#### Charts
+
+```bash
+lightdash-tools charts list <projectUuid>
+lightdash-tools charts get-code <projectUuid> --ids <slugs...>
+lightdash-tools charts upsert-code <projectUuid> <slug> --file <chart.json>
+```
+
+#### Dashboards
+
+```bash
+lightdash-tools dashboards list <projectUuid>
+```
+
+#### Spaces
+
+```bash
+lightdash-tools spaces list <projectUuid>
+lightdash-tools spaces get <projectUuid> <spaceUuid>
 ```
 
 #### Groups
-
-List all groups in the organization:
 
 ```bash
 lightdash-tools groups list
@@ -66,10 +86,14 @@ lightdash-tools groups list
 
 #### Users
 
-List all users in the organization:
-
 ```bash
 lightdash-tools users list
+```
+
+#### Query
+
+```bash
+lightdash-tools query compile <projectUuid> <exploreId> --file <query.json>
 ```
 
 ### Help
@@ -78,8 +102,8 @@ Get help for any command:
 
 ```bash
 lightdash-tools --help
-lightdash-tools organization --help
 lightdash-tools projects --help
+lightdash-tools charts --help
 ```
 
 ## Output Format
@@ -96,18 +120,13 @@ The CLI provides helpful error messages for:
 
 ## Development
 
-Run tests:
+If you are developing the CLI itself:
 
-```bash
-pnpm test
-```
-
-Build:
-
-```bash
-pnpm build
-```
+1. Install dependencies: `pnpm install`
+2. Build: `pnpm build`
+3. Run tests: `pnpm test`
+4. Run locally: `node dist/index.js`
 
 ## License
 
-ISC
+Apache-2.0

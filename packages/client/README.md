@@ -42,9 +42,9 @@ const client = new LightdashClient({
   personalAccessToken: 'your-pat-token',
 });
 
-const project = await client.projects.getProject('project-uuid');
-const org = await client.organizations.getCurrentOrganization();
-const dashboards = await client.dashboards.listDashboards('project-uuid');
+const project = await client.v1.projects.getProject('project-uuid');
+const org = await client.v1.organizations.getCurrentOrganization();
+const dashboards = await client.v1.dashboards.listDashboards('project-uuid');
 ```
 
 ### With environment variables (e.g. CI)
@@ -56,7 +56,7 @@ export LIGHTDASH_API_KEY=your-pat-token
 
 ```typescript
 const client = new LightdashClient();
-const project = await client.projects.getProject('project-uuid');
+const project = await client.v1.projects.getProject('project-uuid');
 ```
 
 ### Request cancellation (AbortController)
@@ -91,12 +91,13 @@ const client = new LightdashClient({
 
 - `client.v1.projects` – get project, list projects, list charts
 - `client.v1.organizations` – get current organization
-- `client.v1.charts` – list charts
+- `client.v1.explores` – list explores, get explore
+- `client.v1.charts` – list charts, get/upsert charts-as-code
 - `client.v1.dashboards` – list dashboards
 - `client.v1.spaces` – list/get/create/update/delete spaces; grant/revoke user and group access to spaces
 - `client.v1.projectAccess` – list/grant/get/update/revoke project access for users; list/add/remove/update project access for groups (see [Assign or update project access for a list of users](https://docs.lightdash.com/api-reference/v1/recipes))
-- `client.v1.query` – run metric queries
-- `client.v1.users` – list/get/update organization members
+- `client.v1.query` – run/compile metric queries
+- `client.v1.users` – list/get/update/delete organization members
 - `client.v1.groups` – list/create/update groups
 - `client.v1.aiAgents` – list AI agents (admin), list threads (admin), get/update AI organization settings
 
@@ -141,4 +142,4 @@ pnpm build --filter @lightdash-tools/client
 
 ## License
 
-ISC
+Apache-2.0

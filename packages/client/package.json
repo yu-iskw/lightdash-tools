@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Client library for Lightdash AI.",
   "keywords": [],
-  "license": "ISC",
+  "license": "Apache-2.0",
   "author": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
