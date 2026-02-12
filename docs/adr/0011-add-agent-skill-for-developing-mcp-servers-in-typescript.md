@@ -4,7 +4,7 @@ Date: 2026-02-10
 
 ## Status
 
-Accepted
+Superseded by [14. Align develop-mcp-server-ts skill with MCP specification 2025-11-25](0014-align-develop-mcp-server-ts-skill-with-mcp-specification-2025-11-25.md)
 
 ## Context
 

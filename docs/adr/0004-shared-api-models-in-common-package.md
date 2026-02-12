@@ -29,111 +29,55 @@ We will implement **Approach 2: Shared Models in `@lightdash-tools/common`**.
 
 ### Implementation Details
 
-- Extract core domain models to `packages/common/src/types/lightdash-api.ts`
-- Organize models by domain namespace (Projects, Organizations, Queries, Charts, Dashboards, Spaces)
-- Client package depends on `@lightdash-tools/common` for domain types
-- Other packages can import types from `@lightdash-tools/common` without client dependency
-- Models are type aliases to generated OpenAPI types, ensuring alignment with the spec
+- Extract core domain models to `packages/common/src/types/lightdash-api.ts`.
+- Organize models by domain namespace (Projects, Organizations, Queries, Charts, Dashboards, Spaces).
+- Client package depends on `@lightdash-tools/common` for domain types.
+- Other packages can import types from `@lightdash-tools/common` without client dependency.
+- Models are type aliases to generated OpenAPI types, ensuring alignment with the spec.
+- **Type Generation**: Moved to the common package (`packages/common/src/types/generated/openapi-types.ts`). This eliminates the circular dependency where common depended on client.
+- **File Organization**: Models are split into domain-specific files (`projects.ts`, `organizations.ts`, etc.) under `packages/common/src/types/` for maintainability, assembled in `lightdash-api.ts`.
+- **Enforcement**: CI check `scripts/check-common-no-client.mjs` (invoked via `validate:deps`) ensures `@lightdash-tools/common` never depends on `@lightdash-tools/client`.
 
 ### Architecture
 
 ```
 @lightdash-tools/common
 └── types/
-    └── lightdash-api.ts
-        ├── Projects namespace (Project, OrganizationProject)
-        ├── Organizations namespace (Organization)
-        ├── Queries namespace
-        │   ├── Requests (MetricQuery, SqlQuery, etc.)
-        │   └── Responses (QueryResults, etc.)
-        ├── Charts namespace
-        ├── Dashboards namespace
-        └── Spaces namespace
+    ├── generated/
+    │   └── openapi-types.ts      # Generated from OpenAPI spec
+    ├── lightdash-api.ts          # Main entry, assembles namespaces
+    ├── projects.ts               # Projects domain
+    ├── organizations.ts          # Organizations domain
+    ├── queries.ts                # Queries domain
+    ├── charts.ts                 # Charts domain
+    ├── dashboards.ts             # Dashboards domain
+    └── spaces.ts                 # Spaces domain
 ```
 
 ## Consequences
 
 ### Positive
 
-- **Reusability**: Other packages can use types without client dependency
-- **Organization**: Models organized by domain for better discoverability
-- **Type Safety**: Models remain aligned with OpenAPI spec (type aliases)
-- **Separation of Concerns**: Common types separated from client implementation
-- **Monorepo Best Practices**: Shared code lives in common package
+- **Reusability**: Other packages can use types without client dependency.
+- **Organization**: Models organized by domain for better discoverability.
+- **Type Safety**: Models remain aligned with OpenAPI spec (type aliases).
+- **Separation of Concerns**: Common types separated from client implementation.
+- **Monorepo Best Practices**: Shared code lives in common package.
+- **Clean Build**: Circular dependency fixed by moving codegen to common.
 
 ### Negative
 
-- **Initial Dependency**: Common temporarily depends on client's generated types (can be moved later)
-- **Migration Effort**: Existing code needs to update imports
-
-### Migration Strategy
-
-1. Extract models to common package
-2. Update client to import from common
-3. Replace `components['schemas']['Type']` with `LightdashApi.Domain.Type`
-4. Other packages can start using common types immediately
+- **Initial Migration**: One-time effort to move types and update imports.
 
 ## Future Considerations
-
-### Type Generation Location
-
-**Implemented (2026-02-10):** Type generation has been moved to the common package. The generated OpenAPI types file (`openapi-types.ts`) now lives in `packages/common/src/types/generated/`, and the `generate:types` script runs in the common package. This eliminates the circular dependency where common depended on client, fixing CI build order issues.
-
-**Previous state:** Type generation was in the client package, and common imported from client's generated types, creating a circular dependency.
-
-**Current state:**
-
-- Common generates types via `pnpm --filter @lightdash-tools/common generate:types`
-- Common exports raw OpenAPI types (`paths`, `components`, `operations`) from its main entry point
-- Client imports OpenAPI types from `@lightdash-tools/common` instead of generating them locally
-- Build order is now well-defined: common builds first, then client
 
 ### Additional Model Organization
 
 As more models are needed, consider:
 
-- Adding validation schemas (Zod, etc.) if runtime validation is needed
-- Creating request/response builders or helpers
-- Adding model versioning if API versions diverge significantly
-
-### File Organization (2026-02-10)
-
-As the `lightdash-api.ts` file grows, models are split into domain-specific files for better maintainability.
-
-**Decision:** Split models into separate domain files (`projects.ts`, `organizations.ts`, `queries.ts`, etc.) while maintaining backward compatibility through the main `lightdash-api.ts` file.
-
-**Rationale:**
-
-- Better maintainability: Each domain file is self-contained and easier to navigate
-- Scalability: Easy to add new domains without bloating a single file
-- Clear boundaries: Domain files have clear ownership and responsibility
-- Backward compatibility: Main file assembles namespace and provides flat exports
-
-**File Structure:**
-
-```
-packages/common/src/types/
-├── lightdash-api.ts (main file - imports domains, assembles namespace, flat exports)
-├── projects.ts (Projects namespace)
-├── organizations.ts (Organizations namespace)
-├── queries.ts (Queries namespace)
-├── charts.ts (Charts namespace)
-├── dashboards.ts (Dashboards namespace)
-└── spaces.ts (Spaces namespace)
-```
-
-**Implementation:** Each domain file exports its namespace. The main file imports all domains, assembles the `LightdashApi` namespace, and provides flat exports for backward compatibility. All existing imports continue to work without changes.
-
-### Verification and enforcement (2026-02-10)
-
-**Rule:** `@lightdash-tools/common` must not depend on `@lightdash-tools/client`. Dependency direction is one-way: client → common only.
-
-**Enforcement:** A CI check runs on every build:
-
-1. **Package dependency:** The script fails if `packages/common/package.json` lists `@lightdash-tools/client` in `dependencies` or `devDependencies`.
-2. **Import audit:** The script fails if any file under `packages/common` imports from `@lightdash-tools/client` or from path segments that resolve to the client package (e.g. `from '@lightdash-tools/client'` or `from '../client'`).
-
-**Implementation:** The check lives in `scripts/check-common-no-client.mjs` and is invoked via the root script `validate:deps`. The Build workflow (`.github/workflows/build.yml`) runs `pnpm validate:deps` so that introducing a reverse dependency causes the build to fail.
+- Adding validation schemas (Zod, etc.) if runtime validation is needed.
+- Creating request/response builders or helpers.
+- Adding model versioning if API versions diverge significantly.
 
 ## References
 

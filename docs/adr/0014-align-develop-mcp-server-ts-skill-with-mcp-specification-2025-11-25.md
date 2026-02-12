@@ -36,7 +36,7 @@ We update the skill as follows:
 
 ## References
 
-- ADR-0011: Add agent skill for developing MCP servers in TypeScript
+- ADR-0011: Add agent skill for developing MCP servers in TypeScript (updates this skill)
 - OpenSpec: `docs/openspec/changes/develop-mcp-server-ts-skill-spec-2025-11-25/`
 - GitHub: Issue #31 (Update develop-mcp-server-ts skill for MCP spec 2025-11-25)
 - MCP specification: <https://modelcontextprotocol.io/specification/2025-11-25>

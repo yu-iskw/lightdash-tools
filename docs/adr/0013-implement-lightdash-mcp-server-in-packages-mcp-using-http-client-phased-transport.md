@@ -4,7 +4,7 @@ Date: 2026-02-10
 
 ## Status
 
-Accepted
+Amended by [17. Phase 2 MCP server: Streamable HTTP transport and optional auth implementation](0017-phase-2-mcp-server-streamable-http-transport-and-optional-auth-implementation.md)
 
 ## Context
 
