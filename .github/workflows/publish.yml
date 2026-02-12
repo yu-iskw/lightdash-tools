@@ -62,8 +62,7 @@ jobs:
         with:
           node-version-file: .node-version
           registry-url: https://registry.npmjs.org
-          # TODO: Replace with your scope
-          scope: ''
+          scope: '@lightdash-tools'
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
       - name: Install dependencies
