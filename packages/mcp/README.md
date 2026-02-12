@@ -2,6 +2,20 @@
 
 MCP server for Lightdash: exposes projects, charts, dashboards, spaces, users, and groups as tools. Uses `@lightdash-tools/client` for all API access.
 
+## Installation
+
+You can run the MCP server using `npx`:
+
+```bash
+npx @lightdash-tools/mcp
+```
+
+Or install it globally:
+
+```bash
+npm install -g @lightdash-tools/mcp
+```
+
 ## Transports
 
 - **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.
@@ -24,20 +38,24 @@ MCP server for Lightdash: exposes projects, charts, dashboards, spaces, users, a
 
 ### Stdio (local)
 
+For use with Claude Desktop or IDEs, use `npx`:
+
 ```bash
-pnpm build
-pnpm start
-# or: node dist/index.js
+npx @lightdash-tools/mcp
 ```
 
-Use with Claude Desktop or an IDE by configuring the MCP server command (e.g. `node` with path to `dist/index.js`). Logging goes to stderr only; stdout is JSON-RPC.
+Or if installed globally:
+
+```bash
+lightdash-mcp
+```
+
+Logging goes to stderr only; stdout is JSON-RPC.
 
 ### Streamable HTTP (remote)
 
 ```bash
-pnpm build
-pnpm start:http
-# or: node dist/http.js
+npx @lightdash-tools/mcp --http
 ```
 
 The server listens on `http://localhost:3100` (or `MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
@@ -46,8 +64,12 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 
 ## Tools
 
-Same set in both modes: `list_projects`, `get_project`, `list_charts`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`.
+Same set in both modes: `list_projects`, `get_project`, `list_explores`, `get_explore`, `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`, `compile_query`.
 
 ### Destructive tools
 
 Tools with `destructiveHint: true` (e.g. `delete_member`) perform irreversible or high-impact actions. MCP clients should show a warning and/or require user confirmation before executing them. AI agents should ask the user for explicit confirmation before calling such tools.
+
+## License
+
+Apache-2.0
