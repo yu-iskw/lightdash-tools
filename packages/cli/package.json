@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/cli",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "CLI for Lightdash AI.",
   "keywords": [],
   "license": "ISC",
