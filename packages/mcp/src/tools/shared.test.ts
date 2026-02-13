@@ -10,7 +10,7 @@ describe('registerToolSafe', () => {
   const mockHandler = vi.fn().mockResolvedValue({ content: [{ type: 'text', text: 'success' }] });
 
   it('should allow read-only tool in read-only mode', async () => {
-    process.env.LIGHTDASH_AI_MODE = SafetyMode.READ_ONLY;
+    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.READ_ONLY;
 
     registerToolSafe(
       mockServer,
@@ -34,7 +34,7 @@ describe('registerToolSafe', () => {
   });
 
   it('should block destructive tool in read-only mode', async () => {
-    process.env.LIGHTDASH_AI_MODE = SafetyMode.READ_ONLY;
+    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.READ_ONLY;
 
     registerToolSafe(
       mockServer,
@@ -57,7 +57,7 @@ describe('registerToolSafe', () => {
   });
 
   it('should allow destructive tool in write-destructive mode', async () => {
-    process.env.LIGHTDASH_AI_MODE = SafetyMode.WRITE_DESTRUCTIVE;
+    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
 
     registerToolSafe(
       mockServer,

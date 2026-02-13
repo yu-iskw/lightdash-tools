@@ -25,6 +25,7 @@ The CLI requires the following environment variables (consistent with `@lightdas
 - `LIGHTDASH_URL` - Lightdash server base URL (e.g., `https://app.lightdash.cloud`)
 - `LIGHTDASH_API_KEY` - Personal access token (PAT)
 - `LIGHTDASH_PROXY_AUTHORIZATION` - Optional proxy authorization header
+- `LIGHTDASH_TOOL_SAFETY_MODE` - Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`)
 
 Example:
 
@@ -157,6 +158,20 @@ lightdash-tools charts --help
 ## Output Format
 
 All commands output JSON by default, formatted with 2-space indentation.
+
+## Safety Modes
+
+The CLI implements a hierarchical safety model to prevent accidental destructive operations. You can control this via the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the global `--mode` flag.
+
+- `read-only`: Only allows non-modifying operations (e.g., list, get).
+- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert).
+- `write-destructive` (default): Allows all operations, including deletions.
+
+Example:
+
+```bash
+lightdash-tools --mode read-only users list
+```
 
 ## Error Handling
 

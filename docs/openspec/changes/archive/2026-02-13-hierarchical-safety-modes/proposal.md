@@ -7,7 +7,7 @@ AI agents and autonomous tools interacting with Lightdash via MCP or CLI can per
 ## What Changes
 
 - **Unified Safety Model**: Define hierarchical safety modes (`read-only`, `write-idempotent`, `write-destructive`) in `@lightdash-tools/common`.
-- **Global Configuration**: Support `LIGHTDASH_AI_MODE` environment variable and `--mode` CLI flag.
+- **Global Configuration**: Support `LIGHTDASH_TOOL_SAFETY_MODE` environment variable and `--mode` CLI flag.
 - **MCP Enforcement**: Update `registerToolSafe` to wrap handlers in safety checks and update tool descriptions to indicate if they are disabled.
 - **CLI Enforcement**: Add a global action wrapper to check safety mode before executing commands.
 - **Annotation Audit**: Audit all MCP tools and CLI commands to ensure they have correct `readOnlyHint` and `destructiveHint` annotations.

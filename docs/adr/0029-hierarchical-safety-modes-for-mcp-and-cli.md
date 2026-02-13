@@ -22,16 +22,16 @@ We will implement a hierarchical safety model across both the MCP server and the
 
 ### Safety Modes Hierarchy
 
-1.  **`read-only`**: Only allows operations explicitly marked as read-only.
-    - `annotations.readOnlyHint === true`
-2.  **`write-idempotent`**: Allows `read-only` operations and non-destructive, idempotent writes.
-    - `annotations.readOnlyHint === true` OR (`annotations.readOnlyHint === false` AND `annotations.destructiveHint === false`)
-3.  **`write-destructive`**: Allows all operations, including destructive ones.
-    - All tools/commands.
+1. **`read-only`**: Only allows operations explicitly marked as read-only.
+   - `annotations.readOnlyHint === true`
+2. **`write-idempotent`**: Allows `read-only` operations and non-destructive, idempotent writes.
+   - `annotations.readOnlyHint === true` OR (`annotations.readOnlyHint === false` AND `annotations.destructiveHint === false`)
+3. **`write-destructive`**: Allows all operations, including destructive ones.
+   - All tools/commands.
 
 ### Configuration
 
-- Environment Variable: `LIGHTDASH_AI_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
+- Environment Variable: `LIGHTDASH_TOOL_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
 - CLI Flag: `--mode` (same values).
 - Default: `write-destructive` (for backward compatibility).
 
@@ -44,7 +44,7 @@ We will implement a hierarchical safety model across both the MCP server and the
 
 ```mermaid
 graph TD
-    Env[LIGHTDASH_AI_MODE] --> Core[Safety Logic]
+    Env[LIGHTDASH_TOOL_SAFETY_MODE] --> Core[Safety Logic]
     Flag[--mode flag] --> Core
 
     subgraph mcp_server [MCP Server]

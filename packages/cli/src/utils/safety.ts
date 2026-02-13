@@ -24,7 +24,7 @@ export function wrapAction<T extends unknown[]>(
     const mode = getSafetyMode(this);
     if (!isAllowed(mode, annotations)) {
       console.error(
-        `Error: This command is disabled in ${mode} mode. To enable it, use --mode or set LIGHTDASH_AI_MODE.`,
+        `Error: This command is disabled in ${mode} mode. To enable it, use --mode or set LIGHTDASH_TOOL_SAFETY_MODE.`,
       );
       process.exit(1);
     }
