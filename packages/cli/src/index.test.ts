@@ -39,7 +39,7 @@ describe('CLI Command Registration', () => {
     expect(listCmd).toBeDefined();
   });
 
-  it('should register groups command with list and get subcommands', () => {
+  it('should register groups command with list, get, create, update, delete, and members subcommands', () => {
     const program = new Command();
     registerGroupsCommand(program);
 
@@ -51,6 +51,27 @@ describe('CLI Command Registration', () => {
 
     const getCmd = groupsCmd?.commands.find((cmd) => cmd.name() === 'get');
     expect(getCmd).toBeDefined();
+
+    const createCmd = groupsCmd?.commands.find((cmd) => cmd.name() === 'create');
+    expect(createCmd).toBeDefined();
+
+    const updateCmd = groupsCmd?.commands.find((cmd) => cmd.name() === 'update');
+    expect(updateCmd).toBeDefined();
+
+    const deleteCmd = groupsCmd?.commands.find((cmd) => cmd.name() === 'delete');
+    expect(deleteCmd).toBeDefined();
+
+    const membersCmd = groupsCmd?.commands.find((cmd) => cmd.name() === 'members');
+    expect(membersCmd).toBeDefined();
+
+    const membersListCmd = membersCmd?.commands.find((cmd) => cmd.name() === 'list');
+    expect(membersListCmd).toBeDefined();
+
+    const membersAddCmd = membersCmd?.commands.find((cmd) => cmd.name() === 'add');
+    expect(membersAddCmd).toBeDefined();
+
+    const membersRemoveCmd = membersCmd?.commands.find((cmd) => cmd.name() === 'remove');
+    expect(membersRemoveCmd).toBeDefined();
   });
 
   it('should register users list with --all option', () => {

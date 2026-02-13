@@ -3,7 +3,7 @@
  */
 
 import type { Command } from 'commander';
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
@@ -81,6 +81,128 @@ export function registerGroupsCommand(program: Command): void {
         } catch (error) {
           console.error(
             'Error fetching group:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  groupsCmd
+    .command('create <name>')
+    .description('Create a new group')
+    .action(
+      wrapAction(WRITE_IDEMPOTENT, async (name: string) => {
+        try {
+          const client = getClient();
+          const group = await client.v1.groups.createGroup({ name });
+          console.log(JSON.stringify(group, null, 2));
+        } catch (error) {
+          console.error(
+            'Error creating group:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  groupsCmd
+    .command('update <groupUuid>')
+    .description('Update a group')
+    .option('--name <name>', 'New name for the group')
+    .action(
+      wrapAction(WRITE_IDEMPOTENT, async (groupUuid: string, cmd: Command) => {
+        const options = cmd.opts() as { name?: string };
+        if (!options.name) {
+          console.error('Error: --name is required for update');
+          process.exit(1);
+        }
+        try {
+          const client = getClient();
+          const group = await client.v1.groups.updateGroup(groupUuid, { name: options.name });
+          console.log(JSON.stringify(group, null, 2));
+        } catch (error) {
+          console.error(
+            'Error updating group:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  groupsCmd
+    .command('delete <groupUuid>')
+    .description('Delete a group')
+    .action(
+      wrapAction(WRITE_DESTRUCTIVE, async (groupUuid: string) => {
+        try {
+          const client = getClient();
+          await client.v1.groups.deleteGroup(groupUuid);
+          console.error(`Group ${groupUuid} deleted successfully`);
+        } catch (error) {
+          console.error(
+            'Error deleting group:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  const membersCmd = groupsCmd.command('members').description('Manage group members');
+
+  membersCmd
+    .command('list <groupUuid>')
+    .description('List members of a group')
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async (groupUuid: string) => {
+        try {
+          const client = getClient();
+          const members = await client.v1.groups.getGroupMembers(groupUuid);
+          console.log(JSON.stringify(members, null, 2));
+        } catch (error) {
+          console.error(
+            'Error listing group members:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  membersCmd
+    .command('add <groupUuid> <userUuid>')
+    .description('Add a user to a group')
+    .action(
+      wrapAction(WRITE_IDEMPOTENT, async (groupUuid: string, userUuid: string) => {
+        try {
+          const client = getClient();
+          await client.v1.groups.addUserToGroup(groupUuid, userUuid);
+          console.error(`User ${userUuid} added to group ${groupUuid} successfully`);
+        } catch (error) {
+          console.error(
+            'Error adding user to group:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
+
+  membersCmd
+    .command('remove <groupUuid> <userUuid>')
+    .description('Remove a user from a group')
+    .action(
+      wrapAction(WRITE_DESTRUCTIVE, async (groupUuid: string, userUuid: string) => {
+        try {
+          const client = getClient();
+          await client.v1.groups.removeUserFromGroup(groupUuid, userUuid);
+          console.error(`User ${userUuid} removed from group ${groupUuid} successfully`);
+        } catch (error) {
+          console.error(
+            'Error removing user from group:',
             error instanceof Error ? error.message : String(error),
           );
           process.exit(1);
