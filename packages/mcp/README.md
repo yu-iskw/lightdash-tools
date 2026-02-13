@@ -27,7 +27,10 @@ npm install -g @lightdash-tools/mcp
 
 - `LIGHTDASH_URL` — Lightdash instance base URL (e.g. `https://app.lightdash.cloud`).
 - `LIGHTDASH_API_KEY` — Personal access token or API key.
-- `LIGHTDASH_TOOL_SAFETY_MODE` — Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
+
+### Optional (both modes)
+
+- `LIGHTDASH_TOOL_SAFETY_MODE` — Safety mode for dynamic enforcement (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
 
 ### Streamable HTTP only
 
@@ -43,6 +46,12 @@ For use with Claude Desktop or IDEs, use `npx`:
 
 ```bash
 npx @lightdash-tools/mcp
+```
+
+To hide destructive tools from the agent:
+
+```bash
+npx @lightdash-tools/mcp --binded-tool-mode write-idempotent
 ```
 
 Or if installed globally:
@@ -67,15 +76,25 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 
 Same set in both modes: `list_projects`, `get_project`, `list_explores`, `get_explore`, `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`, `compile_query`, `list_metrics`, `list_schedulers`, `list_tags`, `search_content`.
 
+### CLI Options
+
+- `--http` — Run as HTTP server instead of Stdio.
+- `--binded-tool-mode <mode>` — Filter registered tools by safety mode (`read-only`, `write-idempotent`, `write-destructive`). Tools not allowed in this mode will not be registered, hiding them from AI agents.
+
 ## Safety Modes
 
-The MCP server implements a hierarchical safety model. You can control which tools are available to AI agents using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable.
+The MCP server implements a hierarchical safety model. You can control which tools are available to AI agents using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the `--binded-tool-mode` CLI option.
 
 - `read-only`: Only allows non-modifying tools (e.g., `list_*`, `get_*`).
 - `write-idempotent`: Allows read tools and non-destructive writes (e.g., `upsert_chart_as_code`).
 - `write-destructive` (default): Allows all tools, including destructive ones (e.g., `delete_member`).
 
-When a tool is disabled via safety mode, the server will return a descriptive error message if an agent attempts to call it.
+### Enforcement Layers
+
+1. **Dynamic Enforcement (Visible but Disabled)**: Using `LIGHTDASH_TOOL_SAFETY_MODE` environment variable. Tools are registered and visible to the agent, but return an error if called. This allows agents to understand that a capability exists but is restricted.
+2. **Static Filtering (Hidden)**: Using the `--binded-tool-mode` CLI option. Tools not allowed in the selected mode are not registered at all. They are completely hidden from the AI agent.
+
+When a tool is disabled via dynamic enforcement, the server will return a descriptive error message if an agent attempts to call it.
 
 ### Destructive tools
 
