@@ -5,6 +5,7 @@
  */
 
 import type { LightdashClientConfig, PartialLightdashClientConfig } from '../config';
+import { SecretString } from './secret-string';
 
 /** Environment variable names (aligned with Lightdash CLI). */
 export const ENV_LIGHTDASH_API_KEY = 'LIGHTDASH_API_KEY';
@@ -47,9 +48,10 @@ export function mergeConfig(
   const fromEnv = loadConfigFromEnv();
 
   const baseUrl = explicit?.baseUrl ?? fromEnv.baseUrl ?? '';
-  const personalAccessToken = explicit?.personalAccessToken ?? fromEnv.personalAccessToken ?? '';
+  const pat = explicit?.personalAccessToken ?? fromEnv.personalAccessToken ?? '';
+  const proxyAuth = explicit?.proxyAuthorization ?? fromEnv.proxyAuthorization;
 
-  if (!baseUrl || !personalAccessToken) {
+  if (!baseUrl || !pat) {
     throw new Error(
       'Lightdash client requires baseUrl and personalAccessToken. ' +
         'Set them in config or via LIGHTDASH_URL and LIGHTDASH_API_KEY.',
@@ -58,8 +60,8 @@ export function mergeConfig(
 
   return {
     baseUrl,
-    personalAccessToken,
-    proxyAuthorization: explicit?.proxyAuthorization ?? fromEnv.proxyAuthorization,
+    personalAccessToken: typeof pat === 'string' ? new SecretString(pat) : pat,
+    proxyAuthorization: typeof proxyAuth === 'string' ? new SecretString(proxyAuth) : proxyAuth,
     rateLimit: explicit?.rateLimit,
     timeout: explicit?.timeout,
     retry: explicit?.retry,

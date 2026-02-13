@@ -22,13 +22,12 @@ export function attachRequestInterceptors(
 ): void {
   axiosInstance.interceptors.request.use(
     (req: InternalAxiosRequestConfig) => {
-      const token = config.personalAccessToken.startsWith('ldpat_')
-        ? config.personalAccessToken
-        : `ldpat_${config.personalAccessToken}`;
+      const rawToken = config.personalAccessToken.expose();
+      const token = rawToken.startsWith('ldpat_') ? rawToken : `ldpat_${rawToken}`;
       req.headers.Authorization = `ApiKey ${token}`;
 
       if (config.proxyAuthorization) {
-        req.headers['Proxy-Authorization'] = config.proxyAuthorization;
+        req.headers['Proxy-Authorization'] = config.proxyAuthorization.expose();
       }
 
       (req as InternalAxiosRequestConfig & { _lightdashStartTime?: number })._lightdashStartTime =

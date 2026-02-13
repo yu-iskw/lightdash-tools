@@ -6,7 +6,7 @@
 const args = process.argv.slice(2);
 
 if (args.includes('--http')) {
-  import('./http.js');
+  void import('./http.js');
 } else {
-  import('./index.js');
+  void import('./index.js');
 }

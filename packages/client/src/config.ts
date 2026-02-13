@@ -3,6 +3,8 @@
  * Supports explicit config and environment variables (LIGHTDASH_API_KEY, LIGHTDASH_URL, LIGHTDASH_PROXY_AUTHORIZATION).
  */
 
+import type { SecretString } from './utils/secret-string';
+
 /**
  * Rate limit configuration for Bottleneck (token bucket algorithm).
  */
@@ -61,9 +63,9 @@ export interface LightdashClientConfig {
   /** Lightdash server base URL (e.g. https://app.lightdash.cloud). */
   baseUrl: string;
   /** Personal access token for API authentication (without ldpat_ prefix). */
-  personalAccessToken: string;
+  personalAccessToken: SecretString;
   /** Optional proxy authorization header value for proxied access. */
-  proxyAuthorization?: string;
+  proxyAuthorization?: SecretString;
   /** Override default rate limits. */
   rateLimit?: RateLimitConfig;
   /** Request timeout in milliseconds. Default 30000. */
@@ -81,18 +83,11 @@ export interface LightdashClientConfig {
  * Used when constructing the client with optional explicit overrides.
  */
 export type PartialLightdashClientConfig = Partial<
-  Pick<
-    LightdashClientConfig,
-    | 'baseUrl'
-    | 'personalAccessToken'
-    | 'proxyAuthorization'
-    | 'rateLimit'
-    | 'timeout'
-    | 'retry'
-    | 'logger'
-    | 'observability'
-  >
->;
+  Omit<LightdashClientConfig, 'personalAccessToken' | 'proxyAuthorization'>
+> & {
+  personalAccessToken?: string | SecretString;
+  proxyAuthorization?: string | SecretString;
+};
 
 /** Default rate limit: 10 req/sec, 5 concurrent, token bucket. */
 export const DEFAULT_RATE_LIMIT: Required<RateLimitConfig> = {

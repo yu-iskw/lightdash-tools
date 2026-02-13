@@ -11,6 +11,7 @@ export const TOOL_PREFIX = 'lightdash_tools__';
 
 export type TextContent = {
   content: Array<{ type: 'text'; text: string }>;
+  isError?: boolean;
 };
 
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
@@ -95,7 +96,7 @@ export function wrapTool<T>(
       return await handler(args as T);
     } catch (err) {
       const text = toMcpErrorMessage(err);
-      return { content: [{ type: 'text', text }] };
+      return { content: [{ type: 'text', text }], isError: true };
     }
   };
 }

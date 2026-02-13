@@ -60,7 +60,7 @@ describe('mergeConfig', () => {
       personalAccessToken: 'explicit-token',
     });
     expect(merged.baseUrl).toBe('https://explicit.example.com');
-    expect(merged.personalAccessToken).toBe('explicit-token');
+    expect(merged.personalAccessToken.expose()).toBe('explicit-token');
   });
 
   it('should use env when explicit config omits a field', () => {
@@ -68,7 +68,7 @@ describe('mergeConfig', () => {
     process.env[ENV_LIGHTDASH_API_KEY] = 'env-token';
     const merged = mergeConfig({ baseUrl: 'https://explicit.example.com' });
     expect(merged.baseUrl).toBe('https://explicit.example.com');
-    expect(merged.personalAccessToken).toBe('env-token');
+    expect(merged.personalAccessToken.expose()).toBe('env-token');
   });
 
   it('should throw when baseUrl and personalAccessToken cannot be resolved', () => {
