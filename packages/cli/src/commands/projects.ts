@@ -49,4 +49,43 @@ export function registerProjectsCommand(program: Command): void {
         process.exit(1);
       }
     });
+
+  const validateCmd = projectsCmd.command('validate').description('Project validation');
+
+  validateCmd
+    .command('run <projectUuid>')
+    .description('Trigger project validation and get job ID')
+    .action(async (projectUuid: string) => {
+      try {
+        const client = getClient();
+        const result = await client.v1.validation.validateProject(projectUuid);
+        console.log(JSON.stringify(result, null, 2));
+      } catch (error) {
+        console.error(
+          'Error triggering validation:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    });
+
+  validateCmd
+    .command('results <projectUuid>')
+    .description('Get latest validation results for a project')
+    .option('--job-id <id>', 'Specific validation job ID')
+    .action(async (projectUuid: string, options: { jobId?: string }) => {
+      try {
+        const client = getClient();
+        const result = await client.v1.validation.getValidationResults(projectUuid, {
+          jobId: options.jobId,
+        });
+        console.log(JSON.stringify(result, null, 2));
+      } catch (error) {
+        console.error(
+          'Error fetching validation results:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    });
 }

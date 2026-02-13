@@ -51,4 +51,38 @@ export function registerExploresCommand(program: Command): void {
         process.exit(1);
       }
     });
+
+  exploresCmd
+    .command('dimensions <projectUuid> <exploreId>')
+    .description('List dimensions for an explore')
+    .action(async (projectUuid: string, exploreId: string) => {
+      try {
+        const client = getClient();
+        const result = await client.v1.explores.listDimensions(projectUuid, exploreId);
+        console.log(JSON.stringify(result, null, 2));
+      } catch (error) {
+        console.error(
+          'Error listing dimensions:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    });
+
+  exploresCmd
+    .command('lineage <projectUuid> <exploreId> <fieldId>')
+    .description('Get lineage for a field in an explore')
+    .action(async (projectUuid: string, exploreId: string, fieldId: string) => {
+      try {
+        const client = getClient();
+        const result = await client.v1.explores.getFieldLineage(projectUuid, exploreId, fieldId);
+        console.log(JSON.stringify(result, null, 2));
+      } catch (error) {
+        console.error(
+          'Error fetching lineage:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    });
 }

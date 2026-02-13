@@ -5,7 +5,16 @@ export { OrganizationRolesClient } from './api/v2/organization-roles';
 export { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
 export { AiAgentsClient } from './api/v1/ai-agents';
 export { ProjectAccessClient } from './api/v1/project-access';
+export { ValidationClient } from './api/v1/validation';
+export { MetricsClient } from './api/v1/metrics';
+export { SchedulersClient } from './api/v1/schedulers';
+export { TagsClient } from './api/v1/tags';
+export { ContentClient } from './api/v2/content';
 export type { ListMembersParams, ListAllMembersParams } from './api/v1/users';
+export type { GetValidationResultsParams, ValidateProjectBody } from './api/v1/validation';
+export type { ListMetricsParams } from './api/v1/metrics';
+export type { ListSchedulersParams } from './api/v1/schedulers';
+export type { SearchContentParams } from './api/v2/content';
 export type {
   ListGroupsParams,
   ListAllGroupsParams,

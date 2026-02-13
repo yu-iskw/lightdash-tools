@@ -19,6 +19,11 @@ import type { Groups } from './groups';
 import type { AiAgents } from './ai-agents';
 import type { ProjectAccess } from './project-access';
 import type { Explores } from './explores';
+import type { Validation } from './validation';
+import type { Metrics } from './metrics';
+import type { Schedulers } from './schedulers';
+import type { Tags } from './tags';
+import type { Content } from './content';
 
 // Re-export domain namespaces
 export type {
@@ -34,6 +39,11 @@ export type {
   AiAgents,
   ProjectAccess,
   Explores,
+  Validation,
+  Metrics,
+  Schedulers,
+  Tags,
+  Content,
 };
 
 // Import generated types for LightdashApi namespace assembly
@@ -174,6 +184,43 @@ export namespace LightdashApi {
   export namespace Explores {
     export type ApiExploresResults = components['schemas']['ApiExploresResults'];
     export type ApiExploreResults = components['schemas']['ApiExploreResults'];
+    export type CompiledTable = components['schemas']['CompiledTable'];
+  }
+
+  export namespace Validation {
+    export type ApiValidateResponse = components['schemas']['ApiValidateResponse'];
+    export type ApiJobScheduledResponse = components['schemas']['ApiJobScheduledResponse'];
+    export type ValidationTarget = components['schemas']['ValidationTarget'];
+  }
+
+  export namespace Metrics {
+    export type ApiMetricsCatalog = components['schemas']['ApiMetricsCatalog'];
+    export type ApiGetMetricResponse = components['schemas']['ApiGetMetricPeek'];
+  }
+
+  export namespace Schedulers {
+    export type ApiSchedulersResponse = components['schemas']['ApiSchedulersResponse'];
+    export type ApiSchedulerAndTargetsResponse =
+      components['schemas']['ApiSchedulerAndTargetsResponse'];
+    export type ListSchedulersParams = {
+      pageSize?: number;
+      page?: number;
+      searchQuery?: string;
+      sortBy?: 'name' | 'createdAt';
+      sortDirection?: 'asc' | 'desc';
+    };
+  }
+
+  export namespace Tags {
+    export type ApiGetTagsResponse = components['schemas']['ApiGetTagsResponse'];
+    export type ApiGetTagResponse = {
+      results: components['schemas']['Tag'];
+      status: 'ok';
+    };
+  }
+
+  export namespace Content {
+    export type ApiContentResponse = components['schemas']['ApiContentResponse'];
   }
 
   /** Types for Lightdash API v1 endpoints (ADR-0008). */
