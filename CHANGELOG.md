@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] - 2026-02-13
+
+### Features
+
+- Implemented hierarchical safety modes (`read-only`, `write-idempotent`, `write-destructive`) for both CLI and MCP server.
+- Added support for `LIGHTDASH_AI_MODE` environment variable and `--mode` global CLI flag to enforce safety guardrails.
+- Integrated tool annotations (`readOnlyHint`, `destructiveHint`) to automatically filter and block operations based on the active safety mode.
+- Added comprehensive unit and integration tests for safety enforcement.
+
 ## [0.2.0] - 2026-02-13
 
 ### Features

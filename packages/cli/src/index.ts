@@ -24,7 +24,15 @@ import { registerContentCommand } from './commands/content';
 
 const program = new Command();
 
-program.name('lightdash-ai').description('CLI for Lightdash AI').version('1.0.0');
+program
+  .name('lightdash-ai')
+  .description('CLI for Lightdash AI')
+  .version('1.0.0')
+  .option(
+    '--mode <mode>',
+    'Safety mode (read-only, write-idempotent, write-destructive)',
+    'write-destructive',
+  );
 
 // Register all commands (organization and projects first so subcommands can attach)
 registerOrganizationCommand(program);

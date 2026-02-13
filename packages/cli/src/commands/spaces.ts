@@ -3,7 +3,9 @@
  */
 
 import type { Command } from 'commander';
+import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
+import { wrapAction } from '../utils/safety';
 
 /**
  * Registers the projects spaces subcommands under the existing projects command.
@@ -19,34 +21,38 @@ export function registerSpacesCommand(program: Command): void {
   spacesCmd
     .command('list <projectUuid>')
     .description('List spaces in a project')
-    .action(async (projectUuid: string) => {
-      try {
-        const client = getClient();
-        const result = await client.v1.spaces.listSpacesInProject(projectUuid);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error listing spaces:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async (projectUuid: string) => {
+        try {
+          const client = getClient();
+          const result = await client.v1.spaces.listSpacesInProject(projectUuid);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error listing spaces:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 
   spacesCmd
     .command('get <projectUuid> <spaceUuid>')
     .description('Get a space by UUID')
-    .action(async (projectUuid: string, spaceUuid: string) => {
-      try {
-        const client = getClient();
-        const result = await client.v1.spaces.getSpace(projectUuid, spaceUuid);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error fetching space:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async (projectUuid: string, spaceUuid: string) => {
+        try {
+          const client = getClient();
+          const result = await client.v1.spaces.getSpace(projectUuid, spaceUuid);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error fetching space:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 }

@@ -3,6 +3,8 @@
  */
 
 import type { LightdashClient } from '@lightdash-tools/client';
+import { isAllowed, getSafetyModeFromEnv, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 import { toMcpErrorMessage } from '../errors.js';
 
@@ -17,15 +19,6 @@ export type TextContent = {
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
 export type ToolHandler = (args: unknown, extra?: unknown) => Promise<TextContent>;
 
-/** MCP tool annotations (hints for client display and approval). See MCP spec Tool annotations. */
-export type ToolAnnotations = {
-  title?: string;
-  readOnlyHint?: boolean;
-  destructiveHint?: boolean;
-  idempotentHint?: boolean;
-  openWorldHint?: boolean;
-};
-
 /** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT or WRITE_IDEMPOTENT) for visibility. */
 export type ToolOptions = {
   description: string;
@@ -34,29 +27,8 @@ export type ToolOptions = {
   annotations?: ToolAnnotations;
 };
 
-/** Preset: read-only, non-destructive, idempotent, closed-world. Use for list/get/compile tools. */
-export const READ_ONLY_DEFAULT: ToolAnnotations = {
-  readOnlyHint: true,
-  openWorldHint: false,
-  destructiveHint: false,
-  idempotentHint: true,
-};
-
-/** Preset: write, non-destructive, idempotent (e.g. upsert by slug). Use for create/update tools. */
-export const WRITE_IDEMPOTENT: ToolAnnotations = {
-  readOnlyHint: false,
-  openWorldHint: false,
-  destructiveHint: false,
-  idempotentHint: true,
-};
-
-/** Preset: write, destructive, non-idempotent. Use for delete/remove tools; clients should prompt for user confirmation. */
-export const WRITE_DESTRUCTIVE: ToolAnnotations = {
-  readOnlyHint: false,
-  openWorldHint: false,
-  destructiveHint: true,
-  idempotentHint: false,
-};
+// Re-export presets for convenience and backward compatibility in tools
+export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 
 /** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
 const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
@@ -77,12 +49,34 @@ export function registerToolSafe(
 ): void {
   const name = TOOL_PREFIX + shortName;
   const annotations = mergeAnnotations(options.annotations);
+  const mode = getSafetyModeFromEnv();
+
+  const isToolAllowed = isAllowed(mode, annotations);
+
+  // If not allowed, wrap handler to return an error and update description
+  let finalHandler = handler;
+  let finalDescription = options.description;
+
+  if (!isToolAllowed) {
+    finalDescription = `[DISABLED in ${mode} mode] ${options.description}`;
+    finalHandler = async () => ({
+      content: [
+        {
+          type: 'text',
+          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_AI_MODE.`,
+        },
+      ],
+      isError: true,
+    });
+  }
+
   const mergedOptions: ToolOptions = {
     ...options,
+    description: finalDescription,
     title: options.title ?? options.annotations?.title,
     annotations,
   };
-  (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, handler);
+  (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, finalHandler);
 }
 
 export function wrapTool<T>(
