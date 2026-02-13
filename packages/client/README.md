@@ -1,4 +1,4 @@
-# @lightdash-tools/client
+# [@lightdash-tools/client](https://www.npmjs.com/package/@lightdash-tools/client) <!-- markdown-link-check-disable-line -->
 
 HTTP client for the [Lightdash API](https://docs.lightdash.com/api-reference/v1/introduction) with centralized rate limiting, async calls, and TypeScript types generated from the OpenAPI spec.
 
@@ -89,6 +89,8 @@ const client = new LightdashClient({
 
 ## API areas
 
+### V1 API
+
 - `client.v1.projects` – get project, list projects, list charts
 - `client.v1.organizations` – get current organization
 - `client.v1.explores` – list explores, get explore
@@ -100,6 +102,17 @@ const client = new LightdashClient({
 - `client.v1.users` – list/get/update/delete organization members
 - `client.v1.groups` – list/create/update groups
 - `client.v1.aiAgents` – list AI agents (admin), list threads (admin), get/update AI organization settings
+- `client.v1.metrics` – list metrics in data catalog
+- `client.v1.schedulers` – list/get/create/update/delete scheduled deliveries
+- `client.v1.tags` – list/create/update/delete tags
+- `client.v1.validation` – list/get/delete validation errors
+
+### V2 API (Experimental)
+
+- `client.v2.content` – search for charts, dashboards, and spaces across projects
+- `client.v2.query` – execute async metric/SQL/saved chart queries
+- `client.v2.organizationRoles` – list organization roles and their permissions
+- `client.v2.projectRoleAssignments` – list/grant/revoke project role assignments for users and groups
 
 Deprecated top-level aliases (`client.projects`, `client.organizations`, etc.) are still available but will be removed in a future major version.
 

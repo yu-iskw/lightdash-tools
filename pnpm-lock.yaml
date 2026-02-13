@@ -67,6 +67,9 @@ importers:
 
   packages/common:
     devDependencies:
+      '@types/node':
+        specifier: ^25.2.3
+        version: 25.2.3
       openapi-typescript:
         specifier: ^7.13.0
         version: 7.13.0(typescript@5.9.3)
@@ -76,6 +79,9 @@ importers:
       '@lightdash-tools/client':
         specifier: workspace:*
         version: link:../client
+      '@lightdash-tools/common':
+        specifier: workspace:*
+        version: link:../common
       '@modelcontextprotocol/sdk':
         specifier: ^1.26.0
         version: 1.26.0(zod@4.3.6)

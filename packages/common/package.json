@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/common",
-  "version": "0.1.2",
+  "version": "0.2.1",
   "description": "Shared utilities and types for Lightdash AI.",
   "keywords": [],
   "license": "Apache-2.0",
@@ -12,6 +12,7 @@
     "generate:types": "openapi-typescript https://raw.githubusercontent.com/lightdash/lightdash/refs/heads/main/packages/backend/src/generated/swagger.json -o src/types/generated/openapi-types.ts"
   },
   "devDependencies": {
+    "@types/node": "^25.2.3",
     "openapi-typescript": "^7.13.0"
   }
 }

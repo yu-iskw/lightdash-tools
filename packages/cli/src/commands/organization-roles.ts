@@ -3,7 +3,9 @@
  */
 
 import type { Command } from 'commander';
+import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
+import { wrapAction } from '../utils/safety';
 
 /**
  * Registers the organization roles subcommands under the existing organization command.
@@ -22,45 +24,49 @@ export function registerOrganizationRolesCommand(program: Command): void {
     .description('List organization roles')
     .option('--load <value>', 'Load query param')
     .option('--role-type-filter <value>', 'Filter by role type')
-    .action(async function (this: Command) {
-      const options = this.opts() as { load?: string; roleTypeFilter?: string };
-      try {
-        const client = getClient();
-        const org = await client.v1.organizations.getCurrentOrganization();
-        const orgUuid = (org as { organizationUuid: string }).organizationUuid;
-        const params =
-          options.load != null || options.roleTypeFilter != null
-            ? { load: options.load, roleTypeFilter: options.roleTypeFilter }
-            : undefined;
-        const result = await client.v2.organizationRoles.getRoles(orgUuid, params);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error listing organization roles:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
+        const options = this.opts() as { load?: string; roleTypeFilter?: string };
+        try {
+          const client = getClient();
+          const org = await client.v1.organizations.getCurrentOrganization();
+          const orgUuid = (org as { organizationUuid: string }).organizationUuid;
+          const params =
+            options.load != null || options.roleTypeFilter != null
+              ? { load: options.load, roleTypeFilter: options.roleTypeFilter }
+              : undefined;
+          const result = await client.v2.organizationRoles.getRoles(orgUuid, params);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error listing organization roles:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 
   rolesCmd
     .command('get <roleUuid>')
     .description('Get an organization role by UUID')
-    .action(async (roleUuid: string) => {
-      try {
-        const client = getClient();
-        const org = await client.v1.organizations.getCurrentOrganization();
-        const orgUuid = (org as { organizationUuid: string }).organizationUuid;
-        const role = await client.v2.organizationRoles.getRole(orgUuid, roleUuid);
-        console.log(JSON.stringify(role, null, 2));
-      } catch (error) {
-        console.error(
-          'Error fetching organization role:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async (roleUuid: string) => {
+        try {
+          const client = getClient();
+          const org = await client.v1.organizations.getCurrentOrganization();
+          const orgUuid = (org as { organizationUuid: string }).organizationUuid;
+          const role = await client.v2.organizationRoles.getRole(orgUuid, roleUuid);
+          console.log(JSON.stringify(role, null, 2));
+        } catch (error) {
+          console.error(
+            'Error fetching organization role:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 
   const assignmentsCmd = rolesCmd
     .command('assignments')
@@ -68,42 +74,46 @@ export function registerOrganizationRolesCommand(program: Command): void {
   assignmentsCmd
     .command('list')
     .description('List organization role assignments')
-    .action(async () => {
-      try {
-        const client = getClient();
-        const org = await client.v1.organizations.getCurrentOrganization();
-        const orgUuid = (org as { organizationUuid: string }).organizationUuid;
-        const result = await client.v2.organizationRoles.listRoleAssignments(orgUuid);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error listing role assignments:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async () => {
+        try {
+          const client = getClient();
+          const org = await client.v1.organizations.getCurrentOrganization();
+          const orgUuid = (org as { organizationUuid: string }).organizationUuid;
+          const result = await client.v2.organizationRoles.listRoleAssignments(orgUuid);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error listing role assignments:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 
   rolesCmd
     .command('assign <userUuid>')
     .description('Assign an organization role to a user')
     .requiredOption('--role-id <roleId>', 'Role ID to assign')
-    .action(async (userUuid: string, cmd: Command) => {
-      const options = cmd.opts() as { roleId: string };
-      try {
-        const client = getClient();
-        const org = await client.v1.organizations.getCurrentOrganization();
-        const orgUuid = (org as { organizationUuid: string }).organizationUuid;
-        const result = await client.v2.organizationRoles.assignRoleToUser(orgUuid, userUuid, {
-          roleId: options.roleId,
-        });
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error assigning role to user:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(WRITE_IDEMPOTENT, async (userUuid: string, cmd: Command) => {
+        const options = cmd.opts() as { roleId: string };
+        try {
+          const client = getClient();
+          const org = await client.v1.organizations.getCurrentOrganization();
+          const orgUuid = (org as { organizationUuid: string }).organizationUuid;
+          const result = await client.v2.organizationRoles.assignRoleToUser(orgUuid, userUuid, {
+            roleId: options.roleId,
+          });
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error assigning role to user:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 }

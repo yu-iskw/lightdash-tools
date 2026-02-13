@@ -4,7 +4,9 @@
 
 import type { Command } from 'commander';
 import { readFileSync } from 'fs';
+import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
+import { wrapAction } from '../utils/safety';
 import type { UpsertChartAsCodeBody } from '@lightdash-tools/common';
 
 /**
@@ -57,19 +59,21 @@ export function registerChartsCommand(program: Command): void {
   chartsCmd
     .command('list <projectUuid>')
     .description('List charts in a project')
-    .action(async (projectUuid: string) => {
-      try {
-        const client = getClient();
-        const result = await client.v1.charts.listCharts(projectUuid);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error listing charts:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(READ_ONLY_DEFAULT, async (projectUuid: string) => {
+        try {
+          const client = getClient();
+          const result = await client.v1.charts.listCharts(projectUuid);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error listing charts:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
+    );
 
   const codeCmd = chartsCmd
     .command('code')
@@ -82,44 +86,52 @@ export function registerChartsCommand(program: Command): void {
     .option('--offset <number>', 'Pagination offset', (v) => parseInt(v, 10))
     .option('--language-map', 'Include language map in response')
     .action(
-      async (
-        projectUuid: string,
-        options: { ids?: string[]; offset?: number; languageMap?: boolean },
-      ) => {
-        try {
-          const client = getClient();
-          const result = await client.v1.charts.getChartsAsCode(projectUuid, {
-            ids: options.ids,
-            offset: options.offset,
-            languageMap: options.languageMap,
-          });
-          console.log(JSON.stringify(result, null, 2));
-        } catch (error) {
-          console.error(
-            'Error getting charts as code:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      },
+      wrapAction(
+        READ_ONLY_DEFAULT,
+        async (
+          projectUuid: string,
+          options: { ids?: string[]; offset?: number; languageMap?: boolean },
+        ) => {
+          try {
+            const client = getClient();
+            const result = await client.v1.charts.getChartsAsCode(projectUuid, {
+              ids: options.ids,
+              offset: options.offset,
+              languageMap: options.languageMap,
+            });
+            console.log(JSON.stringify(result, null, 2));
+          } catch (error) {
+            console.error(
+              'Error getting charts as code:',
+              error instanceof Error ? error.message : String(error),
+            );
+            process.exit(1);
+          }
+        },
+      ),
     );
 
   codeCmd
     .command('upsert <projectUuid> <slug>')
     .description('Upsert a chart from code (body from --file or stdin)')
     .option('--file <path>', 'Read chart JSON from file (default: stdin)')
-    .action(async (projectUuid: string, slug: string, options: { file?: string }) => {
-      try {
-        const body = await readChartJsonInput(options.file);
-        const client = getClient();
-        const result = await client.v1.charts.upsertChartAsCode(projectUuid, slug, body);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error upserting chart as code:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+    .action(
+      wrapAction(
+        WRITE_IDEMPOTENT,
+        async (projectUuid: string, slug: string, options: { file?: string }) => {
+          try {
+            const body = await readChartJsonInput(options.file);
+            const client = getClient();
+            const result = await client.v1.charts.upsertChartAsCode(projectUuid, slug, body);
+            console.log(JSON.stringify(result, null, 2));
+          } catch (error) {
+            console.error(
+              'Error upserting chart as code:',
+              error instanceof Error ? error.message : String(error),
+            );
+            process.exit(1);
+          }
+        },
+      ),
+    );
 }

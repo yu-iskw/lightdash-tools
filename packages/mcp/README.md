@@ -1,4 +1,4 @@
-# @lightdash-tools/mcp
+# [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
 MCP server for Lightdash: exposes projects, charts, dashboards, spaces, users, and groups as tools. Uses `@lightdash-tools/client` for all API access.
 
@@ -64,7 +64,7 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 
 ## Tools
 
-Same set in both modes: `list_projects`, `get_project`, `list_explores`, `get_explore`, `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`, `compile_query`.
+Same set in both modes: `list_projects`, `get_project`, `list_explores`, `get_explore`, `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`, `list_dashboards`, `list_spaces`, `get_space`, `list_organization_members`, `get_member`, `delete_member`, `list_groups`, `get_group`, `compile_query`, `list_metrics`, `list_schedulers`, `list_tags`, `search_content`.
 
 ### Destructive tools
 

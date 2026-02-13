@@ -4,7 +4,9 @@
 
 import type { Command } from 'commander';
 import { readFileSync } from 'fs';
+import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
+import { wrapAction } from '../utils/safety';
 import type { CompileQueryRequest } from '@lightdash-tools/common';
 
 /**
@@ -55,29 +57,34 @@ export function registerQueryCommand(program: Command): void {
     .argument('<projectUuid>', 'Project UUID')
     .argument('<exploreId>', 'Explore ID')
     .option('--file <path>', 'Read metric query JSON from file (default: read from stdin)')
-    .action(async (projectUuid: string, exploreId: string, options: { file?: string }) => {
-      try {
-        if (!projectUuid) {
-          console.error('Error: projectUuid is required');
-          process.exit(1);
-        }
-        if (!exploreId) {
-          console.error('Error: exploreId is required');
-          process.exit(1);
-        }
+    .action(
+      wrapAction(
+        READ_ONLY_DEFAULT,
+        async (projectUuid: string, exploreId: string, options: { file?: string }) => {
+          try {
+            if (!projectUuid) {
+              console.error('Error: projectUuid is required');
+              process.exit(1);
+            }
+            if (!exploreId) {
+              console.error('Error: exploreId is required');
+              process.exit(1);
+            }
 
-        // Read JSON input
-        const body = (await readJsonInput(options.file)) as CompileQueryRequest;
+            // Read JSON input
+            const body = (await readJsonInput(options.file)) as CompileQueryRequest;
 
-        const client = getClient();
-        const result = await client.v1.query.compileQuery(projectUuid, exploreId, body);
-        console.log(JSON.stringify(result, null, 2));
-      } catch (error) {
-        console.error(
-          'Error compiling query:',
-          error instanceof Error ? error.message : String(error),
-        );
-        process.exit(1);
-      }
-    });
+            const client = getClient();
+            const result = await client.v1.query.compileQuery(projectUuid, exploreId, body);
+            console.log(JSON.stringify(result, null, 2));
+          } catch (error) {
+            console.error(
+              'Error compiling query:',
+              error instanceof Error ? error.message : String(error),
+            );
+            process.exit(1);
+          }
+        },
+      ),
+    );
 }
