@@ -213,7 +213,7 @@ describe('CLI Command Registration', () => {
 
   it('should have --safety-mode option', () => {
     const program = new Command();
-    program.option('--safety-mode <mode>', 'description', 'write-destructive');
+    program.option('--safety-mode <mode>', 'description', 'read-only');
     const option = program.options.find((opt) => opt.long === '--safety-mode');
     expect(option).toBeDefined();
   });

@@ -54,7 +54,7 @@ Currently, AI agents can execute any available MCP tool or CLI command. Some of 
 
 ### 5. Default Mode
 
-**Decision**: Default to `write-destructive`.
+**Decision**: Default to `read-only`.
 **Rationale**: Backward compatibility. Users must explicitly opt-in to safer modes.
 
 ## Risks / Trade-offs

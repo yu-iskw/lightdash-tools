@@ -8,13 +8,13 @@ The system SHALL define three hierarchical safety modes:
 
 1. `read-only`: Only allow read-only operations.
 2. `write-idempotent`: Allow read-only operations and non-destructive, idempotent writes.
-3. `write-destructive`: Allow all operations.
+3. `read-only`: Allow all operations.
 
 #### Scenario: Mode comparison
 
 - **WHEN** a required mode is compared against the current mode
 - **THEN** it SHALL be allowed if the current mode is at least as permissive as the required mode
-- **AND** the hierarchy order SHALL be `read-only` < `write-idempotent` < `write-destructive`
+- **AND** the hierarchy order SHALL be `read-only` < `write-idempotent` < `read-only`
 
 ### Requirement: Safety validation logic
 
@@ -34,12 +34,12 @@ The system SHALL provide a unified validation function that takes a tool's annot
 
 #### Scenario: Write-destructive mode enforcement
 
-- **WHEN** the current mode is `write-destructive`
+- **WHEN** the current mode is `read-only`
 - **THEN** all tools SHALL be allowed regardless of annotations
 
 ### Requirement: Global configuration
 
-The current safety mode SHALL be configurable via environment variable `LIGHTDASH_TOOL_SAFETY_MODE` and SHALL default to `write-destructive`.
+The current safety mode SHALL be configurable via environment variable `LIGHTDASH_TOOL_SAFETY_MODE` and SHALL default to `read-only`.
 
 #### Scenario: Environment variable configuration
 
@@ -49,4 +49,4 @@ The current safety mode SHALL be configurable via environment variable `LIGHTDAS
 #### Scenario: Default mode
 
 - **WHEN** `LIGHTDASH_TOOL_SAFETY_MODE` is NOT set
-- **THEN** the system SHALL default to `write-destructive`
+- **THEN** the system SHALL default to `read-only`

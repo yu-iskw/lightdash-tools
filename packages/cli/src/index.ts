@@ -27,11 +27,11 @@ const program = new Command();
 program
   .name('lightdash-ai')
   .description('CLI for Lightdash AI')
-  .version('1.0.0')
+  .version('0.2.5')
   .option(
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
-    'write-destructive',
+    'read-only',
   );
 
 // Register all commands (organization and projects first so subcommands can attach)
