@@ -9,4 +9,6 @@ export namespace Explores {
   export type ApiExploresResults = components['schemas']['ApiExploresResults'];
   /** Get single explore response (full explore). */
   export type ApiExploreResults = components['schemas']['ApiExploreResults'];
+  /** Compiled table within an explore. */
+  export type CompiledTable = components['schemas']['CompiledTable'];
 }

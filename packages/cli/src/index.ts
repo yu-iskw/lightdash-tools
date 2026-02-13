@@ -17,6 +17,10 @@ import { registerGroupsCommand } from './commands/groups';
 import { registerUsersCommand } from './commands/users';
 import { registerQueryCommand } from './commands/query';
 import { registerExploresCommand } from './commands/explores';
+import { registerMetricsCommand } from './commands/metrics';
+import { registerSchedulersCommand } from './commands/schedulers';
+import { registerTagsCommand } from './commands/tags';
+import { registerContentCommand } from './commands/content';
 
 const program = new Command();
 
@@ -36,6 +40,10 @@ registerGroupsCommand(program);
 registerUsersCommand(program);
 registerQueryCommand(program);
 registerExploresCommand(program);
+registerMetricsCommand(program);
+registerSchedulersCommand(program);
+registerTagsCommand(program);
+registerContentCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

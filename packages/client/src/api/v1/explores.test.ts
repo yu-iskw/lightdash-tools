@@ -37,4 +37,38 @@ describe('ExploresClient', () => {
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/explores/e1');
     expect(result).toEqual(explore);
   });
+
+  it('listDimensions should extract dimensions from explore', async () => {
+    const client = new ExploresClient(mockHttp);
+    const explore = {
+      tables: {
+        t1: {
+          dimensions: {
+            d1: { name: 'd1' },
+          },
+        },
+      },
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(explore);
+    const result = await client.listDimensions('p1', 'e1');
+    expect(result).toEqual([{ name: 'd1' }]);
+  });
+
+  it('getFieldLineage should extract lineage from explore', async () => {
+    const client = new ExploresClient(mockHttp);
+    const explore = {
+      tables: {
+        t1: {
+          dimensions: {
+            d1: { name: 'd1' },
+          },
+          metrics: {},
+          lineageGraph: { upstream: [] },
+        },
+      },
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(explore);
+    const result = await client.getFieldLineage('p1', 'e1', 'd1');
+    expect(result).toEqual({ upstream: [] });
+  });
 });

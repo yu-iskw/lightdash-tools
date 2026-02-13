@@ -21,6 +21,11 @@ import { GroupsClient } from './api/v1/groups';
 import { AiAgentsClient } from './api/v1/ai-agents';
 import { ProjectAccessClient } from './api/v1/project-access';
 import { ExploresClient } from './api/v1/explores';
+import { ValidationClient } from './api/v1/validation';
+import { MetricsClient } from './api/v1/metrics';
+import { SchedulersClient } from './api/v1/schedulers';
+import { TagsClient } from './api/v1/tags';
+import { ContentClient } from './api/v2/content';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -37,6 +42,10 @@ export class V1ApiClients {
   readonly aiAgents: AiAgentsClient;
   readonly projectAccess: ProjectAccessClient;
   readonly explores: ExploresClient;
+  readonly validation: ValidationClient;
+  readonly metrics: MetricsClient;
+  readonly schedulers: SchedulersClient;
+  readonly tags: TagsClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -50,6 +59,10 @@ export class V1ApiClients {
     this.aiAgents = new AiAgentsClient(http);
     this.projectAccess = new ProjectAccessClient(http);
     this.explores = new ExploresClient(http);
+    this.validation = new ValidationClient(http);
+    this.metrics = new MetricsClient(http);
+    this.schedulers = new SchedulersClient(http);
+    this.tags = new TagsClient(http);
   }
 }
 
@@ -60,11 +73,13 @@ export class V2ApiClients {
   readonly query: QueryClientV2;
   readonly organizationRoles: OrganizationRolesClient;
   readonly projectRoleAssignments: ProjectRoleAssignmentsClient;
+  readonly content: ContentClient;
 
   constructor(http: HttpClient) {
     this.query = new QueryClientV2(http);
     this.organizationRoles = new OrganizationRolesClient(http);
     this.projectRoleAssignments = new ProjectRoleAssignmentsClient(http);
+    this.content = new ContentClient(http);
   }
 }
 
@@ -128,6 +143,26 @@ export class LightdashClient {
    * @deprecated Use `client.v1.explores` instead. This alias will be removed in a future major version.
    */
   readonly explores: ExploresClient;
+  /**
+   * @deprecated Use `client.v1.validation` instead. This alias will be removed in a future major version.
+   */
+  readonly validation: ValidationClient;
+  /**
+   * @deprecated Use `client.v1.metrics` instead. This alias will be removed in a future major version.
+   */
+  readonly metrics: MetricsClient;
+  /**
+   * @deprecated Use `client.v1.schedulers` instead. This alias will be removed in a future major version.
+   */
+  readonly schedulers: SchedulersClient;
+  /**
+   * @deprecated Use `client.v1.tags` instead. This alias will be removed in a future major version.
+   */
+  readonly tags: TagsClient;
+  /**
+   * @deprecated Use `client.v2.content` instead. This alias will be removed in a future major version.
+   */
+  readonly content: ContentClient;
 
   constructor(config?: PartialLightdashClientConfig) {
     const merged = mergeConfig(config);
@@ -156,6 +191,11 @@ export class LightdashClient {
     this.groups = this.v1.groups;
     this.aiAgents = this.v1.aiAgents;
     this.explores = this.v1.explores;
+    this.validation = this.v1.validation;
+    this.metrics = this.v1.metrics;
+    this.schedulers = this.v1.schedulers;
+    this.tags = this.v1.tags;
+    this.content = this.v2.content;
   }
 
   /**
