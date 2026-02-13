@@ -3,7 +3,7 @@
  * Space access types (AddSpaceUserAccess, AddSpaceGroupAccess, SpaceMemberRole) live in space-access.ts.
  */
 
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Spaces {
   /** Space summary. */

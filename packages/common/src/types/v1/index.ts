@@ -3,17 +3,17 @@
  * Domain files remain at types/*.ts; see ADR-0008 (file layout follow-up).
  */
 
-import type { Projects as P } from '../projects';
-import type { Organizations as O } from '../organizations';
-import type { Queries as Q } from '../queries';
-import type { Charts as C } from '../charts';
-import type { Dashboards as D } from '../dashboards';
-import type { Spaces as S } from '../spaces';
-import type { SpaceAccess as SA } from '../space-access';
-import type { ProjectAccess as PA } from '../project-access';
-import type { Users as U } from '../users';
-import type { Groups as G } from '../groups';
-import type { AiAgents as A } from '../ai-agents';
+import type { Projects as P } from './projects';
+import type { Organizations as O } from './organizations';
+import type { Queries as Q } from './queries';
+import type { Charts as C } from './charts';
+import type { Dashboards as D } from './dashboards';
+import type { Spaces as S } from './spaces';
+import type { SpaceAccess as SA } from './space-access';
+import type { ProjectAccess as PA } from './project-access';
+import type { Users as U } from './users';
+import type { Groups as G } from './groups';
+import type { AiAgents as A } from './ai-agents';
 
 export namespace V1 {
   export namespace Projects {

@@ -1,4 +1,4 @@
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Schedulers {
   export type ApiSchedulersResponse = components['schemas']['ApiSchedulersResponse'];

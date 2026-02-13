@@ -3,19 +3,24 @@
  * Domain files remain at types/*.ts; see ADR-0008 (file layout follow-up).
  */
 
-import type { Projects as P } from '../projects';
-import type { Organizations as O } from '../organizations';
-import type { Queries as Q } from '../queries';
-import type { Charts as C } from '../charts';
-import type { Dashboards as D } from '../dashboards';
-import type { Spaces as S } from '../spaces';
-import type { SpaceAccess as SA } from '../space-access';
-import type { ProjectAccess as PA } from '../project-access';
-import type { Users as U } from '../users';
-import type { Groups as G } from '../groups';
-import type { AiAgents as A } from '../ai-agents';
+import type { Projects as P } from '../v1/projects';
+import type { Organizations as O } from '../v1/organizations';
+import type { Queries as Q } from '../v1/queries';
+import type { Charts as C } from '../v1/charts';
+import type { Dashboards as D } from '../v1/dashboards';
+import type { Spaces as S } from '../v1/spaces';
+import type { SpaceAccess as SA } from '../v1/space-access';
+import type { ProjectAccess as PA } from '../v1/project-access';
+import type { Users as U } from '../v1/users';
+import type { Groups as G } from '../v1/groups';
+import type { AiAgents as A } from '../v1/ai-agents';
+import type { Content as Con } from './content';
 
 export namespace V2 {
+  export namespace Content {
+    export type ApiContentResponse = Con.ApiContentResponse;
+  }
+
   export namespace Projects {
     export type Project = P.Project;
     export type OrganizationProject = P.OrganizationProject;

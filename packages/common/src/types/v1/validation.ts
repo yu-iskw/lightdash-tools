@@ -1,4 +1,4 @@
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Validation {
   export type ValidationTarget = components['schemas']['ValidationTarget'];
