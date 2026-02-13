@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   SafetyMode,
   isAllowed,
+  getSafetyModeFromEnv,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
@@ -31,6 +32,29 @@ describe('Safety Logic', () => {
       expect(isAllowed(SafetyMode.WRITE_DESTRUCTIVE, READ_ONLY_DEFAULT)).toBe(true);
       expect(isAllowed(SafetyMode.WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT)).toBe(true);
       expect(isAllowed(SafetyMode.WRITE_DESTRUCTIVE, WRITE_DESTRUCTIVE)).toBe(true);
+    });
+  });
+
+  describe('getSafetyModeFromEnv', () => {
+    const originalEnv = process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+
+    afterEach(() => {
+      process.env.LIGHTDASH_TOOL_SAFETY_MODE = originalEnv;
+    });
+
+    it('should return READ_ONLY by default when env is not set', () => {
+      delete process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+      expect(getSafetyModeFromEnv()).toBe(SafetyMode.READ_ONLY);
+    });
+
+    it('should return value from env when set to valid mode', () => {
+      process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_IDEMPOTENT;
+      expect(getSafetyModeFromEnv()).toBe(SafetyMode.WRITE_IDEMPOTENT);
+    });
+
+    it('should return READ_ONLY when env is set to invalid value', () => {
+      process.env.LIGHTDASH_TOOL_SAFETY_MODE = 'invalid-mode';
+      expect(getSafetyModeFromEnv()).toBe(SafetyMode.READ_ONLY);
     });
   });
 });

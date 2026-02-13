@@ -98,9 +98,9 @@ The server registers the following tools (names prefixed with `lightdash_tools__
 
 The MCP server implements a hierarchical safety model. You can control which tools are available to AI agents using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the `--safety-mode` CLI option.
 
-- `read-only`: Only allows non-modifying tools (e.g., `list_*`, `get_*`).
+- `read-only` (default): Only allows non-modifying tools (e.g., `list_*`, `get_*`).
 - `write-idempotent`: Allows read tools and non-destructive writes (e.g., `upsert_chart_as_code`).
-- `write-destructive` (default): Allows all tools, including destructive ones (e.g., `delete_member`).
+- `write-destructive`: Allows all tools, including destructive ones (e.g., `delete_member`).
 
 ### Enforcement Layers
 

@@ -10,6 +10,7 @@ import { registerProjectsCommand } from './commands/projects';
 import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
 import { registerProjectAccessCommand } from './commands/project-access';
 import { registerSpacesCommand } from './commands/spaces';
+import { registerSpaceAccessCommand } from './commands/space-access';
 import { registerChartsCommand } from './commands/charts';
 import { registerDashboardsCommand } from './commands/dashboards';
 import { registerAiAgentsCommand } from './commands/ai-agents';
@@ -27,11 +28,11 @@ const program = new Command();
 program
   .name('lightdash-ai')
   .description('CLI for Lightdash AI')
-  .version('1.0.0')
+  .version('0.2.6')
   .option(
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
-    'write-destructive',
+    'read-only',
   );
 
 // Register all commands (organization and projects first so subcommands can attach)
@@ -41,6 +42,7 @@ registerProjectsCommand(program);
 registerProjectRoleAssignmentsCommand(program);
 registerProjectAccessCommand(program);
 registerSpacesCommand(program);
+registerSpaceAccessCommand(program);
 registerChartsCommand(program);
 registerDashboardsCommand(program);
 registerAiAgentsCommand(program);

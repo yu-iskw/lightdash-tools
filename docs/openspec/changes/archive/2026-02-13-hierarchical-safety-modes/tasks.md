@@ -5,7 +5,7 @@
 - [x] 1.1 Create `packages/common/src/safety.ts` with `SafetyMode` enum and `ToolAnnotations` type.
 - [x] 1.2 Implement `isAllowed(mode, annotations)` logic in `packages/common/src/safety.ts`.
 - [x] 1.3 Export safety presets (`READ_ONLY_DEFAULT`, `WRITE_IDEMPOTENT`, `WRITE_DESTRUCTIVE`) from `common`.
-- [x] 1.4 Export `getSafetyModeFromEnv()` with default to `write-destructive`.
+- [x] 1.4 Export `getSafetyModeFromEnv()` with default to `read-only`.
 
 ## 2. MCP Server Enforcement
 

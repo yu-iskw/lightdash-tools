@@ -67,5 +67,5 @@ export function getSafetyModeFromEnv(): SafetyMode {
   if (Object.values(SafetyMode).includes(mode as SafetyMode)) {
     return mode as SafetyMode;
   }
-  return SafetyMode.WRITE_DESTRUCTIVE;
+  return SafetyMode.READ_ONLY;
 }

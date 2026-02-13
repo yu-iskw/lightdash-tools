@@ -43,7 +43,7 @@ The system SHALL provide a unified validation function that takes a tool's annot
 
 ### Requirement: Global configuration
 
-The current safety mode SHALL be configurable via environment variable `LIGHTDASH_TOOL_SAFETY_MODE` and SHALL default to `write-destructive`.
+The current safety mode SHALL be configurable via environment variable `LIGHTDASH_TOOL_SAFETY_MODE` and SHALL default to `read-only`.
 
 #### Scenario: Environment variable configuration
 
@@ -53,4 +53,4 @@ The current safety mode SHALL be configurable via environment variable `LIGHTDAS
 #### Scenario: Default mode
 
 - **WHEN** `LIGHTDASH_TOOL_SAFETY_MODE` is NOT set
-- **THEN** the system SHALL default to `write-destructive`
+- **THEN** the system SHALL default to `read-only`

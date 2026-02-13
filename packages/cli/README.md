@@ -155,9 +155,9 @@ The CLI implements a hierarchical safety model to prevent accidental destructive
 
 You can control the safety mode via the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the global `--safety-mode` flag.
 
-- `read-only`: Only allows non-modifying operations (e.g., list, get).
+- `read-only` (default): Only allows non-modifying operations (e.g., list, get).
 - `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
-- `write-destructive` (default): Allows all operations, including deletions.
+- `write-destructive`: Allows all operations, including deletions.
 
 ### Enforcement
 

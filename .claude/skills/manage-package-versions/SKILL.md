@@ -53,6 +53,21 @@ changie batch <version>
 changie merge
 ```
 
+### 3. Sync Entrypoint Versions
+
+Maintain the version string in CLI and MCP entrypoints by updating the `.version()` call to match the new version.
+
+**Identify files with version strings:**
+
+Search for `.version(` in the codebase to find relevant entrypoints. Common locations include:
+
+- `packages/mcp/src/bin.ts`
+- `packages/cli/src/index.ts`
+
+**Update the version string:**
+
+Replace the hardcoded version string with the new `<version>`.
+
 ## Best Practices
 
 - Always use the same `<version>` string for both `pnpm` and `changie` commands.

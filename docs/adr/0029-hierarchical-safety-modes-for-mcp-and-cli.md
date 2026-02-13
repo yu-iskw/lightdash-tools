@@ -34,7 +34,7 @@ We will implement a hierarchical safety model across both the MCP server and the
 - Environment Variable: `LIGHTDASH_TOOL_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
 - CLI Flag: `--safety-mode` (same values).
 - MCP CLI Flag: `--safety-mode` (same values; specifically for filtering registered tools).
-- Default: `write-destructive` (for backward compatibility).
+- Default: `read-only` (for improved security).
 
 ### Enforcement
 
