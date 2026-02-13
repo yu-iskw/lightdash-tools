@@ -63,7 +63,7 @@ export function isAllowed(mode: SafetyMode | string, annotations: ToolAnnotation
  * Resolves safety mode from environment variable.
  */
 export function getSafetyModeFromEnv(): SafetyMode {
-  const mode = process.env.LIGHTDASH_AI_MODE;
+  const mode = process.env.LIGHTDASH_TOOL_SAFETY_MODE;
   if (Object.values(SafetyMode).includes(mode as SafetyMode)) {
     return mode as SafetyMode;
   }

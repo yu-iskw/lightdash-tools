@@ -6,9 +6,9 @@ import type { Command } from 'commander';
  * Resolves the safety mode from the command line options or environment variables.
  */
 export function getSafetyMode(cmd: Command): SafetyMode {
-  const options = cmd.optsWithGlobals() as { mode?: string };
-  if (options.mode && Object.values(SafetyMode).includes(options.mode as SafetyMode)) {
-    return options.mode as SafetyMode;
+  const options = cmd.optsWithGlobals() as { safetyMode?: string };
+  if (options.safetyMode && Object.values(SafetyMode).includes(options.safetyMode as SafetyMode)) {
+    return options.safetyMode as SafetyMode;
   }
   return getSafetyModeFromEnv();
 }
@@ -24,7 +24,7 @@ export function wrapAction<T extends unknown[]>(
     const mode = getSafetyMode(this);
     if (!isAllowed(mode, annotations)) {
       console.error(
-        `Error: This command is disabled in ${mode} mode. To enable it, use --mode or set LIGHTDASH_AI_MODE.`,
+        `Error: This command is disabled in ${mode} mode. To enable it, use --safety-mode or set LIGHTDASH_TOOL_SAFETY_MODE.`,
       );
       process.exit(1);
     }

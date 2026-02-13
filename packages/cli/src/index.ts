@@ -29,7 +29,7 @@ program
   .description('CLI for Lightdash AI')
   .version('1.0.0')
   .option(
-    '--mode <mode>',
+    '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
     'write-destructive',
   );

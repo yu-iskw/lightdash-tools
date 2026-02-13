@@ -22,30 +22,33 @@ We will implement a hierarchical safety model across both the MCP server and the
 
 ### Safety Modes Hierarchy
 
-1.  **`read-only`**: Only allows operations explicitly marked as read-only.
-    - `annotations.readOnlyHint === true`
-2.  **`write-idempotent`**: Allows `read-only` operations and non-destructive, idempotent writes.
-    - `annotations.readOnlyHint === true` OR (`annotations.readOnlyHint === false` AND `annotations.destructiveHint === false`)
-3.  **`write-destructive`**: Allows all operations, including destructive ones.
-    - All tools/commands.
+1. **`read-only`**: Only allows operations explicitly marked as read-only.
+   - `annotations.readOnlyHint === true`
+2. **`write-idempotent`**: Allows `read-only` operations and non-destructive, idempotent writes.
+   - `annotations.readOnlyHint === true` OR (`annotations.readOnlyHint === false` AND `annotations.destructiveHint === false`)
+3. **`write-destructive`**: Allows all operations, including destructive ones.
+   - All tools/commands.
 
 ### Configuration
 
-- Environment Variable: `LIGHTDASH_AI_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
-- CLI Flag: `--mode` (same values).
+- Environment Variable: `LIGHTDASH_TOOL_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
+- CLI Flag: `--safety-mode` (same values).
+- MCP CLI Flag: `--safety-mode` (same values; specifically for filtering registered tools).
 - Default: `write-destructive` (for backward compatibility).
 
 ### Enforcement
 
-- **MCP Server**: The `registerToolSafe` function will be updated to wrap tool handlers in a safety check. If a tool is called that is forbidden in the current mode, the server will return an error message to the agent. Tool descriptions will also be updated to indicate if a tool is disabled.
-- **CLI**: A global `--mode` option will be added. Commands will be annotated with `ToolAnnotations`. A middleware/wrapper will check the safety mode before executing a command's action.
+- **MCP Server**:
+  - **Dynamic Enforcement**: The `registerToolSafe` function will be updated to wrap tool handlers in a safety check. If a tool is called that is forbidden in the current mode, the server will return an error message to the agent. Tool descriptions will also be updated to indicate if a tool is disabled.
+  - **Static Filtering**: The `--safety-mode` option allows the server to filter which tools are registered at start-up. Tools not allowed in the selected mode will not be bound (registered) to the MCP server, hiding them completely from the AI agent.
+- **CLI**: A global `--safety-mode` option will be added. Commands will be annotated with `ToolAnnotations`. A middleware/wrapper will check the safety mode before executing a command's action.
 
 ### Architecture
 
 ```mermaid
 graph TD
-    Env[LIGHTDASH_AI_MODE] --> Core[Safety Logic]
-    Flag[--mode flag] --> Core
+    Env[LIGHTDASH_TOOL_SAFETY_MODE] --> Core[Safety Logic]
+    Flag[--safety-mode flag] --> Core
 
     subgraph mcp_server [MCP Server]
         Core --> MCP_Reg[registerToolSafe]

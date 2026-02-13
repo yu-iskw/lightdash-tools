@@ -3,10 +3,11 @@
  */
 
 import type { LightdashClient } from '@lightdash-tools/client';
-import { isAllowed, getSafetyModeFromEnv, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { isAllowed, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 import { toMcpErrorMessage } from '../errors.js';
+import { getStaticSafetyMode, getSafetyMode } from '../config.js';
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'lightdash_tools__';
@@ -49,8 +50,15 @@ export function registerToolSafe(
 ): void {
   const name = TOOL_PREFIX + shortName;
   const annotations = mergeAnnotations(options.annotations);
-  const mode = getSafetyModeFromEnv();
 
+  // Static Filtering: Skip registration if not allowed in static safety mode
+  const staticMode = getStaticSafetyMode();
+  if (staticMode && !isAllowed(staticMode, annotations)) {
+    return;
+  }
+
+  // Dynamic Enforcement: Wrap handler if not allowed in current safety mode (env)
+  const mode = getSafetyMode();
   const isToolAllowed = isAllowed(mode, annotations);
 
   // If not allowed, wrap handler to return an error and update description
@@ -63,7 +71,7 @@ export function registerToolSafe(
       content: [
         {
           type: 'text',
-          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_AI_MODE.`,
+          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOL_SAFETY_MODE.`,
         },
       ],
       isError: true,

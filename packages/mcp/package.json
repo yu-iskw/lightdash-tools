@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/mcp",
-  "version": "0.2.1",
+  "version": "0.2.4",
   "description": "MCP server and utilities for Lightdash AI.",
   "keywords": [],
   "license": "Apache-2.0",
@@ -19,6 +19,7 @@
     "@lightdash-tools/client": "workspace:*",
     "@lightdash-tools/common": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.26.0",
+    "commander": "^14.0.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {

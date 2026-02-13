@@ -16,7 +16,7 @@ describe('CLI wrapAction', () => {
 
   it('should allow read-only action in read-only mode', async () => {
     const cmd = new Command();
-    cmd.setOptionValueWithSource('mode', SafetyMode.READ_ONLY, 'cli');
+    cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
 
     const wrapped = wrapAction(READ_ONLY_DEFAULT, mockAction);
     await wrapped.call(cmd, 'arg1');
@@ -27,7 +27,7 @@ describe('CLI wrapAction', () => {
 
   it('should block destructive action in read-only mode', async () => {
     const cmd = new Command();
-    cmd.setOptionValueWithSource('mode', SafetyMode.READ_ONLY, 'cli');
+    cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
 
     const wrapped = wrapAction(WRITE_DESTRUCTIVE, mockAction);
 
@@ -42,7 +42,7 @@ describe('CLI wrapAction', () => {
 
   it('should allow destructive action in write-destructive mode', async () => {
     const cmd = new Command();
-    cmd.setOptionValueWithSource('mode', SafetyMode.WRITE_DESTRUCTIVE, 'cli');
+    cmd.setOptionValueWithSource('safetyMode', SafetyMode.WRITE_DESTRUCTIVE, 'cli');
 
     const wrapped = wrapAction(WRITE_DESTRUCTIVE, mockAction);
     await wrapped.call(cmd, 'arg1');

@@ -10,6 +10,18 @@ All tools are available as npm packages under the `@lightdash-tools` scope.
 - **CLI** ([packages/cli/README.md](packages/cli/README.md)) — Command-line interface for Lightdash. Run directly via [`npx @lightdash-tools/cli`](https://www.npmjs.com/package/@lightdash-tools/cli) or install globally via `npm install -g @lightdash-tools/cli`. <!-- markdown-link-check-disable-line -->
 - **MCP** ([packages/mcp/README.md](packages/mcp/README.md)) — MCP server that exposes Lightdash as tools for AI assistants. Run directly via [`npx @lightdash-tools/mcp`](https://www.npmjs.com/package/@lightdash-tools/mcp). <!-- markdown-link-check-disable-line -->
 
+## AI Safety
+
+Both the CLI and MCP server implement a hierarchical safety model to prevent accidental destructive operations (see [ADR 0029](docs/adr/0029-hierarchical-safety-modes-for-mcp-and-cli.md)).
+
+You can control the safety level using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable:
+
+- `read-only`: Only allows non-modifying operations (e.g., list, get).
+- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert).
+- `write-destructive` (default): Allows all operations, including deletions.
+
+For the CLI, you can also use the global `--safety-mode` flag.
+
 Developing? See [CONTRIBUTING.md](CONTRIBUTING.md). For agent instructions see [AGENTS.md](AGENTS.md). For architectural decisions, see [docs/adr/](docs/adr/).
 
 ## License
