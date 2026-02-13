@@ -70,6 +70,26 @@ Same set in both modes: `list_projects`, `get_project`, `list_explores`, `get_ex
 
 Tools with `destructiveHint: true` (e.g. `delete_member`) perform irreversible or high-impact actions. MCP clients should show a warning and/or require user confirmation before executing them. AI agents should ask the user for explicit confirmation before calling such tools.
 
+## Testing
+
+This package includes unit tests and integration tests. Integration tests run against a real Lightdash API and are only executed if the required environment variables are set.
+
+### Running unit tests
+
+```bash
+pnpm test
+```
+
+### Running integration tests
+
+To run tests against a real Lightdash instance, provide your credentials:
+
+```bash
+LIGHTDASH_URL=https://app.lightdash.cloud LIGHTDASH_API_KEY=your_api_key pnpm test
+```
+
+The integration tests will automatically detect these environment variables and run additional scenarios, such as verifying authentication and tool execution against the live API.
+
 ## License
 
 Apache-2.0

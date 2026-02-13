@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   LightdashClient,
   mergeConfig,
@@ -6,9 +6,19 @@ import {
   LightdashApiError,
   RateLimitError,
   NetworkError,
+  ENV_LIGHTDASH_API_KEY,
+  ENV_LIGHTDASH_URL,
+  ENV_LIGHTDASH_PROXY_AUTHORIZATION,
+  SecretString,
 } from './index';
 
 describe('LightdashClient', () => {
+  beforeEach(() => {
+    vi.stubEnv(ENV_LIGHTDASH_API_KEY, '');
+    vi.stubEnv(ENV_LIGHTDASH_URL, '');
+    vi.stubEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, '');
+  });
+
   it('should export LightdashClient', () => {
     expect(LightdashClient).toBeDefined();
   });
@@ -26,17 +36,27 @@ describe('LightdashClient', () => {
       /baseUrl and personalAccessToken|LIGHTDASH_URL and LIGHTDASH_API_KEY/,
     );
   });
-});
 
-describe('mergeConfig', () => {
   it('should merge explicit config with env (explicit wins)', () => {
+    vi.stubEnv(ENV_LIGHTDASH_URL, 'https://env.example.com');
+    vi.stubEnv(ENV_LIGHTDASH_API_KEY, 'env-token');
+
     const explicit = {
       baseUrl: 'https://custom.example.com',
       personalAccessToken: 'explicit-token',
     };
     const merged = mergeConfig(explicit);
     expect(merged.baseUrl).toBe('https://custom.example.com');
-    expect(merged.personalAccessToken).toBe('explicit-token');
+    expect(merged.personalAccessToken).toBeInstanceOf(SecretString);
+    expect(merged.personalAccessToken.expose()).toBe('explicit-token');
+  });
+});
+
+describe('mergeConfig', () => {
+  beforeEach(() => {
+    vi.stubEnv(ENV_LIGHTDASH_API_KEY, '');
+    vi.stubEnv(ENV_LIGHTDASH_URL, '');
+    vi.stubEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, '');
   });
 
   it('should require baseUrl and personalAccessToken', () => {
@@ -47,6 +67,12 @@ describe('mergeConfig', () => {
 });
 
 describe('loadConfigFromEnv', () => {
+  beforeEach(() => {
+    vi.stubEnv(ENV_LIGHTDASH_API_KEY, '');
+    vi.stubEnv(ENV_LIGHTDASH_URL, '');
+    vi.stubEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, '');
+  });
+
   it('should return empty object when env vars are not set', () => {
     const config = loadConfigFromEnv();
     expect(config).toEqual({});

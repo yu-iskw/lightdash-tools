@@ -37,5 +37,6 @@ export {
 } from './utils/env';
 export { HttpClient } from './http/http-client';
 export { RateLimiter } from './http/rate-limiter';
+export { SecretString } from './utils/secret-string';
 export type { ApiResponseOk, ApiResponseError, ApiResponseBody, ApiError } from './types/api';
 export type { paths, components, operations } from './types/api';
