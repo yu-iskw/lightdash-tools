@@ -16,12 +16,21 @@ Domain models are type aliases to generated OpenAPI types (using `openapi-typesc
 
 Models are split into domain-specific files for better maintainability:
 
-- `types/projects.ts` - Projects domain models
-- `types/organizations.ts` - Organizations domain models
-- `types/queries.ts` - Queries domain models (requests and responses)
-- `types/charts.ts` - Charts domain models
-- `types/dashboards.ts` - Dashboards domain models
-- `types/spaces.ts` - Spaces domain models
+- `types/v1/projects.ts` - Projects domain models
+- `types/v1/organizations.ts` - Organizations domain models
+- `types/v1/queries.ts` - Queries domain models (requests and responses)
+- `types/v1/charts.ts` - Charts domain models
+- `types/v1/dashboards.ts` - Dashboards domain models
+- `types/v1/spaces.ts` - Spaces domain models
+- `types/v1/metrics.ts` - Metrics domain models
+- `types/v1/schedulers.ts` - Schedulers domain models
+- `types/v1/tags.ts` - Tags domain models
+- `types/v1/users.ts` - Users domain models
+- `types/v1/groups.ts` - Groups domain models
+- `types/v1/ai-agents.ts` - AI Agents domain models
+- `types/v1/project-access.ts` - Project Access domain models
+- `types/v1/validation.ts` - Validation domain models
+- `types/v2/content.ts` - Content domain models (v2)
 
 The main `types/lightdash-api.ts` file imports all domains and assembles the `LightdashApi` namespace, providing flat exports for backward compatibility. All existing imports continue to work without changes.
 

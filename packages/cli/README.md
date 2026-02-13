@@ -1,4 +1,4 @@
-# Lightdash AI CLI
+# Lightdash AI CLI ([@lightdash-tools/cli](https://www.npmjs.com/package/@lightdash-tools/cli)) <!-- markdown-link-check-disable-line -->
 
 Command-line interface for interacting with the Lightdash API.
 
@@ -88,6 +88,54 @@ lightdash-tools groups list
 
 ```bash
 lightdash-tools users list
+```
+
+#### Metrics
+
+```bash
+lightdash-tools metrics list <projectUuid>
+```
+
+#### Schedulers
+
+```bash
+lightdash-tools schedulers list <projectUuid>
+```
+
+#### Tags
+
+```bash
+lightdash-tools tags list <projectUuid>
+```
+
+#### Content (Experimental)
+
+```bash
+lightdash-tools content search "query"
+```
+
+#### AI Agents
+
+```bash
+lightdash-tools ai-agents list
+```
+
+#### Project Access
+
+```bash
+lightdash-tools project-access list <projectUuid>
+```
+
+#### Organization Roles
+
+```bash
+lightdash-tools organization-roles list
+```
+
+#### Project Role Assignments
+
+```bash
+lightdash-tools project-role-assignments list <projectUuid>
 ```
 
 #### Query

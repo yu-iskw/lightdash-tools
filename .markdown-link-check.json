@@ -1,4 +1,7 @@
 {
   "ignorePatterns": [
+    {
+      "pattern": "^https://www.npmjs.com/package/@lightdash-tools/"
+    }
   ]
 }
