@@ -6,13 +6,13 @@ The Command Line Interface for lightdash-tools, providing a human-friendly way t
 
 ## Requirements
 
-### Requirement: Global mode flag
+### Requirement: Global safety mode flag
 
-The CLI SHALL support a global `--mode` flag to override the default safety mode.
+The CLI SHALL support a global `--safety-mode` flag to override the default safety mode.
 
-#### Scenario: Global mode flag override
+#### Scenario: Global safety mode flag override
 
-- **WHEN** user runs `lightdash-tools --mode <mode> <command>`
+- **WHEN** user runs `lightdash-tools --safety-mode <mode> <command>`
 - **THEN** the CLI SHALL use the specified `<mode>` for the duration of the command execution
 
 ### Requirement: Hierarchical safety enforcement in CLI

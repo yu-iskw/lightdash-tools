@@ -20,7 +20,7 @@ You can control the safety level using the `LIGHTDASH_TOOL_SAFETY_MODE` environm
 - `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert).
 - `write-destructive` (default): Allows all operations, including deletions.
 
-For the CLI, you can also use the global `--mode` flag.
+For the CLI, you can also use the global `--safety-mode` flag.
 
 Developing? See [CONTRIBUTING.md](CONTRIBUTING.md). For agent instructions see [AGENTS.md](AGENTS.md). For architectural decisions, see [docs/adr/](docs/adr/).
 

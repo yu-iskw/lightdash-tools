@@ -7,7 +7,7 @@ import { isAllowed, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 import { toMcpErrorMessage } from '../errors.js';
-import { getBindedToolMode, getSafetyMode } from '../config.js';
+import { getStaticSafetyMode, getSafetyMode } from '../config.js';
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'lightdash_tools__';
@@ -51,9 +51,9 @@ export function registerToolSafe(
   const name = TOOL_PREFIX + shortName;
   const annotations = mergeAnnotations(options.annotations);
 
-  // Static Filtering: Skip registration if not allowed in binded tool mode
-  const bindedMode = getBindedToolMode();
-  if (bindedMode && !isAllowed(bindedMode, annotations)) {
+  // Static Filtering: Skip registration if not allowed in static safety mode
+  const staticMode = getStaticSafetyMode();
+  if (staticMode && !isAllowed(staticMode, annotations)) {
     return;
   }
 

@@ -5,25 +5,25 @@
 
 import { Command } from 'commander';
 import { SafetyMode } from '@lightdash-tools/common';
-import { setBindedToolMode } from './config.js';
+import { setStaticSafetyMode } from './config.js';
 
 const program = new Command();
 
 program
   .name('lightdash-mcp')
   .description('MCP server for Lightdash AI')
-  .version('0.2.2')
+  .version('0.2.3')
   .option('--http', 'Run as HTTP server instead of Stdio')
   .option(
-    '--binded-tool-mode <mode>',
+    '--safety-mode <mode>',
     'Filter registered tools by safety mode (read-only, write-idempotent, write-destructive)',
   )
   .action((options) => {
-    if (options.bindedToolMode) {
-      if (Object.values(SafetyMode).includes(options.bindedToolMode)) {
-        setBindedToolMode(options.bindedToolMode as SafetyMode);
+    if (options.safetyMode) {
+      if (Object.values(SafetyMode).includes(options.safetyMode)) {
+        setStaticSafetyMode(options.safetyMode as SafetyMode);
       } else {
-        console.error(`Invalid safety mode: ${options.bindedToolMode}`);
+        console.error(`Invalid safety mode: ${options.safetyMode}`);
         process.exit(1);
       }
     }

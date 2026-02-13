@@ -8,7 +8,7 @@ import type { PartialLightdashClientConfig } from '@lightdash-tools/client';
 import { getSafetyModeFromEnv } from '@lightdash-tools/common';
 import type { SafetyMode } from '@lightdash-tools/common';
 
-let globalBindedToolMode: SafetyMode | undefined;
+let globalStaticSafetyMode: SafetyMode | undefined;
 
 /**
  * Gets the safety mode for dynamic enforcement.
@@ -20,15 +20,15 @@ export function getSafetyMode(): SafetyMode {
 /**
  * Gets the safety mode for static tool filtering (binding).
  */
-export function getBindedToolMode(): SafetyMode | undefined {
-  return globalBindedToolMode;
+export function getStaticSafetyMode(): SafetyMode | undefined {
+  return globalStaticSafetyMode;
 }
 
 /**
- * Sets the binded tool mode (from CLI).
+ * Sets the static safety mode (from CLI).
  */
-export function setBindedToolMode(mode: SafetyMode): void {
-  globalBindedToolMode = mode;
+export function setStaticSafetyMode(mode: SafetyMode): void {
+  globalStaticSafetyMode = mode;
 }
 
 /**

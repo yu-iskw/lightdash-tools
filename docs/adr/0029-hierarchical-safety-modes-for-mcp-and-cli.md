@@ -32,23 +32,23 @@ We will implement a hierarchical safety model across both the MCP server and the
 ### Configuration
 
 - Environment Variable: `LIGHTDASH_TOOL_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
-- CLI Flag: `--mode` (same values).
-- MCP CLI Flag: `--binded-tool-mode` (same values; specifically for filtering registered tools).
+- CLI Flag: `--safety-mode` (same values).
+- MCP CLI Flag: `--safety-mode` (same values; specifically for filtering registered tools).
 - Default: `write-destructive` (for backward compatibility).
 
 ### Enforcement
 
 - **MCP Server**:
   - **Dynamic Enforcement**: The `registerToolSafe` function will be updated to wrap tool handlers in a safety check. If a tool is called that is forbidden in the current mode, the server will return an error message to the agent. Tool descriptions will also be updated to indicate if a tool is disabled.
-  - **Static Filtering**: The `--binded-tool-mode` option allows the server to filter which tools are registered at start-up. Tools not allowed in the selected mode will not be bound (registered) to the MCP server, hiding them completely from the AI agent.
-- **CLI**: A global `--mode` option will be added. Commands will be annotated with `ToolAnnotations`. A middleware/wrapper will check the safety mode before executing a command's action.
+  - **Static Filtering**: The `--safety-mode` option allows the server to filter which tools are registered at start-up. Tools not allowed in the selected mode will not be bound (registered) to the MCP server, hiding them completely from the AI agent.
+- **CLI**: A global `--safety-mode` option will be added. Commands will be annotated with `ToolAnnotations`. A middleware/wrapper will check the safety mode before executing a command's action.
 
 ### Architecture
 
 ```mermaid
 graph TD
     Env[LIGHTDASH_TOOL_SAFETY_MODE] --> Core[Safety Logic]
-    Flag[--mode flag] --> Core
+    Flag[--safety-mode flag] --> Core
 
     subgraph mcp_server [MCP Server]
         Core --> MCP_Reg[registerToolSafe]

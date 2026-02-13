@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/mcp",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "MCP server and utilities for Lightdash AI.",
   "keywords": [],
   "license": "Apache-2.0",

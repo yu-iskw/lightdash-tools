@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.4] - 2026-02-13
+
+### Features
+
+- renamed --mode to --safety-mode in CLI (breaking change)
+
 ## [0.2.3] - 2026-02-13
 
 - add --binded-tool-mode to MCP server for tool filtering

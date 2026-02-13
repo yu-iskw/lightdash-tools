@@ -42,6 +42,7 @@ The CLI provides subcommands grouped by domain. All commands output JSON by defa
 
 ```bash
 lightdash-tools organization get
+lightdash-tools organization-roles list
 ```
 
 #### Projects
@@ -49,64 +50,68 @@ lightdash-tools organization get
 ```bash
 lightdash-tools projects list
 lightdash-tools projects get <projectUuid>
+lightdash-tools projects validate run <projectUuid>
+lightdash-tools projects validate results <projectUuid>
 ```
 
-#### Explores
+#### Explores (Project-level)
 
 ```bash
-lightdash-tools explores list <projectUuid>
-lightdash-tools explores get <projectUuid> <exploreId>
+lightdash-tools projects explores list <projectUuid>
+lightdash-tools projects explores get <projectUuid> <exploreId>
+lightdash-tools projects explores dimensions <projectUuid> <exploreId>
+lightdash-tools projects explores lineage <projectUuid> <exploreId> <fieldId>
 ```
 
-#### Charts
+#### Charts (Project-level)
 
 ```bash
-lightdash-tools charts list <projectUuid>
-lightdash-tools charts get-code <projectUuid> --ids <slugs...>
-lightdash-tools charts upsert-code <projectUuid> <slug> --file <chart.json>
+lightdash-tools projects charts list <projectUuid>
+lightdash-tools projects charts code list <projectUuid> --ids <slugs...>
+lightdash-tools projects charts code upsert <projectUuid> <slug> --file <chart.json>
 ```
 
-#### Dashboards
+#### Dashboards (Project-level)
 
 ```bash
-lightdash-tools dashboards list <projectUuid>
+lightdash-tools projects dashboards list <projectUuid>
 ```
 
-#### Spaces
+#### Spaces (Project-level)
 
 ```bash
-lightdash-tools spaces list <projectUuid>
-lightdash-tools spaces get <projectUuid> <spaceUuid>
+lightdash-tools projects spaces list <projectUuid>
+lightdash-tools projects spaces get <projectUuid> <spaceUuid>
 ```
 
-#### Groups
-
-```bash
-lightdash-tools groups list
-```
-
-#### Users
+#### Users & Groups
 
 ```bash
 lightdash-tools users list
+lightdash-tools users get <userUuid>
+lightdash-tools groups list
 ```
 
-#### Metrics
+#### Metrics & Schedulers
 
 ```bash
 lightdash-tools metrics list <projectUuid>
-```
-
-#### Schedulers
-
-```bash
+lightdash-tools metrics get <projectUuid> <tableName> <metricName>
 lightdash-tools schedulers list <projectUuid>
+lightdash-tools schedulers get <schedulerUuid>
 ```
 
 #### Tags
 
 ```bash
 lightdash-tools tags list <projectUuid>
+lightdash-tools tags get <projectUuid> <tagUuid>
+```
+
+#### Query
+
+```bash
+lightdash-tools query compile <projectUuid> <exploreId> --file <query.json>
 ```
 
 #### Content (Experimental)
@@ -121,28 +126,11 @@ lightdash-tools content search "query"
 lightdash-tools ai-agents list
 ```
 
-#### Project Access
+#### Access Control (Project-level)
 
 ```bash
-lightdash-tools project-access list <projectUuid>
-```
-
-#### Organization Roles
-
-```bash
-lightdash-tools organization-roles list
-```
-
-#### Project Role Assignments
-
-```bash
-lightdash-tools project-role-assignments list <projectUuid>
-```
-
-#### Query
-
-```bash
-lightdash-tools query compile <projectUuid> <exploreId> --file <query.json>
+lightdash-tools projects project-access list <projectUuid>
+lightdash-tools projects project-role-assignments list <projectUuid>
 ```
 
 ### Help
@@ -152,7 +140,7 @@ Get help for any command:
 ```bash
 lightdash-tools --help
 lightdash-tools projects --help
-lightdash-tools charts --help
+lightdash-tools projects charts --help
 ```
 
 ## Output Format
@@ -161,17 +149,32 @@ All commands output JSON by default, formatted with 2-space indentation.
 
 ## Safety Modes
 
-The CLI implements a hierarchical safety model to prevent accidental destructive operations. You can control this via the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the global `--mode` flag.
+The CLI implements a hierarchical safety model to prevent accidental destructive operations. This is the same model used by the Lightdash MCP server.
+
+### Configuration
+
+You can control the safety mode via the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the global `--safety-mode` flag.
 
 - `read-only`: Only allows non-modifying operations (e.g., list, get).
-- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert).
+- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
 - `write-destructive` (default): Allows all operations, including deletions.
+
+### Enforcement
+
+The CLI uses **Dynamic Enforcement**: all commands remain visible in help, but if you attempt to execute a command that is forbidden in the current mode, the CLI will exit with an error message.
 
 Example:
 
 ```bash
-lightdash-tools --mode read-only users list
+# This will work
+lightdash-tools --safety-mode read-only users list
+
+# This will fail if delete was implemented
+lightdash-tools --safety-mode read-only users delete <uuid>
 ```
+
+When a command is blocked, you will see an error like:
+`Error: This command is disabled in read-only mode. To enable it, use --safety-mode or set LIGHTDASH_TOOL_SAFETY_MODE.`
 
 ## Error Handling
 
@@ -188,7 +191,7 @@ If you are developing the CLI itself:
 1. Install dependencies: `pnpm install`
 2. Build: `pnpm build`
 3. Run tests: `pnpm test`
-4. Run locally: `node dist/index.jst`
+4. Run locally: `node dist/index.js`
 
 ## License
 
