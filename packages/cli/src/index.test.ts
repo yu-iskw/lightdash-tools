@@ -6,6 +6,7 @@ import { registerProjectsCommand } from './commands/projects';
 import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
 import { registerProjectAccessCommand } from './commands/project-access';
 import { registerSpacesCommand } from './commands/spaces';
+import { registerSpaceAccessCommand } from './commands/space-access';
 import { registerChartsCommand } from './commands/charts';
 import { registerDashboardsCommand } from './commands/dashboards';
 import { registerAiAgentsCommand } from './commands/ai-agents';
@@ -125,17 +126,19 @@ describe('CLI Command Registration', () => {
     expect(rolesCmd?.commands.some((c) => c.name() === 'assign')).toBe(true);
   });
 
-  it('should register projects roles, access, spaces subcommands', () => {
+  it('should register projects roles, access, spaces, and space-access subcommands', () => {
     const program = new Command();
     registerProjectsCommand(program);
     registerProjectRoleAssignmentsCommand(program);
     registerProjectAccessCommand(program);
     registerSpacesCommand(program);
+    registerSpaceAccessCommand(program);
 
     const projectsCmd = program.commands.find((cmd) => cmd.name() === 'projects');
     expect(projectsCmd?.commands.some((c) => c.name() === 'roles')).toBe(true);
     expect(projectsCmd?.commands.some((c) => c.name() === 'access')).toBe(true);
     expect(projectsCmd?.commands.some((c) => c.name() === 'spaces')).toBe(true);
+    expect(projectsCmd?.commands.some((c) => c.name() === 'space-access')).toBe(true);
   });
 
   it('should register projects charts and dashboards subcommands', () => {
@@ -194,6 +197,7 @@ describe('CLI Command Registration', () => {
     registerProjectRoleAssignmentsCommand(program);
     registerProjectAccessCommand(program);
     registerSpacesCommand(program);
+    registerSpaceAccessCommand(program);
     registerChartsCommand(program);
     registerDashboardsCommand(program);
     registerAiAgentsCommand(program);
