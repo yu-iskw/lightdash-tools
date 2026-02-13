@@ -1,4 +1,4 @@
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Content {
   export type ApiContentResponse = components['schemas']['ApiContentResponse'];

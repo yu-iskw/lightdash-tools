@@ -3,7 +3,7 @@
  * Extracted from OpenAPI specification for better maintainability.
  */
 
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Users {
   /** Organization member profile. */

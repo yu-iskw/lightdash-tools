@@ -2,7 +2,7 @@
  * Explores domain models (list and get response types from the Lightdash v1 API).
  */
 
-import type { components } from './generated/openapi-types';
+import type { components } from '../generated/openapi-types';
 
 export namespace Explores {
   /** List explores response (array of summary explore). */
