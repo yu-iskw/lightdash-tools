@@ -16,6 +16,7 @@ import { registerMetricsTools } from './metrics.js';
 import { registerSchedulersTools } from './schedulers.js';
 import { registerTagsTools } from './tags.js';
 import { registerContentTools } from './content.js';
+import { registerAiAgentTools } from './ai-agents.js';
 
 export function registerTools(server: McpServer, client: LightdashClient): void {
   registerProjectTools(server, client);
@@ -30,4 +31,5 @@ export function registerTools(server: McpServer, client: LightdashClient): void 
   registerSchedulersTools(server, client);
   registerTagsTools(server, client);
   registerContentTools(server, client);
+  registerAiAgentTools(server, client);
 }

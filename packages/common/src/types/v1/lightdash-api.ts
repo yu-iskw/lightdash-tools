@@ -172,6 +172,7 @@ export namespace LightdashApi {
   }
 
   export namespace AiAgents {
+    // Admin
     export type AiAgentSummary = components['schemas']['AiAgentSummary'];
     export type AiAgentAdminSortField = components['schemas']['AiAgentAdminSortField'];
     export type AdminThreadsResult =
@@ -182,6 +183,35 @@ export namespace LightdashApi {
       components['schemas']['UpdateAiOrganizationSettings'];
     export type UpdateAiOrganizationSettingsResult =
       components['schemas']['ApiUpdateAiOrganizationSettingsResponse']['results'];
+    // Agent CRUD
+    export type AiAgent = components['schemas']['AiAgent'];
+    export type CreateAiAgent = components['schemas']['ApiCreateAiAgent'];
+    export type UpdateAiAgent = components['schemas']['ApiUpdateAiAgent'];
+    // Threads
+    export type AiAgentThreadSummary = components['schemas']['AiAgentThreadSummary'];
+    export type AiAgentThread = components['schemas']['AiAgentThread'];
+    export type CreateAgentThreadBody = components['schemas']['ApiAiAgentThreadCreateRequest'];
+    export type GenerateAgentThreadBody =
+      components['schemas']['ApiAiAgentThreadMessageCreateRequest'];
+    export type GenerateAgentThreadResult =
+      components['schemas']['ApiAiAgentThreadGenerateResponse']['results'];
+    // Evaluations
+    export type CreateEvaluationPrompt = components['schemas']['CreateEvaluationPrompt'];
+    export type CreateEvaluationBody = components['schemas']['ApiCreateEvaluationRequest'];
+    export type CreateEvaluationResult =
+      components['schemas']['ApiCreateEvaluationResponse']['results'];
+    export type UpdateEvaluationBody = components['schemas']['ApiUpdateEvaluationRequest'];
+    export type AppendEvaluationBody = components['schemas']['ApiAppendEvaluationRequest'];
+    export type AiAgentEvaluationSummary = components['schemas']['AiAgentEvaluationSummary'];
+    export type AiAgentEvaluation = components['schemas']['AiAgentEvaluation'];
+    // Evaluation runs
+    export type AiAgentEvaluationRunSummary =
+      components['schemas']['AiAgentEvaluationRunSummary'];
+    export type AiAgentEvaluationRun = components['schemas']['AiAgentEvaluationRun'];
+    export type AiAgentEvaluationRunResult =
+      components['schemas']['AiAgentEvaluationRunResult'];
+    export type AiEvalRunResultAssessment = components['schemas']['AiEvalRunResultAssessment'];
+    export type AssessmentType = components['schemas']['AssessmentType'];
   }
 
   export namespace Explores {
@@ -273,7 +303,7 @@ export type ExecuteAsyncMetricQueryResults = Queries.Responses.ExecuteAsyncMetri
 export type ExecuteAsyncDashboardChartResults = Queries.Responses.ExecuteAsyncDashboardChartResults;
 export type ExecuteAsyncSqlQueryResults = Queries.Responses.ExecuteAsyncSqlQueryResults;
 
-// AI agents (flat exports)
+// AI agents (flat exports) — admin
 export type AiAgentSummary = AiAgents.AiAgentSummary;
 export type AiAgentAdminSortField = AiAgents.AiAgentAdminSortField;
 export type AiAgentsAdminThreadsResult = AiAgents.AdminThreadsResult;
@@ -281,6 +311,26 @@ export type GetAiOrganizationSettingsResult = AiAgents.GetAiOrganizationSettings
 export type UpdateAiOrganizationSettings = AiAgents.UpdateAiOrganizationSettings;
 export type UpdateAiOrganizationSettingsResult = AiAgents.UpdateAiOrganizationSettingsResult;
 export type GetAdminThreadsParams = AiAgents.GetAdminThreadsParams;
+// AI agents (flat exports) — project-scoped
+export type AiAgent = AiAgents.AiAgent;
+export type CreateAiAgent = AiAgents.CreateAiAgent;
+export type UpdateAiAgent = AiAgents.UpdateAiAgent;
+export type AiAgentThreadSummary = AiAgents.AiAgentThreadSummary;
+export type AiAgentThread = AiAgents.AiAgentThread;
+export type CreateAgentThreadBody = AiAgents.CreateAgentThreadBody;
+export type GenerateAgentThreadBody = AiAgents.GenerateAgentThreadBody;
+export type GenerateAgentThreadResult = AiAgents.GenerateAgentThreadResult;
+// AI agents (flat exports) — evaluations
+export type CreateEvaluationPrompt = AiAgents.CreateEvaluationPrompt;
+export type CreateEvaluationBody = AiAgents.CreateEvaluationBody;
+export type CreateEvaluationResult = AiAgents.CreateEvaluationResult;
+export type UpdateEvaluationBody = AiAgents.UpdateEvaluationBody;
+export type AppendEvaluationBody = AiAgents.AppendEvaluationBody;
+export type AiAgentEvaluationSummary = AiAgents.AiAgentEvaluationSummary;
+export type AiAgentEvaluation = AiAgents.AiAgentEvaluation;
+export type AiAgentEvaluationRunSummary = AiAgents.AiAgentEvaluationRunSummary;
+export type AiAgentEvaluationRun = AiAgents.AiAgentEvaluationRun;
+export type AiAgentEvaluationRunResult = AiAgents.AiAgentEvaluationRunResult;
 
 // Explores (flat exports)
 export type ApiExploresResults = Explores.ApiExploresResults;
