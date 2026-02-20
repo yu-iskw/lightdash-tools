@@ -92,10 +92,7 @@ export class AiAgentsClient extends BaseApiClient {
   // ─── Project-scoped: threads ─────────────────────────────────────────────────
 
   /** List all threads for an agent (GET /projects/{projectUuid}/aiAgents/{agentUuid}/threads). */
-  async listAgentThreads(
-    projectUuid: string,
-    agentUuid: string,
-  ): Promise<AiAgentThreadSummary[]> {
+  async listAgentThreads(projectUuid: string, agentUuid: string): Promise<AiAgentThreadSummary[]> {
     return this.http.get<AiAgentThreadSummary[]>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads`,
     );
@@ -205,11 +202,7 @@ export class AiAgentsClient extends BaseApiClient {
   }
 
   /** Delete an evaluation (DELETE …/evaluations/{evalUuid}). */
-  async deleteEvaluation(
-    projectUuid: string,
-    agentUuid: string,
-    evalUuid: string,
-  ): Promise<void> {
+  async deleteEvaluation(projectUuid: string, agentUuid: string, evalUuid: string): Promise<void> {
     await this.http.delete(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/evaluations/${evalUuid}`,
     );

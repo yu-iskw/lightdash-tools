@@ -40,12 +40,14 @@ export function registerAiAgentsCommand(program: Command): void {
     .description('List AI agent threads across the organization (admin)')
     .option('--page <number>', 'Page number', (v: string) => parseInt(v, 10))
     .option('--page-size <number>', 'Page size', (v: string) => parseInt(v, 10))
-    .option('--agent <uuid>', 'Filter by agent UUID (repeatable)', (v, prev: string[]) =>
-      [...(prev ?? []), v],
-    )
-    .option('--project <uuid>', 'Filter by project UUID (repeatable)', (v, prev: string[]) =>
-      [...(prev ?? []), v],
-    )
+    .option('--agent <uuid>', 'Filter by agent UUID (repeatable)', (v, prev: string[]) => [
+      ...(prev ?? []),
+      v,
+    ])
+    .option('--project <uuid>', 'Filter by project UUID (repeatable)', (v, prev: string[]) => [
+      ...(prev ?? []),
+      v,
+    ])
     .option('--human-score <number>', 'Filter by human score (-1, 0, or 1)', (v: string) =>
       parseInt(v, 10),
     )
@@ -126,8 +128,7 @@ export function registerAiAgentsCommand(program: Command): void {
         const options = this.opts() as { aiAgentsVisible?: string };
         const body: Partial<UpdateAiOrganizationSettings> = {};
         if (options.aiAgentsVisible != null) {
-          (body as Record<string, unknown>)['aiAgentsVisible'] =
-            options.aiAgentsVisible === 'true';
+          (body as Record<string, unknown>)['aiAgentsVisible'] = options.aiAgentsVisible === 'true';
         }
         if (Object.keys(body).length === 0) {
           console.error('Error: at least one option is required (e.g. --ai-agents-visible)');

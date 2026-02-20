@@ -166,10 +166,9 @@ describe('AiAgentsClient', () => {
     const result = await client.generateAgentThreadResponse('proj1', 'a1', 't1', {
       prompt: 'What is the total revenue?',
     });
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/threads/t1/generate',
-      { prompt: 'What is the total revenue?' },
-    );
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads/t1/generate', {
+      prompt: 'What is the total revenue?',
+    });
     expect(result).toEqual(response);
   });
 
@@ -209,10 +208,7 @@ describe('AiAgentsClient', () => {
     const updated = { evalUuid: 'e1', title: 'Updated Eval', prompts: [] };
     vi.mocked(mockHttp.patch).mockResolvedValue(updated);
     const result = await client.updateEvaluation('proj1', 'a1', 'e1', body);
-    expect(mockHttp.patch).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/evaluations/e1',
-      body,
-    );
+    expect(mockHttp.patch).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1', body);
     expect(result).toEqual(updated);
   });
 
@@ -253,9 +249,7 @@ describe('AiAgentsClient', () => {
     const runs = [{ runUuid: 'r1', evalUuid: 'e1', status: 'completed' }];
     vi.mocked(mockHttp.get).mockResolvedValue(runs);
     const result = await client.listEvaluationRuns('proj1', 'a1', 'e1');
-    expect(mockHttp.get).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/evaluations/e1/runs',
-    );
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
     expect(result).toEqual(runs);
   });
 
@@ -264,9 +258,7 @@ describe('AiAgentsClient', () => {
     const run = { runUuid: 'r1', evalUuid: 'e1', results: [] };
     vi.mocked(mockHttp.get).mockResolvedValue(run);
     const result = await client.getEvaluationRunResults('proj1', 'a1', 'e1', 'r1');
-    expect(mockHttp.get).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/evaluations/e1/runs/r1',
-    );
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs/r1');
     expect(result).toEqual(run);
   });
 });

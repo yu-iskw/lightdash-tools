@@ -107,16 +107,12 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(
-      client,
-      (c) =>
-        async (params: { aiAgentsVisible?: boolean }) => {
-          const result = await c.v1.aiAgents.updateAiOrganizationSettings(
-            params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
-          );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-        },
-    ),
+    wrapTool(client, (c) => async (params: { aiAgentsVisible?: boolean }) => {
+      const result = await c.v1.aiAgents.updateAiOrganizationSettings(
+        params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
+      );
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+    }),
   );
 
   // ─── Project-scoped: agent CRUD ──────────────────────────────────────────────

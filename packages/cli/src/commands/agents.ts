@@ -161,9 +161,7 @@ export function registerAgentsCommand(program: Command): void {
 
   // ─── Thread management ───────────────────────────────────────────────────────
 
-  const threadsCmd = agentsCmd
-    .command('threads')
-    .description('Manage agent conversation threads');
+  const threadsCmd = agentsCmd.command('threads').description('Manage agent conversation threads');
 
   threadsCmd
     .command('list <agentUuid>')
@@ -191,27 +189,20 @@ export function registerAgentsCommand(program: Command): void {
     .description('Get a thread with all its messages')
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
-      wrapAction(
-        READ_ONLY_DEFAULT,
-        async (agentUuid: string, threadUuid: string, cmd: Command) => {
-          const { project } = cmd.opts() as { project: string };
-          try {
-            const client = getClient();
-            const result = await client.v1.aiAgents.getAgentThread(
-              project,
-              agentUuid,
-              threadUuid,
-            );
-            console.log(JSON.stringify(result, null, 2));
-          } catch (error) {
-            console.error(
-              'Error fetching thread:',
-              error instanceof Error ? error.message : String(error),
-            );
-            process.exit(1);
-          }
-        },
-      ),
+      wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, threadUuid: string, cmd: Command) => {
+        const { project } = cmd.opts() as { project: string };
+        try {
+          const client = getClient();
+          const result = await client.v1.aiAgents.getAgentThread(project, agentUuid, threadUuid);
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error fetching thread:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
     );
 
   threadsCmd
@@ -250,28 +241,25 @@ export function registerAgentsCommand(program: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .requiredOption('--prompt <text>', 'User prompt')
     .action(
-      wrapAction(
-        WRITE_IDEMPOTENT,
-        async (agentUuid: string, threadUuid: string, cmd: Command) => {
-          const options = cmd.opts() as { project: string; prompt: string };
-          try {
-            const client = getClient();
-            const result = await client.v1.aiAgents.generateAgentThreadResponse(
-              options.project,
-              agentUuid,
-              threadUuid,
-              { prompt: options.prompt },
-            );
-            console.log(JSON.stringify(result, null, 2));
-          } catch (error) {
-            console.error(
-              'Error continuing thread:',
-              error instanceof Error ? error.message : String(error),
-            );
-            process.exit(1);
-          }
-        },
-      ),
+      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, threadUuid: string, cmd: Command) => {
+        const options = cmd.opts() as { project: string; prompt: string };
+        try {
+          const client = getClient();
+          const result = await client.v1.aiAgents.generateAgentThreadResponse(
+            options.project,
+            agentUuid,
+            threadUuid,
+            { prompt: options.prompt },
+          );
+          console.log(JSON.stringify(result, null, 2));
+        } catch (error) {
+          console.error(
+            'Error continuing thread:',
+            error instanceof Error ? error.message : String(error),
+          );
+          process.exit(1);
+        }
+      }),
     );
 
   // ─── Evaluations ─────────────────────────────────────────────────────────────
@@ -480,11 +468,7 @@ export function registerAgentsCommand(program: Command): void {
         const { project } = cmd.opts() as { project: string };
         try {
           const client = getClient();
-          const result = await client.v1.aiAgents.listEvaluationRuns(
-            project,
-            agentUuid,
-            evalUuid,
-          );
+          const result = await client.v1.aiAgents.listEvaluationRuns(project, agentUuid, evalUuid);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(
