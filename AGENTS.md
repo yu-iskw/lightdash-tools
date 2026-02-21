@@ -6,6 +6,34 @@ This repository is a production-ready TypeScript monorepo template.
 It uses pnpm workspaces, Node.js (see `.node-version`), Trunk, Vitest, and GitHub Actions.
 Use this file as the shared quick reference for Cursor, Claude Code, Codex, and Gemini CLI.
 
+## Self-Documentation Protocol
+
+**Every AI agent working in this repository MUST update `AGENTS.md` and/or `CLAUDE.md` at the end of any task where something non-obvious was learned.** This creates shared memory that improves every future session.
+
+### When to update
+
+Update whenever you discover any of the following during a task:
+
+- A tool, command, or API behaved differently than you expected
+- A workaround was required that is not obvious from the code
+- A pattern or convention was corrected or clarified
+- A PR/code review caught a bug caused by a wrong assumption
+- An environment constraint changed the normal workflow
+
+### What to update
+
+| Learning type                                        | File to update | Section              |
+| :--------------------------------------------------- | :------------- | :------------------- |
+| Environment/tool/pattern issues affecting all agents | `AGENTS.md`    | **Common Gotchas**   |
+| Claude Code-specific observations                    | `CLAUDE.md`    | **Recent Learnings** |
+| Broadly applicable to all agents and tools           | Both files     | Both sections        |
+
+### Format rules
+
+- `AGENTS.md` → Common Gotchas: concise bullet (`- **Topic:** explanation in 1–3 sentences.`)
+- `CLAUDE.md` → Recent Learnings: dated entry (`- [YYYY-MM-DD]: explanation in 1–3 sentences.`)
+- Commit doc updates together with the fix, or in a separate `docs:` commit.
+
 ## Setup Commands
 
 ```bash
@@ -105,3 +133,6 @@ When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues 
   - Lint: `pnpm lint:eslint`
   - Format: `pnpm format:eslint` (ESLint auto-fix) and `pnpm format:prettier` (Prettier)
   - These skip Trunk entirely but cover the essential formatting and linting checks.
+- **OpenAPI paginated responses are always wrapped:** Lightdash list endpoints return `{ results: { data: { <key>: T[] }, pagination? }, status: 'ok' }`, not a bare array. Always check the `ApiXxxListResponse` schema in `packages/common/src/types/generated/openapi-types.ts` before assuming the shape. Extract the inner array (e.g. `response.results.data.runs`) after fetching.
+- **New common types must be threaded through three layers:** When adding a type from the OpenAPI-generated file to `packages/common`, export it from: (1) `types/v1/ai-agents.ts` namespace, (2) both the namespace and the flat exports in `types/v1/lightdash-api.ts`, and (3) the flat export block in `types/lightdash-api.ts`. Missing any layer causes "not exported" build errors in dependent packages.
+- **Validate org-wide CLI flags explicitly:** Boolean CLI flags that affect organization-wide settings (e.g. `--ai-agents-visible`) must validate against the exact allowed literals (`'true'`/`'false'`) and `process.exit(1)` on invalid input. Never silently coerce via `value === 'true'` — typos like `True` or `yes` would silently disable features.
