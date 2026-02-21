@@ -5,6 +5,7 @@ import {
   getSafetyModeFromEnv,
   getAllowedProjectUuidsFromEnv,
   isProjectAllowed,
+  areAllProjectsAllowed,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
@@ -61,34 +62,34 @@ describe('Safety Logic', () => {
   });
 
   describe('getAllowedProjectUuidsFromEnv', () => {
-    const originalEnv = process.env.LIGHTDASH_ALLOWED_PROJECTS;
+    const originalEnv = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
 
     afterEach(() => {
-      process.env.LIGHTDASH_ALLOWED_PROJECTS = originalEnv;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = originalEnv;
     });
 
     it('should return empty array when env is not set', () => {
-      delete process.env.LIGHTDASH_ALLOWED_PROJECTS;
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
       expect(getAllowedProjectUuidsFromEnv()).toEqual([]);
     });
 
     it('should parse a single UUID', () => {
-      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a';
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a']);
     });
 
     it('should parse comma-separated UUIDs', () => {
-      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a,uuid-b,uuid-c';
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a,uuid-b,uuid-c';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b', 'uuid-c']);
     });
 
     it('should trim whitespace around UUIDs', () => {
-      process.env.LIGHTDASH_ALLOWED_PROJECTS = ' uuid-a , uuid-b ';
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = ' uuid-a , uuid-b ';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
     });
 
     it('should filter out empty entries', () => {
-      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a,,uuid-b';
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a,,uuid-b';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
     });
   });
@@ -104,6 +105,28 @@ describe('Safety Logic', () => {
 
     it('should deny a project that is not in the allowlist', () => {
       expect(isProjectAllowed(['uuid-a', 'uuid-b'], 'uuid-c')).toBe(false);
+    });
+  });
+
+  describe('areAllProjectsAllowed', () => {
+    it('should allow everything when allowlist is empty', () => {
+      expect(areAllProjectsAllowed([], ['uuid-a', 'uuid-b'])).toBe(true);
+    });
+
+    it('should allow an empty projectUuids array (trivially)', () => {
+      expect(areAllProjectsAllowed(['uuid-a'], [])).toBe(true);
+    });
+
+    it('should allow when all UUIDs are in the allowlist', () => {
+      expect(areAllProjectsAllowed(['uuid-a', 'uuid-b'], ['uuid-a', 'uuid-b'])).toBe(true);
+    });
+
+    it('should deny when any UUID is not in the allowlist', () => {
+      expect(areAllProjectsAllowed(['uuid-a', 'uuid-b'], ['uuid-a', 'uuid-c'])).toBe(false);
+    });
+
+    it('should deny when all UUIDs are outside the allowlist', () => {
+      expect(areAllProjectsAllowed(['uuid-a'], ['uuid-b', 'uuid-c'])).toBe(false);
     });
   });
 });

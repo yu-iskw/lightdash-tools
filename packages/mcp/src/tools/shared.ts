@@ -10,7 +10,13 @@
  */
 
 import type { LightdashClient } from '@lightdash-tools/client';
-import { isAllowed, isProjectAllowed, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import {
+  isAllowed,
+  areAllProjectsAllowed,
+  READ_ONLY_DEFAULT,
+  logAuditEntry,
+  getSessionId,
+} from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 import { toMcpErrorMessage } from '../errors.js';
@@ -20,7 +26,6 @@ import {
   getAllowedProjectUuids,
   isDryRunMode,
 } from '../config.js';
-import { logAuditEntry, getSessionId } from '../audit.js';
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'lightdash_tools__';
@@ -68,17 +73,39 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
   );
 }
 
-/** Extracts the projectUuid string from tool args if present. */
-function extractProjectUuid(args: unknown): string | undefined {
-  if (typeof args !== 'object' || args === null) return undefined;
+/**
+ * Extracts all project UUIDs from tool args.
+ * Handles both the singular form (projectUuid: string) and the plural form
+ * (projectUuids: string[]) so that tools like search_content are also covered.
+ */
+function extractProjectUuids(args: unknown): string[] {
+  if (typeof args !== 'object' || args === null) return [];
   const a = args as Record<string, unknown>;
-  return typeof a['projectUuid'] === 'string' ? a['projectUuid'] : undefined;
+  const uuids: string[] = [];
+
+  // Singular: projectUuid?: string
+  if (typeof a['projectUuid'] === 'string') {
+    uuids.push(a['projectUuid']);
+  }
+
+  // Plural: projectUuids?: string[]
+  if (Array.isArray(a['projectUuids'])) {
+    for (const uuid of a['projectUuids']) {
+      if (typeof uuid === 'string') {
+        uuids.push(uuid);
+      }
+    }
+  }
+
+  return uuids;
 }
 
 /**
  * Registers a tool with prefix and annotations, applying all guardrail layers.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
  * Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
+ *
+ * CLI flag --allowed-projects always takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
  */
 export function registerToolSafe(
   server: unknown,
@@ -135,17 +162,22 @@ export function registerToolSafe(
 
   // ── Project allowlist wrapper ─────────────────────────────────────────────
   // Reject calls targeting project UUIDs not in the configured allowlist.
+  // Covers both singular (projectUuid) and plural (projectUuids[]) arg shapes.
+  // CLI --allowed-projects takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
   const allowedProjects = getAllowedProjectUuids();
   if (allowedProjects.length > 0) {
     const innerHandler = finalHandler;
     finalHandler = async (args, extra): Promise<TextContent> => {
-      const projectUuid = extractProjectUuid(args);
-      if (projectUuid !== undefined && !isProjectAllowed(allowedProjects, projectUuid)) {
+      const projectUuids = extractProjectUuids(args);
+      const deniedUuids = projectUuids.filter(
+        (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
+      );
+      if (deniedUuids.length > 0) {
         return {
           content: [
             {
               type: 'text',
-              text: `Error: Project '${projectUuid}' is not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
+              text: `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
             },
           ],
           isError: true,
@@ -161,7 +193,7 @@ export function registerToolSafe(
   const auditedInner = finalHandler;
   finalHandler = async (args, extra): Promise<TextContent> => {
     const start = Date.now();
-    const projectUuid = extractProjectUuid(args);
+    const projectUuids = extractProjectUuids(args);
     let status: 'success' | 'error' | 'blocked' = 'success';
     let result: TextContent;
 
@@ -178,7 +210,7 @@ export function registerToolSafe(
         timestamp: new Date().toISOString(),
         sessionId: getSessionId(),
         tool: name,
-        projectUuid,
+        projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
         status,
         durationMs: Date.now() - start,
       });
@@ -189,7 +221,7 @@ export function registerToolSafe(
       timestamp: new Date().toISOString(),
       sessionId: getSessionId(),
       tool: name,
-      projectUuid,
+      projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
       status,
       durationMs: Date.now() - start,
     });

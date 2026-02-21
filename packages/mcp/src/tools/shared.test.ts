@@ -4,11 +4,16 @@ import { SafetyMode } from '@lightdash-tools/common';
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
 
 // Silence audit log output during tests
-vi.mock('../audit.js', () => ({
-  getSessionId: () => 'test-session',
-  logAuditEntry: vi.fn(),
-  initAuditLog: vi.fn(),
-}));
+vi.mock('@lightdash-tools/common', async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const actual = await importOriginal<any>();
+  return {
+    ...actual,
+    getSessionId: () => 'test-session',
+    logAuditEntry: vi.fn(),
+    initAuditLog: vi.fn(),
+  };
+});
 
 describe('registerToolSafe', () => {
   const mockServer = {
@@ -25,7 +30,7 @@ describe('registerToolSafe', () => {
     setStaticAllowedProjectUuids([]);
     setDryRunMode(false);
     process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
-    delete process.env.LIGHTDASH_ALLOWED_PROJECTS;
+    delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
     delete process.env.LIGHTDASH_DRY_RUN;
   });
 
@@ -178,7 +183,7 @@ describe('registerToolSafe', () => {
       expect(result.content[0].text).toBe('success');
     });
 
-    it('should allow calls for a project UUID in the allowlist', async () => {
+    it('should allow calls for a singular projectUuid in the allowlist', async () => {
       setStaticAllowedProjectUuids(['uuid-allowed', 'uuid-other']);
 
       registerToolSafe(
@@ -194,7 +199,7 @@ describe('registerToolSafe', () => {
       expect(result.content[0].text).toBe('success');
     });
 
-    it('should block calls for a project UUID not in the allowlist', async () => {
+    it('should block calls for a singular projectUuid not in the allowlist', async () => {
       setStaticAllowedProjectUuids(['uuid-allowed']);
 
       registerToolSafe(
@@ -226,6 +231,55 @@ describe('registerToolSafe', () => {
       const result = await handler({});
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
+    });
+
+    it('should allow when all projectUuids[] are in the allowlist', async () => {
+      setStaticAllowedProjectUuids(['uuid-a', 'uuid-b']);
+
+      registerToolSafe(
+        mockServer,
+        'search_content_allowed',
+        { description: 'Search content', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuids: ['uuid-a', 'uuid-b'] });
+      expect(result.isError).toBeUndefined();
+      expect(result.content[0].text).toBe('success');
+    });
+
+    it('should block when any UUID in projectUuids[] is not in the allowlist', async () => {
+      setStaticAllowedProjectUuids(['uuid-a']);
+
+      registerToolSafe(
+        mockServer,
+        'search_content_blocked',
+        { description: 'Search content', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuids: ['uuid-a', 'uuid-denied'] });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('uuid-denied');
+      expect(result.content[0].text).toContain('not in the list of allowed projects');
+    });
+
+    it('should block when all projectUuids[] are outside the allowlist', async () => {
+      setStaticAllowedProjectUuids(['uuid-allowed']);
+
+      registerToolSafe(
+        mockServer,
+        'search_content_all_blocked',
+        { description: 'Search content', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuids: ['uuid-x', 'uuid-y'] });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('not in the list of allowed projects');
     });
   });
 
