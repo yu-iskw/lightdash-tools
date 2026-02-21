@@ -76,3 +76,4 @@ Use the `/improve-claude-config` skill to orchestrate these changes.
 ## Recent Learnings
 
 - [2026-02-05]: Initial setup of the comprehensive skills reference and self-improvement guidelines.
+- [2026-02-21]: When Trunk cannot be installed (e.g., `curl https://get.trunk.io` returns 403 in restricted environments), fall back to standalone formatters already available in `package.json`: `pnpm lint:eslint` for linting, `pnpm format:eslint` for ESLint auto-fix, and `pnpm format:prettier` for Prettier formatting. These bypass Trunk entirely and are sufficient for CI/CD environments where Trunk binary download is blocked.

@@ -101,3 +101,7 @@ When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues 
 - Keep `pnpm-lock.yaml` committed for reproducible installs.
 - Run `trunk install` if Trunk reports missing tools.
 - ADR and Changie are initialized (`docs/adr`, `.changie.yaml`); use the `manage-adr` and `manage-changelog` skills when `adr-tools` and `changie` are available.
+- **Trunk unavailable (restricted network):** If `curl https://get.trunk.io` returns 403, use these direct fallbacks instead of Trunk commands:
+  - Lint: `pnpm lint:eslint`
+  - Format: `pnpm format:eslint` (ESLint auto-fix) and `pnpm format:prettier` (Prettier)
+  - These skip Trunk entirely but cover the essential formatting and linting checks.
