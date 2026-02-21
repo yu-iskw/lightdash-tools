@@ -27,6 +27,7 @@ import type {
   AiAgentEvaluationSummary,
   AiAgentEvaluation,
   AiAgentEvaluationRunSummary,
+  AiAgentEvaluationRunsListResponse,
   AiAgentEvaluationRun,
 } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
@@ -231,9 +232,10 @@ export class AiAgentsClient extends BaseApiClient {
     agentUuid: string,
     evalUuid: string,
   ): Promise<AiAgentEvaluationRunSummary[]> {
-    return this.http.get<AiAgentEvaluationRunSummary[]>(
+    const response = await this.http.get<AiAgentEvaluationRunsListResponse>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/evaluations/${evalUuid}/runs`,
     );
+    return response.results.data.runs;
   }
 
   /** Get detailed results of a specific run (GET …/evaluations/{evalUuid}/runs/{runUuid}). */

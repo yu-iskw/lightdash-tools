@@ -91,6 +91,7 @@ export type {
   AiAgentEvaluationSummary,
   AiAgentEvaluation,
   AiAgentEvaluationRunSummary,
+  AiAgentEvaluationRunsListResponse,
   AiAgentEvaluationRun,
   AiAgentEvaluationRunResult,
   ApiExploresResults,

@@ -206,6 +206,8 @@ export namespace LightdashApi {
     export type AiAgentEvaluation = components['schemas']['AiAgentEvaluation'];
     // Evaluation runs
     export type AiAgentEvaluationRunSummary = components['schemas']['AiAgentEvaluationRunSummary'];
+    export type AiAgentEvaluationRunsListResponse =
+      components['schemas']['ApiAiAgentEvaluationRunSummaryListResponse'];
     export type AiAgentEvaluationRun = components['schemas']['AiAgentEvaluationRun'];
     export type AiAgentEvaluationRunResult = components['schemas']['AiAgentEvaluationRunResult'];
     export type AiEvalRunResultAssessment = components['schemas']['AiEvalRunResultAssessment'];
@@ -327,6 +329,7 @@ export type AppendEvaluationBody = AiAgents.AppendEvaluationBody;
 export type AiAgentEvaluationSummary = AiAgents.AiAgentEvaluationSummary;
 export type AiAgentEvaluation = AiAgents.AiAgentEvaluation;
 export type AiAgentEvaluationRunSummary = AiAgents.AiAgentEvaluationRunSummary;
+export type AiAgentEvaluationRunsListResponse = AiAgents.AiAgentEvaluationRunsListResponse;
 export type AiAgentEvaluationRun = AiAgents.AiAgentEvaluationRun;
 export type AiAgentEvaluationRunResult = AiAgents.AiAgentEvaluationRunResult;
 

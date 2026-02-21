@@ -128,6 +128,12 @@ export function registerAiAgentsCommand(program: Command): void {
         const options = this.opts() as { aiAgentsVisible?: string };
         const body: Partial<UpdateAiOrganizationSettings> = {};
         if (options.aiAgentsVisible != null) {
+          if (options.aiAgentsVisible !== 'true' && options.aiAgentsVisible !== 'false') {
+            console.error(
+              `Error: --ai-agents-visible must be 'true' or 'false', got: '${options.aiAgentsVisible}'`,
+            );
+            process.exit(1);
+          }
           (body as Record<string, unknown>)['aiAgentsVisible'] = options.aiAgentsVisible === 'true';
         }
         if (Object.keys(body).length === 0) {

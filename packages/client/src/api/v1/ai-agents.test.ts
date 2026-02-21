@@ -244,10 +244,11 @@ describe('AiAgentsClient', () => {
     expect(result).toEqual(runSummary);
   });
 
-  it('listEvaluationRuns should call GET .../evaluations/{evalUuid}/runs', async () => {
+  it('listEvaluationRuns should call GET .../evaluations/{evalUuid}/runs and unwrap runs array', async () => {
     const client = new AiAgentsClient(mockHttp);
     const runs = [{ runUuid: 'r1', evalUuid: 'e1', status: 'completed' }];
-    vi.mocked(mockHttp.get).mockResolvedValue(runs);
+    const pagedResponse = { results: { data: { runs }, pagination: undefined }, status: 'ok' };
+    vi.mocked(mockHttp.get).mockResolvedValue(pagedResponse);
     const result = await client.listEvaluationRuns('proj1', 'a1', 'e1');
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
     expect(result).toEqual(runs);

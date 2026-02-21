@@ -101,6 +101,12 @@ export namespace AiAgents {
 
   /** Summary of a single evaluation run. */
   export type AiAgentEvaluationRunSummary = components['schemas']['AiAgentEvaluationRunSummary'];
+  /**
+   * Paginated list response for evaluation runs.
+   * Shape: `{ results: { data: { runs: AiAgentEvaluationRunSummary[] }, pagination? }, status }`.
+   */
+  export type AiAgentEvaluationRunsListResponse =
+    components['schemas']['ApiAiAgentEvaluationRunSummaryListResponse'];
   /** Full evaluation run including per-prompt results. */
   export type AiAgentEvaluationRun = components['schemas']['AiAgentEvaluationRun'];
   /** Individual result entry within a run (prompt + response + assessment). */
