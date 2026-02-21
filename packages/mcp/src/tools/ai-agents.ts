@@ -513,6 +513,117 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
 
   registerToolSafe(
     server,
+    'update_agent_evaluation',
+    {
+      title: 'Update agent evaluation',
+      description: 'Update an evaluation title, description, or replace its prompts',
+      inputSchema: {
+        projectUuid: z.string().describe('Project UUID'),
+        agentUuid: z.string().describe('Agent UUID'),
+        evalUuid: z.string().describe('Evaluation UUID'),
+        title: z.string().optional().describe('New title'),
+        description: z.string().optional().describe('New description'),
+        prompts: z
+          .array(
+            z.union([
+              z.object({
+                prompt: z.string().describe('Test prompt text'),
+                expectedResponse: z.string().nullable().describe('Expected response (optional)'),
+              }),
+              z.object({
+                threadUuid: z.string().describe('Existing thread UUID'),
+                promptUuid: z.string().describe('Existing prompt UUID within the thread'),
+                expectedResponse: z.string().nullable().describe('Expected response (optional)'),
+              }),
+            ]),
+          )
+          .optional()
+          .describe('Replacement prompt list (omit to leave unchanged)'),
+      },
+      annotations: WRITE_IDEMPOTENT,
+    },
+    wrapTool(
+      client,
+      (c) =>
+        async ({
+          projectUuid,
+          agentUuid,
+          evalUuid,
+          ...body
+        }: {
+          projectUuid: string;
+          agentUuid: string;
+          evalUuid: string;
+          title?: string;
+          description?: string;
+          prompts?: Parameters<typeof c.v1.aiAgents.updateEvaluation>[3]['prompts'];
+        }) => {
+          const result = await c.v1.aiAgents.updateEvaluation(
+            projectUuid,
+            agentUuid,
+            evalUuid,
+            body as Parameters<typeof c.v1.aiAgents.updateEvaluation>[3],
+          );
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        },
+    ),
+  );
+
+  registerToolSafe(
+    server,
+    'append_agent_evaluation_prompts',
+    {
+      title: 'Append evaluation prompts',
+      description:
+        'Append additional prompts to an existing evaluation without replacing existing ones',
+      inputSchema: {
+        projectUuid: z.string().describe('Project UUID'),
+        agentUuid: z.string().describe('Agent UUID'),
+        evalUuid: z.string().describe('Evaluation UUID'),
+        prompts: z
+          .array(
+            z.union([
+              z.object({
+                prompt: z.string().describe('Test prompt text'),
+                expectedResponse: z.string().nullable().describe('Expected response (optional)'),
+              }),
+              z.object({
+                threadUuid: z.string().describe('Existing thread UUID'),
+                promptUuid: z.string().describe('Existing prompt UUID within the thread'),
+                expectedResponse: z.string().nullable().describe('Expected response (optional)'),
+              }),
+            ]),
+          )
+          .describe('Prompts to append'),
+      },
+      annotations: WRITE_IDEMPOTENT,
+    },
+    wrapTool(
+      client,
+      (c) =>
+        async ({
+          projectUuid,
+          agentUuid,
+          evalUuid,
+          prompts,
+        }: {
+          projectUuid: string;
+          agentUuid: string;
+          evalUuid: string;
+          prompts: Parameters<typeof c.v1.aiAgents.appendToEvaluation>[3]['prompts'];
+        }) => {
+          await c.v1.aiAgents.appendToEvaluation(projectUuid, agentUuid, evalUuid, { prompts });
+          return {
+            content: [
+              { type: 'text', text: `Prompts appended to evaluation ${evalUuid} successfully` },
+            ],
+          };
+        },
+    ),
+  );
+
+  registerToolSafe(
+    server,
     'run_agent_evaluation',
     {
       title: 'Run agent evaluation',
