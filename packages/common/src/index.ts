@@ -5,6 +5,9 @@ export function greet(name: string): string {
 // Export safety logic
 export * from './safety';
 
+// Export audit logger (shared by MCP and CLI)
+export * from './audit';
+
 // Export Lightdash API models
 export * from './types/lightdash-api';
 export type { LightdashApi } from './types/lightdash-api';
