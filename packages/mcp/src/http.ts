@@ -7,7 +7,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { getClient } from './config.js';
+import { getClient, getAuditLogPath } from './config.js';
+import { initAuditLog } from './audit.js';
 import { registerTools } from './tools/index.js';
 
 const MCP_PATH = '/mcp';
@@ -165,6 +166,8 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
 }
 
 function main(): void {
+  initAuditLog(getAuditLogPath());
+
   const server = createServer((req, res) => {
     handleRequest(req, res).catch((err) => {
       console.error('MCP HTTP handler error:', err);
