@@ -5,7 +5,7 @@
 
 import { Command } from 'commander';
 import { SafetyMode } from '@lightdash-tools/common';
-import { setStaticSafetyMode } from './config.js';
+import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from './config.js';
 
 const program = new Command();
 
@@ -18,6 +18,14 @@ program
     '--safety-mode <mode>',
     'Filter registered tools by safety mode (read-only, write-idempotent, write-destructive)',
   )
+  .option(
+    '--allowed-projects <uuids>',
+    'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_ALLOWED_PROJECTS; empty = all allowed)',
+  )
+  .option(
+    '--dry-run',
+    'Simulate write operations without executing them (overrides LIGHTDASH_DRY_RUN)',
+  )
   .action((options) => {
     if (options.safetyMode) {
       if (Object.values(SafetyMode).includes(options.safetyMode)) {
@@ -26,6 +34,18 @@ program
         console.error(`Invalid safety mode: ${options.safetyMode}`);
         process.exit(1);
       }
+    }
+
+    if (options.allowedProjects) {
+      const uuids = (options.allowedProjects as string)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      setStaticAllowedProjectUuids(uuids);
+    }
+
+    if (options.dryRun) {
+      setDryRunMode(true);
     }
 
     if (options.http) {

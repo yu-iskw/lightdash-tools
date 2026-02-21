@@ -69,3 +69,25 @@ export function getSafetyModeFromEnv(): SafetyMode {
   }
   return SafetyMode.READ_ONLY;
 }
+
+/**
+ * Parses allowed project UUIDs from the LIGHTDASH_ALLOWED_PROJECTS environment variable
+ * (comma-separated). Returns an empty array when the variable is unset, meaning all
+ * projects are allowed.
+ */
+export function getAllowedProjectUuidsFromEnv(): string[] {
+  const raw = process.env.LIGHTDASH_ALLOWED_PROJECTS ?? '';
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Returns true if projectUuid is permitted by the allowlist.
+ * An empty allowlist means all projects are allowed.
+ */
+export function isProjectAllowed(allowedUuids: readonly string[], projectUuid: string): boolean {
+  if (allowedUuids.length === 0) return true;
+  return allowedUuids.includes(projectUuid);
+}

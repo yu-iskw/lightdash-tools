@@ -3,6 +3,8 @@ import {
   SafetyMode,
   isAllowed,
   getSafetyModeFromEnv,
+  getAllowedProjectUuidsFromEnv,
+  isProjectAllowed,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
@@ -55,6 +57,53 @@ describe('Safety Logic', () => {
     it('should return READ_ONLY when env is set to invalid value', () => {
       process.env.LIGHTDASH_TOOL_SAFETY_MODE = 'invalid-mode';
       expect(getSafetyModeFromEnv()).toBe(SafetyMode.READ_ONLY);
+    });
+  });
+
+  describe('getAllowedProjectUuidsFromEnv', () => {
+    const originalEnv = process.env.LIGHTDASH_ALLOWED_PROJECTS;
+
+    afterEach(() => {
+      process.env.LIGHTDASH_ALLOWED_PROJECTS = originalEnv;
+    });
+
+    it('should return empty array when env is not set', () => {
+      delete process.env.LIGHTDASH_ALLOWED_PROJECTS;
+      expect(getAllowedProjectUuidsFromEnv()).toEqual([]);
+    });
+
+    it('should parse a single UUID', () => {
+      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a';
+      expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a']);
+    });
+
+    it('should parse comma-separated UUIDs', () => {
+      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a,uuid-b,uuid-c';
+      expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b', 'uuid-c']);
+    });
+
+    it('should trim whitespace around UUIDs', () => {
+      process.env.LIGHTDASH_ALLOWED_PROJECTS = ' uuid-a , uuid-b ';
+      expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
+    });
+
+    it('should filter out empty entries', () => {
+      process.env.LIGHTDASH_ALLOWED_PROJECTS = 'uuid-a,,uuid-b';
+      expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
+    });
+  });
+
+  describe('isProjectAllowed', () => {
+    it('should allow all projects when allowlist is empty', () => {
+      expect(isProjectAllowed([], 'any-uuid')).toBe(true);
+    });
+
+    it('should allow a project that is in the allowlist', () => {
+      expect(isProjectAllowed(['uuid-a', 'uuid-b'], 'uuid-a')).toBe(true);
+    });
+
+    it('should deny a project that is not in the allowlist', () => {
+      expect(isProjectAllowed(['uuid-a', 'uuid-b'], 'uuid-c')).toBe(false);
     });
   });
 });
