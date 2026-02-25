@@ -28,7 +28,7 @@ describe('LightdashClient', () => {
       baseUrl: 'https://app.lightdash.cloud',
       personalAccessToken: 'test-token',
     });
-    expect(client.getHttpClient()).toBeDefined();
+    expect(client.getHttpClientV1()).toBeDefined();
   });
 
   it('should throw when baseUrl and personalAccessToken are missing and not in env', () => {
