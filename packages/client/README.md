@@ -65,7 +65,7 @@ Pass `signal` when calling the low-level HTTP client:
 
 ```typescript
 const controller = new AbortController();
-const http = client.getHttpClient();
+const http = client.getHttpClientV1();
 const result = await http.get('/projects/p1', { signal: controller.signal });
 controller.abort(); // cancels the request
 ```
@@ -113,8 +113,6 @@ const client = new LightdashClient({
 - `client.v2.query` – execute async metric/SQL/saved chart queries
 - `client.v2.organizationRoles` – list organization roles and their permissions
 - `client.v2.projectRoleAssignments` – list/grant/revoke project role assignments for users and groups
-
-Deprecated top-level aliases (`client.projects`, `client.organizations`, etc.) are still available but will be removed in a future major version.
 
 For custom endpoints use `client.getHttpClientV1()` and call `get`, `post`, `put`, `patch`, `delete` with the path (relative to `/api/v1`).
 

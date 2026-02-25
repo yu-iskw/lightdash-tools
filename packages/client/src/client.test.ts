@@ -54,37 +54,6 @@ describe('LightdashClient', () => {
     });
   });
 
-  describe('Backward compatibility (deprecated aliases)', () => {
-    it('should expose deprecated top-level aliases that delegate to v1', () => {
-      const client = new LightdashClient(config);
-      expect(client.projects).toBeDefined();
-      expect(client.organizations).toBeDefined();
-      expect(client.charts).toBeDefined();
-      expect(client.dashboards).toBeDefined();
-      expect(client.spaces).toBeDefined();
-      expect(client.query).toBeDefined();
-      expect(client.users).toBeDefined();
-      expect(client.groups).toBeDefined();
-    });
-
-    it('deprecated aliases should reference v1 clients', () => {
-      const client = new LightdashClient(config);
-      expect(client.projects).toBe(client.v1.projects);
-      expect(client.organizations).toBe(client.v1.organizations);
-      expect(client.charts).toBe(client.v1.charts);
-      expect(client.dashboards).toBe(client.v1.dashboards);
-      expect(client.spaces).toBe(client.v1.spaces);
-      expect(client.query).toBe(client.v1.query);
-      expect(client.users).toBe(client.v1.users);
-      expect(client.groups).toBe(client.v1.groups);
-    });
-
-    it('deprecated projects.getProject should work', () => {
-      const client = new LightdashClient(config);
-      expect(typeof client.projects.getProject).toBe('function');
-    });
-  });
-
   describe('HTTP clients', () => {
     it('should provide separate HTTP clients for v1 and v2', () => {
       const client = new LightdashClient(config);
@@ -93,13 +62,6 @@ describe('LightdashClient', () => {
       expect(httpV1).toBeDefined();
       expect(httpV2).toBeDefined();
       expect(httpV1).not.toBe(httpV2);
-    });
-
-    it('getHttpClient should return v1 client (deprecated)', () => {
-      const client = new LightdashClient(config);
-      const http = client.getHttpClient();
-      const httpV1 = client.getHttpClientV1();
-      expect(http).toBe(httpV1);
     });
   });
 });
