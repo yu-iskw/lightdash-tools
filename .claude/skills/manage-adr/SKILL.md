@@ -7,6 +7,30 @@ description: Manage Architecture Decision Records (ADRs). Use this to initialize
 
 Architecture Decision Records (ADRs) are a lightweight way to document the "why" behind significant technical choices.
 
+## Decision Significance Criteria
+
+Use ADRs for decisions that meet one or more of the following criteria:
+
+- **Architectural Impact**: Changes the fundamental structure or flow of the system.
+- **Cross-Package/Domain**: Decisions that affect multiple packages in the monorepo.
+- **Strategic Direction**: Significant choices that set a precedent for future development.
+- **Non-Obvious Trade-offs**: Choosing between multiple valid approaches where the choice isn't purely technical or has long-term implications.
+
+Do **NOT** use ADRs for:
+
+- **Implementation Specifications**: Detailed API schemas, specific function signatures, or local implementation details (use **OpenSpec** for these).
+- **Bug Fixes**: Unless the fix requires a significant architectural change.
+- **Routine Changes**: Minor refactorings or style updates.
+
+## ADR (Why) vs. OpenSpec (How)
+
+A clear distinction must be maintained:
+
+- **ADR**: Focuses on the **Why**. It documents the decision, the context, the alternatives considered, and the high-level architecture. It is the source of truth for architectural evolution.
+- **OpenSpec**: Focuses on the **How**. It contains the detailed proposal, technical specifications, design, and implementation tasks. It is the source of truth for implementation.
+
+When an ADR requires implementation, link the corresponding OpenSpec in the `References` section.
+
 ## When to Use
 
 - When making a significant architectural change.
@@ -90,8 +114,8 @@ B --> C[Component C]
 \`\`\`
 ```
 
-3. **Provide context**: Add a brief description before the diagram explaining what it visualizes
-4. **Keep focused**: One diagram per concept - create multiple diagrams if needed
+1. **Provide context**: Add a brief description before the diagram explaining what it visualizes
+2. **Keep focused**: One diagram per concept - create multiple diagrams if needed
 
 #### Diagram Examples
 
@@ -118,10 +142,13 @@ Common diagram types for ADRs:
 
 ## Best Practices
 
-- Keep ADRs focused on a single decision.
+- Keep ADRs focused on a single high-level decision.
 - Write for future maintainers who lack current context.
+- **Always include "Alternatives Considered" and "Trade-offs"** in the Context or Decision section.
+- Focus on the **Why** (Rationale) rather than the **How** (Implementation details).
 - Update the status and links when decisions change.
 - **Use Mermaid diagrams** to visualize complex decisions, architectures, and relationships. See section 7 above for guidance.
+- Refer to `references/adr-granularity.md` for guidance on ADR vs. OpenSpec.
 - Refer to `references/mermaid-diagrams.md` for diagram examples and patterns.
 - Refer to `references/adr-concepts.md` for more details on the ADR philosophy (if available).
-- Use the template in `assets/template.md` as a guide (if available).
+- Use the template in `docs/adr/template.md` as a guide.
