@@ -4,7 +4,9 @@ Date: 2026-02-13
 
 ## Status
 
-Proposed
+Accepted
+
+Extended by [ADR-0031](0031-agent-security-guardrails-project-allowlist-dry-run-audit-log.md), which adds project-scoped access control, dry-run simulation, and audit logging on top of the safety modes defined here.
 
 ## Context
 

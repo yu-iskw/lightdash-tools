@@ -103,67 +103,6 @@ export class LightdashClient {
   readonly v1: V1ApiClients;
   readonly v2: V2ApiClients;
 
-  /**
-   * @deprecated Use `client.v1.projects` instead. This alias will be removed in a future major version.
-   */
-  readonly projects: ProjectsClient;
-  /**
-   * @deprecated Use `client.v1.organizations` instead. This alias will be removed in a future major version.
-   */
-  readonly organizations: OrganizationsClient;
-  /**
-   * @deprecated Use `client.v1.charts` instead. This alias will be removed in a future major version.
-   */
-  readonly charts: ChartsClient;
-  /**
-   * @deprecated Use `client.v1.dashboards` instead. This alias will be removed in a future major version.
-   */
-  readonly dashboards: DashboardsClient;
-  /**
-   * @deprecated Use `client.v1.spaces` instead. This alias will be removed in a future major version.
-   */
-  readonly spaces: SpacesClient;
-  /**
-   * @deprecated Use `client.v1.query` instead. This alias will be removed in a future major version.
-   */
-  readonly query: QueryClient;
-  /**
-   * @deprecated Use `client.v1.users` instead. This alias will be removed in a future major version.
-   */
-  readonly users: UsersClient;
-  /**
-   * @deprecated Use `client.v1.groups` instead. This alias will be removed in a future major version.
-   */
-  readonly groups: GroupsClient;
-  /**
-   * @deprecated Use `client.v1.aiAgents` instead. This alias will be removed in a future major version.
-   */
-  readonly aiAgents: AiAgentsClient;
-  /**
-   * @deprecated Use `client.v1.explores` instead. This alias will be removed in a future major version.
-   */
-  readonly explores: ExploresClient;
-  /**
-   * @deprecated Use `client.v1.validation` instead. This alias will be removed in a future major version.
-   */
-  readonly validation: ValidationClient;
-  /**
-   * @deprecated Use `client.v1.metrics` instead. This alias will be removed in a future major version.
-   */
-  readonly metrics: MetricsClient;
-  /**
-   * @deprecated Use `client.v1.schedulers` instead. This alias will be removed in a future major version.
-   */
-  readonly schedulers: SchedulersClient;
-  /**
-   * @deprecated Use `client.v1.tags` instead. This alias will be removed in a future major version.
-   */
-  readonly tags: TagsClient;
-  /**
-   * @deprecated Use `client.v2.content` instead. This alias will be removed in a future major version.
-   */
-  readonly content: ContentClient;
-
   constructor(config?: PartialLightdashClientConfig) {
     const merged = mergeConfig(config);
     const rateLimiter = new RateLimiter(merged.rateLimit);
@@ -179,31 +118,6 @@ export class LightdashClient {
     // Create versioned namespaces
     this.v1 = new V1ApiClients(this.httpV1);
     this.v2 = new V2ApiClients(this.httpV2);
-
-    // Backward compatibility: deprecated aliases delegate to v1
-    this.projects = this.v1.projects;
-    this.organizations = this.v1.organizations;
-    this.charts = this.v1.charts;
-    this.dashboards = this.v1.dashboards;
-    this.spaces = this.v1.spaces;
-    this.query = this.v1.query;
-    this.users = this.v1.users;
-    this.groups = this.v1.groups;
-    this.aiAgents = this.v1.aiAgents;
-    this.explores = this.v1.explores;
-    this.validation = this.v1.validation;
-    this.metrics = this.v1.metrics;
-    this.schedulers = this.v1.schedulers;
-    this.tags = this.v1.tags;
-    this.content = this.v2.content;
-  }
-
-  /**
-   * Low-level HTTP client for custom v1 requests. Prefer domain methods (e.g. v1.projects, v1.charts) when available.
-   * @deprecated Use `getHttpClientV1()` instead. This method will be removed in a future major version.
-   */
-  getHttpClient(): HttpClient {
-    return this.httpV1;
   }
 
   /**
