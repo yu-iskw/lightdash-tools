@@ -17,6 +17,7 @@ Both the CLI and MCP server implement a hierarchical safety model to prevent acc
 You can control the safety level using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable:
 
 - `write-destructive`: Allows all operations, including deletions.
+- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
 - `read-only` (default): Only allows non-modifying operations (e.g., list, get).
 
 For the CLI, you can also use the global `--safety-mode` flag.
