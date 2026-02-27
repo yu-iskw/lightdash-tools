@@ -235,7 +235,7 @@ export class AiAgentsClient extends BaseApiClient {
     const response = await this.http.get<AiAgentEvaluationRunsListResponse>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/evaluations/${evalUuid}/runs`,
     );
-    return response.results.data.runs;
+    return response.data.runs;
   }
 
   /** Get detailed results of a specific run (GET …/evaluations/{evalUuid}/runs/{runUuid}). */
