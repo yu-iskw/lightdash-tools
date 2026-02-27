@@ -70,7 +70,13 @@ Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skill
 
 ## Configuration Self-Improvement
 
-This project supports Claude Code self-improvement. When you notice repeated mistakes, recurring explanations, or opportunities for automation:
+This project supports Claude Code self-improvement. **At the end of every task where something non-obvious was learned, you MUST update `CLAUDE.md` (Recent Learnings) and/or `AGENTS.md` (Common Gotchas).** See `AGENTS.md → Self-Documentation Protocol` for the full rules; a short summary:
+
+- Discoveries that apply to all AI tools → `AGENTS.md` → **Common Gotchas**
+- Claude Code-specific findings → `CLAUDE.md` → **Recent Learnings** (format: `- [YYYY-MM-DD]: ...`)
+- When in doubt, update both.
+
+When you notice repeated mistakes, recurring explanations, or opportunities for automation, also consider deeper improvements:
 
 1. **Analyze Pattern**: Identify if it's a rule (guidance), a hook (mandatory action), a skill (workflow), or an agent (specialized task).
 2. **Implement Improvement**:
@@ -81,8 +87,15 @@ This project supports Claude Code self-improvement. When you notice repeated mis
 3. **Use Subagents**: For configuration research or verification, use subagents to isolate context and prevent contamination of the main session.
 4. **Be Specific & Minimal**: Only add rules or skills that provide clear, non-obvious value.
 
-Use the `/improve-claude-config` skill to orchestrate these changes.
+Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
 - [2026-02-05]: Initial setup of the comprehensive skills reference and self-improvement guidelines.
+- [2026-02-21]: When Trunk cannot be installed (e.g., `curl https://get.trunk.io` returns 403 in restricted environments), fall back to standalone formatters already available in `package.json`: `pnpm lint:eslint` for linting, `pnpm format:eslint` for ESLint auto-fix, and `pnpm format:prettier` for Prettier formatting. These bypass Trunk entirely and are sufficient for CI/CD environments where Trunk binary download is blocked.
+- [2026-02-21]: Lightdash paginated list endpoints return a wrapper shape — `{ results: { data: { <key>: T[] }, pagination? }, status: 'ok' }` — not a bare array. Always check the `ApiXxxListResponse` type in the generated OpenAPI file before writing the client method, then extract the inner array (e.g. `response.results.data.runs`). Missed this initially; caught by PR review.
+- [2026-02-21]: When adding a new type from the OpenAPI-generated schema to `packages/common`, it must be exported from three layers in sequence: (1) `types/v1/ai-agents.ts` namespace, (2) both namespace and flat exports in `types/v1/lightdash-api.ts`, (3) flat export block in `types/lightdash-api.ts`. Missing any layer causes "not exported" build errors in `packages/client` or `packages/mcp`.
+- [2026-02-21]: CLI flags that control org-wide boolean settings must validate inputs explicitly. `value === 'true'` silently coerces any non-`'true'` string (including typos like `True`) to `false`, which can silently disable org-wide features. Instead, check `value !== 'true' && value !== 'false'` and exit with a descriptive error.
+- [2026-02-21]: MCP guardrail layer order (from `registerToolSafe`): safety-mode filter (static, skips registration) → safety-mode block (runtime) → dry-run simulation → project-allowlist check → audit wrapper (outermost). New guardrails must be inserted before the audit layer. The `_lightdashBlocked: true` marker signals a blocked result between inner layers and is stripped by the audit wrapper before the response reaches the MCP client.
+- [2026-02-21]: Every CLI action must be wrapped with `wrapAction(annotations, fn)` (from `packages/cli/src/utils/safety.ts`) and every MCP tool with `registerToolSafe()`. Bypassing these means the call is not safety-checked or audit-logged. `initAuditLog()` must be called once in any new process entrypoint.
+- [2026-02-21]: Env var conventions for guardrails: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` (comma-separated UUIDs; CLI `--allowed-projects` overrides), `LIGHTDASH_DRY_RUN` (accepts `1`, `true`, or `yes`; CLI `--dry-run` overrides), `LIGHTDASH_AUDIT_LOG` (file path or unset for stderr), `LIGHTDASH_TOOL_SAFETY_MODE`. Only the allowlist var uses the `LIGHTDASH_TOOLS_` prefix.

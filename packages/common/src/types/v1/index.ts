@@ -95,11 +95,33 @@ export namespace V1 {
   }
 
   export namespace AiAgents {
+    // Admin
     export type AiAgentSummary = A.AiAgentSummary;
     export type AiAgentAdminSortField = A.AiAgentAdminSortField;
     export type AdminThreadsResult = A.AdminThreadsResult;
     export type GetAiOrganizationSettingsResult = A.GetAiOrganizationSettingsResult;
     export type UpdateAiOrganizationSettings = A.UpdateAiOrganizationSettings;
     export type UpdateAiOrganizationSettingsResult = A.UpdateAiOrganizationSettingsResult;
+    // Agent CRUD
+    export type AiAgent = A.AiAgent;
+    export type CreateAiAgent = A.CreateAiAgent;
+    export type UpdateAiAgent = A.UpdateAiAgent;
+    // Threads
+    export type AiAgentThreadSummary = A.AiAgentThreadSummary;
+    export type AiAgentThread = A.AiAgentThread;
+    export type CreateAgentThreadBody = A.CreateAgentThreadBody;
+    export type GenerateAgentThreadBody = A.GenerateAgentThreadBody;
+    export type GenerateAgentThreadResult = A.GenerateAgentThreadResult;
+    // Evaluations
+    export type CreateEvaluationPrompt = A.CreateEvaluationPrompt;
+    export type CreateEvaluationBody = A.CreateEvaluationBody;
+    export type CreateEvaluationResult = A.CreateEvaluationResult;
+    export type UpdateEvaluationBody = A.UpdateEvaluationBody;
+    export type AppendEvaluationBody = A.AppendEvaluationBody;
+    export type AiAgentEvaluationSummary = A.AiAgentEvaluationSummary;
+    export type AiAgentEvaluation = A.AiAgentEvaluation;
+    export type AiAgentEvaluationRunSummary = A.AiAgentEvaluationRunSummary;
+    export type AiAgentEvaluationRun = A.AiAgentEvaluationRun;
+    export type AiAgentEvaluationRunResult = A.AiAgentEvaluationRunResult;
   }
 }
