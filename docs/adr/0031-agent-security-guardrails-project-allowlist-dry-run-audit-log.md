@@ -8,13 +8,14 @@ Accepted
 
 ## Context
 
-ADR-0029 introduced hierarchical safety modes (`read-only`, `write-idempotent`, `write-destructive`) as a first layer of protection for AI-agent operations. Those modes restrict the *type* of operation (read vs. write vs. destructive) but leave three gaps:
+ADR-0029 introduced hierarchical safety modes (`read-only`, `write-idempotent`, `write-destructive`) as a first layer of protection for AI-agent operations. Those modes restrict the _type_ of operation (read vs. write vs. destructive) but leave three gaps:
 
-1. **Scope**: An agent with `write-idempotent` access can still read or write to *any* project in the organisation, including production systems. There is no way to confine it to a specific project or set of projects.
-2. **Simulation**: There is no safe way to verify what an agent *would* do before allowing it to act. Operators cannot run a dry-run against production data.
+1. **Scope**: An agent with `write-idempotent` access can still read or write to _any_ project in the organisation, including production systems. There is no way to confine it to a specific project or set of projects.
+2. **Simulation**: There is no safe way to verify what an agent _would_ do before allowing it to act. Operators cannot run a dry-run against production data.
 3. **Observability**: There is no record of what tools were called, with which arguments, and whether they succeeded. Post-incident forensics are therefore impossible.
 
 These gaps are especially important when:
+
 - Multiple projects exist with different sensitivity levels (dev vs. staging vs. prod).
 - AI agents are given write access for automation workflows and operators want an audit trail.
 - Operators want to test a new agent configuration without any risk.
@@ -29,13 +30,13 @@ Restricts tool and command execution to a configured set of project UUIDs.
 
 **Configuration (CLI flag takes strict priority over env var):**
 
-| Source | MCP | CLI |
-|---|---|---|
-| CLI flag | `--allowed-projects uuid1,uuid2` | n/a (project UUID is a positional arg, not a global flag) |
+| Source      | MCP                                            | CLI                                            |
+| ----------- | ---------------------------------------------- | ---------------------------------------------- |
+| CLI flag    | `--projects uuid1,uuid2`                       | `--projects uuid1,uuid2`                       |
 | Environment | `LIGHTDASH_TOOLS_ALLOWED_PROJECTS=uuid1,uuid2` | `LIGHTDASH_TOOLS_ALLOWED_PROJECTS=uuid1,uuid2` |
 
 - Empty allowlist (default) = all projects are allowed.
-- CLI flag (`--allowed-projects`) always overrides the env var to prevent bypass via environment injection.
+- CLI flag (`--projects`) always overrides the env var to prevent bypass via environment injection.
 
 **Enforcement:**
 
@@ -44,9 +45,9 @@ The allowlist check extracts project UUIDs from both arg shapes a tool may use:
 - `projectUuid: string` — the singular form used by most tools.
 - `projectUuids: string[]` — the plural form used by tools like `search_content` that accept a list of projects. This prevents the allowlist from being bypassed by a tool that uses the array form.
 
-If *any* supplied UUID is not in the allowlist, the call is rejected before the API is reached and the response is marked `blocked`.
+If _any_ supplied UUID is not in the allowlist, the call is rejected before the API is reached and the response is marked `blocked`.
 
-**Known limitation:** Tools with an *optional* `projectUuids[]` argument (e.g., `search_content`) can still query all projects when that argument is omitted entirely. In this case the allowlist cannot determine the target project(s) at call time and the call proceeds. Operators requiring strict cross-project isolation should use `read-only` safety mode in conjunction with the allowlist.
+**Known limitation:** Tools with an _optional_ `projectUuids[]` argument (e.g., `search_content`) can still query all projects when that argument is omitted entirely. In this case the allowlist cannot determine the target project(s) at call time and the call proceeds. Operators requiring strict cross-project isolation should use `read-only` safety mode in conjunction with the allowlist.
 
 ### 2. Dry-run mode
 
@@ -54,9 +55,9 @@ Simulates write operations without executing any API call.
 
 **Configuration:**
 
-| Source | Value |
-|---|---|
-| CLI flag | `--dry-run` |
+| Source      | Value                                      |
+| ----------- | ------------------------------------------ |
+| CLI flag    | `--dry-run`                                |
 | Environment | `LIGHTDASH_DRY_RUN=true` (also `1`, `yes`) |
 
 - Read-only tools are unaffected; they execute normally.
@@ -69,10 +70,10 @@ Records every tool/command invocation as a single NDJSON line.
 
 **Configuration:**
 
-| Source | Value |
-|---|---|
+| Source      | Value                                       |
+| ----------- | ------------------------------------------- |
 | Environment | `LIGHTDASH_AUDIT_LOG=/path/to/audit.ndjson` |
-| Default | stderr with `[audit]` prefix |
+| Default     | stderr with `[audit]` prefix                |
 
 **Entry schema:**
 

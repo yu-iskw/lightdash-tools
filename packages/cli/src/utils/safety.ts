@@ -4,6 +4,9 @@ import {
   SafetyMode,
   logAuditEntry,
   getSessionId,
+  areAllProjectsAllowed,
+  getAllowedProjectUuidsFromEnv,
+  extractProjectUuids,
 } from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { Command } from 'commander';
@@ -18,6 +21,27 @@ export function getSafetyMode(cmd: Command): SafetyMode {
     return options.safetyMode as SafetyMode;
   }
   return getSafetyModeFromEnv();
+}
+
+/**
+ * Resolves the allowed project UUIDs from the command line options or environment variables.
+ * We specifically want the root --projects flag as the security guardrail.
+ * CLI root flags take priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
+ */
+export function getAllowedProjects(cmd: Command): string[] {
+  let root = cmd;
+  while (root.parent) {
+    root = root.parent;
+  }
+  const options = root.opts() as { projects?: string };
+  const raw = options.projects;
+  if (raw) {
+    return raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return getAllowedProjectUuidsFromEnv();
 }
 
 /** Builds a human-readable command path (e.g. "lightdash-ai charts list"). */
@@ -43,12 +67,16 @@ export function wrapAction<T extends unknown[]>(
     const start = Date.now();
     const commandPath = getCommandPath(this);
     const mode = getSafetyMode(this);
+    const allowedProjects = getAllowedProjects(this);
+    const targetProjects = extractProjectUuids(args);
 
+    // ── Safety Mode Enforcement ──────────────────────────────────────────────
     if (!isAllowed(mode, annotations)) {
       logAuditEntry({
         timestamp: new Date().toISOString(),
         sessionId: getSessionId(),
         tool: commandPath,
+        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
         status: 'blocked',
         durationMs: Date.now() - start,
       });
@@ -58,12 +86,34 @@ export function wrapAction<T extends unknown[]>(
       process.exit(1);
     }
 
+    // ── Project Guardrail Enforcement ────────────────────────────────────────
+    if (allowedProjects.length > 0) {
+      const deniedProjects = targetProjects.filter(
+        (p) => !areAllProjectsAllowed(allowedProjects, [p]),
+      );
+      if (deniedProjects.length > 0) {
+        logAuditEntry({
+          timestamp: new Date().toISOString(),
+          sessionId: getSessionId(),
+          tool: commandPath,
+          projectUuids: targetProjects,
+          status: 'blocked',
+          durationMs: Date.now() - start,
+        });
+        console.error(
+          `Error: Project(s) [${deniedProjects.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
+        );
+        process.exit(1);
+      }
+    }
+
     try {
       const result = await action.apply(this, args);
       logAuditEntry({
         timestamp: new Date().toISOString(),
         sessionId: getSessionId(),
         tool: commandPath,
+        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
         status: 'success',
         durationMs: Date.now() - start,
       });
@@ -73,6 +123,7 @@ export function wrapAction<T extends unknown[]>(
         timestamp: new Date().toISOString(),
         sessionId: getSessionId(),
         tool: commandPath,
+        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
         status: 'error',
         durationMs: Date.now() - start,
       });
