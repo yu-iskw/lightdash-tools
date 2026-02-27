@@ -66,6 +66,10 @@ pnpm clean      # Clean build artifacts
 - Commit format: `type(scope): description` (for example: `feat(ui): add new button component`).
 - Commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 - Use `manage-changelog` when `changie` is available.
+- **Decision Documentation**:
+  - Use **ADRs** for "Why" (Architecture/Strategy).
+  - Use **OpenSpec** for "How" (Design/Implementation).
+  - Link ADRs to their corresponding OpenSpecs.
 - Store ADRs in `docs/adr` and use `manage-adr` when `adr-tools` is available.
 
 ## Architecture
@@ -75,6 +79,16 @@ pnpm clean      # Clean build artifacts
 - Claude-specific config lives in `.claude/`.
 - Cursor-specific config lives in `.cursor/`.
 - OpenSpec lives under `docs/openspec/`. Run OpenSpec CLI commands from the `docs/` directory (e.g. `cd docs && openspec list`) or from repo root via `pnpm openspec -- <subcommand>`.
+
+## Decision Documentation Hierarchy
+
+We maintain a clear hierarchy for documenting decisions:
+
+1. **Architecture Decision Records (ADR)** (`docs/adr`): Focus on the **Why**. Document high-level architectural choices, strategic direction, and non-obvious trade-offs.
+2. **OpenSpec** (`docs/openspec`): Focus on the **How**. Document detailed designs, API specifications, and specific implementation tasks.
+3. **Code** (`packages/*`): Focus on the **What**. The implementation itself.
+
+**Rule of Thumb**: If it's about architecture or strategy, use an ADR. If it's about implementation details or specific features, use OpenSpec. Refer to `.claude/skills/manage-adr/references/adr-granularity.md` for more details.
 
 ## Package Naming
 

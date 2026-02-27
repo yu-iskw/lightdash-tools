@@ -58,6 +58,16 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 | `test-and-fix`                 | Run unit tests and automatically fix failures, regression bugs, or test mismatches             |
 | `problem-solving`              | Systematic issue analysis and report generation (global skill)                                 |
 
+## Decision Documentation Hierarchy
+
+This project follows a strict documentation hierarchy for technical decisions:
+
+- **ADR** (`docs/adr`): The **Why**. High-level architecture, strategy, and trade-offs.
+- **OpenSpec** (`docs/openspec`): The **How**. Detailed design, API specifications, and implementation tasks.
+- **Code** (`packages/*`): The **What**. Implementation.
+
+Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for detailed guidance on ADR vs. OpenSpec granularity.
+
 ## Configuration Self-Improvement
 
 This project supports Claude Code self-improvement. **At the end of every task where something non-obvious was learned, you MUST update `CLAUDE.md` (Recent Learnings) and/or `AGENTS.md` (Common Gotchas).** See `AGENTS.md → Self-Documentation Protocol` for the full rules; a short summary:

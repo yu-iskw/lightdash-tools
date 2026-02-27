@@ -16,7 +16,7 @@ export function registerContentCommand(program: Command): void {
   contentCmd
     .command('search <query>')
     .description('Search project content (charts, dashboards, spaces)')
-    .option('--project <uuids...>', 'Filter by project UUIDs')
+    .option('--projects <uuids...>', 'Filter by project UUIDs')
     .option('--type <types...>', 'Filter by content types (chart, dashboard, space)')
     .option('--page <number>', 'Page number', (v) => parseInt(v, 10))
     .option('--page-size <number>', 'Page size', (v) => parseInt(v, 10))
@@ -26,7 +26,7 @@ export function registerContentCommand(program: Command): void {
         async (
           query: string,
           options: {
-            project?: string[];
+            projects?: string[];
             type?: ('chart' | 'dashboard' | 'space')[];
             page?: number;
             pageSize?: number;
@@ -36,7 +36,7 @@ export function registerContentCommand(program: Command): void {
             const client = getClient();
             const result = await client.v2.content.searchContent({
               search: query,
-              projectUuids: options.project,
+              projectUuids: options.projects,
               contentTypes: options.type,
               page: options.page,
               pageSize: options.pageSize,
