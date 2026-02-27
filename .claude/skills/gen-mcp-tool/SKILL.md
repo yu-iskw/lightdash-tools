@@ -17,15 +17,15 @@ Create a new `packages/mcp/src/tools/<resource>.ts` and register it in
 
 ## Key Conventions
 
-| Concern            | Pattern                                                                              |
-| ------------------ | ------------------------------------------------------------------------------------ |
-| Tool name          | `lightdash_tools__<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`) |
-| Read-only tools    | `annotations: READ_ONLY_DEFAULT`                                                     |
-| Idempotent writes  | `annotations: WRITE_IDEMPOTENT`                                                      |
-| Destructive writes | `annotations: WRITE_DESTRUCTIVE`                                                     |
-| Error handling     | Handled by `wrapTool` — no try/catch in the handler body                             |
-| Client access      | `c.v1.<resource>.*` or `c.v2.<resource>.*` from `@lightdash-tools/client`            |
-| Output format      | `{ content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }`             |
+| Concern            | Pattern                                                                   |
+| ------------------ | ------------------------------------------------------------------------- |
+| Tool name          | `ldt__<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`)  |
+| Read-only tools    | `annotations: READ_ONLY_DEFAULT`                                          |
+| Idempotent writes  | `annotations: WRITE_IDEMPOTENT`                                           |
+| Destructive writes | `annotations: WRITE_DESTRUCTIVE`                                          |
+| Error handling     | Handled by `wrapTool` — no try/catch in the handler body                  |
+| Client access      | `c.v1.<resource>.*` or `c.v2.<resource>.*` from `@lightdash-tools/client` |
+| Output format      | `{ content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }`  |
 
 ## Workflow
 

@@ -74,7 +74,7 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 
 ## Tools
 
-The server registers the following tools (names prefixed with `lightdash_tools__`):
+The server registers the following tools (names prefixed with `ldt__`):
 
 - **Projects**: `list_projects`, `get_project`, `validate_project`, `get_validation_results`
 - **Explores**: `list_explores`, `get_explore`

@@ -29,7 +29,7 @@ import {
 } from '../config.js';
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
-export const TOOL_PREFIX = 'lightdash_tools__';
+export const TOOL_PREFIX = 'ldt__';
 
 export type TextContent = {
   content: Array<{ type: 'text'; text: string }>;
