@@ -77,7 +77,7 @@ With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_E
 The server registers the following tools (names prefixed with `lightdash_tools__`):
 
 - **Projects**: `list_projects`, `get_project`, `validate_project`, `get_validation_results`
-- **Explores**: `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage`
+- **Explores**: `list_explores`, `get_explore`
 - **Charts**: `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`
 - **Dashboards**: `list_dashboards`
 - **Spaces**: `list_spaces`, `get_space`
@@ -87,12 +87,27 @@ The server registers the following tools (names prefixed with `lightdash_tools__
 - **Schedulers**: `list_schedulers`
 - **Tags**: `list_tags`
 - **Query**: `compile_query`
-- **Content**: `search_content`
+- **Content**: `search_content` (v2)
+- **AI Agents**:
+  - **Admin**: `list_admin_agents`, `list_admin_agent_threads`, `get_ai_organization_settings`, `update_ai_organization_settings`
+  - **Agent Management**: `list_project_agents`, `get_project_agent`, `create_project_agent`, `update_project_agent`, `delete_project_agent`
+  - **Conversations**: `list_agent_threads`, `get_agent_thread`, `generate_agent_message`, `continue_agent_thread`
+  - **Evaluations**: `list_agent_evaluations`, `get_agent_evaluation`, `create_agent_evaluation`, `update_agent_evaluation`, `append_agent_evaluation_prompts`, `run_agent_evaluation`, `list_agent_evaluation_runs`, `get_agent_evaluation_run_results`, `delete_agent_evaluation`
+
+### CLI Binary
+
+If installed globally, you can use the `lightdash-mcp` binary:
+
+```bash
+lightdash-mcp --help
+```
 
 ### CLI Options
 
 - `--http` — Run as HTTP server instead of Stdio.
 - `--safety-mode <mode>` — Filter registered tools by safety mode (`read-only`, `write-idempotent`, `write-destructive`). Tools not allowed in this mode will not be registered, hiding them from AI agents (Static Filtering).
+- `--projects <uuids>` — Comma-separated list of allowed project UUIDs (overrides `LIGHTDASH_ALLOWED_PROJECTS`; empty = all allowed).
+- `--dry-run` — Simulate write operations without executing them (overrides `LIGHTDASH_DRY_RUN`).
 
 ## Safety Modes
 

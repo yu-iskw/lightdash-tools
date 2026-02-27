@@ -36,101 +36,121 @@ export LIGHTDASH_API_KEY=your-token-here
 
 ### Commands
 
-The CLI provides subcommands grouped by domain. All commands output JSON by default. If you are using `npx`, replace `lightdash-tools` with `npx @lightdash-tools/cli`.
+The CLI provides subcommands grouped by domain. All commands output JSON by default. If you are using `npx`, replace `lightdash-ai` with `npx @lightdash-tools/cli`.
 
 #### Organization
 
 ```bash
-lightdash-tools organization get
-lightdash-tools organization-roles list
+# Get current organization details
+lightdash-ai organization get
+
+# Manage organization roles (v2)
+lightdash-ai organization roles list
+lightdash-ai organization roles get <roleUuid>
+lightdash-ai organization roles assign <userUuid> --role <roleUuid>
 ```
 
 #### Projects
 
 ```bash
-lightdash-tools projects list
-lightdash-tools projects get <projectUuid>
-lightdash-tools projects validate run <projectUuid>
-lightdash-tools projects validate results <projectUuid>
+# List all projects
+lightdash-ai projects list
+
+# Get specific project details
+lightdash-ai projects get <projectUuid>
+
+# Project validation
+lightdash-ai projects validate run <projectUuid>
+lightdash-ai projects validate results <projectUuid>
+
+# Manage project role assignments (v2)
+lightdash-ai projects roles list <projectUuid>
+lightdash-ai projects roles assign --project <projectUuid> --user <userUuid> --role <roleUuid>
+
+# Manage project access (v1)
+lightdash-ai projects access list <projectUuid>
+```
+
+#### Content (Charts, Dashboards, Spaces)
+
+```bash
+# List charts in a project
+lightdash-ai projects charts list <projectUuid>
+
+# List dashboards in a project
+lightdash-ai projects dashboards list <projectUuid>
+
+# List spaces in a project
+lightdash-ai projects spaces list <projectUuid>
+
+# Search project content (v2)
+lightdash-ai content search "query"
+```
+
+#### Charts as Code
+
+```bash
+# Get charts in code representation
+lightdash-ai projects charts code list <projectUuid> --ids <slugs...>
+
+# Upsert a chart from its code representation
+lightdash-ai projects charts code upsert <projectUuid> <slug> --file <chart.json>
 ```
 
 #### Explores (Project-level)
 
 ```bash
-lightdash-tools projects explores list <projectUuid>
-lightdash-tools projects explores get <projectUuid> <exploreId>
-lightdash-tools projects explores dimensions <projectUuid> <exploreId>
-lightdash-tools projects explores lineage <projectUuid> <exploreId> <fieldId>
-```
-
-#### Charts (Project-level)
-
-```bash
-lightdash-tools projects charts list <projectUuid>
-lightdash-tools projects charts code list <projectUuid> --ids <slugs...>
-lightdash-tools projects charts code upsert <projectUuid> <slug> --file <chart.json>
-```
-
-#### Dashboards (Project-level)
-
-```bash
-lightdash-tools projects dashboards list <projectUuid>
-```
-
-#### Spaces (Project-level)
-
-```bash
-lightdash-tools projects spaces list <projectUuid>
-lightdash-tools projects spaces get <projectUuid> <spaceUuid>
+lightdash-ai projects explores list <projectUuid>
+lightdash-ai projects explores get <projectUuid> <exploreId>
 ```
 
 #### Users & Groups
 
 ```bash
-lightdash-tools users list
-lightdash-tools users get <userUuid>
-lightdash-tools groups list
+# Organization members
+lightdash-ai users list
+lightdash-ai users get <userUuid>
+
+# Groups
+lightdash-ai groups list
+lightdash-ai groups get <groupUuid>
+lightdash-ai groups create "Group Name"
 ```
 
 #### Metrics & Schedulers
 
 ```bash
-lightdash-tools metrics list <projectUuid>
-lightdash-tools metrics get <projectUuid> <tableName> <metricName>
-lightdash-tools schedulers list <projectUuid>
-lightdash-tools schedulers get <schedulerUuid>
+# Metrics catalog
+lightdash-ai metrics list <projectUuid>
+lightdash-ai metrics get <projectUuid> <tableName> <metricName>
+
+# Scheduled deliveries
+lightdash-ai schedulers list <projectUuid>
+lightdash-ai schedulers get <schedulerUuid>
 ```
 
 #### Tags
 
 ```bash
-lightdash-tools tags list <projectUuid>
-lightdash-tools tags get <projectUuid> <tagUuid>
+lightdash-ai tags list <projectUuid>
+lightdash-ai tags get <projectUuid> <tagUuid>
 ```
 
 #### Query
 
 ```bash
-lightdash-tools query compile <projectUuid> <exploreId> --file <query.json>
-```
-
-#### Content (Experimental)
-
-```bash
-lightdash-tools content search "query"
+# Compile a metric query
+lightdash-ai query compile <projectUuid> <exploreId> --file <query.json>
 ```
 
 #### AI Agents
 
 ```bash
-lightdash-tools ai-agents list
-```
+# List AI agents
+lightdash-ai ai-agents list
 
-#### Access Control (Project-level)
-
-```bash
-lightdash-tools projects project-access list <projectUuid>
-lightdash-tools projects project-role-assignments list <projectUuid>
+# List agent threads (admin)
+lightdash-ai ai-agents threads --page 1 --page-size 10
 ```
 
 ### Help
@@ -138,9 +158,10 @@ lightdash-tools projects project-role-assignments list <projectUuid>
 Get help for any command:
 
 ```bash
-lightdash-tools --help
-lightdash-tools projects --help
-lightdash-tools projects charts --help
+lightdash-ai --help
+lightdash-ai projects --help
+lightdash-ai projects charts --help
+lightdash-ai projects charts code --help
 ```
 
 ## Output Format
@@ -167,10 +188,10 @@ Example:
 
 ```bash
 # This will work
-lightdash-tools --safety-mode read-only users list
+lightdash-ai --safety-mode read-only users list
 
 # This will fail if delete was implemented
-lightdash-tools --safety-mode read-only users delete <uuid>
+lightdash-ai --safety-mode read-only users delete <uuid>
 ```
 
 When a command is blocked, you will see an error like:

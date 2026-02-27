@@ -22,6 +22,8 @@ Models are split into domain-specific files for better maintainability:
 - `types/v1/charts.ts` - Charts domain models
 - `types/v1/dashboards.ts` - Dashboards domain models
 - `types/v1/spaces.ts` - Spaces domain models
+- `types/v1/space-access.ts` - Space Access domain models
+- `types/v1/explores.ts` - Explores domain models
 - `types/v1/metrics.ts` - Metrics domain models
 - `types/v1/schedulers.ts` - Schedulers domain models
 - `types/v1/tags.ts` - Tags domain models
