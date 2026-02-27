@@ -13,6 +13,7 @@ import type { LightdashClient } from '@lightdash-tools/client';
 import {
   isAllowed,
   areAllProjectsAllowed,
+  extractProjectUuids,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
@@ -71,33 +72,6 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
     '_lightdashBlocked' in result &&
     (result as Record<string, unknown>)['_lightdashBlocked'] === true
   );
-}
-
-/**
- * Extracts all project UUIDs from tool args.
- * Handles both the singular form (projectUuid: string) and the plural form
- * (projectUuids: string[]) so that tools like search_content are also covered.
- */
-function extractProjectUuids(args: unknown): string[] {
-  if (typeof args !== 'object' || args === null) return [];
-  const a = args as Record<string, unknown>;
-  const uuids: string[] = [];
-
-  // Singular: projectUuid?: string
-  if (typeof a['projectUuid'] === 'string') {
-    uuids.push(a['projectUuid']);
-  }
-
-  // Plural: projectUuids?: string[]
-  if (Array.isArray(a['projectUuids'])) {
-    for (const uuid of a['projectUuids']) {
-      if (typeof uuid === 'string') {
-        uuids.push(uuid);
-      }
-    }
-  }
-
-  return uuids;
 }
 
 /**

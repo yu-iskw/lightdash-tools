@@ -37,6 +37,10 @@ program
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
     'read-only',
+  )
+  .option(
+    '--projects <uuids>',
+    'Comma-separated list of allowed project UUIDs (security guardrail)',
   );
 
 // Register all commands (organization and projects first so subcommands can attach)

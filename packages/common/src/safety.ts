@@ -106,3 +106,53 @@ export function areAllProjectsAllowed(
   if (allowedUuids.length === 0) return true;
   return projectUuids.every((uuid) => allowedUuids.includes(uuid));
 }
+
+/**
+ * Extracts all project UUIDs from tool or command arguments.
+ * Handles both MCP-style objects and CLI-style argument arrays.
+ */
+export function extractProjectUuids(args: unknown): string[] {
+  if (args === null || args === undefined) return [];
+  const uuids: string[] = [];
+
+  if (Array.isArray(args)) {
+    // CLI: positional arguments + options object
+    for (const arg of args) {
+      if (typeof arg === 'string' && /^[0-9a-f-]{36}$/i.test(arg)) {
+        // Looks like a UUID positional arg
+        uuids.push(arg);
+      } else if (typeof arg === 'object' && arg !== null) {
+        // Looks like options object or nested args
+        const a = arg as Record<string, unknown>;
+        // Check various naming conventions used across CLI and MCP
+        const keys = ['projects', 'project', 'projectUuid', 'projectUuids'];
+        for (const key of keys) {
+          const val = a[key];
+          if (typeof val === 'string') {
+            uuids.push(val);
+          } else if (Array.isArray(val)) {
+            for (const item of val) {
+              if (typeof item === 'string') uuids.push(item);
+            }
+          }
+        }
+      }
+    }
+  } else if (typeof args === 'object') {
+    // MCP or single options object
+    const a = args as Record<string, unknown>;
+    const keys = ['project', 'projectUuid', 'projectUuids'];
+    for (const key of keys) {
+      const val = a[key];
+      if (typeof val === 'string') {
+        uuids.push(val);
+      } else if (Array.isArray(val)) {
+        for (const item of val) {
+          if (typeof item === 'string') uuids.push(item);
+        }
+      }
+    }
+  }
+
+  return [...new Set(uuids)].filter((u) => u.length > 0);
+}

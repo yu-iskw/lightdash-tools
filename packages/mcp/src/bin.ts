@@ -19,7 +19,7 @@ program
     'Filter registered tools by safety mode (read-only, write-idempotent, write-destructive)',
   )
   .option(
-    '--allowed-projects <uuids>',
+    '--projects <uuids>',
     'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_ALLOWED_PROJECTS; empty = all allowed)',
   )
   .option(
@@ -36,8 +36,8 @@ program
       }
     }
 
-    if (options.allowedProjects) {
-      const uuids = (options.allowedProjects as string)
+    if (options.projects) {
+      const uuids = (options.projects as string)
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean);
