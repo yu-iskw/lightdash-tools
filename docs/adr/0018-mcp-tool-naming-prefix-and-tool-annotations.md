@@ -4,6 +4,7 @@ Date: 2026-02-11
 
 ## Status
 
+Superseded by [33. Shorten MCP tool naming prefix to ldt\_\_](0033-shorten-mcp-tool-naming-prefix-to-ldt__.md)
 Amended by [24. Explicit MCP tool annotation presets at call site for visibility](0024-explicit-mcp-tool-annotation-presets-at-call-site-for-visibility.md)
 
 ## Context
