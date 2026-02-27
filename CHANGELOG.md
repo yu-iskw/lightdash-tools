@@ -1,10 +1,12 @@
 # Changelog
 
+## [0.4.0] - 2026-02-27
+
+### Feat
+
+- MCP tools: shorten prefix to ldt\_\_ to satisfy 60-character limit
+
 ## [0.3.2] - 2026-02-27
-
-### Chores
-
-- resolve security vulnerabilities via dependency upgrades and pnpm overrides
 
 ## [0.3.1] - 2026-02-27
 

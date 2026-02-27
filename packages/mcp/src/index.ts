@@ -15,7 +15,7 @@ async function main(): Promise<void> {
   const client = getClient();
   const server = new McpServer({
     name: 'lightdash-mcp',
-    version: '1.0.0',
+    version: '0.4.0',
   });
 
   registerTools(server, client);

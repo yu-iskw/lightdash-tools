@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name('lightdash-mcp')
   .description('MCP server for Lightdash AI')
-  .version('0.3.2')
+  .version('0.4.0')
   .option('--http', 'Run as HTTP server instead of Stdio')
   .option(
     '--safety-mode <mode>',
