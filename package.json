@@ -25,7 +25,8 @@
     "openspec": "cd docs && npx @fission-ai/openspec@latest",
     "test": "vitest run",
     "validate:deps": "node scripts/check-common-no-client.mjs",
-    "validate:names": "node scripts/validate-package-names.mjs"
+    "validate:names": "node scripts/validate-package-names.mjs",
+    "docs:safety:generate": "node scripts/generate-safety-mode-inventory.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
