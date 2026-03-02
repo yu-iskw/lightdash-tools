@@ -71,7 +71,8 @@ function getMcpRows() {
 
   for (const file of files) {
     const src = readFileSync(join(MCP_DIR, file), 'utf8');
-    const reg = /registerToolSafe\(\s*server,\s*'([^']+)',\s*\{[\s\S]*?annotations:\s*(READ_ONLY_DEFAULT|WRITE_IDEMPOTENT|WRITE_DESTRUCTIVE)/g;
+    const reg =
+      /registerToolSafe\(\s*server,\s*'([^']+)',\s*\{[\s\S]*?annotations:\s*(READ_ONLY_DEFAULT|WRITE_IDEMPOTENT|WRITE_DESTRUCTIVE)/g;
 
     let match;
     while ((match = reg.exec(src)) !== null) {
@@ -185,4 +186,6 @@ ${mcpToolRows}
 `;
 
 writeFileSync(OUTPUT, markdown, 'utf8');
-process.stdout.write(`Generated ${basename(OUTPUT)} with ${cliRows.length} CLI entries and ${mcpRows.length} MCP entries.\n`);
+process.stdout.write(
+  `Generated ${basename(OUTPUT)} with ${cliRows.length} CLI entries and ${mcpRows.length} MCP entries.\n`,
+);

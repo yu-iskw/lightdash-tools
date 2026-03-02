@@ -11,203 +11,203 @@
 
 ## API domain map
 
-| API domain | CLI command module(s) | MCP tool module(s) |
-| --- | --- | --- |
-| Agents | `agents.ts` | (n/a) |
-| Ai Agents | `ai-agents.ts` | `ai-agents.ts` |
-| Charts | `charts.ts` | `charts.ts` |
-| Content | `content.ts` | `content.ts` |
-| Dashboards | `dashboards.ts` | `dashboards.ts` |
-| Explores | `explores.ts` | `explores.ts` |
-| Groups | `groups.ts` | `groups.ts` |
-| Metrics | `metrics.ts` | `metrics.ts` |
-| Organization | `organization.ts` | (n/a) |
-| Organization Roles | `organization-roles.ts` | (n/a) |
-| Project Access | `project-access.ts` | (n/a) |
-| Project Role Assignments | `project-role-assignments.ts` | (n/a) |
-| Projects | `projects.ts` | `projects.ts` |
-| Query | `query.ts` | `query.ts` |
-| Schedulers | `schedulers.ts` | `schedulers.ts` |
-| Space Access | `space-access.ts` | (n/a) |
-| Spaces | `spaces.ts` | `spaces.ts` |
-| Tags | `tags.ts` | `tags.ts` |
-| Users | `users.ts` | `users.ts` |
+| API domain               | CLI command module(s)         | MCP tool module(s) |
+| ------------------------ | ----------------------------- | ------------------ |
+| Agents                   | `agents.ts`                   | (n/a)              |
+| Ai Agents                | `ai-agents.ts`                | `ai-agents.ts`     |
+| Charts                   | `charts.ts`                   | `charts.ts`        |
+| Content                  | `content.ts`                  | `content.ts`       |
+| Dashboards               | `dashboards.ts`               | `dashboards.ts`    |
+| Explores                 | `explores.ts`                 | `explores.ts`      |
+| Groups                   | `groups.ts`                   | `groups.ts`        |
+| Metrics                  | `metrics.ts`                  | `metrics.ts`       |
+| Organization             | `organization.ts`             | (n/a)              |
+| Organization Roles       | `organization-roles.ts`       | (n/a)              |
+| Project Access           | `project-access.ts`           | (n/a)              |
+| Project Role Assignments | `project-role-assignments.ts` | (n/a)              |
+| Projects                 | `projects.ts`                 | `projects.ts`      |
+| Query                    | `query.ts`                    | `query.ts`         |
+| Schedulers               | `schedulers.ts`               | `schedulers.ts`    |
+| Space Access             | `space-access.ts`             | (n/a)              |
+| Spaces                   | `spaces.ts`                   | `spaces.ts`        |
+| Tags                     | `tags.ts`                     | `tags.ts`          |
+| Users                    | `users.ts`                    | `users.ts`         |
 
 ## CLI module coverage
 
-| CLI module | Available safety modes |
-| --- | --- |
-| `agents.ts` | read-only, write-destructive, write-idempotent |
-| `ai-agents.ts` | read-only, write-idempotent |
-| `charts.ts` | read-only, write-idempotent |
-| `content.ts` | read-only |
-| `dashboards.ts` | read-only |
-| `explores.ts` | read-only |
-| `groups.ts` | read-only, write-destructive, write-idempotent |
-| `metrics.ts` | read-only |
-| `organization-roles.ts` | read-only, write-idempotent |
-| `organization.ts` | read-only |
-| `project-access.ts` | read-only |
+| CLI module                    | Available safety modes                         |
+| ----------------------------- | ---------------------------------------------- |
+| `agents.ts`                   | read-only, write-destructive, write-idempotent |
+| `ai-agents.ts`                | read-only, write-idempotent                    |
+| `charts.ts`                   | read-only, write-idempotent                    |
+| `content.ts`                  | read-only                                      |
+| `dashboards.ts`               | read-only                                      |
+| `explores.ts`                 | read-only                                      |
+| `groups.ts`                   | read-only, write-destructive, write-idempotent |
+| `metrics.ts`                  | read-only                                      |
+| `organization-roles.ts`       | read-only, write-idempotent                    |
+| `organization.ts`             | read-only                                      |
+| `project-access.ts`           | read-only                                      |
 | `project-role-assignments.ts` | read-only, write-destructive, write-idempotent |
-| `projects.ts` | read-only, write-idempotent |
-| `query.ts` | read-only |
-| `schedulers.ts` | read-only |
-| `space-access.ts` | write-destructive, write-idempotent |
-| `spaces.ts` | read-only |
-| `tags.ts` | read-only |
-| `users.ts` | read-only |
+| `projects.ts`                 | read-only, write-idempotent                    |
+| `query.ts`                    | read-only                                      |
+| `schedulers.ts`               | read-only                                      |
+| `space-access.ts`             | write-destructive, write-idempotent            |
+| `spaces.ts`                   | read-only                                      |
+| `tags.ts`                     | read-only                                      |
+| `users.ts`                    | read-only                                      |
 
 ## CLI subcommands and safety mode
 
-| CLI module | Subcommand | Safety mode |
-| --- | --- | --- |
-| `agents.ts` | `append <agentUuid> <evalUuid>` | write-idempotent |
-| `agents.ts` | `continue <agentUuid> <threadUuid>` | write-idempotent |
-| `agents.ts` | `create` | write-idempotent |
-| `agents.ts` | `create <agentUuid>` | write-idempotent |
-| `agents.ts` | `delete <agentUuid>` | write-destructive |
-| `agents.ts` | `delete <agentUuid> <evalUuid>` | write-destructive |
-| `agents.ts` | `generate <agentUuid>` | write-idempotent |
-| `agents.ts` | `get <agentUuid>` | read-only |
-| `agents.ts` | `get <agentUuid> <evalUuid>` | read-only |
-| `agents.ts` | `get <agentUuid> <threadUuid>` | read-only |
-| `agents.ts` | `list` | read-only |
-| `agents.ts` | `list <agentUuid>` | read-only |
-| `agents.ts` | `list <agentUuid>` | read-only |
-| `agents.ts` | `run <agentUuid> <evalUuid>` | write-idempotent |
-| `agents.ts` | `run-results <agentUuid> <evalUuid> <runUuid>` | read-only |
-| `agents.ts` | `runs <agentUuid> <evalUuid>` | read-only |
-| `agents.ts` | `update <agentUuid>` | write-idempotent |
-| `agents.ts` | `update <agentUuid> <evalUuid>` | write-idempotent |
-| `ai-agents.ts` | `get` | read-only |
-| `ai-agents.ts` | `list` | read-only |
-| `ai-agents.ts` | `threads` | read-only |
-| `ai-agents.ts` | `update` | write-idempotent |
-| `charts.ts` | `list <projectUuid>` | read-only |
-| `charts.ts` | `list <projectUuid>` | read-only |
-| `charts.ts` | `upsert <projectUuid> <slug>` | write-idempotent |
-| `content.ts` | `search <query>` | read-only |
-| `dashboards.ts` | `list <projectUuid>` | read-only |
-| `explores.ts` | `dimensions <projectUuid> <exploreId>` | read-only |
-| `explores.ts` | `get <projectUuid> <exploreId>` | read-only |
-| `explores.ts` | `lineage <projectUuid> <exploreId> <fieldId>` | read-only |
-| `explores.ts` | `list <projectUuid>` | read-only |
-| `groups.ts` | `add <groupUuid> <userUuid>` | write-idempotent |
-| `groups.ts` | `create <name>` | write-idempotent |
-| `groups.ts` | `delete <groupUuid>` | write-destructive |
-| `groups.ts` | `get <groupUuid>` | read-only |
-| `groups.ts` | `list` | read-only |
-| `groups.ts` | `list <groupUuid>` | read-only |
-| `groups.ts` | `remove <groupUuid> <userUuid>` | write-destructive |
-| `groups.ts` | `update <groupUuid>` | write-idempotent |
-| `metrics.ts` | `get <projectUuid> <tableName> <metricName>` | read-only |
-| `metrics.ts` | `list <projectUuid>` | read-only |
-| `organization-roles.ts` | `assign <userUuid>` | write-idempotent |
-| `organization-roles.ts` | `get <roleUuid>` | read-only |
-| `organization-roles.ts` | `list` | read-only |
-| `organization-roles.ts` | `list` | read-only |
-| `organization.ts` | `get` | read-only |
-| `project-access.ts` | `get <projectUuid> <userUuid>` | read-only |
-| `project-access.ts` | `list <projectUuid>` | read-only |
-| `project-access.ts` | `list <projectUuid>` | read-only |
-| `project-role-assignments.ts` | `group <projectUuid> <groupId>` | write-idempotent |
-| `project-role-assignments.ts` | `group <projectUuid> <groupId>` | write-destructive |
-| `project-role-assignments.ts` | `list <projectUuid>` | read-only |
-| `project-role-assignments.ts` | `user <projectUuid> <userUuid>` | write-idempotent |
-| `project-role-assignments.ts` | `user <projectUuid> <userUuid>` | write-destructive |
-| `projects.ts` | `get` | read-only |
-| `projects.ts` | `list` | read-only |
-| `projects.ts` | `results <projectUuid>` | read-only |
-| `projects.ts` | `run <projectUuid>` | write-idempotent |
-| `query.ts` | `compile` | read-only |
-| `schedulers.ts` | `get <schedulerUuid>` | read-only |
-| `schedulers.ts` | `list <projectUuid>` | read-only |
-| `space-access.ts` | `grant <projectUuid> <spaceUuid> <groupUuid> <role>` | write-idempotent |
-| `space-access.ts` | `grant <projectUuid> <spaceUuid> <userUuid> <role>` | write-idempotent |
-| `space-access.ts` | `revoke <projectUuid> <spaceUuid> <groupUuid>` | write-destructive |
-| `space-access.ts` | `revoke <projectUuid> <spaceUuid> <userUuid>` | write-destructive |
-| `spaces.ts` | `get <projectUuid> <spaceUuid>` | read-only |
-| `spaces.ts` | `list <projectUuid>` | read-only |
-| `tags.ts` | `get <projectUuid> <tagUuid>` | read-only |
-| `tags.ts` | `list <projectUuid>` | read-only |
-| `users.ts` | `get <userUuid>` | read-only |
-| `users.ts` | `list` | read-only |
+| CLI module                    | Subcommand                                           | Safety mode       |
+| ----------------------------- | ---------------------------------------------------- | ----------------- |
+| `agents.ts`                   | `append <agentUuid> <evalUuid>`                      | write-idempotent  |
+| `agents.ts`                   | `continue <agentUuid> <threadUuid>`                  | write-idempotent  |
+| `agents.ts`                   | `create`                                             | write-idempotent  |
+| `agents.ts`                   | `create <agentUuid>`                                 | write-idempotent  |
+| `agents.ts`                   | `delete <agentUuid>`                                 | write-destructive |
+| `agents.ts`                   | `delete <agentUuid> <evalUuid>`                      | write-destructive |
+| `agents.ts`                   | `generate <agentUuid>`                               | write-idempotent  |
+| `agents.ts`                   | `get <agentUuid>`                                    | read-only         |
+| `agents.ts`                   | `get <agentUuid> <evalUuid>`                         | read-only         |
+| `agents.ts`                   | `get <agentUuid> <threadUuid>`                       | read-only         |
+| `agents.ts`                   | `list`                                               | read-only         |
+| `agents.ts`                   | `list <agentUuid>`                                   | read-only         |
+| `agents.ts`                   | `list <agentUuid>`                                   | read-only         |
+| `agents.ts`                   | `run <agentUuid> <evalUuid>`                         | write-idempotent  |
+| `agents.ts`                   | `run-results <agentUuid> <evalUuid> <runUuid>`       | read-only         |
+| `agents.ts`                   | `runs <agentUuid> <evalUuid>`                        | read-only         |
+| `agents.ts`                   | `update <agentUuid>`                                 | write-idempotent  |
+| `agents.ts`                   | `update <agentUuid> <evalUuid>`                      | write-idempotent  |
+| `ai-agents.ts`                | `get`                                                | read-only         |
+| `ai-agents.ts`                | `list`                                               | read-only         |
+| `ai-agents.ts`                | `threads`                                            | read-only         |
+| `ai-agents.ts`                | `update`                                             | write-idempotent  |
+| `charts.ts`                   | `list <projectUuid>`                                 | read-only         |
+| `charts.ts`                   | `list <projectUuid>`                                 | read-only         |
+| `charts.ts`                   | `upsert <projectUuid> <slug>`                        | write-idempotent  |
+| `content.ts`                  | `search <query>`                                     | read-only         |
+| `dashboards.ts`               | `list <projectUuid>`                                 | read-only         |
+| `explores.ts`                 | `dimensions <projectUuid> <exploreId>`               | read-only         |
+| `explores.ts`                 | `get <projectUuid> <exploreId>`                      | read-only         |
+| `explores.ts`                 | `lineage <projectUuid> <exploreId> <fieldId>`        | read-only         |
+| `explores.ts`                 | `list <projectUuid>`                                 | read-only         |
+| `groups.ts`                   | `add <groupUuid> <userUuid>`                         | write-idempotent  |
+| `groups.ts`                   | `create <name>`                                      | write-idempotent  |
+| `groups.ts`                   | `delete <groupUuid>`                                 | write-destructive |
+| `groups.ts`                   | `get <groupUuid>`                                    | read-only         |
+| `groups.ts`                   | `list`                                               | read-only         |
+| `groups.ts`                   | `list <groupUuid>`                                   | read-only         |
+| `groups.ts`                   | `remove <groupUuid> <userUuid>`                      | write-destructive |
+| `groups.ts`                   | `update <groupUuid>`                                 | write-idempotent  |
+| `metrics.ts`                  | `get <projectUuid> <tableName> <metricName>`         | read-only         |
+| `metrics.ts`                  | `list <projectUuid>`                                 | read-only         |
+| `organization-roles.ts`       | `assign <userUuid>`                                  | write-idempotent  |
+| `organization-roles.ts`       | `get <roleUuid>`                                     | read-only         |
+| `organization-roles.ts`       | `list`                                               | read-only         |
+| `organization-roles.ts`       | `list`                                               | read-only         |
+| `organization.ts`             | `get`                                                | read-only         |
+| `project-access.ts`           | `get <projectUuid> <userUuid>`                       | read-only         |
+| `project-access.ts`           | `list <projectUuid>`                                 | read-only         |
+| `project-access.ts`           | `list <projectUuid>`                                 | read-only         |
+| `project-role-assignments.ts` | `group <projectUuid> <groupId>`                      | write-idempotent  |
+| `project-role-assignments.ts` | `group <projectUuid> <groupId>`                      | write-destructive |
+| `project-role-assignments.ts` | `list <projectUuid>`                                 | read-only         |
+| `project-role-assignments.ts` | `user <projectUuid> <userUuid>`                      | write-idempotent  |
+| `project-role-assignments.ts` | `user <projectUuid> <userUuid>`                      | write-destructive |
+| `projects.ts`                 | `get`                                                | read-only         |
+| `projects.ts`                 | `list`                                               | read-only         |
+| `projects.ts`                 | `results <projectUuid>`                              | read-only         |
+| `projects.ts`                 | `run <projectUuid>`                                  | write-idempotent  |
+| `query.ts`                    | `compile`                                            | read-only         |
+| `schedulers.ts`               | `get <schedulerUuid>`                                | read-only         |
+| `schedulers.ts`               | `list <projectUuid>`                                 | read-only         |
+| `space-access.ts`             | `grant <projectUuid> <spaceUuid> <groupUuid> <role>` | write-idempotent  |
+| `space-access.ts`             | `grant <projectUuid> <spaceUuid> <userUuid> <role>`  | write-idempotent  |
+| `space-access.ts`             | `revoke <projectUuid> <spaceUuid> <groupUuid>`       | write-destructive |
+| `space-access.ts`             | `revoke <projectUuid> <spaceUuid> <userUuid>`        | write-destructive |
+| `spaces.ts`                   | `get <projectUuid> <spaceUuid>`                      | read-only         |
+| `spaces.ts`                   | `list <projectUuid>`                                 | read-only         |
+| `tags.ts`                     | `get <projectUuid> <tagUuid>`                        | read-only         |
+| `tags.ts`                     | `list <projectUuid>`                                 | read-only         |
+| `users.ts`                    | `get <userUuid>`                                     | read-only         |
+| `users.ts`                    | `list`                                               | read-only         |
 
 ## MCP module coverage
 
-| MCP module | Available safety modes |
-| --- | --- |
-| `ai-agents.ts` | read-only, write-destructive, write-idempotent |
-| `charts.ts` | read-only, write-idempotent |
-| `content.ts` | read-only |
-| `dashboards.ts` | read-only |
-| `explores.ts` | read-only |
-| `groups.ts` | read-only, write-destructive, write-idempotent |
-| `metrics.ts` | read-only |
-| `projects.ts` | read-only, write-idempotent |
-| `query.ts` | read-only |
-| `schedulers.ts` | read-only |
-| `spaces.ts` | read-only, write-destructive, write-idempotent |
-| `tags.ts` | read-only |
-| `users.ts` | read-only, write-destructive |
+| MCP module      | Available safety modes                         |
+| --------------- | ---------------------------------------------- |
+| `ai-agents.ts`  | read-only, write-destructive, write-idempotent |
+| `charts.ts`     | read-only, write-idempotent                    |
+| `content.ts`    | read-only                                      |
+| `dashboards.ts` | read-only                                      |
+| `explores.ts`   | read-only                                      |
+| `groups.ts`     | read-only, write-destructive, write-idempotent |
+| `metrics.ts`    | read-only                                      |
+| `projects.ts`   | read-only, write-idempotent                    |
+| `query.ts`      | read-only                                      |
+| `schedulers.ts` | read-only                                      |
+| `spaces.ts`     | read-only, write-destructive, write-idempotent |
+| `tags.ts`       | read-only                                      |
+| `users.ts`      | read-only, write-destructive                   |
 
 ## MCP tools and safety mode
 
-| MCP module | Tool short name | Safety mode |
-| --- | --- | --- |
-| `ai-agents.ts` | `append_agent_evaluation_prompts` | write-idempotent |
-| `ai-agents.ts` | `continue_agent_thread` | write-idempotent |
-| `ai-agents.ts` | `create_agent_evaluation` | write-idempotent |
-| `ai-agents.ts` | `create_project_agent` | write-idempotent |
-| `ai-agents.ts` | `delete_agent_evaluation` | write-destructive |
-| `ai-agents.ts` | `delete_project_agent` | write-destructive |
-| `ai-agents.ts` | `generate_agent_message` | write-idempotent |
-| `ai-agents.ts` | `get_agent_evaluation` | read-only |
-| `ai-agents.ts` | `get_agent_evaluation_run_results` | read-only |
-| `ai-agents.ts` | `get_agent_thread` | read-only |
-| `ai-agents.ts` | `get_ai_organization_settings` | read-only |
-| `ai-agents.ts` | `get_project_agent` | read-only |
-| `ai-agents.ts` | `list_admin_agent_threads` | read-only |
-| `ai-agents.ts` | `list_admin_agents` | read-only |
-| `ai-agents.ts` | `list_agent_evaluation_runs` | read-only |
-| `ai-agents.ts` | `list_agent_evaluations` | read-only |
-| `ai-agents.ts` | `list_agent_threads` | read-only |
-| `ai-agents.ts` | `list_project_agents` | read-only |
-| `ai-agents.ts` | `run_agent_evaluation` | write-idempotent |
-| `ai-agents.ts` | `update_agent_evaluation` | write-idempotent |
-| `ai-agents.ts` | `update_ai_organization_settings` | write-idempotent |
-| `ai-agents.ts` | `update_project_agent` | write-idempotent |
-| `charts.ts` | `list_charts` | read-only |
-| `charts.ts` | `list_charts_as_code` | read-only |
-| `charts.ts` | `upsert_chart_as_code` | write-idempotent |
-| `content.ts` | `search_content` | read-only |
-| `dashboards.ts` | `list_dashboards` | read-only |
-| `explores.ts` | `get_explore` | read-only |
-| `explores.ts` | `get_field_lineage` | read-only |
-| `explores.ts` | `list_dimensions` | read-only |
-| `explores.ts` | `list_explores` | read-only |
-| `groups.ts` | `add_user_to_group` | write-idempotent |
-| `groups.ts` | `create_group` | write-idempotent |
-| `groups.ts` | `delete_group` | write-destructive |
-| `groups.ts` | `get_group` | read-only |
-| `groups.ts` | `list_group_members` | read-only |
-| `groups.ts` | `list_groups` | read-only |
-| `groups.ts` | `remove_user_from_group` | write-destructive |
-| `groups.ts` | `update_group` | write-idempotent |
-| `metrics.ts` | `list_metrics` | read-only |
-| `projects.ts` | `get_project` | read-only |
-| `projects.ts` | `get_validation_results` | read-only |
-| `projects.ts` | `list_projects` | read-only |
-| `projects.ts` | `validate_project` | write-idempotent |
-| `query.ts` | `compile_query` | read-only |
-| `schedulers.ts` | `list_schedulers` | read-only |
-| `spaces.ts` | `get_space` | read-only |
-| `spaces.ts` | `grant_group_space_access` | write-idempotent |
-| `spaces.ts` | `grant_user_space_access` | write-idempotent |
-| `spaces.ts` | `list_spaces` | read-only |
-| `spaces.ts` | `revoke_group_space_access` | write-destructive |
-| `spaces.ts` | `revoke_user_space_access` | write-destructive |
-| `tags.ts` | `list_tags` | read-only |
-| `users.ts` | `delete_member` | write-destructive |
-| `users.ts` | `get_member` | read-only |
-| `users.ts` | `list_organization_members` | read-only |
+| MCP module      | Tool short name                    | Safety mode       |
+| --------------- | ---------------------------------- | ----------------- |
+| `ai-agents.ts`  | `append_agent_evaluation_prompts`  | write-idempotent  |
+| `ai-agents.ts`  | `continue_agent_thread`            | write-idempotent  |
+| `ai-agents.ts`  | `create_agent_evaluation`          | write-idempotent  |
+| `ai-agents.ts`  | `create_project_agent`             | write-idempotent  |
+| `ai-agents.ts`  | `delete_agent_evaluation`          | write-destructive |
+| `ai-agents.ts`  | `delete_project_agent`             | write-destructive |
+| `ai-agents.ts`  | `generate_agent_message`           | write-idempotent  |
+| `ai-agents.ts`  | `get_agent_evaluation`             | read-only         |
+| `ai-agents.ts`  | `get_agent_evaluation_run_results` | read-only         |
+| `ai-agents.ts`  | `get_agent_thread`                 | read-only         |
+| `ai-agents.ts`  | `get_ai_organization_settings`     | read-only         |
+| `ai-agents.ts`  | `get_project_agent`                | read-only         |
+| `ai-agents.ts`  | `list_admin_agent_threads`         | read-only         |
+| `ai-agents.ts`  | `list_admin_agents`                | read-only         |
+| `ai-agents.ts`  | `list_agent_evaluation_runs`       | read-only         |
+| `ai-agents.ts`  | `list_agent_evaluations`           | read-only         |
+| `ai-agents.ts`  | `list_agent_threads`               | read-only         |
+| `ai-agents.ts`  | `list_project_agents`              | read-only         |
+| `ai-agents.ts`  | `run_agent_evaluation`             | write-idempotent  |
+| `ai-agents.ts`  | `update_agent_evaluation`          | write-idempotent  |
+| `ai-agents.ts`  | `update_ai_organization_settings`  | write-idempotent  |
+| `ai-agents.ts`  | `update_project_agent`             | write-idempotent  |
+| `charts.ts`     | `list_charts`                      | read-only         |
+| `charts.ts`     | `list_charts_as_code`              | read-only         |
+| `charts.ts`     | `upsert_chart_as_code`             | write-idempotent  |
+| `content.ts`    | `search_content`                   | read-only         |
+| `dashboards.ts` | `list_dashboards`                  | read-only         |
+| `explores.ts`   | `get_explore`                      | read-only         |
+| `explores.ts`   | `get_field_lineage`                | read-only         |
+| `explores.ts`   | `list_dimensions`                  | read-only         |
+| `explores.ts`   | `list_explores`                    | read-only         |
+| `groups.ts`     | `add_user_to_group`                | write-idempotent  |
+| `groups.ts`     | `create_group`                     | write-idempotent  |
+| `groups.ts`     | `delete_group`                     | write-destructive |
+| `groups.ts`     | `get_group`                        | read-only         |
+| `groups.ts`     | `list_group_members`               | read-only         |
+| `groups.ts`     | `list_groups`                      | read-only         |
+| `groups.ts`     | `remove_user_from_group`           | write-destructive |
+| `groups.ts`     | `update_group`                     | write-idempotent  |
+| `metrics.ts`    | `list_metrics`                     | read-only         |
+| `projects.ts`   | `get_project`                      | read-only         |
+| `projects.ts`   | `get_validation_results`           | read-only         |
+| `projects.ts`   | `list_projects`                    | read-only         |
+| `projects.ts`   | `validate_project`                 | write-idempotent  |
+| `query.ts`      | `compile_query`                    | read-only         |
+| `schedulers.ts` | `list_schedulers`                  | read-only         |
+| `spaces.ts`     | `get_space`                        | read-only         |
+| `spaces.ts`     | `grant_group_space_access`         | write-idempotent  |
+| `spaces.ts`     | `grant_user_space_access`          | write-idempotent  |
+| `spaces.ts`     | `list_spaces`                      | read-only         |
+| `spaces.ts`     | `revoke_group_space_access`        | write-destructive |
+| `spaces.ts`     | `revoke_user_space_access`         | write-destructive |
+| `tags.ts`       | `list_tags`                        | read-only         |
+| `users.ts`      | `delete_member`                    | write-destructive |
+| `users.ts`      | `get_member`                       | read-only         |
+| `users.ts`      | `list_organization_members`        | read-only         |

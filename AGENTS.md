@@ -160,3 +160,5 @@ When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues 
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.
 
 - **Safety inventory doc is generated:** Run `pnpm docs:safety:generate` to regenerate `docs/safety-mode-inventory.md` from `wrapAction(...)` and `registerToolSafe(...)` usage. Do not hand-edit the generated inventory file.
+
+- **Generated safety docs still require formatting:** After running `pnpm docs:safety:generate`, run `pnpm format:prettier` (or at least Prettier on the touched docs/script files) before CI. Trunk/format checks can fail on unformatted generated markdown or generator script changes even when `pnpm lint:eslint` passes.
