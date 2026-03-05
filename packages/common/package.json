@@ -12,7 +12,7 @@
     "generate:types": "openapi-typescript https://raw.githubusercontent.com/lightdash/lightdash/refs/heads/main/packages/backend/src/generated/swagger.json -o src/types/generated/openapi-types.ts"
   },
   "devDependencies": {
-    "@types/node": "^25.3.3",
+    "@types/node": "^25.3.4",
     "openapi-typescript": "^7.13.0"
   }
 }
