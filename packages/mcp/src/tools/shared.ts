@@ -4,9 +4,10 @@
  * Guardrail layers applied by registerToolSafe (outer → inner):
  *   1. Audit log wrapper   — captures timing and outcome for every call.
  *   2. Project allowlist   — rejects calls targeting disallowed project UUIDs at runtime.
- *   3. Dry-run wrapper     — simulates writes without executing them (registration-time).
- *   4. Safety-mode wrapper — disables tools that exceed the configured safety level.
- *   5. Raw handler         — the actual tool implementation.
+ *   3. Input validation    — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   4. Dry-run wrapper     — simulates writes without executing them (registration-time).
+ *   5. Safety-mode wrapper — disables tools that exceed the configured safety level.
+ *   6. Raw handler        — the actual tool implementation.
  */
 
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -17,6 +18,7 @@ import {
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
+  validateResourceId,
 } from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
@@ -133,6 +135,47 @@ export function registerToolSafe(
       _lightdashBlocked: true,
     });
   }
+
+  // ── Input validation wrapper ─────────────────────────────────────────────
+  // Validate resource IDs (projectUuid, slug, etc.) before handler.
+  const validatedInner = finalHandler;
+  finalHandler = async (args, extra): Promise<TextContent> => {
+    const projectUuids = extractProjectUuids(args);
+    for (const uuid of projectUuids) {
+      try {
+        validateResourceId(uuid);
+      } catch (err) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
+    }
+    const a = args as Record<string, unknown>;
+    if (typeof a?.slug === 'string') {
+      try {
+        validateResourceId(a.slug);
+      } catch (err) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: Invalid slug: ${err instanceof Error ? err.message : String(err)}`,
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
+    }
+    return validatedInner(args, extra);
+  };
 
   // ── Project allowlist wrapper ─────────────────────────────────────────────
   // Reject calls targeting project UUIDs not in the configured allowlist.

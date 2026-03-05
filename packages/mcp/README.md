@@ -31,6 +31,8 @@ npm install -g @lightdash-tools/mcp
 ### Optional (both modes)
 
 - `LIGHTDASH_TOOL_SAFETY_MODE` — Safety mode for dynamic enforcement (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` — Comma-separated project UUIDs to restrict operations (empty = all allowed). CLI `--projects` overrides.
+- `LIGHTDASH_DRY_RUN` — Set to `1`, `true`, or `yes` to simulate write operations without executing.
 
 ### Streamable HTTP only
 
@@ -106,7 +108,7 @@ lightdash-mcp --help
 
 - `--http` — Run as HTTP server instead of Stdio.
 - `--safety-mode <mode>` — Filter registered tools by safety mode (`read-only`, `write-idempotent`, `write-destructive`). Tools not allowed in this mode will not be registered, hiding them from AI agents (Static Filtering).
-- `--projects <uuids>` — Comma-separated list of allowed project UUIDs (overrides `LIGHTDASH_ALLOWED_PROJECTS`; empty = all allowed).
+- `--projects <uuids>` — Comma-separated list of allowed project UUIDs (overrides `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`; empty = all allowed).
 - `--dry-run` — Simulate write operations without executing them (overrides `LIGHTDASH_DRY_RUN`).
 
 ## Safety Modes
@@ -127,6 +129,10 @@ When a tool is disabled via dynamic enforcement, the server will return a descri
 ### Destructive tools
 
 Tools with `destructiveHint: true` (e.g. `delete_member`) perform irreversible or high-impact actions. MCP clients should show a warning and/or require user confirmation before executing them. AI agents should ask the user for explicit confirmation before calling such tools.
+
+### Input validation
+
+Resource IDs (project UUIDs, slugs) are validated before execution. Invalid inputs (control characters, `?`, `#`, `%`, path traversal) are rejected. This guards against adversarial or hallucinated inputs when used by AI agents. See [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md) for agent-specific guidance.
 
 ## Testing
 

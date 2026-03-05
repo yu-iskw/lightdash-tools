@@ -59,5 +59,4 @@ flowchart LR
 ## References
 
 - GitHub: Issue #26 (parent), sub-issues #27–#30
-- OpenSpec: `docs/openspec/changes/mcp-server-lightdash-client/`
 - ADR-0011: Add agent skill for developing MCP servers in TypeScript

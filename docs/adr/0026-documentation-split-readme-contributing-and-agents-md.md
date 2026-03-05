@@ -15,7 +15,7 @@ README contained template placeholders (`{PROJECT_NAME}`, `{PROJECT_DESCRIPTION}
 We split documentation into three roles:
 
 1. **README** (audience: **end-users**): Project identity (name, description, license) and "Using the tools" — HTTP client, CLI, MCP: one sentence each plus link to the corresponding package README (`packages/client/README.md`, `packages/cli/README.md`, `packages/mcp/README.md`). No build, lint, Trunk, or project structure in README. Single line: "Developing? See [CONTRIBUTING](../../CONTRIBUTING.md)." Optionally a brief line linking to [AGENTS.md](../../AGENTS.md) for agent instructions.
-2. **CONTRIBUTING** (audience: **developers**): Setup, building from source, project structure, branch from `main`, pre-commit (`pnpm lint && pnpm test`), commit format, PR expectations, where ADRs/changelog/OpenSpec live. Ends with "for full command list, code style, and tooling see AGENTS.md." No duplication of agent/skill tables.
+2. **CONTRIBUTING** (audience: **developers**): Setup, building from source, project structure, branch from `main`, pre-commit (`pnpm lint && pnpm test`), commit format, PR expectations, where ADRs and changelog live. Ends with "for full command list, code style, and tooling see AGENTS.md." No duplication of agent/skill tables.
 3. **AGENTS.md**: Remains the canonical reference for commands, code style, testing, git/PR workflow, package naming, subagents, and skills. Workflow changes are made here first; CONTRIBUTING only summarizes.
 
 ## Consequences

@@ -5,6 +5,9 @@ export function greet(name: string): string {
 // Export safety logic
 export * from './safety';
 
+// Export input validation
+export * from './input-validation';
+
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';
 

@@ -69,4 +69,3 @@ LightdashClient
 
 - Problem-solving analysis: See agent transcript
 - GitHub Issue: #3
-- OpenSpec: `docs/openspec/changes/api-version-namespaces/`

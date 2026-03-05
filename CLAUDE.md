@@ -18,27 +18,14 @@ This decomposes tasks into independent subtasks with file ownership, executes th
 
 ## Available Agents
 
-| Agent                    | Purpose                                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `project-manager`        | Unified project management (changelog, ADR, OpenSpec, issues); routes to specialists and default project. |
-| `github-project-manager` | Sync repo work with GitHub Projects                                                                       |
-| `github-triage-agent`    | Triage, label, and assign issues                                                                          |
-| `openspec-manager`       | Run OpenSpec SDD workflows (root: `docs/openspec/`; run CLI from `docs/` or `pnpm openspec --`)           |
-| `verifier`               | Run build → lint → test cycle                                                                             |
-| `code-reviewer`          | Review code for quality and security                                                                      |
-| `parallel-executor`      | Orchestrate parallel task execution                                                                       |
-| `parallel-tasks-planner` | Plan task decomposition                                                                                   |
-| `task-worker`            | Execute isolated subtasks                                                                                 |
-
-## Default GitHub Project
-
-This repository uses the following GitHub Project for tracking work:
-
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
-- **Owner**: `yu-iskw`
-- **Project Number**: `3`
-
-When using the `github-project-manager` agent or GitHub Project-related skills, this project should be used as the default target unless explicitly specified otherwise. ADR, changelog, OpenSpec, and issue work must always be tracked on this project (add or link issues via `gh-adding-items-to-projects` or the github-project-manager agent).
+| Agent                    | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `project-manager`        | Unified project management (changelog, ADR). |
+| `verifier`               | Run build → lint → test cycle                |
+| `code-reviewer`          | Review code for quality and security         |
+| `parallel-executor`      | Orchestrate parallel task execution          |
+| `parallel-tasks-planner` | Plan task decomposition                      |
+| `task-worker`            | Execute isolated subtasks                    |
 
 ## Available Skills
 
@@ -63,10 +50,9 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 This project follows a strict documentation hierarchy for technical decisions:
 
 - **ADR** (`docs/adr`): The **Why**. High-level architecture, strategy, and trade-offs.
-- **OpenSpec** (`docs/openspec`): The **How**. Detailed design, API specifications, and implementation tasks.
-- **Code** (`packages/*`): The **What**. Implementation.
+- **Code** (`packages/*`): The **What**. Implementation. Detailed design and specs go in design docs, README, or code.
 
-Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for detailed guidance on ADR vs. OpenSpec granularity.
+Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for ADR granularity guidance.
 
 ## Configuration Self-Improvement
 

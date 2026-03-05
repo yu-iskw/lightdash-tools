@@ -21,6 +21,5 @@ Set full defaults in `DEFAULT_ANNOTATIONS` in [packages/mcp/src/tools/shared.ts]
 
 ## References
 
-- GitHub: Issue #46 (parent), sub-issues #47 (ADR/OpenSpec), #48 (Implementation), #49 (Changelog)
-- OpenSpec: `docs/openspec/changes/mcp-tools-full-annotation-defaults/`
+- GitHub: Issue #46 (parent), sub-issues #47 (ADR), #48 (Implementation), #49 (Changelog)
 - ADR-0018: MCP tool naming prefix and tool annotations

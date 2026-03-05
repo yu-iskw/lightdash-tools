@@ -18,18 +18,18 @@ Use ADRs for decisions that meet one or more of the following criteria:
 
 Do **NOT** use ADRs for:
 
-- **Implementation Specifications**: Detailed API schemas, specific function signatures, or local implementation details (use **OpenSpec** for these).
+- **Implementation Specifications**: Detailed API schemas, specific function signatures, or local implementation details (use design docs, README, or code instead).
 - **Bug Fixes**: Unless the fix requires a significant architectural change.
 - **Routine Changes**: Minor refactorings or style updates.
 
-## ADR (Why) vs. OpenSpec (How)
+## ADR (Why) vs. Design Docs / Code (How)
 
 A clear distinction must be maintained:
 
 - **ADR**: Focuses on the **Why**. It documents the decision, the context, the alternatives considered, and the high-level architecture. It is the source of truth for architectural evolution.
-- **OpenSpec**: Focuses on the **How**. It contains the detailed proposal, technical specifications, design, and implementation tasks. It is the source of truth for implementation.
+- **Design docs, README, and code**: Focus on the **How**. Detailed proposal, technical specifications, design, and implementation tasks live in design docs, package READMEs, or code comments.
 
-When an ADR requires implementation, link the corresponding OpenSpec in the `References` section.
+When an ADR requires implementation, link to design docs or relevant code in the `References` section.
 
 ## When to Use
 
@@ -148,7 +148,7 @@ Common diagram types for ADRs:
 - Focus on the **Why** (Rationale) rather than the **How** (Implementation details).
 - Update the status and links when decisions change.
 - **Use Mermaid diagrams** to visualize complex decisions, architectures, and relationships. See section 7 above for guidance.
-- Refer to `references/adr-granularity.md` for guidance on ADR vs. OpenSpec.
+- Refer to `references/adr-granularity.md` for guidance on ADR granularity.
 - Refer to `references/mermaid-diagrams.md` for diagram examples and patterns.
 - Refer to `references/adr-concepts.md` for more details on the ADR philosophy (if available).
 - Use the template in `docs/adr/template.md` as a guide.

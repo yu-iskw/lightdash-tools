@@ -84,4 +84,3 @@ As more models are needed, consider:
 - Problem-solving analysis: See agent transcript
 - GitHub Issue: #4
 - GitHub Issue (enforcement): #9
-- OpenSpec: `docs/openspec/changes/shared-api-models/`

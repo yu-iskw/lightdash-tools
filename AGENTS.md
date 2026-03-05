@@ -68,9 +68,11 @@ pnpm clean      # Clean build artifacts
 - Use `manage-changelog` when `changie` is available.
 - **Decision Documentation**:
   - Use **ADRs** for "Why" (Architecture/Strategy).
-  - Use **OpenSpec** for "How" (Design/Implementation).
-  - Link ADRs to their corresponding OpenSpecs.
 - Store ADRs in `docs/adr` and use `manage-adr` when `adr-tools` is available.
+
+## Agent Context (Lightdash CLI / MCP)
+
+When using the Lightdash CLI or MCP tools, read [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md) for agent-specific invariants (dry-run, allowlist, field masks, schema introspection).
 
 ## Architecture
 
@@ -78,17 +80,15 @@ pnpm clean      # Clean build artifacts
 - CI workflows live in `.github/workflows/`.
 - Claude-specific config lives in `.claude/`.
 - Cursor-specific config lives in `.cursor/`.
-- OpenSpec lives under `docs/openspec/`. Run OpenSpec CLI commands from the `docs/` directory (e.g. `cd docs && openspec list`) or from repo root via `pnpm openspec -- <subcommand>`.
 
 ## Decision Documentation Hierarchy
 
 We maintain a clear hierarchy for documenting decisions:
 
 1. **Architecture Decision Records (ADR)** (`docs/adr`): Focus on the **Why**. Document high-level architectural choices, strategic direction, and non-obvious trade-offs.
-2. **OpenSpec** (`docs/openspec`): Focus on the **How**. Document detailed designs, API specifications, and specific implementation tasks.
-3. **Code** (`packages/*`): Focus on the **What**. The implementation itself.
+2. **Code** (`packages/*`): Focus on the **What**. The implementation itself.
 
-**Rule of Thumb**: If it's about architecture or strategy, use an ADR. If it's about implementation details or specific features, use OpenSpec. Refer to `.claude/skills/manage-adr/references/adr-granularity.md` for more details.
+**Rule of Thumb**: If it's about architecture or strategy, use an ADR. If it's about implementation details or specific features, document in design docs, README, or code. Refer to `.claude/skills/manage-adr/references/adr-granularity.md` for more details.
 
 ## Package Naming
 
@@ -96,29 +96,16 @@ We maintain a clear hierarchy for documenting decisions:
 - Workspace packages must be named `@lightdash-tools/<dirname>` (for example, `packages/common` → `@lightdash-tools/common`).
 - Run `pnpm validate:names` before submitting PRs that touch package names or add packages.
 
-## Default GitHub Project
-
-This repository uses the following GitHub Project for tracking work:
-
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
-- **Owner**: `yu-iskw`
-- **Project Number**: `3`
-
-When using the `github-project-manager` agent or GitHub Project-related skills, this project should be used as the default target unless explicitly specified otherwise. Work tied to ADRs, changelogs, OpenSpec, or GitHub issues must be tracked on this project; when creating such work, add or link the corresponding issue to the project. For general project management, use the project-manager agent; it routes to specialists and enforces project tracking.
-
 ## Subagents
 
-| Agent                    | Purpose                                                                                                 |
-| :----------------------- | :------------------------------------------------------------------------------------------------------ |
-| `project-manager`        | Unified project management: changelog, ADR, OpenSpec, issues; ensure work is on default GitHub Project. |
-| `github-project-manager` | Sync repository work with GitHub Projects.                                                              |
-| `github-triage-agent`    | Triage issues, apply labels, and assign owners.                                                         |
-| `openspec-manager`       | Run Spec-Driven Development workflows with OpenSpec.                                                    |
-| `verifier`               | Run build, lint, and test verification cycles.                                                          |
-| `code-reviewer`          | Review code quality and security concerns.                                                              |
-| `parallel-executor`      | Orchestrate parallel task execution.                                                                    |
-| `parallel-tasks-planner` | Decompose work into isolated parallel tasks.                                                            |
-| `task-worker`            | Execute a single isolated subtask with clear file ownership.                                            |
+| Agent                    | Purpose                                                      |
+| :----------------------- | :----------------------------------------------------------- |
+| `project-manager`        | Unified project management: changelog, ADR.                  |
+| `verifier`               | Run build, lint, and test verification cycles.               |
+| `code-reviewer`          | Review code quality and security concerns.                   |
+| `parallel-executor`      | Orchestrate parallel task execution.                         |
+| `parallel-tasks-planner` | Decompose work into isolated parallel tasks.                 |
+| `task-worker`            | Execute a single isolated subtask with clear file ownership. |
 
 ## Key Skills
 
@@ -134,7 +121,7 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 | `manage-package-versions` | Consistently manage package versions across the monorepo.     |
 | `problem-solving`         | Run structured issue analysis and reporting.                  |
 
-When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues are on the default GitHub Project. Additional specialized skills are documented in `CLAUDE.md`.
+Additional specialized skills are documented in `CLAUDE.md`.
 
 ## Common Gotchas
 

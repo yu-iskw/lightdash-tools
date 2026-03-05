@@ -24,6 +24,7 @@ import { registerMetricsCommand } from './commands/metrics';
 import { registerSchedulersCommand } from './commands/schedulers';
 import { registerTagsCommand } from './commands/tags';
 import { registerContentCommand } from './commands/content';
+import { registerSchemaCommand } from './commands/schema';
 
 // Initialise audit log before any command runs (uses LIGHTDASH_AUDIT_LOG env var).
 initAuditLog(process.env.LIGHTDASH_AUDIT_LOG);
@@ -42,7 +43,8 @@ program
   .option(
     '--projects <uuids>',
     'Comma-separated list of allowed project UUIDs (security guardrail)',
-  );
+  )
+  .option('--dry-run', 'Simulate mutating operations without executing (env: LIGHTDASH_DRY_RUN=1)');
 
 // Register all commands (organization and projects first so subcommands can attach)
 registerOrganizationCommand(program);
@@ -64,6 +66,7 @@ registerMetricsCommand(program);
 registerSchedulersCommand(program);
 registerTagsCommand(program);
 registerContentCommand(program);
+registerSchemaCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

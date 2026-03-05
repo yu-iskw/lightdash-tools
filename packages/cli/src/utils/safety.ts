@@ -7,6 +7,7 @@ import {
   areAllProjectsAllowed,
   getAllowedProjectUuidsFromEnv,
   extractProjectUuids,
+  validateResourceId,
 } from '@lightdash-tools/common';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { Command } from 'commander';
@@ -21,6 +22,20 @@ export function getSafetyMode(cmd: Command): SafetyMode {
     return options.safetyMode as SafetyMode;
   }
   return getSafetyModeFromEnv();
+}
+
+/**
+ * Resolves whether dry-run mode is active from CLI or environment.
+ */
+export function isDryRun(cmd: Command): boolean {
+  let root = cmd;
+  while (root.parent) {
+    root = root.parent;
+  }
+  const options = root.opts() as { dryRun?: boolean };
+  if (options.dryRun === true) return true;
+  const v = process.env.LIGHTDASH_DRY_RUN;
+  return v === '1' || v === 'true' || v === 'yes';
 }
 
 /**
@@ -70,6 +85,41 @@ export function wrapAction<T extends unknown[]>(
     const allowedProjects = getAllowedProjects(this);
     const targetProjects = extractProjectUuids(args);
 
+    // ── Input Validation ─────────────────────────────────────────────────────
+    function validateStringArgs(values: unknown[]): void {
+      for (const v of values) {
+        if (typeof v === 'string') {
+          validateResourceId(v);
+        } else if (Array.isArray(v)) {
+          validateStringArgs(v);
+        } else if (v && typeof v === 'object') {
+          const o = v as Record<string, unknown>;
+          for (const key of ['projectUuid', 'projectUuids', 'slug', 'project']) {
+            const val = o[key];
+            if (typeof val === 'string') validateResourceId(val);
+            else if (Array.isArray(val))
+              for (const item of val) if (typeof item === 'string') validateResourceId(item);
+          }
+        }
+      }
+    }
+    try {
+      validateStringArgs(args as unknown[]);
+    } catch (err) {
+      logAuditEntry({
+        timestamp: new Date().toISOString(),
+        sessionId: getSessionId(),
+        tool: commandPath,
+        projectUuids: targetProjects,
+        status: 'blocked',
+        durationMs: Date.now() - start,
+      });
+      console.error(
+        `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      process.exit(1);
+    }
+
     // ── Safety Mode Enforcement ──────────────────────────────────────────────
     if (!isAllowed(mode, annotations)) {
       logAuditEntry({
@@ -84,6 +134,23 @@ export function wrapAction<T extends unknown[]>(
         `Error: This command is disabled in ${mode} mode. To enable it, use --safety-mode or set LIGHTDASH_TOOL_SAFETY_MODE.`,
       );
       process.exit(1);
+    }
+
+    // ── Dry-Run (Write Commands Only) ────────────────────────────────────────
+    const isReadOnly = !!annotations.readOnlyHint;
+    if (!isReadOnly && isDryRun(this)) {
+      logAuditEntry({
+        timestamp: new Date().toISOString(),
+        sessionId: getSessionId(),
+        tool: commandPath,
+        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
+        status: 'blocked',
+        durationMs: Date.now() - start,
+      });
+      console.log(
+        `[DRY-RUN] Would execute: ${commandPath} with args: ${JSON.stringify(args)}. No changes were made.`,
+      );
+      return;
     }
 
     // ── Project Guardrail Enforcement ────────────────────────────────────────

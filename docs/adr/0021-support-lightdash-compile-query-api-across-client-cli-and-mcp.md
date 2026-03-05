@@ -73,4 +73,3 @@ flowchart TB
 ## References
 
 - ADR-0003: API Version Namespaces (runtime namespaces used by this feature)
-- OpenSpec: `docs/openspec/changes/lightdash-compile-query-api/`

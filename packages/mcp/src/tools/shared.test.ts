@@ -110,6 +110,26 @@ describe('registerToolSafe', () => {
     expect(result.content[0].text).toBe('success');
   });
 
+  it('should reject invalid projectUuid before calling handler', async () => {
+    registerToolSafe(
+      mockServer,
+      'list_tool',
+      {
+        description: 'List something',
+        inputSchema: {},
+        annotations: READ_ONLY_DEFAULT,
+      },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({ projectUuid: 'uuid?fields=name' });
+
+    expect(mockHandler).not.toHaveBeenCalled();
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Invalid resource ID');
+  });
+
   describe('static filtering (safety-mode)', () => {
     it('should skip registration if tool is more permissive than binded mode', () => {
       setStaticSafetyMode(SafetyMode.READ_ONLY);
