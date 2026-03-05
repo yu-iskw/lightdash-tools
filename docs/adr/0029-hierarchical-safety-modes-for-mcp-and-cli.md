@@ -33,7 +33,7 @@ We will implement a hierarchical safety model across both the MCP server and the
 
 ### Configuration
 
-- Environment Variable: `LIGHTDASH_TOOL_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
+- Environment Variable: `LIGHTDASH_TOOLS_SAFETY_MODE` (values: `read-only`, `write-idempotent`, `write-destructive`).
 - CLI Flag: `--safety-mode` (same values).
 - MCP CLI Flag: `--safety-mode` (same values; specifically for filtering registered tools).
 - Default: `read-only` (for improved security).
@@ -49,7 +49,7 @@ We will implement a hierarchical safety model across both the MCP server and the
 
 ```mermaid
 graph TD
-    Env[LIGHTDASH_TOOL_SAFETY_MODE] --> Core[Safety Logic]
+    Env[LIGHTDASH_TOOLS_SAFETY_MODE] --> Core[Safety Logic]
     Flag[--safety-mode flag] --> Core
 
     subgraph mcp_server [MCP Server]

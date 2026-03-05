@@ -4,9 +4,9 @@ Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`l
 
 ## Safety and Guardrails
 
-- **Always use `--dry-run` for mutating operations when testing.** Set `LIGHTDASH_DRY_RUN=1` or pass `--dry-run` to simulate writes without executing them.
+- **Always use `--dry-run` for mutating operations when testing.** Set `LIGHTDASH_TOOLS_DRY_RUN=1` or pass `--dry-run` to simulate writes without executing them.
 - **Validate project UUIDs against the allowlist before running.** Set `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` or `--projects` to restrict which projects the agent can access. Empty allowlist = all projects permitted.
-- **Safety modes:** `read-only` (default), `write-idempotent`, `write-destructive`. Use `--safety-mode` or `LIGHTDASH_TOOL_SAFETY_MODE` to control which operations are allowed.
+- **Safety modes:** `read-only` (default), `write-idempotent`, `write-destructive`. Use `--safety-mode` or `LIGHTDASH_TOOLS_SAFETY_MODE` to control which operations are allowed.
 
 ## Context Window Discipline
 
@@ -22,3 +22,10 @@ Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`l
 
 - Resource IDs (projectUuid, slug) must not contain `?`, `#`, `%`, or path traversal (`..`). Invalid IDs are rejected before any API call.
 - The agent is not a trusted operator. All inputs are validated.
+
+## Secrets and Credentials
+
+- Prefer env vars from the parent process (CI, shell, systemd). The tools do not load `.env` files.
+- Avoid plaintext `.env` when AI has file access—secrets on disk can be read by agents.
+- If using `.env`, use [dotenvx](https://dotenvx.com/) for encryption and run via `dotenvx run -- lightdash-ai ...` or `dotenvx run -- lightdash-mcp ...`.
+- See [docs/secrets-and-credentials.md](../secrets-and-credentials.md) for details.

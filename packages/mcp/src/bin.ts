@@ -20,11 +20,11 @@ program
   )
   .option(
     '--projects <uuids>',
-    'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_ALLOWED_PROJECTS; empty = all allowed)',
+    'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_TOOLS_ALLOWED_PROJECTS; empty = all allowed)',
   )
   .option(
     '--dry-run',
-    'Simulate write operations without executing them (overrides LIGHTDASH_DRY_RUN)',
+    'Simulate write operations without executing them (overrides LIGHTDASH_TOOLS_DRY_RUN)',
   )
   .action((options) => {
     if (options.safetyMode) {

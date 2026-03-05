@@ -39,24 +39,24 @@ describe('Safety Logic', () => {
   });
 
   describe('getSafetyModeFromEnv', () => {
-    const originalEnv = process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+    const originalEnv = process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
 
     afterEach(() => {
-      process.env.LIGHTDASH_TOOL_SAFETY_MODE = originalEnv;
+      process.env.LIGHTDASH_TOOLS_SAFETY_MODE = originalEnv;
     });
 
     it('should return READ_ONLY by default when env is not set', () => {
-      delete process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+      delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
       expect(getSafetyModeFromEnv()).toBe(SafetyMode.READ_ONLY);
     });
 
     it('should return value from env when set to valid mode', () => {
-      process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_IDEMPOTENT;
+      process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_IDEMPOTENT;
       expect(getSafetyModeFromEnv()).toBe(SafetyMode.WRITE_IDEMPOTENT);
     });
 
     it('should return READ_ONLY when env is set to invalid value', () => {
-      process.env.LIGHTDASH_TOOL_SAFETY_MODE = 'invalid-mode';
+      process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'invalid-mode';
       expect(getSafetyModeFromEnv()).toBe(SafetyMode.READ_ONLY);
     });
   });

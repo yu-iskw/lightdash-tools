@@ -18,11 +18,11 @@ describe('CLI wrapAction', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    delete process.env.LIGHTDASH_DRY_RUN;
+    delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
   });
 
   afterEach(() => {
-    delete process.env.LIGHTDASH_DRY_RUN;
+    delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
   });
 
   it('should allow read-only action in read-only mode', async () => {
@@ -93,8 +93,8 @@ describe('CLI wrapAction', () => {
     expect(processExitSpy).not.toHaveBeenCalled();
   });
 
-  it('should simulate write command when LIGHTDASH_DRY_RUN=1', async () => {
-    process.env.LIGHTDASH_DRY_RUN = '1';
+  it('should simulate write command when LIGHTDASH_TOOLS_DRY_RUN=1', async () => {
+    process.env.LIGHTDASH_TOOLS_DRY_RUN = '1';
     const cmd = new Command();
     cmd.setOptionValueWithSource('safetyMode', SafetyMode.WRITE_IDEMPOTENT, 'cli');
 
@@ -106,8 +106,8 @@ describe('CLI wrapAction', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('No changes were made'));
   });
 
-  it('should execute read command even when LIGHTDASH_DRY_RUN=1', async () => {
-    process.env.LIGHTDASH_DRY_RUN = '1';
+  it('should execute read command even when LIGHTDASH_TOOLS_DRY_RUN=1', async () => {
+    process.env.LIGHTDASH_TOOLS_DRY_RUN = '1';
     const cmd = new Command();
     cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
 

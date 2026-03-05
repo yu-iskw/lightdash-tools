@@ -30,9 +30,11 @@ npm install -g @lightdash-tools/mcp
 
 ### Optional (both modes)
 
-- `LIGHTDASH_TOOL_SAFETY_MODE` — Safety mode for dynamic enforcement (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
+- `LIGHTDASH_TOOLS_SAFETY_MODE` — Safety mode for dynamic enforcement (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
 - `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` — Comma-separated project UUIDs to restrict operations (empty = all allowed). CLI `--projects` overrides.
-- `LIGHTDASH_DRY_RUN` — Set to `1`, `true`, or `yes` to simulate write operations without executing.
+- `LIGHTDASH_TOOLS_DRY_RUN` — Set to `1`, `true`, or `yes` to simulate write operations without executing.
+
+Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
 
 ### Streamable HTTP only
 
@@ -109,11 +111,11 @@ lightdash-mcp --help
 - `--http` — Run as HTTP server instead of Stdio.
 - `--safety-mode <mode>` — Filter registered tools by safety mode (`read-only`, `write-idempotent`, `write-destructive`). Tools not allowed in this mode will not be registered, hiding them from AI agents (Static Filtering).
 - `--projects <uuids>` — Comma-separated list of allowed project UUIDs (overrides `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`; empty = all allowed).
-- `--dry-run` — Simulate write operations without executing them (overrides `LIGHTDASH_DRY_RUN`).
+- `--dry-run` — Simulate write operations without executing them (overrides `LIGHTDASH_TOOLS_DRY_RUN`).
 
 ## Safety Modes
 
-The MCP server implements a hierarchical safety model. You can control which tools are available to AI agents using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the `--safety-mode` CLI option.
+The MCP server implements a hierarchical safety model. You can control which tools are available to AI agents using the `LIGHTDASH_TOOLS_SAFETY_MODE` environment variable or the `--safety-mode` CLI option.
 
 - `read-only` (default): Only allows non-modifying tools (e.g., `list_*`, `get_*`).
 - `write-idempotent`: Allows read tools and non-destructive writes (e.g., `upsert_chart_as_code`).
@@ -121,7 +123,7 @@ The MCP server implements a hierarchical safety model. You can control which too
 
 ### Enforcement Layers
 
-1. **Dynamic Enforcement (Visible but Disabled)**: Using `LIGHTDASH_TOOL_SAFETY_MODE` environment variable. Tools are registered and visible to the agent, but return an error if called. This allows agents to understand that a capability exists but is restricted.
+1. **Dynamic Enforcement (Visible but Disabled)**: Using `LIGHTDASH_TOOLS_SAFETY_MODE` environment variable. Tools are registered and visible to the agent, but return an error if called. This allows agents to understand that a capability exists but is restricted.
 2. **Static Filtering (Hidden)**: Using the `--safety-mode` CLI option. Tools not allowed in the selected mode are not registered at all. They are completely hidden from the AI agent.
 
 When a tool is disabled via dynamic enforcement, the server will return a descriptive error message if an agent attempts to call it.

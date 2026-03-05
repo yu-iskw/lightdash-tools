@@ -14,7 +14,7 @@ import type { Command } from 'commander';
 
 /**
  * Resolves the safety mode from the command line options or environment variables.
- * CLI --safety-mode takes priority over LIGHTDASH_TOOL_SAFETY_MODE.
+ * CLI --safety-mode takes priority over LIGHTDASH_TOOLS_SAFETY_MODE.
  */
 export function getSafetyMode(cmd: Command): SafetyMode {
   const options = cmd.optsWithGlobals() as { safetyMode?: string };
@@ -34,14 +34,14 @@ export function isDryRun(cmd: Command): boolean {
   }
   const options = root.opts() as { dryRun?: boolean };
   if (options.dryRun === true) return true;
-  const v = process.env.LIGHTDASH_DRY_RUN;
+  const v = process.env.LIGHTDASH_TOOLS_DRY_RUN;
   return v === '1' || v === 'true' || v === 'yes';
 }
 
 /**
  * Resolves the allowed project UUIDs from the command line options or environment variables.
  * We specifically want the root --projects flag as the security guardrail.
- * CLI root flags take priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
+ * CLI --projects takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
  */
 export function getAllowedProjects(cmd: Command): string[] {
   let root = cmd;
@@ -131,7 +131,7 @@ export function wrapAction<T extends unknown[]>(
         durationMs: Date.now() - start,
       });
       console.error(
-        `Error: This command is disabled in ${mode} mode. To enable it, use --safety-mode or set LIGHTDASH_TOOL_SAFETY_MODE.`,
+        `Error: This command is disabled in ${mode} mode. To enable it, use --safety-mode or set LIGHTDASH_TOOLS_SAFETY_MODE.`,
       );
       process.exit(1);
     }

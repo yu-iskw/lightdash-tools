@@ -14,7 +14,7 @@ All tools are available as npm packages under the `@lightdash-tools` scope.
 
 Both the CLI and MCP server implement a hierarchical safety model to prevent accidental destructive operations (see [ADR 0029](docs/adr/0029-hierarchical-safety-modes-for-mcp-and-cli.md)).
 
-You can control the safety level using the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable:
+You can control the safety level using the `LIGHTDASH_TOOLS_SAFETY_MODE` environment variable:
 
 - `write-destructive`: Allows all operations, including deletions.
 - `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
@@ -25,11 +25,11 @@ For the CLI, you can also use the global `--safety-mode` flag.
 **Agent-friendly features** (CLI and MCP):
 
 - **Schema introspection** — `lightdash-ai schema list` and `lightdash-ai schema get <resource>` for runtime discoverability.
-- **Dry-run** — `--dry-run` or `LIGHTDASH_DRY_RUN=1` to simulate mutating operations without executing.
+- **Dry-run** — `--dry-run` or `LIGHTDASH_TOOLS_DRY_RUN=1` to simulate mutating operations without executing.
 - **Project allowlist** — `--projects` or `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` to restrict operations to specific projects.
 - **Input validation** — Resource IDs are validated; invalid inputs (control chars, `?`, `#`, `%`, path traversal) are rejected before any API call.
 
-For agent-specific guidance, see [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md).
+For agent-specific guidance, see [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md). For credentials, use env vars from your shell or CI; see [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
 
 Developing? See [CONTRIBUTING.md](CONTRIBUTING.md). For agent instructions see [AGENTS.md](AGENTS.md). For architectural decisions, see [docs/adr/](docs/adr/).
 

@@ -2,6 +2,9 @@ export function greet(name: string): string {
   return `Hello, ${name}!`;
 }
 
+// Export env var constants
+export * from './env';
+
 // Export safety logic
 export * from './safety';
 

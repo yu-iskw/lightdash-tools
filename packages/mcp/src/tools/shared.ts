@@ -115,7 +115,7 @@ export function registerToolSafe(
       content: [
         {
           type: 'text',
-          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOL_SAFETY_MODE.`,
+          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
         },
       ],
       isError: true,

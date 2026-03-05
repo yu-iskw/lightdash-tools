@@ -5,7 +5,7 @@
  *   timestamp, sessionId, tool/command name, projectUuids (if present), status, and durationMs.
  *
  * Output destination:
- *   - If LIGHTDASH_AUDIT_LOG is set to a file path, entries are appended to that file.
+ *   - If LIGHTDASH_TOOLS_AUDIT_LOG is set to a file path, entries are appended to that file.
  *   - Otherwise entries are written to stderr with an "[audit]" prefix.
  */
 

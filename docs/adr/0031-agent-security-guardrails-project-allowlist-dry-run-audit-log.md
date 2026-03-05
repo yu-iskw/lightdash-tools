@@ -55,10 +55,10 @@ Simulates write operations without executing any API call.
 
 **Configuration:**
 
-| Source      | Value                                      |
-| ----------- | ------------------------------------------ |
-| CLI flag    | `--dry-run`                                |
-| Environment | `LIGHTDASH_DRY_RUN=true` (also `1`, `yes`) |
+| Source      | Value                                            |
+| ----------- | ------------------------------------------------ |
+| CLI flag    | `--dry-run`                                      |
+| Environment | `LIGHTDASH_TOOLS_DRY_RUN=true` (also `1`, `yes`) |
 
 - Read-only tools are unaffected; they execute normally.
 - Any tool with `readOnlyHint: false` returns a description of what would have been sent instead of calling the API. The MCP tool description is prefixed with `[DRY-RUN]` so the AI agent can see the restriction.
@@ -70,10 +70,10 @@ Records every tool/command invocation as a single NDJSON line.
 
 **Configuration:**
 
-| Source      | Value                                       |
-| ----------- | ------------------------------------------- |
-| Environment | `LIGHTDASH_AUDIT_LOG=/path/to/audit.ndjson` |
-| Default     | stderr with `[audit]` prefix                |
+| Source      | Value                                             |
+| ----------- | ------------------------------------------------- |
+| Environment | `LIGHTDASH_TOOLS_AUDIT_LOG=/path/to/audit.ndjson` |
+| Default     | stderr with `[audit]` prefix                      |
 
 **Entry schema:**
 
