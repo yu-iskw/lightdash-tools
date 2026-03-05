@@ -86,15 +86,15 @@ export function wrapAction<T extends unknown[]>(
     const targetProjects = extractProjectUuids(args);
 
     // ── Input Validation ─────────────────────────────────────────────────────
+    // Validate only known identifier fields (projectUuid, slug, etc.) in objects.
+    // Do NOT validate bare positional strings—they may be free-form (query, name, etc.).
     function validateStringArgs(values: unknown[]): void {
       for (const v of values) {
-        if (typeof v === 'string') {
-          validateResourceId(v);
-        } else if (Array.isArray(v)) {
+        if (Array.isArray(v)) {
           validateStringArgs(v);
         } else if (v && typeof v === 'object') {
           const o = v as Record<string, unknown>;
-          for (const key of ['projectUuid', 'projectUuids', 'slug', 'project']) {
+          for (const key of ['project', 'projectUuid', 'projectUuids', 'projects', 'slug']) {
             const val = o[key];
             if (typeof val === 'string') validateResourceId(val);
             else if (Array.isArray(val))

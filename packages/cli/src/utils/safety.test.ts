@@ -62,17 +62,35 @@ describe('CLI wrapAction', () => {
     expect(processExitSpy).not.toHaveBeenCalled();
   });
 
-  it('should reject invalid projectUuid before calling handler', async () => {
+  it('should reject invalid projectUuid in options before calling handler', async () => {
     const cmd = new Command();
     cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
 
     const wrapped = wrapAction(READ_ONLY_DEFAULT, mockAction);
 
-    await expect(wrapped.call(cmd, 'uuid?fields=name')).rejects.toThrow('exit');
+    await expect(wrapped.call(cmd, 'arg1', { projectUuid: 'uuid?fields=name' })).rejects.toThrow(
+      'exit',
+    );
 
     expect(mockAction).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid resource ID'));
     expect(processExitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should allow free-form query strings in positionals', async () => {
+    const cmd = new Command();
+    cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
+
+    const wrapped = wrapAction(READ_ONLY_DEFAULT, mockAction);
+
+    await wrapped.call(cmd, 'what?');
+    expect(mockAction).toHaveBeenCalledWith('what?');
+    expect(processExitSpy).not.toHaveBeenCalled();
+
+    mockAction.mockClear();
+    await wrapped.call(cmd, 'growth%');
+    expect(mockAction).toHaveBeenCalledWith('growth%');
+    expect(processExitSpy).not.toHaveBeenCalled();
   });
 
   it('should simulate write command when LIGHTDASH_DRY_RUN=1', async () => {
