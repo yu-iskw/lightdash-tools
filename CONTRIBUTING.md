@@ -49,10 +49,9 @@ pnpm lint && pnpm test
 - Ensure `pnpm lint` and `pnpm test` pass.
 - If you touch package names or add packages, run `pnpm validate:names` before submitting.
 
-## ADRs, changelog, and OpenSpec
+## ADRs and changelog
 
 - **ADRs**: Stored in [docs/adr](docs/adr). Use the `manage-adr` skill when `adr-tools` is available.
 - **Changelog**: Managed with [Changie](https://github.com/miniscruff/changie). Use the `manage-changelog` skill when `changie` is available.
-- **OpenSpec**: Spec-driven changes live under [docs/openspec](docs/openspec). Run the CLI from `docs/` or `pnpm openspec --` from the repo root.
 
 For full workflow details, subagents, and skills see [AGENTS.md](AGENTS.md).

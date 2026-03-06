@@ -28,5 +28,4 @@ Organize MCP tools by domain under a dedicated directory:
 
 ## References
 
-- GitHub: Issue #32 (parent), sub-issues #33 (ADR and OpenSpec), #34 (Implementation)
-- OpenSpec: `docs/openspec/changes/mcp-tools-domain-split/`
+- GitHub: Issue #32 (parent), sub-issues #33 (ADR), #34 (Implementation)

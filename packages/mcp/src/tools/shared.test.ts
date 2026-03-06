@@ -29,17 +29,17 @@ describe('registerToolSafe', () => {
     setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
     setStaticAllowedProjectUuids([]);
     setDryRunMode(false);
-    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
     delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
-    delete process.env.LIGHTDASH_DRY_RUN;
+    delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
   });
 
   afterEach(() => {
-    delete process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+    delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
   });
 
   it('should allow read-only tool in read-only mode', async () => {
-    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.READ_ONLY;
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.READ_ONLY;
     setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE); // static = allow all
 
     registerToolSafe(
@@ -64,7 +64,7 @@ describe('registerToolSafe', () => {
   });
 
   it('should block destructive tool in read-only mode', async () => {
-    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.READ_ONLY;
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.READ_ONLY;
     setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
 
     registerToolSafe(
@@ -88,7 +88,7 @@ describe('registerToolSafe', () => {
   });
 
   it('should allow destructive tool in write-destructive mode', async () => {
-    process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
     setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
 
     registerToolSafe(
@@ -108,6 +108,26 @@ describe('registerToolSafe', () => {
 
     const result = await handler({});
     expect(result.content[0].text).toBe('success');
+  });
+
+  it('should reject invalid projectUuid before calling handler', async () => {
+    registerToolSafe(
+      mockServer,
+      'list_tool',
+      {
+        description: 'List something',
+        inputSchema: {},
+        annotations: READ_ONLY_DEFAULT,
+      },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({ projectUuid: 'uuid?fields=name' });
+
+    expect(mockHandler).not.toHaveBeenCalled();
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Invalid resource ID');
   });
 
   describe('static filtering (safety-mode)', () => {
@@ -303,7 +323,7 @@ describe('registerToolSafe', () => {
 
     it('should simulate write-idempotent tools in dry-run mode', async () => {
       setDryRunMode(true);
-      process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
+      process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
 
       registerToolSafe(
         mockServer,
@@ -325,7 +345,7 @@ describe('registerToolSafe', () => {
 
     it('should simulate destructive tools in dry-run mode', async () => {
       setDryRunMode(true);
-      process.env.LIGHTDASH_TOOL_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
+      process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
 
       registerToolSafe(
         mockServer,

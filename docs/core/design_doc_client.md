@@ -1,8 +1,3 @@
 # Lightdash HTTP client design
 
-The Lightdash HTTP client design is specified in OpenSpec:
-
-- **Change:** [docs/openspec/changes/lightdash-http-client/](../openspec/changes/lightdash-http-client/)
-- **Artifacts:** `proposal.md`, `specs/lightdash-http-client/spec.md`, `design.md`
-
-See the OpenSpec change for proposal (why/what), specifications (requirements and scenarios), and design (auth, transport, error handling, testing strategy). Implementation will follow in a separate change (tasks and code in `packages/client`).
+The Lightdash HTTP client is implemented in `packages/client`. Architecture and strategic decisions are documented in ADRs in `docs/adr`. Implementation details (auth, transport, error handling, testing strategy) live in the package README, code, and ADRs.

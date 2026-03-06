@@ -18,9 +18,8 @@ We will use a dedicated HTTP client in `packages/client` with:
 - Typed methods per API area; first area is Organizations (get/update org, list members/projects/groups, create org, delete member; optional list allowed organizations).
 - Native `fetch`, JSON request/response, and centralized error handling (Lightdash ApiErrorPayload when present).
 
-Full design, requirements, and scenarios are specified in OpenSpec: [docs/openspec/changes/lightdash-http-client/](../openspec/changes/lightdash-http-client/).
+Implementation details (auth, transport, error handling) are in `packages/client` and [docs/core/design_doc_client.md](../core/design_doc_client.md).
 
 ## Consequences
 
 - API contracts and auth live in one place; other packages (cli, mcp) will depend on `@lightdash-tools/client` for Lightdash API access.
-- Implementation will follow the OpenSpec change (proposal, specs, design); tasks and code are not yet written.

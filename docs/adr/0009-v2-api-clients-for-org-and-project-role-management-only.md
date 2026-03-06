@@ -35,5 +35,4 @@ Organization, projects, users, groups, and space-level access **remain on existi
 ## References
 
 - GitHub Issue: #16
-- OpenSpec: `docs/openspec/changes/client-v2-role-clients/`
 - ADR-0003 (API Version Namespaces): runtime v1/v2 client instances this decision builds on

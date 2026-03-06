@@ -58,4 +58,3 @@ graph TB
 
 - ADR-0003: API Version Namespaces (runtime namespaces that this layout supports)
 - GitHub Issue: #14
-- OpenSpec: `docs/openspec/changes/client-api-v1-folder-layout/`

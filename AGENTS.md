@@ -68,9 +68,11 @@ pnpm clean      # Clean build artifacts
 - Use `manage-changelog` when `changie` is available.
 - **Decision Documentation**:
   - Use **ADRs** for "Why" (Architecture/Strategy).
-  - Use **OpenSpec** for "How" (Design/Implementation).
-  - Link ADRs to their corresponding OpenSpecs.
 - Store ADRs in `docs/adr` and use `manage-adr` when `adr-tools` is available.
+
+## Agent Context (Lightdash CLI / MCP)
+
+When using the Lightdash CLI or MCP tools, read [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md) for agent-specific invariants (dry-run, allowlist, field masks, schema introspection).
 
 ## Architecture
 
@@ -78,17 +80,15 @@ pnpm clean      # Clean build artifacts
 - CI workflows live in `.github/workflows/`.
 - Claude-specific config lives in `.claude/`.
 - Cursor-specific config lives in `.cursor/`.
-- OpenSpec lives under `docs/openspec/`. Run OpenSpec CLI commands from the `docs/` directory (e.g. `cd docs && openspec list`) or from repo root via `pnpm openspec -- <subcommand>`.
 
 ## Decision Documentation Hierarchy
 
 We maintain a clear hierarchy for documenting decisions:
 
 1. **Architecture Decision Records (ADR)** (`docs/adr`): Focus on the **Why**. Document high-level architectural choices, strategic direction, and non-obvious trade-offs.
-2. **OpenSpec** (`docs/openspec`): Focus on the **How**. Document detailed designs, API specifications, and specific implementation tasks.
-3. **Code** (`packages/*`): Focus on the **What**. The implementation itself.
+2. **Code** (`packages/*`): Focus on the **What**. The implementation itself.
 
-**Rule of Thumb**: If it's about architecture or strategy, use an ADR. If it's about implementation details or specific features, use OpenSpec. Refer to `.claude/skills/manage-adr/references/adr-granularity.md` for more details.
+**Rule of Thumb**: If it's about architecture or strategy, use an ADR. If it's about implementation details or specific features, document in design docs, README, or code. Refer to `.claude/skills/manage-adr/references/adr-granularity.md` for more details.
 
 ## Package Naming
 
@@ -96,29 +96,16 @@ We maintain a clear hierarchy for documenting decisions:
 - Workspace packages must be named `@lightdash-tools/<dirname>` (for example, `packages/common` → `@lightdash-tools/common`).
 - Run `pnpm validate:names` before submitting PRs that touch package names or add packages.
 
-## Default GitHub Project
-
-This repository uses the following GitHub Project for tracking work:
-
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
-- **Owner**: `yu-iskw`
-- **Project Number**: `3`
-
-When using the `github-project-manager` agent or GitHub Project-related skills, this project should be used as the default target unless explicitly specified otherwise. Work tied to ADRs, changelogs, OpenSpec, or GitHub issues must be tracked on this project; when creating such work, add or link the corresponding issue to the project. For general project management, use the project-manager agent; it routes to specialists and enforces project tracking.
-
 ## Subagents
 
-| Agent                    | Purpose                                                                                                 |
-| :----------------------- | :------------------------------------------------------------------------------------------------------ |
-| `project-manager`        | Unified project management: changelog, ADR, OpenSpec, issues; ensure work is on default GitHub Project. |
-| `github-project-manager` | Sync repository work with GitHub Projects.                                                              |
-| `github-triage-agent`    | Triage issues, apply labels, and assign owners.                                                         |
-| `openspec-manager`       | Run Spec-Driven Development workflows with OpenSpec.                                                    |
-| `verifier`               | Run build, lint, and test verification cycles.                                                          |
-| `code-reviewer`          | Review code quality and security concerns.                                                              |
-| `parallel-executor`      | Orchestrate parallel task execution.                                                                    |
-| `parallel-tasks-planner` | Decompose work into isolated parallel tasks.                                                            |
-| `task-worker`            | Execute a single isolated subtask with clear file ownership.                                            |
+| Agent                    | Purpose                                                      |
+| :----------------------- | :----------------------------------------------------------- |
+| `project-manager`        | Unified project management: changelog, ADR.                  |
+| `verifier`               | Run build, lint, and test verification cycles.               |
+| `code-reviewer`          | Review code quality and security concerns.                   |
+| `parallel-executor`      | Orchestrate parallel task execution.                         |
+| `parallel-tasks-planner` | Decompose work into isolated parallel tasks.                 |
+| `task-worker`            | Execute a single isolated subtask with clear file ownership. |
 
 ## Key Skills
 
@@ -134,7 +121,7 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 | `manage-package-versions` | Consistently manage package versions across the monorepo.     |
 | `problem-solving`         | Run structured issue analysis and reporting.                  |
 
-When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues are on the default GitHub Project. Additional specialized skills are documented in `CLAUDE.md`.
+Additional specialized skills are documented in `CLAUDE.md`.
 
 ## Common Gotchas
 
@@ -152,9 +139,11 @@ When using `manage-adr`, `manage-changelog`, or OpenSpec, ensure related issues 
 - **Validate org-wide CLI flags explicitly:** Boolean CLI flags that affect organization-wide settings (e.g. `--ai-agents-visible`) must validate against the exact allowed literals (`'true'`/`'false'`) and `process.exit(1)` on invalid input. Never silently coerce via `value === 'true'` — typos like `True` or `yes` would silently disable features.
 - **MCP tools must use `registerToolSafe()`:** Every MCP tool registration must go through `registerToolSafe()` in `packages/mcp/src/tools/shared.ts`, never the raw `server.registerTool()`. This applies the layered guardrails: safety-mode filter → dry-run simulation → project allowlist → audit logging (outermost).
 - **CLI actions must use `wrapAction()`:** Every CLI command's `.action()` callback must be wrapped with `wrapAction(annotations, fn)` from `packages/cli/src/utils/safety.ts`. This enforces safety-mode and records audit log entries for every invocation.
+- **Input validation applies only to known identifier keys:** `validateResourceId()` is applied to strings under `project`, `projectUuid`, `projectUuids`, `projects`, `slug` in options/nested objects—not to bare positional strings. Free-form positionals (query, name, resource) may contain `?`, `#`, `%`; do not add validation for them. When adding a new identifier option, include its key in the list in `packages/cli/src/utils/safety.ts`. See [ADR-0034](docs/adr/0034-input-validation-validate-only-known-identifier-fields.md).
 - **`_lightdashBlocked` marker convention:** Guardrail layers (safety-mode block, dry-run, project-allowlist denial) return `{ ..., _lightdashBlocked: true }`. The audit wrapper reads this flag to set `status = 'blocked'`, then strips it before returning to the MCP client. Do not return this marker from real tool handlers.
 - **Tool args may use singular or plural project UUID shapes:** `extractProjectUuids()` in `shared.ts` handles both `projectUuid: string` and `projectUuids: string[]`. When writing project-allowlist or audit logic, always use this helper instead of reading `args.projectUuid` directly.
-- **Env var naming is not uniform — know each one:** `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` (project allowlist), `LIGHTDASH_DRY_RUN` (accepts `1`, `true`, or `yes`), `LIGHTDASH_AUDIT_LOG` (file path or unset for stderr), `LIGHTDASH_TOOL_SAFETY_MODE`. The `LIGHTDASH_TOOLS_` prefix is only on the allowlist var.
+- **Env vars use LIGHTDASH*TOOLS* prefix:** All project-specific vars (`LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, `LIGHTDASH_TOOLS_DRY_RUN`, `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_TOOLS_SAFETY_MODE`) use this prefix to distinguish from official Lightdash vars (`LIGHTDASH_URL`, `LIGHTDASH_API_KEY`). See [ADR-0035](docs/adr/0035-environment-variables-prefix-lightdash-tools.md).
+- **Secrets:** Use env vars from the parent process. Do not recommend plaintext `.env` to users; if they use file-based config, recommend dotenvx. See [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
 - **`initAuditLog()` must be called once at process startup:** Both `packages/cli/src/index.ts` and MCP's `bin.ts` call `initAuditLog()` at startup. Any new entrypoint must do the same; individual command files do not need to call it.
 - **MCP tool names must be concise:** Some MCP clients (e.g., Claude Desktop) impose a 60-character limit on combined server and tool names. Use the `ldt__` prefix (set in `packages/mcp/src/tools/shared.ts`) and avoid excessively long tool names to ensure they are not filtered out.
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.

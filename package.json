@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "description": "",
   "keywords": [],
@@ -22,7 +22,6 @@
     "lint:security": "trunk check --all --scope security",
     "lint:trunk": "trunk check",
     "lint:trunk-all": "trunk check --all",
-    "openspec": "cd docs && npx @fission-ai/openspec@latest",
     "test": "vitest run",
     "validate:deps": "node scripts/check-common-no-client.mjs",
     "validate:names": "node scripts/validate-package-names.mjs"

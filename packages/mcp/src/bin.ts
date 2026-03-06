@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name('lightdash-mcp')
   .description('MCP server for Lightdash AI')
-  .version('0.4.0')
+  .version('0.5.0')
   .option('--http', 'Run as HTTP server instead of Stdio')
   .option(
     '--safety-mode <mode>',
@@ -20,11 +20,11 @@ program
   )
   .option(
     '--projects <uuids>',
-    'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_ALLOWED_PROJECTS; empty = all allowed)',
+    'Comma-separated list of allowed project UUIDs (overrides LIGHTDASH_TOOLS_ALLOWED_PROJECTS; empty = all allowed)',
   )
   .option(
     '--dry-run',
-    'Simulate write operations without executing them (overrides LIGHTDASH_DRY_RUN)',
+    'Simulate write operations without executing them (overrides LIGHTDASH_TOOLS_DRY_RUN)',
   )
   .action((options) => {
     if (options.safetyMode) {

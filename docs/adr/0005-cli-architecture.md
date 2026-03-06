@@ -84,5 +84,4 @@ packages/cli/
 ## References
 
 - Problem-solving analysis: See agent transcript
-- OpenSpec: `docs/openspec/changes/lightdash-cli/`
 - Commander.js: <https://www.npmjs.com/package/commander> <!-- markdown-link-check-disable-line -->

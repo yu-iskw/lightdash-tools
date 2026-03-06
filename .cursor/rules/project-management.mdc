@@ -3,19 +3,11 @@ alwaysApply: true
 ---
 # Project Management
 
-For project management (changelog, ADR, OpenSpec, issues), read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md). When a task matches a description below, read the linked file and follow its instructions.
-
-## Track work in GitHub Project
-
-ADR, changelog, OpenSpec specs/changes, and GitHub issues must be tracked in the default GitHub Project. When creating or updating any of these, ensure there is a corresponding issue on the project: create or link an issue and add it via [gh-adding-items-to-projects](.claude/skills/gh-adding-items-to-projects/SKILL.md) or the github-project-manager agent.
+For project management (changelog, ADR), read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md). When a task matches a description below, read the linked file and follow its instructions.
 
 ## Agents
 
-- **Project management** (changelog, ADR, OpenSpec, issues; routes to specialists): read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md).
-- **GitHub Project boards** (sync issues, status, fields, milestones): read and follow [.claude/agents/github-project-manager.md](.claude/agents/github-project-manager.md).
-  - **Default Project**: <https://github.com/users/yu-iskw/projects/3/views/1> (Owner: `yu-iskw`, Project Number: `3`)
-- **Issue triage** (label, assign, categorize, request info): read and follow [.claude/agents/github-triage-agent.md](.claude/agents/github-triage-agent.md).
-- **Spec-driven development** (OpenSpec: proposal → specs → design → tasks → implementation → archive): read and follow [.claude/agents/openspec-manager.md](.claude/agents/openspec-manager.md). OpenSpec root is `docs/openspec/`; run the OpenSpec CLI from `docs/` or use `pnpm openspec --` from repo root.
+- **Project management** (changelog, ADR; routes to specialists): read and follow [.claude/agents/project-manager.md](.claude/agents/project-manager.md).
 
 ## Skills
 

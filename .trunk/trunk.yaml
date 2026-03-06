@@ -12,23 +12,27 @@ plugins:
 # Many linters and tools depend on runtimes - configure them here. (https://docs.trunk.io/runtimes)
 runtimes:
   enabled:
-    - node@22.16.0
-    - python@3.10.8
+    - go@1.26.0
+    - node@24.13.0
+    - python@3.13.3
 # This is the section where you manage your linters. (https://docs.trunk.io/check/configuration)
 lint:
   disabled:
     - checkov
     - trufflehog
   enabled:
+    - eslint@10.0.2
+    - shellcheck@0.8.0
+    - shfmt@3.6.0
     - markdown-link-check@3.14.2
-    - sort-package-json@3.6.0
+    - sort-package-json@3.6.1
     - actionlint@1.7.7
     - pre-commit-hooks@5.0.0
-    - trivy@0.64.1
+    - trivy@0.69.3
     - osv-scanner@2.0.3
     - yamllint@1.38.0
     - git-diff-check
-    - markdownlint@0.47.0
+    - markdownlint@0.48.0
     - prettier@3.8.1
 actions:
   enabled:

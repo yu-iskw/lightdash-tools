@@ -1,3 +1,5 @@
+import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from './env';
+
 /**
  * Hierarchical safety modes for Lightdash AI tools and CLI.
  */
@@ -63,7 +65,7 @@ export function isAllowed(mode: SafetyMode | string, annotations: ToolAnnotation
  * Resolves safety mode from environment variable.
  */
 export function getSafetyModeFromEnv(): SafetyMode {
-  const mode = process.env.LIGHTDASH_TOOL_SAFETY_MODE;
+  const mode = process.env[ENV_LIGHTDASH_TOOLS_SAFETY_MODE];
   if (Object.values(SafetyMode).includes(mode as SafetyMode)) {
     return mode as SafetyMode;
   }
@@ -78,7 +80,7 @@ export function getSafetyModeFromEnv(): SafetyMode {
  * Note: CLI/MCP flags (--allowed-projects) always take priority over this env var.
  */
 export function getAllowedProjectUuidsFromEnv(): string[] {
-  const raw = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS ?? '';
+  const raw = process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] ?? '';
   return raw
     .split(',')
     .map((s) => s.trim())

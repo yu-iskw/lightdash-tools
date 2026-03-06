@@ -17,7 +17,7 @@ Rename the package namespace from `@lightdash-ai` to `@lightdash-tools` in one p
 - Root and workspace `package.json` names and workspace dependency references
 - The package name validator script (`scripts/validate-package-names.mjs`)
 - All source imports in packages (client, cli, common, mcp) and config (vitest, scripts)
-- All documentation (AGENTS.md, CLAUDE.md, ADRs, OpenSpec, READMEs, .claude references)
+- All documentation (AGENTS.md, CLAUDE.md, ADRs, READMEs, .claude references)
 
 Optionally rename the CLI binary from `lightdash-ai` to `lightdash-tools` in `packages/cli/package.json` and any docs that show CLI invocation.
 

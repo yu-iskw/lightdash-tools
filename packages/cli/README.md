@@ -25,7 +25,11 @@ The CLI requires the following environment variables (consistent with `@lightdas
 - `LIGHTDASH_URL` - Lightdash server base URL (e.g., `https://app.lightdash.cloud`)
 - `LIGHTDASH_API_KEY` - Personal access token (PAT)
 - `LIGHTDASH_PROXY_AUTHORIZATION` - Optional proxy authorization header
-- `LIGHTDASH_TOOL_SAFETY_MODE` - Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`)
+- `LIGHTDASH_TOOLS_SAFETY_MODE` - Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`)
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` - Optional comma-separated project UUIDs (restrict operations to these projects; empty = all allowed)
+- `LIGHTDASH_TOOLS_DRY_RUN` - Set to `1`, `true`, or `yes` to simulate mutating operations without executing
+
+Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
 
 Example:
 
@@ -153,6 +157,23 @@ lightdash-ai ai-agents list
 lightdash-ai ai-agents threads --page 1 --page-size 10
 ```
 
+#### Schema Introspection (Agent-Friendly)
+
+```bash
+# List all introspectable resources
+lightdash-ai schema list
+
+# Get schema for a resource (path, method, params)
+lightdash-ai schema get charts.list
+lightdash-ai schema get ai-agents.settings.update
+```
+
+### Global Options
+
+- `--safety-mode <mode>` - Override safety mode (`read-only`, `write-idempotent`, `write-destructive`)
+- `--projects <uuids>` - Comma-separated list of allowed project UUIDs
+- `--dry-run` - Simulate mutating operations without executing (same as `LIGHTDASH_TOOLS_DRY_RUN=1`)
+
 ### Help
 
 Get help for any command:
@@ -174,7 +195,7 @@ The CLI implements a hierarchical safety model to prevent accidental destructive
 
 ### Configuration
 
-You can control the safety mode via the `LIGHTDASH_TOOL_SAFETY_MODE` environment variable or the global `--safety-mode` flag.
+You can control the safety mode via the `LIGHTDASH_TOOLS_SAFETY_MODE` environment variable or the global `--safety-mode` flag.
 
 - `read-only` (default): Only allows non-modifying operations (e.g., list, get).
 - `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
@@ -195,7 +216,17 @@ lightdash-ai --safety-mode read-only users delete <uuid>
 ```
 
 When a command is blocked, you will see an error like:
-`Error: This command is disabled in read-only mode. To enable it, use --safety-mode or set LIGHTDASH_TOOL_SAFETY_MODE.`
+`Error: This command is disabled in read-only mode. To enable it, use --safety-mode or set LIGHTDASH_TOOLS_SAFETY_MODE.`
+
+## Input Validation
+
+The CLI validates all resource IDs (project UUIDs, slugs) before executing. Invalid inputs are rejected:
+
+- Control characters (ASCII < 0x20)
+- Query/fragment chars (`?`, `#`, `%`)
+- Path traversal (`..`)
+
+This guards against adversarial or hallucinated inputs when used by AI agents. See [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md) for agent-specific guidance.
 
 ## Error Handling
 

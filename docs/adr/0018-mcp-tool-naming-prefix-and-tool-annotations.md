@@ -24,5 +24,4 @@ Multiple MCP servers can be connected to a single host (e.g. Claude Desktop); to
 
 ## References
 
-- GitHub: Issue #41 (parent), sub-issues #42 (ADR/OpenSpec), #43 (Implementation), #44 (Changelog)
-- OpenSpec: `docs/openspec/changes/mcp-tools-prefix-and-annotations/`
+- GitHub: Issue #41 (parent), sub-issues #42 (ADR), #43 (Implementation), #44 (Changelog)

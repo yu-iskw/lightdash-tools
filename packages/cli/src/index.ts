@@ -24,16 +24,17 @@ import { registerMetricsCommand } from './commands/metrics';
 import { registerSchedulersCommand } from './commands/schedulers';
 import { registerTagsCommand } from './commands/tags';
 import { registerContentCommand } from './commands/content';
+import { registerSchemaCommand } from './commands/schema';
 
-// Initialise audit log before any command runs (uses LIGHTDASH_AUDIT_LOG env var).
-initAuditLog(process.env.LIGHTDASH_AUDIT_LOG);
+// Initialise audit log before any command runs (uses LIGHTDASH_TOOLS_AUDIT_LOG env var).
+initAuditLog(process.env.LIGHTDASH_TOOLS_AUDIT_LOG);
 
 const program = new Command();
 
 program
   .name('lightdash-ai')
   .description('CLI for Lightdash AI')
-  .version('0.4.0')
+  .version('0.5.0')
   .option(
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
@@ -42,6 +43,10 @@ program
   .option(
     '--projects <uuids>',
     'Comma-separated list of allowed project UUIDs (security guardrail)',
+  )
+  .option(
+    '--dry-run',
+    'Simulate mutating operations without executing (env: LIGHTDASH_TOOLS_DRY_RUN=1)',
   );
 
 // Register all commands (organization and projects first so subcommands can attach)
@@ -64,6 +69,7 @@ registerMetricsCommand(program);
 registerSchedulersCommand(program);
 registerTagsCommand(program);
 registerContentCommand(program);
+registerSchemaCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

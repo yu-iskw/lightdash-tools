@@ -9,7 +9,7 @@ import { wrapAction } from '../utils/safety';
 
 /**
  * Registers the groups command and its subcommands.
- * Uses client.v1.groups (typed client) per ADR-0010 and OpenSpec cli-parity-with-client.
+ * Uses client.v1.groups (typed client) per ADR-0010.
  */
 export function registerGroupsCommand(program: Command): void {
   const groupsCmd = program.command('groups').description('Manage groups');

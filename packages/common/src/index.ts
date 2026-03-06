@@ -2,8 +2,14 @@ export function greet(name: string): string {
   return `Hello, ${name}!`;
 }
 
+// Export env var constants
+export * from './env';
+
 // Export safety logic
 export * from './safety';
+
+// Export input validation
+export * from './input-validation';
 
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';

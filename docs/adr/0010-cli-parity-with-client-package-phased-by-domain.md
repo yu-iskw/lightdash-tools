@@ -49,7 +49,7 @@ flowchart LR
 
 - **Single pattern**: CLI uses typed clients only; no raw HTTP for covered domains. Easier to maintain and keep in sync with API types.
 - **Incremental delivery**: Parity is achieved in phases; each phase delivers user value and can be shipped independently.
-- **Alignment**: Matches OpenSpec "extend incrementally" and ADR-0005 future considerations (Groups/Users clients, additional commands).
+- **Alignment**: Matches ADR-0005 future considerations (Groups/Users clients, additional commands).
 
 ### Negative
 
@@ -57,10 +57,9 @@ flowchart LR
 
 ### Risks
 
-- **Drift**: If new client domains are added without CLI follow-up, parity gaps reappear; mitigated by tracking in OpenSpec and issue #18.
+- **Drift**: If new client domains are added without CLI follow-up, parity gaps reappear; mitigated by tracking in issue #18.
 
 ## References
 
 - ADR-0005: CLI Architecture (this ADR implements its "Future Considerations" for Groups/Users clients and additional commands)
-- OpenSpec: `docs/openspec/changes/cli-parity-with-client/`
 - GitHub: Issue #18 (CLI parity with HTTP client)

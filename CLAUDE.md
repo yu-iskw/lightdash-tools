@@ -18,27 +18,14 @@ This decomposes tasks into independent subtasks with file ownership, executes th
 
 ## Available Agents
 
-| Agent                    | Purpose                                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- |
-| `project-manager`        | Unified project management (changelog, ADR, OpenSpec, issues); routes to specialists and default project. |
-| `github-project-manager` | Sync repo work with GitHub Projects                                                                       |
-| `github-triage-agent`    | Triage, label, and assign issues                                                                          |
-| `openspec-manager`       | Run OpenSpec SDD workflows (root: `docs/openspec/`; run CLI from `docs/` or `pnpm openspec --`)           |
-| `verifier`               | Run build → lint → test cycle                                                                             |
-| `code-reviewer`          | Review code for quality and security                                                                      |
-| `parallel-executor`      | Orchestrate parallel task execution                                                                       |
-| `parallel-tasks-planner` | Plan task decomposition                                                                                   |
-| `task-worker`            | Execute isolated subtasks                                                                                 |
-
-## Default GitHub Project
-
-This repository uses the following GitHub Project for tracking work:
-
-- **URL**: <https://github.com/users/yu-iskw/projects/3/views/1> <!-- markdown-link-check-disable-line -->
-- **Owner**: `yu-iskw`
-- **Project Number**: `3`
-
-When using the `github-project-manager` agent or GitHub Project-related skills, this project should be used as the default target unless explicitly specified otherwise. ADR, changelog, OpenSpec, and issue work must always be tracked on this project (add or link issues via `gh-adding-items-to-projects` or the github-project-manager agent).
+| Agent                    | Purpose                                      |
+| ------------------------ | -------------------------------------------- |
+| `project-manager`        | Unified project management (changelog, ADR). |
+| `verifier`               | Run build → lint → test cycle                |
+| `code-reviewer`          | Review code for quality and security         |
+| `parallel-executor`      | Orchestrate parallel task execution          |
+| `parallel-tasks-planner` | Plan task decomposition                      |
+| `task-worker`            | Execute isolated subtasks                    |
 
 ## Available Skills
 
@@ -63,10 +50,9 @@ When using the `github-project-manager` agent or GitHub Project-related skills, 
 This project follows a strict documentation hierarchy for technical decisions:
 
 - **ADR** (`docs/adr`): The **Why**. High-level architecture, strategy, and trade-offs.
-- **OpenSpec** (`docs/openspec`): The **How**. Detailed design, API specifications, and implementation tasks.
-- **Code** (`packages/*`): The **What**. Implementation.
+- **Code** (`packages/*`): The **What**. Implementation. Detailed design and specs go in design docs, README, or code.
 
-Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for detailed guidance on ADR vs. OpenSpec granularity.
+Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for ADR granularity guidance.
 
 ## Configuration Self-Improvement
 
@@ -98,5 +84,5 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 - [2026-02-21]: CLI flags that control org-wide boolean settings must validate inputs explicitly. `value === 'true'` silently coerces any non-`'true'` string (including typos like `True`) to `false`, which can silently disable org-wide features. Instead, check `value !== 'true' && value !== 'false'` and exit with a descriptive error.
 - [2026-02-21]: MCP guardrail layer order (from `registerToolSafe`): safety-mode filter (static, skips registration) → safety-mode block (runtime) → dry-run simulation → project-allowlist check → audit wrapper (outermost). New guardrails must be inserted before the audit layer. The `_lightdashBlocked: true` marker signals a blocked result between inner layers and is stripped by the audit wrapper before the response reaches the MCP client.
 - [2026-02-21]: Every CLI action must be wrapped with `wrapAction(annotations, fn)` (from `packages/cli/src/utils/safety.ts`) and every MCP tool with `registerToolSafe()`. Bypassing these means the call is not safety-checked or audit-logged. `initAuditLog()` must be called once in any new process entrypoint.
-- [2026-02-21]: Env var conventions for guardrails: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` (comma-separated UUIDs; CLI `--allowed-projects` overrides), `LIGHTDASH_DRY_RUN` (accepts `1`, `true`, or `yes`; CLI `--dry-run` overrides), `LIGHTDASH_AUDIT_LOG` (file path or unset for stderr), `LIGHTDASH_TOOL_SAFETY_MODE`. Only the allowlist var uses the `LIGHTDASH_TOOLS_` prefix.
+- [2026-03-06]: All project-specific env vars use `LIGHTDASH_TOOLS_` prefix: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, `LIGHTDASH_TOOLS_DRY_RUN`, `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_TOOLS_SAFETY_MODE`. See ADR-0035.
 - [2026-02-27]: Shortened the MCP tool naming prefix from `lightdash_tools__` to `ldt__` to satisfy the 60-character limit imposed by some clients (e.g., Claude Desktop). Bumped package versions to `0.4.0` across the monorepo to reflect these changes.

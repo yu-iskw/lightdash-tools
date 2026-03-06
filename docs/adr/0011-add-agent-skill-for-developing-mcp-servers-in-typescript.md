@@ -36,5 +36,4 @@ The skill does not implement runtime MCP server code in the repo; it provides in
 
 ## References
 
-- OpenSpec: `docs/openspec/changes/develop-mcp-server-ts-skill/`
 - GitHub: Issue #19 (Add agent skill: Develop MCP Server in TypeScript)

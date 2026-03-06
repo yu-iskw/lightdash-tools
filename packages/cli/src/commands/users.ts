@@ -9,7 +9,7 @@ import { wrapAction } from '../utils/safety';
 
 /**
  * Registers the users command and its subcommands.
- * Uses client.v1.users (typed client) per ADR-0010 and OpenSpec cli-parity-with-client.
+ * Uses client.v1.users (typed client) per ADR-0010.
  */
 export function registerUsersCommand(program: Command): void {
   const usersCmd = program.command('users').description('Manage users');

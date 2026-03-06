@@ -4,11 +4,11 @@ Date: 2026-02-11
 
 ## Status
 
-Accepted
+Superseded. GitHub agent skills and agents were removed from this project. Project tracking is now manual.
 
 ## Context
 
-The default GitHub Project board stays in sync with repository work only when project item **Status** (and other fields) is updated when work completes or advances. The project-manager umbrella agent routes to specialists and ensures ADR, changelog, OpenSpec, and issue work is on the project, but it did not explicitly require that status be updated when work progresses or completes. Without that requirement, items can remain in "Todo" or "In Progress" after work is done, and stakeholders see an inaccurate board.
+The default GitHub Project board stays in sync with repository work only when project item **Status** (and other fields) is updated when work completes or advances. The project-manager umbrella agent routes to specialists and ensures ADR, changelog, and issue work is on the project, but it did not explicitly require that status be updated when work progresses or completes. Without that requirement, items can remain in "Todo" or "In Progress" after work is done, and stakeholders see an inaccurate board.
 
 ## Decision
 
@@ -21,7 +21,8 @@ Project-manager **MUST** ensure that issue/project item status is updated when w
 ## Consequences
 
 - **Easier**: The board reflects current state; project-manager has a single, explicit responsibility to ensure status updates via delegation; no bypass of security guardrails (context verification, human approval remain in github-project-manager).
-- **Ongoing**: Any workflow that completes or advances work (release, major change, or one-off ADR/changelog/OpenSpec/issue work) should trigger delegation to update status when the work is tied to a project item.
+- **Ongoing**: Any workflow that completes or advances work (release, major change, or one-off ADR/changelog/issue work) should trigger delegation to update status when the work is tied to a project item.
+- **Superseded**: GitHub agent skills and agents were removed. Project tracking is now manual.
 
 ## Design (implementation spec)
 
@@ -29,7 +30,7 @@ All edits are in [.claude/agents/project-manager.md](../../.claude/agents/projec
 
 1. **Routing table** (~L45–53): Insert one row after "Issues / board sync / fields / sub-issues / add to project", before "Spec-driven work":
    - Task: **Update issue/project item status when work completes or advances**
-   - Delegate to: **MUST delegate to** [github-project-manager](../../.claude/agents/github-project-manager.md)
+   - Delegate to: **MUST delegate to** github-project-manager (removed)
 
 2. **Checklist** (~L63–67): Append a step (e.g. step 5) after "Changelog when done":
    - **Update project item status**: When work is complete or advanced, delegate to github-project-manager to update the issue's Status (e.g. move to Done or In Progress as appropriate).

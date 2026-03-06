@@ -43,7 +43,7 @@ export function getAllowedProjectUuids(): string[] {
 }
 
 /**
- * Sets the project UUID allowlist from the CLI (overrides LIGHTDASH_ALLOWED_PROJECTS).
+ * Sets the project UUID allowlist from the CLI (overrides LIGHTDASH_TOOLS_ALLOWED_PROJECTS).
  */
 export function setStaticAllowedProjectUuids(uuids: string[]): void {
   globalStaticAllowedProjectUuids = uuids;
@@ -51,11 +51,11 @@ export function setStaticAllowedProjectUuids(uuids: string[]): void {
 
 /**
  * Returns true when dry-run mode is active.
- * CLI flag overrides the LIGHTDASH_DRY_RUN environment variable.
+ * CLI flag overrides the LIGHTDASH_TOOLS_DRY_RUN environment variable.
  */
 export function isDryRunMode(): boolean {
   if (globalDryRunMode !== undefined) return globalDryRunMode;
-  const v = process.env.LIGHTDASH_DRY_RUN;
+  const v = process.env.LIGHTDASH_TOOLS_DRY_RUN;
   return v === '1' || v === 'true' || v === 'yes';
 }
 
@@ -67,10 +67,10 @@ export function setDryRunMode(enabled: boolean): void {
 }
 
 /**
- * Returns the audit log file path from LIGHTDASH_AUDIT_LOG, or undefined to use stderr.
+ * Returns the audit log file path from LIGHTDASH_TOOLS_AUDIT_LOG, or undefined to use stderr.
  */
 export function getAuditLogPath(): string | undefined {
-  return process.env.LIGHTDASH_AUDIT_LOG || undefined;
+  return process.env.LIGHTDASH_TOOLS_AUDIT_LOG || undefined;
 }
 
 /**

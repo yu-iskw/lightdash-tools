@@ -72,4 +72,3 @@ flowchart LR
 
 - ADR-0003: API Version Namespaces (runtime namespaces used by this feature)
 - GitHub Issue: [#52](https://github.com/yu-iskw/lightdash-tools/issues/52) <!-- markdown-link-check-disable-line -->
-- OpenSpec: `docs/openspec/changes/explores-api-client-cli-mcp/`
