@@ -50,4 +50,11 @@ export default tseslint.config(
     files: ['packages/common/src/types/v1/index.ts', 'packages/common/src/types/v2/index.ts'],
     rules: { '@typescript-eslint/no-unused-vars': 'off' },
   },
+  // Enforce no deprecated API calls in CLI and MCP (ADR-0036)
+  {
+    files: ['packages/cli/src/**/*.ts', 'packages/mcp/src/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-deprecated': 'error',
+    },
+  },
 );

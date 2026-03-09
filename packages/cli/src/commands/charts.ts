@@ -58,12 +58,12 @@ export function registerChartsCommand(program: Command): void {
 
   chartsCmd
     .command('list <projectUuid>')
-    .description('List charts in a project')
+    .description('List charts in a project (using charts-as-code API)')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (projectUuid: string) => {
         try {
           const client = getClient();
-          const result = await client.v1.charts.listCharts(projectUuid);
+          const result = await client.v1.charts.getChartsAsCode(projectUuid);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(
