@@ -79,23 +79,47 @@ export function registerProjectsCommand(program: Command): void {
 
   validateCmd
     .command('results <projectUuid>')
-    .description('Get latest validation results for a project')
-    .option('--job-id <id>', 'Specific validation job ID')
+    .description('Get validation results for a project (v2 API, paginated)')
+    .option('--validation-id <id>', 'Specific validation result ID (number)')
+    .option('--page <number>', 'Page number (1-indexed)', (v) => parseInt(v, 10))
+    .option('--page-size <number>', 'Results per page', (v) => parseInt(v, 10))
     .action(
-      wrapAction(READ_ONLY_DEFAULT, async (projectUuid: string, options: { jobId?: string }) => {
-        try {
-          const client = getClient();
-          const result = await client.v1.validation.getValidationResults(projectUuid, {
-            jobId: options.jobId,
-          });
-          console.log(JSON.stringify(result, null, 2));
-        } catch (error) {
-          console.error(
-            'Error fetching validation results:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      }),
+      wrapAction(
+        READ_ONLY_DEFAULT,
+        async (
+          projectUuid: string,
+          options: { validationId?: string; page?: number; pageSize?: number },
+        ) => {
+          try {
+            const client = getClient();
+            if (options.validationId) {
+              // Get specific validation result by ID
+              const validationId = parseInt(options.validationId, 10);
+              if (isNaN(validationId)) {
+                console.error('Error: validation-id must be a number');
+                process.exit(1);
+              }
+              const result = await client.v2.validation.getValidationResult(
+                projectUuid,
+                validationId,
+              );
+              console.log(JSON.stringify(result, null, 2));
+            } else {
+              // List validation results (first page by default)
+              const result = await client.v2.validation.listValidationResults(projectUuid, {
+                page: options.page,
+                pageSize: options.pageSize,
+              });
+              console.log(JSON.stringify(result, null, 2));
+            }
+          } catch (error) {
+            console.error(
+              'Error fetching validation results:',
+              error instanceof Error ? error.message : String(error),
+            );
+            process.exit(1);
+          }
+        },
+      ),
     );
 }

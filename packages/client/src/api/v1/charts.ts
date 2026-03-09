@@ -17,7 +17,10 @@ export interface GetChartsAsCodeOptions {
 }
 
 export class ChartsClient extends BaseApiClient {
-  /** List charts in a project (returns SpaceQuery array). */
+  /**
+   * List charts in a project (returns SpaceQuery array).
+   * @deprecated This API endpoint is deprecated in Lightdash. Use charts-as-code API instead.
+   */
   async listCharts(projectUuid: string): Promise<SpaceQuery[]> {
     return this.http.get<SpaceQuery[]>(`/projects/${projectUuid}/charts`);
   }

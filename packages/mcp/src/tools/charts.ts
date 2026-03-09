@@ -13,12 +13,12 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
     'list_charts',
     {
       title: 'List charts',
-      description: 'List charts in a project',
+      description: 'List charts in a project (using charts-as-code API)',
       inputSchema: { projectUuid: z.string().describe('Project UUID') },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const charts = await c.v1.charts.listCharts(projectUuid);
+      const charts = await c.v1.charts.getChartsAsCode(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(charts, null, 2) }] };
     }),
   );

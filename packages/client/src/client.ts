@@ -26,6 +26,7 @@ import { MetricsClient } from './api/v1/metrics';
 import { SchedulersClient } from './api/v1/schedulers';
 import { TagsClient } from './api/v1/tags';
 import { ContentClient } from './api/v2/content';
+import { ValidationClientV2 } from './api/v2/validation';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.
@@ -74,12 +75,14 @@ export class V2ApiClients {
   readonly organizationRoles: OrganizationRolesClient;
   readonly projectRoleAssignments: ProjectRoleAssignmentsClient;
   readonly content: ContentClient;
+  readonly validation: ValidationClientV2;
 
   constructor(http: HttpClient) {
     this.query = new QueryClientV2(http);
     this.organizationRoles = new OrganizationRolesClient(http);
     this.projectRoleAssignments = new ProjectRoleAssignmentsClient(http);
     this.content = new ContentClient(http);
+    this.validation = new ValidationClientV2(http);
   }
 }
 

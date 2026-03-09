@@ -1574,7 +1574,7 @@ snapshots:
   '@eslint/config-array@0.23.2':
     dependencies:
       '@eslint/object-schema': 3.0.2
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       minimatch: 10.2.4
     transitivePeerDependencies:
       - supports-color
@@ -1778,7 +1778,7 @@ snapshots:
       '@typescript-eslint/types': 8.56.1
       '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.9.3)
       '@typescript-eslint/visitor-keys': 8.56.1
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       eslint: 10.0.2
       typescript: 5.9.3
     transitivePeerDependencies:
@@ -1788,7 +1788,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@5.9.3)
       '@typescript-eslint/types': 8.56.1
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       typescript: 5.9.3
     transitivePeerDependencies:
       - supports-color
@@ -1807,7 +1807,7 @@ snapshots:
       '@typescript-eslint/types': 8.56.1
       '@typescript-eslint/typescript-estree': 8.56.1(typescript@5.9.3)
       '@typescript-eslint/utils': 8.56.1(eslint@10.0.2)(typescript@5.9.3)
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       eslint: 10.0.2
       ts-api-utils: 2.4.0(typescript@5.9.3)
       typescript: 5.9.3
@@ -1822,7 +1822,7 @@ snapshots:
       '@typescript-eslint/tsconfig-utils': 8.56.1(typescript@5.9.3)
       '@typescript-eslint/types': 8.56.1
       '@typescript-eslint/visitor-keys': 8.56.1
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       minimatch: 10.2.4
       semver: 7.7.4
       tinyglobby: 0.2.15
@@ -1998,6 +1998,10 @@ snapshots:
       shebang-command: 2.0.0
       which: 2.0.2
 
+  debug@4.4.3:
+    dependencies:
+      ms: 2.1.3
+
   debug@4.4.3(supports-color@10.2.2):
     dependencies:
       ms: 2.1.3
@@ -2108,7 +2112,7 @@ snapshots:
       '@types/estree': 1.0.8
       ajv: 6.14.0
       cross-spawn: 7.0.6
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3
       escape-string-regexp: 4.0.0
       eslint-scope: 9.1.1
       eslint-visitor-keys: 5.0.1

@@ -44,7 +44,7 @@ export type ToolHandler = (args: unknown, extra?: unknown) => Promise<TextConten
 /** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT or WRITE_IDEMPOTENT) for visibility. */
 export type ToolOptions = {
   description: string;
-  inputSchema: Record<string, z.ZodTypeAny>;
+  inputSchema: Record<string, z.ZodType>;
   title?: string;
   annotations?: ToolAnnotations;
 };

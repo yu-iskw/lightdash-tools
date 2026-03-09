@@ -55,19 +55,41 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
     'get_validation_results',
     {
       title: 'Get validation results',
-      description: 'Get the latest validation results for a project',
+      description: 'Get validation results for a project (v2 API, paginated)',
       inputSchema: {
         projectUuid: z.string().describe('Project UUID'),
-        jobId: z.string().optional().describe('Optional job ID to get results for'),
+        validationId: z.number().optional().describe('Optional validation result ID (number)'),
+        page: z.number().optional().describe('Page number (1-indexed)'),
+        pageSize: z.number().optional().describe('Results per page'),
       },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
       client,
       (c) =>
-        async ({ projectUuid, jobId }: { projectUuid: string; jobId?: string }) => {
-          const result = await c.v1.validation.getValidationResults(projectUuid, { jobId });
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        async ({
+          projectUuid,
+          validationId,
+          page,
+          pageSize,
+        }: {
+          projectUuid: string;
+          validationId?: number;
+          page?: number;
+          pageSize?: number;
+        }) => {
+          if (validationId !== undefined) {
+            // Get specific validation result by ID
+            const result = await c.v2.validation.getValidationResult(projectUuid, validationId);
+            return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          } else {
+            // List validation results (first page by default)
+            const result = await c.v2.validation.listValidationResults(projectUuid, {
+              page,
+              pageSize,
+            });
+            return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          }
         },
     ),
   );

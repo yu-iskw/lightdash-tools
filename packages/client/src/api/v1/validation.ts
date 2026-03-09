@@ -19,7 +19,10 @@ export interface ValidateProjectBody {
 }
 
 export class ValidationClient extends BaseApiClient {
-  /** Get validation results for a project. */
+  /**
+   * Get validation results for a project.
+   * @deprecated Use v2 validation API (ListValidationResults) instead.
+   */
   async getValidationResults(
     projectUuid: string,
     params?: GetValidationResultsParams,

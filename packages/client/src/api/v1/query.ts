@@ -11,7 +11,10 @@ import type {
 import { BaseApiClient } from '../base-client';
 
 export class QueryClient extends BaseApiClient {
-  /** Run a metric query for an explore. */
+  /**
+   * Run a metric query for an explore.
+   * @deprecated This API endpoint is deprecated in Lightdash. Use v2 query API instead.
+   */
   async runQuery(
     projectUuid: string,
     exploreId: string,
