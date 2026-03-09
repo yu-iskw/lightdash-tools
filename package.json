@@ -19,9 +19,10 @@
     "lint": "pnpm lint:trunk && pnpm lint:eslint",
     "lint:all": "pnpm lint:trunk-all",
     "lint:eslint": "eslint .",
-    "lint:security": "trunk check --all --scope security",
-    "lint:trunk": "trunk check",
-    "lint:trunk-all": "trunk check --all",
+    "lint:security": "trunk check --all --scope security -y",
+    "lint:semgrep": "semgrep ci",
+    "lint:trunk": "trunk check -y",
+    "lint:trunk-all": "trunk check --all -y",
     "test": "vitest run",
     "validate:deps": "node scripts/check-common-no-client.mjs",
     "validate:names": "node scripts/validate-package-names.mjs"

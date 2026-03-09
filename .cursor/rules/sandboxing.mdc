@@ -1,0 +1,56 @@
+---
+alwaysApply: true
+---
+
+# Cursor Agent Sandboxing
+
+This project enforces Cursor agent sandboxing to balance security and productivity.
+
+## Rationale
+
+We use Cursor 2.0+ OS-level sandboxing (macOS Seatbelt, Linux Landlock, Windows WSL2) so agents can run standard dev tasks without manual approval while staying confined. Deny-by-default network plus a curated allowlist keeps outbound access minimal; the allowlist covers package registries (npmjs.org, yarnpkg.com) and tool downloads (github.com, googleapis.com). Shared build cache is enabled so sandboxed and unsandboxed commands share caches for faster builds. Protected paths (e.g. `.cursor/*.json`, `.git/config`) remain write-protected by Cursor regardless of this config.
+
+## Sandbox Configuration
+
+The sandbox configuration is defined in `.cursor/sandbox.json`:
+
+- **Workspace Access**: Read/write access to the workspace directory
+- **Network Policy**: Deny-by-default with allowlist for essential registries (npmjs.org, github.com, etc.)
+- **Build Cache**: Shared build cache enabled for performance
+
+## Agent Restrictions
+
+When running in the sandbox, agents:
+
+- ✅ Can read/write files in the workspace
+- ✅ Can access `/tmp` or system temp directories
+- ✅ Can make network requests to allowlisted domains
+- ❌ Cannot write files outside the workspace (except `/tmp`)
+- ❌ Cannot make network requests to non-allowlisted domains
+- ❌ Cannot modify protected paths (`.cursor/*.json`, `.git/config`, `.claude/*.json`)
+
+## Requesting Changes
+
+If an agent needs access to a new domain or filesystem path:
+
+1. **Network Access**: Add the domain pattern to `networkPolicy.allow` in `.cursor/sandbox.json`
+2. **Filesystem Access**: Add the path to `additionalReadwritePaths` or `additionalReadonlyPaths`
+3. **Documentation**: Update this rule file if the change affects agent workflows
+
+## Protected Paths
+
+The following paths are always write-protected, regardless of configuration:
+
+- `.cursorignore`
+- `.git/hooks/**`, `.git/config`, `.git/info/attributes`
+- `.code-workspace`
+- `.vscode/**`
+- `.claude/*.json`, `.claude/**/*.json`
+- `.cursor/*.json`, `.cursor/**/*.json`, `.cursor/.workspace-trusted`
+
+The following `.cursor` subdirectories are writable: `rules/`, `commands/`, `worktrees/`, `skills/`, `agents/`.
+
+## References
+
+- [Cursor Terminal Documentation](https://cursor.com/docs/agent/tools/terminal)
+- [Cursor Sandbox Reference](https://cursor.com/docs/reference/sandbox.md)
