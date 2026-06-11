@@ -44,8 +44,9 @@ pnpm test:fast     # Vitest without coverage (local iteration only)
 pnpm lint          # Trunk + ESLint + knip (dead-code / unused dependency check)
 pnpm lint:eslint   # ESLint only (Trunk fallback)
 pnpm knip          # Unused exports, files, and dependencies
-pnpm verify        # Full agent harness: validations, build, test, eslint, knip
-pnpm verify:quick  # Fast loop: test + eslint + knip (no build)
+pnpm verify        # Agent harness: validations, build, test+coverage, eslint, knip
+pnpm verify:quick  # Fast loop: test+coverage, eslint, knip (no build)
+pnpm verify:ci     # verify + Trunk (matches CI: test.yml + trunk_check.yml)
 pnpm format        # Auto-format code via Trunk
 pnpm clean         # Clean build artifacts
 ```
@@ -57,7 +58,7 @@ Unless the user explicitly narrows scope, run the relevant gates from the reposi
 1. `pnpm test` for Vitest with coverage (thresholds in [`coverage-thresholds.mjs`](coverage-thresholds.mjs)).
 2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene.
 3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
-4. `pnpm verify` for a full agent harness pass (validations, build, test, eslint, knip).
+4. `pnpm verify` for the default agent harness (validations, build, test+coverage, eslint, knip). CI also runs Trunk via `trunk_check.yml`; use `pnpm verify:ci` locally when you need that gate.
 5. `pnpm lint` (Trunk + ESLint + knip) when touching Markdown, YAML, `.trunk/`, or GitHub workflow files.
 
 Root [`eslint.config.mjs`](eslint.config.mjs) layers import-x, SonarJS, security, unicorn, eslint-comments, and Vitest rules on top of `@typescript-eslint` (dbt-tools-ts pattern). It enforces `@typescript-eslint/no-deprecated` on CLI and MCP (ADR-0036). [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.

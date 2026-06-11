@@ -204,13 +204,6 @@ export default [
     files: ['packages/cli/src/commands/**/*.ts', 'packages/mcp/src/tools/**/*.ts'],
     rules: {
       'max-nested-callbacks': 'off',
-    },
-  },
-  // Large declarative registration modules.
-  {
-    files: ['packages/cli/src/commands/agents.ts', 'packages/mcp/src/tools/ai-agents.ts'],
-    rules: {
-      'max-lines-per-function': ['error', { max: 800 }],
       'sonarjs/no-duplicate-string': 'off',
     },
   },

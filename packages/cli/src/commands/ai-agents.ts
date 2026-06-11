@@ -4,6 +4,7 @@
 
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 
+import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
@@ -23,17 +24,18 @@ type AdminThreadsCliOptions = {
 };
 
 function buildAdminThreadsParams(options: AdminThreadsCliOptions): GetAdminThreadsParams | undefined {
-  const params: GetAdminThreadsParams = {};
-  if (options.page != null) params.page = options.page;
-  if (options.pageSize != null) params.pageSize = options.pageSize;
-  if (options.agent != null) params.agentUuids = options.agent;
-  if (options.project != null) params.projectUuids = options.project;
-  if (options.humanScore != null) params.humanScore = options.humanScore;
-  if (options.dateFrom != null) params.dateFrom = options.dateFrom;
-  if (options.dateTo != null) params.dateTo = options.dateTo;
-  if (options.sort != null) params.sortField = options.sort as GetAdminThreadsParams['sortField'];
-  if (options.sortDirection != null) params.sortDirection = options.sortDirection as 'asc' | 'desc';
-  return Object.keys(params).length > 0 ? params : undefined;
+  return pickDefined({
+    page: options.page,
+    pageSize: options.pageSize,
+    agentUuids: options.agent,
+    projectUuids: options.project,
+    humanScore: options.humanScore,
+    dateFrom: options.dateFrom,
+    dateTo: options.dateTo,
+    sortField: options.sort != null ? (options.sort as GetAdminThreadsParams['sortField']) : undefined,
+    sortDirection:
+      options.sortDirection != null ? (options.sortDirection as 'asc' | 'desc') : undefined,
+  }) as GetAdminThreadsParams | undefined;
 }
 
 /**

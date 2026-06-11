@@ -51,5 +51,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: pnpm test
+
+      - name: Run knip
+        run: pnpm knip

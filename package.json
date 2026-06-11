@@ -18,7 +18,6 @@
     "knip": "knip",
     "knip:fix": "knip --fix",
     "lint": "pnpm lint:trunk && pnpm lint:eslint && pnpm knip",
-    "lint:knip": "knip",
     "lint:all": "pnpm lint:trunk-all",
     "lint:eslint": "eslint .",
     "lint:security": "trunk check --all --scope security",
@@ -29,7 +28,8 @@
     "validate:deps": "node scripts/check-common-no-client.mjs",
     "validate:names": "node scripts/validate-package-names.mjs",
     "verify": "pnpm validate:names && pnpm validate:deps && pnpm build && pnpm test && pnpm lint:eslint && pnpm knip",
-    "verify:quick": "pnpm test && pnpm lint:eslint && pnpm knip"
+    "verify:quick": "pnpm test && pnpm lint:eslint && pnpm knip",
+    "verify:ci": "pnpm verify && pnpm lint:trunk"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",

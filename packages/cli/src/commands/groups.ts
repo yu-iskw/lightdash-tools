@@ -4,6 +4,7 @@
 
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 
+import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
@@ -19,29 +20,19 @@ type ListGroupsCliOptions = {
 };
 
 async function listGroups(client: LightdashClient, options: ListGroupsCliOptions): Promise<void> {
+  const shared = {
+    searchQuery: options.search,
+    includeMembers: options.includeMembers,
+  };
+
   if (options.all) {
-    const listParams: { searchQuery?: string; includeMembers?: number } = {};
-    if (options.search != null) listParams.searchQuery = options.search;
-    if (options.includeMembers != null) listParams.includeMembers = options.includeMembers;
-    const list = await client.v1.groups.listAllGroups(
-      Object.keys(listParams).length > 0 ? listParams : undefined,
-    );
+    const list = await client.v1.groups.listAllGroups(pickDefined(shared));
     console.log(JSON.stringify(list, null, 2));
     return;
   }
 
-  const params: {
-    page?: number;
-    pageSize?: number;
-    searchQuery?: string;
-    includeMembers?: number;
-  } = {};
-  if (options.page != null) params.page = options.page;
-  if (options.pageSize != null) params.pageSize = options.pageSize;
-  if (options.search != null) params.searchQuery = options.search;
-  if (options.includeMembers != null) params.includeMembers = options.includeMembers;
   const result = await client.v1.groups.listGroups(
-    Object.keys(params).length > 0 ? params : undefined,
+    pickDefined({ page: options.page, pageSize: options.pageSize, ...shared }),
   );
   console.log(JSON.stringify(result, null, 2));
 }

@@ -4,6 +4,7 @@
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
+import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
@@ -18,22 +19,16 @@ type ListUsersCliOptions = {
 };
 
 async function listUsers(client: LightdashClient, options: ListUsersCliOptions): Promise<void> {
+  const searchQuery = options.search;
+
   if (options.all) {
-    const listParams: { searchQuery?: string } = {};
-    if (options.search != null) listParams.searchQuery = options.search;
-    const list = await client.v1.users.listAllMembers(
-      Object.keys(listParams).length > 0 ? listParams : undefined,
-    );
+    const list = await client.v1.users.listAllMembers(pickDefined({ searchQuery }));
     console.log(JSON.stringify(list, null, 2));
     return;
   }
 
-  const params: { page?: number; pageSize?: number; searchQuery?: string } = {};
-  if (options.page != null) params.page = options.page;
-  if (options.pageSize != null) params.pageSize = options.pageSize;
-  if (options.search != null) params.searchQuery = options.search;
   const result = await client.v1.users.listMembers(
-    Object.keys(params).length > 0 ? params : undefined,
+    pickDefined({ page: options.page, pageSize: options.pageSize, searchQuery }),
   );
   console.log(JSON.stringify(result, null, 2));
 }
