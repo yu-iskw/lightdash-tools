@@ -21,7 +21,6 @@ function buildCreateAgentBody(desired: BundleAgentSpec, projectUuid: string): Cr
     spaceAccess: [],
     enableDataAccess: desired.enableDataAccess ?? false,
     enableSelfImprovement: desired.enableSelfImprovement ?? false,
-    enableReasoning: desired.enableReasoning ?? false,
     version: 1,
   };
 }
@@ -65,7 +64,6 @@ export async function applyAgentChange(
       tags: desired.tags ?? null,
       enableDataAccess: desired.enableDataAccess,
       enableSelfImprovement: desired.enableSelfImprovement,
-      enableReasoning: desired.enableReasoning,
     });
     agentUuidByKey.set(desired.key, agentUuid);
     return true;

@@ -58,6 +58,9 @@ jobs:
       - name: Regenerate OpenAPI types
         run: pnpm --filter @lightdash-tools/common generate:types
 
+      - name: Verify regenerated OpenAPI types compile
+        run: pnpm --filter @lightdash-tools/common build
+
       - name: Regenerate operation registry
         run: pnpm --filter @lightdash-tools/common generate:operation-registry
 
