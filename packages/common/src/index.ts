@@ -11,6 +11,9 @@ export * from './safety';
 // Export input validation
 export * from './input-validation';
 
+// Export argument / descriptor validation (RFC Phase 0)
+export * from './argument-validation';
+
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';
 
