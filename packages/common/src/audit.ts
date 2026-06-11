@@ -59,3 +59,16 @@ export function logAuditEntry(entry: AuditLogEntry): void {
     process.stderr.write(`[audit] ${line}`);
   }
 }
+
+/** Closes the file stream, if any. Awaits pending writes before resolving. */
+export function closeAuditLog(): Promise<void> {
+  const stream = _writeStream;
+  if (!stream) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    stream.end(() => {
+      _writeStream = undefined;
+      resolve();
+    });
+    stream.on('error', reject);
+  });
+}
