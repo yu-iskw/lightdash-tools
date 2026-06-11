@@ -8622,6 +8622,11 @@ export interface components {
     EmbedJwtContentChart: components['schemas']['CommonChartEmbedJwtContent'] & {
       contentId: string;
     };
+    EmbedWriteActions: {
+      spaceUuid: string;
+      userUuid?: string;
+      serviceAccountUserUuid?: string;
+    };
     CreateEmbedJwt: {
       /** Format: double */
       exp?: number;
@@ -8635,6 +8640,7 @@ export interface components {
       userAttributes?: {
         [key: string]: string;
       };
+      writeActions?: components['schemas']['EmbedWriteActions'];
       content:
         | components['schemas']['EmbedJwtContentDashboardUuid']
         | components['schemas']['EmbedJwtContentDashboardSlug']
@@ -13002,9 +13008,9 @@ export interface components {
                       name: string;
                     }[];
                     exploreSearchResults?: {
+                      joinedTables?: string[] | null;
                       /** Format: double */
                       searchRank?: number | null;
-                      joinedTables?: string[] | null;
                       label: string;
                       name: string;
                     }[];
@@ -13047,13 +13053,13 @@ export interface components {
               | {
                   /** Format: double */
                   contentSizeBytes: number;
+                  name: string;
                   /** @enum {string} */
                   status: 'success';
-                  name: string;
                 }
               | {
                   /** @enum {string} */
-                  status: 'error' | 'success' | 'not_found';
+                  status: 'error' | 'not_found' | 'success';
                 }
               | {
                   streamingMessage?: unknown;
@@ -13065,34 +13071,34 @@ export interface components {
                   discovery:
                     | {
                         rationale: string | null;
+                        fields: {
+                          description: string | null;
+                          isFromJoinedTable: boolean;
+                          /** @enum {string} */
+                          caseSensitiveFilters: 'false' | 'not_applicable' | 'true';
+                          fieldFilterType: string;
+                          fieldValueType: string;
+                          /** @enum {string} */
+                          fieldType: 'dimension' | 'metric';
+                          table: string;
+                          label: string;
+                          name: string;
+                          fieldId: string;
+                        }[];
                         explore: {
                           joinedTables: string[];
                           baseTable: string;
                           label: string;
                           name: string;
                         };
-                        fields: {
-                          isFromJoinedTable: boolean;
-                          /** @enum {string} */
-                          caseSensitiveFilters: 'true' | 'false' | 'not_applicable';
-                          fieldValueType: string;
-                          fieldFilterType: string;
-                          description: string | null;
-                          /** @enum {string} */
-                          fieldType: 'metric' | 'dimension';
-                          table: string;
-                          fieldId: string;
-                          label: string;
-                          name: string;
-                        }[];
                         /** @enum {string} */
                         status: 'resolved';
                       }
                     | {
                         suggestedQuestion: string;
                         candidates: {
-                          exploreLabel: string;
                           reason: string;
+                          exploreLabel: string;
                           exploreName: string;
                         }[];
                         /** @enum {string} */
@@ -13113,18 +13119,18 @@ export interface components {
                   };
                   warnings: string[];
                   href: string;
+                  uuid: string;
+                  name: string;
                   slug: string;
                   /** @enum {string} */
                   status: 'success';
-                  uuid: string;
-                  name: string;
                 }
               | {
                   steps?:
                     | {
-                        label: string;
                         /** @enum {string} */
                         kind: 'read' | 'edit' | 'search' | 'compile' | 'stage';
+                        label: string;
                       }[]
                     | null;
                   previewUrl?: string | null;
@@ -13135,9 +13141,9 @@ export interface components {
                   commitSha?: string | null;
                   /** @enum {string|null} */
                   prAction?: 'opened' | 'updated' | null;
+                  prUrl: string | null;
                   /** @enum {string} */
                   status: 'success';
-                  prUrl: string | null;
                 }
               | {
                   /** @enum {string|null} */
@@ -13152,18 +13158,17 @@ export interface components {
                 }
               | {
                   href: string;
+                  name: string;
                   slug: string;
                   /** @enum {string} */
                   status: 'success';
-                  name: string;
                 }
               | {
                   /** @enum {string} */
-                  status: 'error' | 'success' | 'rejected' | 'timeout';
+                  status: 'error' | 'rejected' | 'success' | 'timeout';
                 }
               | {
                   ranking?: {
-                    searchQuery: string | null;
                     fields: {
                       /** Format: double */
                       chartUsage?: number | null;
@@ -13175,7 +13180,8 @@ export interface components {
                       name: string;
                     }[];
                     /** @enum {string|null} */
-                    type: 'metric' | 'dimension' | null;
+                    type: 'dimension' | 'metric' | null;
+                    searchQuery: string | null;
                   };
                   /** @enum {string} */
                   status: 'error' | 'success';
@@ -17937,13 +17943,13 @@ export interface components {
       };
     };
     /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__': Record<
+    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__': Record<
       string,
       never
     >;
     /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__': {
-      chart?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__'];
+    'PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__': {
+      chart?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__'];
     };
     /**
      * @description Create a type from another type with all keys and nested keys set to optional.
@@ -17952,7 +17958,7 @@ export interface components {
      *     - Merging a default settings/config object with another object, the second object would be a deep partial of the default object.
      *     - Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test.
      */
-    'PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__'];
+    'PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__'];
     /** @enum {string} */
     'ContentAsCodeType.SPACE': 'space';
     SpaceAsCode: {
