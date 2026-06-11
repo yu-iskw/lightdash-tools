@@ -87,12 +87,11 @@ const sharedTsRules = Object.assign({}, tseslint.configs.recommended.rules, {
   'no-new-func': 'error',
   'prefer-const': 'error',
   'max-lines-per-function': ['error', { max: 280 }],
-  'max-depth': ['error', { max: 6 }],
-  'max-params': ['error', { max: 8 }],
-  'max-nested-callbacks': ['error', { max: 4 }],
-  // SonarJS (stricter than google-cloud-tools baseline: 15 vs 20)
-  'sonarjs/cyclomatic-complexity': ['error', { threshold: 15 }],
-  'sonarjs/cognitive-complexity': ['error', 15],
+  'max-depth': ['error', { max: 5 }],
+  'max-params': ['error', { max: 5 }],
+  'max-nested-callbacks': ['error', { max: 2 }],
+  'sonarjs/cyclomatic-complexity': ['error', { threshold: 12 }],
+  'sonarjs/cognitive-complexity': ['error', 12],
   'sonarjs/no-duplicate-string': 'error',
   'sonarjs/prefer-immediate-return': 'error',
   'no-unreachable': 'error',
@@ -177,6 +176,7 @@ export default [
       'vitest/no-conditional-expect': 'off',
       'sonarjs/no-duplicate-string': 'off',
       'max-lines-per-function': ['error', { max: 700 }],
+      'max-nested-callbacks': 'off',
     },
   },
   // Common package types: namespaces used by design (ADR-0008, LightdashApi)
@@ -199,7 +199,14 @@ export default [
       '@typescript-eslint/no-deprecated': 'error',
     },
   },
-  // Command/tool registration modules are intentionally long declarative tables.
+  // Commander/MCP registration uses unavoidable three-level callback nesting.
+  {
+    files: ['packages/cli/src/commands/**/*.ts', 'packages/mcp/src/tools/**/*.ts'],
+    rules: {
+      'max-nested-callbacks': 'off',
+    },
+  },
+  // Large declarative registration modules.
   {
     files: ['packages/cli/src/commands/agents.ts', 'packages/mcp/src/tools/ai-agents.ts'],
     rules: {
@@ -222,13 +229,6 @@ export default [
       'sonarjs/cognitive-complexity': 'off',
       'sonarjs/cyclomatic-complexity': 'off',
       'max-depth': 'off',
-    },
-  },
-  {
-    files: ['packages/mcp/src/http.ts', 'packages/cli/src/commands/groups.ts', 'packages/cli/src/commands/users.ts'],
-    rules: {
-      'sonarjs/cognitive-complexity': ['error', 25],
-      'sonarjs/cyclomatic-complexity': ['error', { threshold: 20 }],
     },
   },
   {

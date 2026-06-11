@@ -10,6 +10,32 @@ import { wrapAction } from '../utils/safety';
 import type { GetAdminThreadsParams, UpdateAiOrganizationSettings } from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
+type AdminThreadsCliOptions = {
+  page?: number;
+  pageSize?: number;
+  agent?: string[];
+  project?: string[];
+  humanScore?: number;
+  dateFrom?: string;
+  dateTo?: string;
+  sort?: string;
+  sortDirection?: string;
+};
+
+function buildAdminThreadsParams(options: AdminThreadsCliOptions): GetAdminThreadsParams | undefined {
+  const params: GetAdminThreadsParams = {};
+  if (options.page != null) params.page = options.page;
+  if (options.pageSize != null) params.pageSize = options.pageSize;
+  if (options.agent != null) params.agentUuids = options.agent;
+  if (options.project != null) params.projectUuids = options.project;
+  if (options.humanScore != null) params.humanScore = options.humanScore;
+  if (options.dateFrom != null) params.dateFrom = options.dateFrom;
+  if (options.dateTo != null) params.dateTo = options.dateTo;
+  if (options.sort != null) params.sortField = options.sort as GetAdminThreadsParams['sortField'];
+  if (options.sortDirection != null) params.sortDirection = options.sortDirection as 'asc' | 'desc';
+  return Object.keys(params).length > 0 ? params : undefined;
+}
+
 /**
  * Registers the top-level ai-agents command and its subcommands (admin scope).
  */
@@ -59,34 +85,10 @@ export function registerAiAgentsCommand(program: Command): void {
     .option('--sort-direction <dir>', 'Sort direction: asc | desc')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as {
-          page?: number;
-          pageSize?: number;
-          agent?: string[];
-          project?: string[];
-          humanScore?: number;
-          dateFrom?: string;
-          dateTo?: string;
-          sort?: string;
-          sortDirection?: string;
-        };
+        const options = this.opts() as AdminThreadsCliOptions;
         try {
           const client = getClient();
-          const params: GetAdminThreadsParams = {};
-          if (options.page != null) params.page = options.page;
-          if (options.pageSize != null) params.pageSize = options.pageSize;
-          if (options.agent != null) params.agentUuids = options.agent;
-          if (options.project != null) params.projectUuids = options.project;
-          if (options.humanScore != null) params.humanScore = options.humanScore;
-          if (options.dateFrom != null) params.dateFrom = options.dateFrom;
-          if (options.dateTo != null) params.dateTo = options.dateTo;
-          if (options.sort != null)
-            params.sortField = options.sort as GetAdminThreadsParams['sortField'];
-          if (options.sortDirection != null)
-            params.sortDirection = options.sortDirection as 'asc' | 'desc';
-          const result = await client.v1.aiAgents.getAdminThreads(
-            Object.keys(params).length > 0 ? params : undefined,
-          );
+          const result = await client.v1.aiAgents.getAdminThreads(buildAdminThreadsParams(options));
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(

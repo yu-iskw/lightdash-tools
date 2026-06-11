@@ -100,67 +100,90 @@ function isInitializeMessage(body: unknown): boolean {
   );
 }
 
-async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
-  if (!authMiddleware(req, res)) return;
+function getSessionId(req: IncomingMessage): string | undefined {
+  const sessionId = req.headers['mcp-session-id'];
+  return typeof sessionId === 'string' ? sessionId : sessionId?.[0];
+}
 
-  const url = req.url ?? '';
-  const path = url.split('?')[0];
-  if (path !== MCP_PATH) {
-    res
-      .writeHead(404, { 'Content-Type': 'application/json' })
-      .end(JSON.stringify({ error: 'Not Found' }));
+function sendJson(
+  res: ServerResponse,
+  status: number,
+  body: Record<string, string>,
+  extraHeaders?: Record<string, string>,
+): void {
+  res.writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders }).end(JSON.stringify(body));
+}
+
+function getSessionTransport(
+  res: ServerResponse,
+  sid: string | undefined,
+): StreamableHTTPServerTransport | undefined {
+  if (!sid) {
+    sendJson(res, 400, { error: 'Bad Request: Mcp-Session-Id required' });
+    return undefined;
+  }
+  const transport = sessionMap.get(sid);
+  if (!transport) {
+    sendJson(res, 404, { error: 'Session not found' });
+    return undefined;
+  }
+  return transport;
+}
+
+async function handleMcpPost(
+  req: IncomingMessage,
+  res: ServerResponse,
+  sid: string | undefined,
+): Promise<void> {
+  const raw = await readBody(req);
+  const body = raw.length > 0 ? parseJsonBody(raw) : undefined;
+
+  if (sid) {
+    const transport = getSessionTransport(res, sid);
+    if (!transport) return;
+    await transport.handleRequest(req, res, body);
     return;
   }
 
-  const sessionId = req.headers['mcp-session-id'];
-  const sid =
-    typeof sessionId === 'string' ? sessionId : Array.isArray(sessionId) ? sessionId[0] : undefined;
+  if (body !== undefined && isInitializeMessage(body)) {
+    const transport = createSessionTransport();
+    await transport.handleRequest(req, res, body);
+    return;
+  }
+
+  sendJson(res, 400, {
+    error: 'Bad Request: Mcp-Session-Id required for non-initialize requests',
+  });
+}
+
+async function handleMcpGetOrDelete(
+  req: IncomingMessage,
+  res: ServerResponse,
+  sid: string | undefined,
+): Promise<void> {
+  const transport = getSessionTransport(res, sid);
+  if (!transport) return;
+  await transport.handleRequest(req, res);
+}
+
+async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!authMiddleware(req, res)) return;
+
+  const path = (req.url ?? '').split('?')[0];
+  if (path !== MCP_PATH) {
+    sendJson(res, 404, { error: 'Not Found' });
+    return;
+  }
+
+  const sid = getSessionId(req);
 
   if (req.method === 'POST') {
-    const raw = await readBody(req);
-    const body = raw.length > 0 ? parseJsonBody(raw) : undefined;
-
-    if (sid) {
-      const transport = sessionMap.get(sid);
-      if (!transport) {
-        res
-          .writeHead(404, { 'Content-Type': 'application/json' })
-          .end(JSON.stringify({ error: 'Session not found' }));
-        return;
-      }
-      await transport.handleRequest(req, res, body);
-      return;
-    }
-
-    if (body !== undefined && isInitializeMessage(body)) {
-      const transport = createSessionTransport();
-      await transport.handleRequest(req, res, body);
-      return;
-    }
-
-    res.writeHead(400, { 'Content-Type': 'application/json' }).end(
-      JSON.stringify({
-        error: 'Bad Request: Mcp-Session-Id required for non-initialize requests',
-      }),
-    );
+    await handleMcpPost(req, res, sid);
     return;
   }
 
   if (req.method === 'GET' || req.method === 'DELETE') {
-    if (!sid) {
-      res
-        .writeHead(400, { 'Content-Type': 'application/json' })
-        .end(JSON.stringify({ error: 'Bad Request: Mcp-Session-Id required' }));
-      return;
-    }
-    const transport = sessionMap.get(sid);
-    if (!transport) {
-      res
-        .writeHead(404, { 'Content-Type': 'application/json' })
-        .end(JSON.stringify({ error: 'Session not found' }));
-      return;
-    }
-    await transport.handleRequest(req, res);
+    await handleMcpGetOrDelete(req, res, sid);
     return;
   }
 
