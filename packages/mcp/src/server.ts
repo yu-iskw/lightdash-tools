@@ -1,15 +1,19 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-import { registerTools } from './tools/index.js';
+import { registerCapabilities } from './capabilities.js';
 import { PACKAGE_VERSION } from './version.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
+import type { RegisterCapabilitiesOptions } from './capabilities.js';
 
-export function createLightdashMcpServer(client: LightdashClient): McpServer {
+export function createLightdashMcpServer(
+  client: LightdashClient,
+  options?: RegisterCapabilitiesOptions,
+): McpServer {
   const server = new McpServer({
     name: 'lightdash-mcp',
     version: PACKAGE_VERSION,
   });
-  registerTools(server, client);
+  registerCapabilities(server, client, options);
   return server;
 }

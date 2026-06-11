@@ -23,6 +23,14 @@ vi.mock('@lightdash-tools/common', async (importOriginal) => {
   };
 });
 
+const PROJECT_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const PROJECT_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const PROJECT_ALLOWED = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const PROJECT_OTHER = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const PROJECT_DENIED = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+const PROJECT_X = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+const PROJECT_Y = '11111111-1111-4111-8111-111111111111';
+
 describe('registerToolSafe', () => {
   const mockServer = {
     registerTool: vi.fn(),
@@ -206,13 +214,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'any-uuid' });
+      const result = await handler({ projectUuid: PROJECT_A });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should allow calls for a singular projectUuid in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed', 'uuid-other']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED, PROJECT_OTHER]);
 
       registerToolSafe(
         mockServer,
@@ -222,13 +230,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'uuid-allowed' });
+      const result = await handler({ projectUuid: PROJECT_ALLOWED });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should block calls for a singular projectUuid not in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -238,14 +246,14 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'uuid-denied' });
+      const result = await handler({ projectUuid: PROJECT_DENIED });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
-      expect(result.content[0].text).toContain('uuid-denied');
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
     });
 
     it('should allow calls with no projectUuid arg even when allowlist is set', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -262,7 +270,7 @@ describe('registerToolSafe', () => {
     });
 
     it('should allow when all projectUuids[] are in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-a', 'uuid-b']);
+      setStaticAllowedProjectUuids([PROJECT_A, PROJECT_B]);
 
       registerToolSafe(
         mockServer,
@@ -272,13 +280,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-a', 'uuid-b'] });
+      const result = await handler({ projectUuids: [PROJECT_A, PROJECT_B] });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should block when any UUID in projectUuids[] is not in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-a']);
+      setStaticAllowedProjectUuids([PROJECT_A]);
 
       registerToolSafe(
         mockServer,
@@ -288,14 +296,14 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-a', 'uuid-denied'] });
+      const result = await handler({ projectUuids: [PROJECT_A, PROJECT_DENIED] });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('uuid-denied');
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
     });
 
     it('should block when all projectUuids[] are outside the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -305,7 +313,7 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-x', 'uuid-y'] });
+      const result = await handler({ projectUuids: [PROJECT_X, PROJECT_Y] });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
     });
@@ -343,7 +351,7 @@ describe('registerToolSafe', () => {
       const [, options, handler] = mockServer.registerTool.mock.calls[0];
       expect(options.description).toContain('[DRY-RUN]');
 
-      const result = await handler({ projectUuid: 'uuid-x', slug: 'my-chart' });
+      const result = await handler({ projectUuid: PROJECT_X, slug: 'my-chart' });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toContain('[DRY-RUN]');
       expect(result.content[0].text).toContain('No changes were made');
@@ -365,7 +373,7 @@ describe('registerToolSafe', () => {
       const [, options, handler] = mockServer.registerTool.mock.calls[0];
       expect(options.description).toContain('[DRY-RUN]');
 
-      const result = await handler({ projectUuid: 'uuid-x' });
+      const result = await handler({ projectUuid: PROJECT_X });
       expect(result.content[0].text).toContain('No changes were made');
       expect(mockHandler).not.toHaveBeenCalled();
     });
@@ -415,6 +423,24 @@ describe('registerToolSafe', () => {
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     const result = await handler({});
     expect(result.isError).toBe(true);
+  });
+
+  it('should attach structuredContent when handler returns JSON text', async () => {
+    const jsonHandler = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ ok: true }) }],
+    });
+    registerToolSafe(
+      mockServer,
+      'json_tool',
+      { description: 'Returns JSON', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      jsonHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+
+    expect(result.structuredContent).toEqual({ ok: true });
+    expect(JSON.parse(result.content[0].text)).toEqual({ ok: true });
   });
 
   it('wrapTool returns a safe error message when the inner handler throws', async () => {

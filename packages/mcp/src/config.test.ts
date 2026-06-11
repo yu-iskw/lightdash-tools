@@ -10,6 +10,11 @@ import {
   isDryRunMode,
   setDryRunMode,
   getAuditLogPath,
+  getMcpProfiles,
+  hasMcpProfile,
+  MCP_PROFILE_CORE_LIFECYCLE,
+  MCP_PROFILE_EVALUATIONS,
+  DEFAULT_MCP_PROFILES,
 } from './config.js';
 
 describe('config', () => {
@@ -18,6 +23,7 @@ describe('config', () => {
     'LIGHTDASH_TOOLS_ALLOWED_PROJECTS',
     'LIGHTDASH_TOOLS_DRY_RUN',
     'LIGHTDASH_TOOLS_AUDIT_LOG',
+    'LIGHTDASH_TOOLS_MCP_PROFILES',
   ] as const;
 
   const originalEnv: Record<string, string | undefined> = {};
@@ -127,6 +133,26 @@ describe('config', () => {
         setDryRunMode(true);
         expect(isDryRunMode()).toBe(true);
       });
+    });
+  });
+
+  describe('getMcpProfiles / hasMcpProfile', () => {
+    it('should default to core-lifecycle and evaluations when env is unset', () => {
+      expect([...getMcpProfiles()]).toEqual([...DEFAULT_MCP_PROFILES]);
+    });
+
+    it('should parse comma-separated profiles from env', () => {
+      process.env.LIGHTDASH_TOOLS_MCP_PROFILES = 'evaluations, core-lifecycle';
+      expect([...getMcpProfiles()]).toEqual([
+        MCP_PROFILE_EVALUATIONS,
+        MCP_PROFILE_CORE_LIFECYCLE,
+      ]);
+    });
+
+    it('hasMcpProfile reflects active profiles', () => {
+      const profiles = new Set([MCP_PROFILE_EVALUATIONS]);
+      expect(hasMcpProfile(MCP_PROFILE_EVALUATIONS, profiles)).toBe(true);
+      expect(hasMcpProfile(MCP_PROFILE_CORE_LIFECYCLE, profiles)).toBe(false);
     });
   });
 

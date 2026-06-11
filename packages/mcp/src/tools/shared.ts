@@ -18,6 +18,7 @@ import {
   logAuditEntry,
   getSessionId,
   validateResourceId,
+  validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
 import {
@@ -37,8 +38,46 @@ export const TOOL_PREFIX = 'ldt__';
 
 export type TextContent = {
   content: Array<{ type: 'text'; text: string }>;
+  structuredContent?: Record<string, unknown> | unknown[];
   isError?: boolean;
 };
+
+/** Builds a tool result with JSON text and matching structuredContent. */
+export function jsonToolResult(data: unknown): TextContent {
+  const structured =
+    data !== null && typeof data === 'object'
+      ? (data as Record<string, unknown> | unknown[])
+      : { value: data };
+  return {
+    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+    structuredContent: structured,
+  };
+}
+
+/**
+ * When a handler returns JSON text only, attach structuredContent for MCP clients.
+ */
+function enrichStructuredContent(result: TextContent): TextContent {
+  if (result.structuredContent !== undefined || result.isError) {
+    return result;
+  }
+  const first = result.content[0];
+  if (!first || first.type !== 'text') {
+    return result;
+  }
+  try {
+    const parsed: unknown = JSON.parse(first.text);
+    if (parsed !== null && typeof parsed === 'object') {
+      return {
+        ...result,
+        structuredContent: parsed as Record<string, unknown> | unknown[],
+      };
+    }
+  } catch {
+    // Plain-text tool responses intentionally omit structuredContent.
+  }
+  return result;
+}
 
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
 export type ToolHandler = (args: unknown, extra?: unknown) => Promise<TextContent>;
@@ -52,7 +91,13 @@ export type ToolOptions = {
 };
 
 // Re-export presets for convenience and backward compatibility in tools
-export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
+export {
+  READ_ONLY_DEFAULT,
+  WRITE_IDEMPOTENT,
+  WRITE_NONDESTRUCTIVE,
+  WRITE_OPEN_WORLD,
+  WRITE_DESTRUCTIVE,
+} from '@lightdash-tools/common';
 
 /** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
 const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
@@ -176,6 +221,20 @@ export function registerToolSafe(
         } as BlockedContent;
       }
     }
+    try {
+      validateResourceIdsInObject(args);
+    } catch (err) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
+          },
+        ],
+        isError: true,
+        _lightdashBlocked: true,
+      } as BlockedContent;
+    }
     return validatedInner(args, extra);
   };
 
@@ -246,8 +305,11 @@ export function registerToolSafe(
     });
 
     // Strip the internal marker before returning to the MCP client.
-    const { content, isError } = result;
-    return { content, isError };
+    const enriched = enrichStructuredContent(result);
+    const { content, isError, structuredContent } = enriched;
+    return structuredContent !== undefined
+      ? { content, isError, structuredContent }
+      : { content, isError };
   };
 
   const mergedOptions: ToolOptions = {
