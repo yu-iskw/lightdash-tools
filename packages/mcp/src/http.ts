@@ -97,6 +97,9 @@ function cleanupExpiredSessions(): void {
   for (const [sessionId, entry] of sessionMap) {
     if (now - entry.lastAccessAt > SESSION_TTL_MS) {
       sessionMap.delete(sessionId);
+      void entry.transport.close().catch((err: unknown) => {
+        console.error(`Failed to close expired MCP session ${sessionId}:`, err);
+      });
     }
   }
 }

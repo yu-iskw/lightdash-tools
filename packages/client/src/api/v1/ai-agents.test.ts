@@ -376,7 +376,9 @@ describe('AiAgentsClient', () => {
     };
     vi.mocked(mockHttp.get).mockResolvedValue(pagedResponse);
     const result = await client.listEvaluationRuns('proj1', 'a1', 'e1');
-    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs', {
+      params: undefined,
+    });
     expect(result).toEqual(pagedResponse);
   });
 
@@ -389,7 +391,9 @@ describe('AiAgentsClient', () => {
     };
     vi.mocked(mockHttp.get).mockResolvedValue(pagedResponse);
     const result = await client.listAllEvaluationRuns('proj1', 'a1', 'e1');
-    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs', {
+      params: { page: 1, pageSize: 100 },
+    });
     expect(result).toEqual(runs);
   });
 

@@ -211,6 +211,7 @@ export default [
   {
     files: [
       'packages/cli/src/commands/agentops/**/*.ts',
+      'packages/client/src/agentops/**/*.ts',
       'packages/cli/src/commands/agents-evals.ts',
       'packages/cli/src/commands/agents-crud.ts',
       'packages/cli/src/utils/file-input.ts',

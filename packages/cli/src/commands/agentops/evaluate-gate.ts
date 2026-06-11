@@ -2,10 +2,13 @@
  * agentops evaluate-gate — evaluate an evaluation gate policy against a run.
  */
 
+import { resolveEvaluationRun } from '@lightdash-tools/client';
 import {
   GateExitCode,
   WRITE_OPEN_WORLD,
   evaluateGatePolicy,
+  formatGateJUnit,
+  formatGateMarkdown,
   parseLightdashAiEvaluationGate,
 } from '@lightdash-tools/common';
 
@@ -13,121 +16,7 @@ import { getClient } from '../../utils/client';
 import { readFileOrStdin } from '../../utils/file-input';
 import { wrapAction } from '../../utils/safety';
 
-import type {
-  GatePolicyEvaluation,
-  GateRunSnapshot,
-  LightdashAiEvaluationGate,
-} from '@lightdash-tools/common';
 import type { Command } from 'commander';
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
-
-function toRunSnapshot(run: {
-  runUuid: string;
-  status: GateRunSnapshot['status'];
-  passedAssessments: number;
-  failedAssessments: number;
-  completedAt: string | null;
-}): GateRunSnapshot {
-  return {
-    runUuid: run.runUuid,
-    status: run.status,
-    passedAssessments: run.passedAssessments,
-    failedAssessments: run.failedAssessments,
-    completedAt: run.completedAt,
-  };
-}
-
-async function resolveRun(
-  gate: LightdashAiEvaluationGate,
-  options: { wait: boolean; timeoutMs: number; pollIntervalMs: number },
-): Promise<{ run: GateRunSnapshot; timedOut: boolean }> {
-  const client = getClient();
-  const { projectUuid, agentUuid, evaluationUuid } = gate.spec;
-  let runUuid = gate.spec.runUuid;
-
-  if (!runUuid && gate.spec.triggerRun) {
-    const triggered = await client.v1.aiAgents.runEvaluation(
-      projectUuid,
-      agentUuid,
-      evaluationUuid,
-    );
-    runUuid = triggered.runUuid;
-  }
-
-  if (!runUuid) {
-    const runs = await client.v1.aiAgents.listAllEvaluationRuns(
-      projectUuid,
-      agentUuid,
-      evaluationUuid,
-    );
-    const latest = runs[0];
-    if (!latest) {
-      throw new Error('No evaluation runs found. Set spec.triggerRun: true or spec.runUuid.');
-    }
-    runUuid = latest.runUuid;
-  }
-
-  const deadline = Date.now() + options.timeoutMs;
-
-  while (true) {
-    const runs = await client.v1.aiAgents.listAllEvaluationRuns(
-      projectUuid,
-      agentUuid,
-      evaluationUuid,
-    );
-    const run = runs.find((r) => r.runUuid === runUuid);
-    if (!run) {
-      throw new Error(`Run ${runUuid} not found`);
-    }
-
-    const snapshot = toRunSnapshot(run);
-    if (snapshot.status === 'completed' || snapshot.status === 'failed') {
-      return { run: snapshot, timedOut: false };
-    }
-
-    if (!options.wait) {
-      return { run: snapshot, timedOut: false };
-    }
-
-    if (Date.now() >= deadline) {
-      return { run: snapshot, timedOut: true };
-    }
-
-    await sleep(options.pollIntervalMs);
-  }
-}
-
-function formatJUnit(gate: LightdashAiEvaluationGate, evaluation: GatePolicyEvaluation): string {
-  const name = gate.metadata.name;
-  const failures = evaluation.passed
-    ? ''
-    : `    <failure message="${evaluation.reasons.join('; ')}">Gate policy failed</failure>\n`;
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${name}" tests="1" failures="${evaluation.passed ? 0 : 1}">\n  <testcase name="${name}" classname="agentops.evaluate-gate">\n${failures}  </testcase>\n</testsuite>\n`;
-}
-
-function formatMarkdown(gate: LightdashAiEvaluationGate, evaluation: GatePolicyEvaluation): string {
-  const lines = [
-    `# Evaluation Gate: ${gate.metadata.name}`,
-    '',
-    `**Result:** ${evaluation.passed ? 'PASSED' : 'FAILED'} (exit ${evaluation.exitCode})`,
-    '',
-    '## Metrics',
-    `- Run status: ${evaluation.metrics.runStatus}`,
-    `- Passed assessments: ${evaluation.metrics.passedAssessments}`,
-    `- Failed assessments: ${evaluation.metrics.failedAssessments}`,
-    `- Pass rate: ${evaluation.metrics.passRate ?? 'n/a'}`,
-    '',
-  ];
-  if (evaluation.reasons.length > 0) {
-    lines.push('## Reasons', ...evaluation.reasons.map((r) => `- ${r}`), '');
-  }
-  return lines.join('\n');
-}
 
 export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void {
   agentopsCmd
@@ -164,7 +53,8 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
         try {
           const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const gate = parseLightdashAiEvaluationGate(content);
-          const { run, timedOut } = await resolveRun(gate, {
+          const client = getClient();
+          const { run, timedOut } = await resolveEvaluationRun(client, gate, {
             wait: options.wait === true,
             timeoutMs: (options.timeout ?? 600) * 1000,
             pollIntervalMs: (options.pollInterval ?? 10) * 1000,
@@ -189,13 +79,7 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
             process.exit(GateExitCode.TIMEOUT);
           }
 
-          let evaluation = evaluateGatePolicy(gate.spec.policy, run);
-          if (!options.wait && evaluation.exitCode === GateExitCode.RUN_IN_PROGRESS) {
-            evaluation = {
-              ...evaluation,
-              exitCode: GateExitCode.RUN_IN_PROGRESS,
-            };
-          }
+          const evaluation = evaluateGatePolicy(gate.spec.policy, run);
 
           const payload = {
             gateName: gate.metadata.name,
@@ -209,9 +93,9 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
           if (output === 'json') {
             console.log(JSON.stringify(payload, null, 2));
           } else if (output === 'junit') {
-            console.log(formatJUnit(gate, evaluation));
+            console.log(formatGateJUnit(gate, evaluation));
           } else {
-            console.log(formatMarkdown(gate, evaluation));
+            console.log(formatGateMarkdown(gate, evaluation));
           }
 
           process.exit(evaluation.exitCode);

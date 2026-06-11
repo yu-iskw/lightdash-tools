@@ -357,6 +357,23 @@ describe('Safety Logic', () => {
       expect(extractProjectUuids({ query: 'test', limit: 10 })).toEqual([]);
     });
 
+    it('should extract projectUuid from bundleYaml in MCP tool args', () => {
+      const projectUuid = '550e8400-e29b-41d4-a716-446655440000';
+      const bundleYaml = [
+        'apiVersion: lightdash.ai/v1alpha1',
+        'kind: LightdashAiAgentBundle',
+        'metadata:',
+        '  name: test-bundle',
+        'spec:',
+        `  projectUuid: ${projectUuid}`,
+        '  agents:',
+        '    - key: a1',
+        '      name: Agent One',
+        '      evaluations: []',
+      ].join('\n');
+      expect(extractProjectUuids({ bundleYaml })).toEqual([projectUuid]);
+    });
+
     it('should return empty array for empty CLI argument array', () => {
       expect(extractProjectUuids([])).toEqual([]);
     });

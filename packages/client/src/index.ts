@@ -1,4 +1,13 @@
 export { LightdashClient, V1ApiClients, V2ApiClients } from './client';
+export {
+  fetchBundleCurrentState,
+  applyBundleDiff,
+  resolveEvaluationRun,
+  type ApplyBundleDiffFailure,
+  type ApplyBundleDiffResult,
+  type ResolveEvaluationRunOptions,
+  type ResolveEvaluationRunResult,
+} from './agentops';
 export { UsersClient } from './api/v1/users';
 export { GroupsClient } from './api/v1/groups';
 export { OrganizationRolesClient } from './api/v2/organization-roles';

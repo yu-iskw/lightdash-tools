@@ -1,3 +1,4 @@
+import { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
 import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from './env';
 
 /**
@@ -220,6 +221,8 @@ export function extractProjectUuids(args: unknown): string[] {
       }
     }
   }
+
+  uuids.push(...extractProjectUuidsFromToolArgs(args));
 
   return [...new Set(uuids)].filter((u) => u.length > 0);
 }

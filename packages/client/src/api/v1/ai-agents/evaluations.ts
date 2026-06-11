@@ -3,6 +3,7 @@
  * Endpoints: /api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/evaluations/...
  */
 
+import { fetchAllPages } from '../../../pagination/fetch-all-pages';
 import { BaseApiClient } from '../../base-client';
 
 import type {
@@ -104,9 +105,11 @@ export class AiAgentsEvaluationsClient extends BaseApiClient {
     projectUuid: string,
     agentUuid: string,
     evalUuid: string,
+    params?: { page?: number; pageSize?: number },
   ): Promise<AiAgentEvaluationRunsListResponse> {
     return this.http.get<AiAgentEvaluationRunsListResponse>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/evaluations/${evalUuid}/runs`,
+      { params },
     );
   }
 
@@ -118,9 +121,21 @@ export class AiAgentsEvaluationsClient extends BaseApiClient {
     projectUuid: string,
     agentUuid: string,
     evalUuid: string,
+    options?: { pageSize?: number },
   ): Promise<AiAgentEvaluationRunSummary[]> {
-    const response = await this.listEvaluationRuns(projectUuid, agentUuid, evalUuid);
-    return response.data.runs;
+    return fetchAllPages<AiAgentEvaluationRunSummary>({
+      fetchPage: async (page, pageSize) => {
+        const response = await this.listEvaluationRuns(projectUuid, agentUuid, evalUuid, {
+          page,
+          pageSize,
+        });
+        return {
+          data: response.data.runs,
+          pagination: response.pagination ? { ...response.pagination, page, pageSize } : undefined,
+        };
+      },
+      pageSize: options?.pageSize,
+    });
   }
 
   /** Get detailed results of a specific run (GET …/evaluations/{evalUuid}/runs/{runUuid}). */
