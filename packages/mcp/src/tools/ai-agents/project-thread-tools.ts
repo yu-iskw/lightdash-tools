@@ -5,10 +5,21 @@
 import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '../shared.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_OPEN_WORLD } from '../shared.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { TextContent } from '../shared.js';
+
+function jsonToolResult(data: unknown): TextContent {
+  return {
+    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+    structuredContent:
+      data !== null && typeof data === 'object' && !Array.isArray(data)
+        ? (data as Record<string, unknown>)
+        : { data },
+  };
+}
 
 export function registerProjectAgentThreadTools(server: McpServer, client: LightdashClient): void {
   // ─── Project-scoped: threads ─────────────────────────────────────────────────
@@ -30,7 +41,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listAgentThreads(projectUuid, agentUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -61,7 +72,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
           threadUuid: string;
         }) => {
           const result = await c.v1.aiAgents.getAgentThread(projectUuid, agentUuid, threadUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -78,7 +89,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
         agentUuid: z.string().describe('Agent UUID'),
         prompt: z.string().describe('User prompt to send to the agent'),
       },
-      annotations: WRITE_IDEMPOTENT,
+      annotations: WRITE_OPEN_WORLD,
     },
     wrapTool(
       client,
@@ -92,21 +103,12 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
           agentUuid: string;
           prompt: string;
         }) => {
-          const thread = await c.v1.aiAgents.createAgentThread(projectUuid, agentUuid);
-          const result = await c.v1.aiAgents.generateAgentThreadResponse(
+          const { thread, result } = await c.v1.aiAgents.startConversation(
             projectUuid,
             agentUuid,
-            thread.uuid,
             { prompt },
           );
-          return {
-            content: [
-              {
-                type: 'text',
-                text: JSON.stringify({ threadUuid: thread.uuid, ...result }, null, 2),
-              },
-            ],
-          };
+          return jsonToolResult({ threadUuid: thread.uuid, ...result });
         },
     ),
   );
@@ -123,7 +125,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
         threadUuid: z.string().describe('Thread UUID to continue'),
         prompt: z.string().describe('Follow-up prompt'),
       },
-      annotations: WRITE_IDEMPOTENT,
+      annotations: WRITE_OPEN_WORLD,
     },
     wrapTool(
       client,
@@ -139,13 +141,13 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
           threadUuid: string;
           prompt: string;
         }) => {
-          const result = await c.v1.aiAgents.generateAgentThreadResponse(
+          const result = await c.v1.aiAgents.continueConversation(
             projectUuid,
             agentUuid,
             threadUuid,
             { prompt },
           );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );

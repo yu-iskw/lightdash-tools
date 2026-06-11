@@ -2,7 +2,12 @@
  * Agent evaluation commands.
  */
 
-import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+import {
+  READ_ONLY_DEFAULT,
+  WRITE_DESTRUCTIVE,
+  WRITE_IDEMPOTENT,
+  WRITE_NONDESTRUCTIVE,
+} from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
@@ -70,7 +75,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
       'JSON array of prompt objects: [{"prompt":"...","expectedResponse":"..."}]',
     )
     .action(
-      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, cmd: Command) => {
+      wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, cmd: Command) => {
         const options = cmd.opts() as {
           project: string;
           title: string;
@@ -148,14 +153,19 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .requiredOption('--prompts <json>', 'JSON array of prompt objects to append')
     .action(
-      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, evalUuid: string, cmd: Command) => {
+      wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, evalUuid: string, cmd: Command) => {
         const options = cmd.opts() as { project: string; prompts: string };
         try {
           const client = getClient();
-          await client.v1.aiAgents.appendToEvaluation(options.project, agentUuid, evalUuid, {
-            prompts: JSON.parse(options.prompts) as never,
-          });
-          console.error(`Prompts appended to evaluation ${evalUuid} successfully`);
+          const result = await client.v1.aiAgents.appendToEvaluation(
+            options.project,
+            agentUuid,
+            evalUuid,
+            {
+              prompts: JSON.parse(options.prompts) as never,
+            },
+          );
+          console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(
             'Error appending to evaluation:',
@@ -192,7 +202,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .description('Trigger a new evaluation run')
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
-      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, evalUuid: string, cmd: Command) => {
+      wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, evalUuid: string, cmd: Command) => {
         const { project } = cmd.opts() as { project: string };
         try {
           const client = getClient();
@@ -217,7 +227,11 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
         const { project } = cmd.opts() as { project: string };
         try {
           const client = getClient();
-          const result = await client.v1.aiAgents.listEvaluationRuns(project, agentUuid, evalUuid);
+          const result = await client.v1.aiAgents.listAllEvaluationRuns(
+            project,
+            agentUuid,
+            evalUuid,
+          );
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(
