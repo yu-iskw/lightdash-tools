@@ -16,7 +16,7 @@ name: OpenAPI Drift Check
 
 on:
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: 0 6 * * 1
   pull_request:
   workflow_dispatch:
 
