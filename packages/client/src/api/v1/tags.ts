@@ -2,8 +2,9 @@
  * Tags API client.
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 export class TagsClient extends BaseApiClient {
   /** List tags in a project. */

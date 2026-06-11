@@ -2,8 +2,9 @@
  * Dashboards API client.
  */
 
-import type { DashboardBasicDetailsWithTileTypes } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { DashboardBasicDetailsWithTileTypes } from '@lightdash-tools/common';
 
 export class DashboardsClient extends BaseApiClient {
   /** List dashboards in a project. */

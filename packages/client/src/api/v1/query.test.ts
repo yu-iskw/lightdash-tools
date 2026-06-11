@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { QueryClient } from './query';
+
 import type { HttpClient } from '../../http/http-client';
 import type { MetricQueryRequest, CompileQueryRequest } from '@lightdash-tools/common';
 

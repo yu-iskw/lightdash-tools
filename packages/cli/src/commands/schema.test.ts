@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { getSchema, listResources } from './schema';
 
 describe('schema command', () => {

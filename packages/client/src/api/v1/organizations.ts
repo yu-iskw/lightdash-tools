@@ -2,8 +2,9 @@
  * Organizations API client.
  */
 
-import type { Organization } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { Organization } from '@lightdash-tools/common';
 
 export class OrganizationsClient extends BaseApiClient {
   /** Get the current user's organization. */

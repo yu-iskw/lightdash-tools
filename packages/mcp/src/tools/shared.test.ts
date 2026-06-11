@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { registerToolSafe, READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from './shared';
 import { SafetyMode } from '@lightdash-tools/common';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
+
+import { registerToolSafe, READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from './shared';
 
 // Silence audit log output during tests
 vi.mock('@lightdash-tools/common', async (importOriginal) => {

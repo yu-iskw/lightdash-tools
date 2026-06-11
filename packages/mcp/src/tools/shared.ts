@@ -10,7 +10,6 @@
  *   6. Raw handler        — the actual tool implementation.
  */
 
-import type { LightdashClient } from '@lightdash-tools/client';
 import {
   isAllowed,
   areAllProjectsAllowed,
@@ -20,15 +19,19 @@ import {
   getSessionId,
   validateResourceId,
 } from '@lightdash-tools/common';
-import type { ToolAnnotations } from '@lightdash-tools/common';
-import type { z } from 'zod';
-import { toMcpErrorMessage } from '../errors.js';
+
 import {
   getStaticSafetyMode,
   getSafetyMode,
   getAllowedProjectUuids,
   isDryRunMode,
 } from '../config.js';
+import { toMcpErrorMessage } from '../errors.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { ToolAnnotations } from '@lightdash-tools/common';
+import type { z } from 'zod';
+
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'ldt__';
@@ -211,7 +214,7 @@ export function registerToolSafe(
   finalHandler = async (args, extra): Promise<TextContent> => {
     const start = Date.now();
     const projectUuids = extractProjectUuids(args);
-    let status: 'success' | 'error' | 'blocked' = 'success';
+    let status: 'blocked' | 'error' | 'success' = 'success';
     let result: TextContent;
 
     try {

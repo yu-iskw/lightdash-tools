@@ -59,7 +59,7 @@ Unless the user explicitly narrows scope, run the relevant gates from the reposi
 4. `pnpm verify` for a full agent harness pass (validations, build, test, eslint, knip).
 5. `pnpm lint` (Trunk + ESLint + knip) when touching Markdown, YAML, `.trunk/`, or GitHub workflow files.
 
-Root [`eslint.config.mjs`](eslint.config.mjs) enforces type-aware TypeScript rules and `@typescript-eslint/no-deprecated` on CLI and MCP. [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.
+Root [`eslint.config.mjs`](eslint.config.mjs) layers import-x, SonarJS, security, unicorn, eslint-comments, and Vitest rules on top of `@typescript-eslint` (dbt-tools-ts pattern). It enforces `@typescript-eslint/no-deprecated` on CLI and MCP (ADR-0036). [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.
 
 ## Code Style
 

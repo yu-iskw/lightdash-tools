@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { rejectControlChars, validateResourceId, validateSafeOutputDir } from './input-validation';
 
 describe('input-validation', () => {

@@ -4,8 +4,9 @@
  * Priority: explicit config > environment variables > no default for required fields.
  */
 
-import type { LightdashClientConfig, PartialLightdashClientConfig } from '../config';
 import { SecretString } from './secret-string';
+
+import type { LightdashClientConfig, PartialLightdashClientConfig } from '../config';
 
 /** Environment variable names (aligned with Lightdash CLI). */
 export const ENV_LIGHTDASH_API_KEY = 'LIGHTDASH_API_KEY';

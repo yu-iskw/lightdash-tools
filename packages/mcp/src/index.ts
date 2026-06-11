@@ -5,8 +5,9 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { getClient, getAuditLogPath } from './config.js';
+
 import { initAuditLog } from './audit.js';
+import { getClient, getAuditLogPath } from './config.js';
 import { registerTools } from './tools/index.js';
 
 async function main(): Promise<void> {

@@ -2,11 +2,13 @@
  * AI agents (v1) command implementation — admin endpoints.
  */
 
-import type { Command } from 'commander';
-import type { GetAdminThreadsParams, UpdateAiOrganizationSettings } from '@lightdash-tools/common';
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { GetAdminThreadsParams, UpdateAiOrganizationSettings } from '@lightdash-tools/common';
+import type { Command } from 'commander';
 
 /**
  * Registers the top-level ai-agents command and its subcommands (admin scope).

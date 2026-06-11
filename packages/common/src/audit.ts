@@ -9,10 +9,10 @@
  *   - Otherwise entries are written to stderr with an "[audit]" prefix.
  */
 
-import { createWriteStream, type WriteStream } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { createWriteStream, type WriteStream } from 'node:fs';
 
-export type AuditStatus = 'success' | 'error' | 'blocked';
+export type AuditStatus = 'blocked' | 'error' | 'success';
 
 export type AuditLogEntry = {
   timestamp: string;

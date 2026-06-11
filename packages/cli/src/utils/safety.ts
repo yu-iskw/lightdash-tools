@@ -9,6 +9,7 @@ import {
   extractProjectUuids,
   validateResourceId,
 } from '@lightdash-tools/common';
+
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
@@ -77,8 +78,8 @@ function getCommandPath(cmd: Command): string {
 export function wrapAction<T extends unknown[]>(
   annotations: ToolAnnotations,
   action: (...args: T) => Promise<void> | void,
-) {
-  return async function (this: Command, ...args: T) {
+): (this: Command, ...args: T) => Promise<void> {
+  return async function (this: Command, ...args: T): Promise<void> {
     const start = Date.now();
     const commandPath = getCommandPath(this);
     const mode = getSafetyMode(this);

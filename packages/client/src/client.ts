@@ -2,31 +2,32 @@
  * Main Lightdash API client. Configuration can be explicit or loaded from environment variables.
  */
 
-import type { PartialLightdashClientConfig } from './config';
-import { mergeConfig } from './utils/env';
-import { createAxiosInstanceV1, createAxiosInstanceV2 } from './http/axios-client';
-import { RateLimiter } from './http/rate-limiter';
-import { HttpClient } from './http/http-client';
-import { ProjectsClient } from './api/v1/projects';
-import { OrganizationsClient } from './api/v1/organizations';
+import { AiAgentsClient } from './api/v1/ai-agents';
 import { ChartsClient } from './api/v1/charts';
 import { DashboardsClient } from './api/v1/dashboards';
-import { SpacesClient } from './api/v1/spaces';
+import { ExploresClient } from './api/v1/explores';
+import { GroupsClient } from './api/v1/groups';
+import { MetricsClient } from './api/v1/metrics';
+import { OrganizationsClient } from './api/v1/organizations';
+import { ProjectAccessClient } from './api/v1/project-access';
+import { ProjectsClient } from './api/v1/projects';
 import { QueryClient } from './api/v1/query';
-import { QueryClientV2 } from './api/v2/query';
+import { SchedulersClient } from './api/v1/schedulers';
+import { SpacesClient } from './api/v1/spaces';
+import { TagsClient } from './api/v1/tags';
+import { UsersClient } from './api/v1/users';
+import { ValidationClient } from './api/v1/validation';
+import { ContentClient } from './api/v2/content';
 import { OrganizationRolesClient } from './api/v2/organization-roles';
 import { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
-import { UsersClient } from './api/v1/users';
-import { GroupsClient } from './api/v1/groups';
-import { AiAgentsClient } from './api/v1/ai-agents';
-import { ProjectAccessClient } from './api/v1/project-access';
-import { ExploresClient } from './api/v1/explores';
-import { ValidationClient } from './api/v1/validation';
-import { MetricsClient } from './api/v1/metrics';
-import { SchedulersClient } from './api/v1/schedulers';
-import { TagsClient } from './api/v1/tags';
-import { ContentClient } from './api/v2/content';
+import { QueryClientV2 } from './api/v2/query';
 import { ValidationClientV2 } from './api/v2/validation';
+import { createAxiosInstanceV1, createAxiosInstanceV2 } from './http/axios-client';
+import { HttpClient } from './http/http-client';
+import { RateLimiter } from './http/rate-limiter';
+import { mergeConfig } from './utils/env';
+
+import type { PartialLightdashClientConfig } from './config';
 
 /**
  * V1 API clients namespace. Contains all v1 API clients.

@@ -1,50 +1,191 @@
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import prettierConfig from 'eslint-config-prettier';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+import eslintCommentsPlugin from '@eslint-community/eslint-plugin-eslint-comments';
+import { flatConfigs as importXFlatConfigs } from 'eslint-plugin-import-x';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
+import vitestPlugin from '@vitest/eslint-plugin';
 
-export default tseslint.config(
-  eslint.configs.recommended,
-  ...tseslint.configs.recommended,
-  prettierConfig,
-  // Incremental recommended-plus (ADR-0016): consistent types, promises, no explicit any
-  {
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        allowDefaultProject: ['scripts/**/*.mjs'],
-      },
-    },
-    rules: {
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
-      ],
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-    },
+const repoRoot = import.meta.dirname;
+
+/** @type {import("@typescript-eslint/parser").ParserOptions} */
+const tsParserOptions = {
+  ecmaVersion: 2022,
+  sourceType: 'module',
+  projectService: {
+    allowDefaultProject: [
+      'scripts/check-common-no-client.mjs',
+      'scripts/validate-package-names.mjs',
+    ],
   },
+  tsconfigRootDir: repoRoot,
+};
+
+/** Flat-config fragment from eslint-plugin-security (code-level patterns; complements Trivy/OSV). */
+const securityRecommended = security.configs.recommended;
+
+const importXPlugins = {
+  ...importXFlatConfigs.recommended.plugins,
+  ...importXFlatConfigs.typescript.plugins,
+};
+
+const importXSettings = {
+  ...importXFlatConfigs.typescript.settings,
+  'import-x/resolver': {
+    typescript: {
+      alwaysTryTypes: true,
+      project: ['packages/*/tsconfig.json'],
+    },
+    node: true,
+  },
+};
+
+const importXRules = {
+  ...importXFlatConfigs.recommended.rules,
+  ...importXFlatConfigs.typescript.rules,
+  'import-x/order': [
+    'error',
+    {
+      groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'type'],
+      pathGroupsExcludedImportTypes: ['type'],
+      'newlines-between': 'always',
+      alphabetize: { order: 'asc', caseInsensitive: true },
+    },
+  ],
+  'import-x/no-cycle': ['error', { maxDepth: 3 }],
+  // import-x does not understand the MCP SDK wildcard ESM exports with .js subpaths.
+  'import-x/no-unresolved': [
+    'error',
+    {
+      ignore: ['^@modelcontextprotocol/sdk/', '\\.js$'],
+    },
+  ],
+};
+
+/**
+ * Shared production + test rules (AI agent feedback).
+ * Cyclomatic: only SonarJS (core `complexity` removed — duplicated sonarjs/cyclomatic-complexity).
+ * Cognitive: sonarjs/cognitive-complexity (primary “hard to change” signal).
+ * Structural: max-depth / max-params / max-nested-callbacks (catch wide APIs / deep nesting).
+ */
+const sharedTsRules = Object.assign({}, tseslint.configs.recommended.rules, {
+  '@typescript-eslint/no-explicit-any': 'error',
+  '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  '@typescript-eslint/no-floating-promises': 'error',
+  '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: { attributes: true } }],
+  '@typescript-eslint/consistent-type-imports': [
+    'error',
+    // inline-type-imports keeps one import per module (import-x/no-duplicates).
+    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
+  ],
+  '@typescript-eslint/explicit-module-boundary-types': 'error',
+  '@typescript-eslint/sort-type-constituents': 'error',
+  // Security (core + plugin; Trunk still runs Trivy/OSV)
+  'no-eval': 'error',
+  'no-implied-eval': 'error',
+  'no-new-func': 'error',
+  'prefer-const': 'error',
+  'max-lines-per-function': ['error', { max: 280 }],
+  'max-depth': ['error', { max: 6 }],
+  'max-params': ['error', { max: 8 }],
+  'max-nested-callbacks': ['error', { max: 4 }],
+  // SonarJS (stricter than google-cloud-tools baseline: 15 vs 20)
+  'sonarjs/cyclomatic-complexity': ['error', { threshold: 15 }],
+  'sonarjs/cognitive-complexity': ['error', 15],
+  'sonarjs/no-duplicate-string': 'error',
+  'sonarjs/prefer-immediate-return': 'error',
+  'no-unreachable': 'error',
+});
+
+const unicornFilenameCase = [
+  'error',
+  {
+    cases: { kebabCase: true, pascalCase: true },
+    ignore: [/^[\w-]+\.test\.ts$/],
+  },
+];
+
+const tsProductionPlugins = {
+  ...importXPlugins,
+  ...securityRecommended.plugins,
+  '@typescript-eslint': tseslint,
+  sonarjs,
+  unicorn,
+};
+
+const tsProductionRules = {
+  ...importXRules,
+  ...securityRecommended.rules,
+  ...sharedTsRules,
+  '@typescript-eslint/no-unused-private-class-members': 'error',
+  'unicorn/filename-case': unicornFilenameCase,
+};
+
+export default [
   {
     ignores: [
-      '**/dist/**',
       '**/node_modules/**',
+      '**/dist/**',
       '**/coverage/**',
-      '.trunk/**',
       '.claude/**',
       '.cursor/**',
+      '.trunk/**',
+      '**/*.generated.ts',
+      'packages/common/src/types/generated/**',
+      '**/vitest.config.ts',
       'vitest.config.ts',
     ],
   },
-  // Node scripts: process is a global
   {
-    files: ['scripts/**/*.mjs'],
-    languageOptions: { globals: { process: 'readonly' } },
+    plugins: {
+      'eslint-comments': eslintCommentsPlugin,
+    },
+    rules: {
+      'eslint-comments/no-unused-disable': 'error',
+      'eslint-comments/disable-enable-pair': 'error',
+    },
+  },
+  {
+    files: ['packages/**/*.ts'],
+    ignores: ['**/dist/**', '**/*.test.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: tsParserOptions,
+    },
+    plugins: tsProductionPlugins,
+    settings: importXSettings,
+    rules: tsProductionRules,
+  },
+  {
+    files: ['packages/**/*.test.ts'],
+    ignores: ['**/dist/**'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: tsParserOptions,
+      globals: vitestPlugin.environments.env.globals,
+    },
+    plugins: {
+      ...tsProductionPlugins,
+      ...vitestPlugin.configs.recommended.plugins,
+    },
+    settings: importXSettings,
+    rules: {
+      ...tsProductionRules,
+      ...vitestPlugin.configs.recommended.rules,
+      // Tests often repeat string literals and use conditional expects; keep signal without noise.
+      'vitest/no-conditional-expect': 'off',
+      'sonarjs/no-duplicate-string': 'off',
+      'max-lines-per-function': ['error', { max: 700 }],
+    },
   },
   // Common package types: namespaces used by design (ADR-0008, LightdashApi)
   {
     files: ['packages/common/src/types/**/*.ts'],
-    rules: { '@typescript-eslint/no-namespace': 'off' },
+    rules: {
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+    },
   },
   // Type barrel files: imports used only in type re-exports (e.g. export type X = Y.Z)
   {
@@ -58,4 +199,59 @@ export default tseslint.config(
       '@typescript-eslint/no-deprecated': 'error',
     },
   },
-);
+  // Command/tool registration modules are intentionally long declarative tables.
+  {
+    files: ['packages/cli/src/commands/agents.ts', 'packages/mcp/src/tools/ai-agents.ts'],
+    rules: {
+      'max-lines-per-function': ['error', { max: 800 }],
+      'sonarjs/no-duplicate-string': 'off',
+    },
+  },
+  // Guardrail helpers use dynamic key lookup by design (ADR-0034).
+  {
+    files: [
+      'packages/common/src/safety.ts',
+      'packages/cli/src/utils/safety.ts',
+      'packages/client/src/utils/env.ts',
+      'packages/cli/src/commands/schema.ts',
+      'packages/client/src/api/v1/explores.ts',
+      '**/*.test.ts',
+    ],
+    rules: {
+      'security/detect-object-injection': 'off',
+      'sonarjs/cognitive-complexity': 'off',
+      'sonarjs/cyclomatic-complexity': 'off',
+      'max-depth': 'off',
+    },
+  },
+  {
+    files: ['packages/mcp/src/http.ts', 'packages/cli/src/commands/groups.ts', 'packages/cli/src/commands/users.ts'],
+    rules: {
+      'sonarjs/cognitive-complexity': ['error', 25],
+      'sonarjs/cyclomatic-complexity': ['error', { threshold: 20 }],
+    },
+  },
+  {
+    files: ['packages/cli/src/commands/charts.ts', 'packages/cli/src/commands/query.ts', 'packages/common/src/audit.ts'],
+    rules: {
+      'security/detect-non-literal-fs-filename': 'off',
+    },
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+      },
+    },
+    plugins: {
+      ...securityRecommended.plugins,
+    },
+    rules: {
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+    },
+  },
+];

@@ -2,13 +2,14 @@
  * Charts API client. Endpoints for saved charts and chart-as-code operations.
  */
 
+import { BaseApiClient } from '../base-client';
+
 import type {
   SpaceQuery,
   ChartAsCodeListResults,
   ChartAsCodeUpsertResults,
   UpsertChartAsCodeBody,
 } from '@lightdash-tools/common';
-import { BaseApiClient } from '../base-client';
 
 export interface GetChartsAsCodeOptions {
   ids?: string[];

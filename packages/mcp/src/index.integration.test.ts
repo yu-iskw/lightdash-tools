@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { describe, it, expect } from 'vitest';
+
 import { getClient } from './config';
 import { registerTools } from './tools';
 import { TOOL_PREFIX } from './tools/shared';

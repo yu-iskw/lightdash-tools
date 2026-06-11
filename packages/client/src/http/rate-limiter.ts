@@ -4,8 +4,10 @@
  */
 
 import Bottleneck from 'bottleneck';
-import type { RateLimitConfig } from '../config';
+
 import { DEFAULT_RATE_LIMIT } from '../config';
+
+import type { RateLimitConfig } from '../config';
 
 export type RateLimiterOptions = RateLimitConfig;
 

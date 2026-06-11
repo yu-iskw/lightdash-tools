@@ -2,8 +2,9 @@
  * Content API client (v2).
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for searching content. */
 export interface SearchContentParams {
@@ -14,7 +15,7 @@ export interface SearchContentParams {
   pageSize?: number;
   page?: number;
   search?: string;
-  sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastViewedAt' | 'views';
+  sortBy?: 'createdAt' | 'lastViewedAt' | 'name' | 'updatedAt' | 'views';
   sortDirection?: 'asc' | 'desc';
 }
 

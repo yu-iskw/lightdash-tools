@@ -2,10 +2,12 @@
  * Request and response interceptors for auth, proxy, and error handling.
  */
 
-import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import { LightdashApiError, RateLimitError, NetworkError } from '../errors';
+
 import type { LightdashClientConfig } from '../config';
 import type { ApiErrorPayload } from '../errors';
-import { LightdashApiError, RateLimitError, NetworkError } from '../errors';
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
 
 function getRetryAfterSeconds(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;

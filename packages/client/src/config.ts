@@ -85,8 +85,8 @@ export interface LightdashClientConfig {
 export type PartialLightdashClientConfig = Partial<
   Omit<LightdashClientConfig, 'personalAccessToken' | 'proxyAuthorization'>
 > & {
-  personalAccessToken?: string | SecretString;
-  proxyAuthorization?: string | SecretString;
+  personalAccessToken?: SecretString | string;
+  proxyAuthorization?: SecretString | string;
 };
 
 /** Default rate limit: 10 req/sec, 5 concurrent, token bucket. */

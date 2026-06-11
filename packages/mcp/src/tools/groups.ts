@@ -2,9 +2,9 @@
  * MCP tools: groups (list, get).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { groupUuidField, userUuidField } from './schema-fields.js';
 import {
   wrapTool,
   registerToolSafe,
@@ -12,6 +12,9 @@ import {
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
 } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 type ListGroupsParams = {
   page?: number;
@@ -45,7 +48,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
     {
       title: 'Get group',
       description: 'Get a group by UUID',
-      inputSchema: { groupUuid: z.string().describe('Group UUID') },
+      inputSchema: { groupUuid: groupUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ groupUuid }: { groupUuid: string }) => {
@@ -78,7 +81,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'Update group',
       description: 'Update a group name',
       inputSchema: {
-        groupUuid: z.string().describe('Group UUID'),
+        groupUuid: groupUuidField(),
         name: z.string().describe('New group name'),
       },
       annotations: WRITE_IDEMPOTENT,
@@ -96,7 +99,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'Delete group',
       description: 'Delete a group by UUID',
       inputSchema: {
-        groupUuid: z.string().describe('Group UUID'),
+        groupUuid: groupUuidField(),
       },
       annotations: WRITE_DESTRUCTIVE,
     },
@@ -113,7 +116,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'List group members',
       description: 'List members of a group',
       inputSchema: {
-        groupUuid: z.string().describe('Group UUID'),
+        groupUuid: groupUuidField(),
       },
       annotations: READ_ONLY_DEFAULT,
     },
@@ -130,8 +133,8 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'Add user to group',
       description: 'Add a user to a group',
       inputSchema: {
-        groupUuid: z.string().describe('Group UUID'),
-        userUuid: z.string().describe('User UUID'),
+        groupUuid: groupUuidField(),
+        userUuid: userUuidField(),
       },
       annotations: WRITE_IDEMPOTENT,
     },
@@ -156,8 +159,8 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       title: 'Remove user from group',
       description: 'Remove a user from a group',
       inputSchema: {
-        groupUuid: z.string().describe('Group UUID'),
-        userUuid: z.string().describe('User UUID'),
+        groupUuid: groupUuidField(),
+        userUuid: userUuidField(),
       },
       annotations: WRITE_DESTRUCTIVE,
     },

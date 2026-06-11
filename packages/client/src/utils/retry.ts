@@ -3,8 +3,9 @@
  * Retries on 5xx and network errors; no retry for 4xx (except 429 handled by rate limiter).
  */
 
-import type { RetryConfig } from '../config';
 import { DEFAULT_RETRY } from '../config';
+
+import type { RetryConfig } from '../config';
 
 export type RetryOptions = RetryConfig;
 

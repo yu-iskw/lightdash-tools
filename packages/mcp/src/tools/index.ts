@@ -2,21 +2,22 @@
  * MCP tool registration: barrel that delegates to domain modules.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
-import { registerProjectTools } from './projects.js';
-import { registerChartTools } from './charts.js';
-import { registerDashboardTools } from './dashboards.js';
-import { registerSpaceTools } from './spaces.js';
-import { registerUserTools } from './users.js';
-import { registerGroupTools } from './groups.js';
-import { registerQueryTools } from './query.js';
-import { registerExploresTools } from './explores.js';
-import { registerMetricsTools } from './metrics.js';
-import { registerSchedulersTools } from './schedulers.js';
-import { registerTagsTools } from './tags.js';
-import { registerContentTools } from './content.js';
 import { registerAiAgentTools } from './ai-agents.js';
+import { registerChartTools } from './charts.js';
+import { registerContentTools } from './content.js';
+import { registerDashboardTools } from './dashboards.js';
+import { registerExploresTools } from './explores.js';
+import { registerGroupTools } from './groups.js';
+import { registerMetricsTools } from './metrics.js';
+import { registerProjectTools } from './projects.js';
+import { registerQueryTools } from './query.js';
+import { registerSchedulersTools } from './schedulers.js';
+import { registerSpaceTools } from './spaces.js';
+import { registerTagsTools } from './tags.js';
+import { registerUserTools } from './users.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerTools(server: McpServer, client: LightdashClient): void {
   registerProjectTools(server, client);

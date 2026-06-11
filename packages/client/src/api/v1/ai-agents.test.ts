@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { AiAgentsClient } from './ai-agents';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('AiAgentsClient', () => {

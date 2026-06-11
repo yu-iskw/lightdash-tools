@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { ProjectAccessClient } from './project-access';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('ProjectAccessClient', () => {

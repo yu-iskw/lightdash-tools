@@ -3,11 +3,13 @@
  * All requests go through the rate limiter; retry applies to 5xx and network errors.
  */
 
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
-import type { LightdashClientConfig } from '../config';
 import { type ApiErrorPayload, LightdashApiError } from '../errors';
-import { type RateLimiter } from './rate-limiter';
 import { withRetry } from '../utils/retry';
+
+import { type RateLimiter } from './rate-limiter';
+
+import type { LightdashClientConfig } from '../config';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
 /** Lightdash API success response shape. */
 export interface ApiSuccessBody<T = unknown> {
@@ -21,7 +23,7 @@ export interface ApiErrorBody {
   error: ApiErrorPayload['error'];
 }
 
-function assertSuccess<T>(data: ApiSuccessBody<T> | ApiErrorBody): data is ApiSuccessBody<T> {
+function assertSuccess<T>(data: ApiErrorBody | ApiSuccessBody<T>): data is ApiSuccessBody<T> {
   return data.status === 'ok';
 }
 
@@ -37,7 +39,7 @@ export class HttpClient {
 
   private async request<T>(method: Method, url: string, config?: AxiosRequestConfig): Promise<T> {
     const doRequest = () =>
-      this.axiosInstance.request<ApiSuccessBody<T> | ApiErrorBody>({
+      this.axiosInstance.request<ApiErrorBody | ApiSuccessBody<T>>({
         ...config,
         method,
         url,

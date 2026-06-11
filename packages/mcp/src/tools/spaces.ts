@@ -2,9 +2,15 @@
  * MCP tools: spaces (list, get).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
+import { type SpaceMemberRole } from '@lightdash-tools/common';
 import { z } from 'zod';
+
+import {
+  groupUuidField,
+  projectUuidField,
+  spaceUuidField,
+  userUuidField,
+} from './schema-fields.js';
 import {
   wrapTool,
   registerToolSafe,
@@ -12,7 +18,11 @@ import {
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
 } from './shared.js';
-import { type SpaceMemberRole } from '@lightdash-tools/common';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+
+
 
 export function registerSpaceTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -21,7 +31,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
     {
       title: 'List spaces',
       description: 'List spaces in a project',
-      inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
@@ -36,8 +46,8 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'Get space',
       description: 'Get a space by project and space UUID',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
-        spaceUuid: z.string().describe('Space UUID'),
+        projectUuid: projectUuidField(),
+        spaceUuid: spaceUuidField(),
       },
       annotations: READ_ONLY_DEFAULT,
     },
@@ -58,9 +68,9 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'Grant user access to space',
       description: 'Grant a user access to a space',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
-        spaceUuid: z.string().describe('Space UUID'),
-        userUuid: z.string().describe('User UUID'),
+        projectUuid: projectUuidField(),
+        spaceUuid: spaceUuidField(),
+        userUuid: userUuidField(),
         spaceRole: z.enum(['viewer', 'editor', 'admin']).describe('Space role'),
       },
       annotations: WRITE_IDEMPOTENT,
@@ -102,9 +112,9 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'Revoke user access to space',
       description: "Revoke a user's access to a space",
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
-        spaceUuid: z.string().describe('Space UUID'),
-        userUuid: z.string().describe('User UUID'),
+        projectUuid: projectUuidField(),
+        spaceUuid: spaceUuidField(),
+        userUuid: userUuidField(),
       },
       annotations: WRITE_DESTRUCTIVE,
     },
@@ -140,9 +150,9 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'Grant group access to space',
       description: 'Grant a group access to a space',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
-        spaceUuid: z.string().describe('Space UUID'),
-        groupUuid: z.string().describe('Group UUID'),
+        projectUuid: projectUuidField(),
+        spaceUuid: spaceUuidField(),
+        groupUuid: groupUuidField(),
         spaceRole: z.enum(['viewer', 'editor', 'admin']).describe('Space role'),
       },
       annotations: WRITE_IDEMPOTENT,
@@ -184,9 +194,9 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       title: 'Revoke group access to space',
       description: "Revoke a group's access to a space",
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
-        spaceUuid: z.string().describe('Space UUID'),
-        groupUuid: z.string().describe('Group UUID'),
+        projectUuid: projectUuidField(),
+        spaceUuid: spaceUuidField(),
+        groupUuid: groupUuidField(),
       },
       annotations: WRITE_DESTRUCTIVE,
     },

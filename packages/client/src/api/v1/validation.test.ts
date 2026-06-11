@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { ValidationClient } from './validation';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('ValidationClient', () => {

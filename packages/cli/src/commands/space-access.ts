@@ -2,10 +2,12 @@
  * Space access (v1) command implementation.
  */
 
-import type { Command } from 'commander';
 import { WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE, type SpaceMemberRole } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { Command } from 'commander';
 
 /**
  * Registers the space access subcommands under the existing projects command.

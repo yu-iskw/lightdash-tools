@@ -2,10 +2,12 @@
  * MCP tools: users / organization members (list, get, delete).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 type ListMembersParams = {
   page?: number;

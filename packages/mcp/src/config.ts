@@ -4,8 +4,9 @@
  */
 
 import { LightdashClient, mergeConfig } from '@lightdash-tools/client';
-import type { PartialLightdashClientConfig } from '@lightdash-tools/client';
 import { getSafetyModeFromEnv, getAllowedProjectUuidsFromEnv } from '@lightdash-tools/common';
+
+import type { PartialLightdashClientConfig } from '@lightdash-tools/client';
 import type { SafetyMode } from '@lightdash-tools/common';
 
 let globalStaticSafetyMode: SafetyMode | undefined;

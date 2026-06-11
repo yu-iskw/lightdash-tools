@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { GroupsClient } from './groups';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('GroupsClient', () => {

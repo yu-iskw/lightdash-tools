@@ -2,10 +2,12 @@
  * Organization command implementation.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { Command } from 'commander';
 
 /**
  * Registers the organization command and its subcommands.

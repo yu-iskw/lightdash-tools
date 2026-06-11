@@ -5,10 +5,12 @@
  * All commands require --project <projectUuid>.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { Command } from 'commander';
 
 /**
  * Registers the `agents` command group (project-scoped).

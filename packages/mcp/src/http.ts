@@ -3,12 +3,14 @@
  * Optional: MCP_AUTH_ENABLED, MCP_API_KEY. Logging: stderr only.
  */
 
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { randomUUID } from 'node:crypto';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { getClient, getAuditLogPath } from './config.js';
+
 import { initAuditLog } from './audit.js';
+import { getClient, getAuditLogPath } from './config.js';
 import { registerTools } from './tools/index.js';
 
 const MCP_PATH = '/mcp';

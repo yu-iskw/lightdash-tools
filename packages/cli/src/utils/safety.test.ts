@@ -1,5 +1,3 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { wrapAction } from './safety';
 import {
   READ_ONLY_DEFAULT,
   WRITE_DESTRUCTIVE,
@@ -7,6 +5,9 @@ import {
   SafetyMode,
 } from '@lightdash-tools/common';
 import { Command } from 'commander';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+import { wrapAction } from './safety';
 
 describe('CLI wrapAction', () => {
   const mockAction = vi.fn().mockResolvedValue(undefined);

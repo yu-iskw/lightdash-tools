@@ -2,10 +2,13 @@
  * MCP tools: projects (list, get).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerProjectTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -28,7 +31,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
     {
       title: 'Get project',
       description: 'Get a project by UUID',
-      inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
@@ -42,7 +45,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
     {
       title: 'Validate project',
       description: 'Trigger a validation job for a project and return the job ID',
-      inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      inputSchema: { projectUuid: projectUuidField() },
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
@@ -57,7 +60,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       title: 'Get validation results',
       description: 'Get validation results for a project (v2 API, paginated)',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         validationId: z.number().optional().describe('Optional validation result ID (number)'),
         page: z.number().optional().describe('Page number (1-indexed)'),
         pageSize: z.number().optional().describe('Results per page'),

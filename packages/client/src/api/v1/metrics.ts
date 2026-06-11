@@ -2,8 +2,9 @@
  * Metrics API client.
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for listing metrics in catalog. */
 export interface ListMetricsParams {
@@ -13,7 +14,7 @@ export interface ListMetricsParams {
   sort?: string;
   order?: 'asc' | 'desc';
   categories?: string[];
-  categoriesFilterMode?: 'any' | 'all';
+  categoriesFilterMode?: 'all' | 'any';
   tables?: string[];
   ownerUserUuids?: string[];
 }

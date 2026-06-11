@@ -2,9 +2,9 @@
  * MCP tools: AI agents (admin + project-scoped), threads, and evaluations.
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { projectUuidField } from './schema-fields.js';
 import {
   wrapTool,
   registerToolSafe,
@@ -12,6 +12,9 @@ import {
   WRITE_IDEMPOTENT,
   WRITE_DESTRUCTIVE,
 } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerAiAgentTools(server: McpServer, client: LightdashClient): void {
   // ─── Admin: agents ───────────────────────────────────────────────────────────
@@ -124,7 +127,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'List agents in a project',
       description: 'List all AI agents configured for a specific project',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
       },
       annotations: READ_ONLY_DEFAULT,
     },
@@ -141,7 +144,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Get agent',
       description: 'Get details of a specific AI agent in a project',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
       },
       annotations: READ_ONLY_DEFAULT,
@@ -163,7 +166,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Create agent',
       description: 'Create a new AI agent in a project',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         name: z.string().describe('Agent name'),
         description: z.string().optional().describe('Agent description'),
         instruction: z.string().optional().describe('System instruction for the agent'),
@@ -203,7 +206,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Update agent',
       description: 'Update an existing AI agent',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         name: z.string().optional().describe('New name'),
         description: z.string().optional().describe('New description'),
@@ -242,7 +245,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Delete agent',
       description: 'Delete an AI agent from a project',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
       },
       annotations: WRITE_DESTRUCTIVE,
@@ -268,7 +271,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'List agent threads',
       description: 'List all conversation threads for an agent',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
       },
       annotations: READ_ONLY_DEFAULT,
@@ -290,7 +293,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Get agent thread',
       description: 'Get a conversation thread with all its messages',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         threadUuid: z.string().describe('Thread UUID'),
       },
@@ -322,7 +325,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       description:
         'Start a new conversation thread and generate the first agent response for a given prompt',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         prompt: z.string().describe('User prompt to send to the agent'),
       },
@@ -366,7 +369,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Continue agent thread',
       description: 'Continue an existing conversation thread with a new prompt',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         threadUuid: z.string().describe('Thread UUID to continue'),
         prompt: z.string().describe('Follow-up prompt'),
@@ -407,7 +410,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'List agent evaluations',
       description: 'List all evaluations for an agent',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
       },
       annotations: READ_ONLY_DEFAULT,
@@ -429,7 +432,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Get agent evaluation',
       description: 'Get a full evaluation including its test prompts',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
       },
@@ -461,7 +464,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       description:
         'Create a new evaluation test suite for an agent with a title and optional prompts',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         title: z.string().describe('Evaluation title'),
         description: z.string().optional().describe('Evaluation description'),
@@ -518,7 +521,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Update agent evaluation',
       description: 'Update an evaluation title, description, or replace its prompts',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
         title: z.string().optional().describe('New title'),
@@ -577,7 +580,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       description:
         'Append additional prompts to an existing evaluation without replacing existing ones',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
         prompts: z
@@ -629,7 +632,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Run agent evaluation',
       description: 'Trigger a new evaluation run for an agent. Returns the run UUID and status.',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID to run'),
       },
@@ -660,7 +663,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'List evaluation runs',
       description: 'List all runs for an evaluation with their status and pass/fail counts',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
       },
@@ -692,7 +695,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       description:
         'Get detailed per-prompt results for a specific evaluation run, including pass/fail and assessments',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
         runUuid: z.string().describe('Run UUID'),
@@ -731,7 +734,7 @@ export function registerAiAgentTools(server: McpServer, client: LightdashClient)
       title: 'Delete agent evaluation',
       description: 'Delete an evaluation and all its runs',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID'),
       },
