@@ -2,10 +2,11 @@
  * MCP tools: tags (list).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
-import { z } from 'zod';
+import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerTagsTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -14,7 +15,7 @@ export function registerTagsTools(server: McpServer, client: LightdashClient): v
     {
       title: 'List tags',
       description: 'List all tags in a project',
-      inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {

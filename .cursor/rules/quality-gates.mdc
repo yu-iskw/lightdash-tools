@@ -1,0 +1,16 @@
+---
+description: Agent quality gates for verification before claiming task completion.
+alwaysApply: true
+---
+
+# Quality gates
+
+Unless the user explicitly narrows scope, run the relevant gates from the repository root before claiming completion:
+
+1. `pnpm test` for Vitest with v8 coverage and threshold checks (`pnpm test:fast` skips coverage).
+2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene (unused exports, dependencies, and entrypoints).
+3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
+4. `pnpm verify:pr` (alias `pnpm verify`) before commit. Use `pnpm verify:ci` for full CI parity (Trunk OSV/Trivy via `@trunkio/launcher`).
+5. `pnpm lint` when touching Markdown, YAML, `.trunk/`, lockfiles, or GitHub workflow files.
+
+Run `pnpm trunk:install` once after `pnpm install`. See `.claude/skills/common-references/local-ci-parity.md`.

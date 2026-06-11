@@ -3,9 +3,11 @@
  * Outputs machine-readable JSON describing API paths, methods, and parameters.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+
 import { wrapAction } from '../utils/safety';
+
+import type { Command } from 'commander';
 
 /** Maps resource identifiers to API path + method + description. */
 const SCHEMA_REGISTRY: Record<

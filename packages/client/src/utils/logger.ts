@@ -4,6 +4,8 @@
 
 import type { Logger } from '../config';
 
+const LOG_PREFIX = '[Lightdash]';
+
 /** No-op logger for when logging is disabled. */
 export const noopLogger: Logger = {
   debug: () => {},
@@ -14,8 +16,8 @@ export const noopLogger: Logger = {
 
 /** Console-based logger. */
 export const consoleLogger: Logger = {
-  debug: (...args) => console.debug('[Lightdash]', ...args),
-  info: (...args) => console.info('[Lightdash]', ...args),
-  warn: (...args) => console.warn('[Lightdash]', ...args),
-  error: (...args) => console.error('[Lightdash]', ...args),
+  debug: (...args) => console.debug(LOG_PREFIX, ...args),
+  info: (...args) => console.info(LOG_PREFIX, ...args),
+  warn: (...args) => console.warn(LOG_PREFIX, ...args),
+  error: (...args) => console.error(LOG_PREFIX, ...args),
 };

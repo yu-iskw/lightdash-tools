@@ -2,8 +2,9 @@
  * Explores API client (v1).
  */
 
-import type { ApiExploresResults, ApiExploreResults, LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { ApiExploresResults, ApiExploreResults, LightdashApi } from '@lightdash-tools/common';
 
 export class ExploresClient extends BaseApiClient {
   /** List all explores for a project. */

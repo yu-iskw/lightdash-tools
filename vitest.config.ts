@@ -1,6 +1,9 @@
-import { defineConfig } from 'vitest/config';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { defineConfig } from 'vitest/config';
+
+import { GLOBAL_THRESHOLDS } from './coverage-thresholds.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname);
@@ -15,5 +18,20 @@ export default defineConfig({
   test: {
     include: ['packages/*/src/**/*.{test,spec}.ts'],
     exclude: ['node_modules', '.trunk'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'json'],
+      reportsDirectory: 'coverage',
+      include: ['packages/*/src/**/*.ts'],
+      exclude: [
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        '**/*.generated.ts',
+        'packages/common/src/types/generated/**',
+        'packages/common/src/types/v1/index.ts',
+        'packages/common/src/types/v2/index.ts',
+      ],
+      thresholds: GLOBAL_THRESHOLDS,
+    },
   },
 });

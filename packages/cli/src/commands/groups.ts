@@ -2,10 +2,40 @@
  * Groups command implementation.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
+
+import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { Command } from 'commander';
+
+type ListGroupsCliOptions = {
+  all?: boolean;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  includeMembers?: number;
+};
+
+async function listGroups(client: LightdashClient, options: ListGroupsCliOptions): Promise<void> {
+  const shared = {
+    searchQuery: options.search,
+    includeMembers: options.includeMembers,
+  };
+
+  if (options.all) {
+    const list = await client.v1.groups.listAllGroups(pickDefined(shared));
+    console.log(JSON.stringify(list, null, 2));
+    return;
+  }
+
+  const result = await client.v1.groups.listGroups(
+    pickDefined({ page: options.page, pageSize: options.pageSize, ...shared }),
+  );
+  console.log(JSON.stringify(result, null, 2));
+}
 
 /**
  * Registers the groups command and its subcommands.
@@ -26,39 +56,9 @@ export function registerGroupsCommand(program: Command): void {
     )
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as {
-          all?: boolean;
-          page?: number;
-          pageSize?: number;
-          search?: string;
-          includeMembers?: number;
-        };
+        const options = this.opts() as ListGroupsCliOptions;
         try {
-          const client = getClient();
-          if (options.all) {
-            const listParams: { searchQuery?: string; includeMembers?: number } = {};
-            if (options.search != null) listParams.searchQuery = options.search;
-            if (options.includeMembers != null) listParams.includeMembers = options.includeMembers;
-            const list = await client.v1.groups.listAllGroups(
-              Object.keys(listParams).length > 0 ? listParams : undefined,
-            );
-            console.log(JSON.stringify(list, null, 2));
-          } else {
-            const params: {
-              page?: number;
-              pageSize?: number;
-              searchQuery?: string;
-              includeMembers?: number;
-            } = {};
-            if (options.page != null) params.page = options.page;
-            if (options.pageSize != null) params.pageSize = options.pageSize;
-            if (options.search != null) params.searchQuery = options.search;
-            if (options.includeMembers != null) params.includeMembers = options.includeMembers;
-            const result = await client.v1.groups.listGroups(
-              Object.keys(params).length > 0 ? params : undefined,
-            );
-            console.log(JSON.stringify(result, null, 2));
-          }
+          await listGroups(getClient(), options);
         } catch (error) {
           console.error(
             'Error listing groups:',

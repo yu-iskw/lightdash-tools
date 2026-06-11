@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { ProjectRoleAssignmentsClient } from './project-role-assignments';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('ProjectRoleAssignmentsClient', () => {

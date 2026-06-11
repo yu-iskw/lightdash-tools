@@ -25,4 +25,4 @@ export interface ApiResponseError {
 }
 
 /** Discriminated union for API response body. */
-export type ApiResponseBody<T> = ApiResponseOk<T> | ApiResponseError;
+export type ApiResponseBody<T> = ApiResponseError | ApiResponseOk<T>;

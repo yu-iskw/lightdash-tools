@@ -2,10 +2,13 @@
  * MCP tools: charts (list, charts-as-code list and upsert).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerChartTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -14,7 +17,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
     {
       title: 'List charts',
       description: 'List charts in a project (using charts-as-code API)',
-      inputSchema: { projectUuid: z.string().describe('Project UUID') },
+      inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
@@ -29,7 +32,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
       title: 'List charts as code',
       description: 'Get charts in code representation for a project (for charts-as-code workflows)',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         ids: z.array(z.string()).optional().describe('Optional chart IDs (slugs) to filter'),
       },
       annotations: READ_ONLY_DEFAULT,
@@ -50,7 +53,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
       title: 'Upsert chart as code',
       description: 'Create or update a chart from its code representation (by slug)',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         slug: z.string().describe('Chart slug'),
         chart: z
           .record(z.string(), z.unknown())

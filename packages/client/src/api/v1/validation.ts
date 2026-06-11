@@ -2,8 +2,9 @@
  * Validation API client.
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for getting validation results. */
 export interface GetValidationResultsParams {

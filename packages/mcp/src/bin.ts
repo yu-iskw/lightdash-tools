@@ -3,8 +3,9 @@
  * MCP server CLI entrypoint.
  */
 
-import { Command } from 'commander';
 import { SafetyMode } from '@lightdash-tools/common';
+import { Command } from 'commander';
+
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from './config.js';
 
 const program = new Command();

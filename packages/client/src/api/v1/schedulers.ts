@@ -2,15 +2,16 @@
  * Schedulers API client.
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for listing schedulers. */
 export interface ListSchedulersParams {
   pageSize?: number;
   page?: number;
   searchQuery?: string;
-  sortBy?: 'name' | 'createdAt';
+  sortBy?: 'createdAt' | 'name';
   sortDirection?: 'asc' | 'desc';
   createdByUserUuids?: string;
   formats?: string;

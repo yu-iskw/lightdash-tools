@@ -2,12 +2,15 @@
  * Charts (v1) command implementation.
  */
 
-import type { Command } from 'commander';
 import { readFileSync } from 'fs';
+
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
 import type { UpsertChartAsCodeBody } from '@lightdash-tools/common';
+import type { Command } from 'commander';
 
 /**
  * Reads JSON from stdin or a file (for chart-as-code upsert body).

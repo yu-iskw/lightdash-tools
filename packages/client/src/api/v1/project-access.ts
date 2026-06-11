@@ -2,8 +2,9 @@
  * Project access API client (project-level user and group access).
  */
 
-import type { LightdashApi } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { LightdashApi } from '@lightdash-tools/common';
 
 export class ProjectAccessClient extends BaseApiClient {
   /** List users with explicit project access. */

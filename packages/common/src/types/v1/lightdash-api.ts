@@ -6,23 +6,27 @@
  * Models are split into domain-specific files for better maintainability.
  */
 
-// Import domain namespaces from domain files
-import type { Projects } from './projects';
-import type { Organizations } from './organizations';
-import type { Queries } from './queries';
+import { V2 as V2Namespace } from '../v2/index';
+
+import { V1 as V1Namespace } from './index';
+
+import type { AiAgents } from './ai-agents';
 import type { Charts } from './charts';
 import type { Dashboards } from './dashboards';
-import type { Spaces } from './spaces';
-import type { SpaceAccess } from './space-access';
-import type { Users } from './users';
-import type { Groups } from './groups';
-import type { AiAgents } from './ai-agents';
-import type { ProjectAccess } from './project-access';
 import type { Explores } from './explores';
-import type { Validation } from './validation';
+import type { Groups } from './groups';
 import type { Metrics } from './metrics';
+import type { Organizations } from './organizations';
+import type { ProjectAccess } from './project-access';
+import type { Projects } from './projects';
+import type { Queries } from './queries';
 import type { Schedulers } from './schedulers';
+import type { SpaceAccess } from './space-access';
+import type { Spaces } from './spaces';
 import type { Tags } from './tags';
+import type { Users } from './users';
+import type { Validation } from './validation';
+import type { components } from '../generated/openapi-types';
 import type { Content } from '../v2/content';
 
 // Re-export domain namespaces
@@ -45,12 +49,6 @@ export type {
   Tags,
   Content,
 };
-
-// Import generated types for LightdashApi namespace assembly
-import type { components } from '../generated/openapi-types';
-
-import { V1 as V1Namespace } from './index';
-import { V2 as V2Namespace } from '../v2/index';
 
 /**
  * Main namespace for all Lightdash API models.
@@ -239,7 +237,7 @@ export namespace LightdashApi {
       pageSize?: number;
       page?: number;
       searchQuery?: string;
-      sortBy?: 'name' | 'createdAt';
+      sortBy?: 'createdAt' | 'name';
       sortDirection?: 'asc' | 'desc';
     };
   }

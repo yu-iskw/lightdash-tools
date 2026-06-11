@@ -3,9 +3,12 @@
  */
 
 import axios, { type AxiosInstance } from 'axios';
-import type { LightdashClientConfig } from '../config';
+
 import { DEFAULT_TIMEOUT } from '../config';
+
 import { attachRequestInterceptors, attachResponseInterceptors } from './interceptors';
+
+import type { LightdashClientConfig } from '../config';
 
 /**
  * API version type.

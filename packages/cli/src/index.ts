@@ -3,28 +3,29 @@
  * Main entry point for Lightdash AI CLI.
  */
 
-import { Command } from 'commander';
 import { initAuditLog } from '@lightdash-tools/common';
+import { Command } from 'commander';
+
+import { registerAgentsCommand } from './commands/agents';
+import { registerAiAgentsCommand } from './commands/ai-agents';
+import { registerChartsCommand } from './commands/charts';
+import { registerContentCommand } from './commands/content';
+import { registerDashboardsCommand } from './commands/dashboards';
+import { registerExploresCommand } from './commands/explores';
+import { registerGroupsCommand } from './commands/groups';
+import { registerMetricsCommand } from './commands/metrics';
 import { registerOrganizationCommand } from './commands/organization';
 import { registerOrganizationRolesCommand } from './commands/organization-roles';
-import { registerProjectsCommand } from './commands/projects';
-import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
 import { registerProjectAccessCommand } from './commands/project-access';
-import { registerSpacesCommand } from './commands/spaces';
-import { registerSpaceAccessCommand } from './commands/space-access';
-import { registerChartsCommand } from './commands/charts';
-import { registerDashboardsCommand } from './commands/dashboards';
-import { registerAiAgentsCommand } from './commands/ai-agents';
-import { registerAgentsCommand } from './commands/agents';
-import { registerGroupsCommand } from './commands/groups';
-import { registerUsersCommand } from './commands/users';
+import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
+import { registerProjectsCommand } from './commands/projects';
 import { registerQueryCommand } from './commands/query';
-import { registerExploresCommand } from './commands/explores';
-import { registerMetricsCommand } from './commands/metrics';
 import { registerSchedulersCommand } from './commands/schedulers';
-import { registerTagsCommand } from './commands/tags';
-import { registerContentCommand } from './commands/content';
 import { registerSchemaCommand } from './commands/schema';
+import { registerSpaceAccessCommand } from './commands/space-access';
+import { registerSpacesCommand } from './commands/spaces';
+import { registerTagsCommand } from './commands/tags';
+import { registerUsersCommand } from './commands/users';
 
 // Initialise audit log before any command runs (uses LIGHTDASH_TOOLS_AUDIT_LOG env var).
 initAuditLog(process.env.LIGHTDASH_TOOLS_AUDIT_LOG);

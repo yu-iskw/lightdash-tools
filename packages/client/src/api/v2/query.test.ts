@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { QueryClientV2 } from './query';
+
 import type { HttpClient } from '../../http/http-client';
 import type {
   ExecuteAsyncMetricQueryRequestParams,

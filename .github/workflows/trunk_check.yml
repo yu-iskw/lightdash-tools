@@ -47,5 +47,7 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build packages
+        run: pnpm build
       - name: Trunk Check
         uses: trunk-io/trunk-action@v1

@@ -2,10 +2,13 @@
  * MCP tools: schedulers (list, get).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerSchedulersTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -15,7 +18,7 @@ export function registerSchedulersTools(server: McpServer, client: LightdashClie
       title: 'List schedulers',
       description: 'List scheduled deliveries in a project',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         searchQuery: z.string().optional().describe('Search query'),
         page: z.number().optional().describe('Page number'),
         pageSize: z.number().optional().describe('Page size'),

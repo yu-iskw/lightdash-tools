@@ -1,7 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { registerToolSafe, READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from './shared';
 import { SafetyMode } from '@lightdash-tools/common';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
+
+import {
+  registerToolSafe,
+  wrapTool,
+  READ_ONLY_DEFAULT,
+  WRITE_DESTRUCTIVE,
+  WRITE_IDEMPOTENT,
+} from './shared';
 
 // Silence audit log output during tests
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
@@ -361,5 +369,62 @@ describe('registerToolSafe', () => {
       expect(result.content[0].text).toContain('No changes were made');
       expect(mockHandler).not.toHaveBeenCalled();
     });
+  });
+
+  it('should reject invalid slug before calling handler', async () => {
+    registerToolSafe(
+      mockServer,
+      'slug_tool',
+      { description: 'Uses slug', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({ slug: 'bad?slug' });
+
+    expect(mockHandler).not.toHaveBeenCalled();
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('Invalid slug');
+  });
+
+  it('should rethrow when the audited handler throws', async () => {
+    const failingHandler = vi.fn().mockRejectedValue(new Error('boom'));
+    registerToolSafe(
+      mockServer,
+      'throws_tool',
+      { description: 'Throws', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      failingHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    await expect(handler({})).rejects.toThrow('boom');
+  });
+
+  it('should mark audit status error when handler returns isError', async () => {
+    const errorHandler = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: 'failed' }],
+      isError: true,
+    });
+    registerToolSafe(
+      mockServer,
+      'error_result_tool',
+      { description: 'Returns error', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      errorHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+    expect(result.isError).toBe(true);
+  });
+
+  it('wrapTool returns a safe error message when the inner handler throws', async () => {
+    const wrapped = wrapTool({} as never, () => async () => {
+      throw new Error('boom');
+    });
+
+    const result = await wrapped({});
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toBe('boom');
   });
 });

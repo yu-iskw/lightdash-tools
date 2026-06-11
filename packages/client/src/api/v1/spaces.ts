@@ -2,6 +2,8 @@
  * Spaces API client.
  */
 
+import { BaseApiClient } from '../base-client';
+
 import type {
   LightdashApi,
   SpaceSummary,
@@ -10,7 +12,6 @@ import type {
   AddSpaceUserAccess,
   AddSpaceGroupAccess,
 } from '@lightdash-tools/common';
-import { BaseApiClient } from '../base-client';
 
 export class SpacesClient extends BaseApiClient {
   /** List spaces in a project. */

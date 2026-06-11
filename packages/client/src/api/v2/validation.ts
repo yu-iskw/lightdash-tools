@@ -2,15 +2,16 @@
  * Validation API client (v2). Paginated validation results with search, filter, and sort support.
  */
 
-import type { components } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { components } from '@lightdash-tools/common';
 
 /** Query params for listing validation results (v2). */
 export interface ListValidationResultsParams {
   page?: number;
   pageSize?: number;
   searchQuery?: string;
-  sortBy?: 'name' | 'createdAt' | 'errorType' | 'source';
+  sortBy?: 'createdAt' | 'errorType' | 'name' | 'source';
   sortDirection?: 'asc' | 'desc';
   sourceTypes?: string;
   errorTypes?: string;

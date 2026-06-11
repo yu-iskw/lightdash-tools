@@ -37,13 +37,33 @@ Update whenever you discover any of the following during a task:
 ## Setup Commands
 
 ```bash
-pnpm install    # Install all dependencies
-pnpm build      # Build all packages
-pnpm test       # Run all tests via Vitest
-pnpm lint       # Run all linters via Trunk
-pnpm format     # Auto-format code via Trunk
-pnpm clean      # Clean build artifacts
+pnpm install       # Install all dependencies
+pnpm build         # Build all packages
+pnpm test          # Run Vitest with v8 coverage and threshold checks
+pnpm test:fast     # Vitest without coverage (local iteration only)
+pnpm lint          # Trunk (@trunkio/launcher) + lint:local (eslint, knip, package.json, prettier)
+pnpm lint:eslint   # ESLint only
+pnpm knip          # Unused exports, files, and dependencies
+pnpm trunk:install # Fetch Trunk-managed linters (run once after pnpm install)
+pnpm verify        # Alias for verify:pr (default before commit)
+pnpm verify:quick  # Fast loop: build → test → lint:local
+pnpm verify:pr     # Pre-PR gate: validations → build → test → lint:local
+pnpm verify:ci     # Full CI parity: verify:pr + lint:trunk (OSV, Trivy, markdown, YAML)
+pnpm format        # Auto-format code via Trunk
+pnpm clean         # Clean build artifacts
 ```
+
+## Quality Gates
+
+Unless the user explicitly narrows scope, run the relevant gates from the repository root before claiming completion:
+
+1. `pnpm test` for Vitest with coverage (thresholds in [`coverage-thresholds.mjs`](coverage-thresholds.mjs)).
+2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene.
+3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
+4. `pnpm verify:pr` (or `pnpm verify`) before commit. Use `pnpm verify:ci` to match CI including Trunk OSV/Trivy. See [local-ci-parity.md](.claude/skills/common-references/local-ci-parity.md).
+5. `pnpm lint` when touching Markdown, YAML, `.trunk/`, lockfiles, or GitHub workflow files.
+
+Root [`eslint.config.mjs`](eslint.config.mjs) layers import-x, SonarJS, security, unicorn, eslint-comments, and Vitest rules on top of `@typescript-eslint` (dbt-tools-ts pattern). It enforces `@typescript-eslint/no-deprecated` on CLI and MCP (ADR-0036). [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.
 
 ## Code Style
 
@@ -57,12 +77,14 @@ pnpm clean      # Clean build artifacts
 
 - Use Vitest for unit and integration tests.
 - Write tests in `tests/` or alongside source files as `*.test.ts`.
-- Run `pnpm test` before committing.
+- Run `pnpm test` before committing (includes coverage; reports under `coverage/`).
+- Use `pnpm test:fast` only for tight local loops — CI and `pnpm verify` use `pnpm test`.
+- Global coverage floors live in [`coverage-thresholds.mjs`](coverage-thresholds.mjs); raise them as coverage improves.
 
 ## Git And PR Workflow
 
 - Create feature branches from `main`.
-- Run `pnpm lint && pnpm test` before commit.
+- Run `pnpm verify:quick` (or `pnpm verify` before larger changes) before commit.
 - Commit format: `type(scope): description` (for example: `feat(ui): add new button component`).
 - Commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 - Use `manage-changelog` when `changie` is available.
@@ -126,9 +148,10 @@ Additional specialized skills are documented in `CLAUDE.md`.
 ## Common Gotchas
 
 - Use `pnpm` only (do not use `npm` or `yarn`).
-- Trunk manages tool versions hermetically; avoid global linter installs.
+- **Trunk via devDependency:** `@trunkio/launcher` provides the local `trunk` CLI (`pnpm exec trunk`). Run `pnpm trunk:install` after `pnpm install` to fetch Trunk-managed linters. No global Trunk install required.
 - Keep `pnpm-lock.yaml` committed for reproducible installs.
-- Run `trunk install` if Trunk reports missing tools.
+- **pnpm v11 config location:** `overrides` and other pnpm settings live in `pnpm-workspace.yaml`, not `package.json#pnpm`. The repo pins `packageManager` to `pnpm@11.5.3`.
+- **Build before ESLint:** Workspace packages resolve via `dist/` entrypoints. `verify:pr` and `verify:quick` run `pnpm build` first so `import-x/no-unresolved` does not false-negative.
 - ADR and Changie are initialized (`docs/adr`, `.changie.yaml`); use the `manage-adr` and `manage-changelog` skills when `adr-tools` and `changie` are available.
 - **Trunk unavailable (restricted network):** If `curl https://get.trunk.io` returns 403, use these direct fallbacks instead of Trunk commands:
   - Lint: `pnpm lint:eslint`
@@ -146,4 +169,5 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **Secrets:** Use env vars from the parent process. Do not recommend plaintext `.env` to users; if they use file-based config, recommend dotenvx. See [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
 - **`initAuditLog()` must be called once at process startup:** Both `packages/cli/src/index.ts` and MCP's `bin.ts` call `initAuditLog()` at startup. Any new entrypoint must do the same; individual command files do not need to call it.
 - **MCP tool names must be concise:** Some MCP clients (e.g., Claude Desktop) impose a 60-character limit on combined server and tool names. Use the `ldt__` prefix (set in `packages/mcp/src/tools/shared.ts`) and avoid excessively long tool names to ensure they are not filtered out.
+- **Knip ignores intentional type barrels:** `knip.json` uses `ignoreIssues` for `packages/common/src/types/**` because namespace re-exports are public API surface, not dead code. Do not remove those ignores when knip reports unused namespace members in type files.
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.

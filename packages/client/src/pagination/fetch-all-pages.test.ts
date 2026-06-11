@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
+
 import { fetchAllPages } from './fetch-all-pages';
+
 import type { KnexPage } from './types';
 
 describe('fetchAllPages', () => {

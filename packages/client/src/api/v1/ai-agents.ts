@@ -5,6 +5,8 @@
  * Project-scoped   → /api/v1/projects/{projectUuid}/aiAgents/...
  */
 
+import { BaseApiClient } from '../base-client';
+
 import type {
   AiAgentSummary,
   AiAgentsAdminThreadsResult,
@@ -30,7 +32,6 @@ import type {
   AiAgentEvaluationRunsListResponse,
   AiAgentEvaluationRun,
 } from '@lightdash-tools/common';
-import { BaseApiClient } from '../base-client';
 
 export class AiAgentsClient extends BaseApiClient {
   // ─── Admin: threads ──────────────────────────────────────────────────────────

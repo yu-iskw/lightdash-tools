@@ -2,10 +2,12 @@
  * MCP tools: content (search).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerContentTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(

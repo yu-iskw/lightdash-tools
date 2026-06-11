@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import { DashboardsClient } from './dashboards';
+
 import type { HttpClient } from '../../http/http-client';
 
 describe('DashboardsClient', () => {

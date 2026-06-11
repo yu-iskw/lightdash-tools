@@ -2,10 +2,13 @@
  * MCP tools: query (compile).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
+
+import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export function registerQueryTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
@@ -15,7 +18,7 @@ export function registerQueryTools(server: McpServer, client: LightdashClient): 
       title: 'Compile query',
       description: 'Compile a metric query for an explore without executing it',
       inputSchema: {
-        projectUuid: z.string().describe('Project UUID'),
+        projectUuid: projectUuidField(),
         exploreId: z.string().describe('Explore ID'),
         metricQuery: z
           .record(z.string(), z.unknown())

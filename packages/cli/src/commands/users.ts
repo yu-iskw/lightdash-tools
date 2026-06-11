@@ -2,10 +2,36 @@
  * Users command implementation.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+
+import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { LightdashClient } from '@lightdash-tools/client';
+import type { Command } from 'commander';
+
+type ListUsersCliOptions = {
+  all?: boolean;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+};
+
+async function listUsers(client: LightdashClient, options: ListUsersCliOptions): Promise<void> {
+  const searchQuery = options.search;
+
+  if (options.all) {
+    const list = await client.v1.users.listAllMembers(pickDefined({ searchQuery }));
+    console.log(JSON.stringify(list, null, 2));
+    return;
+  }
+
+  const result = await client.v1.users.listMembers(
+    pickDefined({ page: options.page, pageSize: options.pageSize, searchQuery }),
+  );
+  console.log(JSON.stringify(result, null, 2));
+}
 
 /**
  * Registers the users command and its subcommands.
@@ -23,31 +49,9 @@ export function registerUsersCommand(program: Command): void {
     .option('--search <query>', 'Search query')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as {
-          all?: boolean;
-          page?: number;
-          pageSize?: number;
-          search?: string;
-        };
+        const options = this.opts() as ListUsersCliOptions;
         try {
-          const client = getClient();
-          if (options.all) {
-            const listParams: { searchQuery?: string } = {};
-            if (options.search != null) listParams.searchQuery = options.search;
-            const list = await client.v1.users.listAllMembers(
-              Object.keys(listParams).length > 0 ? listParams : undefined,
-            );
-            console.log(JSON.stringify(list, null, 2));
-          } else {
-            const params: { page?: number; pageSize?: number; searchQuery?: string } = {};
-            if (options.page != null) params.page = options.page;
-            if (options.pageSize != null) params.pageSize = options.pageSize;
-            if (options.search != null) params.searchQuery = options.search;
-            const result = await client.v1.users.listMembers(
-              Object.keys(params).length > 0 ? params : undefined,
-            );
-            console.log(JSON.stringify(result, null, 2));
-          }
+          await listUsers(getClient(), options);
         } catch (error) {
           console.error(
             'Error listing users:',

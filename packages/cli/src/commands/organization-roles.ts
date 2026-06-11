@@ -2,10 +2,12 @@
  * Organization roles (v2) command implementation.
  */
 
-import type { Command } from 'commander';
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
+
+import type { Command } from 'commander';
 
 /**
  * Registers the organization roles subcommands under the existing organization command.

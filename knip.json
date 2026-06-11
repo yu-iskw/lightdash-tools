@@ -1,0 +1,43 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreBinaries": ["trunk"],
+  "ignoreDependencies": [],
+  "ignoreExportsUsedInFile": true,
+  "ignoreIssues": {
+    "packages/common/src/types/**": [
+      "exports",
+      "types",
+      "nsExports",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ],
+    "packages/client/src/http/axios-client.ts": ["exports"]
+  },
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/**/*.mjs", "coverage-thresholds.mjs"],
+      "project": ["scripts/**/*.mjs"],
+      "vitest": {
+        "config": ["vitest.config.ts"],
+        "entry": ["packages/**/*.test.ts"]
+      }
+    },
+    "packages/common": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/client": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/cli": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/mcp": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    }
+  }
+}

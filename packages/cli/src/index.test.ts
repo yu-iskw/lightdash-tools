@@ -1,18 +1,19 @@
-import { describe, it, expect } from 'vitest';
 import { Command } from 'commander';
-import { registerOrganizationCommand } from './commands/organization';
-import { registerOrganizationRolesCommand } from './commands/organization-roles';
-import { registerProjectsCommand } from './commands/projects';
-import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
-import { registerProjectAccessCommand } from './commands/project-access';
-import { registerSpacesCommand } from './commands/spaces';
-import { registerSpaceAccessCommand } from './commands/space-access';
+import { describe, it, expect } from 'vitest';
+
+import { registerAiAgentsCommand } from './commands/ai-agents';
 import { registerChartsCommand } from './commands/charts';
 import { registerDashboardsCommand } from './commands/dashboards';
-import { registerAiAgentsCommand } from './commands/ai-agents';
-import { registerGroupsCommand } from './commands/groups';
-import { registerUsersCommand } from './commands/users';
 import { registerExploresCommand } from './commands/explores';
+import { registerGroupsCommand } from './commands/groups';
+import { registerOrganizationCommand } from './commands/organization';
+import { registerOrganizationRolesCommand } from './commands/organization-roles';
+import { registerProjectAccessCommand } from './commands/project-access';
+import { registerProjectRoleAssignmentsCommand } from './commands/project-role-assignments';
+import { registerProjectsCommand } from './commands/projects';
+import { registerSpaceAccessCommand } from './commands/space-access';
+import { registerSpacesCommand } from './commands/spaces';
+import { registerUsersCommand } from './commands/users';
 
 describe('CLI Command Registration', () => {
   it('should register organization command', () => {

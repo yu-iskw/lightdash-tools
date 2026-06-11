@@ -2,8 +2,9 @@
  * Project role assignments API client (v2). Manage project-level role assignments for users and groups.
  */
 
-import type { components } from '@lightdash-tools/common';
 import { BaseApiClient } from '../base-client';
+
+import type { components } from '@lightdash-tools/common';
 
 type RoleAssignment = components['schemas']['RoleAssignment'];
 type UpsertUserRoleAssignmentRequest = components['schemas']['UpsertUserRoleAssignmentRequest'];

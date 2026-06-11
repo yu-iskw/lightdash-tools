@@ -2,6 +2,8 @@
  * Query API client for v2 endpoints. Run metric/SQL/underlying data queries using v2 API.
  */
 
+import { BaseApiClient } from '../base-client';
+
 import type {
   ExecuteAsyncMetricQueryRequestParams,
   ExecuteAsyncSqlQueryRequestParams,
@@ -12,7 +14,6 @@ import type {
   ExecuteAsyncDashboardChartResults,
   ExecuteAsyncSqlQueryResults,
 } from '@lightdash-tools/common';
-import { BaseApiClient } from '../base-client';
 
 export class QueryClientV2 extends BaseApiClient {
   /** Run a metric query (v2 endpoint). */

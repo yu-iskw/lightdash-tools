@@ -9,10 +9,10 @@
  *   - Otherwise entries are written to stderr with an "[audit]" prefix.
  */
 
-import { createWriteStream, type WriteStream } from 'node:fs';
 import { randomUUID } from 'node:crypto';
+import { createWriteStream, type WriteStream } from 'node:fs';
 
-export type AuditStatus = 'success' | 'error' | 'blocked';
+export type AuditStatus = 'blocked' | 'error' | 'success';
 
 export type AuditLogEntry = {
   timestamp: string;
@@ -58,4 +58,17 @@ export function logAuditEntry(entry: AuditLogEntry): void {
   } else {
     process.stderr.write(`[audit] ${line}`);
   }
+}
+
+/** Closes the file stream, if any. Awaits pending writes before resolving. */
+export function closeAuditLog(): Promise<void> {
+  const stream = _writeStream;
+  if (!stream) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    stream.end(() => {
+      _writeStream = undefined;
+      resolve();
+    });
+    stream.on('error', reject);
+  });
 }
