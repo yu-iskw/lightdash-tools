@@ -10,7 +10,7 @@ import { V2 as V2Namespace } from '../v2/index';
 
 import { V1 as V1Namespace } from './index';
 
-import type { AiAgents } from './ai-agents';
+import type { AiAgents, AiAgents as AiAgentsTypes } from './ai-agents';
 import type { Charts } from './charts';
 import type { Dashboards } from './dashboards';
 import type { Explores } from './explores';
@@ -214,6 +214,40 @@ export namespace LightdashApi {
     export type AiAgentEvaluationRunResult = components['schemas']['AiAgentEvaluationRunResult'];
     export type AiEvalRunResultAssessment = components['schemas']['AiEvalRunResultAssessment'];
     export type AssessmentType = components['schemas']['AssessmentType'];
+    // Discovery & preferences
+    export type AiModelOption = AiAgentsTypes.AiModelOption;
+    export type ReadinessScore = AiAgentsTypes.ReadinessScore;
+    export type AiAgentExploreAccessSummary = AiAgentsTypes.AiAgentExploreAccessSummary;
+    export type ExploreAccessSummaryBody = AiAgentsTypes.ExploreAccessSummaryBody;
+    export type AiAgentUserPreferences = AiAgentsTypes.AiAgentUserPreferences;
+    export type GetAgentSuggestionsParams = AiAgentsTypes.GetAgentSuggestionsParams;
+    export type AgentSuggestionChip = AiAgentsTypes.AgentSuggestionChip;
+    export type AgentSuggestions = AiAgentsTypes.AgentSuggestions;
+    // Threads: title & clone
+    export type GenerateThreadTitleResult = AiAgentsTypes.GenerateThreadTitleResult;
+    export type CloneThreadBody = AiAgentsTypes.CloneThreadBody;
+    // Artifacts
+    export type AiAgentVerifiedArtifact = AiAgentsTypes.AiAgentVerifiedArtifact;
+    export type AiAgentVerifiedArtifactsListResult = AiAgentsTypes.AiAgentVerifiedArtifactsListResult;
+    export type ListVerifiedArtifactsParams = AiAgentsTypes.ListVerifiedArtifactsParams;
+    export type AiAgentVerifiedQuestion = AiAgentsTypes.AiAgentVerifiedQuestion;
+    export type AiArtifact = AiAgentsTypes.AiArtifact;
+    export type AiAgentThreadMessageVizQuery = AiAgentsTypes.AiAgentThreadMessageVizQuery;
+    // Message feedback
+    export type UpdateMessageFeedbackBody = AiAgentsTypes.UpdateMessageFeedbackBody;
+    // MCP servers
+    export type AiMcpServerAuthType = AiAgentsTypes.AiMcpServerAuthType;
+    export type AiMcpServerConnectionStatus = AiAgentsTypes.AiMcpServerConnectionStatus;
+    export type AiMcpServer = AiAgentsTypes.AiMcpServer;
+    export type AiMcpServerTool = AiAgentsTypes.AiMcpServerTool;
+    export type AiAgentMcpServerTool = AiAgentsTypes.AiAgentMcpServerTool;
+    export type CreateProjectMcpServerBody = AiAgentsTypes.CreateProjectMcpServerBody;
+    export type AiAgentMcpServerToolUpdate = AiAgentsTypes.AiAgentMcpServerToolUpdate;
+    export type UpdateAgentMcpServerToolsBody = AiAgentsTypes.UpdateAgentMcpServerToolsBody;
+    // SQL approval
+    export type SqlApprovalDecision = AiAgentsTypes.SqlApprovalDecision;
+    export type SubmitSqlApprovalBody = AiAgentsTypes.SubmitSqlApprovalBody;
+    export type SubmitSqlApprovalResult = AiAgentsTypes.SubmitSqlApprovalResult;
   }
 
   export namespace Explores {
@@ -336,6 +370,40 @@ export type AiAgentEvaluationRunSummary = AiAgents.AiAgentEvaluationRunSummary;
 export type AiAgentEvaluationRunsListResponse = AiAgents.AiAgentEvaluationRunsListResponse;
 export type AiAgentEvaluationRun = AiAgents.AiAgentEvaluationRun;
 export type AiAgentEvaluationRunResult = AiAgents.AiAgentEvaluationRunResult;
+// AI agents (flat exports) — discovery & preferences
+export type AiModelOption = AiAgents.AiModelOption;
+export type ReadinessScore = AiAgents.ReadinessScore;
+export type AiAgentExploreAccessSummary = AiAgents.AiAgentExploreAccessSummary;
+export type ExploreAccessSummaryBody = AiAgents.ExploreAccessSummaryBody;
+export type AiAgentUserPreferences = AiAgents.AiAgentUserPreferences;
+export type GetAgentSuggestionsParams = AiAgents.GetAgentSuggestionsParams;
+export type AgentSuggestionChip = AiAgents.AgentSuggestionChip;
+export type AgentSuggestions = AiAgents.AgentSuggestions;
+// AI agents (flat exports) — threads: title & clone
+export type GenerateThreadTitleResult = AiAgents.GenerateThreadTitleResult;
+export type CloneThreadBody = AiAgents.CloneThreadBody;
+// AI agents (flat exports) — artifacts
+export type AiAgentVerifiedArtifact = AiAgents.AiAgentVerifiedArtifact;
+export type AiAgentVerifiedArtifactsListResult = AiAgents.AiAgentVerifiedArtifactsListResult;
+export type ListVerifiedArtifactsParams = AiAgents.ListVerifiedArtifactsParams;
+export type AiAgentVerifiedQuestion = AiAgents.AiAgentVerifiedQuestion;
+export type AiArtifact = AiAgents.AiArtifact;
+export type AiAgentThreadMessageVizQuery = AiAgents.AiAgentThreadMessageVizQuery;
+// AI agents (flat exports) — message feedback
+export type UpdateMessageFeedbackBody = AiAgents.UpdateMessageFeedbackBody;
+// AI agents (flat exports) — MCP servers
+export type AiMcpServerAuthType = AiAgents.AiMcpServerAuthType;
+export type AiMcpServerConnectionStatus = AiAgents.AiMcpServerConnectionStatus;
+export type AiMcpServer = AiAgents.AiMcpServer;
+export type AiMcpServerTool = AiAgents.AiMcpServerTool;
+export type AiAgentMcpServerTool = AiAgents.AiAgentMcpServerTool;
+export type CreateProjectMcpServerBody = AiAgents.CreateProjectMcpServerBody;
+export type AiAgentMcpServerToolUpdate = AiAgents.AiAgentMcpServerToolUpdate;
+export type UpdateAgentMcpServerToolsBody = AiAgents.UpdateAgentMcpServerToolsBody;
+// AI agents (flat exports) — SQL approval
+export type SqlApprovalDecision = AiAgents.SqlApprovalDecision;
+export type SubmitSqlApprovalBody = AiAgents.SubmitSqlApprovalBody;
+export type SubmitSqlApprovalResult = AiAgents.SubmitSqlApprovalResult;
 
 // Explores (flat exports)
 export type ApiExploresResults = Explores.ApiExploresResults;

@@ -7,50 +7,87 @@ import { BaseApiClient } from '../../base-client';
 
 import { AiAgentsAdminClient } from './admin';
 import { AiAgentsProjectClient } from './agents';
+import { AiAgentsArtifactsClient } from './artifacts';
+import { AiAgentsDiscoveryClient } from './discovery';
 import { AiAgentsEvaluationsClient } from './evaluations';
+import { AiAgentsFeedbackClient } from './feedback';
+import { AiAgentsMcpServersClient } from './mcp-servers';
+import { AiAgentsSqlApprovalClient } from './sql-approval';
 import { AiAgentsThreadsClient } from './threads';
 
 import type { RequestOptions } from './request-options';
 import type {
+  AgentSuggestions,
   AiAgent,
   AiAgentEvaluation,
   AiAgentEvaluationRun,
   AiAgentEvaluationRunSummary,
   AiAgentEvaluationRunsListResponse,
   AiAgentEvaluationSummary,
-  AiAgentSummary,
+  AiAgentExploreAccessSummary,
+  AiAgentMcpServerTool,
   AiAgentsAdminThreadsResult,
+  AiAgentSummary,
   AiAgentThread,
+  AiAgentThreadMessageVizQuery,
   AiAgentThreadSummary,
+  AiAgentUserPreferences,
+  AiAgentVerifiedArtifactsListResult,
+  AiAgentVerifiedQuestion,
+  AiArtifact,
+  AiMcpServer,
+  AiMcpServerTool,
+  AiModelOption,
   AppendEvaluationBody,
+  CloneThreadBody,
   CreateAgentThreadBody,
   CreateAgentThreadMessageResult,
   CreateAiAgent,
   CreateEvaluationBody,
   CreateEvaluationResult,
+  CreateProjectMcpServerBody,
+  ExploreAccessSummaryBody,
   GenerateAgentThreadBody,
   GenerateAgentThreadResult,
+  GenerateThreadTitleResult,
   GetAdminThreadsParams,
+  GetAgentSuggestionsParams,
   GetAiOrganizationSettingsResult,
+  ListVerifiedArtifactsParams,
+  ReadinessScore,
+  SubmitSqlApprovalBody,
+  SubmitSqlApprovalResult,
   UpdateAiAgent,
   UpdateAiOrganizationSettings,
   UpdateAiOrganizationSettingsResult,
+  UpdateAgentMcpServerToolsBody,
   UpdateEvaluationBody,
+  UpdateMessageFeedbackBody,
 } from '@lightdash-tools/common';
 import type { HttpClient } from '../../../http/http-client';
 
 export class AiAgentsClient extends BaseApiClient {
   private readonly admin: AiAgentsAdminClient;
   private readonly agents: AiAgentsProjectClient;
+  private readonly artifacts: AiAgentsArtifactsClient;
+  private readonly discovery: AiAgentsDiscoveryClient;
   private readonly threads: AiAgentsThreadsClient;
   private readonly evaluations: AiAgentsEvaluationsClient;
+  private readonly feedback: AiAgentsFeedbackClient;
+  private readonly mcpServers: AiAgentsMcpServersClient;
+  private readonly sqlApproval: AiAgentsSqlApprovalClient;
 
   constructor(http: HttpClient) {
     super(http);
     this.admin = new AiAgentsAdminClient(http);
     this.agents = new AiAgentsProjectClient(http);
+    this.artifacts = new AiAgentsArtifactsClient(http);
+    this.discovery = new AiAgentsDiscoveryClient(http);
     this.threads = new AiAgentsThreadsClient(http);
     this.evaluations = new AiAgentsEvaluationsClient(http);
+    this.feedback = new AiAgentsFeedbackClient(http);
+    this.mcpServers = new AiAgentsMcpServersClient(http);
+    this.sqlApproval = new AiAgentsSqlApprovalClient(http);
   }
 
   // ─── Admin ───────────────────────────────────────────────────────────────────
@@ -93,6 +130,47 @@ export class AiAgentsClient extends BaseApiClient {
 
   deleteAgent(projectUuid: string, agentUuid: string): Promise<void> {
     return this.agents.deleteAgent(projectUuid, agentUuid);
+  }
+
+  // ─── Discovery & preferences ─────────────────────────────────────────────────
+
+  getAgentModelOptions(projectUuid: string, agentUuid: string): Promise<AiModelOption[]> {
+    return this.discovery.getAgentModelOptions(projectUuid, agentUuid);
+  }
+
+  getAgentSuggestions(
+    projectUuid: string,
+    agentUuid: string,
+    params?: GetAgentSuggestionsParams,
+  ): Promise<AgentSuggestions> {
+    return this.discovery.getAgentSuggestions(projectUuid, agentUuid, params);
+  }
+
+  evaluateAgentReadiness(projectUuid: string, agentUuid: string): Promise<ReadinessScore> {
+    return this.discovery.evaluateAgentReadiness(projectUuid, agentUuid);
+  }
+
+  getExploreAccessSummary(
+    projectUuid: string,
+    agentUuid: string,
+    body?: ExploreAccessSummaryBody,
+  ): Promise<AiAgentExploreAccessSummary[]> {
+    return this.discovery.getExploreAccessSummary(projectUuid, agentUuid, body);
+  }
+
+  getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences> {
+    return this.discovery.getUserAgentPreferences(projectUuid);
+  }
+
+  setUserAgentPreferences(
+    projectUuid: string,
+    body: AiAgentUserPreferences,
+  ): Promise<void> {
+    return this.discovery.setUserAgentPreferences(projectUuid, body);
+  }
+
+  deleteUserAgentPreferences(projectUuid: string): Promise<void> {
+    return this.discovery.deleteUserAgentPreferences(projectUuid);
   }
 
   // ─── Project-scoped: threads ─────────────────────────────────────────────────
@@ -196,6 +274,150 @@ export class AiAgentsClient extends BaseApiClient {
     options?: RequestOptions,
   ): Promise<GenerateAgentThreadResult> {
     return this.threads.continueConversation(projectUuid, agentUuid, threadUuid, body, options);
+  }
+
+  generateThreadTitle(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    options?: RequestOptions,
+  ): Promise<GenerateThreadTitleResult> {
+    return this.threads.generateThreadTitle(projectUuid, agentUuid, threadUuid, options);
+  }
+
+  cloneThread(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    body?: CloneThreadBody,
+  ): Promise<AiAgentThreadSummary> {
+    return this.threads.cloneThread(projectUuid, agentUuid, threadUuid, body);
+  }
+
+  // ─── Artifacts ───────────────────────────────────────────────────────────────
+
+  listVerifiedArtifacts(
+    projectUuid: string,
+    agentUuid: string,
+    params?: ListVerifiedArtifactsParams,
+  ): Promise<AiAgentVerifiedArtifactsListResult> {
+    return this.artifacts.listVerifiedArtifacts(projectUuid, agentUuid, params);
+  }
+
+  listVerifiedQuestions(
+    projectUuid: string,
+    agentUuid: string,
+  ): Promise<AiAgentVerifiedQuestion[]> {
+    return this.artifacts.listVerifiedQuestions(projectUuid, agentUuid);
+  }
+
+  getArtifact(
+    projectUuid: string,
+    agentUuid: string,
+    artifactUuid: string,
+  ): Promise<AiArtifact> {
+    return this.artifacts.getArtifact(projectUuid, agentUuid, artifactUuid);
+  }
+
+  getArtifactVersion(
+    projectUuid: string,
+    agentUuid: string,
+    artifactUuid: string,
+    versionUuid: string,
+  ): Promise<AiArtifact> {
+    return this.artifacts.getArtifactVersion(projectUuid, agentUuid, artifactUuid, versionUuid);
+  }
+
+  getMessageVizQuery(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    messageUuid: string,
+  ): Promise<AiAgentThreadMessageVizQuery> {
+    return this.artifacts.getMessageVizQuery(
+      projectUuid,
+      agentUuid,
+      threadUuid,
+      messageUuid,
+    );
+  }
+
+  // ─── Message feedback ────────────────────────────────────────────────────────
+
+  updateMessageFeedback(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    messageUuid: string,
+    body: UpdateMessageFeedbackBody,
+  ): Promise<void> {
+    return this.feedback.updateMessageFeedback(
+      projectUuid,
+      agentUuid,
+      threadUuid,
+      messageUuid,
+      body,
+    );
+  }
+
+  // ─── MCP servers (EE-guarded upstream) ───────────────────────────────────────
+
+  listProjectMcpServers(projectUuid: string): Promise<AiMcpServer[]> {
+    return this.mcpServers.listProjectMcpServers(projectUuid);
+  }
+
+  createProjectMcpServer(
+    projectUuid: string,
+    body: CreateProjectMcpServerBody,
+  ): Promise<AiMcpServer> {
+    return this.mcpServers.createProjectMcpServer(projectUuid, body);
+  }
+
+  listMcpServerTools(projectUuid: string, mcpServerUuid: string): Promise<AiMcpServerTool[]> {
+    return this.mcpServers.listMcpServerTools(projectUuid, mcpServerUuid);
+  }
+
+  refreshMcpServerTools(
+    projectUuid: string,
+    mcpServerUuid: string,
+  ): Promise<AiMcpServerTool[]> {
+    return this.mcpServers.refreshMcpServerTools(projectUuid, mcpServerUuid);
+  }
+
+  listAgentMcpServers(projectUuid: string, agentUuid: string): Promise<AiMcpServer[]> {
+    return this.mcpServers.listAgentMcpServers(projectUuid, agentUuid);
+  }
+
+  updateAgentMcpServerTools(
+    projectUuid: string,
+    agentUuid: string,
+    mcpServerUuid: string,
+    body: UpdateAgentMcpServerToolsBody,
+  ): Promise<AiAgentMcpServerTool[]> {
+    return this.mcpServers.updateAgentMcpServerTools(
+      projectUuid,
+      agentUuid,
+      mcpServerUuid,
+      body,
+    );
+  }
+
+  // ─── SQL approval ────────────────────────────────────────────────────────────
+
+  submitSqlApproval(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    toolCallId: string,
+    body: SubmitSqlApprovalBody,
+  ): Promise<SubmitSqlApprovalResult> {
+    return this.sqlApproval.submitSqlApproval(
+      projectUuid,
+      agentUuid,
+      threadUuid,
+      toolCallId,
+      body,
+    );
   }
 
   // ─── Project-scoped: evaluations ─────────────────────────────────────────────

@@ -1,7 +1,12 @@
 export { AiAgentsClient } from './facade';
 export { AiAgentsAdminClient } from './admin';
 export { AiAgentsProjectClient } from './agents';
+export { AiAgentsArtifactsClient } from './artifacts';
+export { AiAgentsDiscoveryClient } from './discovery';
 export { AiAgentsThreadsClient } from './threads';
 export { AiAgentsEvaluationsClient } from './evaluations';
+export { AiAgentsFeedbackClient } from './feedback';
+export { AiAgentsMcpServersClient } from './mcp-servers';
+export { AiAgentsSqlApprovalClient } from './sql-approval';
 export type { RequestOptions } from './request-options';
 export { toAxiosConfig } from './request-options';

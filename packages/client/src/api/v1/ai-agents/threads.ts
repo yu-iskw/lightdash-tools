@@ -11,10 +11,12 @@ import type { RequestOptions } from './request-options';
 import type {
   AiAgentThread,
   AiAgentThreadSummary,
+  CloneThreadBody,
   CreateAgentThreadBody,
   CreateAgentThreadMessageResult,
   GenerateAgentThreadBody,
   GenerateAgentThreadResult,
+  GenerateThreadTitleResult,
 } from '@lightdash-tools/common';
 
 export class AiAgentsThreadsClient extends BaseApiClient {
@@ -163,5 +165,41 @@ export class AiAgentsThreadsClient extends BaseApiClient {
   ): Promise<GenerateAgentThreadResult> {
     await this.createAgentThreadMessage(projectUuid, agentUuid, threadUuid, body, options);
     return this.generateAgentThreadResponse(projectUuid, agentUuid, threadUuid, options);
+  }
+
+  /** Generate a title for a thread (POST …/threads/{threadUuid}/generate-title). */
+  async generateThreadTitle(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    options?: RequestOptions,
+  ): Promise<GenerateThreadTitleResult> {
+    return this.http.post<GenerateThreadTitleResult>(
+      `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/generate-title`,
+      undefined,
+      toAxiosConfig(options),
+    );
+  }
+
+  /**
+   * Clone a thread from an existing prompt
+   * (POST …/threads/{threadUuid}/clone/{promptUuid}).
+   */
+  async cloneThread(
+    projectUuid: string,
+    agentUuid: string,
+    threadUuid: string,
+    body?: CloneThreadBody,
+  ): Promise<AiAgentThreadSummary> {
+    const promptUuid = body?.promptUuid;
+    if (!promptUuid) {
+      throw new Error('cloneThread requires body.promptUuid');
+    }
+
+    return this.http.post<AiAgentThreadSummary>(
+      `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/clone/${promptUuid}`,
+      undefined,
+      body.createdFrom === undefined ? undefined : { params: { createdFrom: body.createdFrom } },
+    );
   }
 }

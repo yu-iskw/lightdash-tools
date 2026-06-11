@@ -123,5 +123,39 @@ export namespace V1 {
     export type AiAgentEvaluationRunSummary = A.AiAgentEvaluationRunSummary;
     export type AiAgentEvaluationRun = A.AiAgentEvaluationRun;
     export type AiAgentEvaluationRunResult = A.AiAgentEvaluationRunResult;
+    // Discovery & preferences
+    export type AiModelOption = A.AiModelOption;
+    export type ReadinessScore = A.ReadinessScore;
+    export type AiAgentExploreAccessSummary = A.AiAgentExploreAccessSummary;
+    export type ExploreAccessSummaryBody = A.ExploreAccessSummaryBody;
+    export type AiAgentUserPreferences = A.AiAgentUserPreferences;
+    export type GetAgentSuggestionsParams = A.GetAgentSuggestionsParams;
+    export type AgentSuggestionChip = A.AgentSuggestionChip;
+    export type AgentSuggestions = A.AgentSuggestions;
+    // Threads: title & clone
+    export type GenerateThreadTitleResult = A.GenerateThreadTitleResult;
+    export type CloneThreadBody = A.CloneThreadBody;
+    // Artifacts
+    export type AiAgentVerifiedArtifact = A.AiAgentVerifiedArtifact;
+    export type AiAgentVerifiedArtifactsListResult = A.AiAgentVerifiedArtifactsListResult;
+    export type ListVerifiedArtifactsParams = A.ListVerifiedArtifactsParams;
+    export type AiAgentVerifiedQuestion = A.AiAgentVerifiedQuestion;
+    export type AiArtifact = A.AiArtifact;
+    export type AiAgentThreadMessageVizQuery = A.AiAgentThreadMessageVizQuery;
+    // Message feedback
+    export type UpdateMessageFeedbackBody = A.UpdateMessageFeedbackBody;
+    // MCP servers
+    export type AiMcpServerAuthType = A.AiMcpServerAuthType;
+    export type AiMcpServerConnectionStatus = A.AiMcpServerConnectionStatus;
+    export type AiMcpServer = A.AiMcpServer;
+    export type AiMcpServerTool = A.AiMcpServerTool;
+    export type AiAgentMcpServerTool = A.AiAgentMcpServerTool;
+    export type CreateProjectMcpServerBody = A.CreateProjectMcpServerBody;
+    export type AiAgentMcpServerToolUpdate = A.AiAgentMcpServerToolUpdate;
+    export type UpdateAgentMcpServerToolsBody = A.UpdateAgentMcpServerToolsBody;
+    // SQL approval
+    export type SqlApprovalDecision = A.SqlApprovalDecision;
+    export type SubmitSqlApprovalBody = A.SubmitSqlApprovalBody;
+    export type SubmitSqlApprovalResult = A.SubmitSqlApprovalResult;
   }
 }
