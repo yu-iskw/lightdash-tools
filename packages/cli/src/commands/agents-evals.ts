@@ -213,44 +213,47 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .option('--file <path>', 'Read prompts JSON/YAML from file')
     .option('--stdin', 'Read prompts JSON/YAML from stdin')
     .action(
-      wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const options = cmd.opts() as {
-          project: string;
-          prompts?: string;
-          file?: string;
-          stdin?: boolean;
-        };
-        try {
-          const client = getClient();
-          let prompts: unknown[];
+      wrapAction(
+        WRITE_NONDESTRUCTIVE,
+        async (agentUuid: string, evalUuid: string, cmd: Command) => {
+          const options = cmd.opts() as {
+            project: string;
+            prompts?: string;
+            file?: string;
+            stdin?: boolean;
+          };
+          try {
+            const client = getClient();
+            let prompts: unknown[];
 
-          if (hasFileInput(options)) {
-            const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
-            prompts = extractPrompts(parsed);
-          } else if (options.prompts != null) {
-            prompts = JSON.parse(options.prompts) as unknown[];
-          } else {
-            console.error('Error: --prompts, --file, or --stdin is required');
+            if (hasFileInput(options)) {
+              const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
+              prompts = extractPrompts(parsed);
+            } else if (options.prompts != null) {
+              prompts = JSON.parse(options.prompts) as unknown[];
+            } else {
+              console.error('Error: --prompts, --file, or --stdin is required');
+              process.exit(1);
+            }
+
+            const result = await client.v1.aiAgents.appendToEvaluation(
+              options.project,
+              agentUuid,
+              evalUuid,
+              {
+                prompts: prompts as never,
+              },
+            );
+            console.log(JSON.stringify(result, null, 2));
+          } catch (error) {
+            console.error(
+              'Error appending to evaluation:',
+              error instanceof Error ? error.message : String(error),
+            );
             process.exit(1);
           }
-
-          const result = await client.v1.aiAgents.appendToEvaluation(
-            options.project,
-            agentUuid,
-            evalUuid,
-            {
-              prompts: prompts as never,
-            },
-          );
-          console.log(JSON.stringify(result, null, 2));
-        } catch (error) {
-          console.error(
-            'Error appending to evaluation:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      }),
+        },
+      ),
     );
 
   evalsCmd
@@ -279,20 +282,23 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .description('Trigger a new evaluation run')
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
-      wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
-        try {
-          const client = getClient();
-          const result = await client.v1.aiAgents.runEvaluation(project, agentUuid, evalUuid);
-          console.log(JSON.stringify(result, null, 2));
-        } catch (error) {
-          console.error(
-            'Error running evaluation:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      }),
+      wrapAction(
+        WRITE_NONDESTRUCTIVE,
+        async (agentUuid: string, evalUuid: string, cmd: Command) => {
+          const { project } = cmd.opts() as { project: string };
+          try {
+            const client = getClient();
+            const result = await client.v1.aiAgents.runEvaluation(project, agentUuid, evalUuid);
+            console.log(JSON.stringify(result, null, 2));
+          } catch (error) {
+            console.error(
+              'Error running evaluation:',
+              error instanceof Error ? error.message : String(error),
+            );
+            process.exit(1);
+          }
+        },
+      ),
     );
 
   evalsCmd

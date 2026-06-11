@@ -1,14 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import {
-  MCP_PROFILE_CORE_LIFECYCLE,
-  MCP_PROFILE_EVALUATIONS,
-  getMcpProfiles,
-} from './config.js';
 import { registerCapabilities } from './capabilities.js';
-import { registerResources } from './resources/index.js';
+import { MCP_PROFILE_CORE_LIFECYCLE, MCP_PROFILE_EVALUATIONS, getMcpProfiles } from './config.js';
 import { registerPrompts } from './prompts/index.js';
+import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 
 vi.mock('./tools/index.js', () => ({
@@ -47,11 +43,7 @@ describe('registerCapabilities', () => {
   it('registers resources and prompts for default profiles', () => {
     registerCapabilities(server, mockClient);
     expect(registerResources).toHaveBeenCalledWith(server, mockClient);
-    expect(registerPrompts).toHaveBeenCalledWith(
-      server,
-      mockClient,
-      getMcpProfiles(),
-    );
+    expect(registerPrompts).toHaveBeenCalledWith(server, mockClient, getMcpProfiles());
   });
 
   it('skips resources when evaluations profile is disabled', () => {

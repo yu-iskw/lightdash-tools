@@ -3,8 +3,8 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { registerCapabilities } from './capabilities.js';
 import { PACKAGE_VERSION } from './version.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { RegisterCapabilitiesOptions } from './capabilities.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 
 export function createLightdashMcpServer(
   client: LightdashClient,

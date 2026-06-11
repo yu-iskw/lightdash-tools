@@ -13,12 +13,7 @@ const ROOT = path.resolve(__dirname, '..');
 const COMMON_DIST = path.join(ROOT, 'packages/common/dist');
 const OUTPUT_PATH = path.join(ROOT, 'packages/common/dist/operation-registry.json');
 
-const REQUIRED_PROFILES = [
-  'core-lifecycle',
-  'evaluations',
-  'conversations',
-  'discovery-readonly',
-];
+const REQUIRED_PROFILES = ['core-lifecycle', 'evaluations', 'conversations', 'discovery-readonly'];
 
 const P0_OPERATION_IDS = [
   'ai-agents.admin.agents.list',

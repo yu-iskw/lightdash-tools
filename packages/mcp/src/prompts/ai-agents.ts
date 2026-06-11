@@ -10,14 +10,10 @@ import {
   createEvalUuidCompleter,
   createProjectUuidCompleter,
 } from '../completion/ai-agents.js';
-import {
-  MCP_PROFILE_CORE_LIFECYCLE,
-  MCP_PROFILE_EVALUATIONS,
-  hasMcpProfile,
-} from '../config.js';
+import { MCP_PROFILE_CORE_LIFECYCLE, MCP_PROFILE_EVALUATIONS, hasMcpProfile } from '../config.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpProfile } from '../config.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 function scopedArgsSchema(
@@ -32,19 +28,31 @@ function scopedArgsSchema(
 ) {
   const shape: Record<string, z.ZodType> = {};
   if (fields.projectUuid) {
-    shape.projectUuid = completable(z.string().describe('Project UUID'), createProjectUuidCompleter(client));
+    shape.projectUuid = completable(
+      z.string().describe('Project UUID'),
+      createProjectUuidCompleter(client),
+    );
   }
   if (fields.agentUuid) {
-    shape.agentUuid = completable(z.string().describe('Agent UUID'), createAgentUuidCompleter(client));
+    shape.agentUuid = completable(
+      z.string().describe('Agent UUID'),
+      createAgentUuidCompleter(client),
+    );
   }
   if (fields.evalUuid) {
-    shape.evalUuid = completable(z.string().describe('Evaluation UUID'), createEvalUuidCompleter(client));
+    shape.evalUuid = completable(
+      z.string().describe('Evaluation UUID'),
+      createEvalUuidCompleter(client),
+    );
   }
   if (fields.focusArea) {
     shape.focusArea = z.string().optional().describe('Optional focus area for the review');
   }
   if (fields.releaseVersion) {
-    shape.releaseVersion = z.string().optional().describe('Release or deployment version to validate');
+    shape.releaseVersion = z
+      .string()
+      .optional()
+      .describe('Release or deployment version to validate');
   }
   return shape;
 }

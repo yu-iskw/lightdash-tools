@@ -167,7 +167,7 @@ export namespace AiAgents {
   /** Options for cloning a thread from a prompt (POST …/clone/{promptUuid}). */
   export interface CloneThreadBody {
     promptUuid: string;
-    createdFrom?: 'web_app' | 'evals';
+    createdFrom?: 'evals' | 'web_app';
   }
 
   // ─── Artifacts ─────────────────────────────────────────────────────────────────
@@ -202,7 +202,7 @@ export namespace AiAgents {
   // ─── MCP servers (project-scoped; EE-guarded upstream) ───────────────────────
 
   /** MCP server auth type. */
-  export type AiMcpServerAuthType = 'none' | 'bearer' | 'oauth';
+  export type AiMcpServerAuthType = 'bearer' | 'none' | 'oauth';
   /** MCP server connection status. */
   export type AiMcpServerConnectionStatus = 'connected' | 'disconnected' | 'error';
   /** Project MCP server record. */

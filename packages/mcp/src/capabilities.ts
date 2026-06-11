@@ -8,12 +8,12 @@ import {
   MCP_PROFILE_CORE_LIFECYCLE,
   MCP_PROFILE_EVALUATIONS,
 } from './config.js';
-import { registerResources } from './resources/index.js';
 import { registerPrompts } from './prompts/index.js';
+import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpProfile } from './config.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export type RegisterCapabilitiesOptions = {

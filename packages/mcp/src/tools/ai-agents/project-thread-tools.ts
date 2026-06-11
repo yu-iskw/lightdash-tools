@@ -7,9 +7,9 @@ import { z } from 'zod';
 import { projectUuidField } from '../schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_OPEN_WORLD } from '../shared.js';
 
+import type { TextContent } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { TextContent } from '../shared.js';
 
 function jsonToolResult(data: unknown): TextContent {
   return {
@@ -103,11 +103,9 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
           agentUuid: string;
           prompt: string;
         }) => {
-          const { thread, result } = await c.v1.aiAgents.startConversation(
-            projectUuid,
-            agentUuid,
-            { prompt },
-          );
+          const { thread, result } = await c.v1.aiAgents.startConversation(projectUuid, agentUuid, {
+            prompt,
+          });
           return jsonToolResult({ threadUuid: thread.uuid, ...result });
         },
     ),

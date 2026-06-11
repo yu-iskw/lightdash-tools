@@ -41,9 +41,7 @@ describe('AiAgentsMcpServersClient', () => {
     const tools = [{ uuid: 'tool1', toolName: 'search' }];
     vi.mocked(mockHttp.get).mockResolvedValue(tools);
     const result = await client.listMcpServerTools('proj1', 'mcp1');
-    expect(mockHttp.get).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/mcpServers/mcp1/tools',
-    );
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/mcpServers/mcp1/tools');
     expect(result).toEqual(tools);
   });
 

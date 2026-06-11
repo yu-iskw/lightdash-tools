@@ -10,10 +10,14 @@ import {
 } from '@lightdash-tools/common';
 
 import { getClient } from '../../utils/client';
+import { readFileOrStdin } from '../../utils/file-input';
 import { wrapAction } from '../../utils/safety';
-import { readYamlInput } from '../agentops';
 
-import type { GatePolicyEvaluation, GateRunSnapshot, LightdashAiEvaluationGate } from '@lightdash-tools/common';
+import type {
+  GatePolicyEvaluation,
+  GateRunSnapshot,
+  LightdashAiEvaluationGate,
+} from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
 function sleep(ms: number): Promise<void> {
@@ -47,12 +51,20 @@ async function resolveRun(
   let runUuid = gate.spec.runUuid;
 
   if (!runUuid && gate.spec.triggerRun) {
-    const triggered = await client.v1.aiAgents.runEvaluation(projectUuid, agentUuid, evaluationUuid);
+    const triggered = await client.v1.aiAgents.runEvaluation(
+      projectUuid,
+      agentUuid,
+      evaluationUuid,
+    );
     runUuid = triggered.runUuid;
   }
 
   if (!runUuid) {
-    const runs = await client.v1.aiAgents.listAllEvaluationRuns(projectUuid, agentUuid, evaluationUuid);
+    const runs = await client.v1.aiAgents.listAllEvaluationRuns(
+      projectUuid,
+      agentUuid,
+      evaluationUuid,
+    );
     const latest = runs[0];
     if (!latest) {
       throw new Error('No evaluation runs found. Set spec.triggerRun: true or spec.runUuid.');
@@ -63,7 +75,11 @@ async function resolveRun(
   const deadline = Date.now() + options.timeoutMs;
 
   while (true) {
-    const runs = await client.v1.aiAgents.listAllEvaluationRuns(projectUuid, agentUuid, evaluationUuid);
+    const runs = await client.v1.aiAgents.listAllEvaluationRuns(
+      projectUuid,
+      agentUuid,
+      evaluationUuid,
+    );
     const run = runs.find((r) => r.runUuid === runUuid);
     if (!run) {
       throw new Error(`Run ${runUuid} not found`);
@@ -121,7 +137,12 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
     .option('--stdin', 'Read gate YAML from stdin')
     .option('--wait', 'Wait for the evaluation run to complete', false)
     .option('--timeout <seconds>', 'Wait timeout in seconds', (v: string) => parseInt(v, 10), 600)
-    .option('--poll-interval <seconds>', 'Poll interval in seconds', (v: string) => parseInt(v, 10), 10)
+    .option(
+      '--poll-interval <seconds>',
+      'Poll interval in seconds',
+      (v: string) => parseInt(v, 10),
+      10,
+    )
     .option('--output <format>', 'Output format: json, junit, markdown', 'json')
     .action(
       wrapAction(WRITE_OPEN_WORLD, async function (this: Command) {
@@ -141,7 +162,7 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
         }
 
         try {
-          const content = await readYamlInput({ file: options.file, stdin: options.stdin });
+          const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const gate = parseLightdashAiEvaluationGate(content);
           const { run, timedOut } = await resolveRun(gate, {
             wait: options.wait === true,

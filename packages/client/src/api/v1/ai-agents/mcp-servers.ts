@@ -35,7 +35,10 @@ export class AiAgentsMcpServersClient extends BaseApiClient {
   }
 
   /** Refresh tools from the remote MCP server (POST …/tools/refresh). */
-  async refreshMcpServerTools(projectUuid: string, mcpServerUuid: string): Promise<AiMcpServerTool[]> {
+  async refreshMcpServerTools(
+    projectUuid: string,
+    mcpServerUuid: string,
+  ): Promise<AiMcpServerTool[]> {
     return this.http.post<AiMcpServerTool[]>(
       `/projects/${projectUuid}/aiAgents/mcpServers/${mcpServerUuid}/tools/refresh`,
       {},

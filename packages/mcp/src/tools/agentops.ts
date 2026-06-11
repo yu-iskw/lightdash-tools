@@ -15,6 +15,7 @@ import {
 import { z } from 'zod';
 
 import { getSafetyMode } from '../config.js';
+
 import {
   jsonToolResult,
   registerToolSafe,
@@ -23,6 +24,7 @@ import {
   WRITE_DESTRUCTIVE,
 } from './shared.js';
 
+import type { LightdashClient } from '@lightdash-tools/client';
 import type {
   AgentStateSnapshot,
   BundleAgentSpec,
@@ -34,7 +36,6 @@ import type {
   LightdashAiAgentBundle,
   LightdashAiEvaluationGate,
 } from '@lightdash-tools/common';
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 // ─── Shared state fetch (mirrors CLI packages/cli/src/commands/agentops/state.ts) ─
@@ -123,7 +124,10 @@ async function fetchBundleCurrentState(
 
 // ─── Apply (mirrors CLI packages/cli/src/commands/agentops/apply.ts) ───────────
 
-function findDesiredAgent(bundle: LightdashAiAgentBundle, key: string): BundleAgentSpec | undefined {
+function findDesiredAgent(
+  bundle: LightdashAiAgentBundle,
+  key: string,
+): BundleAgentSpec | undefined {
   return bundle.spec.agents.find((a) => a.key === key);
 }
 
@@ -298,7 +302,11 @@ async function resolveRun(
   let runUuid = gate.spec.runUuid;
 
   if (!runUuid && gate.spec.triggerRun) {
-    const triggered = await client.v1.aiAgents.runEvaluation(projectUuid, agentUuid, evaluationUuid);
+    const triggered = await client.v1.aiAgents.runEvaluation(
+      projectUuid,
+      agentUuid,
+      evaluationUuid,
+    );
     runUuid = triggered.runUuid;
   }
 
@@ -388,16 +396,12 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
-      client,
-      (c) =>
-        async ({ bundleYaml }: { bundleYaml: string }) => {
-          const bundle = parseLightdashAiAgentBundle(bundleYaml);
-          const current = await fetchBundleCurrentState(c, bundle);
-          const diff = computeBundleDiff(bundle, current);
-          return jsonToolResult(diff);
-        },
-    ),
+    wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
+      const bundle = parseLightdashAiAgentBundle(bundleYaml);
+      const current = await fetchBundleCurrentState(c, bundle);
+      const diff = computeBundleDiff(bundle, current);
+      return jsonToolResult(diff);
+    }),
   );
 
   registerToolSafe(
@@ -411,36 +415,32 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(
-      client,
-      (c) =>
-        async ({ bundleYaml }: { bundleYaml: string }) => {
-          const bundle = parseLightdashAiAgentBundle(bundleYaml);
-          const current = await fetchBundleCurrentState(c, bundle);
-          const diff = computeBundleDiff(bundle, current);
+    wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
+      const bundle = parseLightdashAiAgentBundle(bundleYaml);
+      const current = await fetchBundleCurrentState(c, bundle);
+      const diff = computeBundleDiff(bundle, current);
 
-          if (diff.summary.deletes > 0 && !isAllowed(getSafetyMode(), WRITE_DESTRUCTIVE)) {
-            return {
-              content: [
-                {
-                  type: 'text' as const,
-                  text: 'Error: bundle requires destructive operations (deletes). Use safety mode write-destructive.',
-                },
-              ],
-              isError: true,
-            };
-          }
+      if (diff.summary.deletes > 0 && !isAllowed(getSafetyMode(), WRITE_DESTRUCTIVE)) {
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: 'Error: bundle requires destructive operations (deletes). Use safety mode write-destructive.',
+            },
+          ],
+          isError: true,
+        };
+      }
 
-          const result = await applyDiff(c, bundle, diff.changes);
-          return jsonToolResult({
-            bundleName: bundle.metadata.name,
-            projectUuid: bundle.spec.projectUuid,
-            summary: diff.summary,
-            applied: result.applied,
-            skipped: result.skipped,
-          });
-        },
-    ),
+      const result = await applyDiff(c, bundle, diff.changes);
+      return jsonToolResult({
+        bundleName: bundle.metadata.name,
+        projectUuid: bundle.spec.projectUuid,
+        summary: diff.summary,
+        applied: result.applied,
+        skipped: result.skipped,
+      });
+    }),
   );
 
   registerToolSafe(
@@ -452,7 +452,10 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
         'Evaluate an evaluation gate YAML policy against a run (may trigger a new run when spec.triggerRun is true)',
       inputSchema: {
         gateYaml: gateYamlField,
-        wait: z.boolean().optional().describe('Wait for the evaluation run to complete (default false)'),
+        wait: z
+          .boolean()
+          .optional()
+          .describe('Wait for the evaluation run to complete (default false)'),
         timeoutSeconds: z
           .number()
           .int()
@@ -533,9 +536,7 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
             return jsonToolResult(payload);
           }
           const text =
-            format === 'junit'
-              ? formatJUnit(gate, evaluation)
-              : formatMarkdown(gate, evaluation);
+            format === 'junit' ? formatJUnit(gate, evaluation) : formatMarkdown(gate, evaluation);
           return { content: [{ type: 'text' as const, text }] };
         },
     ),

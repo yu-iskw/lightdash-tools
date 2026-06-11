@@ -5,7 +5,12 @@
 
 import { BaseApiClient } from '../../base-client';
 
-import type { AiAgent, AiAgentSummary, CreateAiAgent, UpdateAiAgent } from '@lightdash-tools/common';
+import type {
+  AiAgent,
+  AiAgentSummary,
+  CreateAiAgent,
+  UpdateAiAgent,
+} from '@lightdash-tools/common';
 
 export class AiAgentsProjectClient extends BaseApiClient {
   /** List all agents in a project (GET /projects/{projectUuid}/aiAgents). */

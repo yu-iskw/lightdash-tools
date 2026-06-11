@@ -7,25 +7,25 @@
 
 import { getSessionId } from '../audit.js';
 
-export type StructuredLogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type StructuredLogLevel = 'debug' | 'error' | 'info' | 'warn';
 
-export type StructuredLogEntry = {
+export type StructuredLogEntry = Record<string, unknown> & {
   timestamp: string;
   level: StructuredLogLevel;
   component: string;
   event: string;
   message: string;
   sessionId?: string;
-} & Record<string, unknown>;
+};
 
-export type StructuredLogInput = {
+export type StructuredLogInput = Record<string, unknown> & {
   timestamp?: string;
   sessionId?: string;
   level: StructuredLogLevel;
   component: string;
   event: string;
   message: string;
-} & Record<string, unknown>;
+};
 
 /**
  * Emits one RFC-shaped JSON log line to stderr.

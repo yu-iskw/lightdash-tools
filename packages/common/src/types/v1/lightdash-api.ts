@@ -228,7 +228,8 @@ export namespace LightdashApi {
     export type CloneThreadBody = AiAgentsTypes.CloneThreadBody;
     // Artifacts
     export type AiAgentVerifiedArtifact = AiAgentsTypes.AiAgentVerifiedArtifact;
-    export type AiAgentVerifiedArtifactsListResult = AiAgentsTypes.AiAgentVerifiedArtifactsListResult;
+    export type AiAgentVerifiedArtifactsListResult =
+      AiAgentsTypes.AiAgentVerifiedArtifactsListResult;
     export type ListVerifiedArtifactsParams = AiAgentsTypes.ListVerifiedArtifactsParams;
     export type AiAgentVerifiedQuestion = AiAgentsTypes.AiAgentVerifiedQuestion;
     export type AiArtifact = AiAgentsTypes.AiArtifact;

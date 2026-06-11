@@ -25,10 +25,7 @@ describe('schema command', () => {
     it('returns schema for ai-agents.project.agents.list from operation registry', () => {
       const schema = getSchema('ai-agents.project.agents.list');
       expect(schema).not.toBeNull();
-      expect(schema).toHaveProperty(
-        'path',
-        '/api/v1/projects/{projectUuid}/aiAgents',
-      );
+      expect(schema).toHaveProperty('path', '/api/v1/projects/{projectUuid}/aiAgents');
       expect(schema).toHaveProperty('method', 'GET');
       expect(schema).toHaveProperty('cliCommand', 'agents list');
       expect(schema).toHaveProperty('profiles');
@@ -40,9 +37,7 @@ describe('schema command', () => {
       expect(schema).not.toBeNull();
       expect(schema).toHaveProperty('method', 'POST');
       expect(schema).toHaveProperty('cliCommand', 'agents evals create');
-      expect(schema?.params).toEqual(
-        expect.arrayContaining(['projectUuid', 'agentUuid']),
-      );
+      expect(schema?.params).toEqual(expect.arrayContaining(['projectUuid', 'agentUuid']));
     });
 
     it('returns schema for ai-agents.project.threads.start from operation registry', () => {

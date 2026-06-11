@@ -19,13 +19,15 @@ describe('AiAgentsArtifactsClient', () => {
 
   it('listVerifiedArtifacts should call GET …/verified-artifacts with pagination params', async () => {
     const client = new AiAgentsArtifactsClient(mockHttp);
-    const paged = { data: [], pagination: { page: 1, pageSize: 10, totalResults: 0, totalPageCount: 0 } };
+    const paged = {
+      data: [],
+      pagination: { page: 1, pageSize: 10, totalResults: 0, totalPageCount: 0 },
+    };
     vi.mocked(mockHttp.get).mockResolvedValue(paged);
     const result = await client.listVerifiedArtifacts('proj1', 'a1', { page: 1, pageSize: 10 });
-    expect(mockHttp.get).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/verified-artifacts',
-      { params: { page: 1, pageSize: 10 } },
-    );
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/verified-artifacts', {
+      params: { page: 1, pageSize: 10 },
+    });
     expect(result).toEqual(paged);
   });
 

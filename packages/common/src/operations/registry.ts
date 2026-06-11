@@ -35,8 +35,6 @@ export function listOperations(): readonly OperationDescriptor[] {
 }
 
 /** Returns operations that include the given capability profile. */
-export function getOperationsByProfile(
-  profile: CapabilityProfile,
-): readonly OperationDescriptor[] {
+export function getOperationsByProfile(profile: CapabilityProfile): readonly OperationDescriptor[] {
   return ALL_OPERATIONS.filter((operation) => operation.profiles.includes(profile));
 }

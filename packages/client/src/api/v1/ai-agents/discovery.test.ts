@@ -45,10 +45,7 @@ describe('AiAgentsDiscoveryClient', () => {
     const score = { overallScore: 0.8 };
     vi.mocked(mockHttp.post).mockResolvedValue(score);
     const result = await client.evaluateAgentReadiness('proj1', 'a1');
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/evaluateReadiness',
-      {},
-    );
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluateReadiness', {});
     expect(result).toEqual(score);
   });
 
@@ -57,10 +54,9 @@ describe('AiAgentsDiscoveryClient', () => {
     const summary = [{ exploreName: 'orders', metrics: [], dimensions: [], joinedTables: [] }];
     vi.mocked(mockHttp.post).mockResolvedValue(summary);
     const result = await client.getExploreAccessSummary('proj1', 'a1', { tags: ['ai'] });
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/explore-access-summary',
-      { tags: ['ai'] },
-    );
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
+      tags: ['ai'],
+    });
     expect(result).toEqual(summary);
   });
 
@@ -68,10 +64,9 @@ describe('AiAgentsDiscoveryClient', () => {
     const client = new AiAgentsDiscoveryClient(mockHttp);
     vi.mocked(mockHttp.post).mockResolvedValue([]);
     await client.getExploreAccessSummary('proj1', 'a1');
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/explore-access-summary',
-      { tags: null },
-    );
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
+      tags: null,
+    });
   });
 
   it('getUserAgentPreferences should call GET …/preferences', async () => {

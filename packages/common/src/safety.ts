@@ -5,18 +5,18 @@ import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS }
  * Used by {@link OperationPolicy} and {@link isOperationAllowed}.
  */
 export type SafetyImpact =
-  | 'read'
-  | 'write-nondestructive'
-  | 'write-destructive'
   | 'credential-sensitive'
-  | 'external-side-effect';
+  | 'external-side-effect'
+  | 'read'
+  | 'write-destructive'
+  | 'write-nondestructive';
 
 /**
  * Hierarchical safety modes for Lightdash AI tools and CLI.
  */
 export enum SafetyMode {
   READ_ONLY = 'read-only',
-  /** @deprecated Use {@link SafetyMode.WRITE_NONDESTRUCTIVE} instead. */
+  /** Deprecated alias — prefer {@link SafetyMode.WRITE_NONDESTRUCTIVE}. */
   WRITE_IDEMPOTENT = 'write-idempotent',
   WRITE_NONDESTRUCTIVE = 'write-nondestructive',
   WRITE_DESTRUCTIVE = 'write-destructive',
@@ -48,8 +48,8 @@ export const READ_ONLY_DEFAULT: ToolAnnotations = {
 };
 
 /**
- * Preset: write, non-destructive, idempotent (e.g. upsert by slug). Use for create/update tools.
- * @deprecated Use {@link WRITE_NONDESTRUCTIVE} for new tools; idempotent behavior is not implied by safety mode.
+ * Legacy preset: write, non-destructive, idempotent (e.g. upsert by slug).
+ * Prefer {@link WRITE_NONDESTRUCTIVE} for new tools; idempotent behavior is not implied by safety mode.
  */
 export const WRITE_IDEMPOTENT: ToolAnnotations = {
   readOnlyHint: false,

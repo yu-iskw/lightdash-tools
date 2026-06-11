@@ -1,5 +1,3 @@
-import { describe, expect, it } from 'vitest';
-
 import {
   GateExitCode,
   computeBundleDiff,
@@ -7,6 +5,7 @@ import {
   parseLightdashAiAgentBundle,
   parseLightdashAiEvaluationGate,
 } from '@lightdash-tools/common';
+import { describe, expect, it } from 'vitest';
 
 const PROJECT_UUID = '00000000-0000-4000-8000-000000000001';
 const AGENT_UUID = '00000000-0000-4000-8000-000000000010';
@@ -63,10 +62,7 @@ describe('AgentOps schema validation', () => {
   });
 
   it('rejects bundle without agents', () => {
-    const yaml = validBundleYaml.replace(
-      /agents:[\s\S]*/,
-      'agents: []\n',
-    );
+    const yaml = validBundleYaml.replace(/agents:[\s\S]*/, 'agents: []\n');
     expect(() => parseLightdashAiAgentBundle(yaml)).toThrow(/Invalid LightdashAiAgentBundle/);
   });
 
@@ -103,7 +99,13 @@ describe('AgentOps bundle diff', () => {
               evalUuid: EVAL_UUID,
               title: 'Smoke Tests',
               description: null,
-              prompts: [{ type: 'string' as const, prompt: 'What are total sales?', expectedResponse: null }],
+              prompts: [
+                {
+                  type: 'string' as const,
+                  prompt: 'What are total sales?',
+                  expectedResponse: null,
+                },
+              ],
             },
           ],
         },
@@ -144,7 +146,13 @@ describe('AgentOps bundle diff', () => {
               evalUuid: EVAL_UUID,
               title: 'Smoke Tests',
               description: null,
-              prompts: [{ type: 'string' as const, prompt: 'What are total sales?', expectedResponse: null }],
+              prompts: [
+                {
+                  type: 'string' as const,
+                  prompt: 'What are total sales?',
+                  expectedResponse: null,
+                },
+              ],
             },
           ],
         },
@@ -177,7 +185,13 @@ describe('AgentOps bundle diff', () => {
               evalUuid: EVAL_UUID,
               title: 'Smoke Tests',
               description: null,
-              prompts: [{ type: 'string' as const, prompt: 'What are total sales?', expectedResponse: null }],
+              prompts: [
+                {
+                  type: 'string' as const,
+                  prompt: 'What are total sales?',
+                  expectedResponse: null,
+                },
+              ],
             },
           ],
         },
@@ -242,5 +256,26 @@ describe('AgentOps gate policy evaluation', () => {
     const result = evaluateGatePolicy({ requireAllPassed: true }, baseRun);
     expect(result.passed).toBe(false);
     expect(result.exitCode).toBe(GateExitCode.POLICY_FAILED);
+  });
+
+  it('fails when maxFailedAssessments exceeded', () => {
+    const result = evaluateGatePolicy({ maxFailedAssessments: 0 }, baseRun);
+    expect(result.passed).toBe(false);
+    expect(result.reasons[0]).toMatch(/maxFailedAssessments/);
+  });
+
+  it('fails when minPassedAssessments not met', () => {
+    const result = evaluateGatePolicy({ minPassedAssessments: 10 }, baseRun);
+    expect(result.passed).toBe(false);
+    expect(result.reasons[0]).toMatch(/minPassedAssessments/);
+  });
+
+  it('fails minPassRate when no assessments exist', () => {
+    const result = evaluateGatePolicy(
+      { minPassRate: 0.5 },
+      { ...baseRun, passedAssessments: 0, failedAssessments: 0 },
+    );
+    expect(result.passed).toBe(false);
+    expect(result.reasons[0]).toMatch(/at least one assessment/);
   });
 });

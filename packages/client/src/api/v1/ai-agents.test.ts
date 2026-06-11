@@ -139,7 +139,11 @@ describe('AiAgentsClient', () => {
     const thread = { uuid: 't1', title: null };
     vi.mocked(mockHttp.post).mockResolvedValue(thread);
     const result = await client.createAgentThread('proj1', 'a1');
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', {}, undefined);
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads',
+      {},
+      undefined,
+    );
     expect(result).toEqual(thread);
   });
 
@@ -149,7 +153,11 @@ describe('AiAgentsClient', () => {
     const thread = { uuid: 't1', title: null };
     vi.mocked(mockHttp.post).mockResolvedValue(thread);
     await client.createAgentThread('proj1', 'a1', body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', body, undefined);
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads',
+      body,
+      undefined,
+    );
   });
 
   it('getAgentThread should call GET .../threads/{threadUuid}', async () => {

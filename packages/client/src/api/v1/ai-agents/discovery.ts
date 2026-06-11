@@ -18,9 +18,7 @@ import type {
 export class AiAgentsDiscoveryClient extends BaseApiClient {
   /** Available model options for an agent (GET …/{agentUuid}/models). */
   async getAgentModelOptions(projectUuid: string, agentUuid: string): Promise<AiModelOption[]> {
-    return this.http.get<AiModelOption[]>(
-      `/projects/${projectUuid}/aiAgents/${agentUuid}/models`,
-    );
+    return this.http.get<AiModelOption[]>(`/projects/${projectUuid}/aiAgents/${agentUuid}/models`);
   }
 
   /** Suggestion chips for an agent (GET …/{agentUuid}/suggestions). */
@@ -36,10 +34,7 @@ export class AiAgentsDiscoveryClient extends BaseApiClient {
   }
 
   /** Evaluate agent readiness (POST …/{agentUuid}/evaluateReadiness). */
-  async evaluateAgentReadiness(
-    projectUuid: string,
-    agentUuid: string,
-  ): Promise<ReadinessScore> {
+  async evaluateAgentReadiness(projectUuid: string, agentUuid: string): Promise<ReadinessScore> {
     return this.http.post<ReadinessScore>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/evaluateReadiness`,
       {},
@@ -63,16 +58,11 @@ export class AiAgentsDiscoveryClient extends BaseApiClient {
 
   /** Get user default agent preferences (GET …/preferences). */
   async getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences> {
-    return this.http.get<AiAgentUserPreferences>(
-      `/projects/${projectUuid}/aiAgents/preferences`,
-    );
+    return this.http.get<AiAgentUserPreferences>(`/projects/${projectUuid}/aiAgents/preferences`);
   }
 
   /** Set user default agent preferences (POST …/preferences). */
-  async setUserAgentPreferences(
-    projectUuid: string,
-    body: AiAgentUserPreferences,
-  ): Promise<void> {
+  async setUserAgentPreferences(projectUuid: string, body: AiAgentUserPreferences): Promise<void> {
     await this.http.post<void>(`/projects/${projectUuid}/aiAgents/preferences`, body);
   }
 

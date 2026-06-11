@@ -20,7 +20,10 @@ export {
 
 /** Completion callbacks keyed by template variable name (for resource templates). */
 export type AiAgentCompletionCallbacks = {
-  projectUuid: (value: string, context?: { arguments?: Record<string, string> }) => Promise<string[]>;
+  projectUuid: (
+    value: string,
+    context?: { arguments?: Record<string, string> },
+  ) => Promise<string[]>;
   agentUuid: (value: string, context?: { arguments?: Record<string, string> }) => Promise<string[]>;
   evalUuid: (value: string, context?: { arguments?: Record<string, string> }) => Promise<string[]>;
   runUuid: (value: string, context?: { arguments?: Record<string, string> }) => Promise<string[]>;

@@ -143,10 +143,7 @@ describe('config', () => {
 
     it('should parse comma-separated profiles from env', () => {
       process.env.LIGHTDASH_TOOLS_MCP_PROFILES = 'evaluations, core-lifecycle';
-      expect([...getMcpProfiles()]).toEqual([
-        MCP_PROFILE_EVALUATIONS,
-        MCP_PROFILE_CORE_LIFECYCLE,
-      ]);
+      expect([...getMcpProfiles()]).toEqual([MCP_PROFILE_EVALUATIONS, MCP_PROFILE_CORE_LIFECYCLE]);
     });
 
     it('hasMcpProfile reflects active profiles', () => {

@@ -162,11 +162,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
             body = patch as Parameters<typeof client.v1.aiAgents.updateAgent>[2];
           }
 
-          const result = await client.v1.aiAgents.updateAgent(
-            options.project,
-            agentUuid,
-            body,
-          );
+          const result = await client.v1.aiAgents.updateAgent(options.project, agentUuid, body);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(

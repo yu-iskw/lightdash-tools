@@ -127,6 +127,15 @@ describe('operation registry', () => {
     }
   });
 
+  it('returns undefined for unknown operation id', () => {
+    expect(getOperation('ai-agents.unknown.operation')).toBeUndefined();
+  });
+
+  it('filters operations by profile with empty result for unknown profile usage', () => {
+    const ops = getOperationsByProfile('core-lifecycle');
+    expect(ops.every((op) => op.profiles.includes('core-lifecycle'))).toBe(true);
+  });
+
   it('rejects descriptors whose safetyImpact disagrees with MCP annotations', () => {
     expect(() =>
       defineOperation({

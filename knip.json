@@ -25,7 +25,8 @@
     },
     "packages/common": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["openapi-typescript"]
     },
     "packages/client": {
       "entry": ["src/**/*.test.ts"],

@@ -144,18 +144,18 @@ describe('Safety Logic', () => {
 
     it('should allow read, write-nondestructive, and external-side-effect in write-nondestructive mode', () => {
       expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('read'))).toBe(true);
-      expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('write-nondestructive'))).toBe(
-        true,
-      );
-      expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('external-side-effect'))).toBe(
-        true,
-      );
+      expect(
+        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('write-nondestructive')),
+      ).toBe(true);
+      expect(
+        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('external-side-effect')),
+      ).toBe(true);
       expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('write-destructive'))).toBe(
         false,
       );
-      expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('credential-sensitive'))).toBe(
-        false,
-      );
+      expect(
+        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('credential-sensitive')),
+      ).toBe(false);
     });
 
     it('should treat write-idempotent mode the same as write-nondestructive for policy checks', () => {

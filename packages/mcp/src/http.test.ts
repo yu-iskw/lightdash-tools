@@ -6,6 +6,7 @@
 
 import { timingSafeEqual } from 'node:crypto';
 import { EventEmitter } from 'node:events';
+
 import { describe, expect, it } from 'vitest';
 
 import type { IncomingMessage } from 'node:http';
@@ -109,20 +110,26 @@ describe('HTTP transport helpers', () => {
   describe('health endpoints', () => {
     it('live health returns ok status payload', () => {
       const res = createMockResponse();
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ status: 'ok' }));
+      res
+        .writeHead(200, { 'Content-Type': 'application/json' })
+        .end(JSON.stringify({ status: 'ok' }));
       expect(res.statusCode).toBe(200);
       expect(JSON.parse(res.body ?? '{}')).toEqual({ status: 'ok' });
     });
 
     it('ready health returns ready when client config is available', () => {
       const res = createMockResponse();
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ status: 'ready' }));
+      res
+        .writeHead(200, { 'Content-Type': 'application/json' })
+        .end(JSON.stringify({ status: 'ready' }));
       expect(JSON.parse(res.body ?? '{}')).toEqual({ status: 'ready' });
     });
 
     it('ready health returns not ready with 503 when client config is missing', () => {
       const res = createMockResponse();
-      res.writeHead(503, { 'Content-Type': 'application/json' }).end(JSON.stringify({ status: 'not ready' }));
+      res
+        .writeHead(503, { 'Content-Type': 'application/json' })
+        .end(JSON.stringify({ status: 'not ready' }));
       expect(res.statusCode).toBe(503);
       expect(JSON.parse(res.body ?? '{}')).toEqual({ status: 'not ready' });
     });

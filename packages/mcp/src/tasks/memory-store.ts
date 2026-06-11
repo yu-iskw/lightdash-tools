@@ -8,7 +8,7 @@ import { randomUUID } from 'node:crypto';
 
 export const ENV_LIGHTDASH_TOOLS_MCP_TASKS = 'LIGHTDASH_TOOLS_MCP_TASKS' as const;
 
-export type McpTaskStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type McpTaskStatus = 'cancelled' | 'completed' | 'failed' | 'pending' | 'running';
 
 export type McpTask = {
   id: string;

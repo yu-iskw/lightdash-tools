@@ -16,6 +16,7 @@ import { AiAgentsSqlApprovalClient } from './sql-approval';
 import { AiAgentsThreadsClient } from './threads';
 
 import type { RequestOptions } from './request-options';
+import type { HttpClient } from '../../../http/http-client';
 import type {
   AgentSuggestions,
   AiAgent,
@@ -64,7 +65,6 @@ import type {
   UpdateEvaluationBody,
   UpdateMessageFeedbackBody,
 } from '@lightdash-tools/common';
-import type { HttpClient } from '../../../http/http-client';
 
 export class AiAgentsClient extends BaseApiClient {
   private readonly admin: AiAgentsAdminClient;
@@ -162,10 +162,7 @@ export class AiAgentsClient extends BaseApiClient {
     return this.discovery.getUserAgentPreferences(projectUuid);
   }
 
-  setUserAgentPreferences(
-    projectUuid: string,
-    body: AiAgentUserPreferences,
-  ): Promise<void> {
+  setUserAgentPreferences(projectUuid: string, body: AiAgentUserPreferences): Promise<void> {
     return this.discovery.setUserAgentPreferences(projectUuid, body);
   }
 
@@ -204,13 +201,7 @@ export class AiAgentsClient extends BaseApiClient {
     body: GenerateAgentThreadBody,
     options?: RequestOptions,
   ): Promise<CreateAgentThreadMessageResult> {
-    return this.threads.createAgentThreadMessage(
-      projectUuid,
-      agentUuid,
-      threadUuid,
-      body,
-      options,
-    );
+    return this.threads.createAgentThreadMessage(projectUuid, agentUuid, threadUuid, body, options);
   }
 
   generateAgentThreadResponse(
@@ -311,11 +302,7 @@ export class AiAgentsClient extends BaseApiClient {
     return this.artifacts.listVerifiedQuestions(projectUuid, agentUuid);
   }
 
-  getArtifact(
-    projectUuid: string,
-    agentUuid: string,
-    artifactUuid: string,
-  ): Promise<AiArtifact> {
+  getArtifact(projectUuid: string, agentUuid: string, artifactUuid: string): Promise<AiArtifact> {
     return this.artifacts.getArtifact(projectUuid, agentUuid, artifactUuid);
   }
 
@@ -334,12 +321,7 @@ export class AiAgentsClient extends BaseApiClient {
     threadUuid: string,
     messageUuid: string,
   ): Promise<AiAgentThreadMessageVizQuery> {
-    return this.artifacts.getMessageVizQuery(
-      projectUuid,
-      agentUuid,
-      threadUuid,
-      messageUuid,
-    );
+    return this.artifacts.getMessageVizQuery(projectUuid, agentUuid, threadUuid, messageUuid);
   }
 
   // ─── Message feedback ────────────────────────────────────────────────────────
@@ -377,10 +359,7 @@ export class AiAgentsClient extends BaseApiClient {
     return this.mcpServers.listMcpServerTools(projectUuid, mcpServerUuid);
   }
 
-  refreshMcpServerTools(
-    projectUuid: string,
-    mcpServerUuid: string,
-  ): Promise<AiMcpServerTool[]> {
+  refreshMcpServerTools(projectUuid: string, mcpServerUuid: string): Promise<AiMcpServerTool[]> {
     return this.mcpServers.refreshMcpServerTools(projectUuid, mcpServerUuid);
   }
 
@@ -394,12 +373,7 @@ export class AiAgentsClient extends BaseApiClient {
     mcpServerUuid: string,
     body: UpdateAgentMcpServerToolsBody,
   ): Promise<AiAgentMcpServerTool[]> {
-    return this.mcpServers.updateAgentMcpServerTools(
-      projectUuid,
-      agentUuid,
-      mcpServerUuid,
-      body,
-    );
+    return this.mcpServers.updateAgentMcpServerTools(projectUuid, agentUuid, mcpServerUuid, body);
   }
 
   // ─── SQL approval ────────────────────────────────────────────────────────────
@@ -411,21 +385,12 @@ export class AiAgentsClient extends BaseApiClient {
     toolCallId: string,
     body: SubmitSqlApprovalBody,
   ): Promise<SubmitSqlApprovalResult> {
-    return this.sqlApproval.submitSqlApproval(
-      projectUuid,
-      agentUuid,
-      threadUuid,
-      toolCallId,
-      body,
-    );
+    return this.sqlApproval.submitSqlApproval(projectUuid, agentUuid, threadUuid, toolCallId, body);
   }
 
   // ─── Project-scoped: evaluations ─────────────────────────────────────────────
 
-  listEvaluations(
-    projectUuid: string,
-    agentUuid: string,
-  ): Promise<AiAgentEvaluationSummary[]> {
+  listEvaluations(projectUuid: string, agentUuid: string): Promise<AiAgentEvaluationSummary[]> {
     return this.evaluations.listEvaluations(projectUuid, agentUuid);
   }
 

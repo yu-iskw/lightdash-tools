@@ -125,7 +125,9 @@ describe('input-validation', () => {
     });
 
     it('throws when slug exceeds max length', () => {
-      expect(() => validateSlug('a'.repeat(257))).toThrow('Slug must be between 1 and 256 characters');
+      expect(() => validateSlug('a'.repeat(257))).toThrow(
+        'Slug must be between 1 and 256 characters',
+      );
     });
 
     it('accepts slug at max length', () => {

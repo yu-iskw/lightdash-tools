@@ -14,9 +14,9 @@ import {
   WRITE_DESTRUCTIVE,
 } from '../shared.js';
 
+import type { TextContent } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { TextContent } from '../shared.js';
 
 const evaluationPromptInputSchema = z.union([
   z.object({

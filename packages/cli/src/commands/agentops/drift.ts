@@ -2,11 +2,16 @@
  * agentops drift — detect configuration drift vs desired bundle state.
  */
 
-import { READ_ONLY_DEFAULT, detectBundleDrift, parseLightdashAiAgentBundle } from '@lightdash-tools/common';
+import {
+  READ_ONLY_DEFAULT,
+  detectBundleDrift,
+  parseLightdashAiAgentBundle,
+} from '@lightdash-tools/common';
 
 import { getClient } from '../../utils/client';
+import { readFileOrStdin } from '../../utils/file-input';
 import { wrapAction } from '../../utils/safety';
-import { readYamlInput } from '../agentops';
+
 import { fetchBundleCurrentState } from './state';
 
 import type { Command } from 'commander';
@@ -21,7 +26,7 @@ export function registerAgentopsDriftCommand(agentopsCmd: Command): void {
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
         const options = this.opts() as { file?: string; stdin?: boolean };
         try {
-          const content = await readYamlInput({ file: options.file, stdin: options.stdin });
+          const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const bundle = parseLightdashAiAgentBundle(content);
           const client = getClient();
           const current = await fetchBundleCurrentState(client, bundle);
@@ -43,7 +48,10 @@ export function registerAgentopsDriftCommand(agentopsCmd: Command): void {
             process.exit(1);
           }
         } catch (error) {
-          console.error('Error detecting drift:', error instanceof Error ? error.message : String(error));
+          console.error(
+            'Error detecting drift:',
+            error instanceof Error ? error.message : String(error),
+          );
           process.exit(1);
         }
       }),

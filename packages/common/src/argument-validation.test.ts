@@ -39,9 +39,7 @@ describe('argument-validation', () => {
       const descriptors: ArgumentDescriptor[] = [
         { name: 'projectUuid', source: 'option', semanticType: 'uuid', required: true },
       ];
-      expect(() =>
-        validateArguments({ projectUuid: VALID_UUID }, descriptors),
-      ).not.toThrow();
+      expect(() => validateArguments({ projectUuid: VALID_UUID }, descriptors)).not.toThrow();
       expect(() => validateArguments({ projectUuid: 'bad-uuid' }, descriptors)).toThrow(
         'Invalid UUID format',
       );
@@ -161,17 +159,14 @@ describe('argument-validation', () => {
 
     it('validates resource id keys inside arrays', () => {
       expect(() =>
-        validateResourceIdsInObject([
-          { projectUuid: VALID_UUID },
-          { projectUuid: 'bad-uuid' },
-        ]),
+        validateResourceIdsInObject([{ projectUuid: VALID_UUID }, { projectUuid: 'bad-uuid' }]),
       ).toThrow('Invalid UUID format');
     });
 
     it('validates uuid keys with uuid rules', () => {
-      expect(() =>
-        validateResourceIdsInObject({ runUuid: 'not-a-uuid' }),
-      ).toThrow('Invalid UUID format');
+      expect(() => validateResourceIdsInObject({ runUuid: 'not-a-uuid' })).toThrow(
+        'Invalid UUID format',
+      );
     });
 
     it('validates slug key with slug rules', () => {

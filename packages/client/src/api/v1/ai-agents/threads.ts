@@ -107,9 +107,7 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     maybeOptions?: RequestOptions,
   ): Promise<GenerateAgentThreadResult> {
     const hasPromptBody =
-      bodyOrOptions !== undefined &&
-      typeof bodyOrOptions === 'object' &&
-      'prompt' in bodyOrOptions;
+      bodyOrOptions !== undefined && typeof bodyOrOptions === 'object' && 'prompt' in bodyOrOptions;
 
     if (hasPromptBody) {
       const body = bodyOrOptions as GenerateAgentThreadBody;
@@ -137,13 +135,7 @@ export class AiAgentsThreadsClient extends BaseApiClient {
   ): Promise<{ thread: AiAgentThreadSummary; result: GenerateAgentThreadResult }> {
     const { threadBody, ...requestOptions } = options ?? {};
     const thread = await this.createAgentThread(projectUuid, agentUuid, threadBody, requestOptions);
-    await this.createAgentThreadMessage(
-      projectUuid,
-      agentUuid,
-      thread.uuid,
-      body,
-      requestOptions,
-    );
+    await this.createAgentThreadMessage(projectUuid, agentUuid, thread.uuid, body, requestOptions);
     const result = await this.generateAgentThreadResponse(
       projectUuid,
       agentUuid,

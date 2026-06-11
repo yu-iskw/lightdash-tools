@@ -105,7 +105,7 @@ export type GateExitCodeValue = (typeof GateExitCode)[keyof typeof GateExitCode]
 
 // ─── Diff / drift types ────────────────────────────────────────────────────────
 
-export type DiffOperation = 'create' | 'update' | 'delete' | 'noop';
+export type DiffOperation = 'create' | 'delete' | 'noop' | 'update';
 
 export type BundleResourceType = 'agent' | 'evaluation';
 
@@ -167,7 +167,7 @@ export interface BundleCurrentState {
 
 export interface GateRunSnapshot {
   runUuid: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: 'completed' | 'failed' | 'pending' | 'running';
   passedAssessments: number;
   failedAssessments: number;
   completedAt: string | null;
@@ -247,7 +247,7 @@ function promptsEqual(
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function agentFieldsToCompare(agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
+function agentFieldsToCompare(_agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
   return [
     'name',
     'description',
@@ -284,7 +284,10 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
   };
 }
 
-function evaluationToSnapshot(evalSpec: BundleEvaluationSpec, evalUuid: string): EvaluationStateSnapshot {
+function evaluationToSnapshot(
+  evalSpec: BundleEvaluationSpec,
+  evalUuid: string,
+): EvaluationStateSnapshot {
   return {
     evalUuid,
     title: evalSpec.title,
@@ -433,7 +436,8 @@ export function computeBundleDiff(
 
     for (const existingEval of match.evaluations) {
       const isDesired = desiredAgent.evaluations.some(
-        (e) => (e.uuid != null && e.uuid === existingEval.evalUuid) || e.title === existingEval.title,
+        (e) =>
+          (e.uuid != null && e.uuid === existingEval.evalUuid) || e.title === existingEval.title,
       );
       if (!isDesired) {
         changes.push({
@@ -505,10 +509,7 @@ export function getLightdashAiEvaluationGateJsonSchema(): Record<string, unknown
   return z.toJSONSchema(lightdashAiEvaluationGateSchema) as Record<string, unknown>;
 }
 
-export function evaluateGatePolicy(
-  policy: GatePolicy,
-  run: GateRunSnapshot,
-): GatePolicyEvaluation {
+export function evaluateGatePolicy(policy: GatePolicy, run: GateRunSnapshot): GatePolicyEvaluation {
   const reasons: string[] = [];
   const totalAssessments = run.passedAssessments + run.failedAssessments;
   const passRate = totalAssessments > 0 ? run.passedAssessments / totalAssessments : null;

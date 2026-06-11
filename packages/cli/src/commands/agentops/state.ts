@@ -2,6 +2,7 @@
  * Fetches current Lightdash state for AgentOps bundle operations.
  */
 
+import type { LightdashClient } from '@lightdash-tools/client';
 import type {
   AgentStateSnapshot,
   BundleAgentSpec,
@@ -9,7 +10,6 @@ import type {
   EvaluationStateSnapshot,
   LightdashAiAgentBundle,
 } from '@lightdash-tools/common';
-import type { LightdashClient } from '@lightdash-tools/client';
 
 function toAgentSnapshot(agent: {
   uuid: string;

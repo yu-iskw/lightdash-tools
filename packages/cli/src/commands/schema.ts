@@ -172,9 +172,7 @@ export function registerSchemaCommand(program: Command): void {
 
   schemaCmd
     .command('get <resource>')
-    .description(
-      'Get schema for a resource (e.g. charts.list, ai-agents.project.agents.list)',
-    )
+    .description('Get schema for a resource (e.g. charts.list, ai-agents.project.agents.list)')
     .action(
       wrapAction(READ_ONLY_DEFAULT, (resource: string) => {
         const schema = getSchema(resource);

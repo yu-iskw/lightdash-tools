@@ -95,7 +95,9 @@ function validateIdempotentHint(
   id: string,
 ): void {
   if (impact === 'read' && annotations.idempotentHint !== true) {
-    throw new Error(`Operation '${id}': read operations must set mcp.annotations.idempotentHint = true`);
+    throw new Error(
+      `Operation '${id}': read operations must set mcp.annotations.idempotentHint = true`,
+    );
   }
   if (impact === 'write-destructive' && annotations.idempotentHint === true) {
     throw new Error(

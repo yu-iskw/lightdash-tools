@@ -11,14 +11,22 @@ import {
 } from '@lightdash-tools/common';
 
 import { getClient } from '../../utils/client';
+import { readFileOrStdin } from '../../utils/file-input';
 import { getSafetyMode, wrapAction } from '../../utils/safety';
-import { readYamlInput } from '../agentops';
+
 import { fetchBundleCurrentState } from './state';
 
-import type { BundleAgentSpec, BundleDiffChange, LightdashAiAgentBundle } from '@lightdash-tools/common';
+import type {
+  BundleAgentSpec,
+  BundleDiffChange,
+  LightdashAiAgentBundle,
+} from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
-function findDesiredAgent(bundle: LightdashAiAgentBundle, key: string): BundleAgentSpec | undefined {
+function findDesiredAgent(
+  bundle: LightdashAiAgentBundle,
+  key: string,
+): BundleAgentSpec | undefined {
   return bundle.spec.agents.find((a) => a.key === key);
 }
 
@@ -170,7 +178,7 @@ export function registerAgentopsApplyCommand(agentopsCmd: Command): void {
       wrapAction(WRITE_NONDESTRUCTIVE, async function (this: Command) {
         const options = this.opts() as { file?: string; stdin?: boolean };
         try {
-          const content = await readYamlInput({ file: options.file, stdin: options.stdin });
+          const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const bundle = parseLightdashAiAgentBundle(content);
           const client = getClient();
           const current = await fetchBundleCurrentState(client, bundle);
@@ -198,7 +206,10 @@ export function registerAgentopsApplyCommand(agentopsCmd: Command): void {
             ),
           );
         } catch (error) {
-          console.error('Error applying bundle:', error instanceof Error ? error.message : String(error));
+          console.error(
+            'Error applying bundle:',
+            error instanceof Error ? error.message : String(error),
+          );
           process.exit(1);
         }
       }),

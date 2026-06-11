@@ -123,6 +123,39 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
   );
 }
 
+function validationBlockedContent(message: string): BlockedContent {
+  return {
+    content: [{ type: 'text', text: message }],
+    isError: true,
+    _lightdashBlocked: true,
+  };
+}
+
+function runValidation(validate: () => void, label: string): BlockedContent | undefined {
+  try {
+    validate();
+    return undefined;
+  } catch (err) {
+    return validationBlockedContent(
+      `Error: Invalid ${label}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
+
+function validateToolArgs(args: unknown): BlockedContent | undefined {
+  for (const uuid of extractProjectUuids(args)) {
+    const error = runValidation(() => validateResourceId(uuid), 'resource ID');
+    if (error) return error;
+  }
+  const record = args as Record<string, unknown>;
+  const slug = record?.slug;
+  if (typeof slug === 'string') {
+    const error = runValidation(() => validateResourceId(slug), 'slug');
+    if (error) return error;
+  }
+  return runValidation(() => validateResourceIdsInObject(args), 'resource ID');
+}
+
 /**
  * Registers a tool with prefix and annotations, applying all guardrail layers.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
@@ -187,53 +220,9 @@ export function registerToolSafe(
   // Validate resource IDs (projectUuid, slug, etc.) before handler.
   const validatedInner = finalHandler;
   finalHandler = async (args, extra): Promise<TextContent> => {
-    const projectUuids = extractProjectUuids(args);
-    for (const uuid of projectUuids) {
-      try {
-        validateResourceId(uuid);
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
-    }
-    const a = args as Record<string, unknown>;
-    if (typeof a?.slug === 'string') {
-      try {
-        validateResourceId(a.slug);
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Invalid slug: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
-    }
-    try {
-      validateResourceIdsInObject(args);
-    } catch (err) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
-          },
-        ],
-        isError: true,
-        _lightdashBlocked: true,
-      } as BlockedContent;
+    const validationError = validateToolArgs(args);
+    if (validationError) {
+      return validationError;
     }
     return validatedInner(args, extra);
   };

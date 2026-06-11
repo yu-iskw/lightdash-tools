@@ -97,7 +97,9 @@ export function validateSlug(id: string): string {
     throw new Error(`Slug must be between ${SLUG_MIN_LENGTH} and ${SLUG_MAX_LENGTH} characters`);
   }
   if (!SLUG_REGEX.test(id)) {
-    throw new Error('Slug must contain only alphanumeric characters, dots, underscores, and hyphens');
+    throw new Error(
+      'Slug must contain only alphanumeric characters, dots, underscores, and hyphens',
+    );
   }
   return id;
 }
