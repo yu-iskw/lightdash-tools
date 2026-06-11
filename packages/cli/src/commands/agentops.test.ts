@@ -167,6 +167,84 @@ describe('AgentOps bundle diff', () => {
     });
   });
 
+  it('reports noop when API has false booleans and bundle omits them', () => {
+    const bundleWithoutBooleans = parseLightdashAiAgentBundle(`
+apiVersion: lightdash.ai/v1alpha1
+kind: LightdashAiAgentBundle
+metadata:
+  name: sales-bundle
+spec:
+  projectUuid: ${PROJECT_UUID}
+  agents:
+    - key: sales
+      uuid: ${AGENT_UUID}
+      name: Sales Agent
+      instruction: Help with sales
+      evaluations: []
+`);
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Sales Agent',
+            description: null,
+            instruction: 'Help with sales',
+            tags: null,
+            enableDataAccess: false,
+            enableSelfImprovement: false,
+          },
+          evaluations: [],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(bundleWithoutBooleans, current);
+    expect(diff.hasDrift).toBe(false);
+    expect(diff.summary.updates).toBe(0);
+    expect(diff.summary.noops).toBe(1);
+  });
+
+  it('includes agentUuid on name-matched agent update changes', () => {
+    const nameMatchedBundle = parseLightdashAiAgentBundle(`
+apiVersion: lightdash.ai/v1alpha1
+kind: LightdashAiAgentBundle
+metadata:
+  name: sales-bundle
+spec:
+  projectUuid: ${PROJECT_UUID}
+  agents:
+    - key: sales
+      name: Sales Agent
+      instruction: Updated instruction
+      evaluations: []
+`);
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Sales Agent',
+            description: null,
+            instruction: 'Help with sales',
+            tags: null,
+          },
+          evaluations: [],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(nameMatchedBundle, current);
+    const agentUpdate = diff.changes.find(
+      (c) => c.resourceType === 'agent' && c.operation === 'update',
+    );
+    expect(agentUpdate?.agentUuid).toBe(AGENT_UUID);
+  });
+
   it('reports delete for agents not in bundle', () => {
     const orphanUuid = '00000000-0000-4000-8000-000000000099';
     const current = {

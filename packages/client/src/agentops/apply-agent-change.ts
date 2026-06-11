@@ -51,7 +51,7 @@ export async function applyAgentChange(
       recordApplyFailure(ctx, change, `Agent spec not found for key '${change.key}'`);
       return false;
     }
-    const agentUuid = desired.uuid ?? agentUuidByKey.get(desired.key);
+    const agentUuid = desired.uuid ?? change.agentUuid ?? agentUuidByKey.get(desired.key);
     if (!agentUuid) {
       recordApplyFailure(ctx, change, `Could not resolve agent UUID for key '${change.key}'`);
       return false;
@@ -62,8 +62,8 @@ export async function applyAgentChange(
       description: desired.description ?? null,
       instruction: desired.instruction ?? null,
       tags: desired.tags ?? null,
-      enableDataAccess: desired.enableDataAccess,
-      enableSelfImprovement: desired.enableSelfImprovement,
+      enableDataAccess: desired.enableDataAccess ?? false,
+      enableSelfImprovement: desired.enableSelfImprovement ?? false,
     });
     agentUuidByKey.set(desired.key, agentUuid);
     return true;

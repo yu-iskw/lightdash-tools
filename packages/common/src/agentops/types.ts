@@ -117,6 +117,8 @@ export interface BundleDiffChange {
   agentKey?: string;
   /** Resolved agent UUID when known (required for evaluation API calls). */
   agentUuid?: string;
+  /** Resolved evaluation UUID when known (required for title-matched evaluation updates). */
+  evaluationUuid?: string;
   path: string;
   fields?: Record<string, { from: unknown; to: unknown }>;
 }
@@ -259,14 +261,19 @@ function agentFieldsToCompare(_agent: BundleAgentSpec): Array<keyof AgentStateSn
   ];
 }
 
+/** API defaults omitted bundle booleans to false; normalize before diffing. */
+function normalizeAgentBooleanFlag(value: boolean | undefined): boolean {
+  return value ?? false;
+}
+
 function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot> {
   return {
     name: agent.name,
     description: agent.description,
     instruction: agent.instruction,
     tags: agent.tags,
-    enableDataAccess: agent.enableDataAccess,
-    enableSelfImprovement: agent.enableSelfImprovement,
+    enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
+    enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
     enableReasoning: agent.enableReasoning,
   };
 }
@@ -278,8 +285,8 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
     description: agent.description ?? null,
     instruction: agent.instruction ?? null,
     tags: agent.tags ?? null,
-    enableDataAccess: agent.enableDataAccess,
-    enableSelfImprovement: agent.enableSelfImprovement,
+    enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
+    enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
     enableReasoning: agent.enableReasoning,
   };
 }
@@ -368,6 +375,7 @@ export function computeBundleDiff(
         resourceType: 'agent',
         operation: 'update',
         key: desiredAgent.key,
+        agentUuid,
         path: agentPath,
         fields: fieldDiffs,
       });
@@ -376,6 +384,7 @@ export function computeBundleDiff(
         resourceType: 'agent',
         operation: 'noop',
         key: desiredAgent.key,
+        agentUuid,
         path: agentPath,
       });
     }
@@ -419,6 +428,7 @@ export function computeBundleDiff(
           key: desiredEval.key,
           agentKey: desiredAgent.key,
           agentUuid,
+          evaluationUuid: evalMatch.evalUuid,
           path: evalPath,
           fields: evalFieldDiffs,
         });
@@ -429,6 +439,7 @@ export function computeBundleDiff(
           key: desiredEval.key,
           agentKey: desiredAgent.key,
           agentUuid,
+          evaluationUuid: evalMatch.evalUuid,
           path: evalPath,
         });
       }
