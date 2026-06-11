@@ -28,14 +28,14 @@
     "validate:deps": "node scripts/check-common-no-client.mjs",
     "validate:names": "node scripts/validate-package-names.mjs",
     "verify": "pnpm validate:names && pnpm validate:deps && pnpm build && pnpm test && pnpm lint:eslint && pnpm knip",
-    "verify:quick": "pnpm test && pnpm lint:eslint && pnpm knip",
-    "verify:ci": "pnpm verify && pnpm lint:trunk"
+    "verify:ci": "pnpm verify && pnpm lint:trunk",
+    "verify:quick": "pnpm test && pnpm lint:eslint && pnpm knip"
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
     "@typescript-eslint/eslint-plugin": "^8.59.1",
     "@typescript-eslint/parser": "^8.59.1",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.8",
     "@vitest/eslint-plugin": "^1.6.16",
     "eslint": "^10.2.0",
     "eslint-import-resolver-typescript": "^4.4.4",
@@ -46,7 +46,7 @@
     "knip": "^6.3.0",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
-    "vitest": "4.0.18"
+    "vitest": "4.1.8"
   },
   "packageManager": "pnpm@10.28.1",
   "engines": {
