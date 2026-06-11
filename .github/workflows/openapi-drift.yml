@@ -1,0 +1,73 @@
+# Copyright 2026 yu-iskw
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: OpenAPI Drift Check
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    name: Detect generated artifact drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Regenerate OpenAPI types
+        run: pnpm --filter @lightdash-tools/common generate:types
+
+      - name: Regenerate operation registry
+        run: pnpm --filter @lightdash-tools/common generate:operation-registry
+
+      - name: Regenerate CLI docs (if script exists)
+        run: |
+          if node -e "const p=require('./packages/cli/package.json'); process.exit(p.scripts?.['generate-cli-docs'] ? 0 : 1)"; then
+            pnpm --filter @lightdash-tools/cli generate-cli-docs
+          else
+            echo "generate-cli-docs not defined; skipping"
+          fi
+
+      - name: Fail on uncommitted generated changes
+        run: git diff --exit-code

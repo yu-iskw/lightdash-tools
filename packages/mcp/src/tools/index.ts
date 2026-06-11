@@ -2,6 +2,7 @@
  * MCP tool registration: barrel that delegates to domain modules.
  */
 
+import { registerAgentopsTools } from './agentops.js';
 import { registerAiAgentTools } from './ai-agents.js';
 import { registerChartTools } from './charts.js';
 import { registerContentTools } from './content.js';
@@ -33,4 +34,5 @@ export function registerTools(server: McpServer, client: LightdashClient): void 
   registerTagsTools(server, client);
   registerContentTools(server, client);
   registerAiAgentTools(server, client);
+  registerAgentopsTools(server, client);
 }
