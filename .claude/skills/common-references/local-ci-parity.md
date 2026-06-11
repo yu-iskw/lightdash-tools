@@ -4,11 +4,11 @@ Use this reference so local verification catches the same failures as GitHub Act
 
 ## CI workflows vs local commands
 
-| GitHub Actions workflow             | What it runs                | Local equivalent                                                 |
-| ----------------------------------- | --------------------------- | ---------------------------------------------------------------- |
-| **Unit Tests** (`test.yml`)         | `pnpm test`, `pnpm knip`    | Included in `pnpm verify:pr`                                     |
-| **Build** (`build.yml`)             | `pnpm build`                | Included in `pnpm verify:pr`                                     |
-| **Trunk Check** (`trunk_check.yml`) | `pnpm build`, `trunk check` | `pnpm verify:ci` (uses `@trunkio/launcher` from devDependencies) |
+| GitHub Actions workflow             | What it runs                                                   | Local equivalent                                                 |
+| ----------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Unit Tests** (`test.yml`)         | `pnpm build`, `pnpm test` (coverage + thresholds), `pnpm knip` | Included in `pnpm verify:pr`                                     |
+| **Build** (`build.yml`)             | `pnpm build`                                                   | Included in `pnpm verify:pr`                                     |
+| **Trunk Check** (`trunk_check.yml`) | `pnpm build`, `trunk check`                                    | `pnpm verify:ci` (uses `@trunkio/launcher` from devDependencies) |
 
 ## Verification ladder
 
