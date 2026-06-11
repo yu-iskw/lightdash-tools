@@ -37,13 +37,29 @@ Update whenever you discover any of the following during a task:
 ## Setup Commands
 
 ```bash
-pnpm install    # Install all dependencies
-pnpm build      # Build all packages
-pnpm test       # Run all tests via Vitest
-pnpm lint       # Run all linters via Trunk
-pnpm format     # Auto-format code via Trunk
-pnpm clean      # Clean build artifacts
+pnpm install       # Install all dependencies
+pnpm build         # Build all packages
+pnpm test          # Run all tests via Vitest
+pnpm lint          # Trunk + ESLint + knip (dead-code / unused dependency check)
+pnpm lint:eslint   # ESLint only (Trunk fallback)
+pnpm knip          # Unused exports, files, and dependencies
+pnpm verify        # Full agent harness: validations, build, test, eslint, knip
+pnpm verify:quick  # Fast loop: test + eslint + knip (no build)
+pnpm format        # Auto-format code via Trunk
+pnpm clean         # Clean build artifacts
 ```
+
+## Quality Gates
+
+Unless the user explicitly narrows scope, run the relevant gates from the repository root before claiming completion:
+
+1. `pnpm test` for Vitest.
+2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene.
+3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
+4. `pnpm verify` for a full agent harness pass (validations, build, test, eslint, knip).
+5. `pnpm lint` (Trunk + ESLint + knip) when touching Markdown, YAML, `.trunk/`, or GitHub workflow files.
+
+Root [`eslint.config.mjs`](eslint.config.mjs) enforces type-aware TypeScript rules and `@typescript-eslint/no-deprecated` on CLI and MCP. [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.
 
 ## Code Style
 
@@ -62,7 +78,7 @@ pnpm clean      # Clean build artifacts
 ## Git And PR Workflow
 
 - Create feature branches from `main`.
-- Run `pnpm lint && pnpm test` before commit.
+- Run `pnpm verify:quick` (or `pnpm verify` before larger changes) before commit.
 - Commit format: `type(scope): description` (for example: `feat(ui): add new button component`).
 - Commit types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.
 - Use `manage-changelog` when `changie` is available.
@@ -146,4 +162,5 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **Secrets:** Use env vars from the parent process. Do not recommend plaintext `.env` to users; if they use file-based config, recommend dotenvx. See [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
 - **`initAuditLog()` must be called once at process startup:** Both `packages/cli/src/index.ts` and MCP's `bin.ts` call `initAuditLog()` at startup. Any new entrypoint must do the same; individual command files do not need to call it.
 - **MCP tool names must be concise:** Some MCP clients (e.g., Claude Desktop) impose a 60-character limit on combined server and tool names. Use the `ldt__` prefix (set in `packages/mcp/src/tools/shared.ts`) and avoid excessively long tool names to ensure they are not filtered out.
+- **Knip ignores intentional type barrels:** `knip.json` uses `ignoreIssues` for `packages/common/src/types/**` because namespace re-exports are public API surface, not dead code. Do not remove those ignores when knip reports unused namespace members in type files.
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.

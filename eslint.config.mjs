@@ -32,6 +32,7 @@ export default tseslint.config(
       '**/coverage/**',
       '.trunk/**',
       '.claude/**',
+      '.cursor/**',
       'vitest.config.ts',
     ],
   },

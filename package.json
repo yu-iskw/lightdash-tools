@@ -6,7 +6,6 @@
   "keywords": [],
   "license": "Apache-2.0",
   "author": "yu-iskw",
-  "main": "index.js",
   "scripts": {
     "prebuild": "pnpm validate:names",
     "build": "pnpm --recursive build",
@@ -16,7 +15,10 @@
     "format:prettier": "prettier --write .",
     "format:trunk": "trunk fmt",
     "format:trunk-all": "trunk fmt --all",
-    "lint": "pnpm lint:trunk && pnpm lint:eslint",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
+    "lint": "pnpm lint:trunk && pnpm lint:eslint && pnpm knip",
+    "lint:knip": "knip",
     "lint:all": "pnpm lint:trunk-all",
     "lint:eslint": "eslint .",
     "lint:security": "trunk check --all --scope security",
@@ -24,7 +26,9 @@
     "lint:trunk-all": "trunk check --all",
     "test": "vitest run",
     "validate:deps": "node scripts/check-common-no-client.mjs",
-    "validate:names": "node scripts/validate-package-names.mjs"
+    "validate:names": "node scripts/validate-package-names.mjs",
+    "verify": "pnpm validate:names && pnpm validate:deps && pnpm build && pnpm test && pnpm lint:eslint && pnpm knip",
+    "verify:quick": "pnpm test && pnpm lint:eslint && pnpm knip"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -33,6 +37,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
+    "knip": "^6.3.0",
     "typescript-eslint": "^8.56.1",
     "vitest": "^4.0.18"
   },
