@@ -1,0 +1,152 @@
+import { describe, expect, it } from 'vitest';
+
+import { AI_AGENT_OPERATIONS } from './ai-agents';
+import { getOperation, getOperationsByProfile, listOperations } from './registry';
+import { defineOperation } from './types';
+
+import type { CapabilityProfile, OperationDescriptor } from './types';
+
+const P0_OPERATION_IDS = [
+  'ai-agents.admin.agents.list',
+  'ai-agents.admin.settings.get',
+  'ai-agents.admin.settings.update',
+  'ai-agents.project.agents.list',
+  'ai-agents.project.agents.get',
+  'ai-agents.project.agents.create',
+  'ai-agents.project.agents.update',
+  'ai-agents.project.agents.delete',
+  'ai-agents.project.threads.start',
+  'ai-agents.project.threads.continue',
+  'ai-agents.project.evaluations.list',
+  'ai-agents.project.evaluations.get',
+  'ai-agents.project.evaluations.create',
+  'ai-agents.project.evaluations.update',
+  'ai-agents.project.evaluations.append',
+  'ai-agents.project.evaluations.delete',
+  'ai-agents.project.evaluations.run',
+  'ai-agents.project.evaluations.runs.list',
+] as const;
+
+const ALL_PROFILES: CapabilityProfile[] = [
+  'core-lifecycle',
+  'evaluations',
+  'conversations',
+  'discovery-readonly',
+];
+
+function requiredFields(operation: OperationDescriptor): string[] {
+  return [
+    operation.id,
+    operation.summary,
+    operation.http.method,
+    operation.http.path,
+    operation.authorization.safetyImpact,
+    operation.mcp.toolName,
+    operation.cli.commandPath,
+  ];
+}
+
+describe('operation registry', () => {
+  it('registers all P0 operation ids', () => {
+    for (const id of P0_OPERATION_IDS) {
+      expect(getOperation(id)).toBeDefined();
+    }
+  });
+
+  it('has no duplicate operation ids', () => {
+    const ids = listOperations().map((operation) => operation.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('matches AI_AGENT_OPERATIONS export count', () => {
+    expect(listOperations()).toHaveLength(AI_AGENT_OPERATIONS.length);
+  });
+
+  it('includes required descriptor fields on every operation', () => {
+    for (const operation of listOperations()) {
+      for (const field of requiredFields(operation)) {
+        expect(field).toBeTruthy();
+      }
+      expect(operation.profiles.length).toBeGreaterThan(0);
+      expect(operation.http.path.startsWith('/api/v1/')).toBe(true);
+    }
+  });
+
+  it('assigns idempotentHint correctly for read and destructive operations', () => {
+    for (const operation of listOperations()) {
+      const { annotations } = operation.mcp;
+      if (operation.authorization.safetyImpact === 'read') {
+        expect(annotations.idempotentHint).toBe(true);
+        expect(annotations.readOnlyHint).toBe(true);
+      }
+      if (operation.authorization.safetyImpact === 'write-destructive') {
+        expect(annotations.destructiveHint).toBe(true);
+        expect(annotations.idempotentHint).toBe(false);
+      }
+    }
+  });
+
+  it('exposes profile filters for all capability profiles', () => {
+    for (const profile of ALL_PROFILES) {
+      const operations = getOperationsByProfile(profile);
+      expect(operations.length).toBeGreaterThan(0);
+      for (const operation of operations) {
+        expect(operation.profiles).toContain(profile);
+      }
+    }
+  });
+
+  it('maps agent CRUD to core-lifecycle profile', () => {
+    const crudIds = [
+      'ai-agents.project.agents.list',
+      'ai-agents.project.agents.get',
+      'ai-agents.project.agents.create',
+      'ai-agents.project.agents.update',
+      'ai-agents.project.agents.delete',
+    ];
+    for (const id of crudIds) {
+      const operation = getOperation(id);
+      expect(operation?.profiles).toContain('core-lifecycle');
+    }
+  });
+
+  it('maps thread start and continue to conversations profile', () => {
+    expect(getOperation('ai-agents.project.threads.start')?.profiles).toContain('conversations');
+    expect(getOperation('ai-agents.project.threads.continue')?.profiles).toContain('conversations');
+  });
+
+  it('maps evaluation lifecycle operations to evaluations profile', () => {
+    const evalIds = [
+      'ai-agents.project.evaluations.create',
+      'ai-agents.project.evaluations.append',
+      'ai-agents.project.evaluations.run',
+      'ai-agents.project.evaluations.runs.list',
+    ];
+    for (const id of evalIds) {
+      expect(getOperation(id)?.profiles).toContain('evaluations');
+    }
+  });
+
+  it('rejects descriptors whose safetyImpact disagrees with MCP annotations', () => {
+    expect(() =>
+      defineOperation({
+        id: 'test.invalid-impact',
+        summary: 'Invalid impact pairing',
+        http: { method: 'GET', path: '/api/v1/test' },
+        authorization: { safetyImpact: 'write-destructive' },
+        mcp: {
+          toolName: 'test_tool',
+          annotations: {
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false,
+          },
+          taskSupport: { exposed: true, taskEligible: false },
+        },
+        cli: { commandPath: 'test' },
+        profiles: ['discovery-readonly'],
+      }),
+    ).toThrow(/authorization\.safetyImpact/);
+  });
+});
