@@ -6,6 +6,7 @@
 import { initAuditLog } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
+import { registerAgentopsCommand } from './commands/agentops';
 import { registerAgentsCommand } from './commands/agents';
 import { registerAiAgentsCommand } from './commands/ai-agents';
 import { registerChartsCommand } from './commands/charts';
@@ -61,6 +62,7 @@ registerSpaceAccessCommand(program);
 registerChartsCommand(program);
 registerDashboardsCommand(program);
 registerAiAgentsCommand(program);
+registerAgentopsCommand(program);
 registerAgentsCommand(program);
 registerGroupsCommand(program);
 registerUsersCommand(program);
