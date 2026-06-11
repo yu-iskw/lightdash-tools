@@ -69,11 +69,19 @@ export namespace AiAgents {
    */
   export type CreateAgentThreadBody = components['schemas']['ApiAiAgentThreadCreateRequest'];
   /**
-   * Request body for generating/continuing a thread response
-   * (POST …/threads/{threadUuid}/generate).
+   * Request body for adding a user message to a thread
+   * (POST …/threads/{threadUuid}/messages).
    */
-  export type GenerateAgentThreadBody =
+  export type CreateAgentThreadMessageBody =
     components['schemas']['ApiAiAgentThreadMessageCreateRequest'];
+  /** User message returned after creating a thread message. */
+  export type CreateAgentThreadMessageResult =
+    components['schemas']['ApiAiAgentThreadMessageCreateResponse']['results'];
+  /**
+   * Request body for generating/continuing a thread response.
+   * @deprecated Use {@link CreateAgentThreadMessageBody} with the messages endpoint.
+   */
+  export type GenerateAgentThreadBody = CreateAgentThreadMessageBody;
   /** Response returned by the generate endpoint. */
   export type GenerateAgentThreadResult =
     components['schemas']['ApiAiAgentThreadGenerateResponse']['results'];

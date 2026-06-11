@@ -81,6 +81,8 @@ export type {
   AiAgentThreadSummary,
   AiAgentThread,
   CreateAgentThreadBody,
+  CreateAgentThreadMessageBody,
+  CreateAgentThreadMessageResult,
   GenerateAgentThreadBody,
   GenerateAgentThreadResult,
   CreateEvaluationPrompt,

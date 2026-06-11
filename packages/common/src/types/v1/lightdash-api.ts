@@ -189,6 +189,10 @@ export namespace LightdashApi {
     export type AiAgentThreadSummary = components['schemas']['AiAgentThreadSummary'];
     export type AiAgentThread = components['schemas']['AiAgentThread'];
     export type CreateAgentThreadBody = components['schemas']['ApiAiAgentThreadCreateRequest'];
+    export type CreateAgentThreadMessageBody =
+      components['schemas']['ApiAiAgentThreadMessageCreateRequest'];
+    export type CreateAgentThreadMessageResult =
+      components['schemas']['ApiAiAgentThreadMessageCreateResponse']['results'];
     export type GenerateAgentThreadBody =
       components['schemas']['ApiAiAgentThreadMessageCreateRequest'];
     export type GenerateAgentThreadResult =
@@ -316,6 +320,8 @@ export type UpdateAiAgent = AiAgents.UpdateAiAgent;
 export type AiAgentThreadSummary = AiAgents.AiAgentThreadSummary;
 export type AiAgentThread = AiAgents.AiAgentThread;
 export type CreateAgentThreadBody = AiAgents.CreateAgentThreadBody;
+export type CreateAgentThreadMessageBody = AiAgents.CreateAgentThreadMessageBody;
+export type CreateAgentThreadMessageResult = AiAgents.CreateAgentThreadMessageResult;
 export type GenerateAgentThreadBody = AiAgents.GenerateAgentThreadBody;
 export type GenerateAgentThreadResult = AiAgents.GenerateAgentThreadResult;
 // AI agents (flat exports) — evaluations

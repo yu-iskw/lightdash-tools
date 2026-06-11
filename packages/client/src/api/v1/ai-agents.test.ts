@@ -139,7 +139,7 @@ describe('AiAgentsClient', () => {
     const thread = { uuid: 't1', title: null };
     vi.mocked(mockHttp.post).mockResolvedValue(thread);
     const result = await client.createAgentThread('proj1', 'a1');
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', {});
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', {}, undefined);
     expect(result).toEqual(thread);
   });
 
@@ -149,7 +149,7 @@ describe('AiAgentsClient', () => {
     const thread = { uuid: 't1', title: null };
     vi.mocked(mockHttp.post).mockResolvedValue(thread);
     await client.createAgentThread('proj1', 'a1', body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads', body, undefined);
   });
 
   it('getAgentThread should call GET .../threads/{threadUuid}', async () => {
@@ -157,20 +157,131 @@ describe('AiAgentsClient', () => {
     const thread = { uuid: 't1', messages: [] };
     vi.mocked(mockHttp.get).mockResolvedValue(thread);
     const result = await client.getAgentThread('proj1', 'a1', 't1');
-    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads/t1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads/t1', undefined);
     expect(result).toEqual(thread);
   });
 
-  it('generateAgentThreadResponse should call POST .../threads/{threadUuid}/generate', async () => {
+  it('createAgentThreadMessage should call POST .../threads/{threadUuid}/messages', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const message = { uuid: 'm1', message: 'Hello', role: 'user' };
+    vi.mocked(mockHttp.post).mockResolvedValue(message);
+    const body = { prompt: 'What is the total revenue?' };
+    const result = await client.createAgentThreadMessage('proj1', 'a1', 't1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads/t1/messages',
+      body,
+      undefined,
+    );
+    expect(result).toEqual(message);
+  });
+
+  it('createAgentThreadMessage should pass RequestOptions to POST', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const controller = new AbortController();
+    vi.mocked(mockHttp.post).mockResolvedValue({ uuid: 'm1' });
+    await client.createAgentThreadMessage(
+      'proj1',
+      'a1',
+      't1',
+      { prompt: 'Hi' },
+      { signal: controller.signal, timeoutMs: 5000, requestId: 'req-1' },
+    );
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads/t1/messages',
+      { prompt: 'Hi' },
+      {
+        signal: controller.signal,
+        timeout: 5000,
+        headers: { 'X-Request-Id': 'req-1' },
+      },
+    );
+  });
+
+  it('generateAgentThreadResponse without body should call POST .../generate with no body', async () => {
     const client = new AiAgentsClient(mockHttp);
     const response = { response: 'Here is your answer.' };
     vi.mocked(mockHttp.post).mockResolvedValue(response);
+    const result = await client.generateAgentThreadResponse('proj1', 'a1', 't1');
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads/t1/generate',
+      undefined,
+      undefined,
+    );
+    expect(result).toEqual(response);
+  });
+
+  it('generateAgentThreadResponse with prompt body should create message then generate', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const message = { uuid: 'm1', message: 'What is the total revenue?', role: 'user' };
+    const response = { response: 'Here is your answer.' };
+    vi.mocked(mockHttp.post).mockResolvedValueOnce(message).mockResolvedValueOnce(response);
     const result = await client.generateAgentThreadResponse('proj1', 'a1', 't1', {
       prompt: 'What is the total revenue?',
     });
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/threads/t1/generate', {
-      prompt: 'What is the total revenue?',
-    });
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      1,
+      '/projects/proj1/aiAgents/a1/threads/t1/messages',
+      { prompt: 'What is the total revenue?' },
+      undefined,
+    );
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      2,
+      '/projects/proj1/aiAgents/a1/threads/t1/generate',
+      undefined,
+      undefined,
+    );
+    expect(result).toEqual(response);
+  });
+
+  it('startConversation should create thread, message, and generate', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const thread = { uuid: 't1', title: null };
+    const message = { uuid: 'm1', message: 'Hello', role: 'user' };
+    const response = { response: 'Hi there.' };
+    vi.mocked(mockHttp.post)
+      .mockResolvedValueOnce(thread)
+      .mockResolvedValueOnce(message)
+      .mockResolvedValueOnce(response);
+    const result = await client.startConversation('proj1', 'a1', { prompt: 'Hello' });
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      1,
+      '/projects/proj1/aiAgents/a1/threads',
+      {},
+      undefined,
+    );
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      2,
+      '/projects/proj1/aiAgents/a1/threads/t1/messages',
+      { prompt: 'Hello' },
+      undefined,
+    );
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      3,
+      '/projects/proj1/aiAgents/a1/threads/t1/generate',
+      undefined,
+      undefined,
+    );
+    expect(result).toEqual({ thread, result: response });
+  });
+
+  it('continueConversation should create message then generate', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const message = { uuid: 'm2', message: 'Follow up', role: 'user' };
+    const response = { response: 'Sure.' };
+    vi.mocked(mockHttp.post).mockResolvedValueOnce(message).mockResolvedValueOnce(response);
+    const result = await client.continueConversation('proj1', 'a1', 't1', { prompt: 'Follow up' });
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      1,
+      '/projects/proj1/aiAgents/a1/threads/t1/messages',
+      { prompt: 'Follow up' },
+      undefined,
+    );
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      2,
+      '/projects/proj1/aiAgents/a1/threads/t1/generate',
+      undefined,
+      undefined,
+    );
     expect(result).toEqual(response);
   });
 
@@ -214,15 +325,17 @@ describe('AiAgentsClient', () => {
     expect(result).toEqual(updated);
   });
 
-  it('appendToEvaluation should call POST .../evaluations/{evalUuid}/append', async () => {
+  it('appendToEvaluation should call POST .../evaluations/{evalUuid}/append and return evaluation', async () => {
     const client = new AiAgentsClient(mockHttp);
     const body = { prompts: [{ prompt: 'Extra?', expectedResponse: null }] };
-    vi.mocked(mockHttp.post).mockResolvedValue(undefined);
-    await client.appendToEvaluation('proj1', 'a1', 'e1', body);
+    const updated = { evalUuid: 'e1', title: 'My Eval', prompts: body.prompts };
+    vi.mocked(mockHttp.post).mockResolvedValue(updated);
+    const result = await client.appendToEvaluation('proj1', 'a1', 'e1', body);
     expect(mockHttp.post).toHaveBeenCalledWith(
       '/projects/proj1/aiAgents/a1/evaluations/e1/append',
       body,
     );
+    expect(result).toEqual(updated);
   });
 
   it('deleteEvaluation should call DELETE .../evaluations/{evalUuid}', async () => {
@@ -246,12 +359,28 @@ describe('AiAgentsClient', () => {
     expect(result).toEqual(runSummary);
   });
 
-  it('listEvaluationRuns should call GET .../evaluations/{evalUuid}/runs and unwrap runs array', async () => {
+  it('listEvaluationRuns should return full paginated response', async () => {
     const client = new AiAgentsClient(mockHttp);
     const runs = [{ runUuid: 'r1', evalUuid: 'e1', status: 'completed' }];
-    const pagedResponse = { data: { runs }, pagination: undefined };
+    const pagedResponse = {
+      data: { runs },
+      pagination: { totalResults: 1, totalPageCount: 1 },
+    };
     vi.mocked(mockHttp.get).mockResolvedValue(pagedResponse);
     const result = await client.listEvaluationRuns('proj1', 'a1', 'e1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
+    expect(result).toEqual(pagedResponse);
+  });
+
+  it('listAllEvaluationRuns should unwrap runs array from paginated response', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const runs = [{ runUuid: 'r1', evalUuid: 'e1', status: 'completed' }];
+    const pagedResponse = {
+      data: { runs },
+      pagination: { totalResults: 1, totalPageCount: 1 },
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(pagedResponse);
+    const result = await client.listAllEvaluationRuns('proj1', 'a1', 'e1');
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/evaluations/e1/runs');
     expect(result).toEqual(runs);
   });
