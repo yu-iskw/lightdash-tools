@@ -16,7 +16,7 @@
   },
   "workspaces": {
     ".": {
-      "entry": ["scripts/**/*.mjs"],
+      "entry": ["scripts/**/*.mjs", "coverage-thresholds.mjs"],
       "project": ["scripts/**/*.mjs"],
       "vitest": {
         "config": ["vitest.config.ts"],

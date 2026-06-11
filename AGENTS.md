@@ -39,7 +39,8 @@ Update whenever you discover any of the following during a task:
 ```bash
 pnpm install       # Install all dependencies
 pnpm build         # Build all packages
-pnpm test          # Run all tests via Vitest
+pnpm test          # Run Vitest with v8 coverage and threshold checks
+pnpm test:fast     # Vitest without coverage (local iteration only)
 pnpm lint          # Trunk + ESLint + knip (dead-code / unused dependency check)
 pnpm lint:eslint   # ESLint only (Trunk fallback)
 pnpm knip          # Unused exports, files, and dependencies
@@ -53,7 +54,7 @@ pnpm clean         # Clean build artifacts
 
 Unless the user explicitly narrows scope, run the relevant gates from the repository root before claiming completion:
 
-1. `pnpm test` for Vitest.
+1. `pnpm test` for Vitest with coverage (thresholds in [`coverage-thresholds.mjs`](coverage-thresholds.mjs)).
 2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene.
 3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
 4. `pnpm verify` for a full agent harness pass (validations, build, test, eslint, knip).
@@ -73,7 +74,9 @@ Root [`eslint.config.mjs`](eslint.config.mjs) layers import-x, SonarJS, security
 
 - Use Vitest for unit and integration tests.
 - Write tests in `tests/` or alongside source files as `*.test.ts`.
-- Run `pnpm test` before committing.
+- Run `pnpm test` before committing (includes coverage; reports under `coverage/`).
+- Use `pnpm test:fast` only for tight local loops — CI and `pnpm verify` use `pnpm test`.
+- Global coverage floors live in [`coverage-thresholds.mjs`](coverage-thresholds.mjs); raise them as coverage improves.
 
 ## Git And PR Workflow
 

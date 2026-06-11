@@ -17,7 +17,7 @@ When invoked:
 1. **Build**: Run the `build-and-fix` skill loop. Ensure the project compiles successfully.
 2. **Lint**: Run the `lint-and-fix` skill loop. Ensure there are no linting or formatting violations.
 3. **Knip**: Run `pnpm knip` from the repository root. Fix unused exports, files, and dependencies reported by knip.
-4. **Test**: Run the `test-and-fix` skill loop. Ensure all unit tests pass.
+4. **Test**: Run the `test-and-fix` skill loop. Ensure all unit tests pass with coverage (`pnpm test` enforces thresholds in `coverage-thresholds.mjs`).
 
 Alternatively, run `pnpm verify` for the full agent harness (validations, build, test, eslint, knip) and fix any failures.
 
