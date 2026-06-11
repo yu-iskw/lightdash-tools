@@ -6,6 +6,7 @@
  */
 
 import { registerAgentsCrudCommands } from './agents-crud';
+import { registerAgentsDiscoveryCommands } from './agents-discovery';
 import { registerAgentsEvalCommands } from './agents-evals';
 import { registerAgentsThreadCommands } from './agents-threads';
 
@@ -20,6 +21,7 @@ export function registerAgentsCommand(program: Command): void {
     .description('Manage AI agents within a project (project-scoped)');
 
   registerAgentsCrudCommands(agentsCmd);
+  registerAgentsDiscoveryCommands(agentsCmd);
   registerAgentsThreadCommands(agentsCmd);
   registerAgentsEvalCommands(agentsCmd);
 }

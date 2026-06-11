@@ -3,17 +3,22 @@
  * Outputs machine-readable JSON describing API paths, methods, and parameters.
  */
 
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { getOperation, listOperations, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 import { wrapAction } from '../utils/safety';
 
+import type { OperationDescriptor } from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
-/** Maps resource identifiers to API path + method + description. */
-const SCHEMA_REGISTRY: Record<
-  string,
-  { path: string; method: string; description: string; params?: string[] }
-> = {
+type SchemaEntry = {
+  path: string;
+  method: string;
+  description: string;
+  params?: string[];
+};
+
+/** Maps legacy resource identifiers to API path + method + description. */
+const LEGACY_SCHEMA_REGISTRY: Record<string, SchemaEntry> = {
   'organization.get': {
     path: '/api/v1/org',
     method: 'GET',
@@ -94,9 +99,28 @@ const SCHEMA_REGISTRY: Record<
   },
 };
 
-export function getSchema(resource: string): Record<string, unknown> | null {
-  const entry = SCHEMA_REGISTRY[resource];
-  if (!entry) return null;
+function extractPathParams(path: string): string[] {
+  const params: string[] = [];
+  for (const match of path.matchAll(/\{([^}]+)\}/g)) {
+    params.push(match[1]);
+  }
+  return params;
+}
+
+function operationToSchema(operation: OperationDescriptor): Record<string, unknown> {
+  return {
+    resource: operation.id,
+    path: operation.http.path,
+    method: operation.http.method,
+    description: operation.summary,
+    params: extractPathParams(operation.http.path),
+    cliCommand: operation.cli.commandPath,
+    profiles: [...operation.profiles],
+    safetyImpact: operation.authorization.safetyImpact,
+  };
+}
+
+function legacyToSchema(resource: string, entry: SchemaEntry): Record<string, unknown> {
   return {
     resource,
     path: entry.path,
@@ -106,8 +130,26 @@ export function getSchema(resource: string): Record<string, unknown> | null {
   };
 }
 
+export function getSchema(resource: string): Record<string, unknown> | null {
+  const legacy = LEGACY_SCHEMA_REGISTRY[resource];
+  if (legacy) {
+    return legacyToSchema(resource, legacy);
+  }
+
+  const operation = getOperation(resource);
+  if (operation) {
+    return operationToSchema(operation);
+  }
+
+  return null;
+}
+
 export function listResources(): string[] {
-  return Object.keys(SCHEMA_REGISTRY).sort();
+  const resources = new Set<string>([
+    ...Object.keys(LEGACY_SCHEMA_REGISTRY),
+    ...listOperations().map((operation) => operation.id),
+  ]);
+  return [...resources].sort();
 }
 
 /**
@@ -130,7 +172,9 @@ export function registerSchemaCommand(program: Command): void {
 
   schemaCmd
     .command('get <resource>')
-    .description('Get schema for a resource (e.g. charts.list, ai-agents.settings.get)')
+    .description(
+      'Get schema for a resource (e.g. charts.list, ai-agents.project.agents.list)',
+    )
     .action(
       wrapAction(READ_ONLY_DEFAULT, (resource: string) => {
         const schema = getSchema(resource);
