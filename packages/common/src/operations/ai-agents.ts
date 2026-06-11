@@ -238,11 +238,23 @@ const threadsStart = defineOperation({
 
 const threadsContinue = defineOperation({
   id: 'ai-agents.project.threads.continue',
-  summary: 'Continue an existing conversation thread with a new prompt',
+  summary: 'Continue an existing conversation (client workflow: add message, generate response)',
   http: {
     method: 'POST',
     path: PROJECT_AGENT_THREAD_GENERATE_PATH,
   },
+  workflow: [
+    {
+      method: 'POST',
+      path: PROJECT_AGENT_THREAD_MESSAGES_PATH,
+      summary: 'Add user message',
+    },
+    {
+      method: 'POST',
+      path: PROJECT_AGENT_THREAD_GENERATE_PATH,
+      summary: 'Generate agent response',
+    },
+  ],
   authorization: { safetyImpact: IMPACT_EXTERNAL },
   mcp: {
     toolName: 'continue_agent_thread',

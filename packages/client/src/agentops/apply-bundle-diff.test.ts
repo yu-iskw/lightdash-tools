@@ -119,16 +119,13 @@ describe('applyBundleDiff', () => {
 
     const result = await applyBundleDiff(client, nameMatchedBundle, diff.changes);
 
-    expect(updateAgent).toHaveBeenCalledWith(
-      PROJECT_UUID,
-      AGENT_UUID,
-      expect.objectContaining({
-        uuid: AGENT_UUID,
-        instruction: 'Updated instruction',
-        enableDataAccess: false,
-        enableSelfImprovement: false,
-      }),
-    );
+    expect(updateAgent).toHaveBeenCalledWith(PROJECT_UUID, AGENT_UUID, {
+      uuid: AGENT_UUID,
+      name: 'Agent One',
+      description: null,
+      instruction: 'Updated instruction',
+      tags: null,
+    });
     expect(result.applied).toBe(1);
     expect(result.failed).toHaveLength(0);
   });

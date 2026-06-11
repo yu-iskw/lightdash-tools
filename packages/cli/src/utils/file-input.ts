@@ -21,6 +21,17 @@ export function hasExplicitFileInput(options: FileInputOptions): boolean {
 }
 
 /**
+ * Reads YAML/JSON only when --file or --stdin was explicitly requested.
+ * Use for commands that also support flag-based bodies in non-TTY environments.
+ */
+export async function readExplicitFileOrStdin(options: FileInputOptions): Promise<string> {
+  if (!hasExplicitFileInput(options)) {
+    throw new Error('No input provided. Use --file <path> or --stdin.');
+  }
+  return readFileOrStdin(options);
+}
+
+/**
  * Reads raw text from a file path or stdin (when --stdin is set or stdin is piped).
  */
 export async function readFileOrStdin(options: FileInputOptions): Promise<string> {

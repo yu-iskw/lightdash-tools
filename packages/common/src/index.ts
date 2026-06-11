@@ -21,7 +21,10 @@ export * from './operations';
 export * from './agentops/types';
 export * from './agentops/snapshots';
 export * from './agentops/formatters';
-export { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
+export {
+  extractProjectUuidsFromToolArgs,
+  hasYamlProjectDocumentArgs,
+} from './agentops/extract-yaml-project';
 
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';

@@ -99,7 +99,9 @@ export function wrapAction<T extends unknown[]>(
     const commandPath = getCommandPath(this);
     const mode = getSafetyMode(this);
     const allowedProjects = getAllowedProjects(this);
-    const targetProjects = extractProjectUuids(args);
+    const targetProjects = [
+      ...new Set([...extractProjectUuids(args), ...extractProjectUuids(this.opts())]),
+    ];
 
     // ── Input Validation ─────────────────────────────────────────────────────
     // Validate only known identifier fields (projectUuid, slug, etc.) in objects.

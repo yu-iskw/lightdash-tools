@@ -374,6 +374,25 @@ describe('Safety Logic', () => {
       expect(extractProjectUuids({ bundleYaml })).toEqual([projectUuid]);
     });
 
+    it('should extract projectUuid from gateYaml in MCP tool args', () => {
+      const projectUuid = '550e8400-e29b-41d4-a716-446655440000';
+      const agentUuid = '660e8400-e29b-41d4-a716-446655440001';
+      const evaluationUuid = '770e8400-e29b-41d4-a716-446655440002';
+      const gateYaml = [
+        'apiVersion: lightdash.ai/v1alpha1',
+        'kind: LightdashAiEvaluationGate',
+        'metadata:',
+        '  name: release-gate',
+        'spec:',
+        `  projectUuid: ${projectUuid}`,
+        `  agentUuid: ${agentUuid}`,
+        `  evaluationUuid: ${evaluationUuid}`,
+        '  policy:',
+        '    minPassRate: 0.9',
+      ].join('\n');
+      expect(extractProjectUuids({ gateYaml })).toEqual([projectUuid]);
+    });
+
     it('should return empty array for empty CLI argument array', () => {
       expect(extractProjectUuids([])).toEqual([]);
     });

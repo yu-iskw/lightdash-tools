@@ -62,8 +62,12 @@ export async function applyAgentChange(
       description: desired.description ?? null,
       instruction: desired.instruction ?? null,
       tags: desired.tags ?? null,
-      enableDataAccess: desired.enableDataAccess ?? false,
-      enableSelfImprovement: desired.enableSelfImprovement ?? false,
+      ...(desired.enableDataAccess !== undefined
+        ? { enableDataAccess: desired.enableDataAccess }
+        : {}),
+      ...(desired.enableSelfImprovement !== undefined
+        ? { enableSelfImprovement: desired.enableSelfImprovement }
+        : {}),
     });
     agentUuidByKey.set(desired.key, agentUuid);
     return true;

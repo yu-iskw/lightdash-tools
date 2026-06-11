@@ -10,7 +10,7 @@ import {
 } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
-import { readParsedInput } from '../utils/file-input';
+import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
 import type { Command } from 'commander';
@@ -60,7 +60,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
           stdin?: boolean;
         };
         let body: AiAgentUserPreferences;
-        if (options.file != null || options.stdin === true || !process.stdin.isTTY) {
+        if (hasExplicitFileInput(options)) {
           const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
           if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
             console.error('Error: preferences input must be a JSON/YAML object');

@@ -14,6 +14,7 @@ import {
   isAllowed,
   areAllProjectsAllowed,
   extractProjectUuids,
+  hasYamlProjectDocumentArgs,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
@@ -236,6 +237,18 @@ export function registerToolSafe(
     const innerHandler = finalHandler;
     finalHandler = async (args, extra): Promise<TextContent> => {
       const projectUuids = extractProjectUuids(args);
+      if (hasYamlProjectDocumentArgs(args) && projectUuids.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: Could not extract project UUID from YAML document for allowlist check. Fix bundleYaml/gateYaml or omit the document.',
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
       const deniedUuids = projectUuids.filter(
         (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
       );

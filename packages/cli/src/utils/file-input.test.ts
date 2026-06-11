@@ -5,6 +5,7 @@ import { describe, expect, it, vi, afterEach } from 'vitest';
 import {
   hasExplicitFileInput,
   parseJsonOrYaml,
+  readExplicitFileOrStdin,
   readFileOrStdin,
   readParsedInput,
 } from './file-input';
@@ -58,6 +59,19 @@ describe('file-input', () => {
       const result = await readFileOrStdin({ file: 'agent.json' });
       expect(result).toBe('{"x":1}');
       expect(readFileSync).toHaveBeenCalledWith('agent.json', 'utf-8');
+    });
+  });
+
+  describe('readExplicitFileOrStdin', () => {
+    it('requires --file or --stdin', async () => {
+      await expect(readExplicitFileOrStdin({})).rejects.toThrow(
+        'No input provided. Use --file <path> or --stdin.',
+      );
+    });
+
+    it('reads from file when --file is set', async () => {
+      vi.mocked(readFileSync).mockReturnValue('content');
+      await expect(readExplicitFileOrStdin({ file: 'bundle.yaml' })).resolves.toBe('content');
     });
   });
 

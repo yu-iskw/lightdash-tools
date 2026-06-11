@@ -242,6 +242,25 @@ describe('CLI wrapAction', () => {
     expect(processExitSpy).toHaveBeenCalledWith(1);
   });
 
+  it('should enforce allowlist from command opts when project is only in --project', async () => {
+    const { root, child } = buildCommandHierarchy();
+    child
+      .option('--project <uuid>', 'Project UUID')
+      .setOptionValueWithSource('safetyMode', SafetyMode.WRITE_DESTRUCTIVE, 'cli');
+    root.setOptionValueWithSource('projects', UUID_ALLOWED, 'cli');
+    child.setOptionValueWithSource('project', UUID_FORBIDDEN, 'cli');
+
+    const wrapped = wrapAction(WRITE_IDEMPOTENT, mockAction);
+
+    await expect(wrapped.call(child)).rejects.toThrow('exit');
+
+    expect(mockAction).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not in the list of allowed projects'),
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(1);
+  });
+
   it('should re-throw when the action throws', async () => {
     const failingAction = vi.fn().mockRejectedValue(new Error('action failed'));
     const cmd = new Command();

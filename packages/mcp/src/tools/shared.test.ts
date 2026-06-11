@@ -317,6 +317,53 @@ describe('registerToolSafe', () => {
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
     });
+
+    it('should block invalid bundleYaml when allowlist is set and project cannot be extracted', async () => {
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
+
+      registerToolSafe(
+        mockServer,
+        'agentops_plan_blocked_yaml',
+        { description: 'Plan bundle', inputSchema: {}, annotations: WRITE_IDEMPOTENT },
+        mockHandler,
+      );
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ bundleYaml: 'not: valid: yaml: document' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Could not extract project UUID from YAML');
+      expect(mockHandler).not.toHaveBeenCalled();
+    });
+
+    it('should enforce allowlist for valid bundleYaml projectUuid', async () => {
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
+
+      registerToolSafe(
+        mockServer,
+        'agentops_plan_allowed_yaml',
+        { description: 'Plan bundle', inputSchema: {}, annotations: WRITE_IDEMPOTENT },
+        mockHandler,
+      );
+
+      const bundleYaml = [
+        'apiVersion: lightdash.ai/v1alpha1',
+        'kind: LightdashAiAgentBundle',
+        'metadata:',
+        '  name: test-bundle',
+        'spec:',
+        `  projectUuid: ${PROJECT_DENIED}`,
+        '  agents:',
+        '    - key: a1',
+        '      name: Agent One',
+        '      evaluations: []',
+      ].join('\n');
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ bundleYaml });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
+      expect(mockHandler).not.toHaveBeenCalled();
+    });
   });
 
   describe('dry-run mode', () => {

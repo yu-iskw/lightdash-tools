@@ -126,6 +126,13 @@ describe('operation registry', () => {
     expect(lastStep?.path).toContain('/generate');
   });
 
+  it('documents multi-step workflow for thread continue', () => {
+    const operation = getOperation('ai-agents.project.threads.continue');
+    expect(operation?.workflow).toHaveLength(2);
+    expect(operation?.workflow?.[0]?.path).toContain('/messages');
+    expect(operation?.workflow?.[1]?.path).toContain('/generate');
+  });
+
   it('maps evaluation lifecycle operations to evaluations profile', () => {
     const evalIds = [
       'ai-agents.project.evaluations.create',

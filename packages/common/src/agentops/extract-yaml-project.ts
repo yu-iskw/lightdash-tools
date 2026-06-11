@@ -1,5 +1,14 @@
 import { parseLightdashAiAgentBundle, parseLightdashAiEvaluationGate } from './types';
 
+/** True when MCP tool args carry AgentOps YAML documents that imply a project scope. */
+export function hasYamlProjectDocumentArgs(args: unknown): boolean {
+  if (typeof args !== 'object' || args === null || Array.isArray(args)) {
+    return false;
+  }
+  const record = args as Record<string, unknown>;
+  return typeof record.bundleYaml === 'string' || typeof record.gateYaml === 'string';
+}
+
 /**
  * Extracts project UUIDs from MCP tool args, including YAML document fields
  * (`bundleYaml`, `gateYaml`) used by AgentOps composite tools.

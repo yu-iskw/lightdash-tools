@@ -60,6 +60,23 @@ describe('schema command', () => {
       );
     });
 
+    it('returns workflow for ai-agents.project.threads.continue from operation registry', () => {
+      const schema = getSchema('ai-agents.project.threads.continue');
+      expect(schema).not.toBeNull();
+      expect(schema?.workflow).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            method: 'POST',
+            path: '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/messages',
+          }),
+          expect.objectContaining({
+            method: 'POST',
+            path: '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/generate',
+          }),
+        ]),
+      );
+    });
+
     it('returns null for unknown resource', () => {
       const schema = getSchema('unknown.resource');
       expect(schema).toBeNull();

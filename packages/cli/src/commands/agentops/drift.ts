@@ -9,7 +9,7 @@ import {
 } from '@lightdash-tools/common';
 
 import { getClient } from '../../utils/client';
-import { readFileOrStdin } from '../../utils/file-input';
+import { readExplicitFileOrStdin } from '../../utils/file-input';
 import { assertAllowedProject, wrapAction } from '../../utils/safety';
 
 import { fetchBundleCurrentState } from './state';
@@ -26,7 +26,10 @@ export function registerAgentopsDriftCommand(agentopsCmd: Command): void {
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
         const options = this.opts() as { file?: string; stdin?: boolean };
         try {
-          const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
+          const content = await readExplicitFileOrStdin({
+            file: options.file,
+            stdin: options.stdin,
+          });
           const bundle = parseLightdashAiAgentBundle(content);
           assertAllowedProject(this, bundle.spec.projectUuid);
           const client = getClient();

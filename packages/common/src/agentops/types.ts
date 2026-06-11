@@ -247,20 +247,27 @@ function promptsEqual(
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-function agentFieldsToCompare(_agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
-  return [
-    'name',
-    'description',
-    'instruction',
-    'tags',
-    'enableDataAccess',
-    'enableSelfImprovement',
-  ];
+function agentFieldsToCompare(agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
+  const fields: Array<keyof AgentStateSnapshot> = ['name', 'description', 'instruction', 'tags'];
+  if (agent.enableDataAccess !== undefined) {
+    fields.push('enableDataAccess');
+  }
+  if (agent.enableSelfImprovement !== undefined) {
+    fields.push('enableSelfImprovement');
+  }
+  return fields;
 }
 
-/** API defaults omitted bundle booleans to false; normalize before diffing. */
+/** API defaults omitted bundle booleans to false when the bundle explicitly sets them. */
 function normalizeAgentBooleanFlag(value: boolean | undefined): boolean {
   return value ?? false;
+}
+
+function normalizeTags(tags: string[] | null | undefined): string[] | null {
+  if (tags == null || tags.length === 0) {
+    return null;
+  }
+  return tags;
 }
 
 function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot> {
@@ -268,7 +275,7 @@ function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot>
     name: agent.name,
     description: agent.description,
     instruction: agent.instruction,
-    tags: agent.tags,
+    tags: normalizeTags(agent.tags),
     enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
     enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
   };
@@ -280,9 +287,11 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
     name: agent.name,
     description: agent.description ?? null,
     instruction: agent.instruction ?? null,
-    tags: agent.tags ?? null,
-    enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
-    enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
+    tags: normalizeTags(agent.tags ?? null),
+    ...(agent.enableDataAccess !== undefined ? { enableDataAccess: agent.enableDataAccess } : {}),
+    ...(agent.enableSelfImprovement !== undefined
+      ? { enableSelfImprovement: agent.enableSelfImprovement }
+      : {}),
   };
 }
 
