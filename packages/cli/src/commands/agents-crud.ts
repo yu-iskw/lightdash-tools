@@ -5,14 +5,10 @@
 import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
-import { readParsedInput } from '../utils/file-input';
+import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
 import type { Command } from 'commander';
-
-function hasFileInput(options: { file?: string; stdin?: boolean }): boolean {
-  return options.file != null || options.stdin === true || !process.stdin.isTTY;
-}
 
 /**
  * Registers agent CRUD subcommands on the `agents` command group.
@@ -83,7 +79,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.createAgent>[1];
 
-          if (hasFileInput(options)) {
+          if (hasExplicitFileInput(options)) {
             const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
             if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
               console.error('Error: agent input must be a JSON/YAML object');
@@ -141,7 +137,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.updateAgent>[2];
 
-          if (hasFileInput(options)) {
+          if (hasExplicitFileInput(options)) {
             const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
             if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
               console.error('Error: agent patch input must be a JSON/YAML object');

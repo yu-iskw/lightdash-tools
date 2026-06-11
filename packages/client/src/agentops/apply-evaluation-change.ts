@@ -35,11 +35,12 @@ function promptsToCreateBody(
 }
 
 function buildUpdateEvaluationBody(desiredEval: BundleEvaluationSpec): UpdateEvaluationBody {
+  // OpenAPI types omit null, but the API accepts null to clear an existing description.
   return {
     title: desiredEval.title,
-    ...(desiredEval.description != null ? { description: desiredEval.description } : {}),
+    description: desiredEval.description ?? null,
     prompts: promptsToCreateBody(desiredEval.prompts),
-  };
+  } as UpdateEvaluationBody;
 }
 
 function resolveAgentUuid(

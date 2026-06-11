@@ -12,6 +12,15 @@ export type FileInputOptions = {
 };
 
 /**
+ * True when the caller explicitly requested file or stdin input (--file / --stdin).
+ * Unlike {@link readFileOrStdin}, does not treat a non-TTY stdin as implicit input,
+ * so flag-only commands work in CI where stdin is closed.
+ */
+export function hasExplicitFileInput(options: FileInputOptions): boolean {
+  return options.file != null || options.stdin === true;
+}
+
+/**
  * Reads raw text from a file path or stdin (when --stdin is set or stdin is piped).
  */
 export async function readFileOrStdin(options: FileInputOptions): Promise<string> {

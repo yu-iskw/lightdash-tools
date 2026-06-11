@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it, vi, afterEach } from 'vitest';
 
-import { parseJsonOrYaml, readFileOrStdin, readParsedInput } from './file-input';
+import {
+  hasExplicitFileInput,
+  parseJsonOrYaml,
+  readFileOrStdin,
+  readParsedInput,
+} from './file-input';
 
 vi.mock('node:fs', () => ({
   readFileSync: vi.fn(),
@@ -35,6 +40,15 @@ describe('file-input', () => {
 
     it('rejects invalid JSON', () => {
       expect(() => parseJsonOrYaml('{not json')).toThrow();
+    });
+  });
+
+  describe('hasExplicitFileInput', () => {
+    it('returns true only for --file or --stdin', () => {
+      expect(hasExplicitFileInput({ file: 'agent.json' })).toBe(true);
+      expect(hasExplicitFileInput({ stdin: true })).toBe(true);
+      expect(hasExplicitFileInput({})).toBe(false);
+      expect(hasExplicitFileInput({ stdin: false })).toBe(false);
     });
   });
 

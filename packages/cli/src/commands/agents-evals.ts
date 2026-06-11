@@ -10,14 +10,10 @@ import {
 } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
-import { readParsedInput } from '../utils/file-input';
+import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
 import type { Command } from 'commander';
-
-function hasFileInput(options: { file?: string; stdin?: boolean }): boolean {
-  return options.file != null || options.stdin === true || !process.stdin.isTTY;
-}
 
 function extractPrompts(parsed: unknown): unknown[] {
   if (Array.isArray(parsed)) {
@@ -109,7 +105,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.createEvaluation>[2];
 
-          if (hasFileInput(options)) {
+          if (hasExplicitFileInput(options)) {
             const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
             if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
               console.error('Error: evaluation input must be a JSON/YAML object');
@@ -167,7 +163,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.updateEvaluation>[3];
 
-          if (hasFileInput(options)) {
+          if (hasExplicitFileInput(options)) {
             const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
             if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
               console.error('Error: evaluation patch input must be a JSON/YAML object');
@@ -226,7 +222,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
             const client = getClient();
             let prompts: unknown[];
 
-            if (hasFileInput(options)) {
+            if (hasExplicitFileInput(options)) {
               const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
               prompts = extractPrompts(parsed);
             } else if (options.prompts != null) {

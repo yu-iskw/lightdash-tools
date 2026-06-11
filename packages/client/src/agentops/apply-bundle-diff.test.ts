@@ -215,4 +215,88 @@ describe('applyBundleDiff', () => {
     expect(result.applied).toBe(1);
     expect(result.failed).toHaveLength(0);
   });
+
+  it('clears evaluation description when bundle omits it', async () => {
+    const bundleWithoutDescription: LightdashAiAgentBundle = {
+      apiVersion: 'lightdash.ai/v1alpha1',
+      kind: 'LightdashAiAgentBundle',
+      metadata: { name: 'test-bundle' },
+      spec: {
+        projectUuid: PROJECT_UUID,
+        agents: [
+          {
+            key: 'a1',
+            uuid: AGENT_UUID,
+            name: 'Agent One',
+            evaluations: [
+              {
+                key: 'e1',
+                uuid: EVAL_UUID,
+                title: 'Smoke Tests',
+                prompts: [{ prompt: 'Same prompt', expectedResponse: null }],
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Agent One',
+            description: null,
+            instruction: null,
+            tags: null,
+          },
+          evaluations: [
+            {
+              evalUuid: EVAL_UUID,
+              title: 'Smoke Tests',
+              description: 'Old description',
+              prompts: [
+                {
+                  type: 'string' as const,
+                  prompt: 'Same prompt',
+                  expectedResponse: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(bundleWithoutDescription, current);
+    const updateEvaluation = vi.fn().mockResolvedValue(undefined);
+    const client = {
+      v1: {
+        aiAgents: {
+          createAgent: vi.fn(),
+          updateAgent: vi.fn(),
+          deleteAgent: vi.fn(),
+          createEvaluation: vi.fn(),
+          updateEvaluation,
+          deleteEvaluation: vi.fn(),
+        },
+      },
+    } as unknown as LightdashClient;
+
+    const result = await applyBundleDiff(client, bundleWithoutDescription, diff.changes);
+
+    expect(updateEvaluation).toHaveBeenCalledWith(
+      PROJECT_UUID,
+      AGENT_UUID,
+      EVAL_UUID,
+      expect.objectContaining({
+        title: 'Smoke Tests',
+        description: null,
+      }),
+    );
+    expect(result.applied).toBe(1);
+    expect(result.failed).toHaveLength(0);
+  });
 });
