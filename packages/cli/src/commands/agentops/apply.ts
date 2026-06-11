@@ -13,7 +13,7 @@ import {
 
 import { getClient } from '../../utils/client';
 import { readFileOrStdin } from '../../utils/file-input';
-import { getSafetyMode, wrapAction } from '../../utils/safety';
+import { assertAllowedProject, getSafetyMode, wrapAction } from '../../utils/safety';
 
 import { fetchBundleCurrentState } from './state';
 
@@ -31,6 +31,7 @@ export function registerAgentopsApplyCommand(agentopsCmd: Command): void {
         try {
           const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const bundle = parseLightdashAiAgentBundle(content);
+          assertAllowedProject(this, bundle.spec.projectUuid);
           const client = getClient();
           const current = await fetchBundleCurrentState(client, bundle);
           const diff = computeBundleDiff(bundle, current);

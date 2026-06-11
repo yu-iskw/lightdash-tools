@@ -44,7 +44,6 @@ export function toAgentSnapshot(agent: {
   tags: string[] | null;
   enableDataAccess?: boolean;
   enableSelfImprovement?: boolean;
-  enableReasoning?: boolean;
 }): AgentStateSnapshot {
   return {
     uuid: agent.uuid,
@@ -54,7 +53,6 @@ export function toAgentSnapshot(agent: {
     tags: agent.tags,
     enableDataAccess: agent.enableDataAccess,
     enableSelfImprovement: agent.enableSelfImprovement,
-    enableReasoning: agent.enableReasoning,
   };
 }
 

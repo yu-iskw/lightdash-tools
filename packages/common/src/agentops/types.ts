@@ -45,7 +45,6 @@ const bundleAgentSchema = z.object({
   tags: z.array(z.string()).nullable().optional(),
   enableDataAccess: z.boolean().optional(),
   enableSelfImprovement: z.boolean().optional(),
-  enableReasoning: z.boolean().optional(),
   evaluations: z.array(bundleEvaluationSchema).optional().default([]),
 });
 
@@ -145,7 +144,6 @@ export interface AgentStateSnapshot {
   tags: string[] | null;
   enableDataAccess?: boolean;
   enableSelfImprovement?: boolean;
-  enableReasoning?: boolean;
 }
 
 /** Minimal evaluation shape for diffing. */
@@ -257,7 +255,6 @@ function agentFieldsToCompare(_agent: BundleAgentSpec): Array<keyof AgentStateSn
     'tags',
     'enableDataAccess',
     'enableSelfImprovement',
-    'enableReasoning',
   ];
 }
 
@@ -274,7 +271,6 @@ function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot>
     tags: agent.tags,
     enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
     enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
-    enableReasoning: agent.enableReasoning,
   };
 }
 
@@ -287,7 +283,6 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
     tags: agent.tags ?? null,
     enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
     enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
-    enableReasoning: agent.enableReasoning,
   };
 }
 

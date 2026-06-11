@@ -167,6 +167,46 @@ describe('AgentOps bundle diff', () => {
     });
   });
 
+  it('reports noop when bundle omits enableReasoning and API agent has undefined', () => {
+    const bundleWithoutReasoning = parseLightdashAiAgentBundle(`
+apiVersion: lightdash.ai/v1alpha1
+kind: LightdashAiAgentBundle
+metadata:
+  name: sales-bundle
+spec:
+  projectUuid: ${PROJECT_UUID}
+  agents:
+    - key: sales
+      uuid: ${AGENT_UUID}
+      name: Sales Agent
+      instruction: Help with sales
+      evaluations: []
+`);
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Sales Agent',
+            description: null,
+            instruction: 'Help with sales',
+            tags: null,
+            enableDataAccess: false,
+            enableSelfImprovement: false,
+          },
+          evaluations: [],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(bundleWithoutReasoning, current);
+    expect(diff.hasDrift).toBe(false);
+    expect(diff.summary.updates).toBe(0);
+    expect(diff.summary.noops).toBe(1);
+  });
+
   it('reports noop when API has false booleans and bundle omits them', () => {
     const bundleWithoutBooleans = parseLightdashAiAgentBundle(`
 apiVersion: lightdash.ai/v1alpha1

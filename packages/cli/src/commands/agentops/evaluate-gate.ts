@@ -14,7 +14,7 @@ import {
 
 import { getClient } from '../../utils/client';
 import { readFileOrStdin } from '../../utils/file-input';
-import { wrapAction } from '../../utils/safety';
+import { assertAllowedProject, wrapAction } from '../../utils/safety';
 
 import type { Command } from 'commander';
 
@@ -53,6 +53,7 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
         try {
           const content = await readFileOrStdin({ file: options.file, stdin: options.stdin });
           const gate = parseLightdashAiEvaluationGate(content);
+          assertAllowedProject(this, gate.spec.projectUuid);
           const client = getClient();
           const { run, timedOut } = await resolveEvaluationRun(client, gate, {
             wait: options.wait === true,
