@@ -8,7 +8,6 @@ import type { LightdashClientConfig } from '../config';
 import type { ApiErrorPayload } from '../errors';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-
 function getRetryAfterSeconds(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
   const n = parseInt(value, 10);

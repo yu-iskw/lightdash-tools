@@ -22,8 +22,6 @@ import {
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-
-
 export function registerSpaceTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(
     server,

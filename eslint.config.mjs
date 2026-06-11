@@ -225,7 +225,11 @@ export default [
     },
   },
   {
-    files: ['packages/cli/src/commands/charts.ts', 'packages/cli/src/commands/query.ts', 'packages/common/src/audit.ts'],
+    files: [
+      'packages/cli/src/commands/charts.ts',
+      'packages/cli/src/commands/query.ts',
+      'packages/common/src/audit.ts',
+    ],
     rules: {
       'security/detect-non-literal-fs-filename': 'off',
     },

@@ -4,12 +4,7 @@
 
 import { z } from 'zod';
 
-import {
-  wrapTool,
-  registerToolSafe,
-  READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
-} from '../shared.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '../shared.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';

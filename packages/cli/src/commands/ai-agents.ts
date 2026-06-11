@@ -23,7 +23,9 @@ type AdminThreadsCliOptions = {
   sortDirection?: string;
 };
 
-function buildAdminThreadsParams(options: AdminThreadsCliOptions): GetAdminThreadsParams | undefined {
+function buildAdminThreadsParams(
+  options: AdminThreadsCliOptions,
+): GetAdminThreadsParams | undefined {
   return pickDefined({
     page: options.page,
     pageSize: options.pageSize,
@@ -32,7 +34,8 @@ function buildAdminThreadsParams(options: AdminThreadsCliOptions): GetAdminThrea
     humanScore: options.humanScore,
     dateFrom: options.dateFrom,
     dateTo: options.dateTo,
-    sortField: options.sort != null ? (options.sort as GetAdminThreadsParams['sortField']) : undefined,
+    sortField:
+      options.sort != null ? (options.sort as GetAdminThreadsParams['sortField']) : undefined,
     sortDirection:
       options.sortDirection != null ? (options.sortDirection as 'asc' | 'desc') : undefined,
   }) as GetAdminThreadsParams | undefined;

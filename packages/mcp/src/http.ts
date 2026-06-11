@@ -111,7 +111,9 @@ function sendJson(
   body: Record<string, string>,
   extraHeaders?: Record<string, string>,
 ): void {
-  res.writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders }).end(JSON.stringify(body));
+  res
+    .writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders })
+    .end(JSON.stringify(body));
 }
 
 function getSessionTransport(

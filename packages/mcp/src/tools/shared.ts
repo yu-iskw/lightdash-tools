@@ -32,7 +32,6 @@ import type { LightdashClient } from '@lightdash-tools/client';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 
-
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'ldt__';
 
