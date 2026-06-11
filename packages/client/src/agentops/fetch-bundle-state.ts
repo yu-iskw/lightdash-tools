@@ -5,11 +5,7 @@
 import { toAgentSnapshot, toEvaluationSnapshot } from '@lightdash-tools/common';
 
 import type { LightdashClient } from '../client';
-import type {
-  BundleAgentSpec,
-  BundleCurrentState,
-  LightdashAiAgentBundle,
-} from '@lightdash-tools/common';
+import type { BundleCurrentState, LightdashAiAgentBundle } from '@lightdash-tools/common';
 
 export async function fetchBundleCurrentState(
   client: LightdashClient,
@@ -17,12 +13,9 @@ export async function fetchBundleCurrentState(
 ): Promise<BundleCurrentState> {
   const projectUuid = bundle.spec.projectUuid;
   const summaries = await client.v1.aiAgents.listAgents(projectUuid);
-  const relevantSummaries = summaries.filter((s) =>
-    bundle.spec.agents.some((a: BundleAgentSpec) => a.uuid === s.uuid || a.name === s.name),
-  );
 
   const agents = await Promise.all(
-    relevantSummaries.map(async (summary) => {
+    summaries.map(async (summary) => {
       const agent = await client.v1.aiAgents.getAgent(projectUuid, summary.uuid);
       const evalSummaries = await client.v1.aiAgents.listEvaluations(projectUuid, summary.uuid);
       const evaluations = await Promise.all(

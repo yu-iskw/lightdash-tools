@@ -87,14 +87,21 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       }
 
       const result = await applyBundleDiff(c, bundle, diff.changes);
-      return jsonToolResult({
+      const payload = {
         bundleName: bundle.metadata.name,
         projectUuid: bundle.spec.projectUuid,
         summary: diff.summary,
         applied: result.applied,
         skipped: result.skipped,
         failed: result.failed,
-      });
+      };
+      if (result.failed.length > 0) {
+        return {
+          ...jsonToolResult(payload),
+          isError: true,
+        };
+      }
+      return jsonToolResult(payload);
     }),
   );
 
@@ -162,12 +169,14 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
               reasons: ['Timed out waiting for evaluation run to complete'],
               run,
             };
-            if (format === 'json') return jsonToolResult(payload);
+            if (format === 'json') {
+              return { ...jsonToolResult(payload), isError: true };
+            }
             const text =
               format === 'markdown'
                 ? `# Evaluation Gate: ${gate.metadata.name}\n\n**Result:** TIMEOUT\n`
                 : `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${gate.metadata.name}" tests="1" failures="1">\n  <testcase name="timeout"><failure>Timed out</failure></testcase>\n</testsuite>\n`;
-            return { content: [{ type: 'text' as const, text }] };
+            return { content: [{ type: 'text' as const, text }], isError: true };
           }
 
           const evaluation = evaluateGatePolicy(gate.spec.policy, run);
@@ -181,14 +190,22 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
             ...evaluation,
           };
 
+          const isError = !evaluation.passed || evaluation.exitCode !== GateExitCode.PASSED;
+
           if (format === 'json') {
-            return jsonToolResult(payload);
+            return {
+              ...jsonToolResult(payload),
+              ...(isError ? { isError: true } : {}),
+            };
           }
           const text =
             format === 'junit'
               ? formatGateJUnit(gate, evaluation)
               : formatGateMarkdown(gate, evaluation);
-          return { content: [{ type: 'text' as const, text }] };
+          return {
+            content: [{ type: 'text' as const, text }],
+            ...(isError ? { isError: true } : {}),
+          };
         },
     ),
   );

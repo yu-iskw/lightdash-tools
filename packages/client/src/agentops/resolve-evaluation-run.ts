@@ -46,7 +46,9 @@ async function resolveRunUuid(
       agentUuid,
       evaluationUuid,
     );
-    const latest = runs[0];
+    const latest = [...runs].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
     if (!latest) {
       throw new Error('No evaluation runs found. Set spec.triggerRun: true or spec.runUuid.');
     }

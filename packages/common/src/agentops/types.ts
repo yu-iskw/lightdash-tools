@@ -457,12 +457,6 @@ export function computeBundleDiff(
       (a) => a.uuid === agent.uuid || a.name === agent.name,
     );
     if (!isDesired && !matchedAgentUuids.has(agent.uuid)) {
-      changes.push({
-        resourceType: 'agent',
-        operation: 'delete',
-        key: agent.uuid,
-        path: `agents[${agent.uuid}]`,
-      });
       for (const evalItem of evaluations) {
         changes.push({
           resourceType: 'evaluation',
@@ -472,6 +466,12 @@ export function computeBundleDiff(
           path: `agents[${agent.uuid}].evaluations[${evalItem.evalUuid}]`,
         });
       }
+      changes.push({
+        resourceType: 'agent',
+        operation: 'delete',
+        key: agent.uuid,
+        path: `agents[${agent.uuid}]`,
+      });
     }
   }
 

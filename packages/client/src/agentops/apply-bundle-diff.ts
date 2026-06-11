@@ -3,6 +3,7 @@
  */
 
 import { applyAgentChange } from './apply-agent-change';
+import { recordApplyFailure } from './apply-context';
 import { applyEvaluationChange } from './apply-evaluation-change';
 
 import type { ApplyBundleContext, ApplyBundleDiffFailure } from './apply-context';
@@ -49,8 +50,12 @@ export async function applyBundleDiff(
       continue;
     }
 
-    if (await applyChange(ctx, change)) {
-      applied++;
+    try {
+      if (await applyChange(ctx, change)) {
+        applied++;
+      }
+    } catch (error) {
+      recordApplyFailure(ctx, change, error instanceof Error ? error.message : String(error));
     }
   }
 

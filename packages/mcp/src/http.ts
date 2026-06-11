@@ -12,6 +12,8 @@ import { initAuditLog } from './audit.js';
 import { getClient, getAuditLogPath } from './config.js';
 import { createLightdashMcpServer } from './server.js';
 
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+
 const MCP_PATH = '/mcp';
 const PORT = Number(process.env.MCP_HTTP_PORT ?? '3100');
 const MAX_BODY_BYTES = Number(process.env.MCP_MAX_BODY_BYTES ?? 1024 * 1024);
@@ -21,6 +23,7 @@ const SESSION_CLEANUP_INTERVAL_MS = Number(process.env.MCP_SESSION_CLEANUP_MS ??
 
 interface SessionEntry {
   transport: StreamableHTTPServerTransport;
+  server: McpServer;
   lastAccessAt: number;
 }
 
@@ -97,7 +100,7 @@ function cleanupExpiredSessions(): void {
   for (const [sessionId, entry] of sessionMap) {
     if (now - entry.lastAccessAt > SESSION_TTL_MS) {
       sessionMap.delete(sessionId);
-      void entry.transport.close().catch((err: unknown) => {
+      void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
         console.error(`Failed to close expired MCP session ${sessionId}:`, err);
       });
     }
@@ -122,14 +125,19 @@ function canAcceptNewSession(res: ServerResponse): boolean {
 
 function createSessionTransport(): StreamableHTTPServerTransport {
   const server = createLightdashMcpServer(sharedClient);
-
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
     onsessioninitialized: (sessionId) => {
-      sessionMap.set(sessionId, { transport, lastAccessAt: Date.now() });
+      sessionMap.set(sessionId, { transport, server, lastAccessAt: Date.now() });
     },
     onsessionclosed: (sessionId) => {
+      const entry = sessionMap.get(sessionId);
       sessionMap.delete(sessionId);
+      if (entry) {
+        void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
+          console.error(`Failed to close MCP session ${sessionId}:`, err);
+        });
+      }
     },
   });
 
