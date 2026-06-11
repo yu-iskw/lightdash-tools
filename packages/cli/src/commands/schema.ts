@@ -117,6 +117,7 @@ function operationToSchema(operation: OperationDescriptor): Record<string, unkno
     cliCommand: operation.cli.commandPath,
     profiles: [...operation.profiles],
     safetyImpact: operation.authorization.safetyImpact,
+    ...(operation.workflow != null ? { workflow: [...operation.workflow] } : {}),
   };
 }
 

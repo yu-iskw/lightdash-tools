@@ -23,6 +23,17 @@ function allowedProjectUuids(projectUuids: string[]): string[] {
   return projectUuids.filter((uuid) => areAllProjectsAllowed(allowlist, [uuid]));
 }
 
+function isContextProjectAllowed(projectUuid: string | undefined): projectUuid is string {
+  if (!projectUuid) {
+    return false;
+  }
+  const allowlist = getAllowedProjectUuids();
+  if (allowlist.length === 0) {
+    return true;
+  }
+  return areAllProjectsAllowed(allowlist, [projectUuid]);
+}
+
 /** Completes project UUIDs from the organization project list. */
 export function createProjectUuidCompleter(client: LightdashClient) {
   return async (value: string, _context?: CompletionContext): Promise<string[]> => {
@@ -37,7 +48,7 @@ export function createProjectUuidCompleter(client: LightdashClient) {
 export function createAgentUuidCompleter(client: LightdashClient) {
   return async (value: string, context?: CompletionContext): Promise<string[]> => {
     const projectUuid = context?.arguments?.projectUuid;
-    if (!projectUuid) {
+    if (!isContextProjectAllowed(projectUuid)) {
       return [];
     }
     const agents = await client.v1.aiAgents.listAgents(projectUuid);
@@ -51,7 +62,7 @@ export function createEvalUuidCompleter(client: LightdashClient) {
   return async (value: string, context?: CompletionContext): Promise<string[]> => {
     const projectUuid = context?.arguments?.projectUuid;
     const agentUuid = context?.arguments?.agentUuid;
-    if (!projectUuid || !agentUuid) {
+    if (!isContextProjectAllowed(projectUuid) || !agentUuid) {
       return [];
     }
     const evaluations = await client.v1.aiAgents.listEvaluations(projectUuid, agentUuid);
@@ -66,7 +77,7 @@ export function createRunUuidCompleter(client: LightdashClient) {
     const projectUuid = context?.arguments?.projectUuid;
     const agentUuid = context?.arguments?.agentUuid;
     const evalUuid = context?.arguments?.evalUuid;
-    if (!projectUuid || !agentUuid || !evalUuid) {
+    if (!isContextProjectAllowed(projectUuid) || !agentUuid || !evalUuid) {
       return [];
     }
     const runs = await client.v1.aiAgents.listAllEvaluationRuns(projectUuid, agentUuid, evalUuid);

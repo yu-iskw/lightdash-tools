@@ -52,6 +52,13 @@ export type OperationCli = {
   commandPath: string;
 };
 
+/** Optional multi-step HTTP workflow when a single registry entry orchestrates several API calls. */
+export type OperationWorkflowStep = {
+  method: HttpMethod;
+  path: string;
+  summary: string;
+};
+
 export type OperationDescriptor = {
   /** Stable dot-separated identifier (e.g. `ai-agents.project.agents.list`). */
   id: string;
@@ -61,6 +68,8 @@ export type OperationDescriptor = {
   mcp: OperationMcp;
   cli: OperationCli;
   profiles: readonly CapabilityProfile[];
+  /** When set, documents the ordered client-side HTTP steps behind this operation. */
+  workflow?: readonly OperationWorkflowStep[];
 };
 
 const VALID_PROFILES = new Set<CapabilityProfile>([

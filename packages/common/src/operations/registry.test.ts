@@ -115,6 +115,17 @@ describe('operation registry', () => {
     expect(getOperation('ai-agents.project.threads.continue')?.profiles).toContain('conversations');
   });
 
+  it('documents multi-step workflow for thread start', () => {
+    const operation = getOperation('ai-agents.project.threads.start');
+    expect(operation?.http.path).toBe(
+      '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads',
+    );
+    expect(operation?.cli.commandPath).toBe('agents threads start');
+    expect(operation?.workflow).toHaveLength(3);
+    const lastStep = operation?.workflow?.[operation.workflow.length - 1];
+    expect(lastStep?.path).toContain('/generate');
+  });
+
   it('maps evaluation lifecycle operations to evaluations profile', () => {
     const evalIds = [
       'ai-agents.project.evaluations.create',

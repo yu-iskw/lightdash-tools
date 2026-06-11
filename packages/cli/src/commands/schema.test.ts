@@ -44,7 +44,20 @@ describe('schema command', () => {
       const schema = getSchema('ai-agents.project.threads.start');
       expect(schema).not.toBeNull();
       expect(schema).toHaveProperty('method', 'POST');
+      expect(schema).toHaveProperty(
+        'path',
+        '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads',
+      );
+      expect(schema).toHaveProperty('cliCommand', 'agents threads start');
       expect(schema).toHaveProperty('safetyImpact', 'external-side-effect');
+      expect(schema?.workflow).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            method: 'POST',
+            path: '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/generate',
+          }),
+        ]),
+      );
     });
 
     it('returns null for unknown resource', () => {

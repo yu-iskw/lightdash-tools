@@ -198,22 +198,41 @@ const threadsGet = defineOperation({
   profiles: [PROFILE_CONVERSATIONS, PROFILE_DISCOVERY],
 });
 
+const PROJECT_AGENT_THREAD_MESSAGES_PATH = `${PROJECT_AGENT_THREAD_PATH}/messages`;
 const PROJECT_AGENT_THREAD_GENERATE_PATH = `${PROJECT_AGENT_THREAD_PATH}/generate`;
 
 const threadsStart = defineOperation({
   id: 'ai-agents.project.threads.start',
-  summary: 'Start a new conversation thread and generate the first agent response',
+  summary:
+    'Start a new conversation (client workflow: create thread, add message, generate response)',
   http: {
     method: 'POST',
-    path: PROJECT_AGENT_THREAD_GENERATE_PATH,
+    path: PROJECT_AGENT_THREADS_PATH,
   },
+  workflow: [
+    {
+      method: 'POST',
+      path: PROJECT_AGENT_THREADS_PATH,
+      summary: 'Create thread',
+    },
+    {
+      method: 'POST',
+      path: PROJECT_AGENT_THREAD_MESSAGES_PATH,
+      summary: 'Add user message',
+    },
+    {
+      method: 'POST',
+      path: PROJECT_AGENT_THREAD_GENERATE_PATH,
+      summary: 'Generate agent response',
+    },
+  ],
   authorization: { safetyImpact: IMPACT_EXTERNAL },
   mcp: {
     toolName: 'generate_agent_message',
     annotations: WRITE_OPEN_WORLD,
     taskSupport: { exposed: true, taskEligible: true },
   },
-  cli: { commandPath: 'agents threads generate' },
+  cli: { commandPath: 'agents threads start' },
   profiles: [PROFILE_CONVERSATIONS],
 });
 
