@@ -41,12 +41,14 @@ pnpm install       # Install all dependencies
 pnpm build         # Build all packages
 pnpm test          # Run Vitest with v8 coverage and threshold checks
 pnpm test:fast     # Vitest without coverage (local iteration only)
-pnpm lint          # Trunk + ESLint + knip (dead-code / unused dependency check)
-pnpm lint:eslint   # ESLint only (Trunk fallback)
+pnpm lint          # Trunk (@trunkio/launcher) + lint:local (eslint, knip, package.json, prettier)
+pnpm lint:eslint   # ESLint only
 pnpm knip          # Unused exports, files, and dependencies
-pnpm verify        # Agent harness: validations, build, test+coverage, eslint, knip
-pnpm verify:quick  # Fast loop: test+coverage, eslint, knip (no build)
-pnpm verify:ci     # verify + Trunk (matches CI: test.yml + trunk_check.yml)
+pnpm trunk:install # Fetch Trunk-managed linters (run once after pnpm install)
+pnpm verify        # Alias for verify:pr (default before commit)
+pnpm verify:quick  # Fast loop: build → test → lint:local
+pnpm verify:pr     # Pre-PR gate: validations → build → test → lint:local
+pnpm verify:ci     # Full CI parity: verify:pr + lint:trunk (OSV, Trivy, markdown, YAML)
 pnpm format        # Auto-format code via Trunk
 pnpm clean         # Clean build artifacts
 ```
@@ -58,8 +60,8 @@ Unless the user explicitly narrows scope, run the relevant gates from the reposi
 1. `pnpm test` for Vitest with coverage (thresholds in [`coverage-thresholds.mjs`](coverage-thresholds.mjs)).
 2. `pnpm lint:eslint` and `pnpm knip` for TypeScript hygiene.
 3. `pnpm build` when the change spans package exports, shared types, or publish-shaped behavior.
-4. `pnpm verify` for the default agent harness (validations, build, test+coverage, eslint, knip). CI also runs Trunk via `trunk_check.yml`; use `pnpm verify:ci` locally when you need that gate.
-5. `pnpm lint` (Trunk + ESLint + knip) when touching Markdown, YAML, `.trunk/`, or GitHub workflow files.
+4. `pnpm verify:pr` (or `pnpm verify`) before commit. Use `pnpm verify:ci` to match CI including Trunk OSV/Trivy. See [local-ci-parity.md](.claude/skills/common-references/local-ci-parity.md).
+5. `pnpm lint` when touching Markdown, YAML, `.trunk/`, lockfiles, or GitHub workflow files.
 
 Root [`eslint.config.mjs`](eslint.config.mjs) layers import-x, SonarJS, security, unicorn, eslint-comments, and Vitest rules on top of `@typescript-eslint` (dbt-tools-ts pattern). It enforces `@typescript-eslint/no-deprecated` on CLI and MCP (ADR-0036). [`knip.json`](knip.json) maps workspace entrypoints (CLI/MCP bins, tests, scripts) so agents can detect unused exports and dependencies without manual inventory.
 
@@ -146,9 +148,9 @@ Additional specialized skills are documented in `CLAUDE.md`.
 ## Common Gotchas
 
 - Use `pnpm` only (do not use `npm` or `yarn`).
-- Trunk manages tool versions hermetically; avoid global linter installs.
+- **Trunk via devDependency:** `@trunkio/launcher` provides the local `trunk` CLI (`pnpm exec trunk`). Run `pnpm trunk:install` after `pnpm install` to fetch Trunk-managed linters. No global Trunk install required.
 - Keep `pnpm-lock.yaml` committed for reproducible installs.
-- Run `trunk install` if Trunk reports missing tools.
+- **Build before ESLint:** Workspace packages resolve via `dist/` entrypoints. `verify:pr` and `verify:quick` run `pnpm build` first so `import-x/no-unresolved` does not false-negative.
 - ADR and Changie are initialized (`docs/adr`, `.changie.yaml`); use the `manage-adr` and `manage-changelog` skills when `adr-tools` and `changie` are available.
 - **Trunk unavailable (restricted network):** If `curl https://get.trunk.io` returns 403, use these direct fallbacks instead of Trunk commands:
   - Lint: `pnpm lint:eslint`

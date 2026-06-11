@@ -11,7 +11,7 @@ This skill automates the process of setting up the development environment to en
 
 - [ ] **Step 1: Environment Validation**
   - [ ] Check Node.js version against `.node-version`
-  - [ ] Check for `trunk` installation
+  - [ ] Confirm `@trunkio/launcher` is installed (`pnpm exec trunk --version`)
 - [ ] **Step 2: Dependency Installation**
   - [ ] Run `pnpm install`
 - [ ] **Step 3: Tooling Setup**
@@ -27,14 +27,13 @@ Read the `.node-version` file in the workspace root. Ensure the current Node.js 
 
 #### Trunk CLI
 
-Check if `trunk` is installed by running `trunk --version`.
-If `trunk` is not found, advise the user to install it. On macOS, use:
+Trunk is provided by the devDependency `@trunkio/launcher`. After `pnpm install`, verify:
 
 ```bash
-brew install trunk-io
+pnpm exec trunk --version
 ```
 
-For other platforms, refer to the [Trunk installation documentation](https://docs.trunk.io/references/cli/getting-started/install).
+No global install is required. If the command fails, run `pnpm install` again.
 
 ### 2. Dependency Installation
 
@@ -49,7 +48,7 @@ pnpm install
 Trunk manages linters and formatters hermetically. Run the following command to ensure all required tools are downloaded and ready. Refer to [../common-references/trunk-commands.md](../common-references/trunk-commands.md) for more Trunk commands.
 
 ```bash
-trunk install
+pnpm trunk:install
 ```
 
 ## Success Criteria
