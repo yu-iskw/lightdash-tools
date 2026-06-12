@@ -61,13 +61,8 @@ jobs:
       - name: Regenerate operation registry
         run: pnpm --filter @lightdash-tools/common generate:operation-registry
 
-      - name: Regenerate CLI docs (if script exists)
-        run: |
-          if node -e "const p=require('./packages/cli/package.json'); process.exit(p.scripts?.['generate-cli-docs'] ? 0 : 1)"; then
-            pnpm --filter @lightdash-tools/cli generate-cli-docs
-          else
-            echo "generate-cli-docs not defined; skipping"
-          fi
+      - name: Regenerate CLI docs
+        run: node scripts/generate-cli-docs.mjs
 
       - name: Fail on uncommitted generated changes
         run: git diff --exit-code

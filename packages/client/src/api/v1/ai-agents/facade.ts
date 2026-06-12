@@ -158,7 +158,7 @@ export class AiAgentsClient extends BaseApiClient {
     return this.discovery.getExploreAccessSummary(projectUuid, agentUuid, body);
   }
 
-  getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences> {
+  getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences | null> {
     return this.discovery.getUserAgentPreferences(projectUuid);
   }
 

@@ -56,9 +56,15 @@ export class AiAgentsDiscoveryClient extends BaseApiClient {
     );
   }
 
-  /** Get user default agent preferences (GET …/preferences). */
-  async getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences> {
-    return this.http.get<AiAgentUserPreferences>(`/projects/${projectUuid}/aiAgents/preferences`);
+  /**
+   * Get user default agent preferences (GET …/preferences).
+   * Returns null when the user has not set preferences (`ApiSuccessEmpty`).
+   */
+  async getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences | null> {
+    const results = await this.http.get<AiAgentUserPreferences | undefined>(
+      `/projects/${projectUuid}/aiAgents/preferences`,
+    );
+    return results ?? null;
   }
 
   /** Set user default agent preferences (POST …/preferences). */

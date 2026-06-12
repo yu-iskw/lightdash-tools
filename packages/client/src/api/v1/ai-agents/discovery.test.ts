@@ -78,6 +78,13 @@ describe('AiAgentsDiscoveryClient', () => {
     expect(result).toEqual(prefs);
   });
 
+  it('getUserAgentPreferences should return null when API returns empty success', async () => {
+    const client = new AiAgentsDiscoveryClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue(undefined);
+    const result = await client.getUserAgentPreferences('proj1');
+    expect(result).toBeNull();
+  });
+
   it('setUserAgentPreferences should call POST …/preferences', async () => {
     const client = new AiAgentsDiscoveryClient(mockHttp);
     const body = { defaultAgentUuid: 'a2' };
