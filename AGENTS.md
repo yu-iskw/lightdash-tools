@@ -183,7 +183,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 
 - OpenSpec and gh-\* GitHub agent skills were removed; project-management is changelog and ADR only.
 - MCP `structuredContent` must be a JSON object; `toStructuredContent()` in `packages/mcp/src/tools/shared.ts` wraps non-objects (including arrays) as `{ data: ... }`.
-- `packages/mcp-ui` is the dedicated workspace package for MCP ext-apps interactive UI (React + vite-plugin-singlefile).
+- `packages/mcp-ui` is the dedicated workspace package for MCP ext-apps interactive UI (React + vite-plugin-singlefile). It stays `private: true`; `@lightdash-tools/mcp` copies `mcp-ui/dist/index.html` into `dist/assets/minimal-app.html` at build time so the published MCP package does not depend on a private registry package.
 - `pnpm-workspace.yaml` maintains supply-chain mitigations for global pnpm policies: `semver: '>=7.8.4'` override, expanded `minimumReleaseAgeExclude`, `vite: 8.0.16` pin, and `allowBuilds` for `@modelcontextprotocol/ext-apps`.
 - `getUserAgentPreferences` returns `null` when the API responds with `ApiSuccessEmpty` (user has no saved preferences).
 - The openapi-drift CI workflow uses `scripts/generate-cli-docs.mjs` to regenerate CLI documentation.

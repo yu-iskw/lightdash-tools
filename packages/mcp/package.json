@@ -10,8 +10,11 @@
   "bin": {
     "lightdash-mcp": "./dist/bin.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-ui-asset.mjs",
     "start": "node dist/index.js",
     "start:http": "node dist/http.js",
     "test": "pnpm --dir ../.. exec vitest run packages/mcp/src"
@@ -19,13 +22,13 @@
   "dependencies": {
     "@lightdash-tools/client": "workspace:*",
     "@lightdash-tools/common": "workspace:*",
-    "@lightdash-tools/mcp-ui": "workspace:*",
     "@modelcontextprotocol/ext-apps": "^1.7.4",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^15.0.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@lightdash-tools/mcp-ui": "workspace:*",
     "@types/node": "^25.9.3"
   }
 }

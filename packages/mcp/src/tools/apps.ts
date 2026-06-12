@@ -3,7 +3,7 @@
  */
 
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
+import path from 'node:path';
 
 import { registerAppResource, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/server';
 import { z } from 'zod';
@@ -13,27 +13,20 @@ import { registerAppToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-const appRequire = createRequire(__filename);
 const resourceUri = 'ui://minimal-app/index.html';
+/** Bundled at build time from @lightdash-tools/mcp-ui (see scripts/copy-ui-asset.mjs). */
+const bundledAppHtmlPath = path.join(__dirname, '..', 'assets', 'minimal-app.html');
 
 function loadAppHtml(): string | undefined {
-  let htmlPath: string;
   try {
-    htmlPath = appRequire.resolve('@lightdash-tools/mcp-ui/index.html');
+    // Path is fixed relative to this module; not derived from user input.
+    // eslint-disable-next-line security/detect-non-literal-fs-filename -- bundled package asset path
+    return fs.readFileSync(bundledAppHtmlPath, 'utf-8');
   } catch (err) {
     console.error(
-      'Warning: Could not resolve @lightdash-tools/mcp-ui/index.html. Make sure the package is built.',
+      `Warning: Could not read bundled MCP App HTML at ${bundledAppHtmlPath}. Rebuild @lightdash-tools/mcp.`,
       err,
     );
-    return undefined;
-  }
-
-  try {
-    // htmlPath comes from require.resolve of a workspace package export, not user input.
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- resolved package asset path
-    return fs.readFileSync(htmlPath, 'utf-8');
-  } catch (err) {
-    console.error('Error reading MCP App HTML:', err);
     return undefined;
   }
 }

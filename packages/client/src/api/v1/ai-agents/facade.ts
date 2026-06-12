@@ -13,7 +13,7 @@ import { AiAgentsEvaluationsClient } from './evaluations';
 import { AiAgentsFeedbackClient } from './feedback';
 import { AiAgentsMcpServersClient } from './mcp-servers';
 import { AiAgentsSqlApprovalClient } from './sql-approval';
-import { AiAgentsThreadsClient } from './threads';
+import { AiAgentsThreadsClient, type StartConversationThreadBody } from './threads';
 
 import type { RequestOptions } from './request-options';
 import type { HttpClient } from '../../../http/http-client';
@@ -252,7 +252,7 @@ export class AiAgentsClient extends BaseApiClient {
     projectUuid: string,
     agentUuid: string,
     body: GenerateAgentThreadBody,
-    options?: RequestOptions & { threadBody?: CreateAgentThreadBody },
+    options?: RequestOptions & { threadBody?: StartConversationThreadBody },
   ): Promise<{ thread: AiAgentThreadSummary; result: GenerateAgentThreadResult }> {
     return this.threads.startConversation(projectUuid, agentUuid, body, options);
   }

@@ -19,6 +19,19 @@ import type {
   GenerateThreadTitleResult,
 } from '@lightdash-tools/common';
 
+/** Thread metadata for {@link startConversation}; the user prompt is sent via the message body. */
+export type StartConversationThreadBody = Omit<CreateAgentThreadBody, 'prompt'>;
+
+function toCreateThreadBody(
+  threadBody: StartConversationThreadBody | undefined,
+): CreateAgentThreadBody | undefined {
+  if (threadBody === undefined) {
+    return undefined;
+  }
+  const { prompt: _prompt, ...rest } = threadBody as CreateAgentThreadBody;
+  return rest;
+}
+
 export class AiAgentsThreadsClient extends BaseApiClient {
   /** List all threads for an agent (GET /projects/{projectUuid}/aiAgents/{agentUuid}/threads). */
   async listAgentThreads(projectUuid: string, agentUuid: string): Promise<AiAgentThreadSummary[]> {
@@ -131,10 +144,15 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     projectUuid: string,
     agentUuid: string,
     body: GenerateAgentThreadBody,
-    options?: RequestOptions & { threadBody?: CreateAgentThreadBody },
+    options?: RequestOptions & { threadBody?: StartConversationThreadBody },
   ): Promise<{ thread: AiAgentThreadSummary; result: GenerateAgentThreadResult }> {
     const { threadBody, ...requestOptions } = options ?? {};
-    const thread = await this.createAgentThread(projectUuid, agentUuid, threadBody, requestOptions);
+    const thread = await this.createAgentThread(
+      projectUuid,
+      agentUuid,
+      toCreateThreadBody(threadBody),
+      requestOptions,
+    );
     await this.createAgentThreadMessage(projectUuid, agentUuid, thread.uuid, body, requestOptions);
     const result = await this.generateAgentThreadResponse(
       projectUuid,

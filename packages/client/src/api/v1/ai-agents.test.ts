@@ -272,6 +272,39 @@ describe('AiAgentsClient', () => {
     expect(result).toEqual({ thread, result: response });
   });
 
+  it('startConversation should strip prompt from threadBody when creating thread', async () => {
+    const client = new AiAgentsClient(mockHttp);
+    const thread = { uuid: 't1', title: null };
+    const message = { uuid: 'm1', message: 'Hello', role: 'user' };
+    const response = { response: 'Hi there.' };
+    vi.mocked(mockHttp.post)
+      .mockResolvedValueOnce(thread)
+      .mockResolvedValueOnce(message)
+      .mockResolvedValueOnce(response);
+    const threadBodyWithPrompt = {
+      prompt: 'duplicate',
+      modelConfig: { modelProvider: 'openai', modelName: 'gpt-4' },
+    };
+    await client.startConversation(
+      'proj1',
+      'a1',
+      { prompt: 'Hello' },
+      {
+        threadBody: threadBodyWithPrompt as Parameters<typeof client.startConversation>[3] extends {
+          threadBody?: infer T;
+        }
+          ? T
+          : never,
+      },
+    );
+    expect(mockHttp.post).toHaveBeenNthCalledWith(
+      1,
+      '/projects/proj1/aiAgents/a1/threads',
+      { modelConfig: { modelProvider: 'openai', modelName: 'gpt-4' } },
+      undefined,
+    );
+  });
+
   it('continueConversation should create message then generate', async () => {
     const client = new AiAgentsClient(mockHttp);
     const message = { uuid: 'm2', message: 'Follow up', role: 'user' };
