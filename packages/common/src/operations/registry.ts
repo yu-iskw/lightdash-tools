@@ -35,7 +35,10 @@ export function listOperations(): readonly OperationDescriptor[] {
   return ALL_OPERATIONS;
 }
 
-/** Returns operations that include the given capability profile. */
+/** Returns agent-surface operations that include the given capability profile. */
 export function getOperationsByProfile(profile: CapabilityProfile): readonly OperationDescriptor[] {
-  return ALL_OPERATIONS.filter((operation) => operation.profiles.includes(profile));
+  return ALL_OPERATIONS.filter(
+    (operation) =>
+      operation.agentExposure !== 'client-only' && operation.profiles.includes(profile),
+  );
 }

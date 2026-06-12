@@ -167,6 +167,24 @@ describe('operation registry', () => {
     expect(operation?.http.path).toBe('/api/v1/org/user/{userUuid}');
   });
 
+  it('excludes client-only operations from profile discovery catalogs', () => {
+    for (const profile of ALL_PROFILES) {
+      for (const operation of getOperationsByProfile(profile)) {
+        expect(operation.agentExposure).not.toBe('client-only');
+      }
+    }
+    expect(getOperation('users.members.delete')).toBeDefined();
+    expect(
+      getOperationsByProfile('discovery-readonly').some((op) => op.id === 'users.members.delete'),
+    ).toBe(false);
+  });
+
+  it('keeps discovery-readonly profile operations read-only', () => {
+    for (const operation of getOperationsByProfile('discovery-readonly')) {
+      expect(operation.authorization.safetyImpact).toBe('read');
+    }
+  });
+
   it('never exposes client-only operations on MCP', () => {
     for (const operation of listOperations()) {
       if (operation.agentExposure === 'client-only') {

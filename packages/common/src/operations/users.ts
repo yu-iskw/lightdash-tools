@@ -9,6 +9,7 @@ import { defineOperation } from './types';
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
 const PROFILE_DISCOVERY: CapabilityProfile = 'discovery-readonly';
+const PROFILE_CORE_LIFECYCLE: CapabilityProfile = 'core-lifecycle';
 
 const API_V1 = '/api/v1';
 const MEMBERS_PATH = `${API_V1}/org/users`;
@@ -55,7 +56,7 @@ const membersDelete = defineOperation({
   },
   cli: { commandPath: '' },
   agentExposure: 'client-only',
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [PROFILE_CORE_LIFECYCLE],
 });
 
 /** Organization member operations registered in the shared operation registry. */
