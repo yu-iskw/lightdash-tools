@@ -53,7 +53,7 @@ const membersDelete = defineOperation({
     annotations: WRITE_DESTRUCTIVE,
     taskSupport: { exposed: false, taskEligible: false },
   },
-  cli: { commandPath: '' },
+  cli: { commandPath: 'users delete' },
   agentExposure: 'client-only',
   profiles: [PROFILE_DISCOVERY],
 });
