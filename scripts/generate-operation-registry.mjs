@@ -72,7 +72,9 @@ function validateOperation(operation, errors) {
   }
 
   if (agentExposure === 'client-only' && operation.mcp?.taskSupport?.exposed === true) {
-    errors.push(`Operation '${operation.id}' client-only must set mcp.taskSupport.exposed to false`);
+    errors.push(
+      `Operation '${operation.id}' client-only must set mcp.taskSupport.exposed to false`,
+    );
   }
 
   if (!Array.isArray(operation.profiles) || operation.profiles.length === 0) {
