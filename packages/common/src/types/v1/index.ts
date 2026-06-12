@@ -130,6 +130,10 @@ export namespace V1 {
     export type ExploreAccessSummaryBody = A.ExploreAccessSummaryBody;
     export type AiAgentUserPreferences = A.AiAgentUserPreferences;
     export type GetAgentSuggestionsParams = A.GetAgentSuggestionsParams;
+    export type AgentSuggestion = A.AgentSuggestion;
+    export type AgentSuggestionPromptChip = A.AgentSuggestionPromptChip;
+    export type AgentSuggestionNavigateChip = A.AgentSuggestionNavigateChip;
+    export type AgentSuggestionTool = A.AgentSuggestionTool;
     export type AgentSuggestionChip = A.AgentSuggestionChip;
     export type AgentSuggestions = A.AgentSuggestions;
     // Threads: title & clone
@@ -146,6 +150,7 @@ export namespace V1 {
     export type UpdateMessageFeedbackBody = A.UpdateMessageFeedbackBody;
     // MCP servers
     export type AiMcpServerAuthType = A.AiMcpServerAuthType;
+    export type AiMcpCredentialScope = A.AiMcpCredentialScope;
     export type AiMcpServerConnectionStatus = A.AiMcpServerConnectionStatus;
     export type AiMcpServer = A.AiMcpServer;
     export type AiMcpServerTool = A.AiMcpServerTool;

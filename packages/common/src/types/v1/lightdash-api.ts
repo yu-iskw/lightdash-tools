@@ -221,6 +221,10 @@ export namespace LightdashApi {
     export type ExploreAccessSummaryBody = AiAgentsTypes.ExploreAccessSummaryBody;
     export type AiAgentUserPreferences = AiAgentsTypes.AiAgentUserPreferences;
     export type GetAgentSuggestionsParams = AiAgentsTypes.GetAgentSuggestionsParams;
+    export type AgentSuggestion = AiAgentsTypes.AgentSuggestion;
+    export type AgentSuggestionPromptChip = AiAgentsTypes.AgentSuggestionPromptChip;
+    export type AgentSuggestionNavigateChip = AiAgentsTypes.AgentSuggestionNavigateChip;
+    export type AgentSuggestionTool = AiAgentsTypes.AgentSuggestionTool;
     export type AgentSuggestionChip = AiAgentsTypes.AgentSuggestionChip;
     export type AgentSuggestions = AiAgentsTypes.AgentSuggestions;
     // Threads: title & clone
@@ -238,6 +242,7 @@ export namespace LightdashApi {
     export type UpdateMessageFeedbackBody = AiAgentsTypes.UpdateMessageFeedbackBody;
     // MCP servers
     export type AiMcpServerAuthType = AiAgentsTypes.AiMcpServerAuthType;
+    export type AiMcpCredentialScope = AiAgentsTypes.AiMcpCredentialScope;
     export type AiMcpServerConnectionStatus = AiAgentsTypes.AiMcpServerConnectionStatus;
     export type AiMcpServer = AiAgentsTypes.AiMcpServer;
     export type AiMcpServerTool = AiAgentsTypes.AiMcpServerTool;
@@ -378,6 +383,10 @@ export type AiAgentExploreAccessSummary = AiAgents.AiAgentExploreAccessSummary;
 export type ExploreAccessSummaryBody = AiAgents.ExploreAccessSummaryBody;
 export type AiAgentUserPreferences = AiAgents.AiAgentUserPreferences;
 export type GetAgentSuggestionsParams = AiAgents.GetAgentSuggestionsParams;
+export type AgentSuggestion = AiAgents.AgentSuggestion;
+export type AgentSuggestionPromptChip = AiAgents.AgentSuggestionPromptChip;
+export type AgentSuggestionNavigateChip = AiAgents.AgentSuggestionNavigateChip;
+export type AgentSuggestionTool = AiAgents.AgentSuggestionTool;
 export type AgentSuggestionChip = AiAgents.AgentSuggestionChip;
 export type AgentSuggestions = AiAgents.AgentSuggestions;
 // AI agents (flat exports) — threads: title & clone
@@ -394,6 +403,7 @@ export type AiAgentThreadMessageVizQuery = AiAgents.AiAgentThreadMessageVizQuery
 export type UpdateMessageFeedbackBody = AiAgents.UpdateMessageFeedbackBody;
 // AI agents (flat exports) — MCP servers
 export type AiMcpServerAuthType = AiAgents.AiMcpServerAuthType;
+export type AiMcpCredentialScope = AiAgents.AiMcpCredentialScope;
 export type AiMcpServerConnectionStatus = AiAgents.AiMcpServerConnectionStatus;
 export type AiMcpServer = AiAgents.AiMcpServer;
 export type AiMcpServerTool = AiAgents.AiMcpServerTool;

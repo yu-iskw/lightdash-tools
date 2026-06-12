@@ -1,6 +1,7 @@
 node_modules
 dist
 coverage
+tmp
 .trunk
 pnpm-lock.yaml
 .markdown-link-check.json

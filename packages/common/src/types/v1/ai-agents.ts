@@ -144,20 +144,18 @@ export namespace AiAgents {
     afterMessageUuid?: string;
     enableSqlMode?: boolean;
   }
-  /** Suggestion chip returned by the suggestions endpoint. */
-  export interface AgentSuggestionChip {
-    label: string;
-    defaults?: {
-      timeframe?: string;
-      metrics?: string[];
-      dimensions?: string[];
-      explore?: string;
-    };
-  }
+  /** Discriminated suggestion chip (`kind: 'prompt'` or `kind: 'navigate'`). */
+  export type AgentSuggestion = components['schemas']['AgentSuggestion'];
+  /** Prompt suggestion chip (`kind: 'prompt'`). */
+  export type AgentSuggestionPromptChip = components['schemas']['AgentSuggestionPromptChip'];
+  /** Navigate suggestion chip (`kind: 'navigate'`). */
+  export type AgentSuggestionNavigateChip = components['schemas']['AgentSuggestionNavigateChip'];
+  /** Tool invoked by a prompt suggestion chip. */
+  export type AgentSuggestionTool = components['schemas']['AgentSuggestionTool'];
+  /** @deprecated Use {@link AgentSuggestion}. */
+  export type AgentSuggestionChip = AgentSuggestion;
   /** Suggestion chips wrapper (inner `results` of suggestions response). */
-  export interface AgentSuggestions {
-    chips: AgentSuggestionChip[];
-  }
+  export type AgentSuggestions = components['schemas']['ApiAgentSuggestionsResponse']['results'];
 
   // ─── Threads: title & clone ────────────────────────────────────────────────────
 
@@ -202,39 +200,15 @@ export namespace AiAgents {
   // ─── MCP servers (project-scoped; EE-guarded upstream) ───────────────────────
 
   /** MCP server auth type. */
-  export type AiMcpServerAuthType = 'bearer' | 'none' | 'oauth';
+  export type AiMcpServerAuthType = components['schemas']['AiMcpServerAuthType'];
+  /** MCP credential scope. */
+  export type AiMcpCredentialScope = components['schemas']['AiMcpCredentialScope'];
   /** MCP server connection status. */
-  export type AiMcpServerConnectionStatus = 'connected' | 'disconnected' | 'error';
+  export type AiMcpServerConnectionStatus = components['schemas']['AiMcpServerConnectionStatus'];
   /** Project MCP server record. */
-  export interface AiMcpServer {
-    uuid: string;
-    projectUuid: string;
-    name: string;
-    url: string;
-    iconUrl: string | null;
-    authType: AiMcpServerAuthType;
-    allowOAuthCredentialSharing: boolean;
-    hasCredentials: boolean;
-    credentialScope: string | null;
-    connectionStatus: AiMcpServerConnectionStatus | null;
-    error: string | null;
-    connectedByUserUuid: string | null;
-    createdAt: string;
-    updatedAt: string;
-  }
+  export type AiMcpServer = components['schemas']['AiMcpServer'];
   /** MCP tool discovered on a project server. */
-  export interface AiMcpServerTool {
-    uuid: string;
-    mcpServerUuid: string;
-    toolName: string;
-    title: string | null;
-    description: string | null;
-    inputSchema: unknown;
-    annotations: unknown;
-    meta: unknown;
-    createdAt: string;
-    updatedAt: string;
-  }
+  export type AiMcpServerTool = components['schemas']['AiMcpServerTool'];
   /** MCP tool with per-agent enablement. */
   export type AiAgentMcpServerTool = AiMcpServerTool & {
     enabled: boolean;
