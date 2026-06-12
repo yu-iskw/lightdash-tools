@@ -64,5 +64,8 @@ jobs:
       - name: Regenerate CLI docs
         run: node scripts/generate-cli-docs.mjs
 
+      - name: Format generated CLI docs
+        run: pnpm exec prettier --write docs/reference/cli-ai-agents.md
+
       - name: Fail on uncommitted generated changes
         run: git diff --exit-code
