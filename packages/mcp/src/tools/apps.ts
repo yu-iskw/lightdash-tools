@@ -5,14 +5,10 @@
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
 
-import {
-  registerAppTool,
-  registerAppResource,
-  RESOURCE_MIME_TYPE,
-} from '@modelcontextprotocol/ext-apps/server';
+import { registerAppResource, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/server';
 import { z } from 'zod';
 
-import { TOOL_PREFIX, READ_ONLY_DEFAULT } from './shared.js';
+import { registerAppToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -51,20 +47,21 @@ export function registerAppTools(server: McpServer, _client: LightdashClient): v
     return;
   }
 
-  registerAppTool(
+  registerAppToolSafe(
     server,
-    `${TOOL_PREFIX}minimal_app`,
+    'minimal_app',
     {
+      title: 'Minimal MCP app',
       description: 'Open a minimal Lightdash MCP app to test connectivity and bidirectional flow.',
       inputSchema: {
         test: z.boolean().optional().describe('Optional test flag'),
       },
+      annotations: READ_ONLY_DEFAULT,
       _meta: {
         ui: { resourceUri },
       },
-      ...READ_ONLY_DEFAULT,
     },
-    async (args: { test?: boolean }) => {
+    async (args) => {
       return {
         content: [
           {
@@ -77,7 +74,7 @@ export function registerAppTools(server: McpServer, _client: LightdashClient): v
   );
 
   registerAppResource(
-    server,
+    server as unknown as Parameters<typeof registerAppResource>[0],
     resourceUri,
     'Minimal App UI',
     { mimeType: RESOURCE_MIME_TYPE },

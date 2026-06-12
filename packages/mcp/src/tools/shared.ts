@@ -10,6 +10,8 @@
  *   6. Raw handler        — the actual tool implementation.
  */
 
+import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
+
 import {
   isAllowed,
   areAllProjectsAllowed,
@@ -93,6 +95,8 @@ export type ToolOptions = {
   inputSchema: Record<string, z.ZodType>;
   title?: string;
   annotations?: ToolAnnotations;
+  /** MCP Apps UI metadata (e.g. `{ ui: { resourceUri } }`). Passed through to the SDK registerTool call. */
+  _meta?: Record<string, unknown>;
 };
 
 // Re-export presets for convenience and backward compatibility in tools
@@ -325,6 +329,38 @@ export function registerToolSafe(
     annotations,
   };
   (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, finalHandler);
+}
+
+/**
+ * Normalizes MCP App `_meta` the same way as `@modelcontextprotocol/ext-apps` registerAppTool.
+ */
+export function normalizeAppToolMeta(meta: Record<string, unknown>): Record<string, unknown> {
+  const ui = meta.ui as { resourceUri?: string } | undefined;
+  const legacyUri = meta[RESOURCE_URI_META_KEY];
+  if (ui?.resourceUri && legacyUri === undefined) {
+    return { ...meta, [RESOURCE_URI_META_KEY]: ui.resourceUri };
+  }
+  if (typeof legacyUri === 'string' && !ui?.resourceUri) {
+    return { ...meta, ui: { ...ui, resourceUri: legacyUri } };
+  }
+  return meta;
+}
+
+/**
+ * Registers an MCP App tool with the same guardrails as registerToolSafe, preserving `_meta.ui`.
+ */
+export function registerAppToolSafe(
+  server: unknown,
+  shortName: string,
+  options: ToolOptions & { _meta: Record<string, unknown> },
+  handler: ToolHandler,
+): void {
+  registerToolSafe(
+    server,
+    shortName,
+    { ...options, _meta: normalizeAppToolMeta(options._meta) },
+    handler,
+  );
 }
 
 export function wrapTool<T>(
