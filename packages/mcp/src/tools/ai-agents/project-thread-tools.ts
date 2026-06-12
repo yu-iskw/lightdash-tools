@@ -5,21 +5,16 @@
 import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_OPEN_WORLD } from '../shared.js';
+import {
+  wrapTool,
+  registerToolSafe,
+  jsonToolResult,
+  READ_ONLY_DEFAULT,
+  WRITE_OPEN_WORLD,
+} from '../shared.js';
 
-import type { TextContent } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-
-function jsonToolResult(data: unknown): TextContent {
-  return {
-    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-    structuredContent:
-      data !== null && typeof data === 'object' && !Array.isArray(data)
-        ? (data as Record<string, unknown>)
-        : { data },
-  };
-}
 
 export function registerProjectAgentThreadTools(server: McpServer, client: LightdashClient): void {
   // ─── Project-scoped: threads ─────────────────────────────────────────────────

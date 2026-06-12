@@ -490,6 +490,24 @@ describe('registerToolSafe', () => {
     expect(JSON.parse(result.content[0].text)).toEqual({ ok: true });
   });
 
+  it('should wrap array JSON in structuredContent.data', async () => {
+    const jsonHandler = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify([{ id: 'a' }]) }],
+    });
+    registerToolSafe(
+      mockServer,
+      'json_array_tool',
+      { description: 'Returns JSON array', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      jsonHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+
+    expect(result.structuredContent).toEqual({ data: [{ id: 'a' }] });
+    expect(JSON.parse(result.content[0].text)).toEqual([{ id: 'a' }]);
+  });
+
   it('wrapTool returns a safe error message when the inner handler throws', async () => {
     const wrapped = wrapTool({} as never, () => async () => {
       throw new Error('boom');

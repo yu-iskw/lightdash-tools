@@ -4,6 +4,7 @@
 
 import { registerAgentopsTools } from './agentops.js';
 import { registerAiAgentTools } from './ai-agents.js';
+import { registerAppTools } from './apps.js';
 import { registerChartTools } from './charts.js';
 import { registerContentTools } from './content.js';
 import { registerDashboardTools } from './dashboards.js';
@@ -35,4 +36,5 @@ export function registerTools(server: McpServer, client: LightdashClient): void 
   registerContentTools(server, client);
   registerAiAgentTools(server, client);
   registerAgentopsTools(server, client);
+  registerAppTools(server, client);
 }

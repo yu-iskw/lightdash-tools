@@ -19,6 +19,8 @@
   "dependencies": {
     "@lightdash-tools/client": "workspace:*",
     "@lightdash-tools/common": "workspace:*",
+    "@lightdash-tools/mcp-ui": "workspace:*",
+    "@modelcontextprotocol/ext-apps": "^0.3.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^15.0.0",
     "zod": "^4.4.3"

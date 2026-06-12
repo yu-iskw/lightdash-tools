@@ -8,13 +8,13 @@ import { projectUuidField } from '../schema-fields.js';
 import {
   wrapTool,
   registerToolSafe,
+  jsonToolResult,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
   WRITE_NONDESTRUCTIVE,
   WRITE_DESTRUCTIVE,
 } from '../shared.js';
 
-import type { TextContent } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
@@ -29,16 +29,6 @@ const evaluationPromptInputSchema = z.union([
     expectedResponse: z.string().nullable().describe('Expected response (optional)'),
   }),
 ]);
-
-function jsonToolResult(data: unknown): TextContent {
-  return {
-    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-    structuredContent:
-      data !== null && typeof data === 'object' && !Array.isArray(data)
-        ? (data as Record<string, unknown>)
-        : { data },
-  };
-}
 
 function registerEvaluationReadTools(server: McpServer, client: LightdashClient): void {
   registerToolSafe(

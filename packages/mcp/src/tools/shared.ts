@@ -39,19 +39,23 @@ export const TOOL_PREFIX = 'ldt__';
 
 export type TextContent = {
   content: Array<{ type: 'text'; text: string }>;
-  structuredContent?: Record<string, unknown> | unknown[];
+  structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };
 
+/** MCP requires structuredContent to be a record; wrap arrays and primitives. */
+function toStructuredContent(data: unknown): Record<string, unknown> {
+  if (data !== null && typeof data === 'object' && !Array.isArray(data)) {
+    return data as Record<string, unknown>;
+  }
+  return { data };
+}
+
 /** Builds a tool result with JSON text and matching structuredContent. */
 export function jsonToolResult(data: unknown): TextContent {
-  const structured =
-    data !== null && typeof data === 'object'
-      ? (data as Record<string, unknown> | unknown[])
-      : { value: data };
   return {
     content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
-    structuredContent: structured,
+    structuredContent: toStructuredContent(data),
   };
 }
 
@@ -71,7 +75,7 @@ function enrichStructuredContent(result: TextContent): TextContent {
     if (parsed !== null && typeof parsed === 'object') {
       return {
         ...result,
-        structuredContent: parsed as Record<string, unknown> | unknown[],
+        structuredContent: toStructuredContent(parsed),
       };
     }
   } catch {

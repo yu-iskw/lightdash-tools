@@ -2,13 +2,28 @@ packages:
   - packages/*
 
 allowBuilds:
+  '@modelcontextprotocol/ext-apps': true
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
   - '@types/node@25.9.3'
+  - '@typescript-eslint/*'
+  - '@vitest/eslint-plugin'
+  - '@napi-rs/wasm-runtime'
+  - baseline-browser-mapping
+  - caniuse-lite
+  - electron-to-chromium
+  - eslint-plugin-unicorn
+  - hono
+  - knip
+  - prettier
+  - semver
+  - side-channel
+  - vite
 
 overrides:
   js-yaml: '>=4.1.1'
   minimatch: '>=5.1.8'
+  semver: '>=7.8.4'
   tar: '>=7.5.11'
   vite: 8.0.16

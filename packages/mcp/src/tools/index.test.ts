@@ -24,6 +24,7 @@ describe('registerTools', () => {
     registerTool: vi.fn((name: string, options: { description: string }) => {
       registeredTools.push({ name, description: options.description });
     }),
+    registerResource: vi.fn(),
   };
 
   beforeEach(() => {
