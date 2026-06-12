@@ -10,8 +10,6 @@
  *   6. Raw handler        — the actual tool implementation.
  */
 
-import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
-
 import {
   isAllowed,
   areAllProjectsAllowed,
@@ -23,6 +21,7 @@ import {
   validateResourceId,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
+import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 
 import {
   getStaticSafetyMode,
@@ -336,7 +335,9 @@ export function registerToolSafe(
  */
 export function normalizeAppToolMeta(meta: Record<string, unknown>): Record<string, unknown> {
   const ui = meta.ui as { resourceUri?: string } | undefined;
-  const legacyUri = meta[RESOURCE_URI_META_KEY];
+  const legacyUri = Object.hasOwn(meta, RESOURCE_URI_META_KEY)
+    ? Reflect.get(meta, RESOURCE_URI_META_KEY)
+    : undefined;
   if (ui?.resourceUri && legacyUri === undefined) {
     return { ...meta, [RESOURCE_URI_META_KEY]: ui.resourceUri };
   }

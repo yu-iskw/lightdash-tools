@@ -1,9 +1,8 @@
 import { SafetyMode } from '@lightdash-tools/common';
+import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
-
-import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 
 import {
   normalizeAppToolMeta,
