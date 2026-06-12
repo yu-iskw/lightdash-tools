@@ -171,3 +171,19 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **MCP tool names must be concise:** Some MCP clients (e.g., Claude Desktop) impose a 60-character limit on combined server and tool names. Use the `ldt__` prefix (set in `packages/mcp/src/tools/shared.ts`) and avoid excessively long tool names to ensure they are not filtered out.
 - **Knip ignores intentional type barrels:** `knip.json` uses `ignoreIssues` for `packages/common/src/types/**` because namespace re-exports are public API surface, not dead code. Do not remove those ignores when knip reports unused namespace members in type files.
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.
+
+## Learned User Preferences
+
+- Prefer simple, minimal implementations; avoid over-engineering when a shared helper or targeted fix suffices.
+- Keep root `package.json` lint and format on Trunk (`pnpm exec trunk`); do not replace with Vite+ `vp check` without explicit approval.
+- When implementing from an attached plan file, do not edit the plan file itself.
+- Use pnpm for local MCP testing workflows (including MCP Inspector); do not substitute npm or yarn.
+
+## Learned Workspace Facts
+
+- OpenSpec and gh-\* GitHub agent skills were removed; project-management is changelog and ADR only.
+- MCP `structuredContent` must be a JSON object; `toStructuredContent()` in `packages/mcp/src/tools/shared.ts` wraps non-objects (including arrays) as `{ data: ... }`.
+- `packages/mcp-ui` is the dedicated workspace package for MCP ext-apps interactive UI (React + vite-plugin-singlefile).
+- `pnpm-workspace.yaml` maintains supply-chain mitigations for global pnpm policies: `semver: '>=7.8.4'` override, expanded `minimumReleaseAgeExclude`, `vite: 8.0.16` pin, and `allowBuilds` for `@modelcontextprotocol/ext-apps`.
+- `getUserAgentPreferences` returns `null` when the API responds with `ApiSuccessEmpty` (user has no saved preferences).
+- The openapi-drift CI workflow uses `scripts/generate-cli-docs.mjs` to regenerate CLI documentation.
