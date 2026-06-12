@@ -179,6 +179,8 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Keep root `package.json` lint and format on Trunk (`pnpm exec trunk`); do not replace with Vite+ `vp check` without explicit approval.
 - When implementing from an attached plan file, do not edit the plan file itself.
 - Use pnpm for local MCP testing workflows (including MCP Inspector); do not substitute npm or yarn.
+- Wrap agent-shell `git commit` and `git push` with `timeout 10` so GPG/pinentry or hook stalls fail fast instead of hanging the session.
+- For agent-driven commits when `commit.gpgsign=true`, use `--no-gpg-sign` or an interactive terminal with pinentry; `--no-verify` skips hooks only, not GPG signing.
 
 ## Learned Workspace Facts
 
@@ -188,3 +190,6 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - `pnpm-workspace.yaml` maintains supply-chain mitigations for global pnpm policies: `semver: '>=7.8.4'` override, expanded `minimumReleaseAgeExclude`, `vite: 8.0.16` pin, and `allowBuilds` for `@modelcontextprotocol/ext-apps`.
 - `getUserAgentPreferences` returns `null` when the API responds with `ApiSuccessEmpty` (user has no saved preferences).
 - The openapi-drift CI workflow uses `scripts/generate-cli-docs.mjs` to regenerate CLI documentation.
+- With `commit.gpgsign=true`, non-interactive agent shells block on GPG pinentry after Trunk pre-commit passes; the hang is signing, not the hook.
+- Operation registry generator requires non-empty `mcp.toolName` and `cli.commandPath` only for `agentExposure: 'agent'`; `client-only` ops document banned MCP names but omit CLI paths.
+- Per ADR-0037, irrecoverable ops such as `delete_member` stay off MCP and CLI; use `@lightdash-tools/client` directly for `users.members.delete`.

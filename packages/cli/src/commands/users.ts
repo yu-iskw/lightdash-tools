@@ -2,7 +2,7 @@
  * Users command implementation.
  */
 
-import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
@@ -74,25 +74,6 @@ export function registerUsersCommand(program: Command): void {
         } catch (error) {
           console.error(
             'Error fetching user:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      }),
-    );
-
-  usersCmd
-    .command('delete <userUuid>')
-    .description('Permanently remove a user from the organization (irrecoverable)')
-    .action(
-      wrapAction(WRITE_DESTRUCTIVE, async (userUuid: string) => {
-        try {
-          const client = getClient();
-          await client.v1.users.deleteMember(userUuid);
-          console.error(`User ${userUuid} removed from organization successfully`);
-        } catch (error) {
-          console.error(
-            'Error removing user:',
             error instanceof Error ? error.message : String(error),
           );
           process.exit(1);
