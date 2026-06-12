@@ -335,7 +335,7 @@ export function registerToolSafe(
  */
 export function normalizeAppToolMeta(meta: Record<string, unknown>): Record<string, unknown> {
   const ui = meta.ui as { resourceUri?: string } | undefined;
-  const legacyUri = Object.hasOwn(meta, RESOURCE_URI_META_KEY)
+  const legacyUri = Object.prototype.hasOwnProperty.call(meta, RESOURCE_URI_META_KEY)
     ? Reflect.get(meta, RESOURCE_URI_META_KEY)
     : undefined;
   if (ui?.resourceUri && legacyUri === undefined) {
