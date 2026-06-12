@@ -28,8 +28,9 @@ function toCreateThreadBody(
   if (threadBody === undefined) {
     return undefined;
   }
-  const { prompt: _prompt, ...rest } = threadBody as CreateAgentThreadBody;
-  return rest;
+  const body: CreateAgentThreadBody = { ...threadBody };
+  delete body.prompt;
+  return body;
 }
 
 export class AiAgentsThreadsClient extends BaseApiClient {
