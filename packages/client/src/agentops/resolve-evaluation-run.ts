@@ -41,12 +41,13 @@ async function resolveRunUuid(
   }
 
   if (!runUuid) {
-    const runs = await client.v1.aiAgents.listAllEvaluationRuns(
+    const response = await client.v1.aiAgents.listEvaluationRuns(
       projectUuid,
       agentUuid,
       evaluationUuid,
+      { page: 1, pageSize: 100 },
     );
-    const latest = [...runs].sort(
+    const latest = [...response.data.runs].sort(
       (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     )[0];
     if (!latest) {

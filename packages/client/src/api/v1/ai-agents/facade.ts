@@ -465,8 +465,9 @@ export class AiAgentsClient extends BaseApiClient {
     projectUuid: string,
     agentUuid: string,
     evalUuid: string,
+    params?: { page?: number; pageSize?: number },
   ): Promise<AiAgentEvaluationRunsListResponse> {
-    return this.evaluations.listEvaluationRuns(projectUuid, agentUuid, evalUuid);
+    return this.evaluations.listEvaluationRuns(projectUuid, agentUuid, evalUuid, params);
   }
 
   listAllEvaluationRuns(

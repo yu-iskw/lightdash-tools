@@ -16,7 +16,6 @@ export async function fetchBundleCurrentState(
 
   const agents = await Promise.all(
     summaries.map(async (summary) => {
-      const agent = await client.v1.aiAgents.getAgent(projectUuid, summary.uuid);
       const evalSummaries = await client.v1.aiAgents.listEvaluations(projectUuid, summary.uuid);
       const evaluations = await Promise.all(
         evalSummaries.map((e) =>
@@ -24,7 +23,7 @@ export async function fetchBundleCurrentState(
         ),
       );
       return {
-        agent: toAgentSnapshot(agent),
+        agent: toAgentSnapshot(summary),
         evaluations: evaluations.map(toEvaluationSnapshot),
       };
     }),

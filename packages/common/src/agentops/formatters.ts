@@ -20,6 +20,15 @@ export function formatGateJUnit(
   return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${name}" tests="1" failures="${evaluation.passed ? 0 : 1}">\n  <testcase name="${name}" classname="agentops.evaluate-gate">\n${failures}  </testcase>\n</testsuite>\n`;
 }
 
+export function formatGateTimeoutJUnit(gate: LightdashAiEvaluationGate): string {
+  const name = escapeXml(gate.metadata.name);
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${name}" tests="1" failures="1">\n  <testcase name="timeout"><failure>Timed out</failure></testcase>\n</testsuite>\n`;
+}
+
+export function formatGateTimeoutMarkdown(gate: LightdashAiEvaluationGate): string {
+  return `# Evaluation Gate: ${gate.metadata.name}\n\n**Result:** TIMEOUT\n`;
+}
+
 export function formatGateMarkdown(
   gate: LightdashAiEvaluationGate,
   evaluation: GatePolicyEvaluation,

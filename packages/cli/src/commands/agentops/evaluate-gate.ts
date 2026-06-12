@@ -9,6 +9,8 @@ import {
   evaluateGatePolicy,
   formatGateJUnit,
   formatGateMarkdown,
+  formatGateTimeoutJUnit,
+  formatGateTimeoutMarkdown,
   parseLightdashAiEvaluationGate,
 } from '@lightdash-tools/common';
 
@@ -24,19 +26,6 @@ function parsePositiveSeconds(value: string, flag: string): number {
     throw new Error(`${flag} must be a positive integer`);
   }
   return parsed;
-}
-
-function resolvePositiveSeconds(
-  value: number | undefined,
-  flag: string,
-  defaultValue: number,
-): number {
-  const resolved = value ?? defaultValue;
-  if (!Number.isFinite(resolved) || resolved <= 0) {
-    console.error(`Error: ${flag} must be a positive integer`);
-    process.exit(GateExitCode.INVALID);
-  }
-  return resolved;
 }
 
 export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void {
@@ -83,12 +72,8 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
           });
           const gate = parseLightdashAiEvaluationGate(content);
           assertAllowedProject(this, gate.spec.projectUuid);
-          const timeoutSeconds = resolvePositiveSeconds(options.timeout, '--timeout', 600);
-          const pollIntervalSeconds = resolvePositiveSeconds(
-            options.pollInterval,
-            '--poll-interval',
-            10,
-          );
+          const timeoutSeconds = options.timeout ?? 600;
+          const pollIntervalSeconds = options.pollInterval ?? 10;
           const client = getClient();
           const { run, timedOut } = await resolveEvaluationRun(client, gate, {
             wait: options.wait === true,
@@ -106,11 +91,9 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
             };
             if (output === 'json') console.log(JSON.stringify(payload, null, 2));
             else if (output === 'markdown') {
-              console.log(`# Evaluation Gate: ${gate.metadata.name}\n\n**Result:** TIMEOUT\n`);
+              console.log(formatGateTimeoutMarkdown(gate));
             } else {
-              console.log(
-                `<?xml version="1.0" encoding="UTF-8"?>\n<testsuite name="${gate.metadata.name}" tests="1" failures="1">\n  <testcase name="timeout"><failure>Timed out</failure></testcase>\n</testsuite>\n`,
-              );
+              console.log(formatGateTimeoutJUnit(gate));
             }
             process.exit(GateExitCode.TIMEOUT);
           }
@@ -137,10 +120,6 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
           process.exit(evaluation.exitCode);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          if (message.includes('must be a positive integer')) {
-            console.error(`Error: ${message}`);
-            process.exit(GateExitCode.INVALID);
-          }
           console.error('Error evaluating gate:', message);
           process.exit(GateExitCode.ERROR);
         }

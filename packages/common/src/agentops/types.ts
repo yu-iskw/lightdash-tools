@@ -220,7 +220,7 @@ export function parseLightdashAiEvaluationGate(content: string): LightdashAiEval
 
 // ─── Prompt normalization ──────────────────────────────────────────────────────
 
-function normalizePrompt(
+export function normalizeEvaluationPrompt(
   prompt:
     | { prompt: string; expectedResponse?: string | null }
     | { threadUuid: string; promptUuid: string; expectedResponse?: string | null },
@@ -303,7 +303,7 @@ function evaluationToSnapshot(
     evalUuid,
     title: evalSpec.title,
     description: evalSpec.description ?? null,
-    prompts: evalSpec.prompts.map(normalizePrompt),
+    prompts: evalSpec.prompts.map(normalizeEvaluationPrompt),
   };
 }
 

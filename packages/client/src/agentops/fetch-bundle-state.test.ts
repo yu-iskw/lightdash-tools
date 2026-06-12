@@ -27,15 +27,6 @@ describe('fetchBundleCurrentState', () => {
       { uuid: 'agent-in-bundle', name: 'Agent One' },
       { uuid: 'orphan-agent', name: 'Orphan' },
     ]);
-    const getAgent = vi
-      .fn()
-      .mockImplementation(async (_projectUuid: string, agentUuid: string) => ({
-        uuid: agentUuid,
-        name: agentUuid === 'agent-in-bundle' ? 'Agent One' : 'Orphan',
-        description: null,
-        instruction: null,
-        tags: null,
-      }));
     const listEvaluations = vi.fn().mockResolvedValue([]);
     const getEvaluation = vi.fn();
 
@@ -43,7 +34,6 @@ describe('fetchBundleCurrentState', () => {
       v1: {
         aiAgents: {
           listAgents,
-          getAgent,
           listEvaluations,
           getEvaluation,
         },
@@ -53,7 +43,6 @@ describe('fetchBundleCurrentState', () => {
     const state = await fetchBundleCurrentState(client, bundle);
 
     expect(listAgents).toHaveBeenCalledWith(bundle.spec.projectUuid);
-    expect(getAgent).toHaveBeenCalledTimes(2);
     expect(state.agents.map((entry) => entry.agent.uuid)).toEqual([
       'agent-in-bundle',
       'orphan-agent',

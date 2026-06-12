@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { App } from '@modelcontextprotocol/ext-apps';
+import { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
 
-const ConnectionTester: React.FC = () => {
+const ConnectionTester = () => {
   const [app, setApp] = useState<App | null>(null);
   const [toolResult, setToolResult] = useState<unknown>(null);
   const [lastMessage, setLastMessage] = useState<string>('Initializing...');
@@ -36,9 +36,7 @@ const ConnectionTester: React.FC = () => {
 
     void init();
 
-    return () => {
-      // Clean up if needed (though App doesn't currently expose a disconnect)
-    };
+    return () => undefined;
   }, []);
 
   const handleTestCall = async () => {

@@ -157,6 +157,24 @@ export default [
     rules: tsProductionRules,
   },
   {
+    files: ['packages/**/*.tsx'],
+    ignores: ['**/dist/**'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ...tsParserOptions,
+        ecmaFeatures: { jsx: true },
+      },
+    },
+    plugins: tsProductionPlugins,
+    settings: importXSettings,
+    rules: {
+      ...tsProductionRules,
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+      'import-x/default': 'off',
+    },
+  },
+  {
     files: ['packages/**/*.test.ts'],
     ignores: ['**/dist/**'],
     languageOptions: {

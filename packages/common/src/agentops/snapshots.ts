@@ -1,3 +1,5 @@
+import { normalizeEvaluationPrompt } from './types';
+
 import type { AgentStateSnapshot, EvaluationStateSnapshot, GateRunSnapshot } from './types';
 
 export function toGateRunSnapshot(run: {
@@ -13,26 +15,6 @@ export function toGateRunSnapshot(run: {
     passedAssessments: run.passedAssessments,
     failedAssessments: run.failedAssessments,
     completedAt: run.completedAt,
-  };
-}
-
-export function normalizeEvaluationPrompt(
-  prompt:
-    | { prompt: string; expectedResponse?: string | null }
-    | { threadUuid: string; promptUuid: string; expectedResponse?: string | null },
-): EvaluationStateSnapshot['prompts'][number] {
-  if ('prompt' in prompt) {
-    return {
-      type: 'string',
-      prompt: prompt.prompt,
-      expectedResponse: prompt.expectedResponse ?? null,
-    };
-  }
-  return {
-    type: 'thread',
-    threadUuid: prompt.threadUuid,
-    promptUuid: prompt.promptUuid,
-    expectedResponse: prompt.expectedResponse ?? null,
   };
 }
 
@@ -69,17 +51,6 @@ export function toEvaluationSnapshot(evaluation: {
     evalUuid: evaluation.evalUuid,
     title: evaluation.title,
     description: evaluation.description,
-    prompts: evaluation.prompts.map((p) =>
-      'prompt' in p
-        ? normalizeEvaluationPrompt({
-            prompt: p.prompt,
-            expectedResponse: p.expectedResponse,
-          })
-        : normalizeEvaluationPrompt({
-            threadUuid: p.threadUuid,
-            promptUuid: p.promptUuid,
-            expectedResponse: p.expectedResponse,
-          }),
-    ),
+    prompts: evaluation.prompts.map((p) => normalizeEvaluationPrompt(p)),
   };
 }
