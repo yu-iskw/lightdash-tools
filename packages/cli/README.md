@@ -31,6 +31,10 @@ The CLI requires the following environment variables (consistent with `@lightdas
 
 Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
 
+### Agent-safe surface
+
+MCP and CLI expose the same agent-safe operations. Irrecoverable actions (e.g. deleting org members) are **not** CLI commands — use `@lightdash-tools/client` for those. Reversible destructive commands (e.g. `groups delete`) remain available and respect `--safety-mode` and `--dry-run`. See [ADR-0037](../../docs/adr/0037-agent-safe-mcp-cli-surface.md) and [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md).
+
 Example:
 
 ```bash
@@ -211,8 +215,8 @@ Example:
 # This will work
 lightdash-ai --safety-mode read-only users list
 
-# This will fail if delete was implemented
-lightdash-ai --safety-mode read-only users delete <uuid>
+# Reversible destructive commands (e.g. groups delete) fail in read-only mode
+lightdash-ai --safety-mode read-only groups delete <groupUuid>
 ```
 
 When a command is blocked, you will see an error like:

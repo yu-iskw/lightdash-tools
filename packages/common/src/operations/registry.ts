@@ -3,10 +3,11 @@
  */
 
 import { AI_AGENT_OPERATIONS } from './ai-agents';
+import { USER_OPERATIONS } from './users';
 
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
-const ALL_OPERATIONS: readonly OperationDescriptor[] = [...AI_AGENT_OPERATIONS];
+const ALL_OPERATIONS: readonly OperationDescriptor[] = [...AI_AGENT_OPERATIONS, ...USER_OPERATIONS];
 
 const operationsById = new Map<string, OperationDescriptor>(
   ALL_OPERATIONS.map((operation) => [operation.id, operation]),

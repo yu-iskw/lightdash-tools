@@ -77,6 +77,14 @@ describe('schema command', () => {
       );
     });
 
+    it('returns schema for users.members.delete with client-only exposure', () => {
+      const schema = getSchema('users.members.delete');
+      expect(schema).not.toBeNull();
+      expect(schema).toHaveProperty('method', 'DELETE');
+      expect(schema).toHaveProperty('path', '/api/v1/org/user/{userUuid}');
+      expect(schema).toHaveProperty('agentExposure', 'client-only');
+    });
+
     it('returns null for unknown resource', () => {
       const schema = getSchema('unknown.resource');
       expect(schema).toBeNull();

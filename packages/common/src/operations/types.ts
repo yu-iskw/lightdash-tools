@@ -7,6 +7,9 @@ import type { SafetyImpact, ToolAnnotations } from '../safety';
 
 export type { SafetyImpact };
 
+/** Whether an operation may appear on MCP/CLI agent surfaces. */
+export type AgentExposure = 'agent' | 'client-only';
+
 /** HTTP verbs supported by registered operations. */
 export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 
@@ -67,6 +70,8 @@ export type OperationDescriptor = {
   authorization: OperationAuthorization;
   mcp: OperationMcp;
   cli: OperationCli;
+  /** `agent` (default) = may be exposed on MCP/CLI; `client-only` = typed client only. */
+  agentExposure?: AgentExposure;
   profiles: readonly CapabilityProfile[];
   /** When set, documents the ordered client-side HTTP steps behind this operation. */
   workflow?: readonly OperationWorkflowStep[];
@@ -119,12 +124,25 @@ function validateIdempotentHint(
  * Defines a typed operation descriptor with RFC consistency checks.
  * Throws when authorization impact disagrees with MCP annotations or profiles are invalid.
  */
-export function defineOperation<T extends OperationDescriptor>(descriptor: T): T {
+export function defineOperation<T extends OperationDescriptor>(
+  descriptor: T,
+): T & { agentExposure: AgentExposure } {
   assertNonEmpty(descriptor.id, 'id');
   assertNonEmpty(descriptor.summary, 'summary');
   assertNonEmpty(descriptor.http.path, 'http.path');
-  assertNonEmpty(descriptor.mcp.toolName, 'mcp.toolName');
-  assertNonEmpty(descriptor.cli.commandPath, 'cli.commandPath');
+
+  const agentExposure = descriptor.agentExposure ?? 'agent';
+
+  if (agentExposure === 'agent') {
+    assertNonEmpty(descriptor.mcp.toolName, 'mcp.toolName');
+    assertNonEmpty(descriptor.cli.commandPath, 'cli.commandPath');
+  }
+
+  if (agentExposure === 'client-only' && descriptor.mcp.taskSupport.exposed) {
+    throw new Error(
+      `Operation '${descriptor.id}': client-only operations must set mcp.taskSupport.exposed to false`,
+    );
+  }
 
   if (descriptor.profiles.length === 0) {
     throw new Error(`Operation '${descriptor.id}' must declare at least one capability profile`);
@@ -149,5 +167,5 @@ export function defineOperation<T extends OperationDescriptor>(descriptor: T): T
     descriptor.id,
   );
 
-  return descriptor;
+  return { ...descriptor, agentExposure };
 }

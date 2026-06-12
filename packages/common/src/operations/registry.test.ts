@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { AI_AGENT_OPERATIONS } from './ai-agents';
 import { getOperation, getOperationsByProfile, listOperations } from './registry';
 import { defineOperation } from './types';
+import { USER_OPERATIONS } from './users';
 
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
@@ -35,15 +36,19 @@ const ALL_PROFILES: CapabilityProfile[] = [
 ];
 
 function requiredFields(operation: OperationDescriptor): string[] {
-  return [
+  const agentExposure = operation.agentExposure ?? 'agent';
+  const fields = [
     operation.id,
     operation.summary,
     operation.http.method,
     operation.http.path,
     operation.authorization.safetyImpact,
-    operation.mcp.toolName,
-    operation.cli.commandPath,
+    agentExposure,
   ];
+  if (agentExposure === 'agent') {
+    fields.push(operation.mcp.toolName, operation.cli.commandPath);
+  }
+  return fields;
 }
 
 describe('operation registry', () => {
@@ -58,8 +63,8 @@ describe('operation registry', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('matches AI_AGENT_OPERATIONS export count', () => {
-    expect(listOperations()).toHaveLength(AI_AGENT_OPERATIONS.length);
+  it('matches aggregated domain export count', () => {
+    expect(listOperations()).toHaveLength(AI_AGENT_OPERATIONS.length + USER_OPERATIONS.length);
   });
 
   it('includes required descriptor fields on every operation', () => {
@@ -154,6 +159,22 @@ describe('operation registry', () => {
     expect(ops.every((op) => op.profiles.includes('core-lifecycle'))).toBe(true);
   });
 
+  it('registers users.members.delete as client-only', () => {
+    const operation = getOperation('users.members.delete');
+    expect(operation?.agentExposure).toBe('client-only');
+    expect(operation?.mcp.taskSupport.exposed).toBe(false);
+    expect(operation?.mcp.toolName).toBe('delete_member');
+    expect(operation?.http.path).toBe('/api/v1/org/user/{userUuid}');
+  });
+
+  it('never exposes client-only operations on MCP', () => {
+    for (const operation of listOperations()) {
+      if (operation.agentExposure === 'client-only') {
+        expect(operation.mcp.taskSupport.exposed).toBe(false);
+      }
+    }
+  });
+
   it('rejects descriptors whose safetyImpact disagrees with MCP annotations', () => {
     expect(() =>
       defineOperation({
@@ -172,6 +193,7 @@ describe('operation registry', () => {
           taskSupport: { exposed: true, taskEligible: false },
         },
         cli: { commandPath: 'test' },
+        agentExposure: 'agent',
         profiles: ['discovery-readonly'],
       }),
     ).toThrow(/authorization\.safetyImpact/);

@@ -115,6 +115,7 @@ function operationToSchema(operation: OperationDescriptor): Record<string, unkno
     description: operation.summary,
     params: extractPathParams(operation.http.path),
     cliCommand: operation.cli.commandPath,
+    agentExposure: operation.agentExposure ?? 'agent',
     profiles: [...operation.profiles],
     safetyImpact: operation.authorization.safetyImpact,
     ...(operation.workflow != null ? { workflow: [...operation.workflow] } : {}),
