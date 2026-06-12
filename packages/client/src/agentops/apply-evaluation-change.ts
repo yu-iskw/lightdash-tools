@@ -93,7 +93,7 @@ export async function applyEvaluationChange(
       return true;
     }
 
-    const evalUuid = desiredEval.uuid ?? change.evaluationUuid;
+    const evalUuid = change.evaluationUuid ?? desiredEval.uuid;
     if (!evalUuid) {
       recordApplyFailure(ctx, change, `Could not resolve evaluation UUID for key '${change.key}'`);
       return false;

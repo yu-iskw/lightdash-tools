@@ -51,7 +51,7 @@ export async function applyAgentChange(
       recordApplyFailure(ctx, change, `Agent spec not found for key '${change.key}'`);
       return false;
     }
-    const agentUuid = desired.uuid ?? change.agentUuid ?? agentUuidByKey.get(desired.key);
+    const agentUuid = change.agentUuid ?? desired.uuid ?? agentUuidByKey.get(desired.key);
     if (!agentUuid) {
       recordApplyFailure(ctx, change, `Could not resolve agent UUID for key '${change.key}'`);
       return false;
