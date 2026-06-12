@@ -5,6 +5,7 @@
 import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
+import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
 import type { Command } from 'commander';
@@ -59,25 +60,48 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .command('create')
     .description('Create a new agent in a project')
     .requiredOption('--project <uuid>', 'Project UUID')
-    .requiredOption('--name <name>', 'Agent name')
+    .option('--name <name>', 'Agent name')
     .option('--description <text>', 'Agent description')
     .option('--instruction <text>', 'System instruction for the agent')
+    .option('--file <path>', 'Read agent JSON/YAML from file')
+    .option('--stdin', 'Read agent JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async function (this: Command) {
         const options = this.opts() as {
           project: string;
-          name: string;
+          name?: string;
           description?: string;
           instruction?: string;
+          file?: string;
+          stdin?: boolean;
         };
         try {
           const client = getClient();
-          const body = {
-            name: options.name,
-            projectUuid: options.project,
-            ...(options.description != null ? { description: options.description } : {}),
-            ...(options.instruction != null ? { instruction: options.instruction } : {}),
-          } as Parameters<typeof client.v1.aiAgents.createAgent>[1];
+          let body: Parameters<typeof client.v1.aiAgents.createAgent>[1];
+
+          if (hasExplicitFileInput(options)) {
+            const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
+            if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              console.error('Error: agent input must be a JSON/YAML object');
+              process.exit(1);
+            }
+            body = {
+              ...(parsed as Record<string, unknown>),
+              projectUuid: options.project,
+            } as Parameters<typeof client.v1.aiAgents.createAgent>[1];
+          } else {
+            if (options.name == null) {
+              console.error('Error: --name is required unless using --file or --stdin');
+              process.exit(1);
+            }
+            body = {
+              name: options.name,
+              projectUuid: options.project,
+              ...(options.description != null ? { description: options.description } : {}),
+              ...(options.instruction != null ? { instruction: options.instruction } : {}),
+            } as Parameters<typeof client.v1.aiAgents.createAgent>[1];
+          }
+
           const result = await client.v1.aiAgents.createAgent(options.project, body);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
@@ -97,6 +121,8 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .option('--name <name>', 'New agent name')
     .option('--description <text>', 'New agent description')
     .option('--instruction <text>', 'New system instruction')
+    .option('--file <path>', 'Read agent patch JSON/YAML from file')
+    .option('--stdin', 'Read agent patch JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, cmd: Command) => {
         const options = cmd.opts() as {
@@ -104,22 +130,35 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
           name?: string;
           description?: string;
           instruction?: string;
+          file?: string;
+          stdin?: boolean;
         };
-        const body: Record<string, unknown> = {};
-        if (options.name != null) body['name'] = options.name;
-        if (options.description != null) body['description'] = options.description;
-        if (options.instruction != null) body['instruction'] = options.instruction;
-        if (Object.keys(body).length === 0) {
-          console.error('Error: at least one of --name, --description, --instruction is required');
-          process.exit(1);
-        }
         try {
           const client = getClient();
-          const result = await client.v1.aiAgents.updateAgent(
-            options.project,
-            agentUuid,
-            body as Parameters<typeof client.v1.aiAgents.updateAgent>[2],
-          );
+          let body: Parameters<typeof client.v1.aiAgents.updateAgent>[2];
+
+          if (hasExplicitFileInput(options)) {
+            const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
+            if (parsed == null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              console.error('Error: agent patch input must be a JSON/YAML object');
+              process.exit(1);
+            }
+            body = parsed as Parameters<typeof client.v1.aiAgents.updateAgent>[2];
+          } else {
+            const patch: Record<string, unknown> = {};
+            if (options.name != null) patch['name'] = options.name;
+            if (options.description != null) patch['description'] = options.description;
+            if (options.instruction != null) patch['instruction'] = options.instruction;
+            if (Object.keys(patch).length === 0) {
+              console.error(
+                'Error: at least one of --name, --description, --instruction, --file, --stdin is required',
+              );
+              process.exit(1);
+            }
+            body = patch as Parameters<typeof client.v1.aiAgents.updateAgent>[2];
+          }
+
+          const result = await client.v1.aiAgents.updateAgent(options.project, agentUuid, body);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(

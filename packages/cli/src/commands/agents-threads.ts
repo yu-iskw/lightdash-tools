@@ -2,7 +2,7 @@
  * Agent thread management commands.
  */
 
-import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, WRITE_OPEN_WORLD } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
@@ -57,35 +57,35 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
       }),
     );
 
+  const startThreadHandler = wrapAction(
+    WRITE_OPEN_WORLD,
+    async (agentUuid: string, cmd: Command) => {
+      const options = cmd.opts() as { project: string; prompt: string };
+      try {
+        const client = getClient();
+        const { thread, result } = await client.v1.aiAgents.startConversation(
+          options.project,
+          agentUuid,
+          { prompt: options.prompt },
+        );
+        console.log(JSON.stringify({ threadUuid: thread.uuid, ...result }, null, 2));
+      } catch (error) {
+        console.error(
+          'Error starting agent conversation:',
+          error instanceof Error ? error.message : String(error),
+        );
+        process.exit(1);
+      }
+    },
+  );
+
   threadsCmd
     .command('generate <agentUuid>')
+    .alias('start')
     .description('Start a new thread and generate the first agent response')
     .requiredOption('--project <uuid>', 'Project UUID')
     .requiredOption('--prompt <text>', 'User prompt')
-    .action(
-      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, cmd: Command) => {
-        const options = cmd.opts() as { project: string; prompt: string };
-        try {
-          const client = getClient();
-          // 1. Create thread
-          const thread = await client.v1.aiAgents.createAgentThread(options.project, agentUuid);
-          // 2. Generate response
-          const result = await client.v1.aiAgents.generateAgentThreadResponse(
-            options.project,
-            agentUuid,
-            thread.uuid,
-            { prompt: options.prompt },
-          );
-          console.log(JSON.stringify({ threadUuid: thread.uuid, ...result }, null, 2));
-        } catch (error) {
-          console.error(
-            'Error generating agent response:',
-            error instanceof Error ? error.message : String(error),
-          );
-          process.exit(1);
-        }
-      }),
-    );
+    .action(startThreadHandler);
 
   threadsCmd
     .command('continue <agentUuid> <threadUuid>')
@@ -93,11 +93,11 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .requiredOption('--prompt <text>', 'User prompt')
     .action(
-      wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, threadUuid: string, cmd: Command) => {
+      wrapAction(WRITE_OPEN_WORLD, async (agentUuid: string, threadUuid: string, cmd: Command) => {
         const options = cmd.opts() as { project: string; prompt: string };
         try {
           const client = getClient();
-          const result = await client.v1.aiAgents.generateAgentThreadResponse(
+          const result = await client.v1.aiAgents.continueConversation(
             options.project,
             agentUuid,
             threadUuid,

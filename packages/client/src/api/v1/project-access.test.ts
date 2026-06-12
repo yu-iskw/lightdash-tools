@@ -87,7 +87,7 @@ describe('ProjectAccessClient', () => {
     const client = new ProjectAccessClient(mockHttp);
     const created = { groupUuid: 'g1', projectUuid: 'p1', role: 'viewer' };
     vi.mocked(mockHttp.post).mockResolvedValue(created);
-    const body = { role: 'viewer' };
+    const body = { role: 'viewer' as const };
     const result = await client.addProjectAccessToGroup('g1', 'p1', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/groups/g1/projects/p1', body);
     expect(result).toEqual(created);

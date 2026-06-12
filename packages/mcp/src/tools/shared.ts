@@ -14,11 +14,14 @@ import {
   isAllowed,
   areAllProjectsAllowed,
   extractProjectUuids,
+  hasYamlProjectDocumentArgs,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
   validateResourceId,
+  validateResourceIdsInObject,
 } from '@lightdash-tools/common';
+import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 
 import {
   getStaticSafetyMode,
@@ -37,8 +40,50 @@ export const TOOL_PREFIX = 'ldt__';
 
 export type TextContent = {
   content: Array<{ type: 'text'; text: string }>;
+  structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };
+
+/** MCP requires structuredContent to be a record; wrap arrays and primitives. */
+function toStructuredContent(data: unknown): Record<string, unknown> {
+  if (data !== null && typeof data === 'object' && !Array.isArray(data)) {
+    return data as Record<string, unknown>;
+  }
+  return { data };
+}
+
+/** Builds a tool result with JSON text and matching structuredContent. */
+export function jsonToolResult(data: unknown): TextContent {
+  return {
+    content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
+    structuredContent: toStructuredContent(data),
+  };
+}
+
+/**
+ * When a handler returns JSON text only, attach structuredContent for MCP clients.
+ */
+function enrichStructuredContent(result: TextContent): TextContent {
+  if (result.structuredContent !== undefined || result.isError) {
+    return result;
+  }
+  const first = result.content[0];
+  if (!first || first.type !== 'text') {
+    return result;
+  }
+  try {
+    const parsed: unknown = JSON.parse(first.text);
+    if (parsed !== null && typeof parsed === 'object') {
+      return {
+        ...result,
+        structuredContent: toStructuredContent(parsed),
+      };
+    }
+  } catch {
+    // Plain-text tool responses intentionally omit structuredContent.
+  }
+  return result;
+}
 
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
 export type ToolHandler = (args: unknown, extra?: unknown) => Promise<TextContent>;
@@ -49,10 +94,18 @@ export type ToolOptions = {
   inputSchema: Record<string, z.ZodType>;
   title?: string;
   annotations?: ToolAnnotations;
+  /** MCP Apps UI metadata (e.g. `{ ui: { resourceUri } }`). Passed through to the SDK registerTool call. */
+  _meta?: Record<string, unknown>;
 };
 
 // Re-export presets for convenience and backward compatibility in tools
-export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
+export {
+  READ_ONLY_DEFAULT,
+  WRITE_IDEMPOTENT,
+  WRITE_NONDESTRUCTIVE,
+  WRITE_OPEN_WORLD,
+  WRITE_DESTRUCTIVE,
+} from '@lightdash-tools/common';
 
 /** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
 const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
@@ -76,6 +129,39 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
     '_lightdashBlocked' in result &&
     (result as Record<string, unknown>)['_lightdashBlocked'] === true
   );
+}
+
+function validationBlockedContent(message: string): BlockedContent {
+  return {
+    content: [{ type: 'text', text: message }],
+    isError: true,
+    _lightdashBlocked: true,
+  };
+}
+
+function runValidation(validate: () => void, label: string): BlockedContent | undefined {
+  try {
+    validate();
+    return undefined;
+  } catch (err) {
+    return validationBlockedContent(
+      `Error: Invalid ${label}: ${err instanceof Error ? err.message : String(err)}`,
+    );
+  }
+}
+
+function validateToolArgs(args: unknown): BlockedContent | undefined {
+  for (const uuid of extractProjectUuids(args)) {
+    const error = runValidation(() => validateResourceId(uuid), 'resource ID');
+    if (error) return error;
+  }
+  const record = args as Record<string, unknown>;
+  const slug = record?.slug;
+  if (typeof slug === 'string') {
+    const error = runValidation(() => validateResourceId(slug), 'slug');
+    if (error) return error;
+  }
+  return runValidation(() => validateResourceIdsInObject(args), 'resource ID');
 }
 
 /**
@@ -142,39 +228,9 @@ export function registerToolSafe(
   // Validate resource IDs (projectUuid, slug, etc.) before handler.
   const validatedInner = finalHandler;
   finalHandler = async (args, extra): Promise<TextContent> => {
-    const projectUuids = extractProjectUuids(args);
-    for (const uuid of projectUuids) {
-      try {
-        validateResourceId(uuid);
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
-    }
-    const a = args as Record<string, unknown>;
-    if (typeof a?.slug === 'string') {
-      try {
-        validateResourceId(a.slug);
-      } catch (err) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Invalid slug: ${err instanceof Error ? err.message : String(err)}`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
+    const validationError = validateToolArgs(args);
+    if (validationError) {
+      return validationError;
     }
     return validatedInner(args, extra);
   };
@@ -188,6 +244,18 @@ export function registerToolSafe(
     const innerHandler = finalHandler;
     finalHandler = async (args, extra): Promise<TextContent> => {
       const projectUuids = extractProjectUuids(args);
+      if (hasYamlProjectDocumentArgs(args) && projectUuids.length === 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: 'Error: Could not extract project UUID from YAML document for allowlist check. Fix bundleYaml/gateYaml or omit the document.',
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
       const deniedUuids = projectUuids.filter(
         (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
       );
@@ -246,8 +314,11 @@ export function registerToolSafe(
     });
 
     // Strip the internal marker before returning to the MCP client.
-    const { content, isError } = result;
-    return { content, isError };
+    const enriched = enrichStructuredContent(result);
+    const { content, isError, structuredContent } = enriched;
+    return structuredContent !== undefined
+      ? { content, isError, structuredContent }
+      : { content, isError };
   };
 
   const mergedOptions: ToolOptions = {
@@ -257,6 +328,40 @@ export function registerToolSafe(
     annotations,
   };
   (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, finalHandler);
+}
+
+/**
+ * Normalizes MCP App `_meta` the same way as `@modelcontextprotocol/ext-apps` registerAppTool.
+ */
+export function normalizeAppToolMeta(meta: Record<string, unknown>): Record<string, unknown> {
+  const ui = meta.ui as { resourceUri?: string } | undefined;
+  const legacyUri = Object.prototype.hasOwnProperty.call(meta, RESOURCE_URI_META_KEY)
+    ? Reflect.get(meta, RESOURCE_URI_META_KEY)
+    : undefined;
+  if (ui?.resourceUri && legacyUri === undefined) {
+    return { ...meta, [RESOURCE_URI_META_KEY]: ui.resourceUri };
+  }
+  if (typeof legacyUri === 'string' && !ui?.resourceUri) {
+    return { ...meta, ui: { ...ui, resourceUri: legacyUri } };
+  }
+  return meta;
+}
+
+/**
+ * Registers an MCP App tool with the same guardrails as registerToolSafe, preserving `_meta.ui`.
+ */
+export function registerAppToolSafe(
+  server: unknown,
+  shortName: string,
+  options: ToolOptions & { _meta: Record<string, unknown> },
+  handler: ToolHandler,
+): void {
+  registerToolSafe(
+    server,
+    shortName,
+    { ...options, _meta: normalizeAppToolMeta(options._meta) },
+    handler,
+  );
 }
 
 export function wrapTool<T>(

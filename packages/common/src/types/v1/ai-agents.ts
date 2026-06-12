@@ -69,11 +69,19 @@ export namespace AiAgents {
    */
   export type CreateAgentThreadBody = components['schemas']['ApiAiAgentThreadCreateRequest'];
   /**
-   * Request body for generating/continuing a thread response
-   * (POST …/threads/{threadUuid}/generate).
+   * Request body for adding a user message to a thread
+   * (POST …/threads/{threadUuid}/messages).
    */
-  export type GenerateAgentThreadBody =
+  export type CreateAgentThreadMessageBody =
     components['schemas']['ApiAiAgentThreadMessageCreateRequest'];
+  /** User message returned after creating a thread message. */
+  export type CreateAgentThreadMessageResult =
+    components['schemas']['ApiAiAgentThreadMessageCreateResponse']['results'];
+  /**
+   * Request body for generating/continuing a thread response.
+   * @deprecated Use {@link CreateAgentThreadMessageBody} with the messages endpoint.
+   */
+  export type GenerateAgentThreadBody = CreateAgentThreadMessageBody;
   /** Response returned by the generate endpoint. */
   export type GenerateAgentThreadResult =
     components['schemas']['ApiAiAgentThreadGenerateResponse']['results'];
@@ -115,4 +123,126 @@ export namespace AiAgents {
   export type AiEvalRunResultAssessment = components['schemas']['AiEvalRunResultAssessment'];
   /** Assessment type: human or llm. */
   export type AssessmentType = components['schemas']['AssessmentType'];
+
+  // ─── Discovery & preferences ───────────────────────────────────────────────────
+
+  /** Available AI model option for an agent (GET …/{agentUuid}/models). */
+  export type AiModelOption = components['schemas']['AiModelOption'];
+  /** Agent readiness evaluation score (POST …/{agentUuid}/evaluateReadiness). */
+  export type ReadinessScore = components['schemas']['ReadinessScore'];
+  /** Per-explore field access summary (POST …/explore-access-summary). */
+  export type AiAgentExploreAccessSummary = components['schemas']['AiAgentExploreAccessSummary'];
+  /** Request body for explore access summary. */
+  export interface ExploreAccessSummaryBody {
+    tags: string[] | null;
+  }
+  /** User default agent preferences (GET/POST/DELETE …/preferences). */
+  export type AiAgentUserPreferences = components['schemas']['AiAgentUserPreferences'];
+  /** Query params for agent suggestion chips (GET …/{agentUuid}/suggestions). */
+  export interface GetAgentSuggestionsParams {
+    threadUuid?: string;
+    afterMessageUuid?: string;
+    enableSqlMode?: boolean;
+  }
+  /** Discriminated suggestion chip (`kind: 'prompt'` or `kind: 'navigate'`). */
+  export type AgentSuggestion = components['schemas']['AgentSuggestion'];
+  /** Prompt suggestion chip (`kind: 'prompt'`). */
+  export type AgentSuggestionPromptChip = components['schemas']['AgentSuggestionPromptChip'];
+  /** Navigate suggestion chip (`kind: 'navigate'`). */
+  export type AgentSuggestionNavigateChip = components['schemas']['AgentSuggestionNavigateChip'];
+  /** Tool invoked by a prompt suggestion chip. */
+  export type AgentSuggestionTool = components['schemas']['AgentSuggestionTool'];
+  /** @deprecated Use {@link AgentSuggestion}. */
+  export type AgentSuggestionChip = AgentSuggestion;
+  /** Suggestion chips wrapper (inner `results` of suggestions response). */
+  export type AgentSuggestions = components['schemas']['ApiAgentSuggestionsResponse']['results'];
+
+  // ─── Threads: title & clone ────────────────────────────────────────────────────
+
+  /** Title generated for a thread (POST …/threads/{threadUuid}/generate-title). */
+  export type GenerateThreadTitleResult =
+    components['schemas']['ApiAiAgentThreadGenerateTitleResponse']['results'];
+  /** Options for cloning a thread from a prompt (POST …/clone/{promptUuid}). */
+  export interface CloneThreadBody {
+    promptUuid: string;
+    createdFrom?: 'evals' | 'web_app';
+  }
+
+  // ─── Artifacts ─────────────────────────────────────────────────────────────────
+
+  /** Verified artifact summary (GET …/verified-artifacts). */
+  export type AiAgentVerifiedArtifact = components['schemas']['AiAgentVerifiedArtifact'];
+  /** Paginated verified artifacts list (`results` of verified-artifacts response). */
+  export type AiAgentVerifiedArtifactsListResult =
+    components['schemas']['KnexPaginatedData_AiAgentVerifiedArtifact-Array_'];
+  /** Query params for listing verified artifacts. */
+  export interface ListVerifiedArtifactsParams {
+    page?: number;
+    pageSize?: number;
+  }
+  /** Verified question entry (GET …/verified-questions). */
+  export type AiAgentVerifiedQuestion =
+    components['schemas']['ApiAiAgentVerifiedQuestionsResponse']['results'][number];
+  /** Full artifact payload (GET …/artifacts/{artifactUuid}). */
+  export type AiArtifact = components['schemas']['AiArtifactTSOACompat'];
+  /** Viz query payload for a thread message or artifact version. */
+  export type AiAgentThreadMessageVizQuery =
+    components['schemas']['ApiAiAgentThreadMessageVizQuery'];
+
+  // ─── Message feedback ──────────────────────────────────────────────────────────
+
+  /** Request body for PATCH …/messages/{messageUuid}/feedback. */
+  export interface UpdateMessageFeedbackBody {
+    humanScore: number;
+    humanFeedback?: string | null;
+  }
+
+  // ─── MCP servers (project-scoped; EE-guarded upstream) ───────────────────────
+
+  /** MCP server auth type. */
+  export type AiMcpServerAuthType = components['schemas']['AiMcpServerAuthType'];
+  /** MCP credential scope. */
+  export type AiMcpCredentialScope = components['schemas']['AiMcpCredentialScope'];
+  /** MCP server connection status. */
+  export type AiMcpServerConnectionStatus = components['schemas']['AiMcpServerConnectionStatus'];
+  /** Project MCP server record. */
+  export type AiMcpServer = components['schemas']['AiMcpServer'];
+  /** MCP tool discovered on a project server. */
+  export type AiMcpServerTool = components['schemas']['AiMcpServerTool'];
+  /** MCP tool with per-agent enablement. */
+  export type AiAgentMcpServerTool = AiMcpServerTool & {
+    enabled: boolean;
+    agentUuid: string;
+  };
+  /** Request body for creating a project MCP server. */
+  export interface CreateProjectMcpServerBody {
+    name: string;
+    url: string;
+    authType: AiMcpServerAuthType;
+    allowOAuthCredentialSharing?: boolean;
+    credentialScope?: string | null;
+    credentials?: { bearerToken: string } | null;
+  }
+  /** Tool enablement update for an agent MCP server. */
+  export interface AiAgentMcpServerToolUpdate {
+    toolName: string;
+    enabled: boolean;
+  }
+  /** Request body for PATCH …/{agentUuid}/mcpServers/{mcpServerUuid}/tools. */
+  export interface UpdateAgentMcpServerToolsBody {
+    toolSettings: AiAgentMcpServerToolUpdate[];
+  }
+
+  // ─── SQL approval ──────────────────────────────────────────────────────────────
+
+  /** SQL approval decision. */
+  export type SqlApprovalDecision = 'approved' | 'rejected';
+  /** Request body for POST …/tool-calls/{toolCallId}/sql-approval. */
+  export interface SubmitSqlApprovalBody {
+    decision: SqlApprovalDecision;
+  }
+  /** SQL approval response (`results` of sql-approval response). */
+  export interface SubmitSqlApprovalResult {
+    decision: SqlApprovalDecision;
+  }
 }

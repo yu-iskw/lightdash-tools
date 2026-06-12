@@ -3,23 +3,17 @@
  * Logging: stderr only (stdout is JSON-RPC).
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { initAuditLog } from './audit.js';
 import { getClient, getAuditLogPath } from './config.js';
-import { registerTools } from './tools/index.js';
+import { createLightdashMcpServer } from './server.js';
 
 async function main(): Promise<void> {
   initAuditLog(getAuditLogPath());
 
   const client = getClient();
-  const server = new McpServer({
-    name: 'lightdash-mcp',
-    version: '0.4.0',
-  });
-
-  registerTools(server, client);
+  const server = createLightdashMcpServer(client);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

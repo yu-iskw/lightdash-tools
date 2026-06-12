@@ -24,6 +24,7 @@ describe('registerTools', () => {
     registerTool: vi.fn((name: string, options: { description: string }) => {
       registeredTools.push({ name, description: options.description });
     }),
+    registerResource: vi.fn(),
   };
 
   beforeEach(() => {
@@ -49,5 +50,8 @@ describe('registerTools', () => {
     expect(names).toContain(`${TOOL_PREFIX}list_charts`);
     expect(names).toContain(`${TOOL_PREFIX}compile_query`);
     expect(names).toContain(`${TOOL_PREFIX}list_admin_agents`);
+    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_plan`);
+    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_apply`);
+    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_evaluate_gate`);
   });
 });

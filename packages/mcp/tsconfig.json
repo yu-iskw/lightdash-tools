@@ -1,13 +1,22 @@
 {
   "compilerOptions": {
-    "target": "es2016",
+    "target": "es2017",
     "module": "commonjs",
     "declaration": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"],
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@modelcontextprotocol/ext-apps/server": [
+        "node_modules/@modelcontextprotocol/ext-apps/dist/src/server/index"
+      ]
+    }
   },
   "include": ["src"]
 }

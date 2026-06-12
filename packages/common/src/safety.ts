@@ -1,11 +1,25 @@
+import { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
 import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from './env';
+
+/**
+ * Semantic impact classification for operations (RFC Phase 0).
+ * Used by {@link OperationPolicy} and {@link isOperationAllowed}.
+ */
+export type SafetyImpact =
+  | 'credential-sensitive'
+  | 'external-side-effect'
+  | 'read'
+  | 'write-destructive'
+  | 'write-nondestructive';
 
 /**
  * Hierarchical safety modes for Lightdash AI tools and CLI.
  */
 export enum SafetyMode {
   READ_ONLY = 'read-only',
+  /** Deprecated alias — prefer {@link SafetyMode.WRITE_NONDESTRUCTIVE}. */
   WRITE_IDEMPOTENT = 'write-idempotent',
+  WRITE_NONDESTRUCTIVE = 'write-nondestructive',
   WRITE_DESTRUCTIVE = 'write-destructive',
 }
 
@@ -21,6 +35,11 @@ export type ToolAnnotations = {
   openWorldHint?: boolean;
 };
 
+/** Policy describing the semantic impact of an operation. */
+export type OperationPolicy = {
+  impact: SafetyImpact;
+};
+
 /** Preset: read-only, non-destructive, idempotent, closed-world. Use for list/get/compile tools. */
 export const READ_ONLY_DEFAULT: ToolAnnotations = {
   readOnlyHint: true,
@@ -29,12 +48,31 @@ export const READ_ONLY_DEFAULT: ToolAnnotations = {
   idempotentHint: true,
 };
 
-/** Preset: write, non-destructive, idempotent (e.g. upsert by slug). Use for create/update tools. */
+/**
+ * Legacy preset: write, non-destructive, idempotent (e.g. upsert by slug).
+ * Prefer {@link WRITE_NONDESTRUCTIVE} for new tools; idempotent behavior is not implied by safety mode.
+ */
 export const WRITE_IDEMPOTENT: ToolAnnotations = {
   readOnlyHint: false,
   openWorldHint: false,
   destructiveHint: false,
   idempotentHint: true,
+};
+
+/** Preset: write, non-destructive, closed-world. Use for create/update tools without idempotency guarantee. */
+export const WRITE_NONDESTRUCTIVE: ToolAnnotations = {
+  readOnlyHint: false,
+  openWorldHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+};
+
+/** Preset: write, non-destructive, open-world. Use for LLM generation and similar external interactions. */
+export const WRITE_OPEN_WORLD: ToolAnnotations = {
+  readOnlyHint: false,
+  openWorldHint: true,
+  destructiveHint: false,
+  idempotentHint: false,
 };
 
 /** Preset: write, destructive, non-idempotent. Use for delete/remove tools. */
@@ -46,26 +84,54 @@ export const WRITE_DESTRUCTIVE: ToolAnnotations = {
 };
 
 /**
- * Validates if an operation is allowed in the current safety mode.
+ * Validates if an operation is allowed in the current safety mode using MCP tool annotations.
+ * Unknown modes default to permissive for backward compatibility.
  */
 export function isAllowed(mode: SafetyMode | string, annotations: ToolAnnotations): boolean {
   switch (mode) {
     case SafetyMode.READ_ONLY:
       return !!annotations.readOnlyHint;
+    case SafetyMode.WRITE_NONDESTRUCTIVE:
     case SafetyMode.WRITE_IDEMPOTENT:
       return !!annotations.readOnlyHint || !annotations.destructiveHint;
     case SafetyMode.WRITE_DESTRUCTIVE:
       return true;
     default:
-      return true; // Default to most permissive if mode is unknown
+      return true;
+  }
+}
+
+/**
+ * Validates if an operation is allowed in the current safety mode using semantic impact policy.
+ * Unknown modes fail closed.
+ */
+export function isOperationAllowed(mode: SafetyMode | string, policy: OperationPolicy): boolean {
+  switch (mode) {
+    case SafetyMode.READ_ONLY:
+      return policy.impact === 'read';
+    case SafetyMode.WRITE_NONDESTRUCTIVE:
+    case SafetyMode.WRITE_IDEMPOTENT:
+      return (
+        policy.impact === 'read' ||
+        policy.impact === 'write-nondestructive' ||
+        policy.impact === 'external-side-effect'
+      );
+    case SafetyMode.WRITE_DESTRUCTIVE:
+      return true;
+    default:
+      return false;
   }
 }
 
 /**
  * Resolves safety mode from environment variable.
+ * Accepts `write-idempotent` as a deprecated alias for `write-nondestructive`.
  */
 export function getSafetyModeFromEnv(): SafetyMode {
   const mode = process.env[ENV_LIGHTDASH_TOOLS_SAFETY_MODE];
+  if (mode === SafetyMode.WRITE_IDEMPOTENT) {
+    return SafetyMode.WRITE_NONDESTRUCTIVE;
+  }
   if (Object.values(SafetyMode).includes(mode as SafetyMode)) {
     return mode as SafetyMode;
   }
@@ -155,6 +221,8 @@ export function extractProjectUuids(args: unknown): string[] {
       }
     }
   }
+
+  uuids.push(...extractProjectUuidsFromToolArgs(args));
 
   return [...new Set(uuids)].filter((u) => u.length > 0);
 }

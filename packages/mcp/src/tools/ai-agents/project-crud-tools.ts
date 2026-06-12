@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
 import {
+  jsonToolResult,
   wrapTool,
   registerToolSafe,
   READ_ONLY_DEFAULT,
@@ -32,7 +33,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
     },
     wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const result = await c.v1.aiAgents.listAgents(projectUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return jsonToolResult(result);
     }),
   );
 
@@ -53,7 +54,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.getAgent(projectUuid, agentUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -93,7 +94,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
             ...(instruction != null ? { instruction } : {}),
           } as Parameters<typeof c.v1.aiAgents.createAgent>[1];
           const result = await c.v1.aiAgents.createAgent(projectUuid, body);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -132,7 +133,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
             agentUuid,
             body as Parameters<typeof c.v1.aiAgents.updateAgent>[2],
           );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );

@@ -1,9 +1,12 @@
 import { SafetyMode } from '@lightdash-tools/common';
+import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
 
 import {
+  normalizeAppToolMeta,
+  registerAppToolSafe,
   registerToolSafe,
   wrapTool,
   READ_ONLY_DEFAULT,
@@ -22,6 +25,14 @@ vi.mock('@lightdash-tools/common', async (importOriginal) => {
     initAuditLog: vi.fn(),
   };
 });
+
+const PROJECT_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const PROJECT_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const PROJECT_ALLOWED = 'cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+const PROJECT_OTHER = 'dddddddd-dddd-4ddd-8ddd-dddddddddddd';
+const PROJECT_DENIED = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
+const PROJECT_X = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+const PROJECT_Y = '11111111-1111-4111-8111-111111111111';
 
 describe('registerToolSafe', () => {
   const mockServer = {
@@ -206,13 +217,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'any-uuid' });
+      const result = await handler({ projectUuid: PROJECT_A });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should allow calls for a singular projectUuid in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed', 'uuid-other']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED, PROJECT_OTHER]);
 
       registerToolSafe(
         mockServer,
@@ -222,13 +233,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'uuid-allowed' });
+      const result = await handler({ projectUuid: PROJECT_ALLOWED });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should block calls for a singular projectUuid not in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -238,14 +249,14 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuid: 'uuid-denied' });
+      const result = await handler({ projectUuid: PROJECT_DENIED });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
-      expect(result.content[0].text).toContain('uuid-denied');
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
     });
 
     it('should allow calls with no projectUuid arg even when allowlist is set', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -262,7 +273,7 @@ describe('registerToolSafe', () => {
     });
 
     it('should allow when all projectUuids[] are in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-a', 'uuid-b']);
+      setStaticAllowedProjectUuids([PROJECT_A, PROJECT_B]);
 
       registerToolSafe(
         mockServer,
@@ -272,13 +283,13 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-a', 'uuid-b'] });
+      const result = await handler({ projectUuids: [PROJECT_A, PROJECT_B] });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toBe('success');
     });
 
     it('should block when any UUID in projectUuids[] is not in the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-a']);
+      setStaticAllowedProjectUuids([PROJECT_A]);
 
       registerToolSafe(
         mockServer,
@@ -288,14 +299,14 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-a', 'uuid-denied'] });
+      const result = await handler({ projectUuids: [PROJECT_A, PROJECT_DENIED] });
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('uuid-denied');
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
     });
 
     it('should block when all projectUuids[] are outside the allowlist', async () => {
-      setStaticAllowedProjectUuids(['uuid-allowed']);
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
 
       registerToolSafe(
         mockServer,
@@ -305,9 +316,56 @@ describe('registerToolSafe', () => {
       );
 
       const [, , handler] = mockServer.registerTool.mock.calls[0];
-      const result = await handler({ projectUuids: ['uuid-x', 'uuid-y'] });
+      const result = await handler({ projectUuids: [PROJECT_X, PROJECT_Y] });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
+    });
+
+    it('should block invalid bundleYaml when allowlist is set and project cannot be extracted', async () => {
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
+
+      registerToolSafe(
+        mockServer,
+        'agentops_plan_blocked_yaml',
+        { description: 'Plan bundle', inputSchema: {}, annotations: WRITE_IDEMPOTENT },
+        mockHandler,
+      );
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ bundleYaml: 'not: valid: yaml: document' });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('Could not extract project UUID from YAML');
+      expect(mockHandler).not.toHaveBeenCalled();
+    });
+
+    it('should enforce allowlist for valid bundleYaml projectUuid', async () => {
+      setStaticAllowedProjectUuids([PROJECT_ALLOWED]);
+
+      registerToolSafe(
+        mockServer,
+        'agentops_plan_allowed_yaml',
+        { description: 'Plan bundle', inputSchema: {}, annotations: WRITE_IDEMPOTENT },
+        mockHandler,
+      );
+
+      const bundleYaml = [
+        'apiVersion: lightdash.ai/v1alpha1',
+        'kind: LightdashAiAgentBundle',
+        'metadata:',
+        '  name: test-bundle',
+        'spec:',
+        `  projectUuid: ${PROJECT_DENIED}`,
+        '  agents:',
+        '    - key: a1',
+        '      name: Agent One',
+        '      evaluations: []',
+      ].join('\n');
+
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ bundleYaml });
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain(PROJECT_DENIED);
+      expect(mockHandler).not.toHaveBeenCalled();
     });
   });
 
@@ -343,7 +401,7 @@ describe('registerToolSafe', () => {
       const [, options, handler] = mockServer.registerTool.mock.calls[0];
       expect(options.description).toContain('[DRY-RUN]');
 
-      const result = await handler({ projectUuid: 'uuid-x', slug: 'my-chart' });
+      const result = await handler({ projectUuid: PROJECT_X, slug: 'my-chart' });
       expect(result.isError).toBeUndefined();
       expect(result.content[0].text).toContain('[DRY-RUN]');
       expect(result.content[0].text).toContain('No changes were made');
@@ -365,7 +423,7 @@ describe('registerToolSafe', () => {
       const [, options, handler] = mockServer.registerTool.mock.calls[0];
       expect(options.description).toContain('[DRY-RUN]');
 
-      const result = await handler({ projectUuid: 'uuid-x' });
+      const result = await handler({ projectUuid: PROJECT_X });
       expect(result.content[0].text).toContain('No changes were made');
       expect(mockHandler).not.toHaveBeenCalled();
     });
@@ -417,6 +475,42 @@ describe('registerToolSafe', () => {
     expect(result.isError).toBe(true);
   });
 
+  it('should attach structuredContent when handler returns JSON text', async () => {
+    const jsonHandler = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify({ ok: true }) }],
+    });
+    registerToolSafe(
+      mockServer,
+      'json_tool',
+      { description: 'Returns JSON', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      jsonHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+
+    expect(result.structuredContent).toEqual({ ok: true });
+    expect(JSON.parse(result.content[0].text)).toEqual({ ok: true });
+  });
+
+  it('should wrap array JSON in structuredContent.data', async () => {
+    const jsonHandler = vi.fn().mockResolvedValue({
+      content: [{ type: 'text', text: JSON.stringify([{ id: 'a' }]) }],
+    });
+    registerToolSafe(
+      mockServer,
+      'json_array_tool',
+      { description: 'Returns JSON array', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+      jsonHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+
+    expect(result.structuredContent).toEqual({ data: [{ id: 'a' }] });
+    expect(JSON.parse(result.content[0].text)).toEqual([{ id: 'a' }]);
+  });
+
   it('wrapTool returns a safe error message when the inner handler throws', async () => {
     const wrapped = wrapTool({} as never, () => async () => {
       throw new Error('boom');
@@ -426,5 +520,54 @@ describe('registerToolSafe', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toBe('boom');
+  });
+
+  it('registerAppToolSafe passes normalized _meta.ui through guardrails', async () => {
+    const resourceUri = 'ui://minimal-app/index.html';
+    registerAppToolSafe(
+      mockServer,
+      'minimal_app',
+      {
+        description: 'MCP app tool',
+        inputSchema: {},
+        annotations: READ_ONLY_DEFAULT,
+        _meta: { ui: { resourceUri } },
+      },
+      mockHandler,
+    );
+
+    const [, options] = mockServer.registerTool.mock.calls[0];
+    expect(options._meta.ui).toEqual({ resourceUri });
+    expect(options._meta[RESOURCE_URI_META_KEY]).toBe(resourceUri);
+  });
+
+  it('registerAppToolSafe applies safety-mode block like registerToolSafe', async () => {
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.READ_ONLY;
+    setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
+
+    registerAppToolSafe(
+      mockServer,
+      'minimal_app',
+      {
+        description: 'Write app tool',
+        inputSchema: {},
+        annotations: WRITE_DESTRUCTIVE,
+        _meta: { ui: { resourceUri: 'ui://app' } },
+      },
+      mockHandler,
+    );
+
+    const [, options, handler] = mockServer.registerTool.mock.calls[0];
+    expect(options.description).toContain('[DISABLED in read-only mode]');
+    const result = await handler({});
+    expect(result.isError).toBe(true);
+    expect(mockHandler).not.toHaveBeenCalled();
+  });
+});
+
+describe('normalizeAppToolMeta', () => {
+  it('mirrors ui.resourceUri into RESOURCE_URI_META_KEY', () => {
+    const meta = normalizeAppToolMeta({ ui: { resourceUri: 'ui://app' } });
+    expect(meta[RESOURCE_URI_META_KEY]).toBe('ui://app');
   });
 });

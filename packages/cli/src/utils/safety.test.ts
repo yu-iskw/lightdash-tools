@@ -7,7 +7,13 @@ import {
 import { Command } from 'commander';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { getAllowedProjects, getSafetyMode, isDryRun, wrapAction } from './safety';
+import {
+  assertAllowedProject,
+  getAllowedProjects,
+  getSafetyMode,
+  isDryRun,
+  wrapAction,
+} from './safety';
 
 const UUID_ALLOWED = '11111111-1111-1111-1111-111111111111';
 const UUID_FORBIDDEN = '22222222-2222-2222-2222-222222222222';
@@ -60,6 +66,41 @@ describe('getAllowedProjects', () => {
     root.setOptionValueWithSource('projects', `${UUID_ALLOWED}, ${UUID_FORBIDDEN}`, 'cli');
 
     expect(getAllowedProjects(child)).toEqual([UUID_ALLOWED, UUID_FORBIDDEN]);
+  });
+});
+
+describe('assertAllowedProject', () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const processExitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
+    throw new Error('exit');
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('allows project when no allowlist is configured', () => {
+    const { child } = buildCommandHierarchy();
+    expect(() => assertAllowedProject(child, UUID_FORBIDDEN)).not.toThrow();
+    expect(processExitSpy).not.toHaveBeenCalled();
+  });
+
+  it('allows project when it is in the allowlist', () => {
+    const { root, child } = buildCommandHierarchy();
+    root.setOptionValueWithSource('projects', UUID_ALLOWED, 'cli');
+    expect(() => assertAllowedProject(child, UUID_ALLOWED)).not.toThrow();
+    expect(processExitSpy).not.toHaveBeenCalled();
+  });
+
+  it('blocks project parsed from bundle when not in allowlist', () => {
+    const { root, child } = buildCommandHierarchy();
+    root.setOptionValueWithSource('projects', UUID_ALLOWED, 'cli');
+
+    expect(() => assertAllowedProject(child, UUID_FORBIDDEN)).toThrow('exit');
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not in the list of allowed projects'),
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(1);
   });
 });
 
@@ -193,6 +234,25 @@ describe('CLI wrapAction', () => {
     const wrapped = wrapAction(WRITE_IDEMPOTENT, mockAction);
 
     await expect(wrapped.call(child, UUID_FORBIDDEN)).rejects.toThrow('exit');
+
+    expect(mockAction).not.toHaveBeenCalled();
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('not in the list of allowed projects'),
+    );
+    expect(processExitSpy).toHaveBeenCalledWith(1);
+  });
+
+  it('should enforce allowlist from command opts when project is only in --project', async () => {
+    const { root, child } = buildCommandHierarchy();
+    child
+      .option('--project <uuid>', 'Project UUID')
+      .setOptionValueWithSource('safetyMode', SafetyMode.WRITE_DESTRUCTIVE, 'cli');
+    root.setOptionValueWithSource('projects', UUID_ALLOWED, 'cli');
+    child.setOptionValueWithSource('project', UUID_FORBIDDEN, 'cli');
+
+    const wrapped = wrapAction(WRITE_IDEMPOTENT, mockAction);
+
+    await expect(wrapped.call(child)).rejects.toThrow('exit');
 
     expect(mockAction).not.toHaveBeenCalled();
     expect(consoleErrorSpy).toHaveBeenCalledWith(

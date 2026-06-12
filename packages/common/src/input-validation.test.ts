@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 
-import { rejectControlChars, validateResourceId, validateSafeOutputDir } from './input-validation';
+import {
+  rejectControlChars,
+  validateFingerprint,
+  validateResourceId,
+  validateSafeOutputDir,
+  validateSlug,
+  validateUuid,
+} from './input-validation';
 
 describe('input-validation', () => {
   describe('rejectControlChars', () => {
@@ -72,6 +79,112 @@ describe('input-validation', () => {
     it('throws when id is not a string', () => {
       expect(() => validateResourceId(123 as unknown as string)).toThrow(
         'Resource ID must be a string',
+      );
+    });
+  });
+
+  describe('validateUuid', () => {
+    const validUuid = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('accepts lowercase UUID', () => {
+      expect(validateUuid(validUuid)).toBe(validUuid);
+    });
+
+    it('accepts uppercase UUID', () => {
+      expect(validateUuid(validUuid.toUpperCase())).toBe(validUuid.toUpperCase());
+    });
+
+    it('throws on invalid format', () => {
+      expect(() => validateUuid('not-a-uuid')).toThrow('Invalid UUID format');
+      expect(() => validateUuid('550e8400-e29b-41d4-a716')).toThrow('Invalid UUID format');
+      expect(() => validateUuid('550e8400-e29b-41d4-a716-446655440000-extra')).toThrow(
+        'Invalid UUID format',
+      );
+    });
+
+    it('throws on control characters', () => {
+      expect(() => validateUuid('550e8400-e29b-41d4-a716\u000044655440000')).toThrow(
+        'Input contains invalid control characters',
+      );
+    });
+
+    it('throws when id is not a string', () => {
+      expect(() => validateUuid(123 as unknown as string)).toThrow('UUID must be a string');
+    });
+  });
+
+  describe('validateSlug', () => {
+    it('accepts valid slugs', () => {
+      expect(validateSlug('my-chart')).toBe('my-chart');
+      expect(validateSlug('chart_123')).toBe('chart_123');
+      expect(validateSlug('a.b-c_d')).toBe('a.b-c_d');
+    });
+
+    it('throws on empty slug', () => {
+      expect(() => validateSlug('')).toThrow('Slug must be between 1 and 256 characters');
+    });
+
+    it('throws when slug exceeds max length', () => {
+      expect(() => validateSlug('a'.repeat(257))).toThrow(
+        'Slug must be between 1 and 256 characters',
+      );
+    });
+
+    it('accepts slug at max length', () => {
+      const slug = 'a'.repeat(256);
+      expect(validateSlug(slug)).toBe(slug);
+    });
+
+    it('throws on invalid characters', () => {
+      expect(() => validateSlug('has space')).toThrow(
+        'Slug must contain only alphanumeric characters, dots, underscores, and hyphens',
+      );
+      expect(() => validateSlug('slug?query')).toThrow(
+        'Slug must contain only alphanumeric characters, dots, underscores, and hyphens',
+      );
+    });
+
+    it('throws on control characters', () => {
+      expect(() => validateSlug('slug\u0001')).toThrow('Input contains invalid control characters');
+    });
+
+    it('throws when id is not a string', () => {
+      expect(() => validateSlug(123 as unknown as string)).toThrow('Slug must be a string');
+    });
+  });
+
+  describe('validateFingerprint', () => {
+    it('accepts non-empty fingerprints', () => {
+      expect(validateFingerprint('abc123')).toBe('abc123');
+      expect(validateFingerprint('sha256:deadbeef')).toBe('sha256:deadbeef');
+    });
+
+    it('throws on empty fingerprint', () => {
+      expect(() => validateFingerprint('')).toThrow(
+        'Fingerprint must be between 1 and 512 characters',
+      );
+    });
+
+    it('throws when fingerprint exceeds max length', () => {
+      expect(() => validateFingerprint('x'.repeat(513))).toThrow(
+        'Fingerprint must be between 1 and 512 characters',
+      );
+    });
+
+    it('accepts fingerprint at max length', () => {
+      const fp = 'x'.repeat(512);
+      expect(validateFingerprint(fp)).toBe(fp);
+    });
+
+    it('throws on control characters', () => {
+      expect(() => validateFingerprint('fp\u0000')).toThrow(
+        'Input contains invalid control characters',
+      );
+    });
+
+    it('throws when id is not a string', () => {
+      expect(() => validateFingerprint(123 as unknown as string)).toThrow(
+        'Fingerprint must be a string',
       );
     });
   });

@@ -8,8 +8,10 @@ import { projectUuidField } from '../schema-fields.js';
 import {
   wrapTool,
   registerToolSafe,
+  jsonToolResult,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
+  WRITE_NONDESTRUCTIVE,
   WRITE_DESTRUCTIVE,
 } from '../shared.js';
 
@@ -46,7 +48,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listEvaluations(projectUuid, agentUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -77,7 +79,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
           evalUuid: string;
         }) => {
           const result = await c.v1.aiAgents.getEvaluation(projectUuid, agentUuid, evalUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -107,8 +109,12 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
           agentUuid: string;
           evalUuid: string;
         }) => {
-          const result = await c.v1.aiAgents.listEvaluationRuns(projectUuid, agentUuid, evalUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          const result = await c.v1.aiAgents.listAllEvaluationRuns(
+            projectUuid,
+            agentUuid,
+            evalUuid,
+          );
+          return jsonToolResult(result);
         },
     ),
   );
@@ -148,7 +154,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
             evalUuid,
             runUuid,
           );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -172,7 +178,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
           .optional()
           .describe('Test prompts for the evaluation'),
       },
-      annotations: WRITE_IDEMPOTENT,
+      annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
       client,
@@ -196,7 +202,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
             ...(description != null ? { description } : {}),
           };
           const result = await c.v1.aiAgents.createEvaluation(projectUuid, agentUuid, body);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -242,7 +248,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
             evalUuid,
             body as Parameters<typeof c.v1.aiAgents.updateEvaluation>[3],
           );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -260,7 +266,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
         evalUuid: z.string().describe('Evaluation UUID'),
         prompts: z.array(evaluationPromptInputSchema).describe('Prompts to append'),
       },
-      annotations: WRITE_IDEMPOTENT,
+      annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
       client,
@@ -276,12 +282,10 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
           evalUuid: string;
           prompts: Parameters<typeof c.v1.aiAgents.appendToEvaluation>[3]['prompts'];
         }) => {
-          await c.v1.aiAgents.appendToEvaluation(projectUuid, agentUuid, evalUuid, { prompts });
-          return {
-            content: [
-              { type: 'text', text: `Prompts appended to evaluation ${evalUuid} successfully` },
-            ],
-          };
+          const result = await c.v1.aiAgents.appendToEvaluation(projectUuid, agentUuid, evalUuid, {
+            prompts,
+          });
+          return jsonToolResult(result);
         },
     ),
   );
@@ -297,7 +301,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
         agentUuid: z.string().describe('Agent UUID'),
         evalUuid: z.string().describe('Evaluation UUID to run'),
       },
-      annotations: WRITE_IDEMPOTENT,
+      annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
       client,
@@ -312,7 +316,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
           evalUuid: string;
         }) => {
           const result = await c.v1.aiAgents.runEvaluation(projectUuid, agentUuid, evalUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -345,6 +349,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
           await c.v1.aiAgents.deleteEvaluation(projectUuid, agentUuid, evalUuid);
           return {
             content: [{ type: 'text', text: `Evaluation ${evalUuid} deleted successfully` }],
+            structuredContent: { evalUuid, deleted: true },
           };
         },
     ),

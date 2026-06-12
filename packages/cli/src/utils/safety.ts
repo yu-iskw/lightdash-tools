@@ -60,6 +60,21 @@ export function getAllowedProjects(cmd: Command): string[] {
   return getAllowedProjectUuidsFromEnv();
 }
 
+/**
+ * Enforces project allowlist for project UUIDs parsed from bundle/gate YAML.
+ * wrapAction only inspects CLI args, so bundle.spec.projectUuid must be checked separately.
+ */
+export function assertAllowedProject(cmd: Command, projectUuid: string): void {
+  validateResourceId(projectUuid);
+  const allowedProjects = getAllowedProjects(cmd);
+  if (allowedProjects.length > 0 && !areAllProjectsAllowed(allowedProjects, [projectUuid])) {
+    console.error(
+      `Error: Project [${projectUuid}] is not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
+    );
+    process.exit(1);
+  }
+}
+
 /** Builds a human-readable command path (e.g. "lightdash-ai charts list"). */
 function getCommandPath(cmd: Command): string {
   const parts: string[] = [];
@@ -84,7 +99,9 @@ export function wrapAction<T extends unknown[]>(
     const commandPath = getCommandPath(this);
     const mode = getSafetyMode(this);
     const allowedProjects = getAllowedProjects(this);
-    const targetProjects = extractProjectUuids(args);
+    const targetProjects = [
+      ...new Set([...extractProjectUuids(args), ...extractProjectUuids(this.opts())]),
+    ];
 
     // ── Input Validation ─────────────────────────────────────────────────────
     // Validate only known identifier fields (projectUuid, slug, etc.) in objects.

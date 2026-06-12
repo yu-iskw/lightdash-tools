@@ -25,7 +25,8 @@
     },
     "packages/common": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["openapi-typescript"]
     },
     "packages/client": {
       "entry": ["src/**/*.test.ts"],
@@ -37,7 +38,12 @@
     },
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts", "scripts/**/*.mjs"],
+      "ignoreDependencies": ["@lightdash-tools/mcp-ui"]
+    },
+    "packages/mcp-ui": {
+      "entry": ["index.html"],
+      "project": ["src/**/*.{ts,tsx}"]
     }
   }
 }

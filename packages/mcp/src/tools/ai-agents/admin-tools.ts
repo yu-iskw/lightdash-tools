@@ -4,7 +4,13 @@
 
 import { z } from 'zod';
 
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '../shared.js';
+import {
+  jsonToolResult,
+  wrapTool,
+  registerToolSafe,
+  READ_ONLY_DEFAULT,
+  WRITE_IDEMPOTENT,
+} from '../shared.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -23,7 +29,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
     },
     wrapTool(client, (c) => async () => {
       const result = await c.v1.aiAgents.listAdminAgents();
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return jsonToolResult(result);
     }),
   );
 
@@ -67,7 +73,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
           sortDirection?: 'asc' | 'desc';
         }) => {
           const result = await c.v1.aiAgents.getAdminThreads(params);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );
@@ -85,7 +91,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
     },
     wrapTool(client, (c) => async () => {
       const result = await c.v1.aiAgents.getAiOrganizationSettings();
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return jsonToolResult(result);
     }),
   );
 
@@ -107,7 +113,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
       const result = await c.v1.aiAgents.updateAiOrganizationSettings(
         params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
       );
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return jsonToolResult(result);
     }),
   );
 }

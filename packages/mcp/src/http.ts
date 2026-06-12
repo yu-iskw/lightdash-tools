@@ -1,22 +1,33 @@
 /**
  * MCP server entrypoint (Streamable HTTP). Use LIGHTDASH_URL, LIGHTDASH_API_KEY.
- * Optional: MCP_AUTH_ENABLED, MCP_API_KEY. Logging: stderr only.
+ * Optional: MCP_AUTH_ENABLED, MCP_API_KEY, MCP_ALLOWED_ORIGINS. Logging: stderr only.
  */
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
 import { initAuditLog } from './audit.js';
 import { getClient, getAuditLogPath } from './config.js';
-import { registerTools } from './tools/index.js';
+import { createLightdashMcpServer } from './server.js';
+
+import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const MCP_PATH = '/mcp';
 const PORT = Number(process.env.MCP_HTTP_PORT ?? '3100');
+const MAX_BODY_BYTES = Number(process.env.MCP_MAX_BODY_BYTES ?? 1024 * 1024);
+const SESSION_TTL_MS = Number(process.env.MCP_SESSION_TTL_MS ?? 30 * 60 * 1000);
+const MAX_SESSIONS = Number(process.env.MCP_MAX_SESSIONS ?? 100);
+const SESSION_CLEANUP_INTERVAL_MS = Number(process.env.MCP_SESSION_CLEANUP_MS ?? 60_000);
 
-const sessionMap = new Map<string, StreamableHTTPServerTransport>();
+interface SessionEntry {
+  transport: StreamableHTTPServerTransport;
+  server: McpServer;
+  lastAccessAt: number;
+}
+
+const sessionMap = new Map<string, SessionEntry>();
 const sharedClient = getClient();
 
 function isAuthEnabled(): boolean {
@@ -28,14 +39,47 @@ function getExpectedApiKey(): string | undefined {
   return process.env.MCP_API_KEY;
 }
 
+function timingSafeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
+
+function getAllowedOrigins(): Set<string> {
+  const raw = process.env.MCP_ALLOWED_ORIGINS;
+  if (!raw) return new Set();
+  return new Set(
+    raw
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+}
+
+function originMiddleware(req: IncomingMessage, res: ServerResponse): boolean {
+  const origin = req.headers.origin;
+  if (!origin || typeof origin !== 'string') return true;
+
+  const allowed = getAllowedOrigins();
+  if (allowed.size === 0) return true;
+
+  if (!allowed.has(origin)) {
+    sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
+    return false;
+  }
+  return true;
+}
+
 function authMiddleware(req: IncomingMessage, res: ServerResponse): boolean {
   if (!isAuthEnabled()) return true;
   const expected = getExpectedApiKey();
   if (!expected) {
     console.error('MCP_AUTH_ENABLED is set but MCP_API_KEY is missing');
-    res
-      .writeHead(500, { 'Content-Type': 'application/json' })
-      .end(JSON.stringify({ error: 'Server auth misconfiguration' }));
+    sendJson(res, 500, { error: 'Server auth misconfiguration' });
     return false;
   }
   const bearer = req.headers.authorization;
@@ -44,26 +88,56 @@ function authMiddleware(req: IncomingMessage, res: ServerResponse): boolean {
     typeof bearer === 'string' && bearer.startsWith('Bearer ') ? bearer.slice(7).trim() : undefined;
   const key = typeof apiKey === 'string' ? apiKey.trim() : undefined;
   const provided = token ?? key;
-  if (!provided || provided !== expected) {
-    res
-      .writeHead(401, { 'Content-Type': 'application/json' })
-      .end(JSON.stringify({ error: 'Unauthorized' }));
+  if (!provided || !timingSafeEqualString(provided, expected)) {
+    sendJson(res, 401, { error: 'Unauthorized' });
+    return false;
+  }
+  return true;
+}
+
+function cleanupExpiredSessions(): void {
+  const now = Date.now();
+  for (const [sessionId, entry] of sessionMap) {
+    if (now - entry.lastAccessAt > SESSION_TTL_MS) {
+      sessionMap.delete(sessionId);
+      void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
+        console.error(`Failed to close expired MCP session ${sessionId}:`, err);
+      });
+    }
+  }
+}
+
+function touchSession(sessionId: string): void {
+  const entry = sessionMap.get(sessionId);
+  if (entry) {
+    entry.lastAccessAt = Date.now();
+  }
+}
+
+function canAcceptNewSession(res: ServerResponse): boolean {
+  cleanupExpiredSessions();
+  if (sessionMap.size >= MAX_SESSIONS) {
+    sendJson(res, 503, { error: 'Service Unavailable: max sessions reached' });
     return false;
   }
   return true;
 }
 
 function createSessionTransport(): StreamableHTTPServerTransport {
-  const server = new McpServer({ name: 'lightdash-mcp', version: '1.0.0' });
-  registerTools(server, sharedClient);
-
+  const server = createLightdashMcpServer(sharedClient);
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
     onsessioninitialized: (sessionId) => {
-      sessionMap.set(sessionId, transport);
+      sessionMap.set(sessionId, { transport, server, lastAccessAt: Date.now() });
     },
     onsessionclosed: (sessionId) => {
+      const entry = sessionMap.get(sessionId);
       sessionMap.delete(sessionId);
+      if (entry) {
+        void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
+          console.error(`Failed to close MCP session ${sessionId}:`, err);
+        });
+      }
     },
   });
 
@@ -74,11 +148,27 @@ function createSessionTransport(): StreamableHTTPServerTransport {
   return transport;
 }
 
-function readBody(req: IncomingMessage): Promise<Buffer> {
+function readBody(req: IncomingMessage, res: ServerResponse): Promise<Buffer | undefined> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', () => resolve(Buffer.concat(chunks)));
+    let size = 0;
+    let rejected = false;
+
+    req.on('data', (chunk: Buffer) => {
+      if (rejected) return;
+      size += chunk.length;
+      if (size > MAX_BODY_BYTES) {
+        rejected = true;
+        req.destroy();
+        sendJson(res, 413, { error: 'Payload Too Large' });
+        resolve(undefined);
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on('end', () => {
+      if (!rejected) resolve(Buffer.concat(chunks));
+    });
     req.on('error', reject);
   });
 }
@@ -124,12 +214,27 @@ function getSessionTransport(
     sendJson(res, 400, { error: 'Bad Request: Mcp-Session-Id required' });
     return undefined;
   }
-  const transport = sessionMap.get(sid);
-  if (!transport) {
+  const entry = sessionMap.get(sid);
+  if (!entry) {
     sendJson(res, 404, { error: 'Session not found' });
     return undefined;
   }
-  return transport;
+  touchSession(sid);
+  return entry.transport;
+}
+
+function handleHealth(path: string, res: ServerResponse): void {
+  if (path === '/health/live') {
+    sendJson(res, 200, { status: 'ok' });
+    return;
+  }
+
+  try {
+    getClient();
+    sendJson(res, 200, { status: 'ready' });
+  } catch {
+    sendJson(res, 503, { status: 'not ready' });
+  }
 }
 
 async function handleMcpPost(
@@ -137,7 +242,9 @@ async function handleMcpPost(
   res: ServerResponse,
   sid: string | undefined,
 ): Promise<void> {
-  const raw = await readBody(req);
+  const raw = await readBody(req, res);
+  if (raw === undefined) return;
+
   const body = raw.length > 0 ? parseJsonBody(raw) : undefined;
 
   if (sid) {
@@ -148,6 +255,7 @@ async function handleMcpPost(
   }
 
   if (body !== undefined && isInitializeMessage(body)) {
+    if (!canAcceptNewSession(res)) return;
     const transport = createSessionTransport();
     await transport.handleRequest(req, res, body);
     return;
@@ -169,9 +277,16 @@ async function handleMcpGetOrDelete(
 }
 
 async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const path = (req.url ?? '').split('?')[0];
+
+  if (path === '/health/live' || path === '/health/ready') {
+    handleHealth(path, res);
+    return;
+  }
+
+  if (!originMiddleware(req, res)) return;
   if (!authMiddleware(req, res)) return;
 
-  const path = (req.url ?? '').split('?')[0];
   if (path !== MCP_PATH) {
     sendJson(res, 404, { error: 'Not Found' });
     return;
@@ -195,13 +310,14 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse): Promise
 function main(): void {
   initAuditLog(getAuditLogPath());
 
+  const cleanupTimer = setInterval(cleanupExpiredSessions, SESSION_CLEANUP_INTERVAL_MS);
+  cleanupTimer.unref();
+
   const server = createServer((req, res) => {
     handleRequest(req, res).catch((err) => {
       console.error('MCP HTTP handler error:', err);
       if (!res.headersSent) {
-        res
-          .writeHead(500, { 'Content-Type': 'application/json' })
-          .end(JSON.stringify({ error: 'Internal Server Error' }));
+        sendJson(res, 500, { error: 'Internal Server Error' });
       }
     });
   });
