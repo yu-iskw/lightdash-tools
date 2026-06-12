@@ -85,7 +85,7 @@ The server registers the following tools (names prefixed with `ldt__`):
 - **Charts**: `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`
 - **Dashboards**: `list_dashboards`
 - **Spaces**: `list_spaces`, `get_space`
-- **Users**: `list_organization_members`, `get_member`, `delete_member`
+- **Users**: `list_organization_members`, `get_member` (member deletion is client-only; see [ADR-0037](../../docs/adr/0037-agent-safe-mcp-cli-surface.md))
 - **Groups**: `list_groups`, `get_group`
 - **Metrics**: `list_metrics`
 - **Schedulers**: `list_schedulers`
@@ -119,7 +119,7 @@ The MCP server implements a hierarchical safety model. You can control which too
 
 - `read-only` (default): Only allows non-modifying tools (e.g., `list_*`, `get_*`).
 - `write-idempotent`: Allows read tools and non-destructive writes (e.g., `upsert_chart_as_code`).
-- `write-destructive`: Allows all tools, including destructive ones (e.g., `delete_member`).
+- `write-destructive`: Allows reversible destructive tools (e.g., `delete_group`, `delete_project_agent`). Irrecoverable ops are not registered on MCP at all.
 
 ### Enforcement Layers
 
@@ -128,9 +128,11 @@ The MCP server implements a hierarchical safety model. You can control which too
 
 When a tool is disabled via dynamic enforcement, the server will return a descriptive error message if an agent attempts to call it.
 
-### Destructive tools
+### Agent-safe surface and destructive tools
 
-Tools with `destructiveHint: true` (e.g. `delete_member`) perform irreversible or high-impact actions. MCP clients should show a warning and/or require user confirmation before executing them. AI agents should ask the user for explicit confirmation before calling such tools.
+See [ADR-0037](../../docs/adr/0037-agent-safe-mcp-cli-surface.md). Irrecoverable operations (e.g. removing an org member) are **not** MCP tools — use `@lightdash-tools/client` instead.
+
+Reversible destructive tools (`destructiveHint: true`, e.g. `delete_group`) remain on MCP. MCP clients should prompt before executing them; agents should obtain explicit confirmation. `--safety-mode` filters reversible destructive tools but does not substitute for excluding irrecoverable ops from the surface.
 
 ### Input validation
 

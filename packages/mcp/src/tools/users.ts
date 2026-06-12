@@ -1,10 +1,12 @@
 /**
- * MCP tools: users / organization members (list, get, delete).
+ * MCP tools: users / organization members (list, get).
+ * Irrecoverable ops (e.g. delete member) are client-only per ADR-0037.
  */
 
 import { z } from 'zod';
 
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from './shared.js';
+import { userUuidField } from './schema-fields.js';
+import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -40,27 +42,12 @@ export function registerUserTools(server: McpServer, client: LightdashClient): v
     {
       title: 'Get member',
       description: 'Get an organization member by UUID',
-      inputSchema: { userUuid: z.string().describe('User UUID') },
+      inputSchema: { userUuid: userUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(client, (c) => async ({ userUuid }: { userUuid: string }) => {
       const member = await c.v1.users.getMemberByUuid(userUuid);
       return { content: [{ type: 'text', text: JSON.stringify(member, null, 2) }] };
-    }),
-  );
-  registerToolSafe(
-    server,
-    'delete_member',
-    {
-      title: 'Delete member (destructive)',
-      description:
-        'Permanently remove a user from the organization. Destructive; clients and agents should obtain explicit user confirmation before calling.',
-      inputSchema: { userUuid: z.string().describe('User UUID') },
-      annotations: WRITE_DESTRUCTIVE,
-    },
-    wrapTool(client, (c) => async ({ userUuid }: { userUuid: string }) => {
-      await c.v1.users.deleteMember(userUuid);
-      return { content: [{ type: 'text', text: 'Member deleted.' }] };
     }),
   );
 }

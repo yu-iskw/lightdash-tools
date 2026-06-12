@@ -8,6 +8,18 @@ Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`l
 - **Validate project UUIDs against the allowlist before running.** Set `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` or `--projects` to restrict which projects the agent can access. Empty allowlist = all projects permitted.
 - **Safety modes:** `read-only` (default), `write-idempotent`, `write-destructive`. Use `--safety-mode` or `LIGHTDASH_TOOLS_SAFETY_MODE` to control which operations are allowed.
 
+## Agent-safe surface
+
+MCP and CLI expose the same **agent-safe** tier — not the full `@lightdash-tools/client` API. See [ADR-0037](../adr/0037-agent-safe-mcp-cli-surface.md).
+
+| Class                        | MCP/CLI                                                   | Example                              |
+| ---------------------------- | --------------------------------------------------------- | ------------------------------------ |
+| Irrecoverable                | **Not exposed** — use the typed client                    | `delete_member` / org member removal |
+| Reversible destructive       | Exposed with `WRITE_DESTRUCTIVE` + safety modes / dry-run | `delete_group`, revoke space access  |
+| Read / non-destructive write | Exposed                                                   | `list_groups`, `create_group`        |
+
+Safety modes gate **reversible** destructive ops at runtime. They do **not** replace banning irrecoverable operations from the surface.
+
 ## Context Window Discipline
 
 - **Add `--fields` or field masks to list calls when supported.** Lightdash API responses can be large. Limit response size to protect the agent's context window.

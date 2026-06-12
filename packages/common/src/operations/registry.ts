@@ -3,10 +3,11 @@
  */
 
 import { AI_AGENT_OPERATIONS } from './ai-agents';
+import { USER_OPERATIONS } from './users';
 
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
-const ALL_OPERATIONS: readonly OperationDescriptor[] = [...AI_AGENT_OPERATIONS];
+const ALL_OPERATIONS: readonly OperationDescriptor[] = [...AI_AGENT_OPERATIONS, ...USER_OPERATIONS];
 
 const operationsById = new Map<string, OperationDescriptor>(
   ALL_OPERATIONS.map((operation) => [operation.id, operation]),
@@ -34,7 +35,10 @@ export function listOperations(): readonly OperationDescriptor[] {
   return ALL_OPERATIONS;
 }
 
-/** Returns operations that include the given capability profile. */
+/** Returns agent-surface operations that include the given capability profile. */
 export function getOperationsByProfile(profile: CapabilityProfile): readonly OperationDescriptor[] {
-  return ALL_OPERATIONS.filter((operation) => operation.profiles.includes(profile));
+  return ALL_OPERATIONS.filter(
+    (operation) =>
+      operation.agentExposure !== 'client-only' && operation.profiles.includes(profile),
+  );
 }

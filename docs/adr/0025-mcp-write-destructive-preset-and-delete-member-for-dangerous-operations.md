@@ -4,7 +4,7 @@ Date: 2026-02-11
 
 ## Status
 
-Accepted
+Superseded by [ADR-0037](0037-agent-safe-mcp-cli-surface.md) (agent-surface exposure). The `WRITE_DESTRUCTIVE` preset and reversible-destructive tooling remain in effect.
 
 ## Context
 

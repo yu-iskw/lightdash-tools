@@ -48,20 +48,33 @@ async function loadRegistry() {
 }
 
 function validateOperation(operation, errors) {
+  const agentExposure = operation.agentExposure ?? 'agent';
+
   const requiredStringFields = [
     ['id', operation.id],
     ['summary', operation.summary],
     ['http.method', operation.http?.method],
     ['http.path', operation.http?.path],
     ['authorization.safetyImpact', operation.authorization?.safetyImpact],
-    ['mcp.toolName', operation.mcp?.toolName],
-    ['cli.commandPath', operation.cli?.commandPath],
   ];
+
+  if (agentExposure === 'agent') {
+    requiredStringFields.push(
+      ['mcp.toolName', operation.mcp?.toolName],
+      ['cli.commandPath', operation.cli?.commandPath],
+    );
+  }
 
   for (const [label, value] of requiredStringFields) {
     if (typeof value !== 'string' || value.trim().length === 0) {
       errors.push(`Operation '${operation.id ?? '<unknown>'}' missing ${label}`);
     }
+  }
+
+  if (agentExposure === 'client-only' && operation.mcp?.taskSupport?.exposed === true) {
+    errors.push(
+      `Operation '${operation.id}' client-only must set mcp.taskSupport.exposed to false`,
+    );
   }
 
   if (!Array.isArray(operation.profiles) || operation.profiles.length === 0) {

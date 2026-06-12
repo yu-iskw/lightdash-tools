@@ -160,6 +160,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **OpenAPI paginated responses are always wrapped:** Lightdash list endpoints return `{ results: { data: { <key>: T[] }, pagination? }, status: 'ok' }`, not a bare array. Always check the `ApiXxxListResponse` schema in `packages/common/src/types/generated/openapi-types.ts` before assuming the shape. Extract the inner array (e.g. `response.results.data.runs`) after fetching.
 - **New common types must be threaded through three layers:** When adding a type from the OpenAPI-generated file to `packages/common`, export it from: (1) `types/v1/ai-agents.ts` namespace, (2) both the namespace and the flat exports in `types/v1/lightdash-api.ts`, and (3) the flat export block in `types/lightdash-api.ts`. Missing any layer causes "not exported" build errors in dependent packages.
 - **Validate org-wide CLI flags explicitly:** Boolean CLI flags that affect organization-wide settings (e.g. `--ai-agents-visible`) must validate against the exact allowed literals (`'true'`/`'false'`) and `process.exit(1)` on invalid input. Never silently coerce via `value === 'true'` — typos like `True` or `yes` would silently disable features.
+- **Agent-safe surface (ADR-0037):** Irrecoverable operations (e.g. `delete_member`) must not be exposed on MCP or CLI — register them as `agentExposure: 'client-only'` in `packages/common/src/operations/` and use `@lightdash-tools/client` for admin scripts. Reversible destructive ops (delete group, revoke access) may stay on both surfaces with `WRITE_DESTRUCTIVE` and existing guardrails.
 - **MCP tools must use `registerToolSafe()`:** Every MCP tool registration must go through `registerToolSafe()` in `packages/mcp/src/tools/shared.ts`, never the raw `server.registerTool()`. This applies the layered guardrails: safety-mode filter → dry-run simulation → project allowlist → audit logging (outermost).
 - **CLI actions must use `wrapAction()`:** Every CLI command's `.action()` callback must be wrapped with `wrapAction(annotations, fn)` from `packages/cli/src/utils/safety.ts`. This enforces safety-mode and records audit log entries for every invocation.
 - **Input validation applies only to known identifier keys:** `validateResourceId()` is applied to strings under `project`, `projectUuid`, `projectUuids`, `projects`, `slug` in options/nested objects—not to bare positional strings. Free-form positionals (query, name, resource) may contain `?`, `#`, `%`; do not add validation for them. When adding a new identifier option, include its key in the list in `packages/cli/src/utils/safety.ts`. See [ADR-0034](docs/adr/0034-input-validation-validate-only-known-identifier-fields.md).
@@ -178,6 +179,8 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Keep root `package.json` lint and format on Trunk (`pnpm exec trunk`); do not replace with Vite+ `vp check` without explicit approval.
 - When implementing from an attached plan file, do not edit the plan file itself.
 - Use pnpm for local MCP testing workflows (including MCP Inspector); do not substitute npm or yarn.
+- Wrap agent-shell `git commit` and `git push` with `timeout 10` so GPG/pinentry or hook stalls fail fast instead of hanging the session.
+- For agent-driven commits when `commit.gpgsign=true`, use `--no-gpg-sign` or an interactive terminal with pinentry; `--no-verify` skips hooks only, not GPG signing.
 
 ## Learned Workspace Facts
 
@@ -187,3 +190,6 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - `pnpm-workspace.yaml` maintains supply-chain mitigations for global pnpm policies: `semver: '>=7.8.4'` override, expanded `minimumReleaseAgeExclude`, `vite: 8.0.16` pin, and `allowBuilds` for `@modelcontextprotocol/ext-apps`.
 - `getUserAgentPreferences` returns `null` when the API responds with `ApiSuccessEmpty` (user has no saved preferences).
 - The openapi-drift CI workflow uses `scripts/generate-cli-docs.mjs` to regenerate CLI documentation.
+- With `commit.gpgsign=true`, non-interactive agent shells block on GPG pinentry after Trunk pre-commit passes; the hang is signing, not the hook.
+- Operation registry generator requires non-empty `mcp.toolName` and `cli.commandPath` only for `agentExposure: 'agent'`; `client-only` ops document banned MCP names but omit CLI paths.
+- Per ADR-0037, irrecoverable ops such as `delete_member` stay off MCP and CLI; use `@lightdash-tools/client` directly for `users.members.delete`.

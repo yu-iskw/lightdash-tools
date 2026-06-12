@@ -17,15 +17,16 @@ Create a new `packages/mcp/src/tools/<resource>.ts` and register it in
 
 ## Key Conventions
 
-| Concern            | Pattern                                                                   |
-| ------------------ | ------------------------------------------------------------------------- |
-| Tool name          | `ldt__<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`)  |
-| Read-only tools    | `annotations: READ_ONLY_DEFAULT`                                          |
-| Idempotent writes  | `annotations: WRITE_IDEMPOTENT`                                           |
-| Destructive writes | `annotations: WRITE_DESTRUCTIVE`                                          |
-| Error handling     | Handled by `wrapTool` — no try/catch in the handler body                  |
-| Client access      | `c.v1.<resource>.*` or `c.v2.<resource>.*` from `@lightdash-tools/client` |
-| Output format      | `{ content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }`  |
+| Concern            | Pattern                                                                         |
+| ------------------ | ------------------------------------------------------------------------------- |
+| Tool name          | `ldt__<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`)        |
+| Read-only tools    | `annotations: READ_ONLY_DEFAULT`                                                |
+| Idempotent writes  | `annotations: WRITE_IDEMPOTENT`                                                 |
+| Destructive writes | `annotations: WRITE_DESTRUCTIVE` (reversible only; see ADR-0037)                |
+| Irrecoverable ops  | **Do not add** — register as `client-only` in `packages/common/src/operations/` |
+| Error handling     | Handled by `wrapTool` — no try/catch in the handler body                        |
+| Client access      | `c.v1.<resource>.*` or `c.v2.<resource>.*` from `@lightdash-tools/client`       |
+| Output format      | `{ content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] }`        |
 
 ## Workflow
 
@@ -37,7 +38,8 @@ Create a new `packages/mcp/src/tools/<resource>.ts` and register it in
    Create `packages/mcp/src/tools/<resource>.ts` using the template below.
    - Use `READ_ONLY_DEFAULT` for list/get operations.
    - Use `WRITE_IDEMPOTENT` for create/upsert operations.
-   - Use `WRITE_DESTRUCTIVE` for delete/reset operations.
+   - Use `WRITE_DESTRUCTIVE` only for **reversible** delete/revoke operations (ADR-0037).
+   - For irrecoverable deletes, do not add an MCP tool; add a `client-only` entry in `packages/common/src/operations/` instead.
 
 3. **Register in the barrel**
    In `packages/mcp/src/tools/index.ts`:
@@ -109,6 +111,7 @@ export function register<Resource>Tools(server: McpServer, client: LightdashClie
 - [ ] Tool names follow `<resource>_<action>` (short name; prefix is added automatically)
 - [ ] All inputs have explicit Zod types with `.describe()` strings
 - [ ] Annotation preset matches the operation type (read / idempotent write / destructive write)
+- [ ] Irrecoverable operations are not exposed; registry entry uses `agentExposure: 'client-only'` (ADR-0037)
 - [ ] `wrapTool` is used — no bare try/catch in handler bodies
 - [ ] `register<Resource>Tools` is imported and called in `tools/index.ts`
 - [ ] `pnpm build && pnpm test` passes

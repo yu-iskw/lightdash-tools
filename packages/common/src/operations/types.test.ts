@@ -18,12 +18,22 @@ const baseDescriptor = {
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'test op' },
+  agentExposure: 'agent' as const,
   profiles: ['discovery-readonly' as const],
 };
 
 describe('defineOperation', () => {
   it('accepts a valid read descriptor', () => {
-    expect(defineOperation(baseDescriptor)).toEqual(baseDescriptor);
+    expect(defineOperation(baseDescriptor)).toEqual({
+      ...baseDescriptor,
+      agentExposure: 'agent',
+    });
+  });
+
+  it('defaults agentExposure to agent', () => {
+    const { agentExposure, ...withoutExposure } = baseDescriptor;
+    void agentExposure;
+    expect(defineOperation(withoutExposure).agentExposure).toBe('agent');
   });
 
   it('rejects empty id', () => {
@@ -81,6 +91,42 @@ describe('defineOperation', () => {
         },
       }),
     ).toThrow(/destructive operations/);
+  });
+
+  it('rejects client-only operation with mcp exposed', () => {
+    expect(() =>
+      defineOperation({
+        ...baseDescriptor,
+        agentExposure: 'client-only',
+        mcp: {
+          ...baseDescriptor.mcp,
+          taskSupport: { exposed: true, taskEligible: false },
+        },
+      }),
+    ).toThrow(/client-only operations must set mcp.taskSupport.exposed to false/);
+  });
+
+  it('allows client-only operation without mcp tool name or cli path', () => {
+    const op = defineOperation({
+      id: 'test.client-only',
+      summary: 'Client only delete',
+      http: { method: 'DELETE', path: '/api/v1/test/{id}' },
+      authorization: { safetyImpact: 'write-destructive' },
+      mcp: {
+        toolName: '',
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: false,
+          openWorldHint: false,
+        },
+        taskSupport: { exposed: false, taskEligible: false },
+      },
+      cli: { commandPath: '' },
+      agentExposure: 'client-only',
+      profiles: ['discovery-readonly'],
+    });
+    expect(op.agentExposure).toBe('client-only');
   });
 
   it('maps openWorldHint to external-side-effect impact', () => {

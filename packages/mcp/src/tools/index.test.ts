@@ -1,4 +1,4 @@
-import { SafetyMode } from '@lightdash-tools/common';
+import { IRRECOVERABLE_TOOL_DENYLIST, SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { setStaticSafetyMode, setDryRunMode } from '../config.js';
@@ -53,5 +53,16 @@ describe('registerTools', () => {
     expect(names).toContain(`${TOOL_PREFIX}ai_agentops_plan`);
     expect(names).toContain(`${TOOL_PREFIX}ai_agentops_apply`);
     expect(names).toContain(`${TOOL_PREFIX}ai_agentops_evaluate_gate`);
+  });
+
+  it('does not register irrecoverable tools from the agent-safe denylist', () => {
+    const mockClient = {} as never;
+
+    registerTools(mockServer as never, mockClient);
+
+    const names = registeredTools.map((t) => t.name);
+    for (const toolName of IRRECOVERABLE_TOOL_DENYLIST) {
+      expect(names).not.toContain(`${TOOL_PREFIX}${toolName}`);
+    }
   });
 });
