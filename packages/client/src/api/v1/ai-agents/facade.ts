@@ -315,13 +315,34 @@ export class AiAgentsClient extends BaseApiClient {
     return this.artifacts.getArtifactVersion(projectUuid, agentUuid, artifactUuid, versionUuid);
   }
 
-  getMessageVizQuery(
+  getArtifactVersionVizQuery(
     projectUuid: string,
     agentUuid: string,
-    threadUuid: string,
-    messageUuid: string,
+    artifactUuid: string,
+    versionUuid: string,
   ): Promise<AiAgentThreadMessageVizQuery> {
-    return this.artifacts.getMessageVizQuery(projectUuid, agentUuid, threadUuid, messageUuid);
+    return this.artifacts.getArtifactVersionVizQuery(
+      projectUuid,
+      agentUuid,
+      artifactUuid,
+      versionUuid,
+    );
+  }
+
+  getDashboardArtifactChartVizQuery(
+    projectUuid: string,
+    agentUuid: string,
+    artifactUuid: string,
+    versionUuid: string,
+    chartIndex: number,
+  ): Promise<AiAgentThreadMessageVizQuery> {
+    return this.artifacts.getDashboardArtifactChartVizQuery(
+      projectUuid,
+      agentUuid,
+      artifactUuid,
+      versionUuid,
+      chartIndex,
+    );
   }
 
   // ─── Message feedback ────────────────────────────────────────────────────────

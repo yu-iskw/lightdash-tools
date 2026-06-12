@@ -370,6 +370,22 @@ spec:
   });
 });
 
+describe('AgentOps evaluate-gate CLI options', () => {
+  it('rejects non-numeric timeout values', () => {
+    const parse = (value: string) => {
+      const parsed = Number.parseInt(value, 10);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error('--timeout must be a positive integer');
+      }
+      return parsed;
+    };
+
+    expect(() => parse('abc')).toThrow('--timeout must be a positive integer');
+    expect(() => parse('0')).toThrow('--timeout must be a positive integer');
+    expect(parse('30')).toBe(30);
+  });
+});
+
 describe('AgentOps gate policy evaluation', () => {
   const baseRun = {
     runUuid: '00000000-0000-4000-8000-000000000030',

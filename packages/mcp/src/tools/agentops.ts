@@ -22,6 +22,7 @@ import {
 import { z } from 'zod';
 
 import { getSafetyMode } from '../config.js';
+import { blockIfProjectNotAllowed } from '../utils/allowlist.js';
 
 import {
   jsonToolResult,
@@ -52,6 +53,8 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
     },
     wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
       const bundle = parseLightdashAiAgentBundle(bundleYaml);
+      const blocked = blockIfProjectNotAllowed(bundle.spec.projectUuid);
+      if (blocked) return blocked;
       const current = await fetchBundleCurrentState(c, bundle);
       const diff = computeBundleDiff(bundle, current);
       return jsonToolResult(diff);
@@ -71,6 +74,8 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
     },
     wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
       const bundle = parseLightdashAiAgentBundle(bundleYaml);
+      const blocked = blockIfProjectNotAllowed(bundle.spec.projectUuid);
+      if (blocked) return blocked;
       const current = await fetchBundleCurrentState(c, bundle);
       const diff = computeBundleDiff(bundle, current);
 
@@ -155,6 +160,8 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
         }) => {
           const format = output ?? 'json';
           const gate = parseLightdashAiEvaluationGate(gateYaml);
+          const blocked = blockIfProjectNotAllowed(gate.spec.projectUuid);
+          if (blocked) return blocked;
           const { run, timedOut } = await resolveEvaluationRun(c, gate, {
             wait: wait === true,
             timeoutMs: (timeoutSeconds ?? 600) * 1000,

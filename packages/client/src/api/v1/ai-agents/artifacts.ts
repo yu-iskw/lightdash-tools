@@ -60,17 +60,33 @@ export class AiAgentsArtifactsClient extends BaseApiClient {
   }
 
   /**
-   * Get the viz query for a thread message
-   * (GET …/threads/{threadUuid}/messages/{messageUuid}/viz-query).
+   * Get the viz query for an artifact version
+   * (GET …/artifacts/{artifactUuid}/versions/{versionUuid}/viz-query).
    */
-  async getMessageVizQuery(
+  async getArtifactVersionVizQuery(
     projectUuid: string,
     agentUuid: string,
-    threadUuid: string,
-    messageUuid: string,
+    artifactUuid: string,
+    versionUuid: string,
   ): Promise<AiAgentThreadMessageVizQuery> {
     return this.http.get<AiAgentThreadMessageVizQuery>(
-      `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/messages/${messageUuid}/viz-query`,
+      `/projects/${projectUuid}/aiAgents/${agentUuid}/artifacts/${artifactUuid}/versions/${versionUuid}/viz-query`,
+    );
+  }
+
+  /**
+   * Get the viz query for a dashboard chart within an artifact version
+   * (GET …/artifacts/{artifactUuid}/versions/{versionUuid}/charts/{chartIndex}/viz-query).
+   */
+  async getDashboardArtifactChartVizQuery(
+    projectUuid: string,
+    agentUuid: string,
+    artifactUuid: string,
+    versionUuid: string,
+    chartIndex: number,
+  ): Promise<AiAgentThreadMessageVizQuery> {
+    return this.http.get<AiAgentThreadMessageVizQuery>(
+      `/projects/${projectUuid}/aiAgents/${agentUuid}/artifacts/${artifactUuid}/versions/${versionUuid}/charts/${chartIndex}/viz-query`,
     );
   }
 }

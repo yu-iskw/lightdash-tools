@@ -60,13 +60,24 @@ describe('AiAgentsArtifactsClient', () => {
     expect(result).toEqual(artifact);
   });
 
-  it('getMessageVizQuery should call GET …/messages/{messageUuid}/viz-query', async () => {
+  it('getArtifactVersionVizQuery should call GET …/versions/{versionUuid}/viz-query', async () => {
     const client = new AiAgentsArtifactsClient(mockHttp);
     const vizQuery = { type: 'table', metadata: { title: null, description: null } };
     vi.mocked(mockHttp.get).mockResolvedValue(vizQuery);
-    const result = await client.getMessageVizQuery('proj1', 'a1', 't1', 'm1');
+    const result = await client.getArtifactVersionVizQuery('proj1', 'a1', 'art1', 'v1');
     expect(mockHttp.get).toHaveBeenCalledWith(
-      '/projects/proj1/aiAgents/a1/threads/t1/messages/m1/viz-query',
+      '/projects/proj1/aiAgents/a1/artifacts/art1/versions/v1/viz-query',
+    );
+    expect(result).toEqual(vizQuery);
+  });
+
+  it('getDashboardArtifactChartVizQuery should call GET …/charts/{chartIndex}/viz-query', async () => {
+    const client = new AiAgentsArtifactsClient(mockHttp);
+    const vizQuery = { type: 'table', metadata: { title: null, description: null } };
+    vi.mocked(mockHttp.get).mockResolvedValue(vizQuery);
+    const result = await client.getDashboardArtifactChartVizQuery('proj1', 'a1', 'art1', 'v1', 2);
+    expect(mockHttp.get).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/artifacts/art1/versions/v1/charts/2/viz-query',
     );
     expect(result).toEqual(vizQuery);
   });
