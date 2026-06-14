@@ -70,11 +70,11 @@ jobs:
       - name: Create pull request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: "${{ secrets.GITHUB_TOKEN }}"
-          commit-message: "chore(deps): apply pnpm audit --fix"
-          title: "chore(deps): apply pnpm audit --fix"
+          token: '${{ secrets.GITHUB_TOKEN }}'
+          commit-message: 'chore(deps): apply pnpm audit --fix'
+          title: 'chore(deps): apply pnpm audit --fix'
           signoff: true
-          branch: "chore/pnpm-audit-fix-${{ github.run_id }}"
+          branch: 'chore/pnpm-audit-fix-${{ github.run_id }}'
           delete-branch: true
           add-paths: |
             pnpm-lock.yaml
