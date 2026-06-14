@@ -38,12 +38,7 @@
     },
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.mjs"],
-      "ignoreDependencies": ["@lightdash-tools/mcp-ui"]
-    },
-    "packages/mcp-ui": {
-      "entry": ["index.html"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.ts", "scripts/**/*.mjs"]
     }
   }
 }

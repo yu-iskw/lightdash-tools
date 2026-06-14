@@ -1,12 +1,9 @@
 import { SafetyMode } from '@lightdash-tools/common';
-import { RESOURCE_URI_META_KEY } from '@modelcontextprotocol/ext-apps/server';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
 
 import {
-  normalizeAppToolMeta,
-  registerAppToolSafe,
   registerToolSafe,
   wrapTool,
   READ_ONLY_DEFAULT,
@@ -520,54 +517,5 @@ describe('registerToolSafe', () => {
 
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toBe('boom');
-  });
-
-  it('registerAppToolSafe passes normalized _meta.ui through guardrails', async () => {
-    const resourceUri = 'ui://minimal-app/index.html';
-    registerAppToolSafe(
-      mockServer,
-      'minimal_app',
-      {
-        description: 'MCP app tool',
-        inputSchema: {},
-        annotations: READ_ONLY_DEFAULT,
-        _meta: { ui: { resourceUri } },
-      },
-      mockHandler,
-    );
-
-    const [, options] = mockServer.registerTool.mock.calls[0];
-    expect(options._meta.ui).toEqual({ resourceUri });
-    expect(options._meta[RESOURCE_URI_META_KEY]).toBe(resourceUri);
-  });
-
-  it('registerAppToolSafe applies safety-mode block like registerToolSafe', async () => {
-    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.READ_ONLY;
-    setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
-
-    registerAppToolSafe(
-      mockServer,
-      'minimal_app',
-      {
-        description: 'Write app tool',
-        inputSchema: {},
-        annotations: WRITE_DESTRUCTIVE,
-        _meta: { ui: { resourceUri: 'ui://app' } },
-      },
-      mockHandler,
-    );
-
-    const [, options, handler] = mockServer.registerTool.mock.calls[0];
-    expect(options.description).toContain('[DISABLED in read-only mode]');
-    const result = await handler({});
-    expect(result.isError).toBe(true);
-    expect(mockHandler).not.toHaveBeenCalled();
-  });
-});
-
-describe('normalizeAppToolMeta', () => {
-  it('mirrors ui.resourceUri into RESOURCE_URI_META_KEY', () => {
-    const meta = normalizeAppToolMeta({ ui: { resourceUri: 'ui://app' } });
-    expect(meta[RESOURCE_URI_META_KEY]).toBe('ui://app');
   });
 });

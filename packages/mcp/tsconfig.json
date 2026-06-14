@@ -10,13 +10,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["node"],
-    "ignoreDeprecations": "6.0",
-    "baseUrl": ".",
-    "paths": {
-      "@modelcontextprotocol/ext-apps/server": [
-        "node_modules/@modelcontextprotocol/ext-apps/dist/src/server/index"
-      ]
-    }
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src"]
 }

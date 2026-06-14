@@ -2,7 +2,6 @@ packages:
   - packages/*
 
 allowBuilds:
-  '@modelcontextprotocol/ext-apps': true
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
