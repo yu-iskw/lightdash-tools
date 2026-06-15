@@ -8,7 +8,7 @@ import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createAiAgentCompletionCallbacks } from '../completion/index.js';
 import { getAllowedProjectUuids } from '../config.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const EVALUATION_RUN_RESULTS_URI_TEMPLATE =
@@ -23,8 +23,11 @@ function assertProjectAllowed(projectUuid: string): void {
   }
 }
 
-export function registerAiAgentResources(server: McpServer, client: LightdashClient): void {
-  const complete = createAiAgentCompletionCallbacks(client);
+export function registerAiAgentResources(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  const complete = createAiAgentCompletionCallbacks(contextProvider);
 
   const template = new ResourceTemplate(EVALUATION_RUN_RESULTS_URI_TEMPLATE, {
     list: undefined,
@@ -51,7 +54,8 @@ export function registerAiAgentResources(server: McpServer, client: LightdashCli
       const evalUuid = String(variables.evalUuid);
       const runUuid = String(variables.runUuid);
       assertProjectAllowed(projectUuid);
-      const results = await client.v1.aiAgents.getEvaluationRunResults(
+      const { lightdashClient } = await contextProvider.getContext();
+      const results = await lightdashClient.v1.aiAgents.getEvaluationRunResults(
         projectUuid,
         agentUuid,
         evalUuid,

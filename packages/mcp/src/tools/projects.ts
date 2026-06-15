@@ -7,10 +7,10 @@ import { z } from 'zod';
 import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectTools(server: McpServer, client: LightdashClient): void {
+export function registerProjectTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_projects',
@@ -20,8 +20,8 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, () => async () => {
-      const projects = await client.v1.projects.listProjects();
+    wrapTool(contextProvider, (c) => async () => {
+      const projects = await c.v1.projects.listProjects();
       return { content: [{ type: 'text', text: JSON.stringify(projects, null, 2) }] };
     }),
   );
@@ -34,7 +34,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const project = await c.v1.projects.getProject(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(project, null, 2) }] };
     }),
@@ -48,7 +48,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       inputSchema: { projectUuid: projectUuidField() },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const result = await c.v1.validation.validateProject(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
     }),
@@ -68,7 +68,7 @@ export function registerProjectTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,

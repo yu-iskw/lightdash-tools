@@ -6,14 +6,15 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
 import { initAuditLog } from './audit.js';
-import { getClient, getAuditLogPath } from './config.js';
+import { EnvContextProvider } from './auth/env-context-provider.js';
+import { getAuditLogPath } from './config.js';
 import { createLightdashMcpServer } from './server.js';
 
 async function main(): Promise<void> {
   initAuditLog(getAuditLogPath());
 
-  const client = getClient();
-  const server = createLightdashMcpServer(client);
+  const contextProvider = new EnvContextProvider();
+  const server = createLightdashMcpServer(contextProvider);
 
   const transport = new StdioServerTransport();
   await server.connect(transport);

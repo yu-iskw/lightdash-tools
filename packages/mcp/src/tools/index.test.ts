@@ -38,9 +38,9 @@ describe('registerTools', () => {
   });
 
   it('registers all domain tool modules on the MCP server', () => {
-    const mockClient = {} as never;
+    const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
 
-    registerTools(mockServer as never, mockClient);
+    registerTools(mockServer as never, mockContextProvider as never);
 
     expect(registeredTools.length).toBeGreaterThan(30);
     expect(registeredTools.every((t) => t.name.startsWith(TOOL_PREFIX))).toBe(true);
@@ -56,9 +56,9 @@ describe('registerTools', () => {
   });
 
   it('does not register irrecoverable tools from the agent-safe denylist', () => {
-    const mockClient = {} as never;
+    const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
 
-    registerTools(mockServer as never, mockClient);
+    registerTools(mockServer as never, mockContextProvider as never);
 
     const names = registeredTools.map((t) => t.name);
     for (const toolName of IRRECOVERABLE_TOOL_DENYLIST) {

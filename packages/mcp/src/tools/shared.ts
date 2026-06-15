@@ -30,6 +30,7 @@ import {
 } from '../config.js';
 import { toMcpErrorMessage } from '../errors.js';
 
+import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
@@ -330,13 +331,13 @@ export function registerToolSafe(
 }
 
 export function wrapTool<T>(
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
 ): ToolHandler {
-  const handler = fn(client);
   return async (args: unknown, extra?: unknown) => {
-    void extra;
     try {
+      const { lightdashClient } = await contextProvider.getContext(extra);
+      const handler = fn(lightdashClient);
       return await handler(args as T);
     } catch (err) {
       const text = toMcpErrorMessage(err);

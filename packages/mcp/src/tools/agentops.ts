@@ -33,13 +33,16 @@ import {
   WRITE_DESTRUCTIVE,
 } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const bundleYamlField = z.string().min(1).describe('Agent bundle document as YAML text');
 const gateYamlField = z.string().min(1).describe('Evaluation gate document as YAML text');
 
-export function registerAgentopsTools(server: McpServer, client: LightdashClient): void {
+export function registerAgentopsTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'ai_agentops_plan',
@@ -52,7 +55,7 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
+    wrapTool(contextProvider, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
       const bundle = parseLightdashAiAgentBundle(bundleYaml);
       const current = await fetchBundleCurrentState(c, bundle);
       const diff = computeBundleDiff(bundle, current);
@@ -71,7 +74,7 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(client, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
+    wrapTool(contextProvider, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
       const bundle = parseLightdashAiAgentBundle(bundleYaml);
       const current = await fetchBundleCurrentState(c, bundle);
       const diff = computeBundleDiff(bundle, current);
@@ -140,7 +143,7 @@ export function registerAgentopsTools(server: McpServer, client: LightdashClient
       annotations: WRITE_OPEN_WORLD,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           gateYaml,

@@ -15,7 +15,7 @@ import {
   WRITE_DESTRUCTIVE,
 } from '../shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const evaluationPromptInputSchema = z.union([
@@ -30,7 +30,7 @@ const evaluationPromptInputSchema = z.union([
   }),
 ]);
 
-function registerEvaluationReadTools(server: McpServer, client: LightdashClient): void {
+function registerEvaluationReadTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_agent_evaluations',
@@ -44,7 +44,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listEvaluations(projectUuid, agentUuid);
@@ -67,7 +67,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -98,7 +98,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -135,7 +135,7 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -160,7 +160,10 @@ function registerEvaluationReadTools(server: McpServer, client: LightdashClient)
   );
 }
 
-function registerEvaluationWriteTools(server: McpServer, client: LightdashClient): void {
+function registerEvaluationWriteTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'create_agent_evaluation',
@@ -181,7 +184,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
       annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -227,7 +230,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -269,7 +272,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
       annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -304,7 +307,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
       annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -335,7 +338,7 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
       annotations: WRITE_DESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -358,8 +361,8 @@ function registerEvaluationWriteTools(server: McpServer, client: LightdashClient
 
 export function registerProjectAgentEvaluationTools(
   server: McpServer,
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
 ): void {
-  registerEvaluationReadTools(server, client);
-  registerEvaluationWriteTools(server, client);
+  registerEvaluationReadTools(server, contextProvider);
+  registerEvaluationWriteTools(server, contextProvider);
 }

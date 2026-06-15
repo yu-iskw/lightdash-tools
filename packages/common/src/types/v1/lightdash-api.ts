@@ -153,6 +153,9 @@ export namespace LightdashApi {
       components['schemas']['ApiOrganizationMemberProfiles'];
     export type OrganizationMemberProfileUpdate =
       components['schemas']['OrganizationMemberProfileUpdate'];
+    export type AuthenticatedUser = components['schemas']['LightdashUser'] & {
+      impersonation: components['schemas']['ImpersonationInfo'] | null;
+    };
   }
 
   export namespace Groups {

@@ -12,10 +12,13 @@ import {
   WRITE_IDEMPOTENT,
 } from '../shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerAdminAiAgentTools(server: McpServer, client: LightdashClient): void {
+export function registerAdminAiAgentTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   // ─── Admin: agents ───────────────────────────────────────────────────────────
 
   registerToolSafe(
@@ -27,7 +30,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async () => {
+    wrapTool(contextProvider, (c) => async () => {
       const result = await c.v1.aiAgents.listAdminAgents();
       return jsonToolResult(result);
     }),
@@ -59,7 +62,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async (params: {
           page?: number;
@@ -89,7 +92,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async () => {
+    wrapTool(contextProvider, (c) => async () => {
       const result = await c.v1.aiAgents.getAiOrganizationSettings();
       return jsonToolResult(result);
     }),
@@ -109,7 +112,7 @@ export function registerAdminAiAgentTools(server: McpServer, client: LightdashCl
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(client, (c) => async (params: { aiAgentsVisible?: boolean }) => {
+    wrapTool(contextProvider, (c) => async (params: { aiAgentsVisible?: boolean }) => {
       const result = await c.v1.aiAgents.updateAiOrganizationSettings(
         params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
       );

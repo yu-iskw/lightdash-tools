@@ -38,9 +38,16 @@ Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents h
 
 ### Streamable HTTP only
 
-- `MCP_HTTP_PORT` — Port for the HTTP server (default: `3100`).
-- `MCP_AUTH_ENABLED` — Set to `1`, `true`, or `yes` to require auth on the MCP endpoint.
-- `MCP_API_KEY` — When auth is enabled, requests must send this value via `Authorization: Bearer <MCP_API_KEY>` or `X-API-Key: <MCP_API_KEY>`.
+Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix (see ADR-0035). Legacy `MCP_*` names still work with deprecation warnings.
+
+- `LIGHTDASH_TOOLS_MCP_AUTH_MODE` — `none` (default), `shared-key`, or `lightdash-oauth`.
+- `LIGHTDASH_TOOLS_MCP_HTTP_PORT` — Port for the HTTP server (default: `3100`). Alias: `MCP_HTTP_PORT`, `MCP_SERVER_PORT`.
+- `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — Public HTTPS base URL for OAuth metadata (required in `lightdash-oauth` mode). Alias: `MCP_PUBLIC_URL`.
+- `LIGHTDASH_TOOLS_MCP_SHARED_KEY` — Shared endpoint secret for `shared-key` mode. Alias: `MCP_API_KEY`.
+- `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` — Comma-separated CORS origin allowlist. Alias: `MCP_ALLOWED_ORIGINS`.
+- `MCP_AUTH_ENABLED` — Legacy alias: when set, implies `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key`.
+
+In `lightdash-oauth` mode, `LIGHTDASH_API_KEY` is not required. Clients authenticate with Lightdash OAuth and send `Authorization: Bearer <access-token>`. The server exposes `GET /.well-known/oauth-protected-resource` and validates tokens against `GET /api/v1/user`.
 
 ## Running
 
@@ -69,7 +76,17 @@ Logging goes to stderr only; stdout is JSON-RPC.
 ### Streamable HTTP (remote)
 
 ```bash
+# Backward-compatible
 npx @lightdash-tools/mcp --http
+
+# Explicit subcommand
+npx @lightdash-tools/mcp serve-http
+
+# Hosted OAuth mode (no LIGHTDASH_API_KEY required)
+export LIGHTDASH_URL="https://app.lightdash.cloud"
+export LIGHTDASH_TOOLS_MCP_AUTH_MODE="lightdash-oauth"
+export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
+npx @lightdash-tools/mcp serve-http
 ```
 
 The server listens on `http://localhost:3100` (or `MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.

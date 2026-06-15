@@ -19,4 +19,8 @@ export namespace Users {
   /** Update payload for organization member (e.g. role). */
   export type OrganizationMemberProfileUpdate =
     components['schemas']['OrganizationMemberProfileUpdate'];
+  /** Currently authenticated Lightdash user (`GET /api/v1/user`). */
+  export type AuthenticatedUser = components['schemas']['LightdashUser'] & {
+    impersonation: components['schemas']['ImpersonationInfo'] | null;
+  };
 }

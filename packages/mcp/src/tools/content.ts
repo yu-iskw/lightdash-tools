@@ -6,10 +6,10 @@ import { z } from 'zod';
 
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerContentTools(server: McpServer, client: LightdashClient): void {
+export function registerContentTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'search_content',
@@ -29,7 +29,7 @@ export function registerContentTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async (params: {
           search: string;

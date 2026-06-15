@@ -9,7 +9,7 @@ import {
   createRunUuidCompleter,
 } from './ai-agents.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 
 export {
   createAgentUuidCompleter,
@@ -31,12 +31,12 @@ export type AiAgentCompletionCallbacks = {
 
 /** Builds AI agent completion callbacks for resources and prompts. */
 export function createAiAgentCompletionCallbacks(
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
 ): AiAgentCompletionCallbacks {
   return {
-    projectUuid: createProjectUuidCompleter(client),
-    agentUuid: createAgentUuidCompleter(client),
-    evalUuid: createEvalUuidCompleter(client),
-    runUuid: createRunUuidCompleter(client),
+    projectUuid: createProjectUuidCompleter(contextProvider),
+    agentUuid: createAgentUuidCompleter(contextProvider),
+    evalUuid: createEvalUuidCompleter(contextProvider),
+    runUuid: createRunUuidCompleter(contextProvider),
   };
 }

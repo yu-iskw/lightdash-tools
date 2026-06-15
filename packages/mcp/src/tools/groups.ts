@@ -13,7 +13,7 @@ import {
   WRITE_DESTRUCTIVE,
 } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 type ListGroupsParams = {
@@ -22,7 +22,7 @@ type ListGroupsParams = {
   searchQuery?: string;
 };
 
-export function registerGroupTools(server: McpServer, client: LightdashClient): void {
+export function registerGroupTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_groups',
@@ -36,7 +36,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async (params: ListGroupsParams) => {
+    wrapTool(contextProvider, (c) => async (params: ListGroupsParams) => {
       const result = await c.v1.groups.listGroups(params ?? {});
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
     }),
@@ -51,7 +51,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       inputSchema: { groupUuid: groupUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ groupUuid }: { groupUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ groupUuid }: { groupUuid: string }) => {
       const group = await c.v1.groups.getGroup(groupUuid);
       return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
     }),
@@ -68,7 +68,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(client, (c) => async ({ name }: { name: string }) => {
+    wrapTool(contextProvider, (c) => async ({ name }: { name: string }) => {
       const group = await c.v1.groups.createGroup({ name });
       return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
     }),
@@ -86,10 +86,14 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(client, (c) => async ({ groupUuid, name }: { groupUuid: string; name: string }) => {
-      const group = await c.v1.groups.updateGroup(groupUuid, { name });
-      return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
-    }),
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({ groupUuid, name }: { groupUuid: string; name: string }) => {
+          const group = await c.v1.groups.updateGroup(groupUuid, { name });
+          return { content: [{ type: 'text', text: JSON.stringify(group, null, 2) }] };
+        },
+    ),
   );
 
   registerToolSafe(
@@ -103,7 +107,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       },
       annotations: WRITE_DESTRUCTIVE,
     },
-    wrapTool(client, (c) => async ({ groupUuid }: { groupUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ groupUuid }: { groupUuid: string }) => {
       await c.v1.groups.deleteGroup(groupUuid);
       return { content: [{ type: 'text', text: `Group ${groupUuid} deleted successfully` }] };
     }),
@@ -120,7 +124,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ groupUuid }: { groupUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ groupUuid }: { groupUuid: string }) => {
       const members = await c.v1.groups.getGroupMembers(groupUuid);
       return { content: [{ type: 'text', text: JSON.stringify(members, null, 2) }] };
     }),
@@ -139,7 +143,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ groupUuid, userUuid }: { groupUuid: string; userUuid: string }) => {
           await c.v1.groups.addUserToGroup(groupUuid, userUuid);
@@ -165,7 +169,7 @@ export function registerGroupTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_DESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ groupUuid, userUuid }: { groupUuid: string; userUuid: string }) => {
           await c.v1.groups.removeUserFromGroup(groupUuid, userUuid);

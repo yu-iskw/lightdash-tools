@@ -10,11 +10,48 @@ import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from
 
 const program = new Command();
 
+function applyGuardrailOptions(options: {
+  safetyMode?: string;
+  projects?: string;
+  dryRun?: boolean;
+}): void {
+  if (options.safetyMode) {
+    if (Object.values(SafetyMode).includes(options.safetyMode as SafetyMode)) {
+      setStaticSafetyMode(options.safetyMode as SafetyMode);
+    } else {
+      console.error(`Invalid safety mode: ${options.safetyMode}`);
+      process.exit(1);
+    }
+  }
+
+  if (options.projects) {
+    const uuids = options.projects
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    setStaticAllowedProjectUuids(uuids);
+  }
+
+  if (options.dryRun) {
+    setDryRunMode(true);
+  }
+}
+
+function runStdio(): void {
+  void import('./index.js');
+}
+
+function runHttp(authMode?: string): void {
+  if (authMode) {
+    process.env.LIGHTDASH_TOOLS_MCP_AUTH_MODE = authMode;
+  }
+  void import('./http.js');
+}
+
 program
   .name('lightdash-mcp')
   .description('MCP server for Lightdash AI')
   .version('0.6.0')
-  .option('--http', 'Run as HTTP server instead of Stdio')
   .option(
     '--safety-mode <mode>',
     'Filter registered tools by safety mode (read-only, write-idempotent, write-destructive)',
@@ -26,33 +63,36 @@ program
   .option(
     '--dry-run',
     'Simulate write operations without executing them (overrides LIGHTDASH_TOOLS_DRY_RUN)',
+  );
+
+program
+  .command('stdio')
+  .description('Run MCP server on stdio (default)')
+  .action((_, command) => {
+    applyGuardrailOptions(command.opts());
+    runStdio();
+  });
+
+program
+  .command('serve-http')
+  .description('Run MCP server with Streamable HTTP transport')
+  .option(
+    '--auth-mode <mode>',
+    'HTTP auth mode: none, shared-key, or lightdash-oauth (overrides LIGHTDASH_TOOLS_MCP_AUTH_MODE)',
   )
+  .action((options, command) => {
+    applyGuardrailOptions(command.parent?.opts() ?? command.opts());
+    runHttp(options.authMode);
+  });
+
+program
+  .option('--http', 'Run as HTTP server instead of Stdio (alias for serve-http)')
   .action((options) => {
-    if (options.safetyMode) {
-      if (Object.values(SafetyMode).includes(options.safetyMode)) {
-        setStaticSafetyMode(options.safetyMode as SafetyMode);
-      } else {
-        console.error(`Invalid safety mode: ${options.safetyMode}`);
-        process.exit(1);
-      }
-    }
-
-    if (options.projects) {
-      const uuids = (options.projects as string)
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      setStaticAllowedProjectUuids(uuids);
-    }
-
-    if (options.dryRun) {
-      setDryRunMode(true);
-    }
-
+    applyGuardrailOptions(options);
     if (options.http) {
-      void import('./http.js');
+      runHttp();
     } else {
-      void import('./index.js');
+      runStdio();
     }
   });
 

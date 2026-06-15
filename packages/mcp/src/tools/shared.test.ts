@@ -11,6 +11,8 @@ import {
   WRITE_IDEMPOTENT,
 } from './shared';
 
+import type { McpContextProvider } from '../request-context.js';
+
 // Silence audit log output during tests
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -509,7 +511,10 @@ describe('registerToolSafe', () => {
   });
 
   it('wrapTool returns a safe error message when the inner handler throws', async () => {
-    const wrapped = wrapTool({} as never, () => async () => {
+    const contextProvider = {
+      getContext: async () => ({ lightdashClient: {} }),
+    } as McpContextProvider;
+    const wrapped = wrapTool(contextProvider, () => async () => {
       throw new Error('boom');
     });
 

@@ -1,7 +1,10 @@
+import { SafetyMode } from '@lightdash-tools/common';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { EVALUATION_RUN_RESULTS_URI_TEMPLATE, registerAiAgentResources } from './ai-agents.js';
+
+import type { McpContextProvider } from '../request-context.js';
 
 describe('registerAiAgentResources', () => {
   const mockGetResults = vi.fn();
@@ -11,7 +14,18 @@ describe('registerAiAgentResources', () => {
         getEvaluationRunResults: mockGetResults,
       },
     },
-  } as never;
+  };
+  const mockContextProvider = {
+    getContext: async () => ({
+      lightdashClient: mockClient as never,
+      auth: { mode: 'env' as const },
+      governance: {
+        safetyMode: SafetyMode.READ_ONLY,
+        dryRun: false,
+        allowedProjectUuids: [],
+      },
+    }),
+  } satisfies McpContextProvider;
 
   let server: McpServer;
   let registerResourceSpy: ReturnType<typeof vi.spyOn>;
@@ -24,7 +38,7 @@ describe('registerAiAgentResources', () => {
   });
 
   it('registers evaluation run results resource template', () => {
-    registerAiAgentResources(server, mockClient);
+    registerAiAgentResources(server, mockContextProvider);
 
     expect(registerResourceSpy).toHaveBeenCalledTimes(1);
     const [name, template, metadata] = registerResourceSpy.mock.calls[0];
@@ -36,7 +50,7 @@ describe('registerAiAgentResources', () => {
   });
 
   it('read handler fetches run results and returns JSON resource contents', async () => {
-    registerAiAgentResources(server, mockClient);
+    registerAiAgentResources(server, mockContextProvider);
 
     const readCallback = registerResourceSpy.mock.calls[0][3] as (
       uri: URL,

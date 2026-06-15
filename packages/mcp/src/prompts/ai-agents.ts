@@ -13,11 +13,11 @@ import {
 import { MCP_PROFILE_CORE_LIFECYCLE, MCP_PROFILE_EVALUATIONS, hasMcpProfile } from '../config.js';
 
 import type { McpProfile } from '../config.js';
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 function scopedArgsSchema(
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
   fields: {
     projectUuid?: boolean;
     agentUuid?: boolean;
@@ -30,19 +30,19 @@ function scopedArgsSchema(
   if (fields.projectUuid) {
     shape.projectUuid = completable(
       z.string().describe('Project UUID'),
-      createProjectUuidCompleter(client),
+      createProjectUuidCompleter(contextProvider),
     );
   }
   if (fields.agentUuid) {
     shape.agentUuid = completable(
       z.string().describe('Agent UUID'),
-      createAgentUuidCompleter(client),
+      createAgentUuidCompleter(contextProvider),
     );
   }
   if (fields.evalUuid) {
     shape.evalUuid = completable(
       z.string().describe('Evaluation UUID'),
-      createEvalUuidCompleter(client),
+      createEvalUuidCompleter(contextProvider),
     );
   }
   if (fields.focusArea) {
@@ -59,7 +59,7 @@ function scopedArgsSchema(
 
 export function registerAiAgentPrompts(
   server: McpServer,
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
   profiles: Set<McpProfile>,
 ): void {
   if (hasMcpProfile(MCP_PROFILE_CORE_LIFECYCLE, profiles)) {
@@ -69,7 +69,7 @@ export function registerAiAgentPrompts(
         title: 'Review AI agent configuration',
         description:
           'Structured review of an AI agent configuration, instruction, and integration settings before changes go live',
-        argsSchema: scopedArgsSchema(client, {
+        argsSchema: scopedArgsSchema(contextProvider, {
           projectUuid: true,
           agentUuid: true,
           focusArea: true,
@@ -103,7 +103,7 @@ export function registerAiAgentPrompts(
         title: 'AI agent release readiness check',
         description:
           'Pre-release checklist for AI agent changes covering evaluations, regressions, and rollout guardrails',
-        argsSchema: scopedArgsSchema(client, {
+        argsSchema: scopedArgsSchema(contextProvider, {
           projectUuid: true,
           agentUuid: true,
           releaseVersion: true,
@@ -139,7 +139,7 @@ export function registerAiAgentPrompts(
         title: 'Triage AI evaluation failures',
         description:
           'Investigate failing evaluation runs, cluster failure patterns, and propose fixes or new test cases',
-        argsSchema: scopedArgsSchema(client, {
+        argsSchema: scopedArgsSchema(contextProvider, {
           projectUuid: true,
           agentUuid: true,
           evalUuid: true,

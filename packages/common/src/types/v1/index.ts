@@ -79,6 +79,7 @@ export namespace V1 {
     export type ApiOrganizationMemberProfile = U.ApiOrganizationMemberProfile;
     export type ApiOrganizationMemberProfiles = U.ApiOrganizationMemberProfiles;
     export type OrganizationMemberProfileUpdate = U.OrganizationMemberProfileUpdate;
+    export type AuthenticatedUser = U.AuthenticatedUser;
   }
 
   export namespace Groups {

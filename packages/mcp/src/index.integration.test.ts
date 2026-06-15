@@ -3,6 +3,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { describe, it, expect } from 'vitest';
 
+import { EnvContextProvider } from './auth/env-context-provider.js';
 import { getClient } from './config';
 import { registerTools } from './tools';
 import { TOOL_PREFIX } from './tools/shared';
@@ -22,8 +23,9 @@ describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
 
   it('should execute list_projects tool with real API', async () => {
     const client = getClient();
+    const contextProvider = new EnvContextProvider({ client });
     const server = new McpServer({ name: 'test-server', version: '1.0.0' });
-    registerTools(server, client);
+    registerTools(server, contextProvider);
 
     const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
 

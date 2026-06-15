@@ -13,10 +13,13 @@ import {
   WRITE_OPEN_WORLD,
 } from '../shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectAgentThreadTools(server: McpServer, client: LightdashClient): void {
+export function registerProjectAgentThreadTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   // ─── Project-scoped: threads ─────────────────────────────────────────────────
 
   registerToolSafe(
@@ -32,7 +35,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listAgentThreads(projectUuid, agentUuid);
@@ -55,7 +58,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -87,7 +90,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
       annotations: WRITE_OPEN_WORLD,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -121,7 +124,7 @@ export function registerProjectAgentThreadTools(server: McpServer, client: Light
       annotations: WRITE_OPEN_WORLD,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
