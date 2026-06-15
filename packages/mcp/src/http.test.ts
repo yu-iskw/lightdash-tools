@@ -67,6 +67,7 @@ describe('HTTP transport helpers', () => {
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':
           'Content-Type, Accept, Authorization, Mcp-Session-Id, X-API-Key',
+        'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });
       expect(buildCorsHeaders('https://other.example.com', allowed)).toEqual({});

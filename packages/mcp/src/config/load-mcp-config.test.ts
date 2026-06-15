@@ -4,6 +4,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
+  ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
 } from './env.js';
 import { loadMcpHttpConfig } from './load-mcp-config.js';
 
@@ -99,5 +100,24 @@ describe('loadMcpHttpConfig', () => {
     process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = 'not-a-number';
 
     expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_HTTP_PORT/);
+  });
+
+  it('rejects invalid VALIDATE_TOKEN boolean literals', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'True';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN/);
+  });
+
+  it('allows explicit false to disable token validation', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
+
+    const config = loadMcpHttpConfig();
+    expect(config.validateToken).toBe(false);
   });
 });

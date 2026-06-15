@@ -76,7 +76,7 @@ program
   .command('stdio')
   .description('Run MCP server on stdio (default)')
   .action((_, command) => {
-    applyGuardrailOptions(command.opts());
+    applyGuardrailOptions(command.parent?.opts() ?? command.opts());
     runStdio();
   });
 

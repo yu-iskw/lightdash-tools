@@ -109,9 +109,11 @@ function parseCsv(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
-function parseTruthy(value: string | undefined, defaultValue: boolean): boolean {
+function parseBooleanEnv(name: string, value: string | undefined, defaultValue: boolean): boolean {
   if (value === undefined) return defaultValue;
-  return value === '1' || value === 'true' || value === 'yes';
+  if (value === '1' || value === 'true' || value === 'yes') return true;
+  if (value === '0' || value === 'false' || value === 'no') return false;
+  throw new Error(`Invalid ${name}: ${value}. Expected 1, true, yes, 0, false, or no.`);
 }
 
 function resolveAuthMode(): McpAuthMode {
@@ -244,7 +246,8 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
       'mcp:read',
       'mcp:write',
     ]),
-    validateToken: parseTruthy(
+    validateToken: parseBooleanEnv(
+      ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
       readEnv(ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN),
       authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH,
     ),
