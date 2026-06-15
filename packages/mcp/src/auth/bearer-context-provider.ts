@@ -1,14 +1,11 @@
-import { createHash } from 'node:crypto';
+import { createBearerConfig, LightdashClient, SecretString } from '@lightdash-tools/client';
 
-import { LightdashClient, SecretString } from '@lightdash-tools/client';
+import { buildMcpGovernance } from '../governance.js';
 
-import { getAllowedProjectUuids, getSafetyMode, isDryRunMode } from '../config.js';
+import { hashToken } from './token-hash.js';
 
+import type { McpHttpConfig } from '../config/load-mcp-config.js';
 import type { LightdashMcpRequestContext, McpContextProvider } from '../request-context.js';
-
-export function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
 
 export interface BearerContextProviderOptions {
   baseUrl: string;
@@ -37,14 +34,13 @@ export class BearerContextProvider implements McpContextProvider {
   }
 
   async getContext(): Promise<LightdashMcpRequestContext> {
-    const client = new LightdashClient({
-      baseUrl: this.options.baseUrl,
-      auth: {
-        type: 'bearer',
-        token: this.options.accessToken,
-      },
-      proxyAuthorization: this.options.proxyAuthorization,
-    });
+    const client = new LightdashClient(
+      createBearerConfig({
+        baseUrl: this.options.baseUrl,
+        accessToken: this.options.accessToken,
+        proxyAuthorization: this.options.proxyAuthorization,
+      }),
+    );
 
     return {
       lightdashClient: client,
@@ -54,11 +50,19 @@ export class BearerContextProvider implements McpContextProvider {
         subject: this.options.subject,
         scopes: this.options.scopes,
       },
-      governance: {
-        safetyMode: getSafetyMode(),
-        dryRun: isDryRunMode(),
-        allowedProjectUuids: getAllowedProjectUuids(),
-      },
+      governance: buildMcpGovernance(),
     };
   }
+}
+
+export function createOAuthBearerProvider(
+  config: Pick<McpHttpConfig, 'lightdashUrl' | 'proxyAuthorization'>,
+  oauth: { accessToken: string; subject?: string },
+): BearerContextProvider {
+  return new BearerContextProvider({
+    baseUrl: config.lightdashUrl,
+    accessToken: oauth.accessToken,
+    proxyAuthorization: config.proxyAuthorization,
+    subject: oauth.subject,
+  });
 }

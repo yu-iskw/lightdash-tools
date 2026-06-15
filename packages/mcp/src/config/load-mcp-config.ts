@@ -1,4 +1,8 @@
-import { ENV_LIGHTDASH_URL, SecretString } from '@lightdash-tools/client';
+import {
+  ENV_LIGHTDASH_URL,
+  ENV_LIGHTDASH_PROXY_AUTHORIZATION,
+  SecretString,
+} from '@lightdash-tools/client';
 import { z } from 'zod';
 
 import {
@@ -188,7 +192,7 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
     { name: ENV_MCP_ALLOWED_ORIGINS, newName: ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS },
   ]);
 
-  const proxyAuth = readEnv('LIGHTDASH_PROXY_AUTHORIZATION');
+  const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION);
 
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
@@ -229,8 +233,6 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
     ),
     requiredScopes: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, ['mcp:read']),
     scopesSupported: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
-      'read',
-      'write',
       'mcp:read',
       'mcp:write',
     ]),

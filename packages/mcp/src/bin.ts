@@ -6,6 +6,7 @@
 import { SafetyMode } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
+import { MCP_HTTP_AUTH_MODES } from './auth/auth-mode.js';
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from './config.js';
 
 const program = new Command();
@@ -43,6 +44,12 @@ function runStdio(): void {
 
 function runHttp(authMode?: string): void {
   if (authMode) {
+    if (!(MCP_HTTP_AUTH_MODES as readonly string[]).includes(authMode)) {
+      console.error(
+        `Invalid --auth-mode: ${authMode}. Expected ${MCP_HTTP_AUTH_MODES.join(', ')}.`,
+      );
+      process.exit(1);
+    }
     process.env.LIGHTDASH_TOOLS_MCP_AUTH_MODE = authMode;
   }
   void import('./http.js');

@@ -1,0 +1,30 @@
+import { timingSafeEqual } from 'node:crypto';
+
+import type { ServerResponse } from 'node:http';
+
+export function timingSafeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return timingSafeEqual(bufA, bufB);
+}
+
+export function checkOrigin(origin: string | undefined, allowedOrigins: string[]): boolean {
+  if (!origin || typeof origin !== 'string') return true;
+  if (allowedOrigins.length === 0) return true;
+  return allowedOrigins.includes(origin);
+}
+
+export function sendJson(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+  extraHeaders?: Record<string, string>,
+): void {
+  res
+    .writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders })
+    .end(JSON.stringify(body));
+}

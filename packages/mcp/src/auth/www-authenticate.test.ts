@@ -18,7 +18,7 @@ const baseConfig: McpHttpConfig = {
   maxSessions: 10,
   sessionCleanupMs: 1000,
   requiredScopes: ['mcp:read'],
-  scopesSupported: ['read', 'write', 'mcp:read', 'mcp:write'],
+  scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
 };
@@ -30,7 +30,7 @@ describe('buildOAuthProtectedResourceMetadata', () => {
       resource: 'https://mcp.example.com/mcp',
       authorization_servers: ['https://app.lightdash.cloud'],
       bearer_methods_supported: ['header'],
-      scopes_supported: ['read', 'write', 'mcp:read', 'mcp:write'],
+      scopes_supported: ['mcp:read', 'mcp:write'],
     });
   });
 });

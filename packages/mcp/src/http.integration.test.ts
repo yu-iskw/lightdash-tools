@@ -176,7 +176,9 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(response.status).toBe(401);
     const wwwAuthenticate = response.headers.get('www-authenticate');
     expect(wwwAuthenticate).toContain('resource_metadata=');
-    expect(wwwAuthenticate).toContain(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`);
+    expect(wwwAuthenticate).toContain(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/mcp`,
+    );
   });
 
   it('returns 401 without echoing invalid bearer token in response body', async () => {
@@ -209,7 +211,11 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     );
 
     expect(resumeResponse.status).toBe(401);
-    expect(await resumeResponse.json()).toEqual({ error: 'Session token mismatch' });
+    expect(await resumeResponse.json()).toEqual({
+      error: 'invalid_token',
+      error_description: 'Session token mismatch',
+    });
+    expect(resumeResponse.headers.get('www-authenticate')).toContain('invalid_token');
   });
 
   it('serves OAuth protected resource metadata at /.well-known/oauth-protected-resource', async () => {
@@ -223,6 +229,29 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
       bearer_methods_supported: ['header'],
       scopes_supported: ['mcp:read', 'mcp:write'],
     });
+  });
+
+  it('serves path-specific OAuth protected resource metadata', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource/mcp`);
+
+    expect(response.status).toBe(200);
+    const metadata = await response.json();
+    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/mcp`);
+  });
+
+  it('returns 400 for malformed JSON POST bodies', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${TOKEN_A}`,
+      },
+      body: '{not-json',
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Bad Request: invalid JSON body' });
   });
 
   it('maps token-a and token-b to distinct authenticated users upstream', async () => {
@@ -315,5 +344,20 @@ describe('MCP HTTP shared-key integration', () => {
     });
     expect(authorized.status).toBe(200);
     expect(authorized.headers.get('mcp-session-id')).toBeTruthy();
+  });
+
+  it('accepts shared key via X-API-Key header', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+        'X-API-Key': 'shared-secret',
+      },
+      body: JSON.stringify(INITIALIZE_BODY),
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('mcp-session-id')).toBeTruthy();
   });
 });

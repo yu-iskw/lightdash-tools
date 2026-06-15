@@ -1,6 +1,6 @@
 import { extractBearerToken } from './bearer.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
-import { getProtectedResourceMetadataUrl } from './oauth-protected-resource.js';
+import { getProtectedResourceMetadataPathUrl } from './oauth-protected-resource.js';
 import { sendJson } from './shared-key-middleware.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
@@ -27,7 +27,7 @@ export async function authenticateLightdashOAuth(
   req: IncomingMessage,
   config: McpHttpConfig,
 ): Promise<OAuthAuthResult> {
-  const resourceMetadataUrl = getProtectedResourceMetadataUrl(config);
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config);
   const scope = config.requiredScopes.join(' ');
   const token = extractBearerToken(req);
 
@@ -35,7 +35,10 @@ export async function authenticateLightdashOAuth(
     return {
       ok: false,
       status: 401,
-      body: { error: 'Unauthorized' },
+      body: {
+        error: 'invalid_request',
+        error_description: 'Bearer access token required',
+      },
       wwwAuthenticate: buildWwwAuthenticateHeader({ resourceMetadataUrl, scope }),
     };
   }
@@ -47,11 +50,15 @@ export async function authenticateLightdashOAuth(
     return {
       ok: false,
       status: 401,
-      body: { error: 'Invalid or expired Lightdash access token' },
+      body: {
+        error: 'invalid_token',
+        error_description: 'Invalid or expired Lightdash access token',
+      },
       wwwAuthenticate: buildWwwAuthenticateHeader({
         resourceMetadataUrl,
         scope,
         error: 'invalid_token',
+        errorDescription: 'Invalid or expired Lightdash access token',
       }),
     };
   }

@@ -9,7 +9,7 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
-import { BearerContextProvider } from '../auth/bearer-context-provider.js';
+import { createOAuthBearerProvider } from '../auth/bearer-context-provider.js';
 import { EnvContextProvider } from '../auth/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
@@ -20,7 +20,9 @@ import {
   getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
 } from '../auth/oauth-protected-resource.js';
-import { authenticateSharedKey, checkOrigin, sendJson } from '../auth/shared-key-middleware.js';
+import { authenticateSharedKey, checkOrigin } from '../auth/shared-key-middleware.js';
+import { hashToken } from '../auth/token-hash.js';
+import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
 import {
   loadMcpHttpConfig,
   requiresLightdashApiKey,
@@ -29,13 +31,14 @@ import {
 import { getAuditLogPath, getClient } from '../config.js';
 import { createLightdashMcpServer } from '../server.js';
 
+import { parseJsonBody, readBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
+import { sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-const ERROR_UNAUTHORIZED = 'Unauthorized';
 const ERROR_SESSION_NOT_FOUND = 'Session not found';
 
 type OAuthRequest = IncomingMessage & {
@@ -71,41 +74,6 @@ function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpCo
 function getSessionId(req: IncomingMessage): string | undefined {
   const sessionId = req.headers['mcp-session-id'];
   return typeof sessionId === 'string' ? sessionId : sessionId?.[0];
-}
-
-function readBody(
-  req: IncomingMessage,
-  res: ServerResponse,
-  maxBodyBytes: number,
-): Promise<Buffer | undefined> {
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = [];
-    let size = 0;
-    let rejected = false;
-
-    req.on('data', (chunk: Buffer) => {
-      if (rejected) return;
-      size += chunk.length;
-      if (size > maxBodyBytes) {
-        rejected = true;
-        req.destroy();
-        sendJson(res, 413, { error: 'Payload Too Large' });
-        resolve(undefined);
-        return;
-      }
-      chunks.push(chunk);
-    });
-    req.on('end', () => {
-      if (!rejected) resolve(Buffer.concat(chunks));
-    });
-    req.on('error', reject);
-  });
-}
-
-function parseJsonBody(buffer: Buffer): unknown {
-  const text = buffer.toString('utf-8');
-  if (!text.trim()) return undefined;
-  return JSON.parse(text) as unknown;
 }
 
 function createEnvContextProvider(config: McpHttpConfig): McpContextProvider {
@@ -185,8 +153,7 @@ function handleMetadata(path: string, res: ServerResponse, config: McpHttpConfig
     return false;
   }
 
-  const metadata = buildOAuthProtectedResourceMetadata(config);
-  res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(metadata));
+  sendJson(res, 200, buildOAuthProtectedResourceMetadata(config));
   return true;
 }
 
@@ -218,6 +185,23 @@ async function ensureEndpointAuth(
   return true;
 }
 
+function writeSessionTokenMismatch(res: ServerResponse, config: McpHttpConfig): void {
+  writeOAuthAuthFailure(res, {
+    ok: false,
+    status: 401,
+    body: {
+      error: 'invalid_token',
+      error_description: 'Session token mismatch',
+    },
+    wwwAuthenticate: buildWwwAuthenticateHeader({
+      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
+      scope: config.requiredScopes.join(' '),
+      error: 'invalid_token',
+      errorDescription: 'Session token mismatch',
+    }),
+  });
+}
+
 function verifySessionAuth(
   req: IncomingMessage,
   res: ServerResponse,
@@ -230,18 +214,23 @@ function verifySessionAuth(
 
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.accessToken) {
-    sendJson(res, 401, { error: ERROR_UNAUTHORIZED });
+    writeOAuthAuthFailure(res, {
+      ok: false,
+      status: 401,
+      body: {
+        error: 'invalid_request',
+        error_description: 'Bearer access token required',
+      },
+      wwwAuthenticate: buildWwwAuthenticateHeader({
+        resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
+        scope: config.requiredScopes.join(' '),
+      }),
+    });
     return false;
   }
 
-  const provider = new BearerContextProvider({
-    baseUrl: config.lightdashUrl,
-    accessToken: oauth.accessToken,
-    proxyAuthorization: config.proxyAuthorization,
-  });
-
-  if (entry.auth.tokenHash && entry.auth.tokenHash !== provider.getTokenHash()) {
-    sendJson(res, 401, { error: 'Session token mismatch' });
+  if (entry.auth.tokenHash && entry.auth.tokenHash !== hashToken(oauth.accessToken)) {
+    writeSessionTokenMismatch(res, config);
     return false;
   }
 
@@ -289,14 +278,23 @@ async function handleInitializePost(
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
     const oauth = (req as OAuthRequest).lightdashOAuth;
     if (!oauth?.ok) {
-      sendJson(res, 401, { error: ERROR_UNAUTHORIZED });
+      writeOAuthAuthFailure(res, {
+        ok: false,
+        status: 401,
+        body: {
+          error: 'invalid_request',
+          error_description: 'Bearer access token required',
+        },
+        wwwAuthenticate: buildWwwAuthenticateHeader({
+          resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
+          scope: config.requiredScopes.join(' '),
+        }),
+      });
       return;
     }
 
-    const contextProvider = new BearerContextProvider({
-      baseUrl: config.lightdashUrl,
+    const contextProvider = createOAuthBearerProvider(config, {
       accessToken: oauth.accessToken,
-      proxyAuthorization: config.proxyAuthorization,
       subject: oauth.user.userUuid,
     });
 
@@ -325,7 +323,15 @@ async function handleMcpPost(
   const raw = await readBody(req, res, config.maxBodyBytes);
   if (raw === undefined) return;
 
-  const body = raw.length > 0 ? parseJsonBody(raw) : undefined;
+  let body: unknown;
+  if (raw.length > 0) {
+    try {
+      body = parseJsonBody(raw);
+    } catch {
+      sendJson(res, 400, { error: 'Bad Request: invalid JSON body' });
+      return;
+    }
+  }
 
   if (sid) {
     await handleExistingSessionPost({ req, res, config, sessionStore }, sid, body);
@@ -418,6 +424,9 @@ export async function createStreamableHttpServer(
     close: () =>
       new Promise<void>((resolve, reject) => {
         clearInterval(cleanupTimer);
+        sessionStore.drainAll((entry, sessionId) => {
+          closeSessionEntry(entry, sessionId, 'shutdown');
+        });
         server.close((err) => {
           if (err) reject(err);
           else resolve();

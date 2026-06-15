@@ -27,4 +27,8 @@ export class TokenValidationCache<T> {
       value,
     });
   }
+
+  delete(tokenHash: string): void {
+    this.entries.delete(tokenHash);
+  }
 }

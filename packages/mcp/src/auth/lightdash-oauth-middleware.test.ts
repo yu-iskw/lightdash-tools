@@ -42,8 +42,14 @@ describe('authenticateLightdashOAuth', () => {
     if (result.ok) return;
 
     expect(result.status).toBe(401);
-    expect(result.body).toEqual({ error: 'Unauthorized' });
+    expect(result.body).toEqual({
+      error: 'invalid_request',
+      error_description: 'Bearer access token required',
+    });
     expect(result.wwwAuthenticate).toContain('resource_metadata=');
+    expect(result.wwwAuthenticate).toContain(
+      'https://mcp.example.com/.well-known/oauth-protected-resource/mcp',
+    );
     expect(result.wwwAuthenticate).toContain('scope="mcp:read"');
   });
 
@@ -57,7 +63,8 @@ describe('authenticateLightdashOAuth', () => {
     if (result.ok) return;
 
     expect(result.status).toBe(401);
-    expect(result.body.error).toBe('Invalid or expired Lightdash access token');
+    expect(result.body.error).toBe('invalid_token');
+    expect(result.body.error_description).toBe('Invalid or expired Lightdash access token');
     expect(JSON.stringify(result.body)).not.toContain(token);
     expect(result.wwwAuthenticate).toContain('error="invalid_token"');
   });
@@ -96,7 +103,10 @@ describe('writeOAuthAuthFailure', () => {
     writeOAuthAuthFailure(res, {
       ok: false,
       status: 401,
-      body: { error: 'Unauthorized' },
+      body: {
+        error: 'invalid_request',
+        error_description: 'Bearer access token required',
+      },
       wwwAuthenticate:
         'Bearer resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource"',
     });
@@ -106,6 +116,9 @@ describe('writeOAuthAuthFailure', () => {
       'WWW-Authenticate':
         'Bearer resource_metadata="https://mcp.example.com/.well-known/oauth-protected-resource"',
     });
-    expect(JSON.parse(chunks[0] ?? '{}')).toEqual({ error: 'Unauthorized' });
+    expect(JSON.parse(chunks[0] ?? '{}')).toEqual({
+      error: 'invalid_request',
+      error_description: 'Bearer access token required',
+    });
   });
 });

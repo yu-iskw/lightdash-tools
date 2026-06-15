@@ -60,4 +60,11 @@ export class SessionStore {
     this.cleanupExpired(() => undefined);
     return this.sessions.size < this.maxSessions;
   }
+
+  drainAll(onClose: (entry: SessionEntry, sessionId: string) => void): void {
+    for (const [sessionId, entry] of this.sessions) {
+      onClose(entry, sessionId);
+    }
+    this.sessions.clear();
+  }
 }
