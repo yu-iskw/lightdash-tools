@@ -86,4 +86,11 @@ describe('loadMcpHttpConfig', () => {
 
     expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY);
   });
+
+  it('throws on invalid auth mode with descriptive message', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'not-a-mode';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_AUTH_MODE/);
+  });
 });
