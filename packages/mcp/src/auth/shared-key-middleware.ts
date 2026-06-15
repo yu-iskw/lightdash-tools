@@ -1,23 +1,11 @@
-import { timingSafeEqual } from 'node:crypto';
+import { timingSafeEqualString } from '../transports/http-response.js';
+
+import { extractBearerToken } from './bearer.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage } from 'node:http';
 
-export function timingSafeEqualString(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    timingSafeEqual(bufA, bufA);
-    return false;
-  }
-  return timingSafeEqual(bufA, bufB);
-}
-
-export function checkOrigin(origin: string | undefined, allowedOrigins: string[]): boolean {
-  if (!origin || typeof origin !== 'string') return true;
-  if (allowedOrigins.length === 0) return true;
-  return allowedOrigins.includes(origin);
-}
+export { checkOrigin, sendJson, timingSafeEqualString } from '../transports/http-response.js';
 
 export interface SharedKeyAuthSuccess {
   ok: true;
@@ -45,29 +33,13 @@ export function authenticateSharedKey(
     };
   }
 
-  const bearer = req.headers.authorization;
   const apiKey = req.headers['x-api-key'];
-  const token =
-    typeof bearer === 'string' && bearer.startsWith('Bearer ')
-      ? bearer.slice('Bearer '.length).trim()
-      : undefined;
   const key = typeof apiKey === 'string' ? apiKey.trim() : undefined;
-  const provided = token ?? key;
+  const provided = extractBearerToken(req) ?? key;
 
   if (!provided || !timingSafeEqualString(provided, expected)) {
     return { ok: false, status: 401, body: { error: 'Unauthorized' } };
   }
 
   return { ok: true };
-}
-
-export function sendJson(
-  res: ServerResponse,
-  status: number,
-  body: Record<string, string>,
-  extraHeaders?: Record<string, string>,
-): void {
-  res
-    .writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders })
-    .end(JSON.stringify(body));
 }

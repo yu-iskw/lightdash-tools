@@ -7,15 +7,20 @@ export interface OAuthProtectedResourceMetadata {
   scopes_supported: string[];
 }
 
+function requirePublicUrl(config: McpHttpConfig): string {
+  if (!config.publicUrl) {
+    throw new Error('publicUrl is required for OAuth protected resource metadata');
+  }
+  return config.publicUrl;
+}
+
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
 ): OAuthProtectedResourceMetadata {
-  if (!config.publicUrl) {
-    throw new Error('publicUrl is required to build OAuth protected resource metadata');
-  }
+  const publicUrl = requirePublicUrl(config);
 
   return {
-    resource: `${config.publicUrl}${config.mcpPath}`,
+    resource: `${publicUrl}${config.mcpPath}`,
     authorization_servers: [config.lightdashUrl],
     bearer_methods_supported: ['header'],
     scopes_supported: config.scopesSupported,
@@ -23,16 +28,11 @@ export function buildOAuthProtectedResourceMetadata(
 }
 
 export function getProtectedResourceMetadataUrl(config: McpHttpConfig): string {
-  if (!config.publicUrl) {
-    throw new Error('publicUrl is required for OAuth protected resource metadata URL');
-  }
-  return `${config.publicUrl}/.well-known/oauth-protected-resource`;
+  return `${requirePublicUrl(config)}/.well-known/oauth-protected-resource`;
 }
 
 export function getProtectedResourceMetadataPathUrl(config: McpHttpConfig): string {
-  if (!config.publicUrl) {
-    throw new Error('publicUrl is required for OAuth protected resource metadata URL');
-  }
+  const publicUrl = requirePublicUrl(config);
   const resourcePath = config.mcpPath.replace(/^\//, '');
-  return `${config.publicUrl}/.well-known/oauth-protected-resource/${resourcePath}`;
+  return `${publicUrl}/.well-known/oauth-protected-resource/${resourcePath}`;
 }

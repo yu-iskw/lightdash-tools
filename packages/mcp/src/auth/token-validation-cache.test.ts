@@ -29,4 +29,11 @@ describe('TokenValidationCache', () => {
     vi.advanceTimersByTime(2);
     expect(cache.get('hash-a')).toBeUndefined();
   });
+
+  it('delete removes cached entries immediately', () => {
+    const cache = new TokenValidationCache<{ userUuid: string }>(30_000);
+    cache.set('hash-a', { userUuid: 'user-a' });
+    cache.delete('hash-a');
+    expect(cache.get('hash-a')).toBeUndefined();
+  });
 });

@@ -1,17 +1,10 @@
 import { type LightdashClient } from '@lightdash-tools/client';
 
-import { getAllowedProjectUuids, getClient, getSafetyMode, isDryRunMode } from '../config.js';
+import { getClient } from '../config.js';
+import { buildMcpGovernance } from '../governance.js';
 
 import type { McpAuthMode } from './auth-mode.js';
 import type { LightdashMcpRequestContext, McpContextProvider } from '../request-context.js';
-
-function buildGovernance(): LightdashMcpRequestContext['governance'] {
-  return {
-    safetyMode: getSafetyMode(),
-    dryRun: isDryRunMode(),
-    allowedProjectUuids: getAllowedProjectUuids(),
-  };
-}
 
 /** Process-scoped context using LIGHTDASH_URL + LIGHTDASH_API_KEY (STDIO, none, shared-key upstream). */
 export class EnvContextProvider implements McpContextProvider {
@@ -27,7 +20,7 @@ export class EnvContextProvider implements McpContextProvider {
     return {
       lightdashClient: this.client,
       auth: { mode: this.mode },
-      governance: buildGovernance(),
+      governance: buildMcpGovernance(),
     };
   }
 }

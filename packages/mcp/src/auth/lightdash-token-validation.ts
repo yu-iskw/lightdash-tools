@@ -1,6 +1,6 @@
-import { LightdashClient } from '@lightdash-tools/client';
+import { createBearerConfig, LightdashClient } from '@lightdash-tools/client';
 
-import { hashToken } from './bearer-context-provider.js';
+import { hashToken } from './token-hash.js';
 import { TokenValidationCache } from './token-validation-cache.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
@@ -33,21 +33,28 @@ export async function validateLightdashAccessToken(
     if (cached) return cached;
   }
 
-  const client = new LightdashClient({
-    baseUrl: config.lightdashUrl,
-    auth: { type: 'bearer', token: accessToken },
-    proxyAuthorization: config.proxyAuthorization,
-  });
+  const client = new LightdashClient(
+    createBearerConfig({
+      baseUrl: config.lightdashUrl,
+      accessToken,
+      proxyAuthorization: config.proxyAuthorization,
+    }),
+  );
 
-  const user = await client.v1.users.getAuthenticatedUser();
-  const validated: ValidatedLightdashUser = {
-    userUuid: user.userUuid,
-    email: user.email ?? '',
-  };
+  try {
+    const user = await client.v1.users.getAuthenticatedUser();
+    const validated: ValidatedLightdashUser = {
+      userUuid: user.userUuid,
+      email: user.email ?? '',
+    };
 
-  if (config.validateToken) {
-    cache.set(tokenHash, validated);
+    if (config.validateToken) {
+      cache.set(tokenHash, validated);
+    }
+
+    return validated;
+  } catch {
+    cache.delete(tokenHash);
+    throw new Error('Invalid or expired Lightdash access token');
   }
-
-  return validated;
 }
