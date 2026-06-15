@@ -2,6 +2,7 @@ import { extractBearerToken } from './bearer.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 import { getProtectedResourceMetadataPathUrl } from './oauth-protected-resource.js';
 import { sendJson } from './shared-key-middleware.js';
+import { TokenValidationError } from './token-validation-error.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
 import type { ValidatedLightdashUser } from './lightdash-token-validation.js';
@@ -46,7 +47,18 @@ export async function authenticateLightdashOAuth(
   try {
     const user = await validateLightdashAccessToken(config, token);
     return { ok: true, accessToken: token, user };
-  } catch {
+  } catch (error) {
+    if (error instanceof TokenValidationError && error.reason === 'upstream_unavailable') {
+      return {
+        ok: false,
+        status: 503,
+        body: {
+          error: 'temporarily_unavailable',
+          error_description: error.message,
+        },
+      };
+    }
+
     return {
       ok: false,
       status: 401,

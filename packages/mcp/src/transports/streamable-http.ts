@@ -33,7 +33,7 @@ import { createLightdashMcpServer } from '../server.js';
 
 import { parseJsonBody, readBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
-import { sendJson } from './http-response.js';
+import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -455,6 +455,28 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     });
 }
 
+function handleCorsPreflight(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+): boolean {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+  if (!checkOrigin(origin, config.allowedOrigins)) {
+    sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
+    return true;
+  }
+
+  const corsHeaders = buildCorsHeaders(origin, config.allowedOrigins);
+  applyResponseHeaders(res, corsHeaders);
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, corsHeaders).end();
+    return true;
+  }
+
+  return false;
+}
+
 async function handleHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
@@ -463,18 +485,16 @@ async function handleHttpRequest(
 ): Promise<void> {
   const path = (req.url ?? '').split('?')[0];
 
+  if (handleCorsPreflight(req, res, config)) {
+    return;
+  }
+
   if (path === '/health/live' || path === '/health/ready') {
     handleHealth(path, res, config);
     return;
   }
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {
-    return;
-  }
-
-  const origin = req.headers.origin;
-  if (!checkOrigin(typeof origin === 'string' ? origin : undefined, config.allowedOrigins)) {
-    sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
     return;
   }
 

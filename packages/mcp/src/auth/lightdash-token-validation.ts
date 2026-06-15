@@ -1,7 +1,13 @@
-import { createBearerConfig, LightdashClient } from '@lightdash-tools/client';
+import {
+  createBearerConfig,
+  LightdashApiError,
+  LightdashClient,
+  NetworkError,
+} from '@lightdash-tools/client';
 
 import { hashToken } from './token-hash.js';
 import { TokenValidationCache } from './token-validation-cache.js';
+import { TokenValidationError } from './token-validation-error.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
 
@@ -21,25 +27,56 @@ function getValidationCache(config: McpHttpConfig): TokenValidationCache<Validat
   return cache;
 }
 
+function unvalidatedDevUser(tokenHash: string): ValidatedLightdashUser {
+  return {
+    userUuid: `unvalidated:${tokenHash.slice(0, 16)}`,
+    email: 'unvalidated@localhost',
+  };
+}
+
+function classifyValidationError(error: unknown): TokenValidationError {
+  if (error instanceof LightdashApiError) {
+    if (error.statusCode === 401 || error.statusCode === 403) {
+      return new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token');
+    }
+    if (error.statusCode >= 500) {
+      return new TokenValidationError(
+        'upstream_unavailable',
+        'Lightdash is temporarily unavailable',
+      );
+    }
+  }
+
+  if (error instanceof NetworkError) {
+    return new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable');
+  }
+
+  return new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token');
+}
+
 export async function validateLightdashAccessToken(
   config: McpHttpConfig,
   accessToken: string,
 ): Promise<ValidatedLightdashUser> {
   const tokenHash = hashToken(accessToken);
-  const cache = getValidationCache(config);
 
-  if (config.validateToken) {
-    const cached = cache.get(tokenHash);
-    if (cached) return cached;
+  if (!config.validateToken) {
+    return unvalidatedDevUser(tokenHash);
   }
 
-  const client = new LightdashClient(
-    createBearerConfig({
+  const cache = getValidationCache(config);
+  const cached = cache.get(tokenHash);
+  if (cached) return cached;
+
+  const client = new LightdashClient({
+    ...createBearerConfig({
       baseUrl: config.lightdashUrl,
       accessToken,
       proxyAuthorization: config.proxyAuthorization,
     }),
-  );
+    retry: { maxRetries: 0 },
+    timeout: 5_000,
+  });
 
   try {
     const user = await client.v1.users.getAuthenticatedUser();
@@ -48,13 +85,10 @@ export async function validateLightdashAccessToken(
       email: user.email ?? '',
     };
 
-    if (config.validateToken) {
-      cache.set(tokenHash, validated);
-    }
-
+    cache.set(tokenHash, validated);
     return validated;
-  } catch {
+  } catch (error) {
     cache.delete(tokenHash);
-    throw new Error('Invalid or expired Lightdash access token');
+    throw classifyValidationError(error);
   }
 }

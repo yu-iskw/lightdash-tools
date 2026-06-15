@@ -18,6 +18,28 @@ export function checkOrigin(origin: string | undefined, allowedOrigins: string[]
   return allowedOrigins.includes(origin);
 }
 
+export function buildCorsHeaders(
+  origin: string | undefined,
+  allowedOrigins: string[],
+): Record<string, string> {
+  if (!origin || allowedOrigins.length === 0) return {};
+  if (!allowedOrigins.includes(origin)) return {};
+
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers':
+      'Content-Type, Accept, Authorization, Mcp-Session-Id, X-API-Key',
+    Vary: 'Origin',
+  };
+}
+
+export function applyResponseHeaders(res: ServerResponse, headers: Record<string, string>): void {
+  for (const [key, value] of Object.entries(headers)) {
+    res.setHeader(key, value);
+  }
+}
+
 export function sendJson(
   res: ServerResponse,
   status: number,

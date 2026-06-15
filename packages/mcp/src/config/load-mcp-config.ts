@@ -58,6 +58,14 @@ function readEnv(name: string): string | undefined {
   return value;
 }
 
+function parsePositiveIntegerEnv(name: string, value: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`Invalid ${name}: ${value}. Expected a non-negative integer.`);
+  }
+  return parsed;
+}
+
 function readNumberEnv(
   primary: string,
   aliases: Array<{ name: string; newName: string }>,
@@ -65,13 +73,13 @@ function readNumberEnv(
 ): number {
   const primaryValue = readEnv(primary);
   if (primaryValue !== undefined) {
-    return Number(primaryValue);
+    return parsePositiveIntegerEnv(primary, primaryValue);
   }
   for (const alias of aliases) {
     const aliasValue = readEnv(alias.name);
     if (aliasValue !== undefined) {
       warnDeprecatedAlias(alias.name, alias.newName);
-      return Number(aliasValue);
+      return parsePositiveIntegerEnv(alias.name, aliasValue);
     }
   }
   return defaultValue;
