@@ -111,3 +111,10 @@ export function getClient(config?: PartialLightdashClientConfig): LightdashClien
   const merged = mergeConfig(config);
   return new LightdashClient(merged);
 }
+
+export {
+  loadMcpHttpConfig,
+  requiresLightdashApiKey,
+  type McpHttpConfig,
+} from './config/load-mcp-config.js';
+export * from './config/env.js';

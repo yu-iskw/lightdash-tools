@@ -138,6 +138,19 @@ async function postMcp(
   });
 }
 
+async function parseMcpResponse(response: Response): Promise<unknown> {
+  const contentType = response.headers.get('content-type') ?? '';
+  const text = await response.text();
+  if (contentType.includes('application/json')) {
+    return JSON.parse(text) as unknown;
+  }
+
+  const dataLines = text.split('\n').filter((line) => line.startsWith('data: '));
+  const last = dataLines.length > 0 ? dataLines[dataLines.length - 1] : undefined;
+  if (!last) return text;
+  return JSON.parse(last.slice('data: '.length)) as unknown;
+}
+
 describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   let mockLightdash: MockLightdashServer;
   let mcpServer: McpHttpServer;
@@ -220,6 +233,41 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(responseB.status).toBe(200);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_B}`);
+  });
+
+  it('calls ldt__get_authenticated_user over an OAuth HTTP session', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const userCallsBefore = mockLightdash.authorizationHeaders.length;
+
+    await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+
+    const callResponse = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        id: 2,
+      },
+      { token: TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+
+    expect(callResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(callResponse)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    const text = payload.result?.content?.[0]?.text ?? '';
+    expect(text).toContain(USER_A.userUuid);
+    expect(text).not.toContain(TOKEN_A);
+    expect(mockLightdash.authorizationHeaders.length).toBeGreaterThan(userCallsBefore);
+    expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
   });
 });
 

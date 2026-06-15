@@ -47,6 +47,7 @@ describe('registerTools', () => {
 
     const names = registeredTools.map((t) => t.name);
     expect(names).toContain(`${TOOL_PREFIX}list_projects`);
+    expect(names).toContain(`${TOOL_PREFIX}get_authenticated_user`);
     expect(names).toContain(`${TOOL_PREFIX}list_charts`);
     expect(names).toContain(`${TOOL_PREFIX}compile_query`);
     expect(names).toContain(`${TOOL_PREFIX}list_admin_agents`);
