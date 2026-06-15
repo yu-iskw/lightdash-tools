@@ -55,6 +55,17 @@ export interface ObservabilityHooks {
   }): void;
 }
 
+/** Upstream Lightdash authentication scheme. */
+export type LightdashAuthConfig =
+  | {
+      type: 'api-key';
+      token: SecretString;
+    }
+  | {
+      type: 'bearer';
+      token: SecretString;
+    };
+
 /**
  * Full configuration for the Lightdash HTTP client.
  * All fields except rateLimit, timeout, retry, and logger can be provided via environment variables.
@@ -62,8 +73,12 @@ export interface ObservabilityHooks {
 export interface LightdashClientConfig {
   /** Lightdash server base URL (e.g. https://app.lightdash.cloud). */
   baseUrl: string;
-  /** Personal access token for API authentication (without ldpat_ prefix). */
-  personalAccessToken: SecretString;
+  /** Upstream authentication credentials. */
+  auth: LightdashAuthConfig;
+  /**
+   * @deprecated Use `auth: { type: 'api-key', token }`. Normalized into `auth` at merge time.
+   */
+  personalAccessToken?: SecretString;
   /** Optional proxy authorization header value for proxied access. */
   proxyAuthorization?: SecretString;
   /** Override default rate limits. */
@@ -83,8 +98,9 @@ export interface LightdashClientConfig {
  * Used when constructing the client with optional explicit overrides.
  */
 export type PartialLightdashClientConfig = Partial<
-  Omit<LightdashClientConfig, 'personalAccessToken' | 'proxyAuthorization'>
+  Omit<LightdashClientConfig, 'auth' | 'personalAccessToken' | 'proxyAuthorization'>
 > & {
+  auth?: LightdashAuthConfig | { type: 'api-key' | 'bearer'; token: SecretString | string };
   personalAccessToken?: SecretString | string;
   proxyAuthorization?: SecretString | string;
 };

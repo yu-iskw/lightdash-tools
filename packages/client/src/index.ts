@@ -40,6 +40,7 @@ export type {
 export type { PartialLightdashClientConfig } from './config';
 export type {
   LightdashClientConfig,
+  LightdashAuthConfig,
   RateLimitConfig,
   RetryConfig,
   Logger,
@@ -49,7 +50,7 @@ export { noopLogger, consoleLogger } from './utils/logger';
 export { DEFAULT_RATE_LIMIT, DEFAULT_TIMEOUT, DEFAULT_RETRY } from './config';
 export { LightdashApiError, RateLimitError, NetworkError } from './errors';
 export type { ApiErrorPayload } from './errors';
-export { loadConfigFromEnv, mergeConfig } from './utils/env';
+export { loadConfigFromEnv, mergeConfig, createBearerConfig } from './utils/env';
 export {
   ENV_LIGHTDASH_API_KEY,
   ENV_LIGHTDASH_URL,

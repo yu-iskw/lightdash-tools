@@ -61,7 +61,8 @@ describe('mergeConfig', () => {
       personalAccessToken: 'explicit-token',
     });
     expect(merged.baseUrl).toBe('https://explicit.example.com');
-    expect(merged.personalAccessToken.expose()).toBe('explicit-token');
+    expect(merged.auth.type).toBe('api-key');
+    expect(merged.auth.token.expose()).toBe('explicit-token');
   });
 
   it('should use env when explicit config omits a field', () => {
@@ -69,11 +70,11 @@ describe('mergeConfig', () => {
     process.env[ENV_LIGHTDASH_API_KEY] = 'env-token';
     const merged = mergeConfig({ baseUrl: 'https://explicit.example.com' });
     expect(merged.baseUrl).toBe('https://explicit.example.com');
-    expect(merged.personalAccessToken.expose()).toBe('env-token');
+    expect(merged.auth.token.expose()).toBe('env-token');
   });
 
-  it('should throw when baseUrl and personalAccessToken cannot be resolved', () => {
-    expect(() => mergeConfig(undefined)).toThrow(/baseUrl and personalAccessToken/);
+  it('should throw when baseUrl and auth credentials cannot be resolved', () => {
+    expect(() => mergeConfig(undefined)).toThrow(/baseUrl|auth credentials/);
     expect(() => mergeConfig({})).toThrow();
   });
 
@@ -85,5 +86,15 @@ describe('mergeConfig', () => {
       observability: { onRequestComplete },
     });
     expect(merged.observability?.onRequestComplete).toBe(onRequestComplete);
+    expect(merged.auth).toEqual({ type: 'api-key', token: expect.objectContaining({}) });
+  });
+
+  it('should normalize bearer auth config', () => {
+    const merged = mergeConfig({
+      baseUrl: 'https://app.lightdash.cloud',
+      auth: { type: 'bearer', token: 'oauth-token' },
+    });
+    expect(merged.auth.type).toBe('bearer');
+    expect(merged.auth.token.expose()).toBe('oauth-token');
   });
 });

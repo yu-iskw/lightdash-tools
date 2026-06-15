@@ -13,7 +13,7 @@ import { registerResources } from './resources/index.js';
 import { registerTools } from './tools/index.js';
 
 import type { McpProfile } from './config.js';
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from './request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export type RegisterCapabilitiesOptions = {
@@ -27,21 +27,21 @@ export type RegisterCapabilitiesOptions = {
  */
 export function registerCapabilities(
   server: McpServer,
-  client: LightdashClient,
+  contextProvider: McpContextProvider,
   options?: RegisterCapabilitiesOptions,
 ): void {
   const profiles = options?.profiles ?? getMcpProfiles();
 
-  registerTools(server, client);
+  registerTools(server, contextProvider);
 
   if (hasMcpProfile(MCP_PROFILE_EVALUATIONS, profiles)) {
-    registerResources(server, client);
+    registerResources(server, contextProvider);
   }
 
   if (
     hasMcpProfile(MCP_PROFILE_CORE_LIFECYCLE, profiles) ||
     hasMcpProfile(MCP_PROFILE_EVALUATIONS, profiles)
   ) {
-    registerPrompts(server, client, profiles);
+    registerPrompts(server, contextProvider, profiles);
   }
 }

@@ -14,10 +14,13 @@ import {
   WRITE_DESTRUCTIVE,
 } from '../shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectAgentCrudTools(server: McpServer, client: LightdashClient): void {
+export function registerProjectAgentCrudTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   // ─── Project-scoped: agent CRUD ──────────────────────────────────────────────
 
   registerToolSafe(
@@ -31,7 +34,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const result = await c.v1.aiAgents.listAgents(projectUuid);
       return jsonToolResult(result);
     }),
@@ -50,7 +53,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.getAgent(projectUuid, agentUuid);
@@ -74,7 +77,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -115,7 +118,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -151,7 +154,7 @@ export function registerProjectAgentCrudTools(server: McpServer, client: Lightda
       annotations: WRITE_DESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           await c.v1.aiAgents.deleteAgent(projectUuid, agentUuid);

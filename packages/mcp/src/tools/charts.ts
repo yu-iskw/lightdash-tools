@@ -7,10 +7,11 @@ import { z } from 'zod';
 import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
 
+import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerChartTools(server: McpServer, client: LightdashClient): void {
+export function registerChartTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_charts',
@@ -20,7 +21,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const charts = await c.v1.charts.getChartsAsCode(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(charts, null, 2) }] };
     }),
@@ -38,7 +39,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, ids }: { projectUuid: string; ids?: string[] }) => {
           const result = await c.v1.charts.getChartsAsCode(projectUuid, { ids });
@@ -62,7 +63,7 @@ export function registerChartTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,

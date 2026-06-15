@@ -7,10 +7,10 @@ import { z } from 'zod';
 import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerMetricsTools(server: McpServer, client: LightdashClient): void {
+export function registerMetricsTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_metrics',
@@ -26,7 +26,7 @@ export function registerMetricsTools(server: McpServer, client: LightdashClient)
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,

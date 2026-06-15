@@ -30,20 +30,20 @@ This architecture cannot support **per-user Lightdash identity** in hosted deplo
 
 ## Requirements
 
-| ID | Requirement |
-|----|-------------|
-| R1 | STDIO mode continues to work with `LIGHTDASH_URL` + `LIGHTDASH_API_KEY` unchanged. |
-| R2 | `--http` and existing `MCP_*` env vars continue to work with deprecation warnings. |
-| R3 | New `lightdash-oauth` HTTP auth mode works **without** `LIGHTDASH_API_KEY`. |
-| R4 | `GET /.well-known/oauth-protected-resource` returns metadata with `authorization_servers: [LIGHTDASH_URL]`. |
-| R5 | Missing bearer token returns `401` with `WWW-Authenticate` including `resource_metadata`. |
-| R6 | Valid OAuth bearer token is forwarded to Lightdash as `Authorization: Bearer …`. |
-| R7 | PAT mode continues to emit `Authorization: ApiKey ldpat_…`. |
-| R8 | All existing guardrails (safety mode, dry-run, allowlist, validation, audit) remain applied. |
-| R9 | Session token hash binding prevents token switching within a stateful MCP session. |
-| R10 | No raw tokens in logs or audit entries. |
-| R11 | New MCP HTTP env vars use `LIGHTDASH_TOOLS_MCP_*` prefix per ADR-0035. |
-| R12 | Tests cover STDIO, shared-key HTTP, and OAuth HTTP modes. |
+| ID  | Requirement                                                                                                 |
+| --- | ----------------------------------------------------------------------------------------------------------- |
+| R1  | STDIO mode continues to work with `LIGHTDASH_URL` + `LIGHTDASH_API_KEY` unchanged.                          |
+| R2  | `--http` and existing `MCP_*` env vars continue to work with deprecation warnings.                          |
+| R3  | New `lightdash-oauth` HTTP auth mode works **without** `LIGHTDASH_API_KEY`.                                 |
+| R4  | `GET /.well-known/oauth-protected-resource` returns metadata with `authorization_servers: [LIGHTDASH_URL]`. |
+| R5  | Missing bearer token returns `401` with `WWW-Authenticate` including `resource_metadata`.                   |
+| R6  | Valid OAuth bearer token is forwarded to Lightdash as `Authorization: Bearer …`.                            |
+| R7  | PAT mode continues to emit `Authorization: ApiKey ldpat_…`.                                                 |
+| R8  | All existing guardrails (safety mode, dry-run, allowlist, validation, audit) remain applied.                |
+| R9  | Session token hash binding prevents token switching within a stateful MCP session.                          |
+| R10 | No raw tokens in logs or audit entries.                                                                     |
+| R11 | New MCP HTTP env vars use `LIGHTDASH_TOOLS_MCP_*` prefix per ADR-0035.                                      |
+| R12 | Tests cover STDIO, shared-key HTTP, and OAuth HTTP modes.                                                   |
 
 ---
 
@@ -103,12 +103,12 @@ This architecture cannot support **per-user Lightdash identity** in hosted deplo
 
 ### Auth mode matrix
 
-| Mode | Transport | MCP endpoint auth | Lightdash upstream auth | `LIGHTDASH_API_KEY` required |
-|------|-----------|-------------------|-------------------------|------------------------------|
-| `env` | STDIO | N/A (host owns process) | `ApiKey ldpat_…` | Yes |
-| `none` | HTTP | None (warn loudly) | `ApiKey ldpat_…` | Yes |
-| `shared-key` | HTTP | Shared `LIGHTDASH_TOOLS_MCP_SHARED_KEY` | `ApiKey ldpat_…` | Yes |
-| `lightdash-oauth` | HTTP | User's Lightdash OAuth bearer | `Bearer …` (same token) | No |
+| Mode              | Transport | MCP endpoint auth                       | Lightdash upstream auth | `LIGHTDASH_API_KEY` required |
+| ----------------- | --------- | --------------------------------------- | ----------------------- | ---------------------------- |
+| `env`             | STDIO     | N/A (host owns process)                 | `ApiKey ldpat_…`        | Yes                          |
+| `none`            | HTTP      | None (warn loudly)                      | `ApiKey ldpat_…`        | Yes                          |
+| `shared-key`      | HTTP      | Shared `LIGHTDASH_TOOLS_MCP_SHARED_KEY` | `ApiKey ldpat_…`        | Yes                          |
+| `lightdash-oauth` | HTTP      | User's Lightdash OAuth bearer           | `Bearer …` (same token) | No                           |
 
 ### Request flow (OAuth HTTP)
 
@@ -235,12 +235,14 @@ docs/
 **Dependencies:** None.
 
 **Files:**
+
 - `docs/rfc/0040-oauth-backed-streamable-http-mcp.md` (from uploaded RFC)
 - `docs/adr/0040-oauth-backed-streamable-http-mcp.md`
 
 **Approach:** ADR covers: chosen auth modes, Lightdash-as-AS model, env-var naming (`LIGHTDASH_TOOLS_MCP_*`), session token binding threat model, backward-compat migration, explicit non-goals (no MCP-side OAuth server, no refresh token storage).
 
 **Test scenarios:**
+
 - Test expectation: none — documentation only.
 
 **Verification:** ADR passes `adr-tools` validation if available; RFC and ADR cross-reference each other.
@@ -256,6 +258,7 @@ docs/
 **Dependencies:** U0.
 
 **Files:**
+
 - `packages/mcp/src/config/env.ts` (create)
 - `packages/mcp/src/config/load-mcp-config.ts` (create)
 - `packages/mcp/src/config/normalize-url.ts` (create)
@@ -264,6 +267,7 @@ docs/
 - `packages/mcp/src/config/load-mcp-config.test.ts` (create)
 
 **Approach:**
+
 - Define `McpHttpConfig` per RFC §6.4 with Zod schema.
 - Alias resolution: new name wins when both set; emit one-time `console.warn` for deprecated names.
 - `lightdash-oauth` mode: `LIGHTDASH_API_KEY` not required; `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` required in production.
@@ -273,6 +277,7 @@ docs/
 **Patterns to follow:** `packages/common/src/env.ts` constant style; ADR-0035 prefix rules.
 
 **Test scenarios:**
+
 - New `LIGHTDASH_TOOLS_MCP_HTTP_PORT` wins over `MCP_HTTP_PORT` and `MCP_SERVER_PORT`.
 - `MCP_AUTH_ENABLED=1` without explicit auth mode → `shared-key` with warning.
 - Invalid auth mode → startup error with descriptive message.
@@ -292,6 +297,7 @@ docs/
 **Dependencies:** None (can parallelize with U1).
 
 **Files:**
+
 - `packages/client/src/config.ts`
 - `packages/client/src/http/interceptors.ts`
 - `packages/client/src/utils/env.ts`
@@ -299,6 +305,7 @@ docs/
 - `packages/client/src/config.test.ts` or `packages/client/tests/auth.test.ts` (create/extend)
 
 **Approach:**
+
 - Add `LightdashAuthConfig` union (`api-key` | `bearer`).
 - Normalize legacy `personalAccessToken` → `auth: { type: 'api-key', token }`.
 - Interceptor switch: `ApiKey ldpat_…` vs `Bearer …` (no `ldpat_` prefix for bearer).
@@ -308,6 +315,7 @@ docs/
 **Patterns to follow:** `packages/client/src/http/interceptors.ts` existing PAT prefix logic; `SecretString` usage.
 
 **Test scenarios:**
+
 - API key without `ldpat_` prefix → `Authorization: ApiKey ldpat_…`.
 - API key with `ldpat_` prefix → no double prefix.
 - Bearer config → `Authorization: Bearer <token>`.
@@ -327,6 +335,7 @@ docs/
 **Dependencies:** U2.
 
 **Files:**
+
 - `packages/mcp/src/request-context.ts` (create)
 - `packages/mcp/src/auth/env-context-provider.ts` (create)
 - `packages/mcp/src/server.ts`
@@ -335,6 +344,7 @@ docs/
 - `packages/mcp/src/index.ts` (wire `EnvContextProvider`)
 
 **Approach:**
+
 - Define `LightdashMcpRequestContext` with `lightdashClient`, `auth` metadata, `governance` snapshot.
 - `EnvContextProvider`: wraps existing `getClient()` for STDIO/shared-key/none modes.
 - Change signatures:
@@ -346,6 +356,7 @@ docs/
 **Patterns to follow:** RFC §8.2–8.3; keep governance from existing `config.ts` helpers.
 
 **Test scenarios:**
+
 - `EnvContextProvider.getContext()` returns stable client across calls.
 - `createLightdashMcpServer` with provider registers tools (smoke via existing `server.test.ts`).
 - STDIO integration test still passes with provider wired.
@@ -363,6 +374,7 @@ docs/
 **Dependencies:** U3.
 
 **Files (modify):**
+
 - `packages/mcp/src/tools/index.ts`
 - `packages/mcp/src/tools/*.ts` (17 domain modules)
 - `packages/mcp/src/tools/ai-agents/*.ts` (4 modules)
@@ -372,6 +384,7 @@ docs/
 - `packages/mcp/src/tools/index.test.ts`, `packages/mcp/src/index.integration.test.ts`
 
 **Approach:**
+
 - Mechanical migration pattern in each handler:
 
 ```ts
@@ -393,6 +406,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Execution note:** Migrate one domain module first (`projects.ts`) as MVP slice; run tests; then batch the rest.
 
 **Test scenarios:**
+
 - All existing tool unit/integration tests pass without behavior change.
 - No handler closes over a module-level `LightdashClient`.
 - `registerToolSafe` guardrails still block write tools in `read-only` mode.
@@ -410,6 +424,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Dependencies:** U1, U2.
 
 **Files:**
+
 - `packages/mcp/src/auth/oauth-protected-resource.ts` (create)
 - `packages/mcp/src/auth/www-authenticate.ts` (create)
 - `packages/mcp/src/auth/bearer.ts` (create)
@@ -419,6 +434,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - `packages/mcp/src/auth/www-authenticate.test.ts` (create)
 
 **Approach:**
+
 - `GET /.well-known/oauth-protected-resource` (+ optional `/mcp` path-specific variant).
 - `buildOAuthProtectedResourceMetadata(config)` per RFC §9.2.
 - `WWW-Authenticate` builders for: missing token (401), invalid token (401), insufficient scope (403).
@@ -429,6 +445,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Patterns to follow:** MCP SDK `server/auth` response shapes; existing `timingSafeEqualString` from `http.ts`.
 
 **Test scenarios:**
+
 - Metadata JSON includes `resource`, `authorization_servers`, `bearer_methods_supported`, `scopes_supported`.
 - Missing token → 401 with `resource_metadata` and `scope` params.
 - Invalid token (mock 401 from Lightdash) → 401 with `error=invalid_token`.
@@ -449,6 +466,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Dependencies:** U1, U3, U4, U5.
 
 **Files:**
+
 - `packages/mcp/src/transports/session-store.ts` (create)
 - `packages/mcp/src/transports/streamable-http-handler.ts` (create)
 - `packages/mcp/src/auth/bearer-context-provider.ts` (create)
@@ -459,6 +477,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - `packages/mcp/src/http.integration.test.ts` (create)
 
 **Approach:**
+
 - Extract session map + cleanup from `http.ts` into `session-store.ts`; add `auth` field to `SessionEntry`.
 - Auth mode routing:
   - `none`: warn on startup; existing behavior.
@@ -472,6 +491,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Patterns to follow:** `packages/mcp/src/http.ts` existing origin middleware, body size limits, session TTL.
 
 **Test scenarios:**
+
 - `--http` with `MCP_AUTH_ENABLED=1` + `MCP_API_KEY` still works (shared-key compat).
 - `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`: POST /mcp without token → 401 + WWW-Authenticate.
 - Valid bearer → MCP initialize succeeds; upstream mock receives `Bearer`.
@@ -492,17 +512,20 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Dependencies:** U4, U6.
 
 **Files:**
+
 - `packages/mcp/src/tools/users.ts` (or new `packages/mcp/src/tools/auth-diagnostics.ts`)
 - `packages/mcp/src/tools/index.ts`
 - `packages/mcp/src/tools/users.test.ts` (extend or create)
 
 **Approach:**
+
 - Register `get_authenticated_user` with `READ_ONLY_DEFAULT` annotation.
 - Calls `lightdashClient.v1.users.getAuthenticatedUser()` (or equivalent existing client method).
 - Response excludes tokens and sensitive headers.
 - Works in all auth modes (PAT and OAuth).
 
 **Test scenarios:**
+
 - OAuth mode with mock user → returns user UUID/email fields.
 - PAT mode → returns PAT owner user.
 - Response JSON does not contain `token`, `Authorization`, or `apiKey` fields.
@@ -520,6 +543,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Dependencies:** U6.
 
 **Files:**
+
 - `packages/mcp/README.md`
 - `docs/secrets-and-credentials.md`
 - `docs/mcp-oauth-http.md` (create)
@@ -528,6 +552,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - `docs/security/mcp-oauth-threat-model.md` (create)
 
 **Approach:**
+
 - Env-var tables with old → new alias mapping.
 - Cursor remote MCP config example.
 - Cloud Run Dockerfile + env example (from RFC §14).
@@ -535,6 +560,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - Troubleshooting: 401 loops, metadata URL mismatches, session token mismatch.
 
 **Test scenarios:**
+
 - Test expectation: none — docs only.
 
 **Verification:** `pnpm lint` passes on touched markdown/YAML.
@@ -550,11 +576,13 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 **Dependencies:** U1–U8.
 
 **Files:**
+
 - `packages/mcp/src/http.integration.test.ts`
 - `packages/mcp/src/index.integration.test.ts` (extend)
 - `.changes/unreleased/` fragment (if changie available)
 
 **Approach:**
+
 - Mock Lightdash HTTP server for OAuth validation + tool calls.
 - Matrix per RFC §16.3:
   - OAuth: missing/invalid/valid bearer; two users → distinct `get_authenticated_user`.
@@ -564,6 +592,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - Run `pnpm verify:pr` before merge.
 
 **Test scenarios:**
+
 - Full matrix from RFC §16.2–16.3 (config, auth headers, metadata, session binding, guardrails).
 - Coverage thresholds in `coverage-thresholds.mjs` still met.
 
@@ -574,6 +603,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 ## Scope Boundaries
 
 ### In scope
+
 - Dual auth scheme in client (`ApiKey` | `Bearer`)
 - Four MCP auth modes (`env`, `none`, `shared-key`, `lightdash-oauth`)
 - Protected-resource metadata + `WWW-Authenticate`
@@ -583,6 +613,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - Docs, ADR, tests
 
 ### Non-goals (from RFC §4.2)
+
 - MCP server as OAuth authorization server
 - Refresh token storage
 - Custom RBAC replacing Lightdash permissions
@@ -591,6 +622,7 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 - `LIGHTDASH_OAUTH_CLIENT_SECRET` on MCP server
 
 ### Deferred to Follow-Up Work
+
 - **RFC 8707 audience binding** — needs Lightdash token claim documentation
 - **Stateless session mode** (`LIGHTDASH_TOOLS_MCP_SESSION_MODE=stateless`) — evaluate after client compatibility testing
 - **External session store** (Redis) for horizontal scale — in-memory map remains for v1
@@ -603,26 +635,26 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 
 ## Open Questions
 
-| # | Question | Plan assumption | Resolve during |
-|---|----------|-----------------|----------------|
-| Q1 | What scopes does Lightdash OAuth issue? Can they include `mcp:read` / `mcp:write`? | Advertise `scopes_supported` from config; enforce coarse scope check only if Lightdash provides scopes in token | U5 — validate with live Lightdash OAuth app |
-| Q2 | Exact Lightdash issuer URL for `authorization_servers` — base URL or specific path? | Use normalized `LIGHTDASH_URL` | U5 — E2E with Cursor |
-| Q3 | Stateful vs stateless Streamable HTTP default for OAuth? | Keep stateful (current behavior) | U6 — test with target MCP clients |
-| Q4 | Should `get_authenticated_user` be always on or profile-gated? | Always registered (diagnostic default) | U7 |
-| Q5 | Should `LIGHTDASH_PROJECT` affect MCP tool defaults? | No — remain CLI-only; use `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` | U8 docs |
+| #   | Question                                                                            | Plan assumption                                                                                                 | Resolve during                              |
+| --- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Q1  | What scopes does Lightdash OAuth issue? Can they include `mcp:read` / `mcp:write`?  | Advertise `scopes_supported` from config; enforce coarse scope check only if Lightdash provides scopes in token | U5 — validate with live Lightdash OAuth app |
+| Q2  | Exact Lightdash issuer URL for `authorization_servers` — base URL or specific path? | Use normalized `LIGHTDASH_URL`                                                                                  | U5 — E2E with Cursor                        |
+| Q3  | Stateful vs stateless Streamable HTTP default for OAuth?                            | Keep stateful (current behavior)                                                                                | U6 — test with target MCP clients           |
+| Q4  | Should `get_authenticated_user` be always on or profile-gated?                      | Always registered (diagnostic default)                                                                          | U7                                          |
+| Q5  | Should `LIGHTDASH_PROJECT` affect MCP tool defaults?                                | No — remain CLI-only; use `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`                                                    | U8 docs                                     |
 
 ---
 
 ## Risks and Dependencies
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| U4 touches ~25 files — high merge conflict surface | Schedule | MVP slice on `projects.ts` first; batch by domain |
-| MCP SDK `authInfo` shape may differ from assumed `extra` | OAuth context broken | Spike in U3: log/extract `extra` in HTTP handler before full migration |
-| `http.test.ts` mirrors `http.ts` | Drift | U6: extract testable pure functions; delete mirrors |
-| Lightdash OAuth scope semantics unknown | Scope checks too strict/loose | Default: delegate to Lightdash API; optional coarse MCP scope check |
-| In-memory sessions + multi-instance deploy | Session loss / stickiness | Document single-instance requirement; defer Redis |
-| Breaking env var renames | Operator confusion | Aliases + one-time warnings through 1.0 |
+| Risk                                                     | Impact                        | Mitigation                                                             |
+| -------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
+| U4 touches ~25 files — high merge conflict surface       | Schedule                      | MVP slice on `projects.ts` first; batch by domain                      |
+| MCP SDK `authInfo` shape may differ from assumed `extra` | OAuth context broken          | Spike in U3: log/extract `extra` in HTTP handler before full migration |
+| `http.test.ts` mirrors `http.ts`                         | Drift                         | U6: extract testable pure functions; delete mirrors                    |
+| Lightdash OAuth scope semantics unknown                  | Scope checks too strict/loose | Default: delegate to Lightdash API; optional coarse MCP scope check    |
+| In-memory sessions + multi-instance deploy               | Session loss / stickiness     | Document single-instance requirement; defer Redis                      |
+| Breaking env var renames                                 | Operator confusion            | Aliases + one-time warnings through 1.0                                |
 
 **Prerequisites:** Node >=24.13, pnpm >=11.5.3, `@modelcontextprotocol/sdk` ^1.29.0 (already dep).
 
@@ -630,12 +662,12 @@ registerToolSafe(server, 'list_projects', opts, async (_args, extra) => {
 
 ## Suggested Delivery Phases
 
-| Phase | Units | MVP slice |
-|-------|-------|-----------|
-| **A — Foundation** | U0, U1, U2 | Config loads; client emits Bearer header |
-| **B — Context refactor** | U3, U4 | STDIO works with provider; one tool module migrated |
-| **C — OAuth protocol** | U5, U6, U7 | POST /mcp OAuth 401/200 loop works |
-| **D — Ship** | U8, U9 | Docs + full verify |
+| Phase                    | Units      | MVP slice                                           |
+| ------------------------ | ---------- | --------------------------------------------------- |
+| **A — Foundation**       | U0, U1, U2 | Config loads; client emits Bearer header            |
+| **B — Context refactor** | U3, U4     | STDIO works with provider; one tool module migrated |
+| **C — OAuth protocol**   | U5, U6, U7 | POST /mcp OAuth 401/200 loop works                  |
+| **D — Ship**             | U8, U9     | Docs + full verify                                  |
 
 Each phase should leave `main` in a working state (STDIO always green).
 

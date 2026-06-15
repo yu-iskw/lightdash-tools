@@ -32,10 +32,8 @@ describe('LightdashClient', () => {
     expect(client.getHttpClientV1()).toBeDefined();
   });
 
-  it('should throw when baseUrl and personalAccessToken are missing and not in env', () => {
-    expect(() => new LightdashClient({})).toThrow(
-      /baseUrl and personalAccessToken|LIGHTDASH_URL and LIGHTDASH_API_KEY/,
-    );
+  it('should throw when baseUrl and auth credentials are missing and not in env', () => {
+    expect(() => new LightdashClient({})).toThrow(/baseUrl|auth credentials|LIGHTDASH_URL/);
   });
 
   it('should merge explicit config with env (explicit wins)', () => {
@@ -48,8 +46,8 @@ describe('LightdashClient', () => {
     };
     const merged = mergeConfig(explicit);
     expect(merged.baseUrl).toBe('https://custom.example.com');
-    expect(merged.personalAccessToken).toBeInstanceOf(SecretString);
-    expect(merged.personalAccessToken.expose()).toBe('explicit-token');
+    expect(merged.auth.token).toBeInstanceOf(SecretString);
+    expect(merged.auth.token.expose()).toBe('explicit-token');
   });
 });
 
@@ -60,7 +58,7 @@ describe('mergeConfig', () => {
     vi.stubEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, '');
   });
 
-  it('should require baseUrl and personalAccessToken', () => {
+  it('should require baseUrl and auth credentials', () => {
     expect(() => mergeConfig({})).toThrow();
     expect(() => mergeConfig({ baseUrl: 'https://x.com' })).toThrow();
     expect(() => mergeConfig({ personalAccessToken: 't' })).toThrow();

@@ -5,10 +5,10 @@
 import { projectUuidField } from './schema-fields.js';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerTagsTools(server: McpServer, client: LightdashClient): void {
+export function registerTagsTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_tags',
@@ -18,7 +18,7 @@ export function registerTagsTools(server: McpServer, client: LightdashClient): v
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const result = await c.v1.tags.listTags(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
     }),

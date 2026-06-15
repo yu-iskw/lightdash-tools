@@ -19,10 +19,10 @@ import {
   WRITE_DESTRUCTIVE,
 } from './shared.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerSpaceTools(server: McpServer, client: LightdashClient): void {
+export function registerSpaceTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_spaces',
@@ -32,7 +32,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(client, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const spaces = await c.v1.spaces.listSpacesInProject(projectUuid);
       return { content: [{ type: 'text', text: JSON.stringify(spaces, null, 2) }] };
     }),
@@ -50,7 +50,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({ projectUuid, spaceUuid }: { projectUuid: string; spaceUuid: string }) => {
           const space = await c.v1.spaces.getSpace(projectUuid, spaceUuid);
@@ -74,7 +74,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -117,7 +117,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_DESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -156,7 +156,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_IDEMPOTENT,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,
@@ -199,7 +199,7 @@ export function registerSpaceTools(server: McpServer, client: LightdashClient): 
       annotations: WRITE_DESTRUCTIVE,
     },
     wrapTool(
-      client,
+      contextProvider,
       (c) =>
         async ({
           projectUuid,

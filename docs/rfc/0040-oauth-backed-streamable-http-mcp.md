@@ -16,6 +16,7 @@
 2. **Hosted Streamable HTTP OAuth mode** where each MCP user authenticates with Lightdash through a Lightdash OAuth application, and each MCP tool call uses that user's Lightdash OAuth access token.
 
 The current `@lightdash-tools/mcp` package already has:
+
 - STDIO entrypoint using `LIGHTDASH_URL` and `LIGHTDASH_API_KEY`.
 - Streamable HTTP endpoint at `/mcp`.
 - Shared `@lightdash-tools/client`.
@@ -24,6 +25,7 @@ The current `@lightdash-tools/mcp` package already has:
 - Existing HTTP shared-key auth using `MCP_AUTH_ENABLED` and `MCP_API_KEY`.
 
 The experimental `lightdash-mcp-demo` proves the missing OAuth-specific part:
+
 - It exposes `/.well-known/oauth-protected-resource`.
 - It returns `WWW-Authenticate: Bearer resource_metadata="..."` when no bearer token is supplied.
 - It uses `LIGHTDASH_URL` and `MCP_PUBLIC_URL`.
@@ -138,6 +140,7 @@ Current package definition:
 `packages/mcp/src/http.ts` already implements a Streamable HTTP server using Node's `http` module and `StreamableHTTPServerTransport`.
 
 Current behavior:
+
 - MCP endpoint path: `/mcp`.
 - Default port: `MCP_HTTP_PORT ?? 3100`.
 - Session map with TTL and max sessions.
@@ -236,15 +239,15 @@ This is exactly the concept to productionize.
 
 Lightdash's official CLI documentation defines core environment variables:
 
-| Variable | Official meaning |
-|---|---|
-| `LIGHTDASH_API_KEY` | API access token for authentication. Overrides the API key stored in the config file. Useful for CI/CD. |
-| `LIGHTDASH_URL` | Lightdash server URL, e.g. `https://app.lightdash.cloud`. |
-| `LIGHTDASH_PROJECT` | Project UUID to use for CLI commands. |
-| `LIGHTDASH_PROXY_AUTHORIZATION` | Proxy authorization header for proxied access. |
-| `CI` | Non-interactive CI mode. |
-| `DBT_PROJECT_DIR` | Directory of dbt project. |
-| `DBT_PROFILES_DIR` | Directory of dbt profiles. |
+| Variable                        | Official meaning                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_API_KEY`             | API access token for authentication. Overrides the API key stored in the config file. Useful for CI/CD. |
+| `LIGHTDASH_URL`                 | Lightdash server URL, e.g. `https://app.lightdash.cloud`.                                               |
+| `LIGHTDASH_PROJECT`             | Project UUID to use for CLI commands.                                                                   |
+| `LIGHTDASH_PROXY_AUTHORIZATION` | Proxy authorization header for proxied access.                                                          |
+| `CI`                            | Non-interactive CI mode.                                                                                |
+| `DBT_PROJECT_DIR`               | Directory of dbt project.                                                                               |
+| `DBT_PROFILES_DIR`              | Directory of dbt profiles.                                                                              |
 
 `@lightdash-tools/mcp` should continue to use official variables for Lightdash core configuration, especially `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`, and `LIGHTDASH_PROXY_AUTHORIZATION`.
 
@@ -347,12 +350,12 @@ flowchart TD
 
 Define these auth modes:
 
-| Mode | Transport | Credential source | Lightdash upstream auth | Intended use |
-|---|---|---|---|---|
-| `env` | STDIO | `LIGHTDASH_API_KEY` | `Authorization: ApiKey ldpat_...` | Local IDE, local agents, CI |
-| `shared-key` | HTTP | `LIGHTDASH_API_KEY` plus MCP endpoint key | `Authorization: ApiKey ldpat_...` | Backward-compatible private HTTP |
-| `lightdash-oauth` | HTTP | Request `Authorization: Bearer ...` | `Authorization: Bearer ...` | Hosted user-scoped remote MCP |
-| `none` | HTTP | `LIGHTDASH_API_KEY` only, no MCP endpoint auth | `Authorization: ApiKey ldpat_...` | Local development only; should warn loudly |
+| Mode              | Transport | Credential source                              | Lightdash upstream auth           | Intended use                               |
+| ----------------- | --------- | ---------------------------------------------- | --------------------------------- | ------------------------------------------ |
+| `env`             | STDIO     | `LIGHTDASH_API_KEY`                            | `Authorization: ApiKey ldpat_...` | Local IDE, local agents, CI                |
+| `shared-key`      | HTTP      | `LIGHTDASH_API_KEY` plus MCP endpoint key      | `Authorization: ApiKey ldpat_...` | Backward-compatible private HTTP           |
+| `lightdash-oauth` | HTTP      | Request `Authorization: Bearer ...`            | `Authorization: Bearer ...`       | Hosted user-scoped remote MCP              |
+| `none`            | HTTP      | `LIGHTDASH_API_KEY` only, no MCP endpoint auth | `Authorization: ApiKey ldpat_...` | Local development only; should warn loudly |
 
 ### 5.3 Recommended CLI Surface
 
@@ -456,57 +459,57 @@ This keeps compatibility while making responsibilities explicit.
 
 ### 6.2 Core Lightdash Variables
 
-| Variable | Mode | Required | Description |
-|---|---|---:|---|
-| `LIGHTDASH_URL` | All modes | Yes | Lightdash instance base URL. Normalize by removing trailing slash. |
-| `LIGHTDASH_API_KEY` | STDIO, shared-key, none | Yes | PAT/API key for service-style access. Not required in `lightdash-oauth` mode. |
-| `LIGHTDASH_PROJECT` | Optional | No | Default project UUID where relevant. Should not replace `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`. |
-| `LIGHTDASH_PROXY_AUTHORIZATION` | Optional | No | Forwarded to Lightdash as `Proxy-Authorization` when calling Lightdash. |
+| Variable                        | Mode                    | Required | Description                                                                                 |
+| ------------------------------- | ----------------------- | -------: | ------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`                 | All modes               |      Yes | Lightdash instance base URL. Normalize by removing trailing slash.                          |
+| `LIGHTDASH_API_KEY`             | STDIO, shared-key, none |      Yes | PAT/API key for service-style access. Not required in `lightdash-oauth` mode.               |
+| `LIGHTDASH_PROJECT`             | Optional                |       No | Default project UUID where relevant. Should not replace `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`. |
+| `LIGHTDASH_PROXY_AUTHORIZATION` | Optional                |       No | Forwarded to Lightdash as `Proxy-Authorization` when calling Lightdash.                     |
 
 ### 6.3 Existing `LIGHTDASH_TOOLS_` Variables
 
-| Variable | Current / proposed | Description |
-|---|---|---|
-| `LIGHTDASH_TOOLS_SAFETY_MODE` | Keep | `read-only`, `write-nondestructive`, `write-idempotent` alias, `write-destructive`. Default `read-only`. |
-| `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` | Keep | Comma-separated project UUID allowlist. Empty means all projects. |
-| `LIGHTDASH_TOOLS_DRY_RUN` | Keep | `1`, `true`, or `yes` simulates mutating operations. |
-| `LIGHTDASH_TOOLS_AUDIT_LOG` | Keep | Audit log path; stderr when unset. |
-| `LIGHTDASH_TOOLS_MCP_PROFILES` | Keep | Comma-separated capability profiles. |
+| Variable                           | Current / proposed | Description                                                                                              |
+| ---------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_SAFETY_MODE`      | Keep               | `read-only`, `write-nondestructive`, `write-idempotent` alias, `write-destructive`. Default `read-only`. |
+| `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` | Keep               | Comma-separated project UUID allowlist. Empty means all projects.                                        |
+| `LIGHTDASH_TOOLS_DRY_RUN`          | Keep               | `1`, `true`, or `yes` simulates mutating operations.                                                     |
+| `LIGHTDASH_TOOLS_AUDIT_LOG`        | Keep               | Audit log path; stderr when unset.                                                                       |
+| `LIGHTDASH_TOOLS_MCP_PROFILES`     | Keep               | Comma-separated capability profiles.                                                                     |
 
 ### 6.4 New MCP HTTP Variables
 
-| New variable | Old alias | Default | Description |
-|---|---|---:|---|
-| `LIGHTDASH_TOOLS_MCP_HTTP_HOST` | none | `0.0.0.0` | HTTP bind host. |
-| `LIGHTDASH_TOOLS_MCP_HTTP_PORT` | `MCP_HTTP_PORT`, `MCP_SERVER_PORT` | `3100` | HTTP port. |
-| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` | `MCP_PUBLIC_URL` | none | Public HTTPS base URL for OAuth metadata. Required in production OAuth mode. |
-| `LIGHTDASH_TOOLS_MCP_PATH` | none | `/mcp` | MCP endpoint path. |
-| `LIGHTDASH_TOOLS_MCP_AUTH_MODE` | derived from `MCP_AUTH_ENABLED` | `lightdash-oauth` for HTTP in a future major; `none` temporarily for compatibility | `none`, `shared-key`, `lightdash-oauth`. |
-| `LIGHTDASH_TOOLS_MCP_SHARED_KEY` | `MCP_API_KEY` | none | Shared endpoint key for `shared-key` auth mode. |
-| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` | `MCP_ALLOWED_ORIGINS` | empty | Comma-separated CORS/origin allowlist. Empty means no origin restriction. |
-| `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES` | `MCP_MAX_BODY_BYTES` | `1048576` | Maximum JSON body size. |
-| `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS` | `MCP_SESSION_TTL_MS` | `1800000` | Session TTL for stateful Streamable HTTP. |
-| `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS` | `MCP_MAX_SESSIONS` | `100` | Maximum active sessions. |
-| `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS` | `MCP_SESSION_CLEANUP_MS` | `60000` | Cleanup interval. |
-| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` | none | `mcp:read` | Scopes advertised in `WWW-Authenticate`. |
-| `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED` | none | `read,write,mcp:read,mcp:write` | Scopes in protected-resource metadata. |
-| `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN` | none | `1` in OAuth mode | Validate bearer token against `GET /api/v1/user` before tool use. |
-| `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS` | none | `30000` | Optional cache TTL for token validation by token hash. |
+| New variable                                        | Old alias                          |                                                                            Default | Description                                                                  |
+| --------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------: | ---------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_HTTP_HOST`                     | none                               |                                                                          `0.0.0.0` | HTTP bind host.                                                              |
+| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`                     | `MCP_HTTP_PORT`, `MCP_SERVER_PORT` |                                                                             `3100` | HTTP port.                                                                   |
+| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`                    | `MCP_PUBLIC_URL`                   |                                                                               none | Public HTTPS base URL for OAuth metadata. Required in production OAuth mode. |
+| `LIGHTDASH_TOOLS_MCP_PATH`                          | none                               |                                                                             `/mcp` | MCP endpoint path.                                                           |
+| `LIGHTDASH_TOOLS_MCP_AUTH_MODE`                     | derived from `MCP_AUTH_ENABLED`    | `lightdash-oauth` for HTTP in a future major; `none` temporarily for compatibility | `none`, `shared-key`, `lightdash-oauth`.                                     |
+| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`                    | `MCP_API_KEY`                      |                                                                               none | Shared endpoint key for `shared-key` auth mode.                              |
+| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`               | `MCP_ALLOWED_ORIGINS`              |                                                                              empty | Comma-separated CORS/origin allowlist. Empty means no origin restriction.    |
+| `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES`                | `MCP_MAX_BODY_BYTES`               |                                                                          `1048576` | Maximum JSON body size.                                                      |
+| `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`                | `MCP_SESSION_TTL_MS`               |                                                                          `1800000` | Session TTL for stateful Streamable HTTP.                                    |
+| `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`                  | `MCP_MAX_SESSIONS`                 |                                                                              `100` | Maximum active sessions.                                                     |
+| `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`            | `MCP_SESSION_CLEANUP_MS`           |                                                                            `60000` | Cleanup interval.                                                            |
+| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`               | none                               |                                                                         `mcp:read` | Scopes advertised in `WWW-Authenticate`.                                     |
+| `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`              | none                               |                                                    `read,write,mcp:read,mcp:write` | Scopes in protected-resource metadata.                                       |
+| `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                | none                               |                                                                  `1` in OAuth mode | Validate bearer token against `GET /api/v1/user` before tool use.            |
+| `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS` | none                               |                                                                            `30000` | Optional cache TTL for token validation by token hash.                       |
 
 ### 6.5 Compatibility Matrix
 
-| Current variable | New variable | Migration behavior |
-|---|---|---|
-| `MCP_HTTP_PORT` | `LIGHTDASH_TOOLS_MCP_HTTP_PORT` | Keep alias. New name wins if both set. Warn on old name. |
-| `MCP_SERVER_PORT` | `LIGHTDASH_TOOLS_MCP_HTTP_PORT` | Keep alias for demo migration. New name wins. Warn on old name. |
-| `MCP_PUBLIC_URL` | `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` | Keep alias for demo migration. New name wins. Warn on old name. |
-| `MCP_AUTH_ENABLED` | `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key` | If true and new auth mode unset, use `shared-key`. Warn. |
-| `MCP_API_KEY` | `LIGHTDASH_TOOLS_MCP_SHARED_KEY` | Keep alias. New name wins. Warn. |
-| `MCP_ALLOWED_ORIGINS` | `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` | Keep alias. New name wins. Warn. |
-| `MCP_MAX_BODY_BYTES` | `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES` | Keep alias. New name wins. Warn. |
-| `MCP_SESSION_TTL_MS` | `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS` | Keep alias. New name wins. Warn. |
-| `MCP_MAX_SESSIONS` | `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS` | Keep alias. New name wins. Warn. |
-| `MCP_SESSION_CLEANUP_MS` | `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS` | Keep alias. New name wins. Warn. |
+| Current variable         | New variable                               | Migration behavior                                              |
+| ------------------------ | ------------------------------------------ | --------------------------------------------------------------- |
+| `MCP_HTTP_PORT`          | `LIGHTDASH_TOOLS_MCP_HTTP_PORT`            | Keep alias. New name wins if both set. Warn on old name.        |
+| `MCP_SERVER_PORT`        | `LIGHTDASH_TOOLS_MCP_HTTP_PORT`            | Keep alias for demo migration. New name wins. Warn on old name. |
+| `MCP_PUBLIC_URL`         | `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`           | Keep alias for demo migration. New name wins. Warn on old name. |
+| `MCP_AUTH_ENABLED`       | `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key` | If true and new auth mode unset, use `shared-key`. Warn.        |
+| `MCP_API_KEY`            | `LIGHTDASH_TOOLS_MCP_SHARED_KEY`           | Keep alias. New name wins. Warn.                                |
+| `MCP_ALLOWED_ORIGINS`    | `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`      | Keep alias. New name wins. Warn.                                |
+| `MCP_MAX_BODY_BYTES`     | `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES`       | Keep alias. New name wins. Warn.                                |
+| `MCP_SESSION_TTL_MS`     | `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`       | Keep alias. New name wins. Warn.                                |
+| `MCP_MAX_SESSIONS`       | `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`         | Keep alias. New name wins. Warn.                                |
+| `MCP_SESSION_CLEANUP_MS` | `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`   | Keep alias. New name wins. Warn.                                |
 
 ---
 
@@ -554,7 +557,7 @@ For backward compatibility:
 ```ts
 new LightdashClient({
   baseUrl,
-  personalAccessToken: '...'
+  personalAccessToken: '...',
 });
 ```
 
@@ -754,15 +757,15 @@ Recommendation: do the full request-context migration once and enforce it throug
 
 ### 9.1 Endpoints
 
-| Endpoint | Method | Auth | Behavior |
-|---|---|---|---|
-| `/health/live` | `GET` | No | Process liveness. |
-| `/health/ready` | `GET` | No | Validates configuration. In OAuth mode, should not require `LIGHTDASH_API_KEY`. |
-| `/.well-known/oauth-protected-resource` | `GET` | No | Protected-resource metadata. |
-| `/.well-known/oauth-protected-resource/mcp` | `GET` | No | Optional path-specific metadata. |
-| `/mcp` | `POST` | Depends on mode | Streamable HTTP request. |
-| `/mcp` | `GET` | Depends on mode/session | Streamable HTTP GET for session transport if supported. |
-| `/mcp` | `DELETE` | Depends on mode/session | Streamable HTTP session deletion if supported. |
+| Endpoint                                    | Method   | Auth                    | Behavior                                                                        |
+| ------------------------------------------- | -------- | ----------------------- | ------------------------------------------------------------------------------- |
+| `/health/live`                              | `GET`    | No                      | Process liveness.                                                               |
+| `/health/ready`                             | `GET`    | No                      | Validates configuration. In OAuth mode, should not require `LIGHTDASH_API_KEY`. |
+| `/.well-known/oauth-protected-resource`     | `GET`    | No                      | Protected-resource metadata.                                                    |
+| `/.well-known/oauth-protected-resource/mcp` | `GET`    | No                      | Optional path-specific metadata.                                                |
+| `/mcp`                                      | `POST`   | Depends on mode         | Streamable HTTP request.                                                        |
+| `/mcp`                                      | `GET`    | Depends on mode/session | Streamable HTTP GET for session transport if supported.                         |
+| `/mcp`                                      | `DELETE` | Depends on mode/session | Streamable HTTP session deletion if supported.                                  |
 
 ### 9.2 Protected Resource Metadata
 
@@ -895,6 +898,7 @@ interface SessionEntry {
 The demo uses `sessionIdGenerator: undefined` and creates a server per request. This is simpler and safer for OAuth but may not support all Streamable HTTP session behavior.
 
 Recommendation:
+
 - Keep current stateful mode for compatibility.
 - Add config option:
 
@@ -903,6 +907,7 @@ LIGHTDASH_TOOLS_MCP_SESSION_MODE=stateful|stateless
 ```
 
 Default:
+
 - `stateful` for compatibility.
 - Consider `stateless` for OAuth mode only after testing with target MCP clients.
 
@@ -954,11 +959,11 @@ LIGHTDASH_TOOLS_SAFETY_MODE=write-destructive
 
 Map MCP tool annotations to coarse OAuth scopes:
 
-| Tool annotation | Required MCP scope |
-|---|---|
-| `readOnlyHint: true` | `mcp:read` |
-| non-destructive write | `mcp:write` |
-| destructive write | `mcp:write` plus safety mode `write-destructive` |
+| Tool annotation       | Required MCP scope                               |
+| --------------------- | ------------------------------------------------ |
+| `readOnlyHint: true`  | `mcp:read`                                       |
+| non-destructive write | `mcp:write`                                      |
+| destructive write     | `mcp:write` plus safety mode `write-destructive` |
 
 This scope check should be additional to Lightdash authorization, not a replacement.
 
@@ -977,6 +982,7 @@ The MCP server must not attempt to recreate Lightdash object-level permissions. 
 ### Phase 0: Add RFC and ADR
 
 Deliverables:
+
 - Add this RFC under `docs/rfc/`.
 - Add an ADR under `docs/adr/` summarizing:
   - chosen architecture,
@@ -1002,6 +1008,7 @@ packages/mcp/src/config/normalize-url.ts
 ```
 
 Implement:
+
 - New `LIGHTDASH_TOOLS_MCP_*` variables.
 - Old `MCP_*` aliases.
 - One-time deprecation warnings.
@@ -1033,6 +1040,7 @@ export interface McpHttpConfig {
 ```
 
 Acceptance criteria:
+
 - Existing `MCP_HTTP_PORT` still works.
 - New `LIGHTDASH_TOOLS_MCP_HTTP_PORT` wins over old alias.
 - `LIGHTDASH_URL` is required for all modes.
@@ -1042,17 +1050,20 @@ Acceptance criteria:
 ### Phase 2: Extend `@lightdash-tools/client` Auth
 
 Modify:
+
 - `packages/client/src/config.ts`
 - `packages/client/src/utils/env.ts`
 - `packages/client/src/http/interceptors.ts`
 - tests.
 
 Add:
+
 - `auth` union.
 - `bearer` auth mode.
 - Backward-compatible `personalAccessToken`.
 
 Acceptance criteria:
+
 - Existing tests pass unchanged.
 - New tests prove:
   - API-key config emits `Authorization: ApiKey ldpat_...`.
@@ -1076,6 +1087,7 @@ createLightdashMcpServer(contextProvider: McpContextProvider, options?)
 ```
 
 Update:
+
 - `registerCapabilities`
 - `registerTools`
 - every tool module
@@ -1087,6 +1099,7 @@ const { lightdashClient } = await contextProvider.getContext(extra);
 ```
 
 Acceptance criteria:
+
 - No tool module stores a process-global user credential.
 - Existing STDIO mode still works.
 - Tool names remain unchanged.
@@ -1096,12 +1109,14 @@ Acceptance criteria:
 ### Phase 4: Implement OAuth Middleware and Metadata
 
 Create:
+
 - `auth/bearer.ts`
 - `auth/lightdash-oauth-middleware.ts`
 - `auth/oauth-protected-resource.ts`
 - `auth/www-authenticate.ts`
 
 Implement:
+
 - Bearer token extraction.
 - Missing-token challenge.
 - Invalid-token challenge.
@@ -1109,6 +1124,7 @@ Implement:
 - Optional path-specific metadata endpoint.
 
 Acceptance criteria:
+
 - `GET /.well-known/oauth-protected-resource` returns valid metadata.
 - `POST /mcp` without bearer token returns `401` with `WWW-Authenticate`.
 - `WWW-Authenticate` includes `resource_metadata`.
@@ -1118,11 +1134,13 @@ Acceptance criteria:
 ### Phase 5: Update HTTP Transport
 
 Refactor `http.ts` into:
+
 - transport/session-store pieces,
 - auth middleware,
 - request handler.
 
 Required behavior:
+
 - Auth is applied before MCP handling.
 - Health endpoints are unauthenticated.
 - Metadata endpoints are unauthenticated.
@@ -1130,6 +1148,7 @@ Required behavior:
 - Session token hash binding is enforced in OAuth mode.
 
 Acceptance criteria:
+
 - Existing `--http` still works.
 - Existing `MCP_AUTH_ENABLED=1 MCP_API_KEY=...` still works with warning.
 - New `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` works.
@@ -1144,6 +1163,7 @@ ldt__get_authenticated_user
 ```
 
 Behavior:
+
 - In OAuth mode, returns the Lightdash user associated with the bearer token.
 - In API-key mode, returns the user associated with the PAT if Lightdash supports it.
 - Output excludes tokens and sensitive headers.
@@ -1153,6 +1173,7 @@ This tool should be included by default because it is essential for E2E validati
 ### Phase 7: Documentation
 
 Update:
+
 - `packages/mcp/README.md`
 - `docs/secrets-and-credentials.md`
 - add `docs/mcp-oauth-http.md`
@@ -1161,6 +1182,7 @@ Update:
 - add `docs/security/mcp-oauth-threat-model.md`
 
 Documentation must include:
+
 - Env-var table.
 - Migration from `MCP_*` to `LIGHTDASH_TOOLS_MCP_*`.
 - Cursor config examples.
@@ -1171,6 +1193,7 @@ Documentation must include:
 ### Phase 8: Tests
 
 Add unit tests:
+
 - Config precedence.
 - Deprecated env aliases.
 - Auth header generation.
@@ -1181,6 +1204,7 @@ Add unit tests:
 - Guardrails still block as expected.
 
 Add integration tests with mocked Lightdash:
+
 - Missing bearer -> 401.
 - Invalid bearer -> 401.
 - Valid bearer -> tool call reaches mock Lightdash with `Bearer`.
@@ -1189,6 +1213,7 @@ Add integration tests with mocked Lightdash:
 - STDIO mode still uses env API key.
 
 Add live integration tests gated by env:
+
 - `LIGHTDASH_URL`
 - `LIGHTDASH_API_KEY`
 - optional `LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN`
@@ -1197,11 +1222,11 @@ Add live integration tests gated by env:
 
 Recommended release plan:
 
-| Release | Behavior |
-|---|---|
-| `0.x` minor | Add new env vars, OAuth mode, aliases, warnings. |
-| next minor | Docs and examples prefer new names only. |
-| `1.0` | Keep aliases if cheap, or remove only after explicit changelog notice. |
+| Release     | Behavior                                                               |
+| ----------- | ---------------------------------------------------------------------- |
+| `0.x` minor | Add new env vars, OAuth mode, aliases, warnings.                       |
+| next minor  | Docs and examples prefer new names only.                               |
+| `1.0`       | Keep aliases if cheap, or remove only after explicit changelog notice. |
 
 ---
 
@@ -1305,6 +1330,7 @@ LIGHTDASH_TOOLS_ALLOWED_PROJECTS=project_uuid_1,project_uuid_2
 ```
 
 Important:
+
 - Do not set `LIGHTDASH_API_KEY` for OAuth mode unless a fallback service mode is intentionally enabled.
 - Do not log request headers.
 - Use Cloud Run request logs carefully; redact `Authorization`.
@@ -1317,28 +1343,28 @@ Important:
 
 ### 15.1 Assets
 
-| Asset | Protection need |
-|---|---|
-| Lightdash OAuth access token | Must never be logged or persisted by default. |
-| Lightdash data/results | Must be scoped by Lightdash permissions and project allowlists. |
-| MCP endpoint | Must not expose tools unauthenticated in production. |
-| Session IDs | Must not allow user/token confusion. |
-| Audit logs | Must not leak credentials or sensitive raw data unnecessarily. |
+| Asset                        | Protection need                                                 |
+| ---------------------------- | --------------------------------------------------------------- |
+| Lightdash OAuth access token | Must never be logged or persisted by default.                   |
+| Lightdash data/results       | Must be scoped by Lightdash permissions and project allowlists. |
+| MCP endpoint                 | Must not expose tools unauthenticated in production.            |
+| Session IDs                  | Must not allow user/token confusion.                            |
+| Audit logs                   | Must not leak credentials or sensitive raw data unnecessarily.  |
 
 ### 15.2 Threats and Mitigations
 
-| Threat | Risk | Mitigation |
-|---|---|---|
-| Public unauthenticated MCP endpoint | High | Default HTTP auth mode should become `lightdash-oauth`; warn loudly for `none`. |
-| Shared PAT overreach | High | Prefer OAuth mode; keep `read-only`; project allowlist. |
-| Token leakage in logs | High | Redact `Authorization`, never log raw `authInfo.token`, add tests. |
-| Token/session confusion | High | Bind session ID to token hash and subject. |
-| OAuth metadata spoofing due wrong public URL | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` in OAuth production mode. |
-| Insufficient scope UX loop | Medium | Include `scope` in `WWW-Authenticate`; keep required scopes stable. |
-| Reimplemented RBAC mismatch | High | Do not implement Lightdash object RBAC; delegate to Lightdash API. |
-| Agent destructive actions | High | Keep `read-only` default; static filtering; dry-run; denylist for irrecoverable ops. |
-| CSRF/browser-origin misuse | Medium | Optional origin allowlist; avoid cookie auth; use bearer only. |
-| Rate-limit bypass | Medium | Per-IP and per-token hash rate limiting. |
+| Threat                                       | Risk   | Mitigation                                                                           |
+| -------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| Public unauthenticated MCP endpoint          | High   | Default HTTP auth mode should become `lightdash-oauth`; warn loudly for `none`.      |
+| Shared PAT overreach                         | High   | Prefer OAuth mode; keep `read-only`; project allowlist.                              |
+| Token leakage in logs                        | High   | Redact `Authorization`, never log raw `authInfo.token`, add tests.                   |
+| Token/session confusion                      | High   | Bind session ID to token hash and subject.                                           |
+| OAuth metadata spoofing due wrong public URL | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` in OAuth production mode.                   |
+| Insufficient scope UX loop                   | Medium | Include `scope` in `WWW-Authenticate`; keep required scopes stable.                  |
+| Reimplemented RBAC mismatch                  | High   | Do not implement Lightdash object RBAC; delegate to Lightdash API.                   |
+| Agent destructive actions                    | High   | Keep `read-only` default; static filtering; dry-run; denylist for irrecoverable ops. |
+| CSRF/browser-origin misuse                   | Medium | Optional origin allowlist; avoid cookie auth; use bearer only.                       |
+| Rate-limit bypass                            | Medium | Per-IP and per-token hash rate limiting.                                             |
 
 ---
 
@@ -1360,25 +1386,25 @@ The root `verify:pr` already chains name validation, dependency validation, buil
 
 ### 16.2 Unit Test Matrix
 
-| Test area | Cases |
-|---|---|
-| Config | New env vars, old aliases, precedence, invalid values. |
-| Client auth | API key, prefixed API key, bearer token, proxy auth. |
-| OAuth metadata | Public URL normalization, path-specific metadata. |
-| WWW-Authenticate | missing token, invalid token, insufficient scope. |
-| Session store | TTL, max sessions, token hash binding. |
-| Guardrails | safety modes, dry-run, project allowlist, validation. |
+| Test area        | Cases                                                  |
+| ---------------- | ------------------------------------------------------ |
+| Config           | New env vars, old aliases, precedence, invalid values. |
+| Client auth      | API key, prefixed API key, bearer token, proxy auth.   |
+| OAuth metadata   | Public URL normalization, path-specific metadata.      |
+| WWW-Authenticate | missing token, invalid token, insufficient scope.      |
+| Session store    | TTL, max sessions, token hash binding.                 |
+| Guardrails       | safety modes, dry-run, project allowlist, validation.  |
 
 ### 16.3 Mock Integration Test Matrix
 
-| Scenario | Expected |
-|---|---|
-| OAuth mode without token | `401`, `WWW-Authenticate` with `resource_metadata`. |
-| OAuth mode with invalid token | `401`, no raw token in logs. |
-| OAuth mode with valid token | Lightdash mock receives `Authorization: Bearer ...`. |
-| User A and User B | `ldt__get_authenticated_user` returns distinct users. |
-| Shared-key mode | MCP endpoint auth uses shared key; Lightdash upstream uses `ApiKey`. |
-| STDIO mode | Uses `LIGHTDASH_API_KEY`; no HTTP OAuth behavior. |
+| Scenario                      | Expected                                                             |
+| ----------------------------- | -------------------------------------------------------------------- |
+| OAuth mode without token      | `401`, `WWW-Authenticate` with `resource_metadata`.                  |
+| OAuth mode with invalid token | `401`, no raw token in logs.                                         |
+| OAuth mode with valid token   | Lightdash mock receives `Authorization: Bearer ...`.                 |
+| User A and User B             | `ldt__get_authenticated_user` returns distinct users.                |
+| Shared-key mode               | MCP endpoint auth uses shared key; Lightdash upstream uses `ApiKey`. |
+| STDIO mode                    | Uses `LIGHTDASH_API_KEY`; no HTTP OAuth behavior.                    |
 
 ### 16.4 Manual E2E
 
@@ -1436,6 +1462,7 @@ The implementation is complete when:
 ### Task 1: Config and Env Refactor
 
 Implement `loadMcpHttpConfig()` with:
+
 - official Lightdash vars,
 - new `LIGHTDASH_TOOLS_MCP_*` vars,
 - old alias support,
@@ -1445,6 +1472,7 @@ Implement `loadMcpHttpConfig()` with:
 ### Task 2: Client Auth Union
 
 Extend `@lightdash-tools/client` so the same typed client can call Lightdash using either:
+
 - PAT/API-key auth, or
 - OAuth bearer-token auth.
 
@@ -1457,6 +1485,7 @@ This is the highest-impact code change and should be done before adding more OAu
 ### Task 4: OAuth HTTP Mode
 
 Add:
+
 - protected-resource metadata,
 - bearer middleware,
 - `WWW-Authenticate`,
@@ -1466,6 +1495,7 @@ Add:
 ### Task 5: Docs and E2E
 
 Document:
+
 - local STDIO,
 - remote OAuth,
 - shared-key compatibility,
@@ -1509,7 +1539,7 @@ Current:
 export function createLightdashMcpServer(
   client: LightdashClient,
   options?: RegisterCapabilitiesOptions,
-): McpServer
+): McpServer;
 ```
 
 New:
@@ -1518,7 +1548,7 @@ New:
 export function createLightdashMcpServer(
   contextProvider: McpContextProvider,
   options?: RegisterCapabilitiesOptions,
-): McpServer
+): McpServer;
 ```
 
 ### `packages/mcp/src/capabilities.ts`
@@ -1526,13 +1556,13 @@ export function createLightdashMcpServer(
 Current:
 
 ```ts
-registerCapabilities(server, client, options)
+registerCapabilities(server, client, options);
 ```
 
 New:
 
 ```ts
-registerCapabilities(server, contextProvider, options)
+registerCapabilities(server, contextProvider, options);
 ```
 
 ### `packages/mcp/src/tools/index.ts`
@@ -1540,13 +1570,13 @@ registerCapabilities(server, contextProvider, options)
 Current:
 
 ```ts
-registerTools(server, client)
+registerTools(server, client);
 ```
 
 New:
 
 ```ts
-registerTools(server, contextProvider)
+registerTools(server, contextProvider);
 ```
 
 ### `packages/mcp/src/tools/*.ts`
@@ -1560,6 +1590,7 @@ const { lightdashClient } = await contextProvider.getContext(extra);
 ### `packages/mcp/src/http.ts`
 
 Refactor:
+
 - Use `loadMcpHttpConfig()`.
 - Route metadata endpoints before auth.
 - Apply selected auth mode.

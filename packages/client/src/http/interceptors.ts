@@ -4,7 +4,7 @@
 
 import { LightdashApiError, RateLimitError, NetworkError } from '../errors';
 
-import type { LightdashClientConfig } from '../config';
+import type { LightdashAuthConfig, LightdashClientConfig } from '../config';
 import type { ApiErrorPayload } from '../errors';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
@@ -23,9 +23,22 @@ export function attachRequestInterceptors(
 ): void {
   axiosInstance.interceptors.request.use(
     (req: InternalAxiosRequestConfig) => {
-      const rawToken = config.personalAccessToken.expose();
-      const token = rawToken.startsWith('ldpat_') ? rawToken : `ldpat_${rawToken}`;
-      req.headers.Authorization = `ApiKey ${token}`;
+      switch (config.auth.type) {
+        case 'api-key': {
+          const rawToken = config.auth.token.expose();
+          const token = rawToken.startsWith('ldpat_') ? rawToken : `ldpat_${rawToken}`;
+          req.headers.Authorization = `ApiKey ${token}`;
+          break;
+        }
+        case 'bearer': {
+          req.headers.Authorization = `Bearer ${config.auth.token.expose()}`;
+          break;
+        }
+        default: {
+          const _exhaustive: never = config.auth;
+          throw new Error(`Unsupported auth type: ${(_exhaustive as LightdashAuthConfig).type}`);
+        }
+      }
 
       if (config.proxyAuthorization) {
         req.headers['Proxy-Authorization'] = config.proxyAuthorization.expose();

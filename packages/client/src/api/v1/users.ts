@@ -74,4 +74,9 @@ export class UsersClient extends BaseApiClient {
   async deleteMember(userUuid: string): Promise<void> {
     await this.http.delete(`/org/user/${userUuid}`);
   }
+
+  /** Get the currently authenticated Lightdash user (`GET /api/v1/user`). */
+  async getAuthenticatedUser(): Promise<LightdashApi.Users.AuthenticatedUser> {
+    return this.http.get<LightdashApi.Users.AuthenticatedUser>('/user');
+  }
 }

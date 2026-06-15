@@ -17,22 +17,22 @@ import { registerSpaceTools } from './spaces.js';
 import { registerTagsTools } from './tags.js';
 import { registerUserTools } from './users.js';
 
-import type { LightdashClient } from '@lightdash-tools/client';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerTools(server: McpServer, client: LightdashClient): void {
-  registerProjectTools(server, client);
-  registerChartTools(server, client);
-  registerDashboardTools(server, client);
-  registerSpaceTools(server, client);
-  registerUserTools(server, client);
-  registerGroupTools(server, client);
-  registerQueryTools(server, client);
-  registerExploresTools(server, client);
-  registerMetricsTools(server, client);
-  registerSchedulersTools(server, client);
-  registerTagsTools(server, client);
-  registerContentTools(server, client);
-  registerAiAgentTools(server, client);
-  registerAgentopsTools(server, client);
+export function registerTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerProjectTools(server, contextProvider);
+  registerChartTools(server, contextProvider);
+  registerDashboardTools(server, contextProvider);
+  registerSpaceTools(server, contextProvider);
+  registerUserTools(server, contextProvider);
+  registerGroupTools(server, contextProvider);
+  registerQueryTools(server, contextProvider);
+  registerExploresTools(server, contextProvider);
+  registerMetricsTools(server, contextProvider);
+  registerSchedulersTools(server, contextProvider);
+  registerTagsTools(server, contextProvider);
+  registerContentTools(server, contextProvider);
+  registerAiAgentTools(server, contextProvider);
+  registerAgentopsTools(server, contextProvider);
 }
