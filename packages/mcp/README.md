@@ -23,10 +23,10 @@ npm install -g @lightdash-tools/mcp
 
 ## Environment variables
 
-### Required (both modes)
+### Required
 
 - `LIGHTDASH_URL` — Lightdash instance base URL (e.g. `https://app.lightdash.cloud`).
-- `LIGHTDASH_API_KEY` — Personal access token or API key.
+- `LIGHTDASH_API_KEY` — Personal access token or API key. Required for STDIO and HTTP `none` / `shared-key` modes; **not required** for HTTP `lightdash-oauth` mode (clients authenticate with OAuth bearer tokens).
 
 ### Optional (both modes)
 

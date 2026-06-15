@@ -264,6 +264,103 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_B}`);
   });
 
+  it('returns 503 when Lightdash user validation is unavailable', async () => {
+    const unavailableServer = createServer((_req, res) => {
+      res.writeHead(503, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          status: 'error',
+          error: { statusCode: 503, name: 'ServiceUnavailable', message: 'Down' },
+        }),
+      );
+    });
+    await listen(unavailableServer, 0, '127.0.0.1');
+    const unavailableAddress = unavailableServer.address() as AddressInfo;
+    const unavailableUrl = `http://127.0.0.1:${unavailableAddress.port}`;
+
+    const downServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(unavailableUrl),
+    });
+
+    try {
+      const response = await postMcp(downServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+      expect(response.status).toBe(503);
+      expect(await response.json()).toEqual({
+        error: 'temporarily_unavailable',
+        error_description: 'Lightdash is temporarily unavailable',
+      });
+    } finally {
+      await downServer.close();
+      await new Promise<void>((resolve, reject) => {
+        unavailableServer.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+    }
+  });
+});
+
+describe('MCP HTTP CORS integration', () => {
+  let mockLightdash: MockLightdashServer;
+  let mcpServer: McpHttpServer;
+
+  beforeEach(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockLightdash = await startMockLightdashServer();
+    mcpServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(mockLightdash.baseUrl),
+      allowedOrigins: ['https://app.example.com'],
+    });
+  });
+
+  afterEach(async () => {
+    await mcpServer.close();
+    await mockLightdash.close();
+    vi.restoreAllMocks();
+  });
+
+  it('sets CORS headers for allowed origins on metadata', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`, {
+      headers: { Origin: 'https://app.example.com' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://app.example.com');
+    expect(response.headers.get('vary')).toBe('Origin');
+  });
+
+  it('handles CORS preflight OPTIONS requests', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://app.example.com' },
+    });
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://app.example.com');
+    expect(response.headers.get('access-control-allow-methods')).toContain('POST');
+  });
+});
+
+describe('MCP HTTP OAuth integration (continued)', () => {
+  let mockLightdash: MockLightdashServer;
+  let mcpServer: McpHttpServer;
+
+  beforeEach(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockLightdash = await startMockLightdashServer();
+    mcpServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(mockLightdash.baseUrl),
+    });
+  });
+
+  afterEach(async () => {
+    await mcpServer.close();
+    await mockLightdash.close();
+    vi.restoreAllMocks();
+  });
+
   it('calls ldt__get_authenticated_user over an OAuth HTTP session', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');

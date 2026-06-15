@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { checkOrigin, timingSafeEqualString } from './auth/shared-key-middleware.js';
 import { parseJsonBody, readBody } from './transports/http-body.js';
 import { isInitializeMessage } from './transports/http-request-utils.js';
+import { buildCorsHeaders } from './transports/http-response.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -57,6 +58,19 @@ describe('HTTP transport helpers', () => {
     it('rejects unlisted origins when allowlist is configured', () => {
       const allowed = ['https://app.example.com'];
       expect(checkOrigin('https://other.example.com', allowed)).toBe(false);
+    });
+
+    it('builds CORS headers only for allowed origins', () => {
+      const allowed = ['https://app.example.com'];
+      expect(buildCorsHeaders('https://app.example.com', allowed)).toEqual({
+        'Access-Control-Allow-Origin': 'https://app.example.com',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers':
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, X-API-Key',
+        Vary: 'Origin',
+      });
+      expect(buildCorsHeaders('https://other.example.com', allowed)).toEqual({});
+      expect(buildCorsHeaders(undefined, allowed)).toEqual({});
     });
   });
 

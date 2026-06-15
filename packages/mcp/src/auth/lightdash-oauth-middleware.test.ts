@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
+import { TokenValidationError } from './token-validation-error.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
@@ -54,7 +55,9 @@ describe('authenticateLightdashOAuth', () => {
   });
 
   it('returns 401 without echoing the bearer token when validation fails', async () => {
-    vi.mocked(validateLightdashAccessToken).mockRejectedValue(new Error('invalid'));
+    vi.mocked(validateLightdashAccessToken).mockRejectedValue(
+      new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token'),
+    );
 
     const token = 'secret-oauth-token';
     const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
@@ -67,6 +70,24 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.body.error_description).toBe('Invalid or expired Lightdash access token');
     expect(JSON.stringify(result.body)).not.toContain(token);
     expect(result.wwwAuthenticate).toContain('error="invalid_token"');
+  });
+
+  it('returns 503 when Lightdash upstream is unavailable', async () => {
+    vi.mocked(validateLightdashAccessToken).mockRejectedValue(
+      new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable'),
+    );
+
+    const result = await authenticateLightdashOAuth(createRequest('Bearer token'), baseConfig);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.status).toBe(503);
+    expect(result.body).toEqual({
+      error: 'temporarily_unavailable',
+      error_description: 'Lightdash is temporarily unavailable',
+    });
+    expect(result.wwwAuthenticate).toBeUndefined();
   });
 
   it('returns user context when token validation succeeds', async () => {

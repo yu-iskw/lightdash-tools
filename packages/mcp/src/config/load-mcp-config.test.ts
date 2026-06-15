@@ -93,4 +93,11 @@ describe('loadMcpHttpConfig', () => {
 
     expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_AUTH_MODE/);
   });
+
+  it('throws on non-numeric port values', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = 'not-a-number';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_HTTP_PORT/);
+  });
 });
