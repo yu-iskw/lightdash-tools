@@ -49,6 +49,13 @@ Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix (see ADR-0035). Legacy `M
 
 In `lightdash-oauth` mode, `LIGHTDASH_API_KEY` is not required. Clients authenticate with Lightdash OAuth and send `Authorization: Bearer <access-token>`. The server exposes `GET /.well-known/oauth-protected-resource` and validates tokens against `GET /api/v1/user`.
 
+See also:
+
+- [OAuth HTTP operator guide](../../docs/mcp-oauth-http.md)
+- [Cursor remote MCP setup](../../docs/cursor-lightdash-oauth-mcp.md)
+- [Cloud Run deployment](../../docs/cloud-run-mcp-oauth.md)
+- [OAuth threat model](../../docs/security/mcp-oauth-threat-model.md)
+
 ## Running
 
 ### Stdio (local)
@@ -174,6 +181,8 @@ LIGHTDASH_URL=https://app.lightdash.cloud LIGHTDASH_API_KEY=your_api_key pnpm te
 ```
 
 The integration tests will automatically detect these environment variables and run additional scenarios, such as verifying authentication and tool execution against the live API.
+
+For OAuth HTTP mode, set `LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN` (and `LIGHTDASH_URL`) to run the optional live OAuth integration test.
 
 ## License
 
