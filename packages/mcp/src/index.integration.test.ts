@@ -4,11 +4,16 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { describe, it, expect } from 'vitest';
 
 import { EnvContextProvider } from './auth/env-context-provider.js';
+import { validateLightdashAccessToken } from './auth/lightdash-token-validation.js';
 import { getClient } from './config';
 import { registerTools } from './tools';
 import { TOOL_PREFIX } from './tools/shared';
 
+import type { McpHttpConfig } from './config/load-mcp-config.js';
+
 const hasCredentials = !!process.env.LIGHTDASH_API_KEY && !!process.env.LIGHTDASH_URL;
+const hasOAuthToken =
+  !!process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN && !!process.env.LIGHTDASH_URL;
 
 describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
   it('should authenticate and fetch current organization', async () => {
@@ -56,5 +61,37 @@ describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
 
     await mcpClient.close();
     await server.close();
+  });
+});
+
+describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
+  it('validates live OAuth bearer token against Lightdash', async () => {
+    const lightdashUrl = process.env.LIGHTDASH_URL!.replace(/\/$/, '');
+    const config: McpHttpConfig = {
+      lightdashUrl,
+      host: '127.0.0.1',
+      port: 3100,
+      publicUrl: 'https://mcp.example.com',
+      mcpPath: '/mcp',
+      authMode: 'lightdash-oauth',
+      allowedOrigins: [],
+      maxBodyBytes: 1024 * 1024,
+      sessionTtlMs: 60_000,
+      maxSessions: 10,
+      sessionCleanupMs: 60_000,
+      requiredScopes: ['mcp:read'],
+      scopesSupported: ['mcp:read', 'mcp:write'],
+      validateToken: true,
+      tokenValidationCacheTtlMs: 30_000,
+    };
+
+    const user = await validateLightdashAccessToken(
+      config,
+      process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN!,
+    );
+
+    expect(user.userUuid).toBeDefined();
+    expect(user.email).toBeDefined();
+    console.error(`OAuth token authenticated as: ${user.email} (${user.userUuid})`);
   });
 });

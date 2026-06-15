@@ -12,14 +12,16 @@ Set credentials via environment variables injected by your parent process. The t
 - CI, Kubernetes, systemd, and other platforms inject env vars securely.
 - No plaintext secrets on disk.
 
-**Required variables:**
+**Required variables (STDIO and PAT-based HTTP):**
 
 | Variable            | Description                                                      |
 | :------------------ | :--------------------------------------------------------------- |
 | `LIGHTDASH_URL`     | Lightdash instance base URL (e.g. `https://app.lightdash.cloud`) |
 | `LIGHTDASH_API_KEY` | Personal access token (PAT) or API key                           |
 
-**Optional:**
+`LIGHTDASH_API_KEY` is **not required** when running Streamable HTTP with `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`. In that mode, each MCP user authenticates with their own Lightdash OAuth access token; the server does not hold a shared PAT. See [mcp-oauth-http.md](mcp-oauth-http.md).
+
+**Optional (CLI, STDIO, and all MCP modes):**
 
 | Variable                           | Description                                                        |
 | :--------------------------------- | :----------------------------------------------------------------- |
@@ -29,7 +31,29 @@ Set credentials via environment variables injected by your parent process. The t
 | `LIGHTDASH_TOOLS_DRY_RUN`          | Set to `1`, `true`, or `yes` to simulate mutating operations       |
 | `LIGHTDASH_TOOLS_AUDIT_LOG`        | File path for audit log; unset defaults to stderr                  |
 
-See [ADR-0035](adr/0035-environment-variables-prefix-lightdash-tools.md) for the env var naming convention.
+**Streamable HTTP only (`LIGHTDASH_TOOLS_MCP_*`):**
+
+Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix per [ADR-0035](adr/0035-environment-variables-prefix-lightdash-tools.md). Legacy `MCP_*` aliases still work with deprecation warnings. Full tables and migration guide: [mcp-oauth-http.md](mcp-oauth-http.md).
+
+| Variable                                            | Description                                                                                            |
+| :-------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_AUTH_MODE`                     | `none` (default), `shared-key`, or `lightdash-oauth`                                                   |
+| `LIGHTDASH_TOOLS_MCP_HTTP_HOST`                     | HTTP bind host (default `0.0.0.0`)                                                                     |
+| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`                     | HTTP port (default `3100`). Aliases: `MCP_HTTP_PORT`, `MCP_SERVER_PORT`                                |
+| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`                    | Public HTTPS base URL for OAuth metadata (required in `lightdash-oauth` mode). Alias: `MCP_PUBLIC_URL` |
+| `LIGHTDASH_TOOLS_MCP_PATH`                          | MCP endpoint path (default `/mcp`)                                                                     |
+| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`                    | Shared endpoint secret for `shared-key` mode. Alias: `MCP_API_KEY`                                     |
+| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`               | Comma-separated CORS origin allowlist. Alias: `MCP_ALLOWED_ORIGINS`                                    |
+| `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES`                | Maximum JSON body size. Alias: `MCP_MAX_BODY_BYTES`                                                    |
+| `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`                | Session TTL for stateful HTTP. Alias: `MCP_SESSION_TTL_MS`                                             |
+| `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`                  | Maximum active sessions. Alias: `MCP_MAX_SESSIONS`                                                     |
+| `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`            | Session cleanup interval. Alias: `MCP_SESSION_CLEANUP_MS`                                              |
+| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`               | Scopes in `WWW-Authenticate` (default `mcp:read`)                                                      |
+| `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`              | Scopes in protected-resource metadata                                                                  |
+| `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                | Validate bearer via `GET /api/v1/user` (default on in OAuth mode)                                      |
+| `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS` | Token validation cache TTL (default `30000` ms)                                                        |
+
+OAuth client credentials (Client ID/Secret) for MCP **clients** such as Cursor belong in the client's `mcp.json` or environment — not on the MCP server. The server does not use `LIGHTDASH_OAUTH_CLIENT_SECRET`.
 
 **Examples:**
 

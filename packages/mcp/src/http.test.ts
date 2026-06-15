@@ -1,52 +1,15 @@
 /**
  * Unit tests for MCP HTTP transport middleware helpers.
- *
- * Logic mirrors packages/mcp/src/http.ts — keep in sync when http.ts changes.
  */
 
-import { timingSafeEqual } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 
 import { describe, expect, it } from 'vitest';
 
+import { checkOrigin, timingSafeEqualString } from './auth/shared-key-middleware.js';
+import { isInitializeMessage } from './transports/http-request-utils.js';
+
 import type { IncomingMessage } from 'node:http';
-
-function timingSafeEqualString(a: string, b: string): boolean {
-  const bufA = Buffer.from(a);
-  const bufB = Buffer.from(b);
-  if (bufA.length !== bufB.length) {
-    timingSafeEqual(bufA, bufA);
-    return false;
-  }
-  return timingSafeEqual(bufA, bufB);
-}
-
-function getAllowedOrigins(raw: string | undefined): Set<string> {
-  if (!raw) return new Set();
-  return new Set(
-    raw
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean),
-  );
-}
-
-function checkOrigin(origin: string | undefined, allowed: Set<string>): boolean {
-  if (!origin || typeof origin !== 'string') return true;
-  if (allowed.size === 0) return true;
-  return allowed.has(origin);
-}
-
-function isInitializeMessage(body: unknown): boolean {
-  if (body === undefined) return false;
-  const msg = Array.isArray(body) ? body[0] : body;
-  return (
-    typeof msg === 'object' &&
-    msg !== null &&
-    'method' in msg &&
-    (msg as { method?: string }).method === 'initialize'
-  );
-}
 
 type MockResponse = {
   statusCode?: number;
@@ -137,23 +100,22 @@ describe('HTTP transport helpers', () => {
 
   describe('origin validation', () => {
     it('allows requests without Origin header', () => {
-      const allowed = getAllowedOrigins('https://app.example.com');
+      const allowed = ['https://app.example.com'];
       expect(checkOrigin(undefined, allowed)).toBe(true);
     });
 
     it('allows any origin when allowlist is empty', () => {
-      const allowed = getAllowedOrigins(undefined);
-      expect(checkOrigin('https://evil.example.com', allowed)).toBe(true);
+      expect(checkOrigin('https://evil.example.com', [])).toBe(true);
     });
 
     it('allows listed origins', () => {
-      const allowed = getAllowedOrigins('https://app.example.com, https://admin.example.com');
+      const allowed = ['https://app.example.com', 'https://admin.example.com'];
       expect(checkOrigin('https://app.example.com', allowed)).toBe(true);
       expect(checkOrigin('https://admin.example.com', allowed)).toBe(true);
     });
 
     it('rejects unlisted origins when allowlist is configured', () => {
-      const allowed = getAllowedOrigins('https://app.example.com');
+      const allowed = ['https://app.example.com'];
       expect(checkOrigin('https://other.example.com', allowed)).toBe(false);
     });
   });

@@ -29,6 +29,7 @@ import {
 import { getAuditLogPath, getClient } from '../config.js';
 import { createLightdashMcpServer } from '../server.js';
 
+import { isInitializeMessage } from './http-request-utils.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -41,15 +42,30 @@ type OAuthRequest = IncomingMessage & {
   lightdashOAuth?: Awaited<ReturnType<typeof authenticateLightdashOAuth>> & { ok: true };
 };
 
-function isInitializeMessage(body: unknown): boolean {
-  if (body === undefined) return false;
-  const msg = Array.isArray(body) ? body[0] : body;
-  return (
-    typeof msg === 'object' &&
-    msg !== null &&
-    'method' in msg &&
-    (msg as { method?: string }).method === 'initialize'
-  );
+function listen(
+  server: ReturnType<typeof createServer>,
+  port: number,
+  host: string,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      server.removeListener('error', reject);
+      resolve();
+    });
+  });
+}
+
+function resolveListenHost(host: string): string {
+  return host === '0.0.0.0' ? '127.0.0.1' : host;
+}
+
+function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpConfig {
+  const listenHost = resolveListenHost(config.host);
+  return {
+    ...config,
+    publicUrl: config.publicUrl ?? `http://${listenHost}:${listenPort}`,
+  };
 }
 
 function getSessionId(req: IncomingMessage): string | undefined {
@@ -351,11 +367,18 @@ async function handleMcpGetOrDelete(
   await entry.transport.handleRequest(req, res);
 }
 
-export function startStreamableHttpServer(config?: McpHttpConfig): void {
-  const httpConfig = config ?? loadMcpHttpConfig();
-  const sessionStore = new SessionStore(httpConfig.sessionTtlMs, httpConfig.maxSessions);
+export interface StreamableHttpServerHandle {
+  port: number;
+  baseUrl: string;
+  close: () => Promise<void>;
+}
 
-  if (httpConfig.authMode === MCP_AUTH_MODE_NONE) {
+export async function createStreamableHttpServer(
+  config?: McpHttpConfig,
+): Promise<StreamableHttpServerHandle> {
+  const inputConfig = config ?? loadMcpHttpConfig();
+
+  if (inputConfig.authMode === MCP_AUTH_MODE_NONE) {
     console.warn(
       'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=none — MCP HTTP endpoint is unauthenticated. Use lightdash-oauth or shared-key in production.',
     );
@@ -363,11 +386,14 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
 
   initAuditLog(getAuditLogPath());
 
+  const sessionStore = new SessionStore(inputConfig.sessionTtlMs, inputConfig.maxSessions);
+  let httpConfig = inputConfig;
+
   const cleanupTimer = setInterval(() => {
     sessionStore.cleanupExpired((entry, sessionId) => {
       closeSessionEntry(entry, sessionId, 'expired');
     });
-  }, httpConfig.sessionCleanupMs);
+  }, inputConfig.sessionCleanupMs);
   cleanupTimer.unref();
 
   const server = createServer((req, res) => {
@@ -379,15 +405,45 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     });
   });
 
-  server.listen(httpConfig.port, httpConfig.host, () => {
-    const publicUrl = httpConfig.publicUrl ?? `http://localhost:${httpConfig.port}`;
-    console.error(
-      `Lightdash MCP server listening on ${publicUrl}${httpConfig.mcpPath} (auth: ${httpConfig.authMode})`,
-    );
-    if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-      console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(httpConfig)}`);
-    }
-  });
+  await listen(server, inputConfig.port, inputConfig.host);
+
+  const address = server.address();
+  const port = typeof address === 'object' && address !== null ? address.port : inputConfig.port;
+  httpConfig = resolveHttpConfig(inputConfig, port);
+  const baseUrl = httpConfig.publicUrl!;
+
+  return {
+    port,
+    baseUrl,
+    close: () =>
+      new Promise<void>((resolve, reject) => {
+        clearInterval(cleanupTimer);
+        server.close((err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      }),
+  };
+}
+
+export function startStreamableHttpServer(config?: McpHttpConfig): void {
+  void createStreamableHttpServer(config)
+    .then(({ baseUrl }) => {
+      const httpConfig = config ?? loadMcpHttpConfig();
+      console.error(
+        `Lightdash MCP server listening on ${baseUrl}${httpConfig.mcpPath} (auth: ${httpConfig.authMode})`,
+      );
+      if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+        const metadataConfig = httpConfig.publicUrl
+          ? httpConfig
+          : { ...httpConfig, publicUrl: baseUrl };
+        console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(metadataConfig)}`);
+      }
+    })
+    .catch((err: unknown) => {
+      console.error('Failed to start MCP HTTP server:', err);
+      process.exit(1);
+    });
 }
 
 async function handleHttpRequest(
