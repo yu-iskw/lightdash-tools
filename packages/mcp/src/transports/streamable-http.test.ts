@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildOAuthProtectedResourceMetadata } from '../auth/oauth-protected-resource.js';
-import { startStreamableHttpServer } from '../transports/streamable-http.js';
+import {
+  createStreamableHttpServer,
+  startStreamableHttpServer,
+} from '../transports/streamable-http.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
 
@@ -32,5 +35,9 @@ describe('streamable HTTP OAuth metadata', () => {
 
   it('exports startStreamableHttpServer', () => {
     expect(typeof startStreamableHttpServer).toBe('function');
+  });
+
+  it('exports createStreamableHttpServer', () => {
+    expect(typeof createStreamableHttpServer).toBe('function');
   });
 });
