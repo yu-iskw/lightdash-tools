@@ -333,6 +333,9 @@ export type ProjectGroupAccess = ProjectAccess.ProjectGroupAccess;
 export type CreateProjectGroupAccessBody = ProjectAccess.CreateProjectGroupAccessBody;
 export type UpdateProjectGroupAccess = ProjectAccess.UpdateProjectGroupAccess;
 
+// Users (flat exports)
+export type AuthenticatedUser = Users.AuthenticatedUser;
+
 // Query types (flat exports)
 export type MetricQueryRequest = Queries.Requests.MetricQuery;
 export type CompileQueryRequest = Queries.Requests.CompileQuery;

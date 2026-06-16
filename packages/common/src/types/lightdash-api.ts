@@ -56,6 +56,7 @@ export type {
   ProjectGroupAccess,
   CreateProjectGroupAccessBody,
   UpdateProjectGroupAccess,
+  AuthenticatedUser,
   MetricQueryRequest,
   CompileQueryRequest,
   ExecuteAsyncMetricQueryRequestParams,
