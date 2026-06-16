@@ -101,6 +101,22 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('http://127.0.0.1:3100');
   });
 
+  it('rejects deceptive localhost hostnames for public URL', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'http://localhost.evil.example';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/must use https:\/\//);
+  });
+
+  it('rejects deceptive loopback hostnames for public URL', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'http://127.0.0.1.evil.example';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/must use https:\/\//);
+  });
+
   it('allows insecure public URL when explicitly opted in', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';

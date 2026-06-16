@@ -41,7 +41,7 @@ import {
   ENV_MCP_SESSION_CLEANUP_MS,
   ENV_MCP_SESSION_TTL_MS,
 } from './env.js';
-import { normalizeLightdashUrl, normalizePublicUrl } from './normalize-url.js';
+import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
@@ -180,9 +180,7 @@ function assertPublicUrlSecurity(
   );
   if (allowInsecure) return;
 
-  const isLocalHttp =
-    publicUrl.startsWith('http://localhost') || publicUrl.startsWith('http://127.0.0.1');
-  if (isLocalHttp) return;
+  if (isLocalHttpOrigin(publicUrl)) return;
 
   throw new Error(
     `${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} must use https:// in lightdash-oauth mode (got ${publicUrl}). ` +

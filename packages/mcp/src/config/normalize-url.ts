@@ -19,3 +19,16 @@ export function normalizePublicUrl(url: string): string {
 export function normalizeLightdashUrl(url: string): string {
   return stripTrailingSlash(url.trim());
 }
+
+/** True when the URL is cleartext HTTP on loopback (localhost or 127.0.0.1 only). */
+export function isLocalHttpOrigin(url: string): boolean {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return false;
+  }
+
+  if (parsed.protocol !== 'http:') return false;
+  return parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+}
