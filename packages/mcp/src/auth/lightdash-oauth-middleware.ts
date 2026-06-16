@@ -20,6 +20,7 @@ export interface OAuthAuthFailure {
   status: number;
   body: Record<string, string>;
   wwwAuthenticate?: string;
+  headers?: Record<string, string>;
 }
 
 export type OAuthAuthResult = OAuthAuthFailure | OAuthAuthSuccess;
@@ -49,6 +50,10 @@ export async function authenticateLightdashOAuth(
     return { ok: true, accessToken: token, user };
   } catch (error) {
     if (error instanceof TokenValidationError && error.reason === 'upstream_unavailable') {
+      const headers =
+        error.retryAfterSeconds !== undefined
+          ? { 'Retry-After': String(error.retryAfterSeconds) }
+          : undefined;
       return {
         ok: false,
         status: 503,
@@ -56,6 +61,7 @@ export async function authenticateLightdashOAuth(
           error: 'temporarily_unavailable',
           error_description: error.message,
         },
+        headers,
       };
     }
 
@@ -77,8 +83,14 @@ export async function authenticateLightdashOAuth(
 }
 
 export function writeOAuthAuthFailure(res: ServerResponse, failure: OAuthAuthFailure): void {
-  const headers = failure.wwwAuthenticate
-    ? { 'WWW-Authenticate': failure.wwwAuthenticate }
-    : undefined;
-  sendJson(res, failure.status, failure.body, headers);
+  const headers: Record<string, string> = { ...failure.headers };
+  if (failure.wwwAuthenticate) {
+    headers['WWW-Authenticate'] = failure.wwwAuthenticate;
+  }
+  sendJson(
+    res,
+    failure.status,
+    failure.body,
+    Object.keys(headers).length > 0 ? headers : undefined,
+  );
 }

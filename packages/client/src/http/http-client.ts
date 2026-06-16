@@ -8,7 +8,7 @@ import { withRetry } from '../utils/retry';
 
 import { type RateLimiter } from './rate-limiter';
 
-import type { LightdashClientConfig } from '../config';
+import type { ResolvedLightdashClientConfig } from '../config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
 /** Lightdash API success response shape. */
@@ -34,7 +34,7 @@ export class HttpClient {
   constructor(
     private readonly axiosInstance: AxiosInstance,
     private readonly rateLimiter: RateLimiter,
-    private readonly config: LightdashClientConfig,
+    private readonly config: ResolvedLightdashClientConfig,
   ) {}
 
   private async request<T>(method: Method, url: string, config?: AxiosRequestConfig): Promise<T> {

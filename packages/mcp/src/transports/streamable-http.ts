@@ -250,12 +250,15 @@ async function handleExistingSessionPost(
   body: unknown,
 ): Promise<void> {
   const { req, res, config, sessionStore } = ctx;
+  if (config.authMode !== MCP_AUTH_MODE_NONE) {
+    if (!(await ensureEndpointAuth(req, res, config))) return;
+  }
+
   const entry = sessionStore.get(sid);
   if (!entry) {
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
     return;
   }
-  if (!(await ensureEndpointAuth(req, res, config))) return;
   if (!verifySessionAuth(req, res, config, entry)) return;
   sessionStore.touch(sid);
   await entry.transport.handleRequest(req, res, body);
@@ -364,13 +367,16 @@ async function handleMcpGetOrDelete(
     return;
   }
 
+  if (config.authMode !== MCP_AUTH_MODE_NONE) {
+    if (!(await ensureEndpointAuth(req, res, config))) return;
+  }
+
   const entry = sessionStore.get(sid);
   if (!entry) {
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
     return;
   }
 
-  if (!(await ensureEndpointAuth(req, res, config))) return;
   if (!verifySessionAuth(req, res, config, entry)) return;
 
   sessionStore.touch(sid);

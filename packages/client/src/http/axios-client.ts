@@ -8,7 +8,7 @@ import { DEFAULT_TIMEOUT } from '../config';
 
 import { attachRequestInterceptors, attachResponseInterceptors } from './interceptors';
 
-import type { LightdashClientConfig } from '../config';
+import type { ResolvedLightdashClientConfig } from '../config';
 
 /**
  * API version type.
@@ -19,7 +19,7 @@ export type ApiVersion = 'v1' | 'v2';
  * Creates a configured Axios instance for the Lightdash API with a specific version.
  */
 function createAxiosInstanceForVersion(
-  config: LightdashClientConfig,
+  config: ResolvedLightdashClientConfig,
   version: ApiVersion,
 ): AxiosInstance {
   const baseURL = config.baseUrl.replace(/\/$/, '') + `/api/${version}`;
@@ -42,14 +42,14 @@ function createAxiosInstanceForVersion(
 /**
  * Creates a configured Axios instance for the Lightdash API v1.
  */
-export function createAxiosInstanceV1(config: LightdashClientConfig): AxiosInstance {
+export function createAxiosInstanceV1(config: ResolvedLightdashClientConfig): AxiosInstance {
   return createAxiosInstanceForVersion(config, 'v1');
 }
 
 /**
  * Creates a configured Axios instance for the Lightdash API v2.
  */
-export function createAxiosInstanceV2(config: LightdashClientConfig): AxiosInstance {
+export function createAxiosInstanceV2(config: ResolvedLightdashClientConfig): AxiosInstance {
   return createAxiosInstanceForVersion(config, 'v2');
 }
 
@@ -57,6 +57,6 @@ export function createAxiosInstanceV2(config: LightdashClientConfig): AxiosInsta
  * Creates a configured Axios instance for the Lightdash API v1.
  * @deprecated Use `createAxiosInstanceV1` instead. This function is kept for backward compatibility.
  */
-export function createAxiosInstance(config: LightdashClientConfig): AxiosInstance {
+export function createAxiosInstance(config: ResolvedLightdashClientConfig): AxiosInstance {
   return createAxiosInstanceV1(config);
 }

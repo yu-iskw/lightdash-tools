@@ -199,6 +199,17 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
   });
 
+  it('returns 401 before 404 for unknown session without auth', async () => {
+    const response = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { sessionId: 'unknown-session-id' },
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
+  });
+
   it('returns 401 Session token mismatch when resuming with a different bearer', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');

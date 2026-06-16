@@ -90,6 +90,20 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).toBeUndefined();
   });
 
+  it('returns 503 with Retry-After when upstream is rate limited', async () => {
+    vi.mocked(validateLightdashAccessToken).mockRejectedValue(
+      new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable', 60),
+    );
+
+    const result = await authenticateLightdashOAuth(createRequest('Bearer token'), baseConfig);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.status).toBe(503);
+    expect(result.headers).toEqual({ 'Retry-After': '60' });
+  });
+
   it('returns user context when token validation succeeds', async () => {
     vi.mocked(validateLightdashAccessToken).mockResolvedValue({
       userUuid: 'user-uuid-1',
