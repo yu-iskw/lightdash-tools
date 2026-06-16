@@ -34,7 +34,10 @@ const evaluationPromptInputSchema = z.union([
   }),
 ]);
 
-function registerEvaluationReadTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListAgentEvaluationsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_agent_evaluations',
@@ -57,7 +60,12 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
 
+export function registerGetAgentEvaluationTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_agent_evaluation',
@@ -89,7 +97,12 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
 
+export function registerListAgentEvaluationRunsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_agent_evaluation_runs',
@@ -125,7 +138,12 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
 
+export function registerGetAgentEvaluationRunResultsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_agent_evaluation_run_results',
@@ -168,7 +186,7 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
   );
 }
 
-function registerEvaluationWriteTools(
+export function registerCreateAgentEvaluationTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
@@ -218,7 +236,12 @@ function registerEvaluationWriteTools(
         },
     ),
   );
+}
 
+export function registerUpdateAgentEvaluationTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'update_agent_evaluation',
@@ -265,7 +288,12 @@ function registerEvaluationWriteTools(
         },
     ),
   );
+}
 
+export function registerAppendAgentEvaluationPromptsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'append_agent_evaluation_prompts',
@@ -303,7 +331,12 @@ function registerEvaluationWriteTools(
         },
     ),
   );
+}
 
+export function registerRunAgentEvaluationTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'run_agent_evaluation',
@@ -335,7 +368,12 @@ function registerEvaluationWriteTools(
         },
     ),
   );
+}
 
+export function registerDeleteAgentEvaluationTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'delete_agent_evaluation',
@@ -370,6 +408,24 @@ function registerEvaluationWriteTools(
         },
     ),
   );
+}
+
+function registerEvaluationReadTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListAgentEvaluationsTool(server, contextProvider);
+  registerGetAgentEvaluationTool(server, contextProvider);
+  registerListAgentEvaluationRunsTool(server, contextProvider);
+  registerGetAgentEvaluationRunResultsTool(server, contextProvider);
+}
+
+function registerEvaluationWriteTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerCreateAgentEvaluationTool(server, contextProvider);
+  registerUpdateAgentEvaluationTool(server, contextProvider);
+  registerAppendAgentEvaluationPromptsTool(server, contextProvider);
+  registerRunAgentEvaluationTool(server, contextProvider);
+  registerDeleteAgentEvaluationTool(server, contextProvider);
 }
 
 export function registerProjectAgentEvaluationTools(

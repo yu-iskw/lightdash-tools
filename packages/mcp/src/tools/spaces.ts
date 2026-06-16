@@ -25,7 +25,10 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerSpaceTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListSpacesTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_spaces',
@@ -45,6 +48,9 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerGetSpaceTool(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'get_space',
@@ -67,7 +73,12 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerGrantUserSpaceAccessTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'grant_user_space_access',
@@ -112,7 +123,12 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerRevokeUserSpaceAccessTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'revoke_user_space_access',
@@ -151,7 +167,12 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerGrantGroupSpaceAccessTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'grant_group_space_access',
@@ -196,7 +217,12 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerRevokeGroupSpaceAccessTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'revoke_group_space_access',
@@ -235,4 +261,13 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerSpaceTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListSpacesTool(server, contextProvider);
+  registerGetSpaceTool(server, contextProvider);
+  registerGrantUserSpaceAccessTool(server, contextProvider);
+  registerRevokeUserSpaceAccessTool(server, contextProvider);
+  registerGrantGroupSpaceAccessTool(server, contextProvider);
+  registerRevokeGroupSpaceAccessTool(server, contextProvider);
 }

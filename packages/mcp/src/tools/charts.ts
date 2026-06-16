@@ -18,7 +18,10 @@ import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerChartTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListChartsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_charts',
@@ -38,6 +41,12 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerListChartsAsCodeTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_charts_as_code',
@@ -60,6 +69,12 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerUpsertChartAsCodeTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'upsert_chart_as_code',
@@ -100,4 +115,10 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerChartTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListChartsTool(server, contextProvider);
+  registerListChartsAsCodeTool(server, contextProvider);
+  registerUpsertChartAsCodeTool(server, contextProvider);
 }

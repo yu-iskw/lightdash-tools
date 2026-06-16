@@ -1,17 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { createLightdashMcpServer } from './server.js';
+import { listRegisteredToolNamesForTest } from './testing.js';
 import { PACKAGE_VERSION } from './version.js';
 
-import type { McpContextProvider } from './request-context.js';
-
 describe('createLightdashMcpServer', () => {
-  it('creates server with package version', () => {
-    const contextProvider = {
-      getContext: async () => ({ lightdashClient: {} }),
-    } as McpContextProvider;
-    const server = createLightdashMcpServer(contextProvider);
-    expect(server).toBeDefined();
-    expect(PACKAGE_VERSION).toBeTruthy();
+  it('creates a bare server shell (no tools until registered)', async () => {
+    const server = createLightdashMcpServer({ name: 'test-server', version: PACKAGE_VERSION });
+
+    const toolNames = await listRegisteredToolNamesForTest(server);
+    expect(toolNames).toEqual([]);
   });
 });

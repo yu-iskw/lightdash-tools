@@ -15,7 +15,10 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerMetricsTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListMetricsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_metrics',
@@ -48,4 +51,8 @@ export function registerMetricsTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
+
+export function registerMetricsTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListMetricsTool(server, contextProvider);
 }

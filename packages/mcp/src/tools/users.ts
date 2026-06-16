@@ -22,7 +22,10 @@ type ListMembersParams = {
   searchQuery?: string;
 };
 
-export function registerUserTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListOrganizationMembersTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_organization_members',
@@ -45,6 +48,12 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       },
     ),
   );
+}
+
+export function registerGetMemberTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_member',
@@ -64,6 +73,12 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
         },
     ),
   );
+}
+
+export function registerGetAuthenticatedUserTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_authenticated_user',
@@ -87,4 +102,10 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       return { content: [{ type: 'text', text: JSON.stringify(safe, null, 2) }] };
     }),
   );
+}
+
+export function registerUserTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListOrganizationMembersTool(server, contextProvider);
+  registerGetMemberTool(server, contextProvider);
+  registerGetAuthenticatedUserTool(server, contextProvider);
 }

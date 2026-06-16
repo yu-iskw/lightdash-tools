@@ -20,12 +20,10 @@ import {
 import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectAgentCrudTools(
+export function registerListProjectAgentsTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  // ─── Project-scoped: agent CRUD ──────────────────────────────────────────────
-
   registerToolSafe(
     server,
     'list_project_agents',
@@ -47,7 +45,12 @@ export function registerProjectAgentCrudTools(
         },
     ),
   );
+}
 
+export function registerGetProjectAgentTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_project_agent',
@@ -70,7 +73,12 @@ export function registerProjectAgentCrudTools(
         },
     ),
   );
+}
 
+export function registerCreateProjectAgentTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'create_project_agent',
@@ -111,7 +119,12 @@ export function registerProjectAgentCrudTools(
         },
     ),
   );
+}
 
+export function registerUpdateProjectAgentTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'update_project_agent',
@@ -151,7 +164,12 @@ export function registerProjectAgentCrudTools(
         },
     ),
   );
+}
 
+export function registerDeleteProjectAgentTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'delete_project_agent',
@@ -176,4 +194,15 @@ export function registerProjectAgentCrudTools(
         },
     ),
   );
+}
+
+export function registerProjectAgentCrudTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListProjectAgentsTool(server, contextProvider);
+  registerGetProjectAgentTool(server, contextProvider);
+  registerCreateProjectAgentTool(server, contextProvider);
+  registerUpdateProjectAgentTool(server, contextProvider);
+  registerDeleteProjectAgentTool(server, contextProvider);
 }

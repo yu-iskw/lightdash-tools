@@ -16,6 +16,19 @@ Or install it globally:
 npm install -g @lightdash-tools/mcp
 ```
 
+## Persona-specific MCP packages
+
+If you want to narrow what an AI agent can discover and call, prefer the persona-specific packages:
+
+- `@lightdash-tools/mcp-agent-viewer` (read-oriented exploration)
+- `@lightdash-tools/mcp-agent-developer` (curated developer workflows with restricted writes)
+
+See:
+
+- [`docs/mcp/persona-packages.md`](../../docs/mcp/persona-packages.md)
+- [`docs/mcp/agent-viewer.md`](../../docs/mcp/agent-viewer.md)
+- [`docs/mcp/agent-developer.md`](../../docs/mcp/agent-developer.md)
+
 ## Transports
 
 - **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.

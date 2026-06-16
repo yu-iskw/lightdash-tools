@@ -17,12 +17,10 @@ import {
 import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerAdminAiAgentTools(
+export function registerListAdminAgentsTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  // ─── Admin: agents ───────────────────────────────────────────────────────────
-
   registerToolSafe(
     server,
     'list_admin_agents',
@@ -37,9 +35,12 @@ export function registerAdminAiAgentTools(
       return jsonToolResult(result);
     }),
   );
+}
 
-  // ─── Admin: threads ──────────────────────────────────────────────────────────
-
+export function registerListAdminAgentThreadsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_admin_agent_threads',
@@ -83,9 +84,12 @@ export function registerAdminAiAgentTools(
         },
     ),
   );
+}
 
-  // ─── Admin: settings ─────────────────────────────────────────────────────────
-
+export function registerGetAiOrganizationSettingsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_ai_organization_settings',
@@ -100,7 +104,12 @@ export function registerAdminAiAgentTools(
       return jsonToolResult(result);
     }),
   );
+}
 
+export function registerUpdateAiOrganizationSettingsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'update_ai_organization_settings',
@@ -126,4 +135,14 @@ export function registerAdminAiAgentTools(
       },
     ),
   );
+}
+
+export function registerAdminAiAgentTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListAdminAgentsTool(server, contextProvider);
+  registerListAdminAgentThreadsTool(server, contextProvider);
+  registerGetAiOrganizationSettingsTool(server, contextProvider);
+  registerUpdateAiOrganizationSettingsTool(server, contextProvider);
 }

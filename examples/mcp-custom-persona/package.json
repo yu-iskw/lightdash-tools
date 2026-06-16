@@ -1,0 +1,25 @@
+{
+  "name": "@acme/lightdash-mcp-finance-viewer",
+  "version": "1.0.0",
+  "description": "Example persona MCP package for Lightdash finance viewing workflows.",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "lightdash-mcp-finance-viewer": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"(example)\""
+  },
+  "dependencies": {
+    "@lightdash-tools/mcp": "^0.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.0",
+    "typescript": "^6.0.0"
+  }
+}

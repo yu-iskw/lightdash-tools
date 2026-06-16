@@ -33,7 +33,7 @@ import {
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
 import { getAuditLogPath, getClient } from '../config.js';
-import { createLightdashMcpServer } from '../server.js';
+import { createGenericLightdashMcpServer } from '../server.js';
 import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
@@ -106,7 +106,7 @@ function createSessionTransport(
   },
 ): StreamableHTTPServerTransport {
   const holder: { server: McpServer } = {
-    server: createLightdashMcpServer(contextProvider),
+    server: createGenericLightdashMcpServer(contextProvider),
   };
   const transport = new StreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),

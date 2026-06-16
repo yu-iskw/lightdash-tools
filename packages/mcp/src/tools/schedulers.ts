@@ -15,7 +15,7 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerSchedulersTools(
+export function registerListSchedulersTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
@@ -51,4 +51,11 @@ export function registerSchedulersTools(
         },
     ),
   );
+}
+
+export function registerSchedulersTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListSchedulersTool(server, contextProvider);
 }

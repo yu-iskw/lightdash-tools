@@ -42,7 +42,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 const bundleYamlField = z.string().min(1).describe('Agent bundle document as YAML text');
 const gateYamlField = z.string().min(1).describe('Evaluation gate document as YAML text');
 
-export function registerAgentopsTools(
+export function registerAiAgentopsPlanTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
@@ -70,7 +70,12 @@ export function registerAgentopsTools(
         },
     ),
   );
+}
 
+export function registerAiAgentopsApplyTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'ai_agentops_apply',
@@ -122,7 +127,12 @@ export function registerAgentopsTools(
         },
     ),
   );
+}
 
+export function registerAiAgentopsEvaluateGateTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'ai_agentops_evaluate_gate',
@@ -228,4 +238,13 @@ export function registerAgentopsTools(
         },
     ),
   );
+}
+
+export function registerAgentopsTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerAiAgentopsPlanTool(server, contextProvider);
+  registerAiAgentopsApplyTool(server, contextProvider);
+  registerAiAgentopsEvaluateGateTool(server, contextProvider);
 }

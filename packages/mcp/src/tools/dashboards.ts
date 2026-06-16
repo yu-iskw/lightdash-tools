@@ -13,7 +13,7 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerDashboardTools(
+export function registerListDashboardsTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
@@ -36,4 +36,11 @@ export function registerDashboardTools(
         },
     ),
   );
+}
+
+export function registerDashboardTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListDashboardsTool(server, contextProvider);
 }

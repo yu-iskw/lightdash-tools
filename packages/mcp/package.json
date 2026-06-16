@@ -5,8 +5,22 @@
   "keywords": [],
   "license": "Apache-2.0",
   "author": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/library.d.ts",
+      "default": "./dist/library.js"
+    },
+    "./tools": {
+      "types": "./dist/tools/index.d.ts",
+      "default": "./dist/tools/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
+    }
+  },
+  "main": "dist/library.js",
+  "types": "dist/library.d.ts",
   "bin": {
     "lightdash-mcp": "./dist/bin.js"
   },

@@ -37,8 +37,23 @@
       "project": ["src/**/*.ts"]
     },
     "packages/mcp": {
-      "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.mjs"]
+      "entry": [
+        "src/bin.ts",
+        "src/index.ts",
+        "src/http.ts",
+        "src/library.ts",
+        "src/testing.ts",
+        "src/**/*.test.ts"
+      ],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/mcp-agent-viewer": {
+      "entry": ["src/bin.ts", "src/index.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
+    },
+    "packages/mcp-agent-developer": {
+      "entry": ["src/bin.ts", "src/index.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
     }
   }
 }

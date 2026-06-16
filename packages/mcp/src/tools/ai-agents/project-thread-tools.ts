@@ -18,12 +18,10 @@ import {
 import type { McpContextProvider } from '../../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectAgentThreadTools(
+export function registerListAgentThreadsTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  // ─── Project-scoped: threads ─────────────────────────────────────────────────
-
   registerToolSafe(
     server,
     'list_agent_threads',
@@ -46,7 +44,12 @@ export function registerProjectAgentThreadTools(
         },
     ),
   );
+}
 
+export function registerGetAgentThreadTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_agent_thread',
@@ -78,7 +81,12 @@ export function registerProjectAgentThreadTools(
         },
     ),
   );
+}
 
+export function registerGenerateAgentMessageTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'generate_agent_message',
@@ -113,7 +121,12 @@ export function registerProjectAgentThreadTools(
         },
     ),
   );
+}
 
+export function registerContinueAgentThreadTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'continue_agent_thread',
@@ -153,4 +166,14 @@ export function registerProjectAgentThreadTools(
         },
     ),
   );
+}
+
+export function registerProjectAgentThreadTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListAgentThreadsTool(server, contextProvider);
+  registerGetAgentThreadTool(server, contextProvider);
+  registerGenerateAgentMessageTool(server, contextProvider);
+  registerContinueAgentThreadTool(server, contextProvider);
 }

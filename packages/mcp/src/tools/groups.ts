@@ -25,7 +25,10 @@ type ListGroupsParams = {
   searchQuery?: string;
 };
 
-export function registerGroupTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListGroupsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_groups',
@@ -48,7 +51,9 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
       },
     ),
   );
+}
 
+export function registerGetGroupTool(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'get_group',
@@ -68,7 +73,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerCreateGroupTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'create_group',
@@ -90,7 +100,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerUpdateGroupTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'update_group',
@@ -113,7 +128,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerDeleteGroupTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'delete_group',
@@ -135,7 +155,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerListGroupMembersTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_group_members',
@@ -157,7 +182,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerAddUserToGroupTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'add_user_to_group',
@@ -184,7 +214,12 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
 
+export function registerRemoveUserFromGroupTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'remove_user_from_group',
@@ -214,4 +249,15 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerGroupTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListGroupsTool(server, contextProvider);
+  registerGetGroupTool(server, contextProvider);
+  registerCreateGroupTool(server, contextProvider);
+  registerUpdateGroupTool(server, contextProvider);
+  registerDeleteGroupTool(server, contextProvider);
+  registerListGroupMembersTool(server, contextProvider);
+  registerAddUserToGroupTool(server, contextProvider);
+  registerRemoveUserFromGroupTool(server, contextProvider);
 }

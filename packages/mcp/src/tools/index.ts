@@ -36,3 +36,23 @@ export function registerTools(server: McpServer, contextProvider: McpContextProv
   registerAiAgentTools(server, contextProvider);
   registerAgentopsTools(server, contextProvider);
 }
+
+// Public tool registration API (used by persona packages).
+export * from './projects.js';
+export * from './charts.js';
+export * from './dashboards.js';
+export * from './spaces.js';
+export * from './users.js';
+export * from './groups.js';
+export * from './query.js';
+export * from './explores.js';
+export * from './metrics.js';
+export * from './schedulers.js';
+export * from './tags.js';
+export * from './content.js';
+export * from './agentops.js';
+
+export * from './ai-agents/admin-tools.js';
+export * from './ai-agents/project-crud-tools.js';
+export * from './ai-agents/project-thread-tools.js';
+export * from './ai-agents/evaluation-tools.js';

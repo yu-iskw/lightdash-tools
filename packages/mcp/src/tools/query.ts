@@ -15,7 +15,10 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerQueryTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerCompileQueryTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'compile_query',
@@ -53,4 +56,8 @@ export function registerQueryTools(server: McpServer, contextProvider: McpContex
         },
     ),
   );
+}
+
+export function registerQueryTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerCompileQueryTool(server, contextProvider);
 }

@@ -14,7 +14,10 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerContentTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerSearchContentTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'search_content',
@@ -49,4 +52,8 @@ export function registerContentTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
+
+export function registerContentTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerSearchContentTool(server, contextProvider);
 }

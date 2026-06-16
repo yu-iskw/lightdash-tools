@@ -17,7 +17,10 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerProjectTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListProjectsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_projects',
@@ -32,6 +35,12 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       return { content: [{ type: 'text', text: JSON.stringify(projects, null, 2) }] };
     }),
   );
+}
+
+export function registerGetProjectTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_project',
@@ -51,6 +60,12 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
+
+export function registerValidateProjectTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'validate_project',
@@ -70,6 +85,12 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
+
+export function registerGetValidationResultsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_validation_results',
@@ -114,4 +135,11 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
         },
     ),
   );
+}
+
+export function registerProjectTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerListProjectsTool(server, contextProvider);
+  registerGetProjectTool(server, contextProvider);
+  registerValidateProjectTool(server, contextProvider);
+  registerGetValidationResultsTool(server, contextProvider);
 }

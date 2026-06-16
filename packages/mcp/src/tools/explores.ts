@@ -15,7 +15,7 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
-export function registerExploresTools(
+export function registerListExploresTool(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
@@ -38,6 +38,12 @@ export function registerExploresTools(
         },
     ),
   );
+}
+
+export function registerGetExploreTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_explore',
@@ -61,6 +67,12 @@ export function registerExploresTools(
         },
     ),
   );
+}
+
+export function registerListDimensionsTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_dimensions',
@@ -83,6 +95,12 @@ export function registerExploresTools(
         },
     ),
   );
+}
+
+export function registerGetFieldLineageTool(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_field_lineage',
@@ -114,4 +132,14 @@ export function registerExploresTools(
         },
     ),
   );
+}
+
+export function registerExploresTools(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerListExploresTool(server, contextProvider);
+  registerGetExploreTool(server, contextProvider);
+  registerListDimensionsTool(server, contextProvider);
+  registerGetFieldLineageTool(server, contextProvider);
 }

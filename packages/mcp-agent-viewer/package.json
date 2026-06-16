@@ -1,0 +1,27 @@
+{
+  "name": "@lightdash-tools/mcp-agent-viewer",
+  "version": "0.6.0",
+  "description": "Curated Lightdash MCP server for AI agent exploration and viewing workflows.",
+  "keywords": [],
+  "license": "Apache-2.0",
+  "author": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "lightdash-mcp-agent-viewer": "./dist/bin.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "pnpm --dir ../.. exec vitest run packages/mcp-agent-viewer/src"
+  },
+  "dependencies": {
+    "@lightdash-tools/mcp": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3"
+  }
+}
