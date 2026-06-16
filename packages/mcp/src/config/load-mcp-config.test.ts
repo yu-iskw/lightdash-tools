@@ -4,6 +4,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
@@ -225,6 +226,25 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.mcpPath).toBe('/mcp');
+  });
+
+  it('strips configured mcpPath suffix from public URL', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com/custom/mcp';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PATH] = '/custom/mcp';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('https://mcp.example.com');
+    expect(config.mcpPath).toBe('/custom/mcp');
+  });
+
+  it('rejects grant-all-scopes override in production', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'production';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES] = '1';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/not allowed in production/);
   });
 
   it('rejects authMode=none in production without dangerous flag', () => {

@@ -108,6 +108,7 @@ Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix per [ADR-0035](adr/0035-e
 | `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                    | —                                  |        `1` in OAuth mode        | Validate bearer via `GET /api/v1/user`. `false` allowed only in `NODE_ENV=development`.        |
 | `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION` | —                                  |               off               | Set `1` to allow `VALIDATE_TOKEN=false` outside development (not recommended).                 |
 | `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED` | —                                  |               off               | Set `1` to allow `AUTH_MODE=none` when `NODE_ENV=production` (not recommended).                |
+| `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES`      | —                                  |               off               | Dev-only: grant all supported scopes to opaque/claimless tokens (blocked in production).       |
 | `LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL`         | —                                  |               off               | Set `1` to allow non-HTTPS `PUBLIC_URL` outside localhost (not recommended).                   |
 | `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS`     | —                                  |             `30000`             | Token validation cache TTL (keyed by SHA-256 token hash).                                      |
 
@@ -207,7 +208,9 @@ The MCP server enforces coarse OAuth scopes at two layers:
 | Endpoint auth | Incoming bearer tokens must include every scope in `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` (default `mcp:read`). Missing scopes return `403 insufficient_scope`. |
 | Tool calls    | Read-only tools require `mcp:read`; write tools require `mcp:write`.                                                                                           |
 
-Scopes are read from JWT `scope` / `scp` claims when the access token is a JWT. Opaque tokens that pass Lightdash validation are treated as granting all `scopes_supported` values for v1.
+Scopes are read from JWT `scope` / `scp` claims when present. Opaque tokens and JWTs without recognizable scope claims receive **no MCP scopes** and are rejected at endpoint auth with `403 insufficient_scope`. Object-level authorization still comes from Lightdash RBAC and process-level safety mode / project allowlists.
+
+For local development only, `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES=1` (disallowed in `NODE_ENV=production`) restores the previous fail-open behavior for opaque/claimless tokens.
 
 ## Diagnostic tool
 
@@ -225,7 +228,7 @@ Use `ldt__get_authenticated_user` to verify per-user identity after OAuth setup.
 
 ### 401 loop or OAuth never completes
 
-- Confirm `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` matches the URL clients use (HTTPS, no trailing slash, no `/mcp` suffix — the server normalizes this).
+- Confirm `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` matches the URL clients use (HTTPS, no trailing slash). The server strips the configured `LIGHTDASH_TOOLS_MCP_PATH` suffix when present, so `https://host/custom/mcp` with `MCP_PATH=/custom/mcp` normalizes to base `https://host`.
 - Fetch metadata manually and verify `authorization_servers` contains your `LIGHTDASH_URL`.
 - Ensure the Lightdash OAuth application allows the MCP client's redirect URI (for Cursor: `cursor://anysphere.cursor-mcp/oauth/callback`).
 - Check that `POST /mcp` without a token returns `401` with `WWW-Authenticate` including `resource_metadata` (not `404`).

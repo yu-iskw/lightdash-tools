@@ -17,6 +17,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
@@ -170,6 +171,7 @@ export interface McpHttpConfig {
   scopesSupported: string[];
   validateToken: boolean;
   tokenValidationCacheTtlMs: number;
+  grantAllScopesWhenUnknown: boolean;
 }
 
 function assertPublicUrlSecurity(
@@ -237,6 +239,15 @@ function assertAuthModeProductionPolicy(authMode: McpAuthMode, env: NodeJS.Proce
   }
 }
 
+function assertGrantAllScopesPolicy(env: NodeJS.ProcessEnv, enabled: boolean): void {
+  if (!enabled || env.NODE_ENV !== 'production') return;
+
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES}=true grants all MCP scopes to opaque or claimless tokens and is not allowed in production. ` +
+      `Use JWT access tokens with scope claims, or set NODE_ENV=development for local testing.`,
+  );
+}
+
 /** Loud warnings for operator misconfiguration. Call once at HTTP server startup. */
 export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
@@ -249,6 +260,12 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
     console.warn(
       `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
         'Use only for local development.',
+    );
+  }
+
+  if (config.grantAllScopesWhenUnknown) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES}=true — opaque or claimless tokens are granted every supported MCP scope.`,
     );
   }
 
@@ -306,7 +323,9 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
-  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw) : undefined;
+  const mcpPathRaw = readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) ?? '/mcp';
+  const mcpPath = normalizeMcpPath(mcpPathRaw);
+  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, mcpPath) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl, env);
 
   const validateToken = parseBooleanEnv(
@@ -316,7 +335,12 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   );
   assertValidateTokenPolicy(authMode, validateToken, env);
 
-  const mcpPathRaw = readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) ?? '/mcp';
+  const grantAllScopesWhenUnknown = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES, env),
+    false,
+  );
+  assertGrantAllScopesPolicy(env, grantAllScopesWhenUnknown);
 
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
@@ -332,7 +356,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       3100,
     ),
     publicUrl,
-    mcpPath: normalizeMcpPath(mcpPathRaw),
+    mcpPath,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     allowedOrigins: parseCsv(allowedOriginsRaw),
@@ -371,6 +395,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       [],
       30_000,
     ),
+    grantAllScopesWhenUnknown,
   };
 }
 
