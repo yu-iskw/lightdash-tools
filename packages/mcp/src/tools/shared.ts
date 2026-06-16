@@ -22,6 +22,11 @@ import {
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
+import {
+  isReadOnlyMcpScope,
+  RequiredMcpScope,
+  type McpToolCapability,
+} from '../auth/mcp-tool-capability.js';
 import { hasToolScope, requiredScopeForTool } from '../auth/token-scopes.js';
 import {
   getStaticSafetyMode,
@@ -108,6 +113,16 @@ export {
   WRITE_OPEN_WORLD,
   WRITE_DESTRUCTIVE,
 } from '@lightdash-tools/common';
+
+export {
+  RequiredMcpScope,
+  READ_ONLY_CAPABILITY,
+  WRITE_IDEMPOTENT_CAPABILITY,
+  WRITE_NONDESTRUCTIVE_CAPABILITY,
+  WRITE_OPEN_WORLD_CAPABILITY,
+  WRITE_DESTRUCTIVE_CAPABILITY,
+  type McpToolCapability,
+} from '../auth/mcp-tool-capability.js';
 
 /** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
 const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
@@ -339,31 +354,32 @@ export function registerToolSafe(
 export function wrapTool<T>(
   contextProvider: McpContextProvider,
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
-  options?: { readOnly?: boolean },
+  options?: { requiredMcpScope?: RequiredMcpScope },
 ): ToolHandler {
-  const readOnly = options?.readOnly ?? true;
+  const requiredMcpScope = options?.requiredMcpScope ?? RequiredMcpScope.READ;
+  const readOnly = isReadOnlyMcpScope(requiredMcpScope);
   return async (args: unknown, extra?: unknown) => {
     try {
       const context = await contextProvider.getContext(extra);
       const auth = context.auth;
 
-      if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
-        const required = requiredScopeForTool(readOnly);
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
-
       return await runWithToolAuditAuthAsync(
         { tokenHash: auth?.tokenHash, subject: auth?.subject, scopes: auth?.scopes },
         async () => {
+          if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
+            const required = requiredScopeForTool(readOnly);
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
+                },
+              ],
+              isError: true,
+              _lightdashBlocked: true,
+            } as BlockedContent;
+          }
+
           const handler = fn(context.lightdashClient);
           return await handler(args as T);
         },
@@ -375,11 +391,11 @@ export function wrapTool<T>(
   };
 }
 
-/** Wraps a tool handler with request context and OAuth scope checks from annotations. */
+/** Wraps a tool handler with request context and explicit OAuth scope classification. */
 export function wrapToolAnnotated<T>(
   contextProvider: McpContextProvider,
-  annotations: ToolAnnotations,
+  capability: McpToolCapability,
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
 ): ToolHandler {
-  return wrapTool(contextProvider, fn, { readOnly: !!annotations.readOnlyHint });
+  return wrapTool(contextProvider, fn, { requiredMcpScope: capability.requiredMcpScope });
 }

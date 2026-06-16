@@ -6,7 +6,12 @@
 import { z } from 'zod';
 
 import { userUuidField } from './schema-fields.js';
-import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import {
+  READ_ONLY_CAPABILITY,
+  READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -33,7 +38,7 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) => async (params: ListMembersParams) => {
         const result = await c.v1.users.listMembers(params ?? {});
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
@@ -51,7 +56,7 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ userUuid }: { userUuid: string }) => {
           const member = await c.v1.users.getMemberByUuid(userUuid);
@@ -69,7 +74,7 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
       const user = await c.v1.users.getAuthenticatedUser();
       const safe = {
         userUuid: user.userUuid,

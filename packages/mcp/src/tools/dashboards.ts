@@ -3,7 +3,12 @@
  */
 
 import { projectUuidField } from './schema-fields.js';
-import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import {
+  READ_ONLY_CAPABILITY,
+  READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -23,7 +28,7 @@ export function registerDashboardTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const dashboards = await c.v1.dashboards.listDashboards(projectUuid);

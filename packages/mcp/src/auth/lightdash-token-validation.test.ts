@@ -67,6 +67,35 @@ describe('validateLightdashAccessToken', () => {
     expect(user.userUuid).toMatch(/^unvalidated:/);
   });
 
+  it('validates Lightdash OAuth bearer via Authorization Bearer on GET /api/v1/user', async () => {
+    const seenHeaders: string[] = [];
+    const api = await startUserApiServer((req, res) => {
+      const auth = req.headers.authorization ?? '';
+      seenHeaders.push(typeof auth === 'string' ? auth : (auth[0] ?? ''));
+      if (req.method === 'GET' && req.url === '/api/v1/user') {
+        res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+          JSON.stringify({
+            status: 'ok',
+            results: { userUuid: 'u1', email: 'a@b.com', organizationUuid: 'org-1' },
+          }),
+        );
+        return;
+      }
+      res.writeHead(404).end();
+    });
+
+    try {
+      const user = await validateLightdashAccessToken(
+        baseConfig(api.baseUrl),
+        'oauth-access-token',
+      );
+      expect(user.userUuid).toBe('u1');
+      expect(seenHeaders).toContain('Bearer oauth-access-token');
+    } finally {
+      await api.close();
+    }
+  });
+
   it('returns validated user for a valid bearer token', async () => {
     const api = await startUserApiServer((req, res) => {
       if (req.method === 'GET' && req.url === '/api/v1/user') {

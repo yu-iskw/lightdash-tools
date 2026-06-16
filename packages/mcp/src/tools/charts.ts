@@ -6,10 +6,12 @@ import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -28,7 +30,7 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const charts = await c.v1.charts.getChartsAsCode(projectUuid);
@@ -50,7 +52,7 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, ids }: { projectUuid: string; ids?: string[] }) => {
           const result = await c.v1.charts.getChartsAsCode(projectUuid, { ids });
@@ -75,7 +77,7 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

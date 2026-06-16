@@ -6,13 +6,17 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
   jsonToolResult,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
-  WRITE_NONDESTRUCTIVE,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
+  WRITE_DESTRUCTIVE_CAPABILITY,
+  WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
+  WRITE_NONDESTRUCTIVE,
+  WRITE_NONDESTRUCTIVE_CAPABILITY,
 } from '../shared.js';
 
 import type { McpContextProvider } from '../../request-context.js';
@@ -45,7 +49,7 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listEvaluations(projectUuid, agentUuid);
@@ -69,7 +73,7 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -101,7 +105,7 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -139,7 +143,7 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -189,7 +193,7 @@ function registerEvaluationWriteTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_NONDESTRUCTIVE,
+      WRITE_NONDESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -236,7 +240,7 @@ function registerEvaluationWriteTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -279,7 +283,7 @@ function registerEvaluationWriteTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_NONDESTRUCTIVE,
+      WRITE_NONDESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -315,7 +319,7 @@ function registerEvaluationWriteTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_NONDESTRUCTIVE,
+      WRITE_NONDESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -347,7 +351,7 @@ function registerEvaluationWriteTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

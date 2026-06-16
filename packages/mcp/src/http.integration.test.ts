@@ -739,6 +739,102 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   });
 });
 
+describe('MCP HTTP OAuth transport lifecycle', () => {
+  let mockLightdash: MockLightdashServer;
+  let mcpServer: McpHttpServer;
+
+  beforeEach(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockLightdash = await startMockLightdashServer();
+    mcpServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(mockLightdash.baseUrl),
+      maxBodyBytes: 512,
+    });
+  });
+
+  afterEach(async () => {
+    await mcpServer.close();
+    await mockLightdash.close();
+    vi.restoreAllMocks();
+  });
+
+  it('supports initialize → notification → GET on the same OAuth session', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const notifyResponse = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+    expect([200, 202]).toContain(notifyResponse.status);
+
+    const getResponse = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${TOKEN_A}`,
+        'Mcp-Session-Id': sessionId ?? '',
+      },
+    });
+
+    expect(getResponse.status).not.toBe(401);
+    expect(getResponse.status).not.toBe(404);
+  });
+
+  it('returns 413 for oversized JSON body after OAuth authentication', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const hugeBody = JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'notifications/initialized',
+      params: { padding: 'x'.repeat(1024) },
+    });
+
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${TOKEN_A}`,
+        'Mcp-Session-Id': sessionId ?? '',
+      },
+      body: hugeBody,
+    });
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({ error: 'Payload Too Large' });
+  });
+
+  it('closes session on DELETE and rejects subsequent resume with 404', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const deleteResponse = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${TOKEN_A}`,
+        'Mcp-Session-Id': sessionId ?? '',
+      },
+    });
+    expect([200, 202, 204]).toContain(deleteResponse.status);
+
+    const resumeResponse = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+    expect(resumeResponse.status).toBe(404);
+    expect(await resumeResponse.json()).toEqual({ error: 'Session not found' });
+  });
+});
+
 describe('MCP HTTP shared-key integration', () => {
   let mcpServer: McpHttpServer;
   const originalEnv = { ...process.env };

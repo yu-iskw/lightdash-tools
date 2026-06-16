@@ -6,10 +6,12 @@ import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -25,7 +27,7 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
       const projects = await c.v1.projects.listProjects();
       return { content: [{ type: 'text', text: JSON.stringify(projects, null, 2) }] };
     }),
@@ -41,7 +43,7 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const project = await c.v1.projects.getProject(projectUuid);
@@ -60,7 +62,7 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const result = await c.v1.validation.validateProject(projectUuid);
@@ -84,7 +86,7 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

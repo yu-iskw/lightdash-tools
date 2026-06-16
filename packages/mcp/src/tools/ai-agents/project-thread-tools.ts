@@ -6,11 +6,13 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
   jsonToolResult,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_OPEN_WORLD,
+  WRITE_OPEN_WORLD_CAPABILITY,
 } from '../shared.js';
 
 import type { McpContextProvider } from '../../request-context.js';
@@ -36,7 +38,7 @@ export function registerProjectAgentThreadTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listAgentThreads(projectUuid, agentUuid);
@@ -60,7 +62,7 @@ export function registerProjectAgentThreadTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -93,7 +95,7 @@ export function registerProjectAgentThreadTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_OPEN_WORLD,
+      WRITE_OPEN_WORLD_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -128,7 +130,7 @@ export function registerProjectAgentThreadTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_OPEN_WORLD,
+      WRITE_OPEN_WORLD_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

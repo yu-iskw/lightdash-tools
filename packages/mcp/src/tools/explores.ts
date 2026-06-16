@@ -5,7 +5,12 @@
 import { z } from 'zod';
 
 import { exploreIdField, projectUuidField } from './schema-fields.js';
-import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import {
+  READ_ONLY_CAPABILITY,
+  READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -25,7 +30,7 @@ export function registerExploresTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const explores = await c.v1.explores.listExplores(projectUuid);
@@ -48,7 +53,7 @@ export function registerExploresTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
@@ -70,7 +75,7 @@ export function registerExploresTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
@@ -93,7 +98,7 @@ export function registerExploresTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
