@@ -2,7 +2,8 @@
  * Structured audit logger for Lightdash tool invocations (MCP and CLI).
  *
  * Each operation is recorded as a single NDJSON line containing:
- *   timestamp, sessionId, tool/command name, projectUuids (if present), status, and durationMs.
+ *   timestamp, sessionId, tool/command name, projectUuids (if present), status, durationMs,
+ *   and optional OAuth attribution fields (tokenHash, subject) when available.
  *
  * Output destination:
  *   - If LIGHTDASH_TOOLS_AUDIT_LOG is set to a file path, entries are appended to that file.
@@ -21,6 +22,10 @@ export type AuditLogEntry = {
   tool: string;
   /** Project UUIDs involved in the call, if any (covers both projectUuid and projectUuids[]). */
   projectUuids?: string[];
+  /** SHA-256 hash of the OAuth bearer token (never the raw token). */
+  tokenHash?: string;
+  /** Lightdash user UUID when the call runs under OAuth bearer auth. */
+  subject?: string;
   status: AuditStatus;
   durationMs: number;
 };

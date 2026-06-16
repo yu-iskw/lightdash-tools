@@ -1364,7 +1364,7 @@ Important:
 | Reimplemented RBAC mismatch                  | High   | Do not implement Lightdash object RBAC; delegate to Lightdash API.                   |
 | Agent destructive actions                    | High   | Keep `read-only` default; static filtering; dry-run; denylist for irrecoverable ops. |
 | CSRF/browser-origin misuse                   | Medium | Optional origin allowlist; avoid cookie auth; use bearer only.                       |
-| Rate-limit bypass                            | Medium | Per-IP and per-token hash rate limiting.                                             |
+| Rate-limit bypass                            | Medium | Deferred to gateway/Cloud Armor; no in-process rate limiting in v1.                  |
 
 ---
 

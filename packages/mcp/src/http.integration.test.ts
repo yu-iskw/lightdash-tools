@@ -352,6 +352,17 @@ describe('MCP HTTP CORS integration', () => {
     expect(response.headers.get('access-control-allow-methods')).toContain('POST');
     expect(response.headers.get('access-control-allow-headers')).toContain('MCP-Protocol-Version');
   });
+
+  it('returns 403 for disallowed origins', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://evil.example.com' },
+    });
+
+    expect(response.status).toBe(403);
+    const body = (await response.json()) as { error: string };
+    expect(body.error).toContain('origin not allowed');
+  });
 });
 
 describe('MCP HTTP unrestricted CORS integration', () => {

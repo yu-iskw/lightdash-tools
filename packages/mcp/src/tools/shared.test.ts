@@ -512,8 +512,16 @@ describe('registerToolSafe', () => {
 
   it('wrapTool returns a safe error message when the inner handler throws', async () => {
     const contextProvider = {
-      getContext: async () => ({ lightdashClient: {} }),
-    } as McpContextProvider;
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: { mode: 'none' as const },
+        governance: {
+          safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
+          dryRun: false,
+          allowedProjectUuids: [],
+        },
+      }),
+    } as unknown as McpContextProvider;
     const wrapped = wrapTool(contextProvider, () => async () => {
       throw new Error('boom');
     });

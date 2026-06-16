@@ -26,10 +26,12 @@ import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
 import {
   loadMcpHttpConfig,
   requiresLightdashApiKey,
+  emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
 import { getAuditLogPath, getClient } from '../config.js';
 import { createLightdashMcpServer } from '../server.js';
+import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import { parseJsonBody, readBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
@@ -261,7 +263,10 @@ async function handleExistingSessionPost(
   }
   if (!verifySessionAuth(req, res, config, entry)) return;
   sessionStore.touch(sid);
-  await entry.transport.handleRequest(req, res, body);
+  await runWithToolAuditAuthAsync(
+    { tokenHash: entry.auth.tokenHash, subject: entry.auth.subject },
+    () => entry.transport.handleRequest(req, res, body),
+  );
 }
 
 async function handleInitializePost(
@@ -310,7 +315,10 @@ async function handleInitializePost(
       tokenHash: contextProvider.getTokenHash(),
       subject: oauth.user.userUuid,
     });
-    await transport.handleRequest(req, res, body);
+    await runWithToolAuditAuthAsync(
+      { tokenHash: contextProvider.getTokenHash(), subject: oauth.user.userUuid },
+      () => transport.handleRequest(req, res, body),
+    );
     return;
   }
 
@@ -380,7 +388,10 @@ async function handleMcpGetOrDelete(
   if (!verifySessionAuth(req, res, config, entry)) return;
 
   sessionStore.touch(sid);
-  await entry.transport.handleRequest(req, res);
+  await runWithToolAuditAuthAsync(
+    { tokenHash: entry.auth.tokenHash, subject: entry.auth.subject },
+    () => entry.transport.handleRequest(req, res),
+  );
 }
 
 export interface StreamableHttpServerHandle {
@@ -394,11 +405,7 @@ export async function createStreamableHttpServer(
 ): Promise<StreamableHttpServerHandle> {
   const inputConfig = config ?? loadMcpHttpConfig();
 
-  if (inputConfig.authMode === MCP_AUTH_MODE_NONE) {
-    console.warn(
-      'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=none — MCP HTTP endpoint is unauthenticated. Use lightdash-oauth or shared-key in production.',
-    );
-  }
+  emitMcpHttpSecurityWarnings(inputConfig);
 
   initAuditLog(getAuditLogPath());
 

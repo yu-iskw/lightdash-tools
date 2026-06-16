@@ -47,7 +47,7 @@ Security analysis for hosted `@lightdash-tools/mcp` deployments using `LIGHTDASH
 ### Logging and observability
 
 - [ ] Configure log redaction for `Authorization` and `Proxy-Authorization` headers.
-- [ ] Verify audit log entries contain `tokenHash`, not raw tokens.
+- [ ] Verify audit log entries contain `tokenHash` and `subject` (not raw tokens) for OAuth sessions.
 - [ ] Avoid capturing full HTTP request dumps in production.
 
 ### Network and deployment

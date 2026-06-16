@@ -39,6 +39,8 @@ describe('audit', () => {
       timestamp: '2026-01-01T00:00:00.000Z',
       sessionId: getSessionId(),
       tool: 'test_tool',
+      tokenHash: 'abc123',
+      subject: 'user-uuid',
       status: 'success',
       durationMs: 12,
     });
@@ -49,6 +51,8 @@ describe('audit', () => {
     expect(auditLine).toBeDefined();
     expect(auditLine).toContain('[audit]');
     expect(auditLine).toContain('"status":"success"');
+    expect(auditLine).toContain('"tokenHash":"abc123"');
+    expect(auditLine).toContain('"subject":"user-uuid"');
   });
 
   it('logAuditEntry appends to a file when initAuditLog receives a path', async () => {

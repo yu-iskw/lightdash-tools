@@ -96,9 +96,9 @@ export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
 npx @lightdash-tools/mcp serve-http
 ```
 
-The server listens on `http://localhost:3100` (or `MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
+The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
 
-With auth disabled (default), any client can call the endpoint. With `MCP_AUTH_ENABLED` set, send `Authorization: Bearer <token>` or `X-API-Key: <key>` matching `MCP_API_KEY`; otherwise the server returns 401.
+**Auth modes (HTTP):** default is `none` (unauthenticated endpoint; startup warning). For production use `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` or `shared-key`. In `shared-key` mode, clients send `Authorization: Bearer <shared-key>` or `X-API-Key: <shared-key>` matching `LIGHTDASH_TOOLS_MCP_SHARED_KEY`.
 
 ## Tools
 

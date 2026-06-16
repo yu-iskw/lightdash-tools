@@ -14,7 +14,9 @@ import {
 
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
+  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
@@ -42,6 +44,8 @@ import {
 import { normalizeLightdashUrl, normalizePublicUrl } from './normalize-url.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
+
+const DEFAULT_SCOPES_SUPPORTED = ['read', 'write', 'mcp:read', 'mcp:write'] as const;
 
 const warnedAliases = new Set<string>();
 
@@ -160,6 +164,85 @@ export interface McpHttpConfig {
   tokenValidationCacheTtlMs: number;
 }
 
+function assertPublicUrlSecurity(
+  authMode: McpAuthMode,
+  publicUrl: string | undefined,
+  env: NodeJS.ProcessEnv,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || !publicUrl) return;
+
+  if (publicUrl.startsWith('https://')) return;
+
+  const allowInsecure = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
+    readEnvFrom(ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL, env),
+    false,
+  );
+  if (allowInsecure) return;
+
+  const isLocalHttp =
+    publicUrl.startsWith('http://localhost') || publicUrl.startsWith('http://127.0.0.1');
+  if (isLocalHttp) return;
+
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} must use https:// in lightdash-oauth mode (got ${publicUrl}). ` +
+      `For local HTTP testing set ${ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL}=1.`,
+  );
+}
+
+function readEnvFrom(name: string, env: NodeJS.ProcessEnv): string | undefined {
+  // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants in this module
+  const value = env[name];
+  if (value === undefined || value === '') return undefined;
+  return value;
+}
+
+function assertValidateTokenPolicy(
+  authMode: McpAuthMode,
+  validateToken: boolean,
+  env: NodeJS.ProcessEnv,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || validateToken) return;
+
+  const dangerouslyAllowed = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
+    readEnvFrom(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION, env),
+    false,
+  );
+  const isDevelopment = env.NODE_ENV === 'development';
+
+  if (!isDevelopment && !dangerouslyAllowed) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false disables OAuth token validation and is not allowed in production. ` +
+        `Unset it, set NODE_ENV=development for local dev, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION}=1 ` +
+        `only when you accept the security risk.`,
+    );
+  }
+}
+
+/** Loud warnings for operator misconfiguration. Call once at HTTP server startup. */
+export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
+  if (config.authMode === MCP_AUTH_MODE_NONE) {
+    console.warn(
+      'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=none — MCP HTTP endpoint is unauthenticated. Use lightdash-oauth or shared-key in production.',
+    );
+  }
+
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && !config.validateToken) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
+        'Use only for local development.',
+    );
+  }
+
+  if (config.allowedOrigins.length === 0) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
+        'Set an explicit allowlist for browser-facing deployments.',
+    );
+  }
+}
+
 function assertAuthModeRequirements(
   authMode: McpAuthMode,
   publicUrlRaw: string | undefined,
@@ -184,6 +267,7 @@ function readScopeList(primary: string, fallback: string[]): string[] {
 }
 
 export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
+  const env = _env;
   const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL);
   if (!lightdashUrlRaw) {
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
@@ -204,6 +288,16 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION);
 
+  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw) : undefined;
+  assertPublicUrlSecurity(authMode, publicUrl, env);
+
+  const validateToken = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN),
+    authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH,
+  );
+  assertValidateTokenPolicy(authMode, validateToken, env);
+
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
     proxyAuthorization: proxyAuth ? new SecretString(proxyAuth) : undefined,
@@ -216,7 +310,7 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
       ],
       3100,
     ),
-    publicUrl: publicUrlRaw ? normalizePublicUrl(publicUrlRaw) : undefined,
+    publicUrl,
     mcpPath: readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH) ?? '/mcp',
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
@@ -243,14 +337,9 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
     ),
     requiredScopes: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, ['mcp:read']),
     scopesSupported: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
-      'mcp:read',
-      'mcp:write',
+      ...DEFAULT_SCOPES_SUPPORTED,
     ]),
-    validateToken: parseBooleanEnv(
-      ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
-      readEnv(ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN),
-      authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH,
-    ),
+    validateToken,
     tokenValidationCacheTtlMs: readNumberEnv(
       ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
       [],

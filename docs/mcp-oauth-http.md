@@ -90,23 +90,25 @@ These apply to all auth modes and remain operator-configured (not per OAuth user
 
 Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix per [ADR-0035](adr/0035-environment-variables-prefix-lightdash-tools.md). Legacy `MCP_*` aliases still work with one-time deprecation warnings; the new name wins when both are set.
 
-| New variable                                        | Old alias                          |             Default             | Description                                                                       |
-| :-------------------------------------------------- | :--------------------------------- | :-----------------------------: | :-------------------------------------------------------------------------------- |
-| `LIGHTDASH_TOOLS_MCP_HTTP_HOST`                     | —                                  |            `0.0.0.0`            | HTTP bind host.                                                                   |
-| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`                     | `MCP_HTTP_PORT`, `MCP_SERVER_PORT` |             `3100`              | HTTP port.                                                                        |
-| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`                    | `MCP_PUBLIC_URL`                   |                —                | Public HTTPS base URL for OAuth metadata. **Required in `lightdash-oauth` mode.** |
-| `LIGHTDASH_TOOLS_MCP_PATH`                          | —                                  |             `/mcp`              | MCP endpoint path.                                                                |
-| `LIGHTDASH_TOOLS_MCP_AUTH_MODE`                     | derived from `MCP_AUTH_ENABLED`    |             `none`              | `none`, `shared-key`, or `lightdash-oauth`.                                       |
-| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`                    | `MCP_API_KEY`                      |                —                | Shared endpoint secret for `shared-key` mode.                                     |
-| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`               | `MCP_ALLOWED_ORIGINS`              |             (empty)             | Comma-separated CORS/origin allowlist.                                            |
-| `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES`                | `MCP_MAX_BODY_BYTES`               |            `1048576`            | Maximum JSON body size.                                                           |
-| `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`                | `MCP_SESSION_TTL_MS`               |            `1800000`            | Session TTL for stateful Streamable HTTP.                                         |
-| `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`                  | `MCP_MAX_SESSIONS`                 |              `100`              | Maximum active sessions.                                                          |
-| `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`            | `MCP_SESSION_CLEANUP_MS`           |             `60000`             | Session cleanup interval.                                                         |
-| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`               | —                                  |           `mcp:read`            | Scopes advertised in `WWW-Authenticate`.                                          |
-| `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`              | —                                  | `read,write,mcp:read,mcp:write` | Scopes in protected-resource metadata.                                            |
-| `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                | —                                  |        `1` in OAuth mode        | Validate bearer token via `GET /api/v1/user`.                                     |
-| `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS` | —                                  |             `30000`             | Token validation cache TTL (keyed by SHA-256 token hash).                         |
+| New variable                                            | Old alias                          |             Default             | Description                                                                                    |
+| :------------------------------------------------------ | :--------------------------------- | :-----------------------------: | :--------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_HTTP_HOST`                         | —                                  |            `0.0.0.0`            | HTTP bind host.                                                                                |
+| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`                         | `MCP_HTTP_PORT`, `MCP_SERVER_PORT` |             `3100`              | HTTP port.                                                                                     |
+| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`                        | `MCP_PUBLIC_URL`                   |                —                | Public HTTPS base URL for OAuth metadata. **Required in `lightdash-oauth` mode.**              |
+| `LIGHTDASH_TOOLS_MCP_PATH`                              | —                                  |             `/mcp`              | MCP endpoint path.                                                                             |
+| `LIGHTDASH_TOOLS_MCP_AUTH_MODE`                         | derived from `MCP_AUTH_ENABLED`    |             `none`              | `none`, `shared-key`, or `lightdash-oauth`.                                                    |
+| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`                        | `MCP_API_KEY`                      |                —                | Shared endpoint secret for `shared-key` mode.                                                  |
+| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`                   | `MCP_ALLOWED_ORIGINS`              |             (empty)             | Comma-separated CORS origin allowlist. Empty = reflect any browser `Origin` (startup warning). |
+| `LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES`                    | `MCP_MAX_BODY_BYTES`               |            `1048576`            | Maximum JSON body size.                                                                        |
+| `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`                    | `MCP_SESSION_TTL_MS`               |            `1800000`            | Session TTL for stateful Streamable HTTP.                                                      |
+| `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`                      | `MCP_MAX_SESSIONS`                 |              `100`              | Maximum active sessions.                                                                       |
+| `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`                | `MCP_SESSION_CLEANUP_MS`           |             `60000`             | Session cleanup interval.                                                                      |
+| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`                   | —                                  |           `mcp:read`            | Scopes advertised in `WWW-Authenticate`.                                                       |
+| `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`                  | —                                  | `read,write,mcp:read,mcp:write` | Scopes in protected-resource metadata.                                                         |
+| `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                    | —                                  |        `1` in OAuth mode        | Validate bearer via `GET /api/v1/user`. `false` allowed only in `NODE_ENV=development`.        |
+| `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION` | —                                  |               off               | Set `1` to allow `VALIDATE_TOKEN=false` outside development (not recommended).                 |
+| `LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL`         | —                                  |               off               | Set `1` to allow non-HTTPS `PUBLIC_URL` outside localhost (not recommended).                   |
+| `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS`     | —                                  |             `30000`             | Token validation cache TTL (keyed by SHA-256 token hash).                                      |
 
 ### Legacy alias migration
 
@@ -226,9 +228,14 @@ The client switched OAuth users or refreshed to a different access token while r
 
 Lightdash rejected the bearer token. The server returns `401` with `WWW-Authenticate: Bearer error="invalid_token", …`. Re-authenticate through the MCP client's OAuth flow.
 
-### Insufficient scope
+### Write tools blocked by safety mode or Lightdash permissions
 
-Write tools may return `403` with `error="insufficient_scope"`. Request broader scopes in the OAuth application or client config (e.g. `mcp:write`).
+v1 does **not** emit OAuth `403 insufficient_scope` from the MCP server. Write authorization is enforced by:
+
+- `LIGHTDASH_TOOLS_SAFETY_MODE` (process-scoped guardrails on the MCP server)
+- Lightdash API permissions for the authenticated user's bearer token
+
+If a write tool fails, check safety mode and Lightdash RBAC before adjusting OAuth application scopes. MCP advertises `scopes_supported` in metadata for client configuration; runtime scope enforcement at the MCP layer is deferred until Lightdash documents token scope claims.
 
 ### Shared-key mode still requires PAT
 
