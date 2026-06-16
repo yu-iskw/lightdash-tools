@@ -1,3 +1,4 @@
+import { LightdashClient, SecretString } from '@lightdash-tools/client';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -65,8 +66,9 @@ describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
 });
 
 describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
-  it('validates live OAuth bearer token against Lightdash', async () => {
+  it('validates live OAuth bearer token against Lightdash via GET /api/v1/user', async () => {
     const lightdashUrl = process.env.LIGHTDASH_URL!.replace(/\/$/, '');
+    const accessToken = process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN!;
     const config: McpHttpConfig = {
       lightdashUrl,
       host: '127.0.0.1',
@@ -89,13 +91,36 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
       dangerouslyAllowAnyOrigin: false,
     };
 
-    const user = await validateLightdashAccessToken(
-      config,
-      process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN!,
-    );
+    const user = await validateLightdashAccessToken(config, accessToken);
 
     expect(user.userUuid).toBeDefined();
     expect(user.email).toBeDefined();
-    console.error(`OAuth token authenticated as: ${user.email} (${user.userUuid})`);
+    if (user.organizationUuid !== undefined) {
+      expect(typeof user.organizationUuid).toBe('string');
+    }
+    console.error(
+      `OAuth token authenticated as: ${user.email} (${user.userUuid}) org=${user.organizationUuid ?? 'none'}`,
+    );
+  });
+
+  it('accepts the same live OAuth bearer on LightdashClient.getAuthenticatedUser()', async () => {
+    const lightdashUrl = process.env.LIGHTDASH_URL!.replace(/\/$/, '');
+    const accessToken = process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN!;
+    const client = new LightdashClient({
+      baseUrl: lightdashUrl,
+      auth: { type: 'bearer', token: new SecretString(accessToken) },
+      retry: { maxRetries: 0 },
+      timeout: 10_000,
+    });
+
+    const user = await client.v1.users.getAuthenticatedUser();
+
+    expect(user.userUuid).toBeDefined();
+    if (user.organizationUuid !== undefined) {
+      expect(typeof user.organizationUuid).toBe('string');
+    }
+    console.error(
+      `LightdashClient bearer GET /api/v1/user: ${user.email ?? 'no-email'} (${user.userUuid})`,
+    );
   });
 });

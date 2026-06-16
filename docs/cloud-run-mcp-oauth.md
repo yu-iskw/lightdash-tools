@@ -21,6 +21,7 @@ ENV LIGHTDASH_TOOLS_MCP_HTTP_HOST=0.0.0.0
 ENV LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 ENV LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth
 ENV LIGHTDASH_TOOLS_SAFETY_MODE=read-only
+ENV LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1
 
 CMD ["node", "packages/mcp/dist/bin.js", "serve-http"]
 ```
@@ -36,6 +37,7 @@ LIGHTDASH_URL=https://app.lightdash.cloud
 LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://lightdash-mcp-xxxxx.a.run.app
 LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth
+LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1
 LIGHTDASH_TOOLS_SAFETY_MODE=read-only
 LIGHTDASH_TOOLS_ALLOWED_PROJECTS=project_uuid_1,project_uuid_2
 ```
@@ -57,7 +59,7 @@ gcloud builds submit --tag gcr.io/PROJECT_ID/lightdash-mcp
 gcloud run deploy lightdash-mcp \
   --image gcr.io/PROJECT_ID/lightdash-mcp \
   --port 8080 \
-  --set-env-vars "LIGHTDASH_URL=https://app.lightdash.cloud,LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth,LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080,LIGHTDASH_TOOLS_SAFETY_MODE=read-only" \
+  --set-env-vars "LIGHTDASH_URL=https://app.lightdash.cloud,LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth,LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080,LIGHTDASH_TOOLS_SAFETY_MODE=read-only,LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1" \
   --set-env-vars "LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://lightdash-mcp-xxxxx.a.run.app" \
   --set-env-vars "LIGHTDASH_TOOLS_ALLOWED_PROJECTS=project_uuid_1,project_uuid_2" \
   --allow-unauthenticated

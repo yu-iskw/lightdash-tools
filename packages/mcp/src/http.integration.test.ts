@@ -523,6 +523,7 @@ describe('MCP HTTP CORS integration', () => {
     });
 
     expect(response.status).toBe(403);
+    expect(response.headers.get('access-control-allow-origin')).toBeNull();
     const body = (await response.json()) as { error: string };
     expect(body.error).toContain('origin not allowed');
   });
@@ -572,6 +573,7 @@ describe('MCP HTTP unrestricted CORS integration', () => {
       });
 
       expect(response.status).toBe(403);
+      expect(response.headers.get('access-control-allow-origin')).toBeNull();
       expect(await response.json()).toEqual({ error: 'Forbidden: origin not allowed' });
     } finally {
       await restrictedServer.close();
@@ -633,6 +635,41 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     expect(text).not.toContain(TOKEN_A);
     expect(mockLightdash.authorizationHeaders.length).toBeGreaterThan(userCallsBefore);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
+  });
+
+  it('forwards refreshed bearer token to Lightdash on tool calls after session resume', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_A_REFRESHED, sessionId: sessionId ?? undefined },
+    );
+
+    const headersBeforeTool = mockLightdash.authorizationHeaders.length;
+
+    const callResponse = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        id: 6,
+      },
+      { token: TOKEN_A_REFRESHED, sessionId: sessionId ?? undefined },
+    );
+
+    expect(callResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(callResponse)) as {
+      result?: { content?: Array<{ text?: string }> };
+    };
+    expect(payload.result?.content?.[0]?.text ?? '').toContain(USER_A.userUuid);
+
+    const toolHeaders = mockLightdash.authorizationHeaders.slice(headersBeforeTool);
+    expect(toolHeaders).toContain(`Bearer ${TOKEN_A_REFRESHED}`);
+    expect(toolHeaders).not.toContain(`Bearer ${TOKEN_A}`);
   });
 
   it('initializes MCP session with opaque OAuth bearer when endpoint scopes are unset', async () => {

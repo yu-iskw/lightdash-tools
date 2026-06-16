@@ -1,3 +1,10 @@
+/**
+ * Validates a Lightdash OAuth/PAT bearer by calling upstream `GET /api/v1/user`.
+ *
+ * Upstream Lightdash accepts OAuth bearer tokens on this route via
+ * `allowApiKeyAuthentication` (see docs/agent-context/lightdash-oauth-upstream-contract.md).
+ */
+
 import {
   createBearerConfig,
   LightdashApiError,
