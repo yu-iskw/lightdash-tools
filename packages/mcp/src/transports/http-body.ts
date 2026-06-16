@@ -2,6 +2,12 @@ import { sendJson } from './http-response.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
+/** Discards an unread request body after an early auth rejection. */
+export function drainRequestBody(req: IncomingMessage): void {
+  req.resume();
+  req.on('data', () => undefined);
+}
+
 export function readBody(
   req: IncomingMessage,
   res: ServerResponse,

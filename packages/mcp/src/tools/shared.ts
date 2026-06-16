@@ -22,6 +22,7 @@ import {
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
+import { hasToolScope, requiredScopeForTool } from '../auth/token-scopes.js';
 import {
   getStaticSafetyMode,
   getSafetyMode,
@@ -243,6 +244,27 @@ export function registerToolSafe(
     });
   }
 
+  // ── OAuth MCP scope wrapper ───────────────────────────────────────────────
+  // Enforce coarse mcp:read / mcp:write scopes when OAuth audit context is present.
+  const scopeCheckedInner = finalHandler;
+  finalHandler = async (args, extra): Promise<TextContent> => {
+    const auth = getToolAuditAuth();
+    if (auth?.scopes && !hasToolScope(auth.scopes, !!annotations.readOnlyHint)) {
+      const required = requiredScopeForTool(!!annotations.readOnlyHint);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error: insufficient_scope: tool '${name}' requires OAuth scope '${required}'.`,
+          },
+        ],
+        isError: true,
+        _lightdashBlocked: true,
+      } as BlockedContent;
+    }
+    return scopeCheckedInner(args, extra);
+  };
+
   // ── Input validation wrapper ─────────────────────────────────────────────
   // Validate resource IDs (projectUuid, slug, etc.) before handler.
   const validatedInner = finalHandler;
@@ -344,7 +366,7 @@ export function wrapTool<T>(
       const context = await contextProvider.getContext(extra);
       const auth = context.auth;
       return await runWithToolAuditAuthAsync(
-        { tokenHash: auth?.tokenHash, subject: auth?.subject },
+        { tokenHash: auth?.tokenHash, subject: auth?.subject, scopes: auth?.scopes },
         async () => {
           const handler = fn(context.lightdashClient);
           return await handler(args as T);

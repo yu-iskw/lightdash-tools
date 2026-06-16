@@ -10,6 +10,7 @@ import type { AddressInfo } from 'node:net';
 
 const TOKEN_A = 'token-a';
 const TOKEN_B = 'token-b';
+const TOKEN_A_REFRESHED = 'token-a-refreshed';
 
 const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com' };
 const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com' };
@@ -50,6 +51,7 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
   const authorizationHeaders: string[] = [];
   const users: Record<string, { userUuid: string; email: string }> = {
     [TOKEN_A]: USER_A,
+    [TOKEN_A_REFRESHED]: USER_A,
     [TOKEN_B]: USER_B,
   };
 
@@ -210,7 +212,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
   });
 
-  it('returns 401 Session token mismatch when resuming with a different bearer', async () => {
+  it('returns 401 Session subject mismatch when resuming with a different user bearer', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');
     expect(sessionId).toBeTruthy();
@@ -224,9 +226,62 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(resumeResponse.status).toBe(401);
     expect(await resumeResponse.json()).toEqual({
       error: 'invalid_token',
-      error_description: 'Session token mismatch',
+      error_description: 'Session subject mismatch',
     });
     expect(resumeResponse.headers.get('www-authenticate')).toContain('invalid_token');
+  });
+
+  it('allows token refresh for the same OAuth subject within a session', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const resumeResponse = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_A_REFRESHED, sessionId: sessionId ?? undefined },
+    );
+
+    expect([200, 202]).toContain(resumeResponse.status);
+    expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A_REFRESHED}`);
+  });
+
+  it('returns 401 before parsing malformed JSON when OAuth token is missing', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: '{not-json',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('www-authenticate')).toContain('resource_metadata=');
+  });
+
+  it('returns 401 invalid_token for invalid bearer before accepting valid JSON', async () => {
+    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: 'not-a-valid-token',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('www-authenticate')).toContain('invalid_token');
+  });
+
+  it('returns 400 for malformed JSON only after successful OAuth authentication', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+        Authorization: `Bearer ${TOKEN_A}`,
+      },
+      body: '{not-json',
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: 'Bad Request: invalid JSON body' });
   });
 
   it('serves OAuth protected resource metadata at /.well-known/oauth-protected-resource', async () => {
@@ -494,6 +549,25 @@ describe('MCP HTTP shared-key integration', () => {
     });
     expect(authorized.status).toBe(200);
     expect(authorized.headers.get('mcp-session-id')).toBeTruthy();
+  });
+
+  it('returns 401 before reading oversized bodies when shared key is missing', async () => {
+    const hugeBody = JSON.stringify({
+      ...INITIALIZE_BODY,
+      params: { ...INITIALIZE_BODY.params, padding: 'x'.repeat(2048) },
+    });
+
+    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json, text/event-stream',
+      },
+      body: hugeBody,
+    });
+
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'Unauthorized' });
   });
 
   it('accepts shared key via X-API-Key header', async () => {

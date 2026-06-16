@@ -9,7 +9,10 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
-import { createOAuthBearerProvider } from '../auth/bearer-context-provider.js';
+import {
+  createOAuthBearerProvider,
+  BearerContextProvider,
+} from '../auth/bearer-context-provider.js';
 import { EnvContextProvider } from '../auth/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
@@ -33,7 +36,7 @@ import { getAuditLogPath, getClient } from '../config.js';
 import { createLightdashMcpServer } from '../server.js';
 import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
-import { parseJsonBody, readBody } from './http-body.js';
+import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
 import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
@@ -112,6 +115,7 @@ function createSessionTransport(
           tokenHash: auth.tokenHash,
           subject: auth.subject,
         },
+        contextProvider,
       });
     },
     onsessionclosed: (sessionId) => {
@@ -187,21 +191,38 @@ async function ensureEndpointAuth(
   return true;
 }
 
-function writeSessionTokenMismatch(res: ServerResponse, config: McpHttpConfig): void {
+function writeSessionSubjectMismatch(res: ServerResponse, config: McpHttpConfig): void {
   writeOAuthAuthFailure(res, {
     ok: false,
     status: 401,
     body: {
       error: 'invalid_token',
-      error_description: 'Session token mismatch',
+      error_description: 'Session subject mismatch',
     },
     wwwAuthenticate: buildWwwAuthenticateHeader({
       resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
       scope: config.requiredScopes.join(' '),
       error: 'invalid_token',
-      errorDescription: 'Session token mismatch',
+      errorDescription: 'Session subject mismatch',
     }),
   });
+}
+
+function getOAuthAuditContext(req: IncomingMessage): {
+  tokenHash?: string;
+  subject?: string;
+  scopes?: string[];
+} {
+  const oauth = (req as OAuthRequest).lightdashOAuth;
+  if (!oauth?.ok) {
+    return {};
+  }
+
+  return {
+    tokenHash: hashToken(oauth.accessToken),
+    subject: oauth.user.userUuid,
+    scopes: oauth.scopes,
+  };
 }
 
 function verifySessionAuth(
@@ -231,9 +252,17 @@ function verifySessionAuth(
     return false;
   }
 
-  if (entry.auth.tokenHash && entry.auth.tokenHash !== hashToken(oauth.accessToken)) {
-    writeSessionTokenMismatch(res, config);
+  if (entry.auth.subject && entry.auth.subject !== oauth.user.userUuid) {
+    writeSessionSubjectMismatch(res, config);
     return false;
+  }
+
+  const nextTokenHash = hashToken(oauth.accessToken);
+  if (entry.auth.tokenHash !== nextTokenHash) {
+    entry.auth.tokenHash = nextTokenHash;
+    if (entry.contextProvider instanceof BearerContextProvider) {
+      entry.contextProvider.updateAccessToken(oauth.accessToken, oauth.scopes);
+    }
   }
 
   return true;
@@ -252,10 +281,6 @@ async function handleExistingSessionPost(
   body: unknown,
 ): Promise<void> {
   const { req, res, config, sessionStore } = ctx;
-  if (config.authMode !== MCP_AUTH_MODE_NONE) {
-    if (!(await ensureEndpointAuth(req, res, config))) return;
-  }
-
   const entry = sessionStore.get(sid);
   if (!entry) {
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
@@ -263,8 +288,13 @@ async function handleExistingSessionPost(
   }
   if (!verifySessionAuth(req, res, config, entry)) return;
   sessionStore.touch(sid);
+  const auditAuth = getOAuthAuditContext(req);
   await runWithToolAuditAuthAsync(
-    { tokenHash: entry.auth.tokenHash, subject: entry.auth.subject },
+    {
+      tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
+      subject: auditAuth.subject ?? entry.auth.subject,
+      scopes: auditAuth.scopes,
+    },
     () => entry.transport.handleRequest(req, res, body),
   );
 }
@@ -284,8 +314,6 @@ async function handleInitializePost(
     sendJson(res, 503, { error: 'Service Unavailable: max sessions reached' });
     return;
   }
-
-  if (!(await ensureEndpointAuth(req, res, config))) return;
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
     const oauth = (req as OAuthRequest).lightdashOAuth;
@@ -308,6 +336,7 @@ async function handleInitializePost(
     const contextProvider = createOAuthBearerProvider(config, {
       accessToken: oauth.accessToken,
       subject: oauth.user.userUuid,
+      scopes: oauth.scopes,
     });
 
     const transport = createSessionTransport(contextProvider, sessionStore, {
@@ -316,7 +345,11 @@ async function handleInitializePost(
       subject: oauth.user.userUuid,
     });
     await runWithToolAuditAuthAsync(
-      { tokenHash: contextProvider.getTokenHash(), subject: oauth.user.userUuid },
+      {
+        tokenHash: contextProvider.getTokenHash(),
+        subject: oauth.user.userUuid,
+        scopes: oauth.scopes,
+      },
       () => transport.handleRequest(req, res, body),
     );
     return;
@@ -328,6 +361,13 @@ async function handleInitializePost(
   await transport.handleRequest(req, res, body);
 }
 
+function requiresProtectedEndpointAuth(config: McpHttpConfig): boolean {
+  return (
+    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+  );
+}
+
 async function handleMcpPost(
   req: IncomingMessage,
   res: ServerResponse,
@@ -335,6 +375,13 @@ async function handleMcpPost(
   sessionStore: SessionStore,
   sid: string | undefined,
 ): Promise<void> {
+  if (requiresProtectedEndpointAuth(config)) {
+    if (!(await ensureEndpointAuth(req, res, config))) {
+      drainRequestBody(req);
+      return;
+    }
+  }
+
   const raw = await readBody(req, res, config.maxBodyBytes);
   if (raw === undefined) return;
 
@@ -388,8 +435,13 @@ async function handleMcpGetOrDelete(
   if (!verifySessionAuth(req, res, config, entry)) return;
 
   sessionStore.touch(sid);
+  const auditAuth = getOAuthAuditContext(req);
   await runWithToolAuditAuthAsync(
-    { tokenHash: entry.auth.tokenHash, subject: entry.auth.subject },
+    {
+      tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
+      subject: auditAuth.subject ?? entry.auth.subject,
+      scopes: auditAuth.scopes,
+    },
     () => entry.transport.handleRequest(req, res),
   );
 }

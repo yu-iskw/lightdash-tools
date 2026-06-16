@@ -117,8 +117,45 @@ describe('authenticateLightdashOAuth', () => {
       ok: true,
       accessToken: token,
       user: { userUuid: 'user-uuid-1', email: 'user@example.com' },
+      scopes: ['mcp:read', 'mcp:write'],
     });
     expect(validateLightdashAccessToken).toHaveBeenCalledWith(baseConfig, token);
+  });
+
+  it('returns 403 insufficient_scope when required scopes are missing from token claims', async () => {
+    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
+      userUuid: 'user-uuid-1',
+      email: 'user@example.com',
+    });
+
+    const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+    const payload = Buffer.from(JSON.stringify({ scope: 'mcp:write' })).toString('base64url');
+    const token = `${header}.${payload}.signature`;
+
+    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.status).toBe(403);
+    expect(result.body.error).toBe('insufficient_scope');
+    expect(result.wwwAuthenticate).toContain('error="insufficient_scope"');
+  });
+
+  it('accepts lowercase bearer scheme prefix', async () => {
+    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
+      userUuid: 'user-uuid-1',
+      email: 'user@example.com',
+    });
+
+    const result = await authenticateLightdashOAuth(
+      createRequest('bearer valid-token'),
+      baseConfig,
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.accessToken).toBe('valid-token');
   });
 });
 

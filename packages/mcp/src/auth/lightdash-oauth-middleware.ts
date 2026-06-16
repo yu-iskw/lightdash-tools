@@ -2,6 +2,7 @@ import { extractBearerToken } from './bearer.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 import { getProtectedResourceMetadataPathUrl } from './oauth-protected-resource.js';
 import { sendJson } from './shared-key-middleware.js';
+import { extractTokenScopes, hasRequiredScopes } from './token-scopes.js';
 import { TokenValidationError } from './token-validation-error.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
@@ -13,6 +14,7 @@ export interface OAuthAuthSuccess {
   ok: true;
   accessToken: string;
   user: ValidatedLightdashUser;
+  scopes: string[];
 }
 
 export interface OAuthAuthFailure {
@@ -47,7 +49,26 @@ export async function authenticateLightdashOAuth(
 
   try {
     const user = await validateLightdashAccessToken(config, token);
-    return { ok: true, accessToken: token, user };
+    const scopes = extractTokenScopes(token, config.scopesSupported);
+    if (!hasRequiredScopes(scopes, config.requiredScopes)) {
+      const missingScopes = config.requiredScopes.filter((scope) => !scopes.includes(scope));
+      return {
+        ok: false,
+        status: 403,
+        body: {
+          error: 'insufficient_scope',
+          error_description: `Missing required OAuth scopes: ${missingScopes.join(', ')}`,
+        },
+        wwwAuthenticate: buildWwwAuthenticateHeader({
+          resourceMetadataUrl,
+          scope: config.requiredScopes.join(' '),
+          error: 'insufficient_scope',
+          errorDescription: `Missing required OAuth scopes: ${missingScopes.join(', ')}`,
+        }),
+      };
+    }
+
+    return { ok: true, accessToken: token, user, scopes };
   } catch (error) {
     if (error instanceof TokenValidationError && error.reason === 'upstream_unavailable') {
       const headers =
