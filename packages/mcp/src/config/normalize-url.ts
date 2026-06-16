@@ -4,12 +4,13 @@ export function stripTrailingSlash(url: string): string {
 }
 
 /**
- * Normalizes a public MCP base URL: no trailing slash, no `/mcp` suffix.
+ * Normalizes a public MCP base URL: no trailing slash, no configured MCP path suffix.
  */
-export function normalizePublicUrl(url: string): string {
+export function normalizePublicUrl(url: string, mcpPath = '/mcp'): string {
   let normalized = stripTrailingSlash(url.trim());
-  if (normalized.endsWith('/mcp')) {
-    normalized = normalized.slice(0, -'/mcp'.length);
+  const normalizedPath = normalizeMcpPath(mcpPath);
+  if (normalized.endsWith(normalizedPath)) {
+    normalized = normalized.slice(0, -normalizedPath.length);
     normalized = stripTrailingSlash(normalized);
   }
   return normalized;

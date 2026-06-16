@@ -1,3 +1,8 @@
+export interface ExtractTokenScopesOptions {
+  /** Dev-only escape hatch: grant all supported scopes when claims are missing. */
+  grantAllWhenUnknown?: boolean;
+}
+
 function tryDecodeJwtPayload(accessToken: string): Record<string, unknown> | undefined {
   const parts = accessToken.split('.');
   if (parts.length !== 3) return undefined;
@@ -36,18 +41,31 @@ function filterSupportedScopes(scopes: string[], scopesSupported: readonly strin
   return [...new Set(scopes.filter((scope) => supported.has(scope)))];
 }
 
-/** Extracts OAuth scopes from a JWT claim or grants supported defaults for opaque tokens. */
+function scopesWhenUnknown(
+  scopesSupported: readonly string[],
+  grantAllWhenUnknown: boolean,
+): string[] {
+  return grantAllWhenUnknown ? [...scopesSupported] : [];
+}
+
+/** Extracts OAuth scopes from JWT claims. Unknown/opaque tokens fail closed by default. */
 export function extractTokenScopes(
   accessToken: string,
   scopesSupported: readonly string[],
+  options: ExtractTokenScopesOptions = {},
 ): string[] {
+  const grantAllWhenUnknown = options.grantAllWhenUnknown === true;
   const payload = tryDecodeJwtPayload(accessToken);
   if (!payload) {
-    return [...scopesSupported];
+    return scopesWhenUnknown(scopesSupported, grantAllWhenUnknown);
   }
 
   const fromClaim = filterSupportedScopes(parseScopeClaim(payload), scopesSupported);
-  return fromClaim.length > 0 ? fromClaim : [...scopesSupported];
+  if (fromClaim.length > 0) {
+    return fromClaim;
+  }
+
+  return scopesWhenUnknown(scopesSupported, grantAllWhenUnknown);
 }
 
 export function hasRequiredScopes(

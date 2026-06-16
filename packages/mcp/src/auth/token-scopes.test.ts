@@ -26,8 +26,19 @@ describe('extractTokenScopes', () => {
     expect(extractTokenScopes(token, SUPPORTED)).toEqual(['mcp:write', 'write']);
   });
 
-  it('grants supported defaults for opaque tokens', () => {
-    expect(extractTokenScopes('opaque-token', SUPPORTED)).toEqual([...SUPPORTED]);
+  it('returns no scopes for opaque tokens by default', () => {
+    expect(extractTokenScopes('opaque-token', SUPPORTED)).toEqual([]);
+  });
+
+  it('returns no scopes for JWTs without scope claims by default', () => {
+    const token = jwtWithPayload({ sub: 'user-1' });
+    expect(extractTokenScopes(token, SUPPORTED)).toEqual([]);
+  });
+
+  it('can grant all supported scopes for opaque tokens when explicitly opted in', () => {
+    expect(extractTokenScopes('opaque-token', SUPPORTED, { grantAllWhenUnknown: true })).toEqual([
+      ...SUPPORTED,
+    ]);
   });
 });
 
@@ -35,6 +46,7 @@ describe('hasRequiredScopes', () => {
   it('requires every configured scope', () => {
     expect(hasRequiredScopes(['mcp:read', 'mcp:write'], ['mcp:read'])).toBe(true);
     expect(hasRequiredScopes(['mcp:read'], ['mcp:read', 'mcp:write'])).toBe(false);
+    expect(hasRequiredScopes([], ['mcp:read'])).toBe(false);
   });
 });
 

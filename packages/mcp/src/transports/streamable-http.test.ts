@@ -24,6 +24,7 @@ const oauthConfig: McpHttpConfig = {
   scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: false,
   tokenValidationCacheTtlMs: 30_000,
+  grantAllScopesWhenUnknown: false,
 };
 
 describe('streamable HTTP OAuth metadata', () => {

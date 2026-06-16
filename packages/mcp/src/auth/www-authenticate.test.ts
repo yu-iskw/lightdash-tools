@@ -21,6 +21,7 @@ const baseConfig: McpHttpConfig = {
   scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
+  grantAllScopesWhenUnknown: false,
 };
 
 describe('buildOAuthProtectedResourceMetadata', () => {

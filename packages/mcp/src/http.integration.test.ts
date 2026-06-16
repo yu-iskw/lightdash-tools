@@ -8,12 +8,18 @@ import { createStreamableHttpServer } from './transports/streamable-http.js';
 import type { McpHttpConfig } from './config/load-mcp-config.js';
 import type { AddressInfo } from 'node:net';
 
-const TOKEN_A = 'token-a';
-const TOKEN_B = 'token-b';
-const TOKEN_A_REFRESHED = 'token-a-refreshed';
+const TOKEN_A = scopedAccessToken('mcp:read mcp:write', 'token-a');
+const TOKEN_B = scopedAccessToken('mcp:read mcp:write', 'token-b');
+const TOKEN_A_REFRESHED = scopedAccessToken('mcp:read mcp:write', 'token-a-refreshed');
 
 const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com' };
 const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com' };
+
+function scopedAccessToken(scope: string, subject: string): string {
+  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+  const payload = Buffer.from(JSON.stringify({ scope, sub: subject })).toString('base64url');
+  return `${header}.${payload}.signature`;
+}
 
 const INITIALIZE_BODY = {
   jsonrpc: '2.0',
@@ -114,6 +120,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     scopesSupported: ['mcp:read', 'mcp:write'],
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
+    grantAllScopesWhenUnknown: false,
   };
 }
 
@@ -531,6 +538,7 @@ describe('MCP HTTP shared-key integration', () => {
       scopesSupported: ['mcp:read'],
       validateToken: false,
       tokenValidationCacheTtlMs: 30_000,
+      grantAllScopesWhenUnknown: false,
     });
   });
 

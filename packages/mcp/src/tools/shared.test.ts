@@ -2,6 +2,7 @@ import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
+import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import {
   registerToolSafe,
@@ -79,6 +80,28 @@ describe('registerToolSafe', () => {
 
     const result = await handler({});
     expect(result.content[0].text).toBe('success');
+  });
+
+  it('blocks write tools when OAuth scopes omit mcp:write', async () => {
+    registerToolSafe(
+      mockServer,
+      'write_tool',
+      {
+        description: 'Write tool',
+        inputSchema: {},
+        annotations: WRITE_IDEMPOTENT,
+      },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await runWithToolAuditAuthAsync({ scopes: ['mcp:read'] }, () => handler({}));
+
+    expect((result as { isError?: boolean }).isError).toBe(true);
+    expect((result as { content: Array<{ text: string }> }).content[0].text).toContain(
+      'insufficient_scope',
+    );
+    expect(mockHandler).not.toHaveBeenCalled();
   });
 
   it('should block destructive tool in read-only mode', async () => {
