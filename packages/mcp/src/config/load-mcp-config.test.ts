@@ -5,6 +5,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
@@ -109,7 +110,7 @@ describe('loadMcpHttpConfig', () => {
     expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH);
   });
 
-  it('allows lightdash-oauth in production when experimental identity opt-in is set', () => {
+  it('allows production lightdash-oauth when experimental identity opt-in is set', () => {
     process.env.NODE_ENV = 'production';
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
@@ -119,6 +120,42 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.experimentalIdentityOAuth).toBe(true);
+  });
+
+  it('rejects production lightdash-oauth when safety mode is broader than read-only', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'write-destructive';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS] = 'https://cursor.com';
+
+    expect(() => loadMcpHttpConfig()).toThrow(
+      ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH,
+    );
+  });
+
+  it('allows production lightdash-oauth write safety mode with explicit dangerous override', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'write-destructive';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS] = 'https://cursor.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH] = '1';
+
+    const config = loadMcpHttpConfig();
+    expect(config.dangerouslyAllowWriteInIdentityOAuth).toBe(true);
+  });
+
+  it('loads maxSessionsPerSubject=0 as unlimited per-subject cap', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT = '0';
+
+    const config = loadMcpHttpConfig();
+    expect(config.maxSessionsPerSubject).toBe(0);
   });
 
   it('rejects production lightdash-oauth without CORS allowlist or dangerous override', () => {

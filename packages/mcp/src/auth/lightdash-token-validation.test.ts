@@ -28,6 +28,7 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     grantAllScopesWhenUnknown: false,
     experimentalIdentityOAuth: false,
     dangerouslyAllowAnyOrigin: false,
+    dangerouslyAllowWriteInIdentityOAuth: false,
     ...overrides,
   };
 }

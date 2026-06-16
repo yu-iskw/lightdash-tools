@@ -25,6 +25,7 @@ export class SessionStore {
   constructor(
     private readonly sessionTtlMs: number,
     private readonly maxSessions: number,
+    /** `0` disables the per-subject cap (unlimited per subject; global maxSessions still applies). */
     private readonly maxSessionsPerSubject: number,
   ) {}
 
@@ -94,7 +95,11 @@ export class SessionStore {
     if (this.sessions.size >= this.maxSessions) {
       return false;
     }
-    if (subject && (this.subjectSessionCounts.get(subject) ?? 0) >= this.maxSessionsPerSubject) {
+    if (
+      subject &&
+      this.maxSessionsPerSubject > 0 &&
+      (this.subjectSessionCounts.get(subject) ?? 0) >= this.maxSessionsPerSubject
+    ) {
       return false;
     }
     return true;

@@ -28,6 +28,7 @@ const baseConfig: McpHttpConfig = {
   grantAllScopesWhenUnknown: false,
   experimentalIdentityOAuth: false,
   dangerouslyAllowAnyOrigin: false,
+  dangerouslyAllowWriteInIdentityOAuth: false,
 };
 
 describe('getLightdashAuthorizationServerMetadataUrl', () => {

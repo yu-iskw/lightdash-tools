@@ -157,6 +157,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     grantAllScopesWhenUnknown: false,
     experimentalIdentityOAuth: false,
     dangerouslyAllowAnyOrigin: false,
+    dangerouslyAllowWriteInIdentityOAuth: false,
   };
 }
 
@@ -564,6 +565,7 @@ describe('MCP HTTP unrestricted CORS integration', () => {
       ...baseOAuthConfig(mockLightdash.baseUrl),
       allowedOrigins: [],
       dangerouslyAllowAnyOrigin: false,
+      dangerouslyAllowWriteInIdentityOAuth: false,
     });
 
     try {
@@ -902,6 +904,7 @@ describe('MCP HTTP shared-key integration', () => {
       grantAllScopesWhenUnknown: false,
       experimentalIdentityOAuth: false,
       dangerouslyAllowAnyOrigin: false,
+      dangerouslyAllowWriteInIdentityOAuth: false,
     });
   });
 

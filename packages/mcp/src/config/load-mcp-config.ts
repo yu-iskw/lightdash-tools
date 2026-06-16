@@ -18,6 +18,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
@@ -181,6 +182,8 @@ export interface McpHttpConfig {
   experimentalIdentityOAuth: boolean;
   /** Reflect any browser Origin when CORS allowlist is empty (not for production OAuth). */
   dangerouslyAllowAnyOrigin: boolean;
+  /** Allow write safety modes in production identity-only OAuth (no resource/audience binding). */
+  dangerouslyAllowWriteInIdentityOAuth: boolean;
 }
 
 function assertPublicUrlSecurity(
@@ -278,6 +281,26 @@ function assertExperimentalIdentityOAuthPolicy(
   );
 }
 
+function assertProductionOAuthSafetyModePolicy(
+  authMode: McpAuthMode,
+  dangerouslyAllowWriteInIdentityOAuth: boolean,
+  env: NodeJS.ProcessEnv,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || env.NODE_ENV !== 'production') {
+    return;
+  }
+
+  const safetyMode = getSafetyModeFromEnv();
+  if (safetyMode === SafetyMode.READ_ONLY || dangerouslyAllowWriteInIdentityOAuth) {
+    return;
+  }
+
+  throw new Error(
+    `LIGHTDASH_TOOLS_SAFETY_MODE=${safetyMode} is not allowed in production ${MCP_AUTH_MODE_LIGHTDASH_OAUTH} mode without resource/audience-bound token validation. ` +
+      `Use read-only (recommended), ${MCP_AUTH_MODE_SHARED_KEY} for write tools with a PAT, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH}=1 only when you accept exposing write tools to all authenticated OAuth users subject to Lightdash RBAC alone.`,
+  );
+}
+
 function assertAllowedOriginsPolicy(
   authMode: McpAuthMode,
   allowedOrigins: string[],
@@ -328,10 +351,11 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
       'Lightdash exposes /.well-known/oauth-authorization-server for OAuth discovery; the gap is resource/audience-bound token validation, not metadata.',
   );
 
-  if (getSafetyModeFromEnv() !== SafetyMode.READ_ONLY) {
+  if (getSafetyModeFromEnv() !== SafetyMode.READ_ONLY && process.env.NODE_ENV !== 'production') {
     console.warn(
       'Warning: LIGHTDASH_TOOLS_SAFETY_MODE is not read-only while auth mode is lightdash-oauth. ' +
-        'Opaque OAuth tokens cannot enforce MCP-local scopes; widening safety mode exposes write tools to all authenticated OAuth users subject only to Lightdash RBAC.',
+        'Opaque OAuth tokens cannot enforce MCP-local scopes; widening safety mode exposes write tools to all authenticated OAuth users subject only to Lightdash RBAC. ' +
+        'Production startup rejects non-read-only safety mode unless LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH=1.',
     );
   }
 
@@ -460,6 +484,13 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   );
   assertExperimentalIdentityOAuthPolicy(authMode, experimentalIdentityOAuth, env);
 
+  const dangerouslyAllowWriteInIdentityOAuth = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH, env),
+    false,
+  );
+  assertProductionOAuthSafetyModePolicy(authMode, dangerouslyAllowWriteInIdentityOAuth, env);
+
   const dangerouslyAllowAnyOrigin = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
     readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN, env),
@@ -534,6 +565,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     grantAllScopesWhenUnknown,
     experimentalIdentityOAuth,
     dangerouslyAllowAnyOrigin,
+    dangerouslyAllowWriteInIdentityOAuth,
   };
 }
 

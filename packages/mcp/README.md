@@ -21,6 +21,20 @@ npm install -g @lightdash-tools/mcp
 - **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.
 - **Streamable HTTP** — for remote use. Session-based; supports optional endpoint auth.
 
+### Production limitations (`lightdash-oauth`)
+
+`LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` is **experimental identity-only OAuth**, not full [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) resource-server OAuth.
+
+| What works                                                | What is missing                                                                  |
+| :-------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| Per-user `Authorization: Bearer` propagation to Lightdash | Proof the token was issued **for this MCP resource/audience**                    |
+| `GET /api/v1/user` identity validation                    | MCP-local `mcp:read` / `mcp:write` scope enforcement for opaque Lightdash tokens |
+| Session binding to `userUuid` / `organizationUuid`        | Confused-deputy protection against tokens issued to other OAuth clients          |
+
+**Authorization model in this mode:** Lightdash RBAC + process-level `LIGHTDASH_TOOLS_SAFETY_MODE` (production defaults to `read-only`) + `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`. Do not rely on MCP-local OAuth scopes.
+
+Production requires `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1`. Non-read-only safety modes require `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH=1`. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md) and [lightdash-oauth-upstream-contract.md](../../docs/agent-context/lightdash-oauth-upstream-contract.md).
+
 ## Environment variables
 
 ### Required
@@ -46,7 +60,8 @@ Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix (see ADR-0035). Legacy `M
 - `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — Public HTTPS base URL for OAuth metadata (required in `lightdash-oauth` mode). Alias: `MCP_PUBLIC_URL`.
 - `LIGHTDASH_TOOLS_MCP_SHARED_KEY` — Shared endpoint secret for `shared-key` mode. Alias: `MCP_API_KEY`.
 - `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` — Comma-separated CORS origin allowlist. Required in production `lightdash-oauth` mode unless `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN=1`. Alias: `MCP_ALLOWED_ORIGINS`.
-- `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT` — Per OAuth subject in-memory session cap (default: `10`).
+- `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT` — Per OAuth subject in-memory session cap (default: `10`; `0` = unlimited per subject).
+- `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH` — Allow safety modes broader than `read-only` in production `lightdash-oauth` (explicit risk acceptance).
 - `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN` — Reflect any browser `Origin` when CORS allowlist is empty (not for production OAuth without explicit acceptance).
 - `MCP_AUTH_ENABLED` — Legacy alias: when set, implies `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key`.
 
