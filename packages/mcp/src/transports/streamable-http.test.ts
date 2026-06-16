@@ -19,6 +19,7 @@ const oauthConfig: McpHttpConfig = {
   maxBodyBytes: 1024,
   sessionTtlMs: 1000,
   maxSessions: 10,
+  maxSessionsPerSubject: 10,
   sessionCleanupMs: 1000,
   requiredScopes: ['mcp:read'],
   scopesSupported: ['mcp:read', 'mcp:write'],
@@ -26,6 +27,7 @@ const oauthConfig: McpHttpConfig = {
   tokenValidationCacheTtlMs: 30_000,
   grantAllScopesWhenUnknown: false,
   experimentalIdentityOAuth: false,
+  dangerouslyAllowAnyOrigin: false,
 };
 
 describe('streamable HTTP OAuth metadata', () => {

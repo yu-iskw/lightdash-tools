@@ -20,10 +20,12 @@ export interface SessionEntry {
 
 export class SessionStore {
   private readonly sessions = new Map<string, SessionEntry>();
+  private readonly subjectSessionCounts = new Map<string, number>();
 
   constructor(
     private readonly sessionTtlMs: number,
     private readonly maxSessions: number,
+    private readonly maxSessionsPerSubject: number,
   ) {}
 
   get(sessionId: string): SessionEntry | undefined {
@@ -32,10 +34,30 @@ export class SessionStore {
 
   set(sessionId: string, entry: SessionEntry): void {
     this.sessions.set(sessionId, entry);
+    const subject = entry.auth.subject;
+    if (subject) {
+      this.subjectSessionCounts.set(subject, (this.subjectSessionCounts.get(subject) ?? 0) + 1);
+    }
   }
 
   delete(sessionId: string): void {
+    const entry = this.sessions.get(sessionId);
+    if (entry) {
+      this.decrementSubjectCount(entry);
+    }
     this.sessions.delete(sessionId);
+  }
+
+  private decrementSubjectCount(entry: SessionEntry): void {
+    const subject = entry.auth.subject;
+    if (!subject) return;
+
+    const count = this.subjectSessionCounts.get(subject) ?? 0;
+    if (count <= 1) {
+      this.subjectSessionCounts.delete(subject);
+    } else {
+      this.subjectSessionCounts.set(subject, count - 1);
+    }
   }
 
   touch(sessionId: string): void {
@@ -49,7 +71,7 @@ export class SessionStore {
     const now = Date.now();
     for (const [sessionId, entry] of this.sessions) {
       if (now - entry.lastAccessAt > this.sessionTtlMs) {
-        this.sessions.delete(sessionId);
+        this.delete(sessionId);
         onClose(entry, sessionId);
       }
     }
@@ -59,9 +81,18 @@ export class SessionStore {
     return this.sessions.size;
   }
 
-  canAcceptNewSession(onClose: (entry: SessionEntry, sessionId: string) => void): boolean {
+  canAcceptNewSession(
+    subject: string | undefined,
+    onClose: (entry: SessionEntry, sessionId: string) => void,
+  ): boolean {
     this.cleanupExpired(onClose);
-    return this.sessions.size < this.maxSessions;
+    if (this.sessions.size >= this.maxSessions) {
+      return false;
+    }
+    if (subject && (this.subjectSessionCounts.get(subject) ?? 0) >= this.maxSessionsPerSubject) {
+      return false;
+    }
+    return true;
   }
 
   drainAll(onClose: (entry: SessionEntry, sessionId: string) => void): void {
@@ -69,5 +100,6 @@ export class SessionStore {
       onClose(entry, sessionId);
     }
     this.sessions.clear();
+    this.subjectSessionCounts.clear();
   }
 }

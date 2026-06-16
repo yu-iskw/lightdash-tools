@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildOAuthProtectedResourceMetadata } from './oauth-protected-resource.js';
+import {
+  buildOAuthProtectedResourceMetadata,
+  getLightdashAuthorizationServerMetadataUrl,
+} from './oauth-protected-resource.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
@@ -16,6 +19,7 @@ const baseConfig: McpHttpConfig = {
   maxBodyBytes: 1024,
   sessionTtlMs: 1000,
   maxSessions: 10,
+  maxSessionsPerSubject: 10,
   sessionCleanupMs: 1000,
   requiredScopes: ['mcp:read'],
   scopesSupported: ['mcp:read', 'mcp:write'],
@@ -23,7 +27,19 @@ const baseConfig: McpHttpConfig = {
   tokenValidationCacheTtlMs: 30_000,
   grantAllScopesWhenUnknown: false,
   experimentalIdentityOAuth: false,
+  dangerouslyAllowAnyOrigin: false,
 };
+
+describe('getLightdashAuthorizationServerMetadataUrl', () => {
+  it('builds the well-known AS metadata URL for a Lightdash issuer', () => {
+    expect(getLightdashAuthorizationServerMetadataUrl('https://app.lightdash.cloud')).toBe(
+      'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
+    );
+    expect(getLightdashAuthorizationServerMetadataUrl('https://app.lightdash.cloud/')).toBe(
+      'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
+    );
+  });
+});
 
 describe('buildOAuthProtectedResourceMetadata', () => {
   it('includes resource and authorization_servers', () => {

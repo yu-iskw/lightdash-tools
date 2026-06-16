@@ -267,11 +267,9 @@ function verifySessionAuth(
     return false;
   }
 
-  if (
-    entry.auth.organizationUuid &&
-    oauth.user.organizationUuid &&
-    entry.auth.organizationUuid !== oauth.user.organizationUuid
-  ) {
+  const previousOrg = entry.auth.organizationUuid ?? null;
+  const nextOrg = oauth.user.organizationUuid ?? null;
+  if (previousOrg !== nextOrg) {
     writeSessionContextMismatch(res, config, 'Session organization mismatch');
     return false;
   }
@@ -325,8 +323,14 @@ async function handleInitializePost(
   sessionStore: SessionStore,
   body: unknown,
 ): Promise<void> {
+  const oauth =
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+      ? (req as OAuthRequest).lightdashOAuth
+      : undefined;
+  const sessionSubject = oauth?.ok ? oauth.user.userUuid : undefined;
+
   if (
-    !sessionStore.canAcceptNewSession((entry, sessionId) => {
+    !sessionStore.canAcceptNewSession(sessionSubject, (entry, sessionId) => {
       closeSessionEntry(entry, sessionId, 'expired');
     })
   ) {
@@ -335,7 +339,6 @@ async function handleInitializePost(
   }
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    const oauth = (req as OAuthRequest).lightdashOAuth;
     if (!oauth?.ok) {
       writeOAuthAuthFailure(res, {
         ok: false,
@@ -481,7 +484,11 @@ export async function createStreamableHttpServer(
 
   initAuditLog(getAuditLogPath());
 
-  const sessionStore = new SessionStore(inputConfig.sessionTtlMs, inputConfig.maxSessions);
+  const sessionStore = new SessionStore(
+    inputConfig.sessionTtlMs,
+    inputConfig.maxSessions,
+    inputConfig.maxSessionsPerSubject,
+  );
   let httpConfig = inputConfig;
 
   const cleanupTimer = setInterval(() => {

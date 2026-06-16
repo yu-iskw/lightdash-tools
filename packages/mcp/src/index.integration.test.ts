@@ -78,6 +78,7 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
       maxBodyBytes: 1024 * 1024,
       sessionTtlMs: 60_000,
       maxSessions: 10,
+      maxSessionsPerSubject: 10,
       sessionCleanupMs: 60_000,
       requiredScopes: ['mcp:read'],
       scopesSupported: ['mcp:read', 'mcp:write'],
@@ -85,6 +86,7 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
       tokenValidationCacheTtlMs: 30_000,
       grantAllScopesWhenUnknown: false,
       experimentalIdentityOAuth: false,
+      dangerouslyAllowAnyOrigin: false,
     };
 
     const user = await validateLightdashAccessToken(

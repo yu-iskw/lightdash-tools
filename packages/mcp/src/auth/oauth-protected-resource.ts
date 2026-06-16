@@ -20,9 +20,9 @@ export function buildOAuthProtectedResourceMetadata(
 ): OAuthProtectedResourceMetadata {
   const publicUrl = requirePublicUrl(config);
 
-  // authorization_servers points at Lightdash for v1 scaffolding. Upstream Lightdash does not yet
-  // publish OAuth Authorization Server Metadata at /.well-known/oauth-authorization-server, so
-  // standards-compliant MCP clients require preconfigured Lightdash OAuth endpoints in the client.
+  // authorization_servers points at the Lightdash issuer. Current Lightdash exposes
+  // /.well-known/oauth-authorization-server. This MCP server still treats lightdash-oauth as
+  // experimental because Lightdash tokens are not resource-bound to this MCP resource.
   return {
     resource: `${publicUrl}${config.mcpPath}`,
     authorization_servers: [config.lightdashUrl],
@@ -39,4 +39,12 @@ export function getProtectedResourceMetadataPathUrl(config: McpHttpConfig): stri
   const publicUrl = requirePublicUrl(config);
   const resourcePath = config.mcpPath.replace(/^\//, '');
   return `${publicUrl}/.well-known/oauth-protected-resource/${resourcePath}`;
+}
+
+/** Well-known OAuth Authorization Server Metadata URL for a Lightdash issuer origin. */
+export function getLightdashAuthorizationServerMetadataUrl(
+  authorizationServerOrigin: string,
+): string {
+  const base = authorizationServerOrigin.replace(/\/$/, '');
+  return `${base}/.well-known/oauth-authorization-server`;
 }

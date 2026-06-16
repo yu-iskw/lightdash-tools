@@ -19,6 +19,7 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     maxBodyBytes: 1024,
     sessionTtlMs: 60_000,
     maxSessions: 10,
+    maxSessionsPerSubject: 10,
     sessionCleanupMs: 60_000,
     requiredScopes: ['mcp:read'],
     scopesSupported: ['mcp:read', 'mcp:write'],
@@ -26,6 +27,7 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     tokenValidationCacheTtlMs: 30_000,
     grantAllScopesWhenUnknown: false,
     experimentalIdentityOAuth: false,
+    dangerouslyAllowAnyOrigin: false,
     ...overrides,
   };
 }

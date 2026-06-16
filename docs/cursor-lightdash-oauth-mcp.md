@@ -2,21 +2,9 @@
 
 Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running with `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`. This mode is **experimental identity-only OAuth** — see [mcp-oauth-http.md](mcp-oauth-http.md) for production readiness limitations.
 
-## Important: preconfigured Lightdash OAuth endpoints required
+## Important: experimental identity-only OAuth
 
-Lightdash does **not** yet publish OAuth Authorization Server Metadata at `/.well-known/oauth-authorization-server`. MCP clients that follow the MCP Authorization spec will fail OAuth discovery if they rely only on protected-resource metadata.
-
-**Use static OAuth client configuration** (recommended). URL-only discovery may not work until upstream Lightdash adds AS metadata.
-
-Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
-
-| Purpose   | URL                                      |
-| :-------- | :--------------------------------------- |
-| Authorize | `{LIGHTDASH_URL}/api/v1/oauth/authorize` |
-| Token     | `{LIGHTDASH_URL}/api/v1/oauth/token`     |
-| Register  | `{LIGHTDASH_URL}/api/v1/oauth/register`  |
-| Revoke    | `{LIGHTDASH_URL}/api/v1/oauth/revoke`    |
-| Userinfo  | `{LIGHTDASH_URL}/api/v1/oauth/userinfo`  |
+`lightdash-oauth` accepts any valid Lightdash OAuth bearer token for the same Lightdash instance and user/org, but **cannot prove the token was issued for this MCP resource**. Lightdash exposes OAuth Authorization Server Metadata at `{LIGHTDASH_URL}/.well-known/oauth-authorization-server`; discovery is supported. The security gap is missing resource/audience-bound token validation, not missing discovery.
 
 ## Prerequisites
 
@@ -25,6 +13,7 @@ Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
    - `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`
    - `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — public HTTPS URL of the MCP server (must match what clients use)
    - `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` when `NODE_ENV=production`
+   - `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` — explicit CORS allowlist in production (or `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN=1` only if you accept the risk)
    - `LIGHTDASH_TOOLS_SAFETY_MODE=read-only` (strongly recommended)
 
 2. **Lightdash OAuth application** registered in your Lightdash instance. The MCP server does not store OAuth client secrets; credentials live in the MCP client (Cursor).
@@ -35,8 +24,9 @@ Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
 
 ```text
 Cursor  →  POST /mcp (no token)  →  401 + WWW-Authenticate
-Cursor  →  GET /.well-known/oauth-protected-resource  →  metadata (scaffolding)
-Cursor  →  OAuth with Lightdash using preconfigured endpoints (see table above)
+Cursor  →  GET /.well-known/oauth-protected-resource  →  metadata
+Cursor  →  Discover AS metadata at {LIGHTDASH_URL}/.well-known/oauth-authorization-server
+Cursor  →  OAuth with Lightdash (or use static endpoints if discovery fails)
 Cursor  →  POST /mcp  Authorization: Bearer <user-access-token>
 MCP     →  Lightdash API with same Bearer token
 ```
@@ -67,9 +57,35 @@ Configuration file locations:
 | Project | `.cursor/mcp.json` (commit for team sharing) |
 | Global  | `~/.cursor/mcp.json`                         |
 
-### Recommended: static OAuth client credentials
+### Recommended: URL-only discovery (when supported)
 
-Lightdash requires a fixed Client ID (and optionally Client Secret) with a whitelisted redirect URI. Configure explicit OAuth endpoints in Cursor:
+Current Lightdash publishes OAuth Authorization Server Metadata. Prefer discovery first — protected-resource metadata on the MCP server points at your Lightdash issuer:
+
+```json
+{
+  "mcpServers": {
+    "lightdash": {
+      "url": "https://lightdash-mcp.example.com/mcp"
+    }
+  }
+}
+```
+
+Replace `https://lightdash-mcp.example.com` with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` host. The MCP path defaults to `/mcp`.
+
+### Fallback: static OAuth client credentials
+
+If discovery fails or your client requires explicit endpoints, configure Lightdash OAuth URLs directly:
+
+Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
+
+| Purpose   | URL                                      |
+| :-------- | :--------------------------------------- |
+| Authorize | `{LIGHTDASH_URL}/api/v1/oauth/authorize` |
+| Token     | `{LIGHTDASH_URL}/api/v1/oauth/token`     |
+| Register  | `{LIGHTDASH_URL}/api/v1/oauth/register`  |
+| Revoke    | `{LIGHTDASH_URL}/api/v1/oauth/revoke`    |
+| Userinfo  | `{LIGHTDASH_URL}/api/v1/oauth/userinfo`  |
 
 ```json
 {
@@ -85,22 +101,6 @@ Lightdash requires a fixed Client ID (and optionally Client Secret) with a white
   }
 }
 ```
-
-### URL-only discovery (may fail until upstream AS metadata exists)
-
-Only try this after Lightdash publishes OAuth Authorization Server Metadata:
-
-```json
-{
-  "mcpServers": {
-    "lightdash": {
-      "url": "https://lightdash-mcp.example.com/mcp"
-    }
-  }
-}
-```
-
-Replace `https://lightdash-mcp.example.com` with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` host. The MCP path defaults to `/mcp`.
 
 Set credentials in your shell or secret manager — do not commit secrets to `mcp.json`:
 
@@ -121,6 +121,7 @@ Do **not** put a Lightdash PAT in `headers.Authorization` for `lightdash-oauth` 
 
    ```bash
    curl -s "https://lightdash-mcp.example.com/.well-known/oauth-protected-resource" | jq .
+   curl -s "https://app.lightdash.cloud/.well-known/oauth-authorization-server" | jq .
    ```
 
 2. **In Cursor**, after connecting, call the diagnostic tool:
@@ -151,14 +152,15 @@ Lightdash object-level permissions still apply per user via their OAuth token.
 
 ## Troubleshooting
 
-| Symptom                                     | Likely cause                                     | Fix                                                                                |
-| :------------------------------------------ | :----------------------------------------------- | :--------------------------------------------------------------------------------- |
-| Server shows "Needs authentication" forever | Metadata URL mismatch or OAuth app misconfigured | Verify `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`; check redirect URI in Lightdash OAuth app |
-| 401 after Connect                           | Expired token or validation failure              | Run **Cursor: Clear All MCP Tokens** from the command palette; reconnect           |
-| `Session token mismatch`                    | Switched Lightdash user on same session          | Disconnect and reconnect; clear MCP tokens                                         |
-| Tools return permission errors              | Lightdash RBAC for that user                     | Expected — OAuth scoping works; user may lack project access                       |
-| `404` on `/mcp`                             | Wrong URL in `mcp.json`                          | Use full path: `https://host/mcp`                                                  |
-| OAuth works but wrong Lightdash instance    | `LIGHTDASH_URL` on server points elsewhere       | Fix server env and redeploy                                                        |
+| Symptom                                     | Likely cause                                         | Fix                                                                                |
+| :------------------------------------------ | :--------------------------------------------------- | :--------------------------------------------------------------------------------- |
+| Server shows "Needs authentication" forever | Metadata URL mismatch or OAuth app misconfigured     | Verify `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`; check redirect URI in Lightdash OAuth app |
+| OAuth discovery fails                       | Client or network cannot reach Lightdash AS metadata | Use static OAuth endpoints fallback (see table above)                              |
+| 401 after Connect                           | Expired token or validation failure                  | Run **Cursor: Clear All MCP Tokens** from the command palette; reconnect           |
+| `Session token mismatch`                    | Switched Lightdash user on same session              | Disconnect and reconnect; clear MCP tokens                                         |
+| Tools return permission errors              | Lightdash RBAC for that user                         | Expected — OAuth scoping works; user may lack project access                       |
+| `404` on `/mcp`                             | Wrong URL in `mcp.json`                              | Use full path: `https://host/mcp`                                                  |
+| OAuth works but wrong Lightdash instance    | `LIGHTDASH_URL` on server points elsewhere           | Fix server env and redeploy                                                        |
 
 ## See also
 

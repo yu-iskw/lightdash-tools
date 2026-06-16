@@ -6,13 +6,13 @@ Operator guide for hosted `@lightdash-tools/mcp` deployments that authenticate e
 
 `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` is **experimental identity-only OAuth** in v1. It is **not** production-grade, standards-aligned MCP OAuth authorization yet.
 
-| Capability                                                                       | v1 `lightdash-oauth` status                                                                                      |
-| :------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| Per-user bearer propagation to Lightdash                                         | Supported                                                                                                        |
-| Protected-resource metadata on the MCP server                                    | Supported (scaffolding)                                                                                          |
-| Generic MCP client OAuth discovery via Lightdash AS metadata                     | **Not supported** — Lightdash does not publish `/.well-known/oauth-authorization-server` or OIDC discovery today |
-| Resource / audience binding on access tokens                                     | **Not supported** — validation is `GET /api/v1/user` identity only                                               |
-| MCP-local `mcp:read` / `mcp:write` scope enforcement for opaque Lightdash tokens | **Not supported** — authorization is Lightdash RBAC + process safety mode                                        |
+| Capability                                                                       | v1 `lightdash-oauth` status                                                                                   |
+| :------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
+| Per-user bearer propagation to Lightdash                                         | Supported                                                                                                     |
+| Protected-resource metadata on the MCP server                                    | Supported (scaffolding)                                                                                       |
+| OAuth discovery via Lightdash Authorization Server Metadata                      | **Supported upstream** — Lightdash exposes `/.well-known/oauth-authorization-server`                          |
+| Resource / audience binding on access tokens                                     | **Not supported** — validation is `GET /api/v1/user` identity only; tokens are not bound to this MCP resource |
+| MCP-local `mcp:read` / `mcp:write` scope enforcement for opaque Lightdash tokens | **Not supported** — authorization is Lightdash RBAC + process safety mode                                     |
 
 **Production recommendation today:** use `shared-key` HTTP mode with a PAT and strong process guardrails, unless you explicitly accept the experimental identity-only model.
 
@@ -20,11 +20,15 @@ To run `lightdash-oauth` in `NODE_ENV=production`, set `LIGHTDASH_TOOLS_MCP_EXPE
 
 ### What identity-only OAuth means
 
-A valid Lightdash OAuth access token for your instance proves **who** the user is. It does **not** prove the token was issued for **this MCP server** as the intended resource. Any valid Lightdash OAuth token for the same instance could be replayed to the MCP endpoint (confused-deputy risk). Mitigate with tightly controlled OAuth client registration, `LIGHTDASH_TOOLS_SAFETY_MODE`, `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, and network ingress restrictions.
+A valid Lightdash OAuth access token for your instance proves **who** the user is. It does **not** prove the token was issued for **this MCP server** as the intended resource (no resource/audience binding). Any valid Lightdash OAuth token for the same instance could be replayed to the MCP endpoint (confused-deputy risk). Mitigate with tightly controlled OAuth client registration, `LIGHTDASH_TOOLS_SAFETY_MODE`, `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, network ingress restrictions, and explicit CORS allowlists in production.
 
-### MCP client configuration requirement
+### MCP client configuration
 
-Because Lightdash lacks OAuth Authorization Server Metadata discovery endpoints, **standards-compliant MCP clients cannot complete OAuth solely from protected-resource metadata**. Configure Lightdash OAuth endpoints explicitly in the MCP client (see [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md)):
+Lightdash publishes OAuth Authorization Server Metadata at `{LIGHTDASH_URL}/.well-known/oauth-authorization-server`. MCP clients that follow protected-resource metadata → authorization-server metadata discovery should work with current Lightdash.
+
+**Prefer OAuth discovery** when your MCP client supports it. Protected-resource metadata on this server points `authorization_servers` at your `LIGHTDASH_URL`.
+
+**Static endpoint fallback:** if discovery fails or your client requires explicit endpoints, configure Lightdash OAuth URLs directly (see [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md)):
 
 | Endpoint               | Lightdash path                           |
 | :--------------------- | :--------------------------------------- |
@@ -36,13 +40,12 @@ Because Lightdash lacks OAuth Authorization Server Metadata discovery endpoints,
 
 ### Roadmap to production-grade MCP OAuth
 
-Upstream Lightdash work is required before this mode can be represented as fully standards-aligned:
+Upstream Lightdash work is still required before this mode can be represented as fully standards-aligned:
 
-1. OAuth Authorization Server Metadata (`/.well-known/oauth-authorization-server`)
-2. Resource / audience binding at token issuance
-3. Token introspection or validation exposing `client_id`, `scope`, and `resource` to the MCP server
+1. Resource / audience binding at token issuance for external MCP resources
+2. Token introspection or validation exposing `client_id`, `scope`, and `resource` to the MCP server
 
-Until then, this PR's mergeable subset is HTTP transport + bearer propagation + session binding + honest documentation.
+OAuth Authorization Server Metadata discovery is available on current Lightdash; the remaining blocker is resource-bound token validation, not metadata.
 
 ## Overview
 
@@ -309,9 +312,10 @@ Use `ldt__get_authenticated_user` to verify per-user identity after OAuth setup.
 
 ### 401 loop or OAuth never completes
 
-- **Most common:** Lightdash does not expose OAuth Authorization Server Metadata. Configure static Lightdash OAuth endpoints in the MCP client — do not rely on URL-only discovery. See [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md).
+- **Most common:** Token validation is identity-only — any valid Lightdash OAuth token for the instance may work, not only tokens issued for this MCP resource. Review experimental limitations in this guide.
+- If OAuth discovery fails, configure static Lightdash OAuth endpoints in the MCP client as a fallback. See [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md).
 - Confirm `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` matches the URL clients use (HTTPS, no trailing slash). The server strips the configured `LIGHTDASH_TOOLS_MCP_PATH` suffix when present, so `https://host/custom/mcp` with `MCP_PATH=/custom/mcp` normalizes to base `https://host`.
-- Fetch metadata manually and verify `authorization_servers` contains your `LIGHTDASH_URL` (this is scaffolding only; clients still need explicit Lightdash OAuth endpoints).
+- Fetch metadata manually: `GET /.well-known/oauth-protected-resource` should list your `LIGHTDASH_URL` in `authorization_servers`; follow to `{LIGHTDASH_URL}/.well-known/oauth-authorization-server` for AS metadata.
 - Ensure the Lightdash OAuth application allows the MCP client's redirect URI (for Cursor: `cursor://anysphere.cursor-mcp/oauth/callback`).
 - Check that `POST /mcp` without a token returns `401` with `WWW-Authenticate` including `resource_metadata` (not `404`).
 

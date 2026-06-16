@@ -16,6 +16,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
@@ -24,6 +25,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
+  ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
@@ -167,6 +169,7 @@ export interface McpHttpConfig {
   maxBodyBytes: number;
   sessionTtlMs: number;
   maxSessions: number;
+  maxSessionsPerSubject: number;
   sessionCleanupMs: number;
   requiredScopes: string[];
   scopesSupported: string[];
@@ -175,6 +178,8 @@ export interface McpHttpConfig {
   grantAllScopesWhenUnknown: boolean;
   /** Explicit operator opt-in for identity-only OAuth (no resource/audience binding). */
   experimentalIdentityOAuth: boolean;
+  /** Reflect any browser Origin when CORS allowlist is empty (not for production OAuth). */
+  dangerouslyAllowAnyOrigin: boolean;
 }
 
 function assertPublicUrlSecurity(
@@ -266,9 +271,30 @@ function assertExperimentalIdentityOAuthPolicy(
 
   throw new Error(
     `${ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE}=${MCP_AUTH_MODE_LIGHTDASH_OAUTH} is experimental identity-only OAuth in v1. ` +
-      `It does not validate resource/audience binding and Lightdash does not yet expose OAuth Authorization Server Metadata for generic MCP client discovery. ` +
+      `It validates Lightdash user identity via GET /api/v1/user but cannot prove the token was issued for this MCP resource (no resource/audience binding). ` +
       `For production hosted MCP without those limitations, use ${MCP_AUTH_MODE_SHARED_KEY}. ` +
       `To accept the risk, set ${ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH}=1 after reading docs/mcp-oauth-http.md.`,
+  );
+}
+
+function assertAllowedOriginsPolicy(
+  authMode: McpAuthMode,
+  allowedOrigins: string[],
+  dangerouslyAllowAnyOrigin: boolean,
+  env: NodeJS.ProcessEnv,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || env.NODE_ENV !== 'production') {
+    return;
+  }
+
+  if (allowedOrigins.length > 0 || dangerouslyAllowAnyOrigin) {
+    return;
+  }
+
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is required in production ${MCP_AUTH_MODE_LIGHTDASH_OAUTH} mode. ` +
+      `Set an explicit CORS origin allowlist for browser-facing deployments, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN}=1 ` +
+      `only when you accept reflecting any browser Origin.`,
   );
 }
 
@@ -300,7 +326,7 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
     console.warn(
       'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth is experimental identity-only OAuth. ' +
         'Token validation confirms Lightdash user identity via GET /api/v1/user only; it does not prove the token was issued for this MCP resource. ' +
-        'Lightdash does not yet publish /.well-known/oauth-authorization-server — MCP clients need preconfigured Lightdash OAuth endpoints. ' +
+        'Lightdash exposes /.well-known/oauth-authorization-server for OAuth discovery; the gap is resource/audience-bound token validation, not metadata. ' +
         'Authorization is Lightdash RBAC plus process-level safety mode / project allowlists, not MCP-local scopes or audience binding.',
     );
   }
@@ -326,9 +352,20 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   }
 
   if (config.allowedOrigins.length === 0) {
+    const corsWarning =
+      config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+        ? `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
+          'Set an explicit allowlist for browser-facing OAuth deployments; production requires an allowlist or ' +
+          `${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN}=1.`
+        : `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
+          'Set an explicit allowlist for browser-facing deployments.';
+    console.warn(corsWarning);
+  }
+
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && config.maxSessionsPerSubject > 0) {
     console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
-        'Set an explicit allowlist for browser-facing deployments.',
+      `Note: in-memory sessions are capped at ${config.maxSessions} global and ${config.maxSessionsPerSubject} per OAuth subject. ` +
+        'Use gateway-level rate limits and short session TTLs for multi-tenant production deployments.',
     );
   }
 }
@@ -405,6 +442,13 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   );
   assertExperimentalIdentityOAuthPolicy(authMode, experimentalIdentityOAuth, env);
 
+  const dangerouslyAllowAnyOrigin = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN, env),
+    false,
+  );
+  assertAllowedOriginsPolicy(authMode, parseCsv(allowedOriginsRaw), dangerouslyAllowAnyOrigin, env);
+
   const requiredScopes = readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []);
   assertLightdashOAuthScopePolicy(authMode, requiredScopes);
 
@@ -444,6 +488,12 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       [{ name: ENV_MCP_MAX_SESSIONS, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS }],
       100,
     ),
+    maxSessionsPerSubject: readNumberEnv(
+      env,
+      ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
+      [],
+      10,
+    ),
     sessionCleanupMs: readNumberEnv(
       env,
       ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
@@ -465,6 +515,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     ),
     grantAllScopesWhenUnknown,
     experimentalIdentityOAuth,
+    dangerouslyAllowAnyOrigin,
   };
 }
 
