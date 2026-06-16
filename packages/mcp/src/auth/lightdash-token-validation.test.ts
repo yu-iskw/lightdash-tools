@@ -25,6 +25,7 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
     grantAllScopesWhenUnknown: false,
+    experimentalIdentityOAuth: false,
     ...overrides,
   };
 }

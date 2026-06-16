@@ -19,6 +19,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
+  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
@@ -172,6 +173,8 @@ export interface McpHttpConfig {
   validateToken: boolean;
   tokenValidationCacheTtlMs: number;
   grantAllScopesWhenUnknown: boolean;
+  /** Explicit operator opt-in for identity-only OAuth (no resource/audience binding). */
+  experimentalIdentityOAuth: boolean;
 }
 
 function assertPublicUrlSecurity(
@@ -248,6 +251,27 @@ function assertGrantAllScopesPolicy(env: NodeJS.ProcessEnv, enabled: boolean): v
   );
 }
 
+function assertExperimentalIdentityOAuthPolicy(
+  authMode: McpAuthMode,
+  experimentalIdentityOAuth: boolean,
+  env: NodeJS.ProcessEnv,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || env.NODE_ENV !== 'production') {
+    return;
+  }
+
+  if (experimentalIdentityOAuth) {
+    return;
+  }
+
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE}=${MCP_AUTH_MODE_LIGHTDASH_OAUTH} is experimental identity-only OAuth in v1. ` +
+      `It does not validate resource/audience binding and Lightdash does not yet expose OAuth Authorization Server Metadata for generic MCP client discovery. ` +
+      `For production hosted MCP without those limitations, use ${MCP_AUTH_MODE_SHARED_KEY}. ` +
+      `To accept the risk, set ${ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH}=1 after reading docs/mcp-oauth-http.md.`,
+  );
+}
+
 function assertLightdashOAuthScopePolicy(authMode: McpAuthMode, requiredScopes: string[]): void {
   if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || requiredScopes.length === 0) {
     return;
@@ -269,6 +293,15 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
     console.warn(
       'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=none — MCP HTTP endpoint is unauthenticated. Use lightdash-oauth or shared-key in production.',
+    );
+  }
+
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    console.warn(
+      'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth is experimental identity-only OAuth. ' +
+        'Token validation confirms Lightdash user identity via GET /api/v1/user only; it does not prove the token was issued for this MCP resource. ' +
+        'Lightdash does not yet publish /.well-known/oauth-authorization-server — MCP clients need preconfigured Lightdash OAuth endpoints. ' +
+        'Authorization is Lightdash RBAC plus process-level safety mode / project allowlists, not MCP-local scopes or audience binding.',
     );
   }
 
@@ -365,6 +398,13 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   );
   assertGrantAllScopesPolicy(env, grantAllScopesWhenUnknown);
 
+  const experimentalIdentityOAuth = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH, env),
+    false,
+  );
+  assertExperimentalIdentityOAuthPolicy(authMode, experimentalIdentityOAuth, env);
+
   const requiredScopes = readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []);
   assertLightdashOAuthScopePolicy(authMode, requiredScopes);
 
@@ -421,9 +461,10 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       env,
       ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
       [],
-      30_000,
+      10_000,
     ),
     grantAllScopesWhenUnknown,
+    experimentalIdentityOAuth,
   };
 }
 
