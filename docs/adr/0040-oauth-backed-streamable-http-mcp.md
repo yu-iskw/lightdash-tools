@@ -12,7 +12,7 @@ Accepted (v1 experimental subset)
 
 The MCP Authorization specification (2025-11-25) requires HTTP transports to act as OAuth resource servers with protected-resource metadata and `WWW-Authenticate` challenges, plus authorization-server metadata discovery and resource/audience validation on access tokens.
 
-Upstream Lightdash today exposes OAuth routes (`/api/v1/oauth/authorize`, `/token`, `/register`, `/revoke`, `/userinfo`) but **does not** publish `/.well-known/oauth-authorization-server` or OIDC discovery. Access tokens are opaque and are not issued with resource/audience binding that the MCP server can validate.
+Upstream Lightdash exposes OAuth routes (`/api/v1/oauth/authorize`, `/token`, `/register`, `/revoke`, `/userinfo`) and publishes OAuth Authorization Server Metadata at `/.well-known/oauth-authorization-server` (root and API-level). Access tokens remain opaque and are not issued with resource/audience binding that this external MCP server can validate.
 
 ## Decision
 
@@ -30,24 +30,25 @@ Upstream Lightdash today exposes OAuth routes (`/api/v1/oauth/authorize`, `/toke
 
 7. **OAuth scopes**: Opaque Lightdash tokens skip MCP-local scope enforcement. `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` must remain empty in `lightdash-oauth` mode (startup fails otherwise). Protected-resource metadata advertises empty `scopes_supported` by default. Authorization is Lightdash RBAC plus process-level safety mode.
 
-8. **MCP client configuration**: Protected-resource metadata alone is insufficient for generic MCP OAuth discovery. Clients must preconfigure Lightdash OAuth endpoints until upstream AS metadata exists.
+8. **MCP client configuration**: Protected-resource metadata points `authorization_servers` at `LIGHTDASH_URL`. Clients can discover Lightdash AS metadata via `/.well-known/oauth-authorization-server`. Static endpoint configuration remains a supported fallback. The experimental limitation is identity-only validation, not missing discovery.
 
 9. **Environment variables**: Official Lightdash vars unchanged. MCP HTTP server vars use `LIGHTDASH_TOOLS_MCP_*` per ADR-0035.
 
 10. **Governance**: Safety mode, project allowlist, dry-run, and audit remain process-scoped (operator configured), not per OAuth user.
 
+11. **Session quotas**: Global and per-subject in-memory session limits; production deployments should also use gateway rate limits.
+
 ## Consequences
 
 - **Positive**: Per-user bearer propagation; HTTP transport refactor; session binding; honest experimental path for early adopters; `shared-key` remains the production-ready option today.
-- **Negative**: Not standards-aligned MCP OAuth authorization until upstream Lightdash adds AS metadata and resource/audience binding.
+- **Negative**: Not standards-aligned MCP OAuth authorization until upstream Lightdash adds resource/audience binding and MCP servers can validate tokens were issued for this resource.
 - **Risks**: Confused-deputy replay of valid Lightdash OAuth tokens across clients; delayed revocation visibility from validation cache; horizontal scale needs external session store (deferred).
 
 ## Future work (upstream + MCP)
 
-1. Lightdash OAuth Authorization Server Metadata endpoint
-2. Resource/audience-bound token issuance
-3. Introspection or validation exposing `client_id`, `scope`, and `resource`
-4. Production-grade `lightdash-oauth` mode without `EXPERIMENTAL_IDENTITY_OAUTH`
+1. Resource/audience-bound token issuance for external MCP resources
+2. Introspection or validation exposing `client_id`, `scope`, and `resource`
+3. Production-grade `lightdash-oauth` mode without `EXPERIMENTAL_IDENTITY_OAUTH`
 
 ## References
 

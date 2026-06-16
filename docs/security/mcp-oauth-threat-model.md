@@ -22,12 +22,12 @@ Security analysis for hosted `@lightdash-tools/mcp` deployments using `LIGHTDASH
 | Token leakage in logs                      | High   | Redact `Authorization` in reverse proxies and platform logs. Never log raw `authInfo.token`. Audit entries use token hash only.                                                                                           |
 | Token/session confusion                    | High   | Bind sessions to `userUuid` and `organizationUuid`; reject subject or organization mismatch on resume. Same-user token refresh within org updates credentials.                                                            |
 | OAuth metadata spoofing (wrong public URL) | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` in `lightdash-oauth` mode. Normalize URL (no trailing slash, strip `/mcp` suffix).                                                                                               |
-| OAuth discovery failure                    | Medium | Lightdash lacks AS metadata endpoints. Document preconfigured OAuth endpoints; do not claim generic MCP discovery compatibility.                                                                                          |
+| OAuth discovery / metadata spoofing        | Medium | Lightdash exposes AS metadata; verify `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` and `authorization_servers` point at your instance. Prefer discovery; document static endpoint fallback.                                           |
 | Insufficient scope UX loop                 | Medium | `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` is disallowed in `lightdash-oauth` mode. MCP-local scopes are not enforced for opaque tokens.                                                                                       |
 | Reimplemented RBAC mismatch                | High   | Do not recreate Lightdash object-level permissions in MCP. Delegate to Lightdash API with the user's bearer token.                                                                                                        |
 | Agent destructive actions                  | High   | Default `read-only`; static tool filtering via `--safety-mode`; dry-run; irrecoverable ops are client-only per [ADR-0037](../adr/0037-agent-safe-mcp-cli-surface.md).                                                     |
 | CSRF / browser-origin misuse               | Medium | Bearer tokens in `Authorization` header only (no query-string tokens). Optional `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`. No cookie-based MCP auth.                                                                          |
-| Rate-limit bypass                          | Medium | Per-IP and per-token-hash rate limiting deferred to follow-up; use Cloud Armor or gateway in front of Cloud Run.                                                                                                          |
+| Rate-limit bypass / session exhaustion     | Medium | Per-subject and global in-memory session caps. Use Cloud Armor or gateway rate limits in production; keep session TTLs short.                                                                                             |
 
 ## Operator security checklist
 
@@ -36,6 +36,7 @@ Security analysis for hosted `@lightdash-tools/mcp` deployments using `LIGHTDASH
 - [ ] For production hosted MCP today, prefer `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key` with a PAT and strong guardrails.
 - [ ] If using experimental `lightdash-oauth`, set `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` and read [mcp-oauth-http.md](../mcp-oauth-http.md) limitations.
 - [ ] Set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` to the exact HTTPS URL clients use.
+- [ ] Set `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` in production `lightdash-oauth` mode (or document explicit `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN=1` acceptance).
 - [ ] Do **not** set `LIGHTDASH_API_KEY` unless running `none` or `shared-key` mode intentionally.
 - [ ] Set `LIGHTDASH_TOOLS_SAFETY_MODE=read-only` unless write tools are required.
 - [ ] Set `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` to limit cross-project access for all users.
@@ -72,8 +73,7 @@ Security analysis for hosted `@lightdash-tools/mcp` deployments using `LIGHTDASH
 - Refresh token storage on the MCP server
 - `LIGHTDASH_OAUTH_CLIENT_SECRET` on the MCP server process
 - Per-user safety mode or project allowlist (governance remains process-scoped)
-- RFC 8707 audience / resource binding (requires upstream Lightdash OAuth changes)
-- OAuth Authorization Server Metadata on Lightdash (requires upstream)
+- RFC 8707 audience / resource binding (requires upstream Lightdash OAuth changes so MCP servers can validate tokens were issued for this resource)
 - Token introspection with `client_id` / `resource` for MCP resource servers (requires upstream)
 - Production-grade standards-aligned MCP OAuth without `EXPERIMENTAL_IDENTITY_OAUTH`
 

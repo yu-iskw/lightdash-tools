@@ -3,6 +3,7 @@ import { createServer, type Server } from 'node:http';
 import { SecretString } from '@lightdash-tools/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { getLightdashAuthorizationServerMetadataUrl } from './auth/oauth-protected-resource.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -15,6 +16,7 @@ const TOKEN_READ_ONLY = scopedAccessToken('mcp:read', 'token-read-only');
 const OPAQUE_TOKEN_A = 'opaque-token-user-a';
 
 const OPAQUE_TOKEN_ORG_B = 'opaque-token-org-b';
+const OPAQUE_TOKEN_A_NO_ORG = 'opaque-token-user-a-no-org';
 
 const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com', organizationUuid: 'org-a-uuid' };
 const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com', organizationUuid: 'org-b-uuid' };
@@ -23,6 +25,7 @@ const USER_A_ORG_B = {
   email: 'a@example.com',
   organizationUuid: 'org-b-uuid',
 };
+const USER_A_NO_ORG = { userUuid: 'user-a-uuid', email: 'a@example.com' };
 
 function scopedAccessToken(scope: string, subject: string): string {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
@@ -71,12 +74,29 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
     [TOKEN_READ_ONLY]: USER_A,
     [OPAQUE_TOKEN_A]: USER_A,
     [OPAQUE_TOKEN_ORG_B]: USER_A_ORG_B,
+    [OPAQUE_TOKEN_A_NO_ORG]: USER_A_NO_ORG,
   };
+
+  let issuerBaseUrl = '';
 
   const server = createServer((req, res) => {
     const authHeader = req.headers.authorization;
     const auth = typeof authHeader === 'string' ? authHeader : (authHeader?.[0] ?? '');
     authorizationHeaders.push(auth);
+
+    if (req.method === 'GET' && req.url === '/.well-known/oauth-authorization-server') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          issuer: issuerBaseUrl,
+          authorization_endpoint: `${issuerBaseUrl}/api/v1/oauth/authorize`,
+          token_endpoint: `${issuerBaseUrl}/api/v1/oauth/token`,
+          revocation_endpoint: `${issuerBaseUrl}/api/v1/oauth/revoke`,
+          registration_endpoint: `${issuerBaseUrl}/api/v1/oauth/register`,
+          userinfo_endpoint: `${issuerBaseUrl}/api/v1/oauth/userinfo`,
+        }),
+      );
+      return;
+    }
 
     if (req.method === 'GET' && req.url === '/api/v1/user') {
       const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
@@ -102,9 +122,10 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
 
   await listen(server, 0, '127.0.0.1');
   const address = server.address() as AddressInfo;
+  issuerBaseUrl = `http://127.0.0.1:${address.port}`;
 
   return {
-    baseUrl: `http://127.0.0.1:${address.port}`,
+    baseUrl: issuerBaseUrl,
     authorizationHeaders,
     close: () =>
       new Promise<void>((resolve, reject) => {
@@ -127,6 +148,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     maxBodyBytes: 1024 * 1024,
     sessionTtlMs: 60_000,
     maxSessions: 10,
+    maxSessionsPerSubject: 10,
     sessionCleanupMs: 60_000,
     requiredScopes: [],
     scopesSupported: [],
@@ -134,6 +156,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     tokenValidationCacheTtlMs: 30_000,
     grantAllScopesWhenUnknown: false,
     experimentalIdentityOAuth: false,
+    dangerouslyAllowAnyOrigin: false,
   };
 }
 
@@ -270,6 +293,50 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
       error_description: 'Session organization mismatch',
     });
     expect(resumeResponse.headers.get('www-authenticate')).toContain('invalid_token');
+  });
+
+  it('returns 401 Session organization mismatch when org disappears on resume', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: OPAQUE_TOKEN_A,
+    });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const resumeResponse = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: OPAQUE_TOKEN_A_NO_ORG, sessionId: sessionId ?? undefined },
+    );
+
+    expect(resumeResponse.status).toBe(401);
+    expect(await resumeResponse.json()).toEqual({
+      error: 'invalid_token',
+      error_description: 'Session organization mismatch',
+    });
+  });
+
+  it('protected-resource metadata authorization_servers resolves to Lightdash AS metadata', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`);
+    expect(response.status).toBe(200);
+
+    const metadata = (await response.json()) as {
+      authorization_servers: string[];
+    };
+    const asMetadataUrl = getLightdashAuthorizationServerMetadataUrl(
+      metadata.authorization_servers[0],
+    );
+    expect(asMetadataUrl).toBe(`${mockLightdash.baseUrl}/.well-known/oauth-authorization-server`);
+
+    const asResponse = await fetch(asMetadataUrl);
+    expect(asResponse.status).toBe(200);
+    const asMetadata = (await asResponse.json()) as {
+      authorization_endpoint: string;
+      token_endpoint: string;
+    };
+    expect(asMetadata.authorization_endpoint).toBe(
+      `${mockLightdash.baseUrl}/api/v1/oauth/authorize`,
+    );
+    expect(asMetadata.token_endpoint).toBe(`${mockLightdash.baseUrl}/api/v1/oauth/token`);
   });
 
   it('allows token refresh for the same OAuth subject within a session', async () => {
@@ -672,6 +739,7 @@ describe('MCP HTTP shared-key integration', () => {
       maxBodyBytes: 1024 * 1024,
       sessionTtlMs: 60_000,
       maxSessions: 10,
+      maxSessionsPerSubject: 10,
       sessionCleanupMs: 60_000,
       requiredScopes: [],
       scopesSupported: ['mcp:read'],
@@ -679,6 +747,7 @@ describe('MCP HTTP shared-key integration', () => {
       tokenValidationCacheTtlMs: 30_000,
       grantAllScopesWhenUnknown: false,
       experimentalIdentityOAuth: false,
+      dangerouslyAllowAnyOrigin: false,
     });
   });
 
