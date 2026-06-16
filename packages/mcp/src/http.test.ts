@@ -60,18 +60,29 @@ describe('HTTP transport helpers', () => {
       expect(checkOrigin('https://other.example.com', allowed)).toBe(false);
     });
 
-    it('builds CORS headers only for allowed origins', () => {
+    it('builds CORS headers for allowed origins', () => {
       const allowed = ['https://app.example.com'];
       expect(buildCorsHeaders('https://app.example.com', allowed)).toEqual({
         'Access-Control-Allow-Origin': 'https://app.example.com',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':
-          'Content-Type, Accept, Authorization, Mcp-Session-Id, X-API-Key',
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key',
         'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });
       expect(buildCorsHeaders('https://other.example.com', allowed)).toEqual({});
       expect(buildCorsHeaders(undefined, allowed)).toEqual({});
+    });
+
+    it('echoes CORS headers for any origin when allowlist is empty', () => {
+      expect(buildCorsHeaders('https://browser.example.com', [])).toEqual({
+        'Access-Control-Allow-Origin': 'https://browser.example.com',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers':
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key',
+        'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
+        Vary: 'Origin',
+      });
     });
   });
 

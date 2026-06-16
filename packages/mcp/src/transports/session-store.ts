@@ -56,8 +56,8 @@ export class SessionStore {
     return this.sessions.size;
   }
 
-  canAcceptNewSession(): boolean {
-    this.cleanupExpired(() => undefined);
+  canAcceptNewSession(onClose: (entry: SessionEntry, sessionId: string) => void): boolean {
+    this.cleanupExpired(onClose);
     return this.sessions.size < this.maxSessions;
   }
 
