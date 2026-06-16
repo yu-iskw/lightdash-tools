@@ -1,5 +1,5 @@
 /**
- * Validates a Lightdash OAuth/PAT bearer by calling upstream `GET /api/v1/user`.
+ * Validates a Lightdash OAuth/PAT bearer via {@link LIGHTDASH_OAUTH_VALIDATION_ENDPOINT}.
  *
  * Upstream Lightdash accepts OAuth bearer tokens on this route via
  * `allowApiKeyAuthentication` (see docs/agent-context/lightdash-oauth-upstream-contract.md).
@@ -13,11 +13,14 @@ import {
   RateLimitError,
 } from '@lightdash-tools/client';
 
+import { LIGHTDASH_OAUTH_VALIDATION_ENDPOINT } from './lightdash-oauth-upstream-contract.js';
 import { hashToken } from './token-hash.js';
 import { TokenValidationCache } from './token-validation-cache.js';
 import { TokenValidationError } from './token-validation-error.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
+
+export { LIGHTDASH_OAUTH_VALIDATION_ENDPOINT };
 
 export interface ValidatedLightdashUser {
   userUuid: string;

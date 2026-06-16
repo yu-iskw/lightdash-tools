@@ -1,7 +1,8 @@
+import { sendJson } from '../transports/http-response.js';
+
 import { extractBearerToken } from './bearer.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 import { getProtectedResourceMetadataPathUrl } from './oauth-protected-resource.js';
-import { sendJson } from './shared-key-middleware.js';
 import { extractTokenScopes, hasRequiredScopes } from './token-scopes.js';
 import { TokenValidationError } from './token-validation-error.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';

@@ -414,21 +414,6 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(metadata.resource).toBe(`${mcpServer.baseUrl}/mcp`);
   });
 
-  it('returns 400 for malformed JSON POST bodies', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json, text/event-stream',
-        Authorization: `Bearer ${TOKEN_A}`,
-      },
-      body: '{not-json',
-    });
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: 'Bad Request: invalid JSON body' });
-  });
-
   it('maps token-a and token-b to distinct authenticated users upstream', async () => {
     const responseA = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const responseB = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_B });

@@ -205,7 +205,7 @@ sequenceDiagram
     Client->>MCP: GET /.well-known/oauth-protected-resource
     MCP-->>Client: PRM (authorization_servers = LIGHTDASH_URL)
 
-    Note over Client,LD: Client uses preconfigured Lightdash OAuth endpoints (AS metadata not yet available)
+    Note over Client,LD: Client discovers authorization_servers from PRM; OAuth flow uses Lightdash AS
 
     Client->>MCP: POST /mcp Authorization Bearer token
     MCP->>LD: GET /api/v1/user (validate token)
@@ -284,14 +284,15 @@ Validated bearer tokens are cached by SHA-256 hash for `LIGHTDASH_TOOLS_MCP_TOKE
 
 ### Production configuration examples
 
-Identity-only (typical Lightdash opaque OAuth tokens):
+Identity-only (typical Lightdash opaque OAuth tokens; production defaults to read-only tools):
 
 ```bash
 LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth
 LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://mcp.example.com
 LIGHTDASH_URL=https://app.lightdash.cloud
+LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1
 # LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES unset (default empty)
-LIGHTDASH_TOOLS_SAFETY_MODE=write-idempotent
+LIGHTDASH_TOOLS_SAFETY_MODE=read-only
 ```
 
 Strict JWT scope enforcement at the endpoint is **not supported** in `lightdash-oauth` mode because Lightdash OAuth credentials are opaque. Use safety mode and Lightdash RBAC instead:
