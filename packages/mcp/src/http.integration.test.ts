@@ -339,6 +339,37 @@ describe('MCP HTTP CORS integration', () => {
     expect(response.status).toBe(204);
     expect(response.headers.get('access-control-allow-origin')).toBe('https://app.example.com');
     expect(response.headers.get('access-control-allow-methods')).toContain('POST');
+    expect(response.headers.get('access-control-allow-headers')).toContain('MCP-Protocol-Version');
+  });
+});
+
+describe('MCP HTTP unrestricted CORS integration', () => {
+  let mockLightdash: MockLightdashServer;
+  let mcpServer: McpHttpServer;
+
+  beforeEach(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockLightdash = await startMockLightdashServer();
+    mcpServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(mockLightdash.baseUrl),
+      allowedOrigins: [],
+    });
+  });
+
+  afterEach(async () => {
+    await mcpServer.close();
+    await mockLightdash.close();
+    vi.restoreAllMocks();
+  });
+
+  it('echoes CORS headers when allowedOrigins is empty', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`, {
+      headers: { Origin: 'https://browser.example.com' },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://browser.example.com');
   });
 });
 

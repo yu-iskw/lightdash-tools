@@ -69,9 +69,25 @@ describe('SessionStore', () => {
     store.set('a', createMockEntry(Date.now()));
     store.set('b', createMockEntry(Date.now()));
 
-    expect(store.canAcceptNewSession()).toBe(false);
+    const onClose = vi.fn();
+    expect(store.canAcceptNewSession(onClose)).toBe(false);
 
     store.delete('a');
-    expect(store.canAcceptNewSession()).toBe(true);
+    expect(store.canAcceptNewSession(onClose)).toBe(true);
+  });
+
+  it('canAcceptNewSession closes expired sessions via onClose', () => {
+    const store = new SessionStore(1_000, 2);
+    const stale = createMockEntry(Date.now() - 2_000);
+    store.set('stale', stale);
+    store.set('fresh', createMockEntry(Date.now()));
+
+    const onClose = vi.fn();
+    expect(store.canAcceptNewSession(onClose)).toBe(true);
+
+    expect(store.get('stale')).toBeUndefined();
+    expect(store.get('fresh')).toBeDefined();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledWith(stale, 'stale');
   });
 });

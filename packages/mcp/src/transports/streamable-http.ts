@@ -268,7 +268,11 @@ async function handleInitializePost(
   sessionStore: SessionStore,
   body: unknown,
 ): Promise<void> {
-  if (!sessionStore.canAcceptNewSession()) {
+  if (
+    !sessionStore.canAcceptNewSession((entry, sessionId) => {
+      closeSessionEntry(entry, sessionId, 'expired');
+    })
+  ) {
     sendJson(res, 503, { error: 'Service Unavailable: max sessions reached' });
     return;
   }
