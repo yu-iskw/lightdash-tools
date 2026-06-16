@@ -248,6 +248,22 @@ function assertGrantAllScopesPolicy(env: NodeJS.ProcessEnv, enabled: boolean): v
   );
 }
 
+function assertLightdashOAuthScopePolicy(authMode: McpAuthMode, requiredScopes: string[]): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || requiredScopes.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} cannot be set when auth mode is ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}. ` +
+      `Lightdash OAuth access credentials are opaque, so MCP cannot verify JWT scope claims from Lightdash. ` +
+      `Leave ${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} unset and rely on Lightdash RBAC plus LIGHTDASH_TOOLS_SAFETY_MODE.`,
+  );
+}
+
+function defaultScopesSupported(authMode: McpAuthMode): string[] {
+  return authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH ? [] : [...DEFAULT_SCOPES_SUPPORTED];
+}
+
 /** Loud warnings for operator misconfiguration. Call once at HTTP server startup. */
 export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
@@ -266,6 +282,13 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.grantAllScopesWhenUnknown) {
     console.warn(
       `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES}=true — opaque or claimless tokens are granted every supported MCP scope.`,
+    );
+  }
+
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && config.scopesSupported.length > 0) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED} advertises OAuth scopes, but Lightdash OAuth credentials are opaque. ` +
+        'MCP-local scope enforcement applies only when access tokens carry decodable JWT scope claims.',
     );
   }
 
@@ -342,6 +365,9 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   );
   assertGrantAllScopesPolicy(env, grantAllScopesWhenUnknown);
 
+  const requiredScopes = readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []);
+  assertLightdashOAuthScopePolicy(authMode, requiredScopes);
+
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
     proxyAuthorization: proxyAuth ? new SecretString(proxyAuth) : undefined,
@@ -384,10 +410,12 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       [{ name: ENV_MCP_SESSION_CLEANUP_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS }],
       60_000,
     ),
-    requiredScopes: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []),
-    scopesSupported: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
-      ...DEFAULT_SCOPES_SUPPORTED,
-    ]),
+    requiredScopes,
+    scopesSupported: readScopeList(
+      env,
+      ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
+      defaultScopesSupported(authMode),
+    ),
     validateToken,
     tokenValidationCacheTtlMs: readNumberEnv(
       env,

@@ -43,7 +43,13 @@ function parseScopeClaim(payload: Record<string, unknown>): string[] {
   return [];
 }
 
+const ENFORCEABLE_MCP_SCOPES = new Set(['mcp:read', 'mcp:write']);
+
 function filterSupportedScopes(scopes: string[], scopesSupported: readonly string[]): string[] {
+  if (scopesSupported.length === 0) {
+    return [...new Set(scopes.filter((scope) => ENFORCEABLE_MCP_SCOPES.has(scope)))];
+  }
+
   const supported = new Set(scopesSupported);
   return [...new Set(scopes.filter((scope) => supported.has(scope)))];
 }

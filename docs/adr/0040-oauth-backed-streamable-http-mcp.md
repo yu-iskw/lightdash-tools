@@ -24,9 +24,9 @@ The MCP Authorization specification (2025-11-25) requires HTTP transports to act
 
 5. **Token validation**: Validate OAuth tokens via `GET /api/v1/user` with optional short TTL cache keyed by SHA-256 token hash. No JWKS in v1.
 
-6. **Session binding**: Stateful HTTP sessions bind to the authenticated Lightdash `userUuid` (subject). Resuming with a different user's bearer returns `401`. The same user may refresh their access token within an existing session; the server updates upstream credentials and continues the session.
+6. **Session binding**: Stateful HTTP sessions bind to the authenticated Lightdash `userUuid` (subject) and `organizationUuid` when present. Resuming with a different user or organization context returns `401`. The same user may refresh their access token within an existing session when subject and organization context match; the server updates upstream credentials and continues the session. OAuth `clientId` is not available from `GET /api/v1/user` and is deferred for v1.
 
-7. **OAuth scopes**: Lightdash OAuth validates identity via `GET /api/v1/user`. JWT `scope` / `scp` claims optionally enforce coarse `mcp:read` / `mcp:write` tool access when present. Opaque tokens without scope claims skip MCP scope enforcement and rely on Lightdash RBAC plus process-level safety mode. Endpoint scope requirements (`LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`) default to empty.
+7. **OAuth scopes**: Lightdash OAuth validates identity via `GET /api/v1/user`. Lightdash-issued OAuth credentials are opaque, so MCP cannot treat local JWT parsing as an authoritative scope source. `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` must remain empty in `lightdash-oauth` mode (startup fails otherwise). JWT `scope` / `scp` claims optionally enforce coarse `mcp:read` / `mcp:write` tool access when present on decodable tokens. Opaque tokens skip MCP-local scope enforcement and rely on Lightdash RBAC plus process-level safety mode. Protected-resource metadata advertises an empty `scopes_supported` list by default in `lightdash-oauth` mode.
 
 8. **Environment variables**: Official Lightdash vars (`LIGHTDASH_URL`, `LIGHTDASH_API_KEY`) unchanged. MCP HTTP server vars use `LIGHTDASH_TOOLS_MCP_*` per ADR-0035. Legacy `MCP_*` names remain as aliases with one-time deprecation warnings.
 

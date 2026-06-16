@@ -15,6 +15,7 @@ import type { McpHttpConfig } from '../config/load-mcp-config.js';
 export interface ValidatedLightdashUser {
   userUuid: string;
   email: string;
+  organizationUuid?: string;
 }
 
 const validationCaches = new WeakMap<McpHttpConfig, TokenValidationCache<ValidatedLightdashUser>>();
@@ -98,6 +99,7 @@ export async function validateLightdashAccessToken(
     const validated: ValidatedLightdashUser = {
       userUuid: user.userUuid,
       email: user.email ?? '',
+      organizationUuid: user.organizationUuid,
     };
 
     cache.set(tokenHash, validated);
