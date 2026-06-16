@@ -62,9 +62,12 @@ function scopesWhenUnknown(
 }
 
 /**
- * Extracts OAuth scopes from JWT claims.
- * Returns `undefined` when the token is opaque or has no scope claims (identity-only).
- * Returns a (possibly empty) array when scope claims are present.
+ * Extracts OAuth scopes from JWT claims when present.
+ *
+ * For `lightdash-oauth`, Lightdash access tokens are typically opaque and this returns
+ * `undefined` — MCP-local scope enforcement is skipped and authorization relies on Lightdash
+ * RBAC plus process safety mode. Do not treat decoded JWT scopes as validated Lightdash OAuth
+ * authorization unless Lightdash formally issues resource-bound JWT access tokens.
  */
 export function extractTokenScopes(
   accessToken: string,

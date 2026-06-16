@@ -105,4 +105,23 @@ describe('SessionStore', () => {
     expect(store.canAcceptNewSession('user-a', onClose)).toBe(false);
     expect(store.canAcceptNewSession('user-b', onClose)).toBe(true);
   });
+
+  it('does not double-count per-subject sessions when overwriting the same session ID', () => {
+    const store = new SessionStore(60_000, 10, 2);
+    const first = {
+      ...createMockEntry(Date.now()),
+      auth: { mode: 'lightdash-oauth' as const, tokenHash: 'hash-a', subject: 'user-a' },
+    };
+    const replacement = {
+      ...createMockEntry(Date.now()),
+      auth: { mode: 'lightdash-oauth' as const, tokenHash: 'hash-b', subject: 'user-a' },
+    };
+
+    store.set('session-1', first);
+    store.set('session-1', replacement);
+
+    const onClose = vi.fn();
+    expect(store.canAcceptNewSession('user-a', onClose)).toBe(true);
+    expect(store.size).toBe(1);
+  });
 });

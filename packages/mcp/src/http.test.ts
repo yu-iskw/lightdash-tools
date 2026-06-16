@@ -45,8 +45,12 @@ describe('HTTP transport helpers', () => {
       expect(checkOrigin(undefined, allowed)).toBe(true);
     });
 
-    it('allows any origin when allowlist is empty', () => {
-      expect(checkOrigin('https://evil.example.com', [])).toBe(true);
+    it('rejects browser origins when allowlist is empty and dangerouslyAllowAnyOrigin is false', () => {
+      expect(checkOrigin('https://evil.example.com', [], false)).toBe(false);
+    });
+
+    it('allows browser origins when dangerouslyAllowAnyOrigin is true', () => {
+      expect(checkOrigin('https://browser.example.com', [], true)).toBe(true);
     });
 
     it('allows listed origins', () => {
@@ -74,8 +78,12 @@ describe('HTTP transport helpers', () => {
       expect(buildCorsHeaders(undefined, allowed)).toEqual({});
     });
 
-    it('echoes CORS headers for any origin when allowlist is empty', () => {
-      expect(buildCorsHeaders('https://browser.example.com', [])).toEqual({
+    it('omits CORS headers when allowlist is empty and dangerouslyAllowAnyOrigin is false', () => {
+      expect(buildCorsHeaders('https://browser.example.com', [], false)).toEqual({});
+    });
+
+    it('echoes CORS headers when dangerouslyAllowAnyOrigin is true', () => {
+      expect(buildCorsHeaders('https://browser.example.com', [], true)).toEqual({
         'Access-Control-Allow-Origin': 'https://browser.example.com',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':

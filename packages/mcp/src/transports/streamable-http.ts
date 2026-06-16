@@ -557,12 +557,16 @@ function handleCorsPreflight(
   config: McpHttpConfig,
 ): boolean {
   const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  if (!checkOrigin(origin, config.allowedOrigins)) {
+  if (!checkOrigin(origin, config.allowedOrigins, config.dangerouslyAllowAnyOrigin)) {
     sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
     return true;
   }
 
-  const corsHeaders = buildCorsHeaders(origin, config.allowedOrigins);
+  const corsHeaders = buildCorsHeaders(
+    origin,
+    config.allowedOrigins,
+    config.dangerouslyAllowAnyOrigin,
+  );
   applyResponseHeaders(res, corsHeaders);
 
   if (req.method === 'OPTIONS') {

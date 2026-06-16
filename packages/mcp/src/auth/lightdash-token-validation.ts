@@ -56,6 +56,9 @@ function classifyValidationError(error: unknown): TokenValidationError {
 
   if (error instanceof LightdashApiError) {
     if (error.statusCode === 401 || error.statusCode === 403) {
+      console.warn(
+        `Lightdash token validation rejected bearer token (upstream HTTP ${error.statusCode})`,
+      );
       return new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token');
     }
     if (error.statusCode >= 500) {

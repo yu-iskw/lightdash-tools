@@ -12,18 +12,27 @@ export function timingSafeEqualString(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
-export function checkOrigin(origin: string | undefined, allowedOrigins: string[]): boolean {
+export function checkOrigin(
+  origin: string | undefined,
+  allowedOrigins: string[],
+  dangerouslyAllowAnyOrigin = false,
+): boolean {
   if (!origin || typeof origin !== 'string') return true;
-  if (allowedOrigins.length === 0) return true;
-  return allowedOrigins.includes(origin);
+  if (allowedOrigins.length > 0) return allowedOrigins.includes(origin);
+  return dangerouslyAllowAnyOrigin;
 }
 
 export function buildCorsHeaders(
   origin: string | undefined,
   allowedOrigins: string[],
+  dangerouslyAllowAnyOrigin = false,
 ): Record<string, string> {
   if (!origin) return {};
-  if (allowedOrigins.length > 0 && !allowedOrigins.includes(origin)) return {};
+  if (allowedOrigins.length > 0) {
+    if (!allowedOrigins.includes(origin)) return {};
+  } else if (!dangerouslyAllowAnyOrigin) {
+    return {};
+  }
 
   return {
     'Access-Control-Allow-Origin': origin,
