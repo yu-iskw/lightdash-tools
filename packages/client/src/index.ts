@@ -41,6 +41,7 @@ export type { PartialLightdashClientConfig } from './config';
 export type {
   LightdashClientConfig,
   LightdashAuthConfig,
+  ResolvedLightdashClientConfig,
   RateLimitConfig,
   RetryConfig,
   Logger,

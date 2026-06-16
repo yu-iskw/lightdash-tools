@@ -3,6 +3,7 @@ import {
   LightdashApiError,
   LightdashClient,
   NetworkError,
+  RateLimitError,
 } from '@lightdash-tools/client';
 
 import { hashToken } from './token-hash.js';
@@ -34,21 +35,35 @@ function unvalidatedDevUser(tokenHash: string): ValidatedLightdashUser {
   };
 }
 
+const UPSTREAM_UNAVAILABLE_MESSAGE = 'Lightdash is temporarily unavailable';
+
 function classifyValidationError(error: unknown): TokenValidationError {
+  if (
+    error instanceof RateLimitError ||
+    (error instanceof LightdashApiError && error.statusCode === 429)
+  ) {
+    const retryAfter =
+      error instanceof RateLimitError && error.retryAfter !== undefined
+        ? error.retryAfter
+        : undefined;
+    return new TokenValidationError(
+      'upstream_unavailable',
+      UPSTREAM_UNAVAILABLE_MESSAGE,
+      retryAfter,
+    );
+  }
+
   if (error instanceof LightdashApiError) {
     if (error.statusCode === 401 || error.statusCode === 403) {
       return new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token');
     }
     if (error.statusCode >= 500) {
-      return new TokenValidationError(
-        'upstream_unavailable',
-        'Lightdash is temporarily unavailable',
-      );
+      return new TokenValidationError('upstream_unavailable', UPSTREAM_UNAVAILABLE_MESSAGE);
     }
   }
 
   if (error instanceof NetworkError) {
-    return new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable');
+    return new TokenValidationError('upstream_unavailable', UPSTREAM_UNAVAILABLE_MESSAGE);
   }
 
   return new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token');

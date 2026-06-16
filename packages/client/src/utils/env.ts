@@ -8,8 +8,8 @@ import { SecretString } from './secret-string';
 
 import type {
   LightdashAuthConfig,
-  LightdashClientConfig,
   PartialLightdashClientConfig,
+  ResolvedLightdashClientConfig,
 } from '../config';
 
 /** Environment variable names (aligned with Lightdash CLI). */
@@ -94,7 +94,7 @@ export function createBearerConfig(options: {
  */
 export function mergeConfig(
   explicit: PartialLightdashClientConfig | undefined,
-): LightdashClientConfig {
+): ResolvedLightdashClientConfig {
   const fromEnv = loadConfigFromEnv();
 
   const baseUrl = explicit?.baseUrl ?? fromEnv.baseUrl ?? '';

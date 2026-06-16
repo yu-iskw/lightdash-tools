@@ -13,6 +13,8 @@ import {
   SecretString,
 } from './index';
 
+import type { LightdashClientConfig } from './index';
+
 describe('LightdashClient', () => {
   beforeEach(() => {
     vi.stubEnv(ENV_LIGHTDASH_API_KEY, '');
@@ -30,6 +32,14 @@ describe('LightdashClient', () => {
       personalAccessToken: 'test-token',
     });
     expect(client.getHttpClientV1()).toBeDefined();
+  });
+
+  it('allows deprecated personalAccessToken-only exported config shape', () => {
+    const cfg: LightdashClientConfig = {
+      baseUrl: 'https://app.lightdash.cloud',
+      personalAccessToken: new SecretString('pat'),
+    };
+    expect(cfg.personalAccessToken?.expose()).toBe('pat');
   });
 
   it('should throw when baseUrl and auth credentials are missing and not in env', () => {

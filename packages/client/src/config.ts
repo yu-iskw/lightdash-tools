@@ -66,19 +66,9 @@ export type LightdashAuthConfig =
       token: SecretString;
     };
 
-/**
- * Full configuration for the Lightdash HTTP client.
- * All fields except rateLimit, timeout, retry, and logger can be provided via environment variables.
- */
-export interface LightdashClientConfig {
+interface LightdashClientConfigBase {
   /** Lightdash server base URL (e.g. https://app.lightdash.cloud). */
   baseUrl: string;
-  /** Upstream authentication credentials. */
-  auth: LightdashAuthConfig;
-  /**
-   * @deprecated Use `auth: { type: 'api-key', token }`. Normalized into `auth` at merge time.
-   */
-  personalAccessToken?: SecretString;
   /** Optional proxy authorization header value for proxied access. */
   proxyAuthorization?: SecretString;
   /** Override default rate limits. */
@@ -94,11 +84,33 @@ export interface LightdashClientConfig {
 }
 
 /**
+ * Resolved client configuration after mergeConfig().
+ * Runtime code paths always receive this shape with auth populated.
+ */
+export type ResolvedLightdashClientConfig = LightdashClientConfigBase & {
+  auth: LightdashAuthConfig;
+  /**
+   * @deprecated Use `auth: { type: 'api-key', token }`. Retained when auth is api-key.
+   */
+  personalAccessToken?: SecretString;
+};
+
+/**
+ * Full configuration for the Lightdash HTTP client.
+ * Accepts explicit auth or deprecated personalAccessToken-only input.
+ */
+export type LightdashClientConfig =
+  | ResolvedLightdashClientConfig
+  | (LightdashClientConfigBase & {
+      personalAccessToken: SecretString;
+    });
+
+/**
  * Partial config for merging with environment variables.
  * Used when constructing the client with optional explicit overrides.
  */
 export type PartialLightdashClientConfig = Partial<
-  Omit<LightdashClientConfig, 'auth' | 'personalAccessToken' | 'proxyAuthorization'>
+  Omit<LightdashClientConfigBase, 'proxyAuthorization'>
 > & {
   auth?: LightdashAuthConfig | { type: 'api-key' | 'bearer'; token: SecretString | string };
   personalAccessToken?: SecretString | string;

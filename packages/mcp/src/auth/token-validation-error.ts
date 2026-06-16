@@ -4,6 +4,7 @@ export class TokenValidationError extends Error {
   constructor(
     public readonly reason: TokenValidationFailureReason,
     message: string,
+    public readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = 'TokenValidationError';

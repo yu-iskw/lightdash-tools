@@ -123,4 +123,31 @@ describe('validateLightdashAccessToken', () => {
       await api.close();
     }
   });
+
+  it('throws upstream_unavailable for upstream 429 rate limits', async () => {
+    const api = await startUserApiServer((_req, res) => {
+      res
+        .writeHead(429, {
+          'Content-Type': 'application/json',
+          'Retry-After': '30',
+        })
+        .end(
+          JSON.stringify({
+            status: 'error',
+            error: { statusCode: 429, name: 'TooManyRequests', message: 'Slow down' },
+          }),
+        );
+    });
+
+    try {
+      await expect(
+        validateLightdashAccessToken(baseConfig(api.baseUrl), 'any-token'),
+      ).rejects.toMatchObject({
+        reason: 'upstream_unavailable',
+        retryAfterSeconds: 30,
+      });
+    } finally {
+      await api.close();
+    }
+  });
 });

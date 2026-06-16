@@ -4,7 +4,7 @@
 
 import { LightdashApiError, RateLimitError, NetworkError } from '../errors';
 
-import type { LightdashAuthConfig, LightdashClientConfig } from '../config';
+import type { LightdashAuthConfig, ResolvedLightdashClientConfig } from '../config';
 import type { ApiErrorPayload } from '../errors';
 import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
@@ -19,7 +19,7 @@ function getRetryAfterSeconds(value: string | undefined): number | undefined {
  */
 export function attachRequestInterceptors(
   axiosInstance: AxiosInstance,
-  config: LightdashClientConfig,
+  config: ResolvedLightdashClientConfig,
 ): void {
   axiosInstance.interceptors.request.use(
     (req: InternalAxiosRequestConfig) => {
@@ -62,7 +62,7 @@ export function attachRequestInterceptors(
  */
 export function attachResponseInterceptors(
   axiosInstance: AxiosInstance,
-  config?: Pick<LightdashClientConfig, 'logger' | 'observability'>,
+  config?: Pick<ResolvedLightdashClientConfig, 'logger' | 'observability'>,
 ): void {
   const logger = config?.logger;
   axiosInstance.interceptors.response.use(
