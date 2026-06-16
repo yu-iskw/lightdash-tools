@@ -5,7 +5,7 @@
 import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -26,8 +26,9 @@ export function registerQueryTools(server: McpServer, contextProvider: McpContex
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,

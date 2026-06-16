@@ -2,11 +2,11 @@ import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
-import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import {
   registerToolSafe,
   wrapTool,
+  wrapToolAnnotated,
   READ_ONLY_DEFAULT,
   WRITE_DESTRUCTIVE,
   WRITE_IDEMPOTENT,
@@ -83,25 +83,53 @@ describe('registerToolSafe', () => {
   });
 
   it('blocks write tools when OAuth scopes omit mcp:write', async () => {
-    registerToolSafe(
-      mockServer,
-      'write_tool',
-      {
-        description: 'Write tool',
-        inputSchema: {},
-        annotations: WRITE_IDEMPOTENT,
-      },
-      mockHandler,
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: { mode: 'lightdash-oauth' as const, scopes: ['mcp:read'] },
+        governance: {
+          safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
+          dryRun: false,
+          allowedProjectUuids: [],
+        },
+      }),
+    } as unknown as McpContextProvider;
+
+    const wrapped = wrapToolAnnotated(contextProvider, WRITE_IDEMPOTENT, () => async () => ({
+      content: [{ type: 'text', text: 'success' }],
+    }));
+
+    const result = await wrapped({});
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('insufficient_scope');
+  });
+
+  it('allows write tools when OAuth scopes are unset on opaque tokens', async () => {
+    const mockHandler = vi.fn().mockResolvedValue({ content: [{ type: 'text', text: 'success' }] });
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: { mode: 'lightdash-oauth' as const, scopes: undefined },
+        governance: {
+          safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
+          dryRun: false,
+          allowedProjectUuids: [],
+        },
+      }),
+    } as unknown as McpContextProvider;
+
+    const wrapped = wrapToolAnnotated(
+      contextProvider,
+      WRITE_IDEMPOTENT,
+      () => async () => mockHandler(),
     );
 
-    const [, , handler] = mockServer.registerTool.mock.calls[0];
-    const result = await runWithToolAuditAuthAsync({ scopes: ['mcp:read'] }, () => handler({}));
+    const result = await wrapped({});
 
-    expect((result as { isError?: boolean }).isError).toBe(true);
-    expect((result as { content: Array<{ text: string }> }).content[0].text).toContain(
-      'insufficient_scope',
-    );
-    expect(mockHandler).not.toHaveBeenCalled();
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toBe('success');
+    expect(mockHandler).toHaveBeenCalled();
   });
 
   it('should block destructive tool in read-only mode', async () => {

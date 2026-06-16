@@ -23,7 +23,7 @@ const baseConfig: McpHttpConfig = {
   sessionTtlMs: 60_000,
   maxSessions: 10,
   sessionCleanupMs: 60_000,
-  requiredScopes: ['mcp:read'],
+  requiredScopes: [],
   scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
@@ -58,7 +58,7 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).toContain(
       'https://mcp.example.com/.well-known/oauth-protected-resource/mcp',
     );
-    expect(result.wwwAuthenticate).toContain('scope="mcp:read"');
+    expect(result.wwwAuthenticate).not.toContain('scope=');
   });
 
   it('returns 401 without echoing the bearer token when validation fails', async () => {
@@ -129,7 +129,7 @@ describe('authenticateLightdashOAuth', () => {
     expect(validateLightdashAccessToken).toHaveBeenCalledWith(baseConfig, token);
   });
 
-  it('returns 403 insufficient_scope for opaque tokens without scope claims', async () => {
+  it('accepts opaque tokens when endpoint scope requirements are unset', async () => {
     vi.mocked(validateLightdashAccessToken).mockResolvedValue({
       userUuid: 'user-uuid-1',
       email: 'user@example.com',
@@ -140,14 +140,15 @@ describe('authenticateLightdashOAuth', () => {
       baseConfig,
     );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-
-    expect(result.status).toBe(403);
-    expect(result.body.error).toBe('insufficient_scope');
+    expect(result).toEqual({
+      ok: true,
+      accessToken: 'opaque-token',
+      user: { userUuid: 'user-uuid-1', email: 'user@example.com' },
+      scopes: undefined,
+    });
   });
 
-  it('returns 403 insufficient_scope for JWTs without scope claims', async () => {
+  it('accepts JWTs without scope claims when endpoint scope requirements are unset', async () => {
     vi.mocked(validateLightdashAccessToken).mockResolvedValue({
       userUuid: 'user-uuid-1',
       email: 'user@example.com',
@@ -159,11 +160,29 @@ describe('authenticateLightdashOAuth', () => {
 
     const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
 
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.scopes).toBeUndefined();
+  });
+
+  it('returns 403 insufficient_scope when required endpoint scopes are configured and missing', async () => {
+    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
+      userUuid: 'user-uuid-1',
+      email: 'user@example.com',
+    });
+
+    const scopedConfig = { ...baseConfig, requiredScopes: ['mcp:read'] };
+    const result = await authenticateLightdashOAuth(
+      createRequest('Bearer opaque-token'),
+      scopedConfig,
+    );
+
     expect(result.ok).toBe(false);
     if (result.ok) return;
 
     expect(result.status).toBe(403);
     expect(result.body.error).toBe('insufficient_scope');
+    expect(result.wwwAuthenticate).toContain('scope="mcp:read"');
   });
 
   it('returns 403 insufficient_scope when required scopes are missing from token claims', async () => {
@@ -176,7 +195,8 @@ describe('authenticateLightdashOAuth', () => {
     const payload = Buffer.from(JSON.stringify({ scope: 'mcp:write' })).toString('base64url');
     const token = `${header}.${payload}.signature`;
 
-    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
+    const scopedConfig = { ...baseConfig, requiredScopes: ['mcp:read'] };
+    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), scopedConfig);
 
     expect(result.ok).toBe(false);
     if (result.ok) return;

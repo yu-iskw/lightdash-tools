@@ -5,7 +5,7 @@
 import { z } from 'zod';
 
 import { exploreIdField, projectUuidField } from './schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -23,10 +23,15 @@ export function registerExploresTools(
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const explores = await c.v1.explores.listExplores(projectUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(explores, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ projectUuid }: { projectUuid: string }) => {
+          const explores = await c.v1.explores.listExplores(projectUuid);
+          return { content: [{ type: 'text', text: JSON.stringify(explores, null, 2) }] };
+        },
+    ),
   );
   registerToolSafe(
     server,
@@ -41,8 +46,9 @@ export function registerExploresTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
@@ -62,8 +68,9 @@ export function registerExploresTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
@@ -84,8 +91,9 @@ export function registerExploresTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,

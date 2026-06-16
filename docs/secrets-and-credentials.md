@@ -48,7 +48,7 @@ Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix per [ADR-0035](adr/0035-e
 | `LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS`                    | Session TTL for stateful HTTP. Alias: `MCP_SESSION_TTL_MS`                                             |
 | `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS`                      | Maximum active sessions. Alias: `MCP_MAX_SESSIONS`                                                     |
 | `LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS`                | Session cleanup interval. Alias: `MCP_SESSION_CLEANUP_MS`                                              |
-| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`                   | Scopes in `WWW-Authenticate` (default `mcp:read`)                                                      |
+| `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`                   | Optional endpoint scope requirements in `WWW-Authenticate` (default empty)                             |
 | `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`                  | Scopes in protected-resource metadata (default `read,write,mcp:read,mcp:write`)                        |
 | `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                    | Validate bearer via `GET /api/v1/user` (default on in OAuth mode; `false` is dev-only)                 |
 | `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION` | Set to `1` to allow `VALIDATE_TOKEN=false` outside `NODE_ENV=development` (not recommended)            |

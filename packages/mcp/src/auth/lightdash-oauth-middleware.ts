@@ -14,7 +14,7 @@ export interface OAuthAuthSuccess {
   ok: true;
   accessToken: string;
   user: ValidatedLightdashUser;
-  scopes: string[];
+  scopes: string[] | undefined;
 }
 
 export interface OAuthAuthFailure {
@@ -52,8 +52,13 @@ export async function authenticateLightdashOAuth(
     const scopes = extractTokenScopes(token, config.scopesSupported, {
       grantAllWhenUnknown: config.grantAllScopesWhenUnknown,
     });
-    if (!hasRequiredScopes(scopes, config.requiredScopes)) {
-      const missingScopes = config.requiredScopes.filter((scope) => !scopes.includes(scope));
+    if (
+      config.requiredScopes.length > 0 &&
+      !hasRequiredScopes(scopes ?? [], config.requiredScopes)
+    ) {
+      const missingScopes = config.requiredScopes.filter(
+        (scope) => !(scopes ?? []).includes(scope),
+      );
       return {
         ok: false,
         status: 403,

@@ -24,13 +24,15 @@ The MCP Authorization specification (2025-11-25) requires HTTP transports to act
 
 5. **Token validation**: Validate OAuth tokens via `GET /api/v1/user` with optional short TTL cache keyed by SHA-256 token hash. No JWKS in v1.
 
-6. **Session binding**: Stateful HTTP sessions store `tokenHash`; resume with a different token returns 401.
+6. **Session binding**: Stateful HTTP sessions bind to the authenticated Lightdash `userUuid` (subject). Resuming with a different user's bearer returns `401`. The same user may refresh their access token within an existing session; the server updates upstream credentials and continues the session.
 
-7. **Environment variables**: Official Lightdash vars (`LIGHTDASH_URL`, `LIGHTDASH_API_KEY`) unchanged. MCP HTTP server vars use `LIGHTDASH_TOOLS_MCP_*` per ADR-0035. Legacy `MCP_*` names remain as aliases with one-time deprecation warnings.
+7. **OAuth scopes**: Lightdash OAuth validates identity via `GET /api/v1/user`. JWT `scope` / `scp` claims optionally enforce coarse `mcp:read` / `mcp:write` tool access when present. Opaque tokens without scope claims skip MCP scope enforcement and rely on Lightdash RBAC plus process-level safety mode. Endpoint scope requirements (`LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`) default to empty.
 
-8. **Governance**: Safety mode, project allowlist, dry-run, and audit remain process-scoped (operator configured), not per OAuth user.
+8. **Environment variables**: Official Lightdash vars (`LIGHTDASH_URL`, `LIGHTDASH_API_KEY`) unchanged. MCP HTTP server vars use `LIGHTDASH_TOOLS_MCP_*` per ADR-0035. Legacy `MCP_*` names remain as aliases with one-time deprecation warnings.
 
-9. **Guardrails**: Existing `registerToolSafe` layer order unchanged.
+9. **Governance**: Safety mode, project allowlist, dry-run, and audit remain process-scoped (operator configured), not per OAuth user.
+
+10. **Guardrails**: Existing `registerToolSafe` layer order unchanged; OAuth MCP scope checks run in `wrapTool` from request context.
 
 ## Consequences
 

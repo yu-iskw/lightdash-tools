@@ -244,27 +244,6 @@ export function registerToolSafe(
     });
   }
 
-  // ── OAuth MCP scope wrapper ───────────────────────────────────────────────
-  // Enforce coarse mcp:read / mcp:write scopes when OAuth audit context is present.
-  const scopeCheckedInner = finalHandler;
-  finalHandler = async (args, extra): Promise<TextContent> => {
-    const auth = getToolAuditAuth();
-    if (auth?.scopes && !hasToolScope(auth.scopes, !!annotations.readOnlyHint)) {
-      const required = requiredScopeForTool(!!annotations.readOnlyHint);
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error: insufficient_scope: tool '${name}' requires OAuth scope '${required}'.`,
-          },
-        ],
-        isError: true,
-        _lightdashBlocked: true,
-      } as BlockedContent;
-    }
-    return scopeCheckedInner(args, extra);
-  };
-
   // ── Input validation wrapper ─────────────────────────────────────────────
   // Validate resource IDs (projectUuid, slug, etc.) before handler.
   const validatedInner = finalHandler;
@@ -360,11 +339,28 @@ export function registerToolSafe(
 export function wrapTool<T>(
   contextProvider: McpContextProvider,
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
+  options?: { readOnly?: boolean },
 ): ToolHandler {
+  const readOnly = options?.readOnly ?? true;
   return async (args: unknown, extra?: unknown) => {
     try {
       const context = await contextProvider.getContext(extra);
       const auth = context.auth;
+
+      if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
+        const required = requiredScopeForTool(readOnly);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
+
       return await runWithToolAuditAuthAsync(
         { tokenHash: auth?.tokenHash, subject: auth?.subject, scopes: auth?.scopes },
         async () => {
@@ -377,4 +373,13 @@ export function wrapTool<T>(
       return { content: [{ type: 'text', text }], isError: true };
     }
   };
+}
+
+/** Wraps a tool handler with request context and OAuth scope checks from annotations. */
+export function wrapToolAnnotated<T>(
+  contextProvider: McpContextProvider,
+  annotations: ToolAnnotations,
+  fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
+): ToolHandler {
+  return wrapTool(contextProvider, fn, { readOnly: !!annotations.readOnlyHint });
 }
