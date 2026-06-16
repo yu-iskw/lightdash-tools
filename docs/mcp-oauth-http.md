@@ -186,14 +186,27 @@ Client sends `Authorization: Bearer server-endpoint-secret` (or `X-API-Key`). Up
 
 ## Session binding
 
-Stateful Streamable HTTP sessions bind to the OAuth token hash at creation. If a client resumes a session (`Mcp-Session-Id` header) with a different bearer token, the server returns:
+Stateful Streamable HTTP sessions bind to the authenticated OAuth subject (`userUuid`) at creation. If a client resumes a session (`Mcp-Session-Id` header) with a bearer token for a different user, the server returns:
 
 ```http
 HTTP/1.1 401 Unauthorized
-{"error":"Session token mismatch"}
+{"error":"invalid_token","error_description":"Session subject mismatch"}
 ```
 
 Re-authenticate or start a new session.
+
+When the same user refreshes their access token, the session accepts the new bearer token, updates the upstream client credentials, and continues the existing MCP session.
+
+## OAuth scope enforcement
+
+The MCP server enforces coarse OAuth scopes at two layers:
+
+| Layer         | Behavior                                                                                                                                                       |
+| :------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Endpoint auth | Incoming bearer tokens must include every scope in `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` (default `mcp:read`). Missing scopes return `403 insufficient_scope`. |
+| Tool calls    | Read-only tools require `mcp:read`; write tools require `mcp:write`.                                                                                           |
+
+Scopes are read from JWT `scope` / `scp` claims when the access token is a JWT. Opaque tokens that pass Lightdash validation are treated as granting all `scopes_supported` values for v1.
 
 ## Diagnostic tool
 
@@ -220,22 +233,27 @@ Use `ldt__get_authenticated_user` to verify per-user identity after OAuth setup.
 
 Set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` to the public base URL of your MCP server when `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`.
 
-### `Session token mismatch`
+### Session subject mismatch
 
-The client switched OAuth users or refreshed to a different access token while reusing an old `Mcp-Session-Id`. Clear the MCP session in the client or restart the connection.
+The client switched OAuth users while reusing an old `Mcp-Session-Id`. Clear the MCP session in the client or restart the connection.
+
+### Token refresh within a session
+
+Refreshing an access token for the same Lightdash user is supported. Keep the existing `Mcp-Session-Id` and send the new bearer token on subsequent requests.
 
 ### Invalid or expired token
 
 Lightdash rejected the bearer token. The server returns `401` with `WWW-Authenticate: Bearer error="invalid_token", …`. Re-authenticate through the MCP client's OAuth flow.
 
-### Write tools blocked by safety mode or Lightdash permissions
+### Write tools blocked by safety mode, OAuth scopes, or Lightdash permissions
 
-v1 does **not** emit OAuth `403 insufficient_scope` from the MCP server. Write authorization is enforced by:
+Write authorization is enforced by:
 
 - `LIGHTDASH_TOOLS_SAFETY_MODE` (process-scoped guardrails on the MCP server)
+- OAuth MCP scopes (`mcp:read` for read tools, `mcp:write` for write tools)
 - Lightdash API permissions for the authenticated user's bearer token
 
-If a write tool fails, check safety mode and Lightdash RBAC before adjusting OAuth application scopes. MCP advertises `scopes_supported` in metadata for client configuration; runtime scope enforcement at the MCP layer is deferred until Lightdash documents token scope claims.
+If a write tool fails, check safety mode, OAuth scopes, and Lightdash RBAC.
 
 ### Shared-key mode still requires PAT
 

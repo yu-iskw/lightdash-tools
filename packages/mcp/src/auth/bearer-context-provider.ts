@@ -17,20 +17,25 @@ export interface BearerContextProviderOptions {
 
 /** Session- or request-scoped context using a Lightdash OAuth bearer token. */
 export class BearerContextProvider implements McpContextProvider {
-  private readonly options: BearerContextProviderOptions;
-  private readonly tokenHash: string;
+  private options: BearerContextProviderOptions;
+  private tokenHash: string;
 
   constructor(options: BearerContextProviderOptions) {
     this.options = options;
-    const rawToken =
-      options.accessToken instanceof SecretString
-        ? options.accessToken.expose()
-        : options.accessToken;
-    this.tokenHash = hashToken(rawToken);
+    this.tokenHash = hashToken(this.readAccessToken());
   }
 
   getTokenHash(): string {
     return this.tokenHash;
+  }
+
+  updateAccessToken(accessToken: SecretString | string, scopes?: string[]): void {
+    this.options = {
+      ...this.options,
+      accessToken,
+      scopes: scopes ?? this.options.scopes,
+    };
+    this.tokenHash = hashToken(this.readAccessToken());
   }
 
   async getContext(): Promise<LightdashMcpRequestContext> {
@@ -53,16 +58,23 @@ export class BearerContextProvider implements McpContextProvider {
       governance: buildMcpGovernance(),
     };
   }
+
+  private readAccessToken(): string {
+    return this.options.accessToken instanceof SecretString
+      ? this.options.accessToken.expose()
+      : this.options.accessToken;
+  }
 }
 
 export function createOAuthBearerProvider(
   config: Pick<McpHttpConfig, 'lightdashUrl' | 'proxyAuthorization'>,
-  oauth: { accessToken: string; subject?: string },
+  oauth: { accessToken: string; subject?: string; scopes?: string[] },
 ): BearerContextProvider {
   return new BearerContextProvider({
     baseUrl: config.lightdashUrl,
     accessToken: oauth.accessToken,
     proxyAuthorization: config.proxyAuthorization,
     subject: oauth.subject,
+    scopes: oauth.scopes,
   });
 }

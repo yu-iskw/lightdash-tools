@@ -1,4 +1,5 @@
 import type { McpAuthMode } from '../auth/auth-mode.js';
+import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 
@@ -13,6 +14,7 @@ export interface SessionEntry {
   server: McpServer;
   lastAccessAt: number;
   auth: SessionAuthState;
+  contextProvider?: McpContextProvider;
 }
 
 export class SessionStore {

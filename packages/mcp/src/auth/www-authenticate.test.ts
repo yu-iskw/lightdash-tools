@@ -56,4 +56,15 @@ describe('buildWwwAuthenticateHeader', () => {
     });
     expect(header).toContain('error="invalid_token"');
   });
+
+  it('escapes backslashes and quotes in quoted-string values', () => {
+    const header = buildWwwAuthenticateHeader({
+      resourceMetadataUrl: 'https://mcp.example.com/meta"with\\quotes',
+      scope: 'mcp:read',
+      errorDescription: 'Token says "nope"\\retry',
+    });
+
+    expect(header).toContain('resource_metadata="https://mcp.example.com/meta\\"with\\\\quotes"');
+    expect(header).toContain('error_description="Token says \\"nope\\"\\\\retry"');
+  });
 });
