@@ -40,14 +40,15 @@ Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents h
 
 Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix (see ADR-0035). Legacy `MCP_*` names still work with deprecation warnings.
 
-- `LIGHTDASH_TOOLS_MCP_AUTH_MODE` — `none` (default), `shared-key`, or `lightdash-oauth`.
+- `LIGHTDASH_TOOLS_MCP_AUTH_MODE` — `none` (default), `shared-key`, or `lightdash-oauth` (experimental identity-only OAuth).
+- `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH` — Required (`1`) for `lightdash-oauth` in `NODE_ENV=production`. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 - `LIGHTDASH_TOOLS_MCP_HTTP_PORT` — Port for the HTTP server (default: `3100`). Alias: `MCP_HTTP_PORT`, `MCP_SERVER_PORT`.
 - `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — Public HTTPS base URL for OAuth metadata (required in `lightdash-oauth` mode). Alias: `MCP_PUBLIC_URL`.
 - `LIGHTDASH_TOOLS_MCP_SHARED_KEY` — Shared endpoint secret for `shared-key` mode. Alias: `MCP_API_KEY`.
 - `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` — Comma-separated CORS origin allowlist. Alias: `MCP_ALLOWED_ORIGINS`.
 - `MCP_AUTH_ENABLED` — Legacy alias: when set, implies `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key`.
 
-In `lightdash-oauth` mode, `LIGHTDASH_API_KEY` is not required. Clients authenticate with Lightdash OAuth and send `Authorization: Bearer <access-token>`. The server exposes `GET /.well-known/oauth-protected-resource` and validates tokens against `GET /api/v1/user`.
+In `lightdash-oauth` mode, `LIGHTDASH_API_KEY` is not required. Clients authenticate with Lightdash OAuth and send `Authorization: Bearer <access-token>`. The server exposes protected-resource metadata scaffolding and validates tokens via `GET /api/v1/user` (identity only — not resource/audience binding). MCP clients need preconfigured Lightdash OAuth endpoints because Lightdash does not yet publish AS metadata discovery.
 
 See also:
 
@@ -89,16 +90,17 @@ npx @lightdash-tools/mcp --http
 # Explicit subcommand
 npx @lightdash-tools/mcp serve-http
 
-# Hosted OAuth mode (no LIGHTDASH_API_KEY required)
+# Experimental hosted OAuth mode (identity-only; not production-grade MCP OAuth yet)
 export LIGHTDASH_URL="https://app.lightdash.cloud"
 export LIGHTDASH_TOOLS_MCP_AUTH_MODE="lightdash-oauth"
 export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
+export LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH="1"
 npx @lightdash-tools/mcp serve-http
 ```
 
 The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
 
-**Auth modes (HTTP):** default is `none` (unauthenticated endpoint; startup warning). For production use `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` or `shared-key`. In `shared-key` mode, clients send `Authorization: Bearer <shared-key>` or `X-API-Key: <shared-key>` matching `LIGHTDASH_TOOLS_MCP_SHARED_KEY`.
+**Auth modes (HTTP):** default is `none` (unauthenticated endpoint; startup warning). For **production** use `shared-key`. `lightdash-oauth` is experimental identity-only OAuth — see [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
 ## Tools
 

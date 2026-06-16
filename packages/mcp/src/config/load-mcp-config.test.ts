@@ -6,6 +6,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
+  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
@@ -95,6 +96,26 @@ describe('loadMcpHttpConfig', () => {
     process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES] = 'mcp:read';
 
     expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES);
+  });
+
+  it('rejects lightdash-oauth in production without experimental identity opt-in', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH);
+  });
+
+  it('allows lightdash-oauth in production when experimental identity opt-in is set', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';
+
+    const config = loadMcpHttpConfig();
+    expect(config.experimentalIdentityOAuth).toBe(true);
   });
 
   it('keeps default scopes for shared-key mode', () => {
@@ -194,6 +215,7 @@ describe('loadMcpHttpConfig', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
     process.env.NODE_ENV = 'production';
     delete process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION];
@@ -205,6 +227,7 @@ describe('loadMcpHttpConfig', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
     process.env.NODE_ENV = 'production';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION] = '1';

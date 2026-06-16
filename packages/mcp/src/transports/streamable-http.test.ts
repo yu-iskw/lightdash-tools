@@ -25,6 +25,7 @@ const oauthConfig: McpHttpConfig = {
   validateToken: false,
   tokenValidationCacheTtlMs: 30_000,
   grantAllScopesWhenUnknown: false,
+  experimentalIdentityOAuth: false,
 };
 
 describe('streamable HTTP OAuth metadata', () => {

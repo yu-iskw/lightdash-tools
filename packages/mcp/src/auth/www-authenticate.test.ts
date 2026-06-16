@@ -22,6 +22,7 @@ const baseConfig: McpHttpConfig = {
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
   grantAllScopesWhenUnknown: false,
+  experimentalIdentityOAuth: false,
 };
 
 describe('buildOAuthProtectedResourceMetadata', () => {

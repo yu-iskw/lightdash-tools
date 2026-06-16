@@ -1,6 +1,22 @@
-# Cursor remote MCP: Lightdash OAuth mode
+# Cursor remote MCP: Lightdash OAuth mode (experimental)
 
-Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running with `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`. For server setup and env vars, see [mcp-oauth-http.md](mcp-oauth-http.md).
+Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running with `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`. This mode is **experimental identity-only OAuth** — see [mcp-oauth-http.md](mcp-oauth-http.md) for production readiness limitations.
+
+## Important: preconfigured Lightdash OAuth endpoints required
+
+Lightdash does **not** yet publish OAuth Authorization Server Metadata at `/.well-known/oauth-authorization-server`. MCP clients that follow the MCP Authorization spec will fail OAuth discovery if they rely only on protected-resource metadata.
+
+**Use static OAuth client configuration** (recommended). URL-only discovery may not work until upstream Lightdash adds AS metadata.
+
+Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
+
+| Purpose   | URL                                      |
+| :-------- | :--------------------------------------- |
+| Authorize | `{LIGHTDASH_URL}/api/v1/oauth/authorize` |
+| Token     | `{LIGHTDASH_URL}/api/v1/oauth/token`     |
+| Register  | `{LIGHTDASH_URL}/api/v1/oauth/register`  |
+| Revoke    | `{LIGHTDASH_URL}/api/v1/oauth/revoke`    |
+| Userinfo  | `{LIGHTDASH_URL}/api/v1/oauth/userinfo`  |
 
 ## Prerequisites
 
@@ -8,7 +24,8 @@ Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running wi
    - `LIGHTDASH_URL` — your Lightdash instance
    - `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`
    - `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — public HTTPS URL of the MCP server (must match what clients use)
-   - `LIGHTDASH_TOOLS_SAFETY_MODE=read-only` (recommended for production)
+   - `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` when `NODE_ENV=production`
+   - `LIGHTDASH_TOOLS_SAFETY_MODE=read-only` (strongly recommended)
 
 2. **Lightdash OAuth application** registered in your Lightdash instance. The MCP server does not store OAuth client secrets; credentials live in the MCP client (Cursor).
 
@@ -18,8 +35,8 @@ Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running wi
 
 ```text
 Cursor  →  POST /mcp (no token)  →  401 + WWW-Authenticate
-Cursor  →  GET /.well-known/oauth-protected-resource  →  metadata
-Cursor  →  OAuth with Lightdash (authorization_servers = LIGHTDASH_URL)
+Cursor  →  GET /.well-known/oauth-protected-resource  →  metadata (scaffolding)
+Cursor  →  OAuth with Lightdash using preconfigured endpoints (see table above)
 Cursor  →  POST /mcp  Authorization: Bearer <user-access-token>
 MCP     →  Lightdash API with same Bearer token
 ```
@@ -37,7 +54,7 @@ When creating the OAuth application in Lightdash:
    cursor://anysphere.cursor-mcp/oauth/callback
    ```
 
-3. Request scopes that match your deployment. The MCP server advertises `read`, `write`, `mcp:read`, and `mcp:write` by default; align your OAuth app scopes with the tools you need.
+3. Request scopes aligned with your deployment. The MCP server advertises an empty `scopes_supported` list by default; authorization is enforced by Lightdash RBAC and MCP safety mode, not MCP-local scopes on opaque tokens.
 
 The MCP server does **not** need `LIGHTDASH_OAUTH_CLIENT_SECRET`. Client credentials belong in Cursor's `mcp.json` or environment, not on the server.
 
@@ -50,9 +67,28 @@ Configuration file locations:
 | Project | `.cursor/mcp.json` (commit for team sharing) |
 | Global  | `~/.cursor/mcp.json`                         |
 
-### Recommended: URL-only (dynamic OAuth discovery)
+### Recommended: static OAuth client credentials
 
-If Lightdash supports OAuth 2.0 dynamic client registration or Cursor can discover the authorization server from protected-resource metadata:
+Lightdash requires a fixed Client ID (and optionally Client Secret) with a whitelisted redirect URI. Configure explicit OAuth endpoints in Cursor:
+
+```json
+{
+  "mcpServers": {
+    "lightdash": {
+      "url": "https://lightdash-mcp.example.com/mcp",
+      "auth": {
+        "CLIENT_ID": "${env:LIGHTDASH_OAUTH_CLIENT_ID}",
+        "CLIENT_SECRET": "${env:LIGHTDASH_OAUTH_CLIENT_SECRET}",
+        "scopes": ["read", "write", "mcp:read", "mcp:write"]
+      }
+    }
+  }
+}
+```
+
+### URL-only discovery (may fail until upstream AS metadata exists)
+
+Only try this after Lightdash publishes OAuth Authorization Server Metadata:
 
 ```json
 {
@@ -65,31 +101,6 @@ If Lightdash supports OAuth 2.0 dynamic client registration or Cursor can discov
 ```
 
 Replace `https://lightdash-mcp.example.com` with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` host. The MCP path defaults to `/mcp`.
-
-After adding the server:
-
-1. Open **Cursor Settings → Tools & MCP**.
-2. Find the **lightdash** server; it may show **Needs authentication**.
-3. Click **Connect** and complete the browser OAuth flow with Lightdash.
-
-### Static OAuth client credentials
-
-If Lightdash requires a fixed Client ID (and optionally Client Secret) with a whitelisted redirect URI:
-
-```json
-{
-  "mcpServers": {
-    "lightdash": {
-      "url": "https://lightdash-mcp.example.com/mcp",
-      "auth": {
-        "CLIENT_ID": "${env:LIGHTDASH_OAUTH_CLIENT_ID}",
-        "CLIENT_SECRET": "${env:LIGHTDASH_OAUTH_CLIENT_SECRET}",
-        "scopes": ["mcp:read", "mcp:write"]
-      }
-    }
-  }
-}
-```
 
 Set credentials in your shell or secret manager — do not commit secrets to `mcp.json`:
 

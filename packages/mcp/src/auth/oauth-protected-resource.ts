@@ -14,11 +14,15 @@ function requirePublicUrl(config: McpHttpConfig): string {
   return config.publicUrl;
 }
 
+/** Builds MCP OAuth protected-resource metadata for this HTTP server. */
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
 ): OAuthProtectedResourceMetadata {
   const publicUrl = requirePublicUrl(config);
 
+  // authorization_servers points at Lightdash for v1 scaffolding. Upstream Lightdash does not yet
+  // publish OAuth Authorization Server Metadata at /.well-known/oauth-authorization-server, so
+  // standards-compliant MCP clients require preconfigured Lightdash OAuth endpoints in the client.
   return {
     resource: `${publicUrl}${config.mcpPath}`,
     authorization_servers: [config.lightdashUrl],

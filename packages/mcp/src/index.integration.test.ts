@@ -84,6 +84,7 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
       validateToken: true,
       tokenValidationCacheTtlMs: 30_000,
       grantAllScopesWhenUnknown: false,
+      experimentalIdentityOAuth: false,
     };
 
     const user = await validateLightdashAccessToken(

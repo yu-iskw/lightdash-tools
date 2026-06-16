@@ -133,6 +133,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
     grantAllScopesWhenUnknown: false,
+    experimentalIdentityOAuth: false,
   };
 }
 
@@ -677,6 +678,7 @@ describe('MCP HTTP shared-key integration', () => {
       validateToken: false,
       tokenValidationCacheTtlMs: 30_000,
       grantAllScopesWhenUnknown: false,
+      experimentalIdentityOAuth: false,
     });
   });
 
