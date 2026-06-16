@@ -7,6 +7,7 @@ export interface SessionAuthState {
   mode: McpAuthMode;
   tokenHash?: string;
   subject?: string;
+  organizationUuid?: string;
 }
 
 export interface SessionEntry {

@@ -98,7 +98,12 @@ function closeSessionEntry(entry: SessionEntry, sessionId: string, reason: strin
 function createSessionTransport(
   contextProvider: McpContextProvider,
   sessionStore: SessionStore,
-  auth: { mode: McpHttpConfig['authMode']; tokenHash?: string; subject?: string },
+  auth: {
+    mode: McpHttpConfig['authMode'];
+    tokenHash?: string;
+    subject?: string;
+    organizationUuid?: string;
+  },
 ): StreamableHTTPServerTransport {
   const holder: { server: McpServer } = {
     server: createLightdashMcpServer(contextProvider),
@@ -114,6 +119,7 @@ function createSessionTransport(
           mode: auth.mode,
           tokenHash: auth.tokenHash,
           subject: auth.subject,
+          organizationUuid: auth.organizationUuid,
         },
         contextProvider,
       });
@@ -191,19 +197,23 @@ async function ensureEndpointAuth(
   return true;
 }
 
-function writeSessionSubjectMismatch(res: ServerResponse, config: McpHttpConfig): void {
+function writeSessionContextMismatch(
+  res: ServerResponse,
+  config: McpHttpConfig,
+  errorDescription: string,
+): void {
   writeOAuthAuthFailure(res, {
     ok: false,
     status: 401,
     body: {
       error: 'invalid_token',
-      error_description: 'Session subject mismatch',
+      error_description: errorDescription,
     },
     wwwAuthenticate: buildWwwAuthenticateHeader({
       resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
       scope: config.requiredScopes.join(' '),
       error: 'invalid_token',
-      errorDescription: 'Session subject mismatch',
+      errorDescription,
     }),
   });
 }
@@ -253,7 +263,16 @@ function verifySessionAuth(
   }
 
   if (entry.auth.subject && entry.auth.subject !== oauth.user.userUuid) {
-    writeSessionSubjectMismatch(res, config);
+    writeSessionContextMismatch(res, config, 'Session subject mismatch');
+    return false;
+  }
+
+  if (
+    entry.auth.organizationUuid &&
+    oauth.user.organizationUuid &&
+    entry.auth.organizationUuid !== oauth.user.organizationUuid
+  ) {
+    writeSessionContextMismatch(res, config, 'Session organization mismatch');
     return false;
   }
 
@@ -343,6 +362,7 @@ async function handleInitializePost(
       mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
       tokenHash: contextProvider.getTokenHash(),
       subject: oauth.user.userUuid,
+      organizationUuid: oauth.user.organizationUuid,
     });
     await runWithToolAuditAuthAsync(
       {

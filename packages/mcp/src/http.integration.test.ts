@@ -14,8 +14,15 @@ const TOKEN_A_REFRESHED = scopedAccessToken('mcp:read mcp:write', 'token-a-refre
 const TOKEN_READ_ONLY = scopedAccessToken('mcp:read', 'token-read-only');
 const OPAQUE_TOKEN_A = 'opaque-token-user-a';
 
-const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com' };
-const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com' };
+const OPAQUE_TOKEN_ORG_B = 'opaque-token-org-b';
+
+const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com', organizationUuid: 'org-a-uuid' };
+const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com', organizationUuid: 'org-b-uuid' };
+const USER_A_ORG_B = {
+  userUuid: 'user-a-uuid',
+  email: 'a@example.com',
+  organizationUuid: 'org-b-uuid',
+};
 
 function scopedAccessToken(scope: string, subject: string): string {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
@@ -57,12 +64,13 @@ function listen(server: Server, port: number, host: string): Promise<void> {
 
 async function startMockLightdashServer(): Promise<MockLightdashServer> {
   const authorizationHeaders: string[] = [];
-  const users: Record<string, { userUuid: string; email: string }> = {
+  const users: Record<string, { userUuid: string; email: string; organizationUuid?: string }> = {
     [TOKEN_A]: USER_A,
     [TOKEN_A_REFRESHED]: USER_A,
     [TOKEN_B]: USER_B,
     [TOKEN_READ_ONLY]: USER_A,
     [OPAQUE_TOKEN_A]: USER_A,
+    [OPAQUE_TOKEN_ORG_B]: USER_A_ORG_B,
   };
 
   const server = createServer((req, res) => {
@@ -121,7 +129,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     maxSessions: 10,
     sessionCleanupMs: 60_000,
     requiredScopes: [],
-    scopesSupported: ['mcp:read', 'mcp:write'],
+    scopesSupported: [],
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
     grantAllScopesWhenUnknown: false,
@@ -242,6 +250,27 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(resumeResponse.headers.get('www-authenticate')).toContain('invalid_token');
   });
 
+  it('returns 401 Session organization mismatch when resuming with a different org context', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: OPAQUE_TOKEN_A,
+    });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    const resumeResponse = await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: OPAQUE_TOKEN_ORG_B, sessionId: sessionId ?? undefined },
+    );
+
+    expect(resumeResponse.status).toBe(401);
+    expect(await resumeResponse.json()).toEqual({
+      error: 'invalid_token',
+      error_description: 'Session organization mismatch',
+    });
+    expect(resumeResponse.headers.get('www-authenticate')).toContain('invalid_token');
+  });
+
   it('allows token refresh for the same OAuth subject within a session', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');
@@ -304,7 +333,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
       resource: `${mcpServer.baseUrl}/mcp`,
       authorization_servers: [mockLightdash.baseUrl],
       bearer_methods_supported: ['header'],
-      scopes_supported: ['mcp:read', 'mcp:write'],
+      scopes_supported: [],
     });
   });
 
@@ -587,6 +616,37 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     };
     expect(payload.result?.isError).not.toBe(true);
     expect(payload.result?.content?.[0]?.text ?? '').toContain(USER_A.userUuid);
+  });
+
+  it('does not block write tools for opaque OAuth credentials without local scope claims', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: OPAQUE_TOKEN_A,
+    });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: OPAQUE_TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+
+    const callResponse = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'ldt__create_group', arguments: { name: 'opaque-group' } },
+        id: 5,
+      },
+      { token: OPAQUE_TOKEN_A, sessionId: sessionId ?? undefined },
+    );
+
+    expect(callResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(callResponse)) as {
+      result?: { isError?: boolean; content?: Array<{ text?: string }> };
+    };
+    expect(payload.result?.content?.[0]?.text ?? '').not.toContain('insufficient_scope');
   });
 });
 

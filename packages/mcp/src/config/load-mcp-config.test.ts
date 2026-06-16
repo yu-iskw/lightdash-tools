@@ -8,6 +8,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
+  ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
 } from './env.js';
@@ -84,6 +85,24 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('https://mcp.example.com');
     expect(config.lightdashUrl).toBe('https://app.lightdash.cloud');
     expect(config.validateToken).toBe(true);
+    expect(config.scopesSupported).toEqual([]);
+  });
+
+  it('rejects required scopes for lightdash-oauth mode at startup', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES] = 'mcp:read';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES);
+  });
+
+  it('keeps default scopes for shared-key mode', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.MCP_AUTH_ENABLED = '1';
+    process.env.MCP_API_KEY = 'secret';
+
+    const config = loadMcpHttpConfig();
     expect(config.scopesSupported).toEqual(['read', 'write', 'mcp:read', 'mcp:write']);
   });
 

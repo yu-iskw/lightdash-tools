@@ -40,6 +40,11 @@ describe('extractTokenScopes', () => {
     expect(extractTokenScopes(token, SUPPORTED)).toEqual([]);
   });
 
+  it('still enforces mcp:read/mcp:write from JWT claims when metadata scopes are empty', () => {
+    const token = jwtWithPayload({ scope: 'mcp:read mcp:write' });
+    expect(extractTokenScopes(token, [])).toEqual(['mcp:read', 'mcp:write']);
+  });
+
   it('can grant all supported scopes for opaque tokens when explicitly opted in', () => {
     expect(extractTokenScopes('opaque-token', SUPPORTED, { grantAllWhenUnknown: true })).toEqual([
       ...SUPPORTED,
