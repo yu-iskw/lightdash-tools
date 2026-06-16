@@ -2,12 +2,12 @@
  * Shared types and helpers for MCP tool registration.
  *
  * Guardrail layers applied by registerToolSafe (outer → inner):
- *   1. Audit log wrapper   — captures timing and outcome for every call.
- *   2. Project allowlist   — rejects calls targeting disallowed project UUIDs at runtime.
- *   3. Input validation    — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   4. Dry-run wrapper     — simulates writes without executing them (registration-time).
- *   5. Safety-mode wrapper — disables tools that exceed the configured safety level.
- *   6. Raw handler        — the actual tool implementation.
+ *   0. Static safety filter — skips registration when the tool exceeds LIGHTDASH_TOOLS_SAFETY_MODE.
+ *   1. Audit log wrapper    — captures timing and outcome for every call.
+ *   2. Project allowlist      — rejects calls targeting disallowed project UUIDs at runtime.
+ *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   4. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
+ *   5. Raw handler            — the actual tool implementation.
  */
 
 import {

@@ -197,6 +197,21 @@ async function ensureEndpointAuth(
   return true;
 }
 
+function writeBearerTokenRequiredFailure(res: ServerResponse, config: McpHttpConfig): void {
+  writeOAuthAuthFailure(res, {
+    ok: false,
+    status: 401,
+    body: {
+      error: 'invalid_request',
+      error_description: 'Bearer access token required',
+    },
+    wwwAuthenticate: buildWwwAuthenticateHeader({
+      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
+      scope: config.requiredScopes.join(' '),
+    }),
+  });
+}
+
 function writeSessionContextMismatch(
   res: ServerResponse,
   config: McpHttpConfig,
@@ -247,18 +262,7 @@ function verifySessionAuth(
 
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.accessToken) {
-    writeOAuthAuthFailure(res, {
-      ok: false,
-      status: 401,
-      body: {
-        error: 'invalid_request',
-        error_description: 'Bearer access token required',
-      },
-      wwwAuthenticate: buildWwwAuthenticateHeader({
-        resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
-        scope: config.requiredScopes.join(' '),
-      }),
-    });
+    writeBearerTokenRequiredFailure(res, config);
     return false;
   }
 
@@ -340,18 +344,7 @@ async function handleInitializePost(
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
     if (!oauth?.ok) {
-      writeOAuthAuthFailure(res, {
-        ok: false,
-        status: 401,
-        body: {
-          error: 'invalid_request',
-          error_description: 'Bearer access token required',
-        },
-        wwwAuthenticate: buildWwwAuthenticateHeader({
-          resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
-          scope: config.requiredScopes.join(' '),
-        }),
-      });
+      writeBearerTokenRequiredFailure(res, config);
       return;
     }
 
