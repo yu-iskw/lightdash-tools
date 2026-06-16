@@ -29,6 +29,7 @@ import {
   isDryRunMode,
 } from '../config.js';
 import { toMcpErrorMessage } from '../errors.js';
+import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -117,8 +118,26 @@ function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
   return { ...DEFAULT_ANNOTATIONS, ...overrides };
 }
 
-/**
- * Internal marker attached to responses produced by a guardrail (safety-mode block,
+function buildAuditFields(
+  name: string,
+  projectUuids: string[],
+  status: 'blocked' | 'error' | 'success',
+  start: number,
+): Parameters<typeof logAuditEntry>[0] {
+  const auth = getToolAuditAuth();
+  return {
+    timestamp: new Date().toISOString(),
+    sessionId: getSessionId(),
+    tool: name,
+    projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
+    tokenHash: auth?.tokenHash,
+    subject: auth?.subject,
+    status,
+    durationMs: Date.now() - start,
+  };
+}
+
+/** Internal marker attached to responses produced by a guardrail (safety-mode block,
  * dry-run simulation, or project-allowlist denial). The audit wrapper reads this flag
  * to set status = 'blocked', then strips it before returning to the MCP client.
  */
@@ -293,25 +312,11 @@ export function registerToolSafe(
       }
     } catch (err) {
       status = 'error';
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: name,
-        projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
-        status,
-        durationMs: Date.now() - start,
-      });
+      logAuditEntry(buildAuditFields(name, projectUuids, status, start));
       throw err;
     }
 
-    logAuditEntry({
-      timestamp: new Date().toISOString(),
-      sessionId: getSessionId(),
-      tool: name,
-      projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
-      status,
-      durationMs: Date.now() - start,
-    });
+    logAuditEntry(buildAuditFields(name, projectUuids, status, start));
 
     // Strip the internal marker before returning to the MCP client.
     const enriched = enrichStructuredContent(result);
@@ -336,9 +341,15 @@ export function wrapTool<T>(
 ): ToolHandler {
   return async (args: unknown, extra?: unknown) => {
     try {
-      const { lightdashClient } = await contextProvider.getContext(extra);
-      const handler = fn(lightdashClient);
-      return await handler(args as T);
+      const context = await contextProvider.getContext(extra);
+      const auth = context.auth;
+      return await runWithToolAuditAuthAsync(
+        { tokenHash: auth?.tokenHash, subject: auth?.subject },
+        async () => {
+          const handler = fn(context.lightdashClient);
+          return await handler(args as T);
+        },
+      );
     } catch (err) {
       const text = toMcpErrorMessage(err);
       return { content: [{ type: 'text', text }], isError: true };

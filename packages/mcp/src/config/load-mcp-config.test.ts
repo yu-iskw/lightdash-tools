@@ -1,12 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
 } from './env.js';
-import { loadMcpHttpConfig } from './load-mcp-config.js';
+import { emitMcpHttpSecurityWarnings, loadMcpHttpConfig } from './load-mcp-config.js';
 
 const originalEnv = { ...process.env };
 
@@ -79,6 +81,34 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('https://mcp.example.com');
     expect(config.lightdashUrl).toBe('https://app.lightdash.cloud');
     expect(config.validateToken).toBe(true);
+    expect(config.scopesSupported).toEqual(['read', 'write', 'mcp:read', 'mcp:write']);
+  });
+
+  it('rejects non-HTTPS public URL in lightdash-oauth mode', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'http://mcp.example.com';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/must use https:\/\//);
+  });
+
+  it('allows local HTTP public URL without insecure flag', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'http://127.0.0.1:3100';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('http://127.0.0.1:3100');
+  });
+
+  it('allows insecure public URL when explicitly opted in', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'http://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL] = '1';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('http://mcp.example.com');
   });
 
   it('requires shared key when auth mode is shared-key', () => {
@@ -111,13 +141,48 @@ describe('loadMcpHttpConfig', () => {
     expect(() => loadMcpHttpConfig()).toThrow(/Invalid LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN/);
   });
 
-  it('allows explicit false to disable token validation', () => {
+  it('allows explicit false to disable token validation in development', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
+    process.env.NODE_ENV = 'development';
 
     const config = loadMcpHttpConfig();
     expect(config.validateToken).toBe(false);
+  });
+
+  it('rejects VALIDATE_TOKEN=false in production without dangerous flag', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION];
+
+    expect(() => loadMcpHttpConfig()).toThrow(/not allowed in production/);
+  });
+
+  it('allows VALIDATE_TOKEN=false in production with dangerous flag', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
+    process.env.NODE_ENV = 'production';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION] = '1';
+
+    const config = loadMcpHttpConfig();
+    expect(config.validateToken).toBe(false);
+  });
+
+  it('emitMcpHttpSecurityWarnings warns for empty CORS allowlist', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+
+    const config = loadMcpHttpConfig();
+    emitMcpHttpSecurityWarnings(config);
+
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('ALLOWED_ORIGINS'));
   });
 });
