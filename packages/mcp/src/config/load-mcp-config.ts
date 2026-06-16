@@ -16,6 +16,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
@@ -41,7 +42,12 @@ import {
   ENV_MCP_SESSION_CLEANUP_MS,
   ENV_MCP_SESSION_TTL_MS,
 } from './env.js';
-import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
+import {
+  normalizeLightdashUrl,
+  normalizeMcpPath,
+  normalizePublicUrl,
+  isLocalHttpOrigin,
+} from './normalize-url.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
@@ -55,9 +61,9 @@ function warnDeprecatedAlias(oldName: string, newName: string): void {
   console.warn(`Warning: ${oldName} is deprecated. Use ${newName}.`);
 }
 
-function readEnv(name: string): string | undefined {
+function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
   // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants in this module
-  const value = process.env[name];
+  const value = env[name];
   if (value === undefined || value === '') return undefined;
   return value;
 }
@@ -71,16 +77,17 @@ function parsePositiveIntegerEnv(name: string, value: string): number {
 }
 
 function readNumberEnv(
+  env: NodeJS.ProcessEnv,
   primary: string,
   aliases: Array<{ name: string; newName: string }>,
   defaultValue: number,
 ): number {
-  const primaryValue = readEnv(primary);
+  const primaryValue = readEnv(primary, env);
   if (primaryValue !== undefined) {
     return parsePositiveIntegerEnv(primary, primaryValue);
   }
   for (const alias of aliases) {
-    const aliasValue = readEnv(alias.name);
+    const aliasValue = readEnv(alias.name, env);
     if (aliasValue !== undefined) {
       warnDeprecatedAlias(alias.name, alias.newName);
       return parsePositiveIntegerEnv(alias.name, aliasValue);
@@ -90,13 +97,14 @@ function readNumberEnv(
 }
 
 function readStringEnv(
+  env: NodeJS.ProcessEnv,
   primary: string,
   aliases: Array<{ name: string; newName: string }>,
 ): string | undefined {
-  const primaryValue = readEnv(primary);
+  const primaryValue = readEnv(primary, env);
   if (primaryValue !== undefined) return primaryValue;
   for (const alias of aliases) {
-    const aliasValue = readEnv(alias.name);
+    const aliasValue = readEnv(alias.name, env);
     if (aliasValue !== undefined) {
       warnDeprecatedAlias(alias.name, alias.newName);
       return aliasValue;
@@ -120,8 +128,8 @@ function parseBooleanEnv(name: string, value: string | undefined, defaultValue: 
   throw new Error(`Invalid ${name}: ${value}. Expected 1, true, yes, 0, false, or no.`);
 }
 
-function resolveAuthMode(): McpAuthMode {
-  const explicit = readEnv(ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE);
+function resolveAuthMode(env: NodeJS.ProcessEnv): McpAuthMode {
+  const explicit = readEnv(ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE, env);
   if (explicit) {
     const parsed = z.enum(MCP_HTTP_AUTH_MODES).safeParse(explicit);
     if (!parsed.success) {
@@ -132,7 +140,7 @@ function resolveAuthMode(): McpAuthMode {
     return parsed.data;
   }
 
-  const legacyEnabled = readEnv(ENV_MCP_AUTH_ENABLED);
+  const legacyEnabled = readEnv(ENV_MCP_AUTH_ENABLED, env);
   if (legacyEnabled === '1' || legacyEnabled === 'true' || legacyEnabled === 'yes') {
     warnDeprecatedAlias(
       ENV_MCP_AUTH_ENABLED,
@@ -175,7 +183,7 @@ function assertPublicUrlSecurity(
 
   const allowInsecure = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
-    readEnvFrom(ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL, env),
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL, env),
     false,
   );
   if (allowInsecure) return;
@@ -188,13 +196,6 @@ function assertPublicUrlSecurity(
   );
 }
 
-function readEnvFrom(name: string, env: NodeJS.ProcessEnv): string | undefined {
-  // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants in this module
-  const value = env[name];
-  if (value === undefined || value === '') return undefined;
-  return value;
-}
-
 function assertValidateTokenPolicy(
   authMode: McpAuthMode,
   validateToken: boolean,
@@ -204,7 +205,7 @@ function assertValidateTokenPolicy(
 
   const dangerouslyAllowed = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
-    readEnvFrom(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION, env),
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION, env),
     false,
   );
   const isDevelopment = env.NODE_ENV === 'development';
@@ -213,6 +214,24 @@ function assertValidateTokenPolicy(
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false disables OAuth token validation and is not allowed in production. ` +
         `Unset it, set NODE_ENV=development for local dev, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION}=1 ` +
+        `only when you accept the security risk.`,
+    );
+  }
+}
+
+function assertAuthModeProductionPolicy(authMode: McpAuthMode, env: NodeJS.ProcessEnv): void {
+  if (authMode !== MCP_AUTH_MODE_NONE || env.NODE_ENV !== 'production') return;
+
+  const dangerouslyAllowed = parseBooleanEnv(
+    ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED, env),
+    false,
+  );
+
+  if (!dangerouslyAllowed) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE}=${MCP_AUTH_MODE_NONE} is not allowed in production. ` +
+        `Use lightdash-oauth or shared-key, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED}=1 ` +
         `only when you accept the security risk.`,
     );
   }
@@ -259,48 +278,52 @@ function assertAuthModeRequirements(
   }
 }
 
-function readScopeList(primary: string, fallback: string[]): string[] {
-  const parsed = parseCsv(readEnv(primary));
+function readScopeList(env: NodeJS.ProcessEnv, primary: string, fallback: string[]): string[] {
+  const parsed = parseCsv(readEnv(primary, env));
   return parsed.length > 0 ? parsed : fallback;
 }
 
-export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
-  const env = _env;
-  const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL);
+export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
+  const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL, env);
   if (!lightdashUrlRaw) {
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
   }
 
-  const authMode = resolveAuthMode();
-  const publicUrlRaw = readStringEnv(ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL, [
+  const authMode = resolveAuthMode(env);
+  assertAuthModeProductionPolicy(authMode, env);
+
+  const publicUrlRaw = readStringEnv(env, ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL, [
     { name: ENV_MCP_PUBLIC_URL, newName: ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL },
   ]);
-  const sharedKeyRaw = readStringEnv(ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY, [
+  const sharedKeyRaw = readStringEnv(env, ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY, [
     { name: ENV_MCP_API_KEY, newName: ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY },
   ]);
   assertAuthModeRequirements(authMode, publicUrlRaw, sharedKeyRaw);
 
-  const allowedOriginsRaw = readStringEnv(ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS, [
+  const allowedOriginsRaw = readStringEnv(env, ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS, [
     { name: ENV_MCP_ALLOWED_ORIGINS, newName: ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS },
   ]);
 
-  const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION);
+  const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl, env);
 
   const validateToken = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
-    readEnv(ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN),
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN, env),
     authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH,
   );
   assertValidateTokenPolicy(authMode, validateToken, env);
 
+  const mcpPathRaw = readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) ?? '/mcp';
+
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
     proxyAuthorization: proxyAuth ? new SecretString(proxyAuth) : undefined,
-    host: readEnv(ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST) ?? '0.0.0.0',
+    host: readEnv(ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST, env) ?? '0.0.0.0',
     port: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
       [
         { name: ENV_MCP_HTTP_PORT, newName: ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT },
@@ -309,36 +332,41 @@ export function loadMcpHttpConfig(_env: NodeJS.ProcessEnv = process.env): McpHtt
       3100,
     ),
     publicUrl,
-    mcpPath: readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH) ?? '/mcp',
+    mcpPath: normalizeMcpPath(mcpPathRaw),
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     allowedOrigins: parseCsv(allowedOriginsRaw),
     maxBodyBytes: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
       [{ name: ENV_MCP_MAX_BODY_BYTES, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES }],
       1024 * 1024,
     ),
     sessionTtlMs: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS,
       [{ name: ENV_MCP_SESSION_TTL_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS }],
       30 * 60 * 1000,
     ),
     maxSessions: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
       [{ name: ENV_MCP_MAX_SESSIONS, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS }],
       100,
     ),
     sessionCleanupMs: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
       [{ name: ENV_MCP_SESSION_CLEANUP_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS }],
       60_000,
     ),
-    requiredScopes: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, ['mcp:read']),
-    scopesSupported: readScopeList(ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
+    requiredScopes: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, ['mcp:read']),
+    scopesSupported: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
       ...DEFAULT_SCOPES_SUPPORTED,
     ]),
     validateToken,
     tokenValidationCacheTtlMs: readNumberEnv(
+      env,
       ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
       [],
       30_000,

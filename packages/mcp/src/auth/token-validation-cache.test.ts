@@ -36,4 +36,15 @@ describe('TokenValidationCache', () => {
     cache.delete('hash-a');
     expect(cache.get('hash-a')).toBeUndefined();
   });
+
+  it('evicts the oldest entry when max size is exceeded', () => {
+    const cache = new TokenValidationCache<{ userUuid: string }>(30_000, 2);
+    cache.set('hash-a', { userUuid: 'user-a' });
+    cache.set('hash-b', { userUuid: 'user-b' });
+    cache.set('hash-c', { userUuid: 'user-c' });
+
+    expect(cache.get('hash-a')).toBeUndefined();
+    expect(cache.get('hash-b')).toEqual({ userUuid: 'user-b' });
+    expect(cache.get('hash-c')).toEqual({ userUuid: 'user-c' });
+  });
 });

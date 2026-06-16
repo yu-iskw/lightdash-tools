@@ -29,7 +29,7 @@ In **lightdash-oauth** HTTP mode:
 
 **Production recommendation:** `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`.
 
-`none` logs a startup warning and should be used for local development only:
+`none` logs a startup warning in non-production environments. In `NODE_ENV=production`, `none` fails closed unless `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED=1`:
 
 ```text
 Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=none — MCP HTTP endpoint is unauthenticated. Use lightdash-oauth or shared-key in production.
@@ -107,6 +107,7 @@ Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix per [ADR-0035](adr/0035-e
 | `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`                  | —                                  | `read,write,mcp:read,mcp:write` | Scopes in protected-resource metadata.                                                         |
 | `LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN`                    | —                                  |        `1` in OAuth mode        | Validate bearer via `GET /api/v1/user`. `false` allowed only in `NODE_ENV=development`.        |
 | `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION` | —                                  |               off               | Set `1` to allow `VALIDATE_TOKEN=false` outside development (not recommended).                 |
+| `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED` | —                                  |               off               | Set `1` to allow `AUTH_MODE=none` when `NODE_ENV=production` (not recommended).                |
 | `LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL`         | —                                  |               off               | Set `1` to allow non-HTTPS `PUBLIC_URL` outside localhost (not recommended).                   |
 | `LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS`     | —                                  |             `30000`             | Token validation cache TTL (keyed by SHA-256 token hash).                                      |
 

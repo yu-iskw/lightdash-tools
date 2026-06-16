@@ -19,6 +19,7 @@ export interface BearerContextProviderOptions {
 export class BearerContextProvider implements McpContextProvider {
   private options: BearerContextProviderOptions;
   private tokenHash: string;
+  private cachedClient?: LightdashClient;
 
   constructor(options: BearerContextProviderOptions) {
     this.options = options;
@@ -36,19 +37,22 @@ export class BearerContextProvider implements McpContextProvider {
       scopes: scopes ?? this.options.scopes,
     };
     this.tokenHash = hashToken(this.readAccessToken());
+    this.cachedClient = undefined;
   }
 
   async getContext(): Promise<LightdashMcpRequestContext> {
-    const client = new LightdashClient(
-      createBearerConfig({
-        baseUrl: this.options.baseUrl,
-        accessToken: this.options.accessToken,
-        proxyAuthorization: this.options.proxyAuthorization,
-      }),
-    );
+    if (!this.cachedClient) {
+      this.cachedClient = new LightdashClient(
+        createBearerConfig({
+          baseUrl: this.options.baseUrl,
+          accessToken: this.options.accessToken,
+          proxyAuthorization: this.options.proxyAuthorization,
+        }),
+      );
+    }
 
     return {
-      lightdashClient: client,
+      lightdashClient: this.cachedClient,
       auth: {
         mode: 'lightdash-oauth',
         tokenHash: this.tokenHash,

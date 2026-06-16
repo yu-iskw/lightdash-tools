@@ -20,6 +20,17 @@ export function normalizeLightdashUrl(url: string): string {
   return stripTrailingSlash(url.trim());
 }
 
+/** Normalizes MCP HTTP endpoint path to a leading-slash, no-trailing-slash form. */
+export function normalizeMcpPath(path: string): string {
+  const trimmed = path.trim();
+  if (!trimmed) {
+    throw new Error('MCP path must not be empty');
+  }
+
+  const withLeading = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  return stripTrailingSlash(withLeading);
+}
+
 /** True when the URL is cleartext HTTP on loopback (localhost or 127.0.0.1 only). */
 export function isLocalHttpOrigin(url: string): boolean {
   let parsed: URL;
