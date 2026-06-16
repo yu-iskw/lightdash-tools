@@ -2,6 +2,7 @@ import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from '../config.js';
+import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import {
   registerToolSafe,
@@ -144,6 +145,59 @@ describe('registerToolSafe', () => {
     const result = await wrapped({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('insufficient_scope');
+  });
+
+  it('records tokenHash and subject in audit log when registerToolSafe wraps an insufficient_scope block', async () => {
+    const { logAuditEntry } = await import('@lightdash-tools/common');
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: {
+          mode: 'lightdash-oauth' as const,
+          scopes: ['mcp:read'],
+          tokenHash: 'hash-abc',
+          subject: 'user-1',
+        },
+        governance: {
+          safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
+          dryRun: false,
+          allowedProjectUuids: [],
+        },
+      }),
+    } as unknown as McpContextProvider;
+
+    const scopeBlockedHandler = wrapToolAnnotated(
+      contextProvider,
+      WRITE_IDEMPOTENT_CAPABILITY,
+      () => async () => ({ content: [{ type: 'text', text: 'success' }] }),
+    );
+
+    registerToolSafe(
+      mockServer,
+      'scoped_write_audit',
+      {
+        description: 'Write with scope gate',
+        inputSchema: {},
+        annotations: WRITE_IDEMPOTENT,
+      },
+      scopeBlockedHandler,
+    );
+
+    const handler =
+      mockServer.registerTool.mock.calls[mockServer.registerTool.mock.calls.length - 1]?.[2];
+    expect(handler).toBeDefined();
+    await runWithToolAuditAuthAsync(
+      { tokenHash: 'hash-abc', subject: 'user-1', scopes: ['mcp:read'] },
+      () => handler!({}),
+    );
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tokenHash: 'hash-abc',
+        subject: 'user-1',
+        status: 'blocked',
+      }),
+    );
   });
 
   it('allows write tools when OAuth scopes are unset on opaque tokens', async () => {

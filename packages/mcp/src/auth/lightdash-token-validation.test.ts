@@ -96,7 +96,7 @@ describe('validateLightdashAccessToken', () => {
     }
   });
 
-  it('returns validated user for a valid bearer token', async () => {
+  it('returns validated user including organizationUuid when upstream provides it', async () => {
     const api = await startUserApiServer((req, res) => {
       if (req.method === 'GET' && req.url === '/api/v1/user') {
         res.writeHead(200, { 'Content-Type': 'application/json' }).end(
@@ -117,6 +117,28 @@ describe('validateLightdashAccessToken', () => {
         email: 'a@b.com',
         organizationUuid: 'org-1',
       });
+    } finally {
+      await api.close();
+    }
+  });
+
+  it('returns validated user without organizationUuid when upstream omits it', async () => {
+    const api = await startUserApiServer((req, res) => {
+      if (req.method === 'GET' && req.url === '/api/v1/user') {
+        res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+          JSON.stringify({
+            status: 'ok',
+            results: { userUuid: 'u1', email: 'a@b.com' },
+          }),
+        );
+        return;
+      }
+      res.writeHead(404).end();
+    });
+
+    try {
+      const user = await validateLightdashAccessToken(baseConfig(api.baseUrl), 'good-token');
+      expect(user.organizationUuid).toBeUndefined();
     } finally {
       await api.close();
     }

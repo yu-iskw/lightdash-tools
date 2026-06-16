@@ -28,6 +28,30 @@ describe('UsersClient', () => {
     expect(result).toEqual(results);
   });
 
+  it('getAuthenticatedUser should call GET /user (resolved to /api/v1/user)', async () => {
+    const client = new UsersClient(mockHttp);
+    const user = {
+      userUuid: 'u1',
+      email: 'a@example.com',
+      firstName: 'A',
+      lastName: 'User',
+      userId: 1,
+      isTrackingAnonymized: false,
+      isMarketingOptedIn: false,
+      isSetupComplete: true,
+      isActive: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+      timezone: null,
+      organizationUuid: 'org-1',
+      impersonation: null,
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(user);
+    const result = await client.getAuthenticatedUser();
+    expect(mockHttp.get).toHaveBeenCalledWith('/user');
+    expect(result).toEqual(user);
+  });
+
   it('getMemberByUuid should call GET /org/users/{userUuid}', async () => {
     const client = new UsersClient(mockHttp);
     const member = {
