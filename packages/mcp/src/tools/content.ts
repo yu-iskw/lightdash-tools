@@ -4,7 +4,12 @@
 
 import { z } from 'zod';
 
-import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import {
+  READ_ONLY_CAPABILITY,
+  READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -30,7 +35,7 @@ export function registerContentTools(server: McpServer, contextProvider: McpCont
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async (params: {
           search: string;

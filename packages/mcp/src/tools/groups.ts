@@ -6,11 +6,14 @@ import { z } from 'zod';
 
 import { groupUuidField, userUuidField } from './schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
+  WRITE_DESTRUCTIVE_CAPABILITY,
+  WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -38,7 +41,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) => async (params: ListGroupsParams) => {
         const result = await c.v1.groups.listGroups(params ?? {});
         return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
@@ -57,7 +60,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ groupUuid }: { groupUuid: string }) => {
           const group = await c.v1.groups.getGroup(groupUuid);
@@ -79,7 +82,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({ name }: { name: string }) => {
           const group = await c.v1.groups.createGroup({ name });
@@ -102,7 +105,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({ groupUuid, name }: { groupUuid: string; name: string }) => {
           const group = await c.v1.groups.updateGroup(groupUuid, { name });
@@ -124,7 +127,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({ groupUuid }: { groupUuid: string }) => {
           await c.v1.groups.deleteGroup(groupUuid);
@@ -146,7 +149,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ groupUuid }: { groupUuid: string }) => {
           const members = await c.v1.groups.getGroupMembers(groupUuid);
@@ -169,7 +172,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({ groupUuid, userUuid }: { groupUuid: string; userUuid: string }) => {
           await c.v1.groups.addUserToGroup(groupUuid, userUuid);
@@ -196,7 +199,7 @@ export function registerGroupTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({ groupUuid, userUuid }: { groupUuid: string; userUuid: string }) => {
           await c.v1.groups.removeUserFromGroup(groupUuid, userUuid);

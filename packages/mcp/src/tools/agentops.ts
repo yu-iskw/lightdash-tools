@@ -27,10 +27,13 @@ import { getSafetyMode } from '../config.js';
 
 import {
   jsonToolResult,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
+  registerToolSafe,
   wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
+  WRITE_NONDESTRUCTIVE_CAPABILITY,
+  WRITE_OPEN_WORLD_CAPABILITY,
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -57,7 +60,7 @@ export function registerAgentopsTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ bundleYaml }: { bundleYaml: string }) => {
           const bundle = parseLightdashAiAgentBundle(bundleYaml);
@@ -81,7 +84,7 @@ export function registerAgentopsTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_NONDESTRUCTIVE,
+      WRITE_NONDESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({ bundleYaml }: { bundleYaml: string }) => {
           const bundle = parseLightdashAiAgentBundle(bundleYaml);
@@ -154,7 +157,7 @@ export function registerAgentopsTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_OPEN_WORLD,
+      WRITE_OPEN_WORLD_CAPABILITY,
       (c) =>
         async ({
           gateYaml,

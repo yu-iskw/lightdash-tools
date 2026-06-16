@@ -8,8 +8,10 @@ import {
   wrapTool,
   wrapToolAnnotated,
   READ_ONLY_DEFAULT,
+  RequiredMcpScope,
   WRITE_DESTRUCTIVE,
   WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from './shared';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -86,7 +88,12 @@ describe('registerToolSafe', () => {
     const contextProvider = {
       getContext: async () => ({
         lightdashClient: {},
-        auth: { mode: 'lightdash-oauth' as const, scopes: ['mcp:read'] },
+        auth: {
+          mode: 'lightdash-oauth' as const,
+          scopes: ['mcp:read'],
+          tokenHash: 'hash-abc',
+          subject: 'user-1',
+        },
         governance: {
           safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
           dryRun: false,
@@ -95,12 +102,46 @@ describe('registerToolSafe', () => {
       }),
     } as unknown as McpContextProvider;
 
-    const wrapped = wrapToolAnnotated(contextProvider, WRITE_IDEMPOTENT, () => async () => ({
-      content: [{ type: 'text', text: 'success' }],
-    }));
+    const wrapped = wrapToolAnnotated(
+      contextProvider,
+      WRITE_IDEMPOTENT_CAPABILITY,
+      () => async () => ({
+        content: [{ type: 'text', text: 'success' }],
+      }),
+    );
 
     const result = await wrapped({});
 
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('insufficient_scope');
+  });
+
+  it('uses explicit required scope classification independent of annotation hints', async () => {
+    const misleadingAnnotations = { readOnlyHint: true };
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: {
+          mode: 'lightdash-oauth' as const,
+          scopes: ['mcp:read'],
+          tokenHash: 'hash-abc',
+          subject: 'user-1',
+        },
+        governance: {
+          safetyMode: SafetyMode.WRITE_DESTRUCTIVE,
+          dryRun: false,
+          allowedProjectUuids: [],
+        },
+      }),
+    } as unknown as McpContextProvider;
+
+    const wrapped = wrapToolAnnotated(
+      contextProvider,
+      { annotations: misleadingAnnotations, requiredMcpScope: RequiredMcpScope.WRITE },
+      () => async () => ({ content: [{ type: 'text', text: 'success' }] }),
+    );
+
+    const result = await wrapped({});
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('insufficient_scope');
   });
@@ -121,7 +162,7 @@ describe('registerToolSafe', () => {
 
     const wrapped = wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       () => async () => mockHandler(),
     );
 

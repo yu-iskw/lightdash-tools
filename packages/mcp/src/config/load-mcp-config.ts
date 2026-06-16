@@ -3,6 +3,7 @@ import {
   ENV_LIGHTDASH_PROXY_AUTHORIZATION,
   SecretString,
 } from '@lightdash-tools/client';
+import { getSafetyModeFromEnv, SafetyMode } from '@lightdash-tools/common';
 import { z } from 'zod';
 
 import {
@@ -315,6 +316,60 @@ function defaultScopesSupported(authMode: McpAuthMode): string[] {
 }
 
 /** Loud warnings for operator misconfiguration. Call once at HTTP server startup. */
+function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
+  if (config.authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    return;
+  }
+
+  console.warn(
+    'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth is experimental identity-only OAuth. ' +
+      'Token validation confirms Lightdash user identity via GET /api/v1/user only; it does not prove the token was issued for this MCP resource. ' +
+      'MCP-local mcp:read/mcp:write scope enforcement is unavailable for opaque Lightdash OAuth tokens — authorization is Lightdash RBAC plus LIGHTDASH_TOOLS_SAFETY_MODE (default read-only) and process allowlists. ' +
+      'Lightdash exposes /.well-known/oauth-authorization-server for OAuth discovery; the gap is resource/audience-bound token validation, not metadata.',
+  );
+
+  if (getSafetyModeFromEnv() !== SafetyMode.READ_ONLY) {
+    console.warn(
+      'Warning: LIGHTDASH_TOOLS_SAFETY_MODE is not read-only while auth mode is lightdash-oauth. ' +
+        'Opaque OAuth tokens cannot enforce MCP-local scopes; widening safety mode exposes write tools to all authenticated OAuth users subject only to Lightdash RBAC.',
+    );
+  }
+
+  if (!config.validateToken) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
+        'Use only for local development.',
+    );
+  }
+
+  if (config.scopesSupported.length > 0) {
+    console.warn(
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED} advertises OAuth scopes, but Lightdash OAuth credentials are opaque. ` +
+        'MCP-local scope enforcement applies only when access tokens carry decodable JWT scope claims.',
+    );
+  }
+
+  if (config.maxSessionsPerSubject > 0) {
+    console.warn(
+      `Note: in-memory sessions are capped at ${config.maxSessions} global and ${config.maxSessionsPerSubject} per OAuth subject. ` +
+        'Use gateway-level rate limits and short session TTLs for multi-tenant production deployments.',
+    );
+  }
+}
+
+function emitCorsSecurityWarnings(config: McpHttpConfig): void {
+  if (config.allowedOrigins.length > 0) {
+    return;
+  }
+
+  const corsWarning = config.dangerouslyAllowAnyOrigin
+    ? `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty but ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN}=1 — CORS reflects any browser Origin.`
+    : `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS does not reflect browser Origins unless explicitly allowlisted. ` +
+      `Set origins for browser-facing deployments, or set ${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN}=1 only when you accept reflecting any Origin. ` +
+      `Production ${MCP_AUTH_MODE_LIGHTDASH_OAUTH} requires an allowlist or the dangerous override.`;
+  console.warn(corsWarning);
+}
+
 export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
     console.warn(
@@ -322,21 +377,7 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
     );
   }
 
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    console.warn(
-      'Warning: LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth is experimental identity-only OAuth. ' +
-        'Token validation confirms Lightdash user identity via GET /api/v1/user only; it does not prove the token was issued for this MCP resource. ' +
-        'Lightdash exposes /.well-known/oauth-authorization-server for OAuth discovery; the gap is resource/audience-bound token validation, not metadata. ' +
-        'Authorization is Lightdash RBAC plus process-level safety mode / project allowlists, not MCP-local scopes or audience binding.',
-    );
-  }
-
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && !config.validateToken) {
-    console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
-        'Use only for local development.',
-    );
-  }
+  emitLightdashOAuthSecurityWarnings(config);
 
   if (config.grantAllScopesWhenUnknown) {
     console.warn(
@@ -344,30 +385,7 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
     );
   }
 
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && config.scopesSupported.length > 0) {
-    console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED} advertises OAuth scopes, but Lightdash OAuth credentials are opaque. ` +
-        'MCP-local scope enforcement applies only when access tokens carry decodable JWT scope claims.',
-    );
-  }
-
-  if (config.allowedOrigins.length === 0) {
-    const corsWarning =
-      config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
-        ? `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
-          'Set an explicit allowlist for browser-facing OAuth deployments; production requires an allowlist or ' +
-          `${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN}=1.`
-        : `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — CORS reflects any browser Origin. ` +
-          'Set an explicit allowlist for browser-facing deployments.';
-    console.warn(corsWarning);
-  }
-
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && config.maxSessionsPerSubject > 0) {
-    console.warn(
-      `Note: in-memory sessions are capped at ${config.maxSessions} global and ${config.maxSessionsPerSubject} per OAuth subject. ` +
-        'Use gateway-level rate limits and short session TTLs for multi-tenant production deployments.',
-    );
-  }
+  emitCorsSecurityWarnings(config);
 }
 
 function assertAuthModeRequirements(

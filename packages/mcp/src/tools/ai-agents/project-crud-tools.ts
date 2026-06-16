@@ -7,11 +7,14 @@ import { z } from 'zod';
 import { projectUuidField } from '../schema-fields.js';
 import {
   jsonToolResult,
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
+  WRITE_DESTRUCTIVE_CAPABILITY,
+  WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from '../shared.js';
 
 import type { McpContextProvider } from '../../request-context.js';
@@ -36,7 +39,7 @@ export function registerProjectAgentCrudTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const result = await c.v1.aiAgents.listAgents(projectUuid);
@@ -59,7 +62,7 @@ export function registerProjectAgentCrudTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.getAgent(projectUuid, agentUuid);
@@ -84,7 +87,7 @@ export function registerProjectAgentCrudTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -126,7 +129,7 @@ export function registerProjectAgentCrudTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -163,7 +166,7 @@ export function registerProjectAgentCrudTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           await c.v1.aiAgents.deleteAgent(projectUuid, agentUuid);

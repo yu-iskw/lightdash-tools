@@ -6,10 +6,12 @@ import { z } from 'zod';
 
 import {
   jsonToolResult,
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from '../shared.js';
 
 import type { McpContextProvider } from '../../request-context.js';
@@ -30,7 +32,7 @@ export function registerAdminAiAgentTools(
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
       const result = await c.v1.aiAgents.listAdminAgents();
       return jsonToolResult(result);
     }),
@@ -63,7 +65,7 @@ export function registerAdminAiAgentTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async (params: {
           page?: number;
@@ -93,7 +95,7 @@ export function registerAdminAiAgentTools(
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
       const result = await c.v1.aiAgents.getAiOrganizationSettings();
       return jsonToolResult(result);
     }),
@@ -115,7 +117,7 @@ export function registerAdminAiAgentTools(
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) => async (params: { aiAgentsVisible?: boolean }) => {
         const result = await c.v1.aiAgents.updateAiOrganizationSettings(
           params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],

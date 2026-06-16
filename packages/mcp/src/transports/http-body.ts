@@ -23,8 +23,11 @@ export function readBody(
       size += chunk.length;
       if (size > maxBodyBytes) {
         rejected = true;
-        req.destroy();
         sendJson(res, 413, { error: 'Payload Too Large' });
+        req.on('data', () => undefined);
+        if (typeof req.resume === 'function') {
+          req.resume();
+        }
         resolve(undefined);
         return;
       }

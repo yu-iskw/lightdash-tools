@@ -12,11 +12,14 @@ import {
   userUuidField,
 } from './schema-fields.js';
 import {
-  wrapToolAnnotated,
-  registerToolSafe,
+  READ_ONLY_CAPABILITY,
   READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
+  registerToolSafe,
+  wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
+  WRITE_DESTRUCTIVE_CAPABILITY,
+  WRITE_IDEMPOTENT,
+  WRITE_IDEMPOTENT_CAPABILITY,
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
@@ -34,7 +37,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid }: { projectUuid: string }) => {
           const spaces = await c.v1.spaces.listSpacesInProject(projectUuid);
@@ -56,7 +59,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      READ_ONLY_DEFAULT,
+      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, spaceUuid }: { projectUuid: string; spaceUuid: string }) => {
           const space = await c.v1.spaces.getSpace(projectUuid, spaceUuid);
@@ -81,7 +84,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -125,7 +128,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -165,7 +168,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_IDEMPOTENT,
+      WRITE_IDEMPOTENT_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -209,7 +212,7 @@ export function registerSpaceTools(server: McpServer, contextProvider: McpContex
     },
     wrapToolAnnotated(
       contextProvider,
-      WRITE_DESTRUCTIVE,
+      WRITE_DESTRUCTIVE_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
