@@ -38,6 +38,7 @@ const oauthConfig: McpHttpConfig = {
   grantAllScopesWhenUnknown: false,
   experimentalIdentityOAuth: false,
   dangerouslyAllowAnyOrigin: false,
+  dangerouslyAllowWriteInIdentityOAuth: false,
 };
 
 const originalEnv = { ...process.env };

@@ -2,6 +2,18 @@
 
 Deploy `@lightdash-tools/mcp` on Google Cloud Run with `lightdash-oauth` auth mode. For env var reference and auth modes, see [mcp-oauth-http.md](mcp-oauth-http.md).
 
+## Production limitations
+
+`lightdash-oauth` validates **who** the user is (`GET /api/v1/user`) but cannot prove the access token was issued **for this MCP server**. That is not full MCP resource/audience-bound OAuth authorization.
+
+In production, treat authorization as:
+
+- **Lightdash RBAC** (what the user can do in Lightdash)
+- **`LIGHTDASH_TOOLS_SAFETY_MODE=read-only`** (process-level write tool gate; required unless `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH=1`)
+- **`LIGHTDASH_TOOLS_ALLOWED_PROJECTS`** (optional blast-radius limiter)
+
+Do **not** rely on MCP-local `mcp:read` / `mcp:write` scopes for opaque Lightdash OAuth tokens. See [lightdash-oauth-upstream-contract.md](agent-context/lightdash-oauth-upstream-contract.md).
+
 ## Dockerfile
 
 Build from the monorepo root:

@@ -106,6 +106,35 @@ describe('SessionStore', () => {
     expect(store.canAcceptNewSession('user-b', onClose)).toBe(true);
   });
 
+  it('treats maxSessionsPerSubject=0 as unlimited per subject', () => {
+    const store = new SessionStore(60_000, 10, 0);
+    const subjectEntry = (subject: string): SessionEntry => ({
+      ...createMockEntry(Date.now()),
+      auth: { mode: 'lightdash-oauth', tokenHash: 'hash-a', subject },
+    });
+
+    store.set('a', subjectEntry('user-a'));
+    store.set('b', subjectEntry('user-a'));
+    store.set('c', subjectEntry('user-a'));
+
+    const onClose = vi.fn();
+    expect(store.canAcceptNewSession('user-a', onClose)).toBe(true);
+  });
+
+  it('enforces maxSessionsPerSubject=1 for a single concurrent session per subject', () => {
+    const store = new SessionStore(60_000, 10, 1);
+    const subjectEntry = (subject: string): SessionEntry => ({
+      ...createMockEntry(Date.now()),
+      auth: { mode: 'lightdash-oauth', tokenHash: 'hash-a', subject },
+    });
+
+    store.set('a', subjectEntry('user-a'));
+
+    const onClose = vi.fn();
+    expect(store.canAcceptNewSession('user-a', onClose)).toBe(false);
+    expect(store.canAcceptNewSession('user-b', onClose)).toBe(true);
+  });
+
   it('does not double-count per-subject sessions when overwriting the same session ID', () => {
     const store = new SessionStore(60_000, 10, 2);
     const first = {

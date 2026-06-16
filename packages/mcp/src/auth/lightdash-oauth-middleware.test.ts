@@ -31,6 +31,7 @@ const baseConfig: McpHttpConfig = {
   grantAllScopesWhenUnknown: false,
   experimentalIdentityOAuth: false,
   dangerouslyAllowAnyOrigin: false,
+  dangerouslyAllowWriteInIdentityOAuth: false,
 };
 
 function jwtWithScope(scope: string): string {
