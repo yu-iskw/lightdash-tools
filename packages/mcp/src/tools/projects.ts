@@ -5,7 +5,12 @@
 import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
+import {
+  wrapToolAnnotated,
+  registerToolSafe,
+  READ_ONLY_DEFAULT,
+  WRITE_IDEMPOTENT,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -20,7 +25,7 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
       const projects = await c.v1.projects.listProjects();
       return { content: [{ type: 'text', text: JSON.stringify(projects, null, 2) }] };
     }),
@@ -34,10 +39,15 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const project = await c.v1.projects.getProject(projectUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(project, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ projectUuid }: { projectUuid: string }) => {
+          const project = await c.v1.projects.getProject(projectUuid);
+          return { content: [{ type: 'text', text: JSON.stringify(project, null, 2) }] };
+        },
+    ),
   );
   registerToolSafe(
     server,
@@ -48,10 +58,15 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       inputSchema: { projectUuid: projectUuidField() },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const result = await c.v1.validation.validateProject(projectUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      WRITE_IDEMPOTENT,
+      (c) =>
+        async ({ projectUuid }: { projectUuid: string }) => {
+          const result = await c.v1.validation.validateProject(projectUuid);
+          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        },
+    ),
   );
   registerToolSafe(
     server,
@@ -67,8 +82,9 @@ export function registerProjectTools(server: McpServer, contextProvider: McpCont
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,

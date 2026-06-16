@@ -5,7 +5,12 @@
 import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from './shared.js';
+import {
+  wrapToolAnnotated,
+  registerToolSafe,
+  READ_ONLY_DEFAULT,
+  WRITE_IDEMPOTENT,
+} from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -21,10 +26,15 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const charts = await c.v1.charts.getChartsAsCode(projectUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(charts, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ projectUuid }: { projectUuid: string }) => {
+          const charts = await c.v1.charts.getChartsAsCode(projectUuid);
+          return { content: [{ type: 'text', text: JSON.stringify(charts, null, 2) }] };
+        },
+    ),
   );
   registerToolSafe(
     server,
@@ -38,8 +48,9 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, ids }: { projectUuid: string; ids?: string[] }) => {
           const result = await c.v1.charts.getChartsAsCode(projectUuid, { ids });
@@ -62,8 +73,9 @@ export function registerChartTools(server: McpServer, contextProvider: McpContex
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_IDEMPOTENT,
       (c) =>
         async ({
           projectUuid,

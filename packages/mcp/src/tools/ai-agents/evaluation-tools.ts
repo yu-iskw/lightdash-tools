@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
 import {
-  wrapTool,
+  wrapToolAnnotated,
   registerToolSafe,
   jsonToolResult,
   READ_ONLY_DEFAULT,
@@ -43,8 +43,9 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listEvaluations(projectUuid, agentUuid);
@@ -66,8 +67,9 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,
@@ -97,8 +99,9 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,
@@ -134,8 +137,9 @@ function registerEvaluationReadTools(server: McpServer, contextProvider: McpCont
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,
@@ -183,8 +187,9 @@ function registerEvaluationWriteTools(
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_NONDESTRUCTIVE,
       (c) =>
         async ({
           projectUuid,
@@ -229,8 +234,9 @@ function registerEvaluationWriteTools(
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_IDEMPOTENT,
       (c) =>
         async ({
           projectUuid,
@@ -271,8 +277,9 @@ function registerEvaluationWriteTools(
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_NONDESTRUCTIVE,
       (c) =>
         async ({
           projectUuid,
@@ -306,8 +313,9 @@ function registerEvaluationWriteTools(
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_NONDESTRUCTIVE,
       (c) =>
         async ({
           projectUuid,
@@ -337,8 +345,9 @@ function registerEvaluationWriteTools(
       },
       annotations: WRITE_DESTRUCTIVE,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_DESTRUCTIVE,
       (c) =>
         async ({
           projectUuid,

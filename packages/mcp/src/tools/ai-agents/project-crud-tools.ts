@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { projectUuidField } from '../schema-fields.js';
 import {
   jsonToolResult,
-  wrapTool,
+  wrapToolAnnotated,
   registerToolSafe,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
@@ -34,10 +34,15 @@ export function registerProjectAgentCrudTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const result = await c.v1.aiAgents.listAgents(projectUuid);
-      return jsonToolResult(result);
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ projectUuid }: { projectUuid: string }) => {
+          const result = await c.v1.aiAgents.listAgents(projectUuid);
+          return jsonToolResult(result);
+        },
+    ),
   );
 
   registerToolSafe(
@@ -52,8 +57,9 @@ export function registerProjectAgentCrudTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.getAgent(projectUuid, agentUuid);
@@ -76,8 +82,9 @@ export function registerProjectAgentCrudTools(
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_IDEMPOTENT,
       (c) =>
         async ({
           projectUuid,
@@ -117,8 +124,9 @@ export function registerProjectAgentCrudTools(
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_IDEMPOTENT,
       (c) =>
         async ({
           projectUuid,
@@ -153,8 +161,9 @@ export function registerProjectAgentCrudTools(
       },
       annotations: WRITE_DESTRUCTIVE,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_DESTRUCTIVE,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           await c.v1.aiAgents.deleteAgent(projectUuid, agentUuid);

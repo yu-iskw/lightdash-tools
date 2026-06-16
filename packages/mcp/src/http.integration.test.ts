@@ -11,6 +11,8 @@ import type { AddressInfo } from 'node:net';
 const TOKEN_A = scopedAccessToken('mcp:read mcp:write', 'token-a');
 const TOKEN_B = scopedAccessToken('mcp:read mcp:write', 'token-b');
 const TOKEN_A_REFRESHED = scopedAccessToken('mcp:read mcp:write', 'token-a-refreshed');
+const TOKEN_READ_ONLY = scopedAccessToken('mcp:read', 'token-read-only');
+const OPAQUE_TOKEN_A = 'opaque-token-user-a';
 
 const USER_A = { userUuid: 'user-a-uuid', email: 'a@example.com' };
 const USER_B = { userUuid: 'user-b-uuid', email: 'b@example.com' };
@@ -59,6 +61,8 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
     [TOKEN_A]: USER_A,
     [TOKEN_A_REFRESHED]: USER_A,
     [TOKEN_B]: USER_B,
+    [TOKEN_READ_ONLY]: USER_A,
+    [OPAQUE_TOKEN_A]: USER_A,
   };
 
   const server = createServer((req, res) => {
@@ -116,7 +120,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     sessionTtlMs: 60_000,
     maxSessions: 10,
     sessionCleanupMs: 60_000,
-    requiredScopes: ['mcp:read'],
+    requiredScopes: [],
     scopesSupported: ['mcp:read', 'mcp:write'],
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
@@ -464,6 +468,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   beforeEach(async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'write-destructive';
     mockLightdash = await startMockLightdashServer();
     mcpServer = await createStreamableHttpServer({
       ...baseOAuthConfig(mockLightdash.baseUrl),
@@ -473,6 +478,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
+    delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
     vi.restoreAllMocks();
   });
 
@@ -510,6 +516,78 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     expect(mockLightdash.authorizationHeaders.length).toBeGreaterThan(userCallsBefore);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
   });
+
+  it('initializes MCP session with opaque OAuth bearer when endpoint scopes are unset', async () => {
+    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: OPAQUE_TOKEN_A });
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('mcp-session-id')).toBeTruthy();
+    expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${OPAQUE_TOKEN_A}`);
+  });
+
+  it('blocks write tools when JWT scopes omit mcp:write', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: TOKEN_READ_ONLY,
+    });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
+    );
+
+    const callResponse = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'ldt__create_group', arguments: { name: 'blocked-group' } },
+        id: 3,
+      },
+      { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
+    );
+
+    expect(callResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(callResponse)) as {
+      result?: { isError?: boolean; content?: Array<{ text?: string }> };
+    };
+    expect(payload.result?.isError).toBe(true);
+    expect(payload.result?.content?.[0]?.text ?? '').toContain('insufficient_scope');
+  });
+
+  it('allows read tools when JWT scopes include mcp:read only', async () => {
+    const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: TOKEN_READ_ONLY,
+    });
+    const sessionId = initResponse.headers.get('mcp-session-id');
+    expect(sessionId).toBeTruthy();
+
+    await postMcp(
+      mcpServer.baseUrl,
+      { jsonrpc: '2.0', method: 'notifications/initialized' },
+      { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
+    );
+
+    const callResponse = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        id: 4,
+      },
+      { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
+    );
+
+    expect(callResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(callResponse)) as {
+      result?: { isError?: boolean; content?: Array<{ text?: string }> };
+    };
+    expect(payload.result?.isError).not.toBe(true);
+    expect(payload.result?.content?.[0]?.text ?? '').toContain(USER_A.userUuid);
+  });
 });
 
 describe('MCP HTTP shared-key integration', () => {
@@ -534,7 +612,7 @@ describe('MCP HTTP shared-key integration', () => {
       sessionTtlMs: 60_000,
       maxSessions: 10,
       sessionCleanupMs: 60_000,
-      requiredScopes: ['mcp:read'],
+      requiredScopes: [],
       scopesSupported: ['mcp:read'],
       validateToken: false,
       tokenValidationCacheTtlMs: 30_000,

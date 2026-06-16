@@ -22,6 +22,13 @@ function tryDecodeJwtPayload(accessToken: string): Record<string, unknown> | und
   }
 }
 
+function hasScopeClaim(payload: Record<string, unknown>): boolean {
+  if (typeof payload.scope === 'string') {
+    return true;
+  }
+  return Array.isArray(payload.scp);
+}
+
 function parseScopeClaim(payload: Record<string, unknown>): string[] {
   const scope = payload.scope;
   if (typeof scope === 'string' && scope.trim().length > 0) {
@@ -44,28 +51,31 @@ function filterSupportedScopes(scopes: string[], scopesSupported: readonly strin
 function scopesWhenUnknown(
   scopesSupported: readonly string[],
   grantAllWhenUnknown: boolean,
-): string[] {
-  return grantAllWhenUnknown ? [...scopesSupported] : [];
+): string[] | undefined {
+  return grantAllWhenUnknown ? [...scopesSupported] : undefined;
 }
 
-/** Extracts OAuth scopes from JWT claims. Unknown/opaque tokens fail closed by default. */
+/**
+ * Extracts OAuth scopes from JWT claims.
+ * Returns `undefined` when the token is opaque or has no scope claims (identity-only).
+ * Returns a (possibly empty) array when scope claims are present.
+ */
 export function extractTokenScopes(
   accessToken: string,
   scopesSupported: readonly string[],
   options: ExtractTokenScopesOptions = {},
-): string[] {
+): string[] | undefined {
   const grantAllWhenUnknown = options.grantAllWhenUnknown === true;
   const payload = tryDecodeJwtPayload(accessToken);
   if (!payload) {
     return scopesWhenUnknown(scopesSupported, grantAllWhenUnknown);
   }
 
-  const fromClaim = filterSupportedScopes(parseScopeClaim(payload), scopesSupported);
-  if (fromClaim.length > 0) {
-    return fromClaim;
+  if (!hasScopeClaim(payload)) {
+    return scopesWhenUnknown(scopesSupported, grantAllWhenUnknown);
   }
 
-  return scopesWhenUnknown(scopesSupported, grantAllWhenUnknown);
+  return filterSupportedScopes(parseScopeClaim(payload), scopesSupported);
 }
 
 export function hasRequiredScopes(

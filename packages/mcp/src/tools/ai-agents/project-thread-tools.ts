@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../schema-fields.js';
 import {
-  wrapTool,
+  wrapToolAnnotated,
   registerToolSafe,
   jsonToolResult,
   READ_ONLY_DEFAULT,
@@ -34,8 +34,9 @@ export function registerProjectAgentThreadTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid: string; agentUuid: string }) => {
           const result = await c.v1.aiAgents.listAgentThreads(projectUuid, agentUuid);
@@ -57,8 +58,9 @@ export function registerProjectAgentThreadTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async ({
           projectUuid,
@@ -89,8 +91,9 @@ export function registerProjectAgentThreadTools(
       },
       annotations: WRITE_OPEN_WORLD,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_OPEN_WORLD,
       (c) =>
         async ({
           projectUuid,
@@ -123,8 +126,9 @@ export function registerProjectAgentThreadTools(
       },
       annotations: WRITE_OPEN_WORLD,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_OPEN_WORLD,
       (c) =>
         async ({
           projectUuid,

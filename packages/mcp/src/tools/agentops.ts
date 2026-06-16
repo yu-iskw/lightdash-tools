@@ -29,7 +29,7 @@ import {
   jsonToolResult,
   registerToolSafe,
   READ_ONLY_DEFAULT,
-  wrapTool,
+  wrapToolAnnotated,
   WRITE_DESTRUCTIVE,
 } from './shared.js';
 
@@ -55,12 +55,17 @@ export function registerAgentopsTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
-      const bundle = parseLightdashAiAgentBundle(bundleYaml);
-      const current = await fetchBundleCurrentState(c, bundle);
-      const diff = computeBundleDiff(bundle, current);
-      return jsonToolResult(diff);
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ bundleYaml }: { bundleYaml: string }) => {
+          const bundle = parseLightdashAiAgentBundle(bundleYaml);
+          const current = await fetchBundleCurrentState(c, bundle);
+          const diff = computeBundleDiff(bundle, current);
+          return jsonToolResult(diff);
+        },
+    ),
   );
 
   registerToolSafe(
@@ -74,40 +79,45 @@ export function registerAgentopsTools(
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
-    wrapTool(contextProvider, (c) => async ({ bundleYaml }: { bundleYaml: string }) => {
-      const bundle = parseLightdashAiAgentBundle(bundleYaml);
-      const current = await fetchBundleCurrentState(c, bundle);
-      const diff = computeBundleDiff(bundle, current);
+    wrapToolAnnotated(
+      contextProvider,
+      WRITE_NONDESTRUCTIVE,
+      (c) =>
+        async ({ bundleYaml }: { bundleYaml: string }) => {
+          const bundle = parseLightdashAiAgentBundle(bundleYaml);
+          const current = await fetchBundleCurrentState(c, bundle);
+          const diff = computeBundleDiff(bundle, current);
 
-      if (diff.summary.deletes > 0 && !isAllowed(getSafetyMode(), WRITE_DESTRUCTIVE)) {
-        return {
-          content: [
-            {
-              type: 'text' as const,
-              text: 'Error: bundle requires destructive operations (deletes). Use safety mode write-destructive.',
-            },
-          ],
-          isError: true,
-        };
-      }
+          if (diff.summary.deletes > 0 && !isAllowed(getSafetyMode(), WRITE_DESTRUCTIVE)) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text: 'Error: bundle requires destructive operations (deletes). Use safety mode write-destructive.',
+                },
+              ],
+              isError: true,
+            };
+          }
 
-      const result = await applyBundleDiff(c, bundle, diff.changes);
-      const payload = {
-        bundleName: bundle.metadata.name,
-        projectUuid: bundle.spec.projectUuid,
-        summary: diff.summary,
-        applied: result.applied,
-        skipped: result.skipped,
-        failed: result.failed,
-      };
-      if (result.failed.length > 0) {
-        return {
-          ...jsonToolResult(payload),
-          isError: true,
-        };
-      }
-      return jsonToolResult(payload);
-    }),
+          const result = await applyBundleDiff(c, bundle, diff.changes);
+          const payload = {
+            bundleName: bundle.metadata.name,
+            projectUuid: bundle.spec.projectUuid,
+            summary: diff.summary,
+            applied: result.applied,
+            skipped: result.skipped,
+            failed: result.failed,
+          };
+          if (result.failed.length > 0) {
+            return {
+              ...jsonToolResult(payload),
+              isError: true,
+            };
+          }
+          return jsonToolResult(payload);
+        },
+    ),
   );
 
   registerToolSafe(
@@ -142,8 +152,9 @@ export function registerAgentopsTools(
       },
       annotations: WRITE_OPEN_WORLD,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      WRITE_OPEN_WORLD,
       (c) =>
         async ({
           gateYaml,

@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import {
   jsonToolResult,
-  wrapTool,
+  wrapToolAnnotated,
   registerToolSafe,
   READ_ONLY_DEFAULT,
   WRITE_IDEMPOTENT,
@@ -30,7 +30,7 @@ export function registerAdminAiAgentTools(
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
       const result = await c.v1.aiAgents.listAdminAgents();
       return jsonToolResult(result);
     }),
@@ -61,8 +61,9 @@ export function registerAdminAiAgentTools(
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(
+    wrapToolAnnotated(
       contextProvider,
+      READ_ONLY_DEFAULT,
       (c) =>
         async (params: {
           page?: number;
@@ -92,7 +93,7 @@ export function registerAdminAiAgentTools(
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
       const result = await c.v1.aiAgents.getAiOrganizationSettings();
       return jsonToolResult(result);
     }),
@@ -112,11 +113,15 @@ export function registerAdminAiAgentTools(
       },
       annotations: WRITE_IDEMPOTENT,
     },
-    wrapTool(contextProvider, (c) => async (params: { aiAgentsVisible?: boolean }) => {
-      const result = await c.v1.aiAgents.updateAiOrganizationSettings(
-        params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
-      );
-      return jsonToolResult(result);
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      WRITE_IDEMPOTENT,
+      (c) => async (params: { aiAgentsVisible?: boolean }) => {
+        const result = await c.v1.aiAgents.updateAiOrganizationSettings(
+          params as Parameters<typeof c.v1.aiAgents.updateAiOrganizationSettings>[0],
+        );
+        return jsonToolResult(result);
+      },
+    ),
   );
 }

@@ -384,7 +384,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       [{ name: ENV_MCP_SESSION_CLEANUP_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS }],
       60_000,
     ),
-    requiredScopes: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, ['mcp:read']),
+    requiredScopes: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []),
     scopesSupported: readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, [
       ...DEFAULT_SCOPES_SUPPORTED,
     ]),

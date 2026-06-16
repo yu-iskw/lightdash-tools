@@ -6,7 +6,7 @@
 import { z } from 'zod';
 
 import { userUuidField } from './schema-fields.js';
-import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
+import { wrapToolAnnotated, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -31,10 +31,14 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async (params: ListMembersParams) => {
-      const result = await c.v1.users.listMembers(params ?? {});
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) => async (params: ListMembersParams) => {
+        const result = await c.v1.users.listMembers(params ?? {});
+        return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      },
+    ),
   );
   registerToolSafe(
     server,
@@ -45,10 +49,15 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       inputSchema: { userUuid: userUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ userUuid }: { userUuid: string }) => {
-      const member = await c.v1.users.getMemberByUuid(userUuid);
-      return { content: [{ type: 'text', text: JSON.stringify(member, null, 2) }] };
-    }),
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_DEFAULT,
+      (c) =>
+        async ({ userUuid }: { userUuid: string }) => {
+          const member = await c.v1.users.getMemberByUuid(userUuid);
+          return { content: [{ type: 'text', text: JSON.stringify(member, null, 2) }] };
+        },
+    ),
   );
   registerToolSafe(
     server,
@@ -60,7 +69,7 @@ export function registerUserTools(server: McpServer, contextProvider: McpContext
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async () => {
+    wrapToolAnnotated(contextProvider, READ_ONLY_DEFAULT, (c) => async () => {
       const user = await c.v1.users.getAuthenticatedUser();
       const safe = {
         userUuid: user.userUuid,
