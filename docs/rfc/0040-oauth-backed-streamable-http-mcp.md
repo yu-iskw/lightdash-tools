@@ -10,10 +10,10 @@
 
 ## Executive Summary
 
-`@lightdash-tools/mcp` should support **two first-class execution modes**:
+`@lightdash-tools/mcp` should support **two first-class transports** with multiple HTTP auth modes:
 
 1. **STDIO mode** for local IDE/agent use with `LIGHTDASH_URL` and `LIGHTDASH_API_KEY`.
-2. **Hosted Streamable HTTP OAuth mode** where each MCP user authenticates with Lightdash through a Lightdash OAuth application, and each MCP tool call uses that user's Lightdash OAuth access token.
+2. **Hosted Streamable HTTP**, including an **experimental identity-only OAuth mode** (`lightdash-oauth`) where each MCP user authenticates with Lightdash through a Lightdash OAuth application and each MCP tool call uses that user's Lightdash OAuth access token. v1 validates identity via `GET /api/v1/user` only; it is **not** production-grade, standards-aligned MCP OAuth authorization. Production use of `lightdash-oauth` requires explicit risk acceptance (`LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1`). **`shared-key` HTTP remains the production-ready option today.**
 
 The current `@lightdash-tools/mcp` package already has:
 
@@ -32,7 +32,7 @@ The experimental `lightdash-mcp-demo` proves the missing OAuth-specific part:
 - It passes a request bearer token into a Lightdash API call to `/api/v1/user`.
 - It creates a minimal stateless Streamable HTTP MCP server.
 
-This RFC recommends **integrating the demo concept, not copying the demo implementation wholesale**. The production design should refactor `@lightdash-tools/mcp` around a request-scoped credential provider and Lightdash client factory, add OAuth protected-resource metadata, add per-request bearer-token handling, and keep all current guardrails.
+This RFC recommends **integrating the demo concept, not copying the demo implementation wholesale**. The target design should refactor `@lightdash-tools/mcp` around a request-scoped credential provider and Lightdash client factory, add OAuth protected-resource metadata scaffolding, add per-request bearer-token handling, and keep all current guardrails.
 
 The most important changes are:
 
@@ -40,10 +40,12 @@ The most important changes are:
 Current HTTP mode:
   one shared LightdashClient created at process startup from LIGHTDASH_API_KEY
 
-Recommended HTTP OAuth mode:
+Recommended experimental HTTP identity OAuth mode (`lightdash-oauth`):
   one MCP server per HTTP request/session context
   one LightdashClient per authenticated request/session
   credentials from Authorization: Bearer <Lightdash OAuth access token>
+  identity validated via GET /api/v1/user only (not resource/audience binding)
+  production deployable only with LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1
 ```
 
 ---
@@ -229,7 +231,7 @@ GET {LIGHTDASH_URL}/api/v1/user
 Authorization: Bearer <access-token>
 ```
 
-This is exactly the concept to productionize.
+This is the identity-validation and protected-resource metadata pattern to integrate as **experimental identity-only OAuth**, not as production-grade standards-aligned MCP OAuth authorization.
 
 ---
 
@@ -277,7 +279,7 @@ This aligns well with a design where:
 
 ### 4.1 Goals
 
-1. Add production-ready Lightdash OAuth mode to `@lightdash-tools/mcp`.
+1. Add **experimental identity-only OAuth mode** (`lightdash-oauth`) to `@lightdash-tools/mcp`, production-deployable only with explicit risk acceptance (`LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1`). **`shared-key` HTTP remains the production-ready option.**
 2. Keep STDIO mode fully backward-compatible.
 3. Keep existing shared-key HTTP mode backward-compatible initially, but deprecate inconsistent env names.
 4. Make environment variables consistent:
@@ -289,7 +291,7 @@ This aligns well with a design where:
 8. Extend `@lightdash-tools/client` to support both `ApiKey` and `Bearer` auth schemes.
 9. Preserve all safety, dry-run, allowlist, audit, and validation guardrails.
 10. Add tests for STDIO, shared-key HTTP, and OAuth HTTP modes.
-11. Document Cursor/remote MCP setup and Cloud Run deployment.
+11. Document Cursor/remote MCP setup, Cloud Run deployment, and experimental identity-only OAuth limitations (including `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH`).
 
 ### 4.2 Non-Goals
 

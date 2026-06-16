@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 
@@ -90,6 +90,32 @@ describe('validateLightdashAccessToken', () => {
       });
     } finally {
       await api.close();
+    }
+  });
+
+  it('throws invalid_token for upstream 403 and logs sanitized status', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const api = await startUserApiServer((_req, res) => {
+      res.writeHead(403, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          status: 'error',
+          error: { statusCode: 403, name: 'Forbidden', message: 'Forbidden' },
+        }),
+      );
+    });
+
+    try {
+      await expect(
+        validateLightdashAccessToken(baseConfig(api.baseUrl), 'forbidden-token'),
+      ).rejects.toMatchObject({
+        reason: 'invalid_token',
+      });
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Lightdash token validation rejected bearer token (upstream HTTP 403)',
+      );
+    } finally {
+      await api.close();
+      warnSpy.mockRestore();
     }
   });
 

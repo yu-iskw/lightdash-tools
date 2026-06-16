@@ -539,6 +539,7 @@ describe('MCP HTTP unrestricted CORS integration', () => {
     mcpServer = await createStreamableHttpServer({
       ...baseOAuthConfig(mockLightdash.baseUrl),
       allowedOrigins: [],
+      dangerouslyAllowAnyOrigin: true,
     });
   });
 
@@ -548,13 +549,33 @@ describe('MCP HTTP unrestricted CORS integration', () => {
     vi.restoreAllMocks();
   });
 
-  it('echoes CORS headers when allowedOrigins is empty', async () => {
+  it('echoes CORS headers when dangerouslyAllowAnyOrigin is enabled', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`, {
       headers: { Origin: 'https://browser.example.com' },
     });
 
     expect(response.status).toBe(200);
     expect(response.headers.get('access-control-allow-origin')).toBe('https://browser.example.com');
+  });
+
+  it('returns 403 for browser origins when allowlist is empty and dangerouslyAllowAnyOrigin is false', async () => {
+    const restrictedServer = await createStreamableHttpServer({
+      ...baseOAuthConfig(mockLightdash.baseUrl),
+      allowedOrigins: [],
+      dangerouslyAllowAnyOrigin: false,
+    });
+
+    try {
+      const response = await fetch(`${restrictedServer.baseUrl}/mcp`, {
+        method: 'OPTIONS',
+        headers: { Origin: 'https://browser.example.com' },
+      });
+
+      expect(response.status).toBe(403);
+      expect(await response.json()).toEqual({ error: 'Forbidden: origin not allowed' });
+    } finally {
+      await restrictedServer.close();
+    }
   });
 });
 

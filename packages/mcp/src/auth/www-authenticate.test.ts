@@ -42,7 +42,7 @@ describe('getLightdashAuthorizationServerMetadataUrl', () => {
 });
 
 describe('buildOAuthProtectedResourceMetadata', () => {
-  it('includes resource and authorization_servers', () => {
+  it('includes resource and authorization_servers issuer origin', () => {
     const metadata = buildOAuthProtectedResourceMetadata(baseConfig);
     expect(metadata).toEqual({
       resource: 'https://mcp.example.com/mcp',
@@ -50,6 +50,9 @@ describe('buildOAuthProtectedResourceMetadata', () => {
       bearer_methods_supported: ['header'],
       scopes_supported: ['mcp:read', 'mcp:write'],
     });
+    expect(getLightdashAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
+      'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
+    );
   });
 });
 

@@ -33,6 +33,11 @@ export class SessionStore {
   }
 
   set(sessionId: string, entry: SessionEntry): void {
+    const existing = this.sessions.get(sessionId);
+    if (existing) {
+      this.decrementSubjectCount(existing);
+    }
+
     this.sessions.set(sessionId, entry);
     const subject = entry.auth.subject;
     if (subject) {

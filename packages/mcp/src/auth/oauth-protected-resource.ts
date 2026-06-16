@@ -20,9 +20,9 @@ export function buildOAuthProtectedResourceMetadata(
 ): OAuthProtectedResourceMetadata {
   const publicUrl = requirePublicUrl(config);
 
-  // authorization_servers points at the Lightdash issuer. Current Lightdash exposes
-  // /.well-known/oauth-authorization-server. This MCP server still treats lightdash-oauth as
-  // experimental because Lightdash tokens are not resource-bound to this MCP resource.
+  // authorization_servers lists the Lightdash issuer origin (LIGHTDASH_URL), not the metadata
+  // document URL. Clients discover AS metadata at {issuer}/.well-known/oauth-authorization-server.
+  // lightdash-oauth remains experimental because tokens are not resource-bound to this MCP resource.
   return {
     resource: `${publicUrl}${config.mcpPath}`,
     authorization_servers: [config.lightdashUrl],
