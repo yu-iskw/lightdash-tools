@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
+  ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
@@ -200,5 +202,44 @@ describe('loadMcpHttpConfig', () => {
     emitMcpHttpSecurityWarnings(config);
 
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('ALLOWED_ORIGINS'));
+  });
+
+  it('reads config from an explicit env object instead of process.env', () => {
+    process.env.MCP_HTTP_PORT = '9999';
+
+    const env = {
+      LIGHTDASH_URL: 'https://app.lightdash.cloud',
+      [ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE]: 'shared-key',
+      [ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY]: 'secret',
+      LIGHTDASH_TOOLS_MCP_HTTP_PORT: '3200',
+    } as NodeJS.ProcessEnv;
+
+    const config = loadMcpHttpConfig(env);
+    expect(config.authMode).toBe('shared-key');
+    expect(config.port).toBe(3200);
+  });
+
+  it('normalizes MCP path values', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PATH] = 'mcp/';
+
+    const config = loadMcpHttpConfig();
+    expect(config.mcpPath).toBe('/mcp');
+  });
+
+  it('rejects authMode=none in production without dangerous flag', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'production';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/not allowed in production/);
+  });
+
+  it('allows authMode=none in production with dangerous flag', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'production';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED] = '1';
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('none');
   });
 });
