@@ -34,6 +34,15 @@ lint:
     - git-diff-check
     - markdownlint@0.48.0
     - prettier@3.8.1
+  definitions:
+    - name: trivy
+      commands:
+        - name: config
+          max_concurrency: 1
+  ignore:
+    - linters: [trivy]
+      paths:
+        - pnpm-lock.yaml
 actions:
   enabled:
     - trunk-upgrade-available
