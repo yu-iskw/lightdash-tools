@@ -5,7 +5,7 @@ allowBuilds:
   unrs-resolver: true
 
 minimumReleaseAgeExclude:
-  - '@types/node@25.9.3'
+  - '@types/node@26.0.1'
   - '@typescript-eslint/*'
   - '@vitest/eslint-plugin'
   - '@napi-rs/wasm-runtime'
