@@ -25,8 +25,7 @@ export interface GetGroupParams {
 }
 
 export type GroupOrGroupWithMembers =
-  | LightdashApi.Groups.Group
-  | LightdashApi.Groups.GroupWithMembers;
+  LightdashApi.Groups.Group | LightdashApi.Groups.GroupWithMembers;
 
 const ORG_GROUPS_PATH = '/org/groups';
 
