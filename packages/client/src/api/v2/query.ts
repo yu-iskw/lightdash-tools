@@ -13,7 +13,14 @@ import type {
   ExecuteAsyncMetricQueryResults,
   ExecuteAsyncDashboardChartResults,
   ExecuteAsyncSqlQueryResults,
+  GetAsyncQueryResults,
 } from '@lightdash-tools/common';
+
+/** Query params for getAsyncQueryResults. Page starts at 1; pageSize defaults to 500, max 5000 (Lightdash-side). */
+export interface GetAsyncQueryResultsParams {
+  page?: number;
+  pageSize?: number;
+}
 
 export class QueryClientV2 extends BaseApiClient {
   /** Run a metric query (v2 endpoint). */
@@ -66,5 +73,25 @@ export class QueryClientV2 extends BaseApiClient {
       `/projects/${projectUuid}/query/underlying-data`,
       body,
     );
+  }
+
+  /**
+   * Get a page of results for a previously-started async query (v2 endpoint).
+   * Returns a status-discriminated union: poll while pending/queued/executing,
+   * fail on error/expired/cancelled, paginate while ready.
+   */
+  async getAsyncQueryResults(
+    projectUuid: string,
+    queryUuid: string,
+    params?: GetAsyncQueryResultsParams,
+  ): Promise<GetAsyncQueryResults> {
+    return this.http.get<GetAsyncQueryResults>(`/projects/${projectUuid}/query/${queryUuid}`, {
+      params,
+    });
+  }
+
+  /** Cancel a running async query and discard any partial results (v2 endpoint). */
+  async cancelAsyncQuery(projectUuid: string, queryUuid: string): Promise<void> {
+    await this.http.post<void>(`/projects/${projectUuid}/query/${queryUuid}/cancel`);
   }
 }

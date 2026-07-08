@@ -96,6 +96,8 @@ export namespace LightdashApi {
         components['schemas']['ApiExecuteAsyncDashboardChartQueryResults'];
       export type ExecuteAsyncSqlQueryResults =
         components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+      export type GetAsyncQueryResults = components['schemas']['ApiGetAsyncQueryResults'];
+      export type ReadyQueryResultsPage = components['schemas']['ReadyQueryResultsPage'];
     }
   }
 
@@ -350,6 +352,8 @@ export type CompiledQueryResults = Queries.Responses.CompiledQueryResults;
 export type ExecuteAsyncMetricQueryResults = Queries.Responses.ExecuteAsyncMetricQueryResults;
 export type ExecuteAsyncDashboardChartResults = Queries.Responses.ExecuteAsyncDashboardChartResults;
 export type ExecuteAsyncSqlQueryResults = Queries.Responses.ExecuteAsyncSqlQueryResults;
+export type GetAsyncQueryResults = Queries.Responses.GetAsyncQueryResults;
+export type ReadyQueryResultsPage = Queries.Responses.ReadyQueryResultsPage;
 
 // AI agents (flat exports) — admin
 export type AiAgentSummary = AiAgents.AiAgentSummary;

@@ -53,6 +53,16 @@ describe('LightdashClient', () => {
       const client = new LightdashClient(config);
       expect(typeof client.v2.query.runSqlQuery).toBe('function');
     });
+
+    it('v2.query.getAsyncQueryResults should be a function', () => {
+      const client = new LightdashClient(config);
+      expect(typeof client.v2.query.getAsyncQueryResults).toBe('function');
+    });
+
+    it('v2.query.cancelAsyncQuery should be a function', () => {
+      const client = new LightdashClient(config);
+      expect(typeof client.v2.query.cancelAsyncQuery).toBe('function');
+    });
   });
 
   describe('HTTP clients', () => {

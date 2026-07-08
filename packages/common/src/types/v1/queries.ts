@@ -50,5 +50,9 @@ export namespace Queries {
     /** V2 async SQL query results. */
     export type ExecuteAsyncSqlQueryResults =
       components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+    /** V2 get-results response: status-discriminated union (pending/queued/executing/cancelled | error/expired | ready). */
+    export type GetAsyncQueryResults = components['schemas']['ApiGetAsyncQueryResults'];
+    /** V2 get-results "ready" page: rows + pagination metadata. */
+    export type ReadyQueryResultsPage = components['schemas']['ReadyQueryResultsPage'];
   }
 }

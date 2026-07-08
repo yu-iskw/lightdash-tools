@@ -80,4 +80,31 @@ describe('QueryClientV2', () => {
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/query/underlying-data', body);
     expect(result).toEqual(results);
   });
+
+  it('getAsyncQueryResults should call GET /projects/{projectUuid}/query/{queryUuid} with page/pageSize params', async () => {
+    const client = new QueryClientV2(mockHttp);
+    const results = { status: 'pending', queryUuid: 'q1' };
+    vi.mocked(mockHttp.get).mockResolvedValue(results);
+    const result = await client.getAsyncQueryResults('p1', 'q1', { page: 2, pageSize: 500 });
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/query/q1', {
+      params: { page: 2, pageSize: 500 },
+    });
+    expect(result).toEqual(results);
+  });
+
+  it('getAsyncQueryResults should call GET with no params when none are given', async () => {
+    const client = new QueryClientV2(mockHttp);
+    const results = { status: 'ready', queryUuid: 'q1', rows: [] };
+    vi.mocked(mockHttp.get).mockResolvedValue(results);
+    const result = await client.getAsyncQueryResults('p1', 'q1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/query/q1', { params: undefined });
+    expect(result).toEqual(results);
+  });
+
+  it('cancelAsyncQuery should call POST /projects/{projectUuid}/query/{queryUuid}/cancel', async () => {
+    const client = new QueryClientV2(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue(undefined);
+    await client.cancelAsyncQuery('p1', 'q1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/query/q1/cancel');
+  });
 });

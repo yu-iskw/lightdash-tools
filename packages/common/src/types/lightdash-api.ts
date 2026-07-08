@@ -69,6 +69,8 @@ export type {
   ExecuteAsyncMetricQueryResults,
   ExecuteAsyncDashboardChartResults,
   ExecuteAsyncSqlQueryResults,
+  GetAsyncQueryResults,
+  ReadyQueryResultsPage,
   AiAgentSummary,
   AiAgentAdminSortField,
   AiAgentsAdminThreadsResult,

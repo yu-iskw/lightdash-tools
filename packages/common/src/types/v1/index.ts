@@ -39,6 +39,8 @@ export namespace V1 {
       export type ExecuteAsyncMetricQueryResults = Q.Responses.ExecuteAsyncMetricQueryResults;
       export type ExecuteAsyncDashboardChartResults = Q.Responses.ExecuteAsyncDashboardChartResults;
       export type ExecuteAsyncSqlQueryResults = Q.Responses.ExecuteAsyncSqlQueryResults;
+      export type GetAsyncQueryResults = Q.Responses.GetAsyncQueryResults;
+      export type ReadyQueryResultsPage = Q.Responses.ReadyQueryResultsPage;
     }
   }
 
