@@ -7,6 +7,8 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@types/node@25.9.3'
   - '@typescript-eslint/*'
+  - '@typescript/native'
+  - '@typescript/typescript6'
   - '@vitest/eslint-plugin'
   - '@napi-rs/wasm-runtime'
   - baseline-browser-mapping
@@ -18,6 +20,7 @@ minimumReleaseAgeExclude:
   - prettier
   - semver
   - side-channel
+  - typescript
   - vite
 
 overrides:

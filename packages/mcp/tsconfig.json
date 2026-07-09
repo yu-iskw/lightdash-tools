@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
+    "moduleResolution": "bundler",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
@@ -9,8 +10,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"],
-    "ignoreDeprecations": "6.0"
+    "types": ["node"]
   },
   "include": ["src"]
 }
