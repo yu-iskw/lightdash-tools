@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-TypeScript 7.0 is the Go-native compiler (`tsc` from the `typescript` package). It is substantially faster than TypeScript 6, but **does not ship a stable programmatic API** until TypeScript 7.1.
+TypeScript 7.0 is the Go-native compiler. It is substantially faster than TypeScript 6, but **does not ship a stable programmatic API** until TypeScript 7.1. Under the dual-install below, native `tsc` comes from the `@typescript/native` alias (`typescript@7`); the `typescript` package name is reserved for the TypeScript 6 API.
 
 This monorepo:
 
@@ -44,6 +44,7 @@ Package tsconfigs still use `"module": "commonjs"`. Migrating to `nodenext`/ESM 
 - Two TypeScript-related packages must stay in sync in root `devDependencies`.
 - Agents must know that `require('typescript')` is 6.x while `tsc` is 7.x.
 - CJS emit remains; ESM/`nodenext` is deferred.
+- pnpm may also hoist a nested TypeScript 6 `tsc` under `.pnpm`; package `"build": "tsc"` relies on root `node_modules/.bin/tsc` winning (currently `@typescript/native`). Re-check `pnpm exec tsc --version` after lockfile changes.
 
 ## References
 
