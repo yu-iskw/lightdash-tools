@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-07-09]: TypeScript 7 dual-install: `@typescript/native` (npm alias to `typescript@7`) provides `tsc` for builds; `typescript` must stay aliased to `@typescript/typescript6` so typescript-eslint keeps a 6.x programmatic API until TS 7.1. See ADR-0041.
 - [2026-02-05]: Initial setup of the comprehensive skills reference and self-improvement guidelines.
 - [2026-02-21]: When Trunk cannot be installed (e.g., `curl https://get.trunk.io` returns 403 in restricted environments), fall back to standalone formatters already available in `package.json`: `pnpm lint:eslint` for linting, `pnpm format:eslint` for ESLint auto-fix, and `pnpm format:prettier` for Prettier formatting. These bypass Trunk entirely and are sufficient for CI/CD environments where Trunk binary download is blocked.
 - [2026-02-21]: Lightdash paginated list endpoints return a wrapper shape — `{ results: { data: { <key>: T[] }, pagination? }, status: 'ok' }` — not a bare array. Always check the `ApiXxxListResponse` type in the generated OpenAPI file before writing the client method, then extract the inner array (e.g. `response.results.data.runs`). Missed this initially; caught by PR review.

@@ -148,6 +148,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 ## Common Gotchas
 
 - Use `pnpm` only (do not use `npm` or `yarn`).
+- **TypeScript 7 dual-install (ADR-0041):** Root `devDependencies` alias `@typescript/native` → `typescript@^7` (native `tsc` for `pnpm build`) and `typescript` → `@typescript/typescript6` (JS API + `tsc6` for typescript-eslint). Do not replace the `typescript` alias with `typescript@7` until 7.1 ships a stable API and eslint peers allow it. Package tsconfigs keep `module: commonjs` with `moduleResolution: bundler`.
 - **Trunk via devDependency:** `@trunkio/launcher` provides the local `trunk` CLI (`pnpm exec trunk`). Run `pnpm trunk:install` after `pnpm install` to fetch Trunk-managed linters. No global Trunk install required.
 - Keep `pnpm-lock.yaml` committed for reproducible installs.
 - **pnpm v11 config location:** `overrides` and other pnpm settings live in `pnpm-workspace.yaml`, not `package.json#pnpm`. The repo pins `packageManager` to `pnpm@11.5.3`.
