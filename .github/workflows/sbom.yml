@@ -74,20 +74,11 @@ jobs:
         with:
           sbom: sbom.spdx.json
           severity-cutoff: high
+          only-fixed: false
           fail-build: false
           output-format: json
           output-file: grype-report.json
           cache-db: true
-
-      - name: Upload vulnerability report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
-        with:
-          name: >-
-            ${{ github.event.repository.name }}-${{ github.sha }}-grype-report
-          path: grype-report.json
-          retention-days: 14
-          if-no-files-found: error
 
       - name: Enforce High and Critical vulnerability gate
         shell: bash
@@ -116,3 +107,15 @@ jobs:
           fi
 
           echo "No High or Critical vulnerabilities found."
+
+      - name: Upload vulnerability report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ratchet:actions/upload-artifact@v7
+        with:
+          name: >-
+            ${{ github.event.repository.name }}-${{ github.sha }}-grype-report
+          path: |
+            grype-report.json
+            high-critical-vulnerabilities.tsv
+          retention-days: 14
+          if-no-files-found: error
