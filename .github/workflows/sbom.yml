@@ -74,5 +74,45 @@ jobs:
         with:
           sbom: sbom.spdx.json
           severity-cutoff: high
-          output-format: table
+          fail-build: false
+          output-format: json
+          output-file: grype-report.json
           cache-db: true
+
+      - name: Upload vulnerability report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0 # ratchet:actions/upload-artifact@v7
+        with:
+          name: >-
+            ${{ github.event.repository.name }}-${{ github.sha }}-grype-report
+          path: grype-report.json
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Enforce High and Critical vulnerability gate
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          jq -r '
+            .matches[]
+            | select(
+                .vulnerability.severity == "High"
+                or .vulnerability.severity == "Critical"
+              )
+            | [
+                .vulnerability.severity,
+                .vulnerability.id,
+                (.artifact.name + "@" + .artifact.version),
+                ((.vulnerability.fix.versions // []) | join(","))
+              ]
+            | @tsv
+          ' grype-report.json | sort -u | tee high-critical-vulnerabilities.tsv
+
+          finding_count="$(wc -l < high-critical-vulnerabilities.tsv)"
+          if ((finding_count > 0)); then
+            echo "Found ${finding_count} unique High/Critical vulnerability matches."
+            exit 1
+          fi
+
+          echo "No High or Critical vulnerabilities found."
