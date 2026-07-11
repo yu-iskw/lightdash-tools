@@ -13,6 +13,7 @@ minimumReleaseAgeExclude:
   - caniuse-lite
   - electron-to-chromium
   - eslint-plugin-unicorn
+  - form-data
   - hono
   - knip
   - prettier
@@ -21,6 +22,7 @@ minimumReleaseAgeExclude:
   - vite
 
 overrides:
+  form-data: '>=4.0.6'
   js-yaml: '>=4.1.1'
   minimatch: '>=5.1.8'
   semver: '>=7.8.4'
