@@ -172,6 +172,8 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **MCP tool names must be concise:** Some MCP clients (e.g., Claude Desktop) impose a 60-character limit on combined server and tool names. Use the `ldt__` prefix (set in `packages/mcp/src/tools/shared.ts`) and avoid excessively long tool names to ensure they are not filtered out.
 - **Knip ignores intentional type barrels:** `knip.json` uses `ignoreIssues` for `packages/common/src/types/**` because namespace re-exports are public API surface, not dead code. Do not remove those ignores when knip reports unused namespace members in type files.
 - **`pnpm audit` can be registry-blocked in this environment:** The npm audit endpoint may return HTTP 403 (`ERR_PNPM_AUDIT_BAD_RESPONSE`), so a failing audit command can be an infrastructure limitation rather than package vulnerability output. Run upgrades/checks (`pnpm outdated -r`, targeted `pnpm up -r ...`) and report audit as a warning when this happens.
+- **MCP package tests are CommonJS under `tsc`:** `packages/mcp/tsconfig.json` uses `"module": "commonjs"` and compiles `*.test.ts` into `dist/`. Do not use `import.meta` in MCP tests — it fails `pnpm --filter @lightdash-tools/mcp build`. Resolve the repo root with `process.cwd()` (Vitest runs from the monorepo root).
+- **Stdio MCP smoke env:** `EnvContextProvider` calls `getClient()` at construct time, so `LIGHTDASH_URL` and `LIGHTDASH_API_KEY` must be set before the process starts. Dummy values are enough for initialize/tools/list; the Lightdash API is only hit on tool execution.
 
 ## Learned User Preferences
 

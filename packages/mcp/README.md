@@ -21,6 +21,12 @@ npm install -g @lightdash-tools/mcp
 - **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.
 - **Streamable HTTP** — for remote use. Session-based; supports optional endpoint auth.
 
+### SDK / protocol compatibility
+
+- Uses MCP TypeScript SDK v2 (`@modelcontextprotocol/server`, `@modelcontextprotocol/node`).
+- Speaks the established 2025-era protocol by default (not `2026-07-28` unless a future flag).
+- Client qualification matrix: [docs/compatibility/mcp-clients.md](../../docs/compatibility/mcp-clients.md).
+
 ### Production limitations (`lightdash-oauth`)
 
 `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth` is **experimental identity-only OAuth**, not full [MCP authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization) resource-server OAuth.
