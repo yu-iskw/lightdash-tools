@@ -6,6 +6,8 @@ Date: 2026-02-11
 
 Accepted
 
+Related: [41. Compatibility-first MCP TypeScript SDK v2 migration](0041-compatibility-first-mcp-typescript-sdk-v2-migration.md) — transport class package paths moved to SDK v2 (`NodeStreamableHTTPServerTransport` from `@modelcontextprotocol/node`; stdio from `@modelcontextprotocol/server`). Accepted HTTP auth/session architecture is unchanged.
+
 ## Context
 
 Phase 2 of the MCP server adds Streamable HTTP as a second transport and optional endpoint auth so that remote deployments can protect the MCP endpoint. ADR-0013 states the high-level decision (Streamable HTTP, optional Bearer/API key middleware, configurable auth). This ADR records the implementation choices for Phase 2.

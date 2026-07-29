@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 
 import { initAuditLog } from '../audit.js';
 import {
@@ -42,7 +42,7 @@ import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-respons
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 const ERROR_SESSION_NOT_FOUND = 'Session not found';
 
@@ -104,11 +104,11 @@ function createSessionTransport(
     subject?: string;
     organizationUuid?: string;
   },
-): StreamableHTTPServerTransport {
+): NodeStreamableHTTPServerTransport {
   const holder: { server: McpServer } = {
     server: createLightdashMcpServer(contextProvider),
   };
-  const transport = new StreamableHTTPServerTransport({
+  const transport = new NodeStreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
     onsessioninitialized: (sessionId) => {
       sessionStore.set(sessionId, {

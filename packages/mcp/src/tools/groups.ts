@@ -17,7 +17,7 @@ import {
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 type ListGroupsParams = {
   page?: number;

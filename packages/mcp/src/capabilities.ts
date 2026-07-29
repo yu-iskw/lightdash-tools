@@ -14,7 +14,7 @@ import { registerTools } from './tools/index.js';
 
 import type { McpProfile } from './config.js';
 import type { McpContextProvider } from './request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 export type RegisterCapabilitiesOptions = {
   /** Override active profiles (defaults to LIGHTDASH_TOOLS_MCP_PROFILES). */

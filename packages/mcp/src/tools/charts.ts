@@ -16,7 +16,7 @@ import {
 
 import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerChartTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(

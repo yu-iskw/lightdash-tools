@@ -58,7 +58,10 @@ const importXRules = {
   'import-x/no-unresolved': [
     'error',
     {
-      ignore: ['^@modelcontextprotocol/sdk/', '\\.js$'],
+      ignore: [
+        '^@modelcontextprotocol/(server|node|client|core)(/|$)',
+        '\\.js$',
+      ],
     },
   ],
 };

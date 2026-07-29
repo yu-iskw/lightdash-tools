@@ -6,6 +6,8 @@ Date: 2026-06-15
 
 Accepted (v1 experimental subset)
 
+Related: [41. Compatibility-first MCP TypeScript SDK v2 migration](0041-compatibility-first-mcp-typescript-sdk-v2-migration.md) — transport class package paths moved to SDK v2 (`NodeStreamableHTTPServerTransport` from `@modelcontextprotocol/node`). Accepted OAuth/HTTP auth and session architecture is unchanged.
+
 ## Context
 
 `@lightdash-tools/mcp` supports STDIO (env PAT) and Streamable HTTP with optional shared-secret endpoint auth (ADR-0017). ADR-0013 deferred multi-tenant, per-user credentials. Hosted remote MCP deployments need each user to authenticate with Lightdash OAuth and call tools with that user's permissions.

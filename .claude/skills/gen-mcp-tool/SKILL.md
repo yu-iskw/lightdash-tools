@@ -57,7 +57,7 @@ Create a new `packages/mcp/src/tools/<resource>.ts` and register it in
  * MCP tools: <resource> (<list of operations>).
  */
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import type { LightdashClient } from '@lightdash-tools/client';
 import { z } from 'zod';
 import { wrapTool, registerToolSafe, READ_ONLY_DEFAULT } from './shared.js';

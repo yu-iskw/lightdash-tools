@@ -5,7 +5,7 @@
 import { registerAiAgentResources } from './ai-agents.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 export { registerAiAgentResources, EVALUATION_RUN_RESULTS_URI_TEMPLATE } from './ai-agents.js';
 

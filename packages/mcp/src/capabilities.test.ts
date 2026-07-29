@@ -1,5 +1,5 @@
 import { SafetyMode } from '@lightdash-tools/common';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { registerCapabilities } from './capabilities.js';
