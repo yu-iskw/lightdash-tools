@@ -20,6 +20,12 @@ lint:
   disabled:
     - checkov
     - trufflehog
+  ignore:
+    # trivy `config` on the lockfile crashes in CI (broken/incomplete Rego policy cache)
+    # and is not a meaningful IaC target; osv-scanner covers dependency advisories.
+    - linters: [trivy]
+      paths:
+        - pnpm-lock.yaml
   enabled:
     - eslint@10.0.2
     - shellcheck@0.8.0
