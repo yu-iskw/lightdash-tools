@@ -20,11 +20,25 @@ minimumReleaseAgeExclude:
   - semver
   - side-channel
   - vite
+  - axios
+  - brace-expansion
+  - postcss
+  - fast-uri
+  - tar
+  - js-yaml
+  - '@modelcontextprotocol/server'
+  - '@modelcontextprotocol/node'
+  - '@modelcontextprotocol/client'
+  - '@modelcontextprotocol/core'
 
 overrides:
   form-data: '>=4.0.6'
-  js-yaml: '>=4.1.1'
+  js-yaml: '>=4.3.0'
   minimatch: '>=5.1.8'
   semver: '>=7.8.4'
-  tar: '>=7.5.11'
+  tar: '>=7.5.19'
   vite: 8.0.16
+  brace-expansion: '>=5.0.8'
+  postcss: '>=8.5.18'
+  fast-uri: '>=3.1.4'
+  axios: '>=1.18.0'

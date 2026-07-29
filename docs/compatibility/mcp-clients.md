@@ -4,10 +4,10 @@ Real-client qualification is **mandatory before release**. Automated Vitest suit
 
 Fill in **Client version**, **stdio**, **HTTP**, and **OAuth** after manual smoke checks. Use `Pass` / `Fail` / `Pending` / `N/A`.
 
-| Date       | Server version        | SDK   | Client      | Client version | stdio   | HTTP    | OAuth   | Notes                          |
-| ---------- | --------------------- | ----- | ----------- | -------------- | ------: | ------: | ------: | ------------------------------ |
-| 2026-07-29 | 0.6.0 (pre-release)   | 2.0.0 | Claude Code | TBD            | Pending | Pending | Pending | Legacy-era SDK v2 migration    |
-| 2026-07-29 | 0.6.0 (pre-release)   | 2.0.0 | Cursor      | TBD            | Pending | Pending | Pending | Legacy-era SDK v2 migration    |
+| Date       | Server version      | SDK   | Client      | Client version |   stdio |    HTTP |   OAuth | Notes                       |
+| ---------- | ------------------- | ----- | ----------- | -------------- | ------: | ------: | ------: | --------------------------- |
+| 2026-07-29 | 0.6.0 (pre-release) | 2.0.0 | Claude Code | TBD            | Pending | Pending | Pending | Legacy-era SDK v2 migration |
+| 2026-07-29 | 0.6.0 (pre-release) | 2.0.0 | Cursor      | TBD            | Pending | Pending | Pending | Legacy-era SDK v2 migration |
 
 ## How to run smoke checks
 

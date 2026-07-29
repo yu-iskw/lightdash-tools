@@ -11,11 +11,11 @@
 
 Migrate `@lightdash-tools/mcp` off the monolithic `@modelcontextprotocol/sdk` onto exact pins:
 
-| Package                            | Version |
-| ---------------------------------- | ------- |
-| `@modelcontextprotocol/server`     | `2.0.0` |
-| `@modelcontextprotocol/node`       | `2.0.0` |
-| `@modelcontextprotocol/client`     | `2.0.0` (devDependency / tests) |
+| Package                        | Version                         |
+| ------------------------------ | ------------------------------- |
+| `@modelcontextprotocol/server` | `2.0.0`                         |
+| `@modelcontextprotocol/node`   | `2.0.0`                         |
+| `@modelcontextprotocol/client` | `2.0.0` (devDependency / tests) |
 
 Preserve the **legacy-era** protocol path used by current hosts:
 
@@ -25,14 +25,14 @@ Preserve the **legacy-era** protocol path used by current hosts:
 
 ## Import mapping (v1 → v2)
 
-| v1 (`@modelcontextprotocol/sdk`)                         | v2                                                                    |
-| -------------------------------------------------------- | --------------------------------------------------------------------- |
-| `@modelcontextprotocol/sdk/server/mcp.js` (`McpServer`, `ResourceTemplate`) | `@modelcontextprotocol/server`                                        |
-| `@modelcontextprotocol/sdk/server/completable.js`        | `@modelcontextprotocol/server` (`completable`)                        |
-| `@modelcontextprotocol/sdk/server/stdio.js`              | `@modelcontextprotocol/server/stdio`                                  |
+| v1 (`@modelcontextprotocol/sdk`)                                                       | v2                                                                 |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `@modelcontextprotocol/sdk/server/mcp.js` (`McpServer`, `ResourceTemplate`)            | `@modelcontextprotocol/server`                                     |
+| `@modelcontextprotocol/sdk/server/completable.js`                                      | `@modelcontextprotocol/server` (`completable`)                     |
+| `@modelcontextprotocol/sdk/server/stdio.js`                                            | `@modelcontextprotocol/server/stdio`                               |
 | `@modelcontextprotocol/sdk/server/streamableHttp.js` (`StreamableHTTPServerTransport`) | `@modelcontextprotocol/node` (`NodeStreamableHTTPServerTransport`) |
-| `@modelcontextprotocol/sdk/client/index.js`              | `@modelcontextprotocol/client`                                        |
-| `@modelcontextprotocol/sdk/inMemory.js`                  | `@modelcontextprotocol/server` (`InMemoryTransport`)                  |
+| `@modelcontextprotocol/sdk/client/index.js`                                            | `@modelcontextprotocol/client`                                     |
+| `@modelcontextprotocol/sdk/inMemory.js`                                                | `@modelcontextprotocol/server` (`InMemoryTransport`)               |
 
 ## Non-goals (Phase 6 — deferred)
 
@@ -45,10 +45,10 @@ Preserve the **legacy-era** protocol path used by current hosts:
 
 Before release, qualify against:
 
-| Client      | Transports to verify      |
-| ----------- | ------------------------- |
-| Claude Code | stdio + Streamable HTTP   |
-| Cursor      | stdio + Streamable HTTP   |
+| Client      | Transports to verify    |
+| ----------- | ----------------------- |
+| Claude Code | stdio + Streamable HTTP |
+| Cursor      | stdio + Streamable HTTP |
 
 Track results in [docs/compatibility/mcp-clients.md](../compatibility/mcp-clients.md). Automated tests cover protocol/transport wiring; they do **not** replace real-client OAuth UX checks.
 
