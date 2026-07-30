@@ -42,8 +42,7 @@ export function registerExploresTools(
           limit?: number;
         }) => {
           const explores = await c.v1.explores.listExplores(projectUuid);
-          const list = Array.isArray(explores) ? explores : [];
-          return jsonToolResult(summarizeExplores(list, { search, limit }));
+          return jsonToolResult(summarizeExplores(explores, { search, limit }));
         },
     ),
   );
@@ -87,8 +86,7 @@ export function registerExploresTools(
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
-          const list = Array.isArray(result) ? result : [];
-          return jsonToolResult(withDimensionFieldIds(list));
+          return jsonToolResult(withDimensionFieldIds(result));
         },
     ),
   );

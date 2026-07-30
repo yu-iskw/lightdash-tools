@@ -22,12 +22,11 @@ export function toExploreSummary(explore: unknown): ExploreSummary | undefined {
   return summary;
 }
 
-function matchesSearch(summary: ExploreSummary, search: string): boolean {
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
-  if (summary.name.toLowerCase().includes(q)) return true;
-  if (summary.label?.toLowerCase().includes(q)) return true;
-  return (summary.tags ?? []).some((tag) => tag.toLowerCase().includes(q));
+function matchesSearch(summary: ExploreSummary, query: string): boolean {
+  if (!query) return true;
+  if (summary.name.toLowerCase().includes(query)) return true;
+  if (summary.label?.toLowerCase().includes(query)) return true;
+  return (summary.tags ?? []).some((tag) => tag.toLowerCase().includes(query));
 }
 
 /**
@@ -39,17 +38,19 @@ export function summarizeExplores(
   options?: { search?: string; limit?: number },
 ): ExploreSummary[] {
   const search = options?.search;
-  const defaultLimit = search !== undefined && search.trim().length > 0 ? 50 : 100;
-  const limit = options?.limit ?? defaultLimit;
+  const query = search?.trim().toLowerCase() ?? '';
+  const defaultLimit = query.length > 0 ? 50 : 100;
+  const limit = Math.max(0, options?.limit ?? defaultLimit);
 
   const summaries: ExploreSummary[] = [];
   for (const explore of explores) {
+    if (summaries.length >= limit) break;
     const summary = toExploreSummary(explore);
     if (!summary) continue;
-    if (search !== undefined && !matchesSearch(summary, search)) continue;
+    if (search !== undefined && !matchesSearch(summary, query)) continue;
     summaries.push(summary);
   }
-  return summaries.slice(0, Math.max(0, limit));
+  return summaries;
 }
 
 /** Attach compile_query fieldId `{table}_{name}` when table and name are present. */

@@ -9,13 +9,12 @@ import {
   SEMANTIC_LAYER_PLAYBOOK_MIME,
   SEMANTIC_LAYER_PLAYBOOK_URI,
 } from '../resources/playbook.js';
+import { PROJECT_UUID_DESC } from '../tools/schema-fields.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const HARD_BANS =
   'Do not run metric/SQL/chart queries, use SQL runner, trigger validation jobs, mutate content, or call AI/identity tools. Those are not available on this server.';
-
-const PROJECT_UUID_DESC = 'Project UUID';
 
 function playbookEmbeddedResource() {
   return {
