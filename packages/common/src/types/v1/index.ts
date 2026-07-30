@@ -48,6 +48,9 @@ export namespace V1 {
 
   export namespace Dashboards {
     export type DashboardBasicDetailsWithTileTypes = D.DashboardBasicDetailsWithTileTypes;
+    export type DashboardAsCodeListResults = D.DashboardAsCodeListResults;
+    export type DashboardAsCodeUpsertResults = D.DashboardAsCodeUpsertResults;
+    export type UpsertDashboardAsCodeBody = D.UpsertDashboardAsCodeBody;
   }
 
   export namespace Spaces {
