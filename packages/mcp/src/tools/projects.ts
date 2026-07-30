@@ -2,11 +2,13 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
+import { getAllowedProjectUuids } from '../config/runtime.js';
 import { getPinnedProjectUuid } from '../project-pin.js';
 
 import { projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
+  blockedToolContent,
   jsonToolResult,
   registerToolSafe,
   wrapToolAnnotated,
@@ -29,6 +31,12 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
     wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
       const pinned = getPinnedProjectUuid();
       if (pinned) {
+        const allowed = getAllowedProjectUuids();
+        if (allowed.length > 0 && !allowed.includes(pinned)) {
+          return blockedToolContent(
+            `Error: Project(s) [${pinned}] are not in the list of allowed projects. Allowed: [${allowed.join(', ')}].`,
+          );
+        }
         const project = await c.v1.projects.getProject(pinned);
         return jsonToolResult([project]);
       }

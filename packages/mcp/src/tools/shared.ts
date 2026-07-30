@@ -158,7 +158,8 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
   );
 }
 
-function validationBlockedContent(message: string): BlockedContent {
+/** Guardrail-blocked tool result; audit wrapper strips `_lightdashBlocked`. */
+export function blockedToolContent(message: string): BlockedContent {
   return {
     content: [{ type: 'text', text: message }],
     isError: true,
@@ -171,7 +172,7 @@ function runValidation(validate: () => void, label: string): BlockedContent | un
     validate();
     return undefined;
   } catch (err) {
-    return validationBlockedContent(
+    return blockedToolContent(
       `Error: Invalid ${label}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
@@ -226,16 +227,10 @@ export function registerToolSafe(
 
   if (!isToolAllowed) {
     finalDescription = `[DISABLED in ${mode} mode] ${options.description}`;
-    finalHandler = async (): Promise<BlockedContent> => ({
-      content: [
-        {
-          type: 'text',
-          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
-        },
-      ],
-      isError: true,
-      _lightdashBlocked: true,
-    });
+    finalHandler = async (): Promise<BlockedContent> =>
+      blockedToolContent(
+        `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
+      );
   } else if (isDryRunMode() && !isReadOnly) {
     // ── Dry-run wrapper ─────────────────────────────────────────────────────
     // Write operations are simulated; no API calls are made.
@@ -271,16 +266,9 @@ export function registerToolSafe(
       const projectUuids = extractProjectUuids(args);
       const mismatched = projectUuids.filter((uuid) => uuid !== pinned);
       if (mismatched.length > 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
+        return blockedToolContent(
+          `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
+        );
       }
     }
     return pinInner(args, extra);
@@ -299,16 +287,9 @@ export function registerToolSafe(
         (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
       );
       if (deniedUuids.length > 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
+        return blockedToolContent(
+          `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
+        );
       }
       return innerHandler(args, extra);
     };
@@ -372,16 +353,9 @@ export function wrapTool<T>(
         async () => {
           if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
             const required = requiredScopeForTool(readOnly);
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
-                },
-              ],
-              isError: true,
-              _lightdashBlocked: true,
-            } as BlockedContent;
+            return blockedToolContent(
+              `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
+            );
           }
 
           const handler = fn(context.lightdashClient);

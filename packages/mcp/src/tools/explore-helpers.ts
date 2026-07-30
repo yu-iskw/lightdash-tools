@@ -91,12 +91,9 @@ export function flattenExploreDimensions(explore: ApiExploreResults): {
   baseTable: string;
   dimensions: DimensionLike[];
 } {
-  const dimensions: DimensionLike[] = [];
-  for (const table of Object.values(explore.tables)) {
-    for (const dim of Object.values(table.dimensions)) {
-      dimensions.push(dim);
-    }
-  }
+  const dimensions = Object.values(explore.tables).flatMap((table) =>
+    Object.values(table.dimensions),
+  );
   return { baseTable: explore.baseTable, dimensions };
 }
 
