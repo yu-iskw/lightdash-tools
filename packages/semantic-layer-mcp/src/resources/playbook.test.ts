@@ -48,9 +48,13 @@ describe('registerPlaybookResource', () => {
     expect(result.contents[0].text).toMatch(/SQL runner/i);
   });
 
-  it('getPlaybookMarkdown loads the same content', () => {
+  it('getPlaybookMarkdown lists only registered MVP tools', () => {
     const md = getPlaybookMarkdown();
     expect(md).toContain('Allowed tools');
     expect(md).toContain('compile_query');
+    expect(md).toContain('get_metric');
+    expect(md).toContain('list_explores');
+    expect(md).not.toContain('search_field_values');
+    expect(md).not.toMatch(/catalog helpers/i);
   });
 });

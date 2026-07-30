@@ -7,9 +7,17 @@
  * (official Lightdash MCP pin behavior).
  */
 
+import { registerExploresTools } from './explores.js';
+import { registerMetricsTools } from './metrics.js';
+import { registerProjectTools } from './projects.js';
+import { registerQueryTools } from './query.js';
+
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export function registerTools(_server: McpServer, _contextProvider: McpContextProvider): void {
-  // Fixed tool handlers land here.
+export function registerTools(server: McpServer, contextProvider: McpContextProvider): void {
+  registerProjectTools(server, contextProvider);
+  registerExploresTools(server, contextProvider);
+  registerMetricsTools(server, contextProvider);
+  registerQueryTools(server, contextProvider);
 }

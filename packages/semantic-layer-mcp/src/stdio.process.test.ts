@@ -88,7 +88,7 @@ describe('stdio process smoke (SDK v2, host-compatible)', () => {
     child = undefined;
   });
 
-  it('initialize then prompts/list and resources/list over stdio', async () => {
+  it('initialize then tools/list, prompts/list, and resources/list over stdio', async () => {
     child = spawn(process.execPath, [binPath], {
       cwd: repoRoot,
       env: {
@@ -119,10 +119,11 @@ describe('stdio process smoke (SDK v2, host-compatible)', () => {
     const initResult = initResponse.result as {
       serverInfo?: { name?: string };
       protocolVersion?: string;
-      capabilities?: { prompts?: unknown; resources?: unknown };
+      capabilities?: { tools?: unknown; prompts?: unknown; resources?: unknown };
     };
     expect(initResult.serverInfo?.name).toBe('lightdash-semantic-layer-mcp');
     expect(initResult.protocolVersion).toBeTruthy();
+    expect(initResult.capabilities?.tools).toBeDefined();
     expect(initResult.capabilities?.prompts).toBeDefined();
     expect(initResult.capabilities?.resources).toBeDefined();
 
@@ -134,11 +135,35 @@ describe('stdio process smoke (SDK v2, host-compatible)', () => {
     writeLine(child, {
       jsonrpc: '2.0',
       id: 2,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const toolsResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS);
+    expect(toolsResponse.error).toBeUndefined();
+    const toolsResult = toolsResponse.result as { tools?: Array<{ name: string }> };
+    const toolNames = (toolsResult.tools ?? []).map((t) => t.name);
+    expect(toolNames).toEqual(
+      expect.arrayContaining([
+        'list_projects',
+        'list_explores',
+        'list_metrics',
+        'compile_query',
+        'get_metric',
+      ]),
+    );
+    expect(toolNames).toHaveLength(9);
+    expect(toolNames).not.toContain('run_query');
+    expect(toolNames).not.toContain('validate_project');
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 3,
       method: 'prompts/list',
       params: {},
     });
 
-    const promptsResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS);
+    const promptsResponse = await readJsonRpcResponse(child, 3, INIT_TIMEOUT_MS);
     expect(promptsResponse.error).toBeUndefined();
     const promptsResult = promptsResponse.result as { prompts?: Array<{ name: string }> };
     expect(Array.isArray(promptsResult.prompts)).toBe(true);
@@ -154,12 +179,12 @@ describe('stdio process smoke (SDK v2, host-compatible)', () => {
 
     writeLine(child, {
       jsonrpc: '2.0',
-      id: 3,
+      id: 4,
       method: 'resources/list',
       params: {},
     });
 
-    const resourcesResponse = await readJsonRpcResponse(child, 3, INIT_TIMEOUT_MS);
+    const resourcesResponse = await readJsonRpcResponse(child, 4, INIT_TIMEOUT_MS);
     expect(resourcesResponse.error).toBeUndefined();
     const resourcesResult = resourcesResponse.result as {
       resources?: Array<{ uri: string; name?: string }>;

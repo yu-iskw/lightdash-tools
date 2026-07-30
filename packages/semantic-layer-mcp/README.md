@@ -4,6 +4,17 @@ MCP server for **semantic-layer discovery and query composition** (compile only)
 
 Tool surface is **package-is-allowlist**: only handlers registered in code appear in `tools/list`. There is no safety-mode or dry-run filter.
 
+### Registered tools (MVP)
+
+| Area     | Tools                                                                  |
+| -------- | ---------------------------------------------------------------------- |
+| Projects | `list_projects`, `get_project`                                         |
+| Explores | `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage` |
+| Metrics  | `list_metrics`, `get_metric`                                           |
+| Query    | `compile_query` (compile only — never runs the warehouse query)        |
+
+Tool names are **unprefixed** (not `ldt__`). Follow the playbook resource `lightdash://playbooks/semantic-layer`.
+
 ## MCP SDK (v2, compatibility-first)
 
 Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2-migration.md):

@@ -64,7 +64,7 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
         [
           'Discover the Lightdash semantic layer for this project.',
           `Project: ${projectUuid}.${topic}`,
-          'Use list/search tools (list_metrics, list_explores, catalog helpers) before get_explore.',
+          'Use list/search tools (list_metrics, list_explores) before get_explore.',
           HARD_BANS,
           'Summarize relevant explores, metrics, and dimensions. Do not compile or run a query unless asked.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
@@ -92,7 +92,7 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
         [
           'Compose a Lightdash metric query and compile it. Do not run the query.',
           `Project: ${projectUuid}.${topic}${explore}`,
-          'Discover fields, optionally use search_field_values for filters, then call compile_query.',
+          'Discover fields with list/get explore and metric tools, then call compile_query.',
           HARD_BANS,
           'Return the compiled result (or compile errors). Stop after compile_query.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,

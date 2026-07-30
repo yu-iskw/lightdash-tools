@@ -57,11 +57,13 @@ describe('registerSemanticLayerPrompts', () => {
     expect(textMsg.content.text).toMatch(/Do not run/i);
     expect(textMsg.content.text).toMatch(/SQL/i);
     expect(textMsg.content.text).toContain('compile_query');
+    expect(textMsg.content.text).not.toContain('search_field_values');
 
     const resourceMsg = result.messages[1];
     expect(resourceMsg.content.type).toBe('resource');
     expect(resourceMsg.content.resource?.uri).toBe(SEMANTIC_LAYER_PLAYBOOK_URI);
     expect(resourceMsg.content.resource?.text).toContain('compile_query');
+    expect(resourceMsg.content.resource?.text).not.toContain('search_field_values');
   });
 
   it('explore and compile_debug prompts include project and playbook URI', async () => {
