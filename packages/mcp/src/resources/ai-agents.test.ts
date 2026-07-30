@@ -1,5 +1,5 @@
 import { SafetyMode } from '@lightdash-tools/common';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { EVALUATION_RUN_RESULTS_URI_TEMPLATE, registerAiAgentResources } from './ai-agents.js';

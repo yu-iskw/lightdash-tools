@@ -1,6 +1,6 @@
 ---
 name: develop-mcp-server-ts
-description: Standardized workflow for building MCP (Model Context Protocol) servers in TypeScript. Use when building or extending an MCP server with the official TypeScript SDK (tools, resources, prompts), adding tool annotations (title, readOnlyHint, etc.), choosing Stdio vs Streamable HTTP transport, or testing with MCP Inspector or Claude Desktop.
+description: Standardized workflow for building MCP servers in TypeScript. Use when building or extending an MCP server with the official TypeScript SDK (tools, resources, prompts), adding tool annotations (title, readOnlyHint, etc.), choosing Stdio vs Streamable HTTP transport, or testing with MCP Inspector or Claude Desktop.
 ---
 
 # Develop MCP Server (TypeScript)
@@ -16,7 +16,7 @@ Provide a repeatable, documented workflow for building MCP servers with the offi
   - [ ] Decide which primitives the server will expose (e.g. tools only, or tools + resources).
   - [ ] Choose transport: **Stdio** (local, process-based) or **Streamable HTTP** (remote, web-based).
 - [ ] **Step 2: Project initialization**
-  - [ ] Initialize a Node/pnpm project; install `@modelcontextprotocol/sdk` and `zod`.
+  - [ ] Initialize a Node/pnpm project; install `@modelcontextprotocol/server@2.0.0` and `zod` (Zod 4 / Standard Schema). For Node HTTP transport, also install `@modelcontextprotocol/node@2.0.0`. Optionally install `@modelcontextprotocol/client` for tests.
   - [ ] Configure TypeScript for ESM (e.g. `"module": "Node16"`, `"target": "ES2022"`). Optionally use [assets/boilerplate/package.json](assets/boilerplate/package.json) and [assets/boilerplate/tsconfig.json](assets/boilerplate/tsconfig.json).
 - [ ] **Step 3: Implementation patterns**
   - [ ] Use [references/typescript-sdk-cheatsheet.md](references/typescript-sdk-cheatsheet.md) for McpServer, transport, registerTool (with Zod inputSchema), and registerResource.
@@ -43,7 +43,10 @@ Decide which primitives your server needs and whether it will run locally (Stdio
 ### 2. Project initialization
 
 - Create a package (e.g. `pnpm init` or `npm init -y`).
-- Install: `pnpm add @modelcontextprotocol/sdk zod` (or `npm install @modelcontextprotocol/sdk zod`). The SDK requires Zod for tool inputSchema.
+- Install the v2 split packages (not the legacy monolith `@modelcontextprotocol/sdk`):
+  - Server core: `pnpm add @modelcontextprotocol/server@2.0.0 zod` (Zod 4 / Standard Schema required for tool `inputSchema`).
+  - Node HTTP transport (when needed): `pnpm add @modelcontextprotocol/node@2.0.0`.
+  - Optional for tests: `pnpm add -D @modelcontextprotocol/client`.
 - Set `"type": "module"` in package.json if using ESM.
 - Use a tsconfig with `"module": "Node16"`, `"moduleResolution": "Node16"`, `"target": "ES2022"`, and `"outDir": "./build"` (or similar).
 
@@ -51,8 +54,9 @@ Decide which primitives your server needs and whether it will run locally (Stdio
 
 Use the [TypeScript SDK cheatsheet](references/typescript-sdk-cheatsheet.md) for:
 
-- Creating an `McpServer` and connecting a transport (`StdioServerTransport` or `StreamableHTTPServerTransport`).
-- Registering tools with `server.registerTool(name, { description, inputSchema }, handler)`. Use Zod for `inputSchema` (e.g. `{ id: z.string() }`). Return `{ content: [{ type: "text", text: "..." }] }`. Add **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) when they help clients present or approve tools. For **reversible** destructive operations (e.g. delete group), set **destructiveHint: true**. Do not expose irrecoverable deletes on MCP (ADR-0037).
+- Creating an `McpServer` and connecting a transport. For **Stdio** (recommended local path in this repo), use the legacy-era pattern `server.connect(new StdioServerTransport())`. `serveStdio` is a modern/dual-era opt-in helper — not the default here yet.
+- For **Streamable HTTP** on Node, use `NodeStreamableHTTPServerTransport` from `@modelcontextprotocol/node`.
+- Registering tools with `server.registerTool(name, { description, inputSchema }, handler)`. Use Zod (Zod 4 / Standard Schema) for `inputSchema` (e.g. `{ id: z.string() }`). Return `{ content: [{ type: "text", text: "..." }] }`. Add **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) when they help clients present or approve tools. For **reversible** destructive operations (e.g. delete group), set **destructiveHint: true**. Do not expose irrecoverable deletes on MCP (ADR-0037).
 - Registering resources if needed (URI templates and read handler).
 - **Logging**: For Stdio transport, never write to stdout; use `console.error` or a logger that writes to stderr.
 
@@ -65,7 +69,7 @@ Use the [TypeScript SDK cheatsheet](references/typescript-sdk-cheatsheet.md) for
 
 - The server lists and executes tools (and optionally resources/prompts) correctly.
 - For Stdio: No use of `console.log`; logs go to stderr.
-- Tool inputSchema uses Zod and matches the SDK expectations.
+- Tool inputSchema uses Zod (Zod 4 / Standard Schema) and matches the SDK expectations.
 - Tool names follow spec 2025-11-25 (1–128 chars, allowed characters); errors use tool execution result (`isError: true`) or protocol errors as appropriate.
 - Tool annotations (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) are used where they help clients present or approve tools.
 - Official links (TypeScript SDK, MCP spec 2025-11-25) are used for version and API details.

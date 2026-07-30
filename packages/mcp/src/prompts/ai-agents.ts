@@ -2,7 +2,7 @@
  * MCP prompts for AI agent lifecycle and evaluation workflows (RFC Phase 2).
  */
 
-import { completable } from '@modelcontextprotocol/sdk/server/completable.js';
+import { completable, type McpServer } from '@modelcontextprotocol/server';
 import { z } from 'zod';
 
 import {
@@ -14,7 +14,6 @@ import { MCP_PROFILE_CORE_LIFECYCLE, MCP_PROFILE_EVALUATIONS, hasMcpProfile } fr
 
 import type { McpProfile } from '../config.js';
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 function scopedArgsSchema(
   contextProvider: McpContextProvider,
@@ -54,7 +53,7 @@ function scopedArgsSchema(
       .optional()
       .describe('Release or deployment version to validate');
   }
-  return shape;
+  return z.object(shape);
 }
 
 export function registerAiAgentPrompts(

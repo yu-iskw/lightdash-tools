@@ -3,13 +3,12 @@
  */
 
 import { areAllProjectsAllowed } from '@lightdash-tools/common';
-import { ResourceTemplate } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/server';
 
 import { createAiAgentCompletionCallbacks } from '../completion/index.js';
 import { getAllowedProjectUuids } from '../config.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 export const EVALUATION_RUN_RESULTS_URI_TEMPLATE =
   'lightdash://projects/{projectUuid}/ai-agents/{agentUuid}/evaluations/{evalUuid}/runs/{runUuid}/results';

@@ -18,7 +18,7 @@ import { registerTagsTools } from './tags.js';
 import { registerUserTools } from './users.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerTools(server: McpServer, contextProvider: McpContextProvider): void {
   registerProjectTools(server, contextProvider);

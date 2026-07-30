@@ -2,12 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SessionStore, type SessionEntry } from './session-store.js';
 
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import type { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 function createMockEntry(lastAccessAt: number): SessionEntry {
   return {
-    transport: {} as StreamableHTTPServerTransport,
+    transport: {} as NodeStreamableHTTPServerTransport,
     server: {} as McpServer,
     lastAccessAt,
     auth: { mode: 'lightdash-oauth', tokenHash: 'hash-a' },

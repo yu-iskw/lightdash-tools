@@ -2,8 +2,8 @@
  * Minimal MCP server over Stdio (local). Use as a starting point.
  * Logging: use console.error only; never console.log (stdout is used for JSON-RPC).
  */
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { McpServer } from '@modelcontextprotocol/server';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 
 const server = new McpServer({ name: 'example', version: '1.0.0' });

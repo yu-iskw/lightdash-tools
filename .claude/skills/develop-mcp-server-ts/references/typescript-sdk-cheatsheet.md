@@ -1,12 +1,14 @@
 # TypeScript SDK cheatsheet
 
-Code patterns for building MCP servers with `@modelcontextprotocol/sdk`. The SDK requires **Zod** for tool inputSchema. Aligned with **MCP specification 2025-11-25**; see [spec-2025-11-25-index.md](spec-2025-11-25-index.md) and [server/tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools), [server/utilities](https://modelcontextprotocol.io/specification/2025-11-25/server/utilities).
+Code patterns for building MCP servers with the **v2** packages `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. The SDK requires **Zod 4 / Standard Schema** for tool inputSchema. Aligned with **MCP specification 2025-11-25**; see [spec-2025-11-25-index.md](spec-2025-11-25-index.md) and [server/tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools), [server/utilities](https://modelcontextprotocol.io/specification/2025-11-25/server/utilities).
+
+**SDK v2 ≠ automatic 2026 protocol:** Installing `@modelcontextprotocol/server@2.0.0` does not by itself negotiate the 2026-era protocol. Hand-constructed `McpServer` + `server.connect(transport)` stays on the 2025-era path used by this repo.
 
 ## Imports and server instance
 
 ```typescript
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { McpServer, ResourceTemplate, completable } from '@modelcontextprotocol/server';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 
 const server = new McpServer({
@@ -16,6 +18,8 @@ const server = new McpServer({
 ```
 
 ## Stdio transport (local)
+
+Recommended local path for this repo: construct `StdioServerTransport` and call `server.connect()` (legacy-era style). `serveStdio` from `@modelcontextprotocol/server/stdio` is a modern/dual-era opt-in — not the default here yet.
 
 ```typescript
 const transport = new StdioServerTransport();
@@ -27,9 +31,9 @@ console.error('MCP server running on stdio');
 ## Streamable HTTP transport (remote)
 
 ```typescript
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 
-const transport = new StreamableHTTPServerTransport({ ... });
+const transport = new NodeStreamableHTTPServerTransport({ ... });
 await server.connect(transport);
 // Then wire transport to your HTTP server (e.g. Express, Node http).
 ```
@@ -139,8 +143,8 @@ List operations (e.g. `tools/list`, `resources/list`) may support **cursor-based
 
 ## Package and TypeScript
 
-- **Dependencies**: `@modelcontextprotocol/sdk`, `zod`.
-- **ESM**: Use `"type": "module"` in package.json; import with `.js` extension in path (e.g. `.../mcp.js`).
+- **Dependencies**: `@modelcontextprotocol/server@2.0.0`, `zod` (Zod 4 / Standard Schema). For Node HTTP: `@modelcontextprotocol/node@2.0.0`. Optional for tests: `@modelcontextprotocol/client`.
+- **ESM**: Use `"type": "module"` in package.json; import from package roots / declared subpaths (e.g. `@modelcontextprotocol/server`, `@modelcontextprotocol/server/stdio`).
 - **tsconfig**: `"module": "Node16"`, `"moduleResolution": "Node16"`, `"target": "ES2022"`.
 
 ## Official SDK and examples

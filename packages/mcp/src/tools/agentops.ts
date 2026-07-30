@@ -37,7 +37,7 @@ import {
 } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 
 const bundleYamlField = z.string().min(1).describe('Agent bundle document as YAML text');
 const gateYamlField = z.string().min(1).describe('Evaluation gate document as YAML text');

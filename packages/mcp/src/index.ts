@@ -3,7 +3,7 @@
  * Logging: stderr only (stdout is JSON-RPC).
  */
 
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 
 import { initAuditLog } from './audit.js';
 import { EnvContextProvider } from './auth/env-context-provider.js';
