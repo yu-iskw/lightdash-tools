@@ -1,0 +1,3 @@
+kind: refactor
+body: Remove @lightdash-tools/semantic-layer-mcp; use @lightdash-tools/mcp at /semantic-layer/v1/mcp
+time: 2026-07-30T22:07:20.897364+09:00

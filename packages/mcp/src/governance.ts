@@ -1,4 +1,4 @@
-import { getAllowedProjectUuids, getSafetyMode, isDryRunMode } from './config.js';
+import { getAllowedProjectUuids, getSafetyMode, isDryRunMode } from './config/runtime.js';
 
 import type { LightdashMcpRequestContext } from './request-context.js';
 

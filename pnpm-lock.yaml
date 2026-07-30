@@ -158,16 +158,6 @@ importers:
         specifier: ^25.9.3
         version: 25.9.3
 
-  packages/semantic-layer-mcp:
-    dependencies:
-      '@lightdash-tools/mcp':
-        specifier: workspace:*
-        version: link:../mcp
-    devDependencies:
-      '@types/node':
-        specifier: ^25.9.3
-        version: 25.9.3
-
 packages:
 
   '@babel/code-frame@7.29.7':

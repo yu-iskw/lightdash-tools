@@ -1,6 +1,10 @@
 import { SafetyMode } from '@lightdash-tools/common';
 
-import { setStaticSafetyMode, setStaticAllowedProjectUuids, setDryRunMode } from './config.js';
+import {
+  setStaticSafetyMode,
+  setStaticAllowedProjectUuids,
+  setDryRunMode,
+} from './config/runtime.js';
 
 import type { Command } from 'commander';
 

@@ -10,9 +10,9 @@ import {
   isDryRunMode,
   setDryRunMode,
   getAuditLogPath,
-} from './config.js';
+} from './runtime.js';
 
-describe('config', () => {
+describe('config/runtime', () => {
   const envKeys = [
     'LIGHTDASH_TOOLS_SAFETY_MODE',
     'LIGHTDASH_TOOLS_ALLOWED_PROJECTS',

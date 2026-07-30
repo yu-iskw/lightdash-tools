@@ -4,6 +4,32 @@ MCP server for Lightdash **semantic-layer** discovery and query composition (com
 
 Broad admin surfaces (charts, dashboards, users, AI agents, …) are **not** registered on this binary — use `@lightdash-tools/client` or the CLI.
 
+## Directory map
+
+| Edit…                                                   | Path                                                 |
+| :------------------------------------------------------ | :--------------------------------------------------- |
+| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)         |
+| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                 |
+| HTTP transport / sessions                               | `src/transports/`                                    |
+| HTTP auth                                               | `src/auth/`                                          |
+| Runtime client + guardrail env                          | `src/config/runtime.ts`                              |
+| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts` |
+| Audit logging helpers                                   | `src/audit/`                                         |
+| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`  |
+
+Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/`). There is no package-level `src/prompts/` or `src/resources/`.
+
+## Replaces `@lightdash-tools/semantic-layer-mcp`
+
+That package was removed (ADR-0042). Migrate as follows:
+
+| Removed                               | Use instead              |
+| ------------------------------------- | ------------------------ |
+| `@lightdash-tools/semantic-layer-mcp` | `@lightdash-tools/mcp`   |
+| Binary `lightdash-semantic-layer-mcp` | `lightdash-mcp`          |
+| HTTP `/mcp` (old)                     | `/semantic-layer/v1/mcp` |
+| Unprefixed tool names                 | `ldt__*`                 |
+
 ## Installation
 
 You can run the MCP server using `npx`:

@@ -2,106 +2,84 @@
 
 ## Purpose
 
-Discover the Lightdash semantic layer and **compose + compile** metric queries. Do not execute warehouse queries or mutate workspace content.
+Discover the Lightdash semantic layer and **compose + compile** metric queries. Stop after a good compile (or clear compile errors). Do **not** run warehouse queries or mutate content.
 
-## Allowed tools (wire names)
+## Allowed tools (always `ldt__` prefix)
 
-Always call tools with the `ldt__` prefix:
-
-- `ldt__list_projects`, `ldt__get_project`
-- Explores: `ldt__list_explores` (summaries; optional `search` / `limit`), `ldt__get_explore`, `ldt__list_dimensions` (compact + `fieldId`), `ldt__get_field_lineage`
-- Metrics: `ldt__list_metrics`, `ldt__get_metric`
-- `ldt__compile_query`
+| Tool                                      | Use for                                                                                                          |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `ldt__list_projects` / `ldt__get_project` | Confirm project UUID ↔ name                                                                                      |
+| `ldt__list_explores`                      | Summaries (`name`, `label`, `tags`, `databaseName`, `schemaName`, `errors?`); **always** pass `search` + `limit` |
+| `ldt__list_dimensions`                    | Compact `{ name, label, table, type, fieldId }`; **default = base table only**                                   |
+| `ldt__list_metrics` / `ldt__get_metric`   | Catalog search; filter `tableName === exploreId`                                                                 |
+| `ldt__compile_query`                      | Compile only — never “run”                                                                                       |
+| `ldt__get_explore`                        | **Rare** — full explore JSON is huge (~100KB–700KB+)                                                             |
+| `ldt__get_field_lineage`                  | Optional; summarize, don’t dump                                                                                  |
 
 ## Hard bans
 
-Do **not** attempt or invent:
+Do **not** attempt or invent: run-query / SQL runner / validation jobs / charts / dashboards / spaces / users / groups / ACL / AI agents / agentops. Those tools are not on this server.
 
-- Running metric, SQL, chart, dashboard, or underlying-data queries
-- SQL runner / custom SQL
-- Project validation job triggers
-- Charts, dashboards, spaces, content search, tags, schedulers
-- Users, groups, space ACL
-- AI agents, threads, evaluations, agentops
+## From BigQuery / `bq ls` inventory → explore
 
-Those tools are not on this server. Stop after a successful compile (or after reporting compile errors).
+When the user pastes warehouse inventory (TABLE + dataset + partition field):
 
-## Map warehouse / BigQuery hints → explore
-
-Users often give warehouse coordinates (e.g. from `bq ls` / `project.dataset.table`):
-
-| Hint                                                               | Use as                                                            |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| Dataset / schema (e.g. `dwh_pharma`)                               | `schemaName` filter among explore summaries                       |
-| Table name (e.g. `medico_session_summary`)                         | Prefer explore whose **`label` equals that table name exactly**   |
-| Full BQ id `ubie-jp-phr-dwh-prd.dwh_pharma.medico_session_summary` | `databaseName` ≈ project, `schemaName` ≈ dataset, `label` ≈ table |
+| Inventory column                                                             | MCP use                                                                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Dataset (e.g. `dwh_pharma`)                                                  | Prefer explores with matching **`schemaName`**                                       |
+| TABLE (e.g. `medico_session_summary`)                                        | `ldt__list_explores` **`search`** = that table token; prefer **exact `label` match** |
+| Partition / time field (e.g. `session_start_time`, `session_start_time_jst`) | Candidate **dimension** `fieldId` for “by day / by time” compiles                    |
+| Full id `project.dataset.table`                                              | `databaseName` ≈ project, `schemaName` ≈ dataset, `label` ≈ table                    |
 
 Warehouse names are **search hints**, not explore IDs. Explore ids look like `ubie_jp_phr_dwh__dwh_pharma__medico_session_summary`.
 
 ## Always search explores
 
-On large projects, always call `ldt__list_explores` with `search` (and `limit`). Do **not** use the default first-N list (alphabetical across unrelated domains — incomplete and misleading).
+On large projects, **never** use the default first-N explore list (alphabetical across unrelated domains). Always `search` + `limit`.
 
-## Explore disambiguation (do not pick the first hit)
+## Explore disambiguation
 
-Search for a table name often returns many siblings. Example for `medico_session_summary`:
-
-- `…__dm_pharma__eda_medico_session_summary` (`schemaName=dm_pharma`, label `eda_…`)
-- `…__dm_pharma__reporting_medico_session_summary`
-- `…__dwh_pharma__medico_session_summary` ← usually the warehouse table match
-- `…__dwh_pharma__mre_*medico_session_summary*` (experiment / reporting variants)
-
-**Choose in this order:**
+Search `medico_session_summary` often returns many siblings (`eda_…`, `reporting_…`, `mre_*`, exact warehouse table). **Do not pick the first hit.**
 
 1. Skip explores with non-empty `errors`.
-2. Prefer **exact `label` match** to the warehouse table name (e.g. `medico_session_summary`, not `eda_medico_session_summary`).
-3. Prefer **`schemaName` / `databaseName`** matching the user’s dataset/project (e.g. `dwh_pharma` over `dm_pharma` when they said `dwh_pharma`).
+2. If the user named a dataset, prefer matching **`schemaName`** (e.g. `dwh_pharma` over `dm_pharma`). Skip rows with **empty** `schemaName` unless nothing else matches.
+3. Prefer **exact `label`** = warehouse table name (not `eda_medico_session_summary`).
 4. Prefer tags such as `lightdash` when still tied.
-5. Deprioritize prefixed variants (`eda_`, `reporting_`, `mre_`, `mre_dp_`, `mre_pd_`) unless the user asked for that layer.
-6. State the chosen explore **`name`**, `label`, and `schemaName` in the answer.
-
-Never assume “first search result” or “first default list row” is correct.
+5. Deprioritize `eda_`, `reporting_`, `mre_`, `mre_dp_`, `mre_pd_` unless asked.
+6. State chosen explore **`name`**, `label`, and `schemaName` in the answer.
 
 ## Progressive discovery
 
-1. Prefer `ldt__list_metrics` with a **metric keyword** and `ldt__list_explores` with `search` / `limit`.
-2. Do **not** paste full explore catalogs or full `ldt__get_explore` / `ldt__list_dimensions` / lineage JSON into the user-facing answer (payloads can be 100KB–700KB+).
-3. Call `ldt__get_explore` only for the single explore you will compile against — and only if you need explore-scoped metric **names** you cannot get from `ldt__list_metrics`.
-4. Prefer `ldt__list_dimensions` (compact `{ name, label, table, type, fieldId }`) when selecting fields.
+1. `ldt__list_explores` with search → disambiguate → note explore id.
+2. `ldt__list_dimensions` (default base-table) for `fieldId`s. Set `baseTableOnly=false` only if you need joined-table fields (payload grows a lot).
+3. `ldt__list_metrics` with a **specific metric keyword** from the question (`nps`, `session`, …). **Not** the table name / explore id (those often return **zero** hits). **Not** ultra-broad tokens alone (`count`, `sum`) as a first try — they flood the catalog; if used, still filter `tableName === exploreId`.
+4. Call `ldt__get_explore` only if catalog metrics are insufficient and you need explore-local metric names.
+5. `ldt__compile_query` with `fieldId`s → verify SQL columns → **stop**.
 
 ## Metrics catalog vs explore
 
-- `ldt__list_metrics` / `ldt__get_metric` are catalog-wide. Response shape is `{ pagination, data: Metric[] }`.
-- Filter catalog rows where `tableName` **equals the chosen explore id** (full id).
-- `ldt__get_metric` `tableName` must be that same explore id. Short labels like `medico_session_summary` fail with “Metric not found”.
-- **Search with metric keywords from the question** (`nps`, `count`, `rate`, `sum`, …), **not** the warehouse table name and **not** the explore id. Table-name / explore-id searches often return **zero** hits even when metrics exist (e.g. search `nps` → metrics on `…__dwh_pharma__medico_session_summary`; search `medico_session_summary` → empty).
-- If keyword search yields no rows with `tableName === exploreId`, try related keywords, then **compile with dimensions only** (valid) or report that no catalog metrics match.
-- Before `ldt__compile_query`, confirm fields on the chosen explore. Prefer `fieldId` from `ldt__list_dimensions` for dimensions; for metrics use `{exploreId}_{metricName}`.
+- Response shape: `{ pagination, data: Metric[] }`.
+- Keep rows where `tableName` **equals the full explore id**.
+- `ldt__get_metric` `tableName` must be that explore id. Short labels (`medico_session_summary`) → “Metric not found”.
+- For `ldt__compile_query` metrics, use `{exploreId}_{metricName}` (same pattern as dimension `fieldId`).
+- If no catalog metric matches the explore, **compile with `metrics: []`** (dimension-only is valid — e.g. volume-by-day via a date/time dimension).
 
-## Prefer base-table fields
+## Field IDs and empty SELECT
 
-`ldt__list_dimensions` **defaults to base-table only** (`table` === explore id). Set `baseTableOnly=false` only when you need joined-table fields. Prefer `fieldId` from that list for `ldt__compile_query`.
+Prefer `fieldId` from `ldt__list_dimensions` (e.g. `…__medico_session_summary_session_start_time_jst`).
 
-Even base-table lists can be large (hundreds of fields / tens of KB). Shortlist in the answer; do not dump the array.
+Short names alone are unsafe:
 
-## Field IDs for `ldt__compile_query`
-
-Use `{table}_{name}` / `fieldId` from `ldt__list_dimensions` (e.g. `ubie_jp_phr_dwh__dwh_pharma__medico_session_summary_session_start_time`).
-
-Short keys alone are unsafe. Two failure modes:
-
-1. `ldt__compile_query` may **succeed upstream with an empty `SELECT`** — this server returns that as **`isError`** (fix field IDs and re-compile).
-2. Or it may hard-error (`Tried to reference … unknown field id`).
-
-Prefer `fieldId` from `ldt__list_dimensions` when present.
+1. Upstream may “succeed” with an **empty `SELECT`** — this server returns **`isError`**. Fix to `fieldId`s and re-compile once.
+2. Or hard-error on unknown field id.
 
 ## Field lineage
 
-Call `ldt__get_field_lineage` with either `fieldId` (`{table}_{name}`) or the field’s short `name` (both resolve). Summarize lineage; do not paste the full graph.
+`ldt__get_field_lineage` accepts full `fieldId` or short `name`. Summarize; do not paste the full graph.
 
 ## Answer shape
 
-User-facing replies: shortlists of name / label / tags / `schemaName` / `fieldId` / compiled SQL only. Never paste full `ldt__get_explore`, full dimension lists, or full lineage JSON.
+Shortlists only: explore `name` / `label` / `schemaName` / why chosen; metric/dimension names + `fieldId`; compiled SQL or compile errors. Never paste full `get_explore`, full dimension arrays, or full lineage JSON.
 
 ## metricQuery skeleton
 
@@ -117,16 +95,16 @@ User-facing replies: shortlists of name / label / tags / `schemaName` / `fieldId
 }
 ```
 
-`metrics` may be `[]` when the question is dimension-only (e.g. volume-by-day via a date dimension) or when no catalog metric matches the explore.
+`metrics` may be `[]`.
 
 ## Recommended sequence
 
-1. Scope: `ldt__list_projects` / `ldt__get_project`
-2. Discover: `ldt__list_explores` with search → **disambiguate** (exact label + schema) → `ldt__list_dimensions` (base-table `fieldId`s) and/or `ldt__list_metrics` with **metric keywords**, filter `tableName === exploreId`
-3. `ldt__compile_query` with `projectUuid`, `exploreId`, and `metricQuery` using `fieldId`s
-4. Verify compiled SQL selects the intended columns; stop — return SQL / compile result
+1. Scope: `ldt__get_project` (or list → pick)
+2. Discover: search explores → disambiguate → base-table dimensions + keyword metrics (filter explore id)
+3. `ldt__compile_query` with `fieldId`s
+4. Verify SELECT columns; stop
 
 ## Stop / deliverables
 
-- **Explore prompt:** shortlist of explores / metrics / dimensions only — do not compile unless asked. Include `schemaName` and why the explore was chosen.
-- **Compose / debug prompts:** return compiled SQL or compile errors; stop after `ldt__compile_query` (re-compile only while debugging).
+- **Explore prompt:** shortlist only — do not compile unless asked.
+- **Compose / debug:** compiled SQL or errors; stop after a good compile (re-compile only while debugging).

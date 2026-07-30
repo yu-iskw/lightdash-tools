@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && mkdir -p dist/personas/semantic-layer/resources && cp src/personas/semantic-layer/resources/playbook.md dist/personas/semantic-layer/resources/playbook.md",
+    "build": "rm -rf dist && tsc && mkdir -p dist/personas/semantic-layer/resources && cp src/personas/semantic-layer/resources/playbook.md dist/personas/semantic-layer/resources/playbook.md",
     "start": "node dist/index.js",
     "start:http": "node dist/http.js",
     "test": "pnpm --dir ../.. exec vitest run packages/mcp/src"

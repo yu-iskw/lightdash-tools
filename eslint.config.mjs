@@ -212,11 +212,7 @@ export default [
   },
   // Enforce no deprecated API calls in CLI and MCP (ADR-0036)
   {
-    files: [
-      'packages/cli/src/**/*.ts',
-      'packages/mcp/src/**/*.ts',
-      'packages/semantic-layer-mcp/src/**/*.ts',
-    ],
+    files: ['packages/cli/src/**/*.ts', 'packages/mcp/src/**/*.ts'],
     rules: {
       '@typescript-eslint/no-deprecated': 'error',
     },
@@ -238,8 +234,6 @@ export default [
       'packages/cli/src/commands/agents-crud.ts',
       'packages/cli/src/utils/file-input.ts',
       'packages/common/src/agentops/types.ts',
-      'packages/mcp/src/tools/agentops.ts',
-      'packages/mcp/src/tasks/memory-store.ts',
     ],
     rules: {
       'sonarjs/cognitive-complexity': 'off',

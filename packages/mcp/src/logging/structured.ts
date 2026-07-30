@@ -5,7 +5,7 @@
  * rather than per-tool invocation records.
  */
 
-import { getSessionId } from '../audit.js';
+import { getSessionId } from '../audit/audit.js';
 
 export type StructuredLogLevel = 'debug' | 'error' | 'info' | 'warn';
 

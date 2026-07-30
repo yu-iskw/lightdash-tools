@@ -78,7 +78,7 @@ Then: `cursor-agent mcp list` / `cursor-agent mcp list-tools lightdash` (or IDE 
 
 ### Semantic-layer MCP (stdio + HTTP)
 
-Semantic-layer discovery/compile ships as the default persona inside `@lightdash-tools/mcp` ([ADR-0042](../adr/0042-shared-mcp-tool-registry-and-persona-manifests-with-fixed-paths.md)): nine `ldt__*` tools, fixed HTTP path `/semantic-layer/v1/mcp`. Same ADR-0041 transports. Automated coverage: `stdio.process.test.ts`, `protocol-contract.test.ts`, HTTP integration. OAuth client credentials stay on Cursor/Claude — not on the server. `@lightdash-tools/semantic-layer-mcp` is a deprecated shim that forwards to `lightdash-mcp`.
+Semantic-layer discovery/compile ships as the default persona inside `@lightdash-tools/mcp` ([ADR-0042](../adr/0042-shared-mcp-tool-registry-and-persona-manifests-with-fixed-paths.md)): nine `ldt__*` tools, fixed HTTP path `/semantic-layer/v1/mcp`. Same ADR-0041 transports. Automated coverage: `stdio.process.test.ts`, `protocol-contract.test.ts`, HTTP integration. OAuth client credentials stay on Cursor/Claude — not on the server.
 
 ```bash
 pnpm --filter @lightdash-tools/mcp build

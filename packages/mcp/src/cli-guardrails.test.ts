@@ -7,7 +7,7 @@ import {
   applyGuardrailOptions,
   resolveGuardrailOptions,
 } from './cli-guardrails.js';
-import { getStaticSafetyMode, setStaticSafetyMode } from './config.js';
+import { getStaticSafetyMode, setStaticSafetyMode } from './config/runtime.js';
 
 describe('resolveGuardrailOptions', () => {
   it('prefers subcommand safety-mode over parent safety-mode', () => {

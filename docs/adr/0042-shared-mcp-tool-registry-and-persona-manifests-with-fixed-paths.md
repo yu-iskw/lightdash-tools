@@ -26,7 +26,7 @@ Free-form `LIGHTDASH_TOOLS_MCP_PATH` / persona env knobs would fight path-is-ide
 2. Structure source as `tools/` (shared `ToolId` registry + `registerToolsByIds`) and `personas/<id>/` (allowlist, prompts, resources, fixed `path`).
 3. Ship only the `semantic-layer` persona now: nine tools, path `/semantic-layer/v1/mcp`, wire names `ldt__*`.
 4. HTTP mounts every shipped persona path from code (`listPersonaPaths` / `getPersonaByPath`); unknown paths 404. Stdio always uses the sole shipped persona (no PATH/PERSONA env).
-5. Deprecate `@lightdash-tools/semantic-layer-mcp` as a thin shim that forwards to `lightdash-mcp`.
+5. **Remove** `@lightdash-tools/semantic-layer-mcp`; do not keep a forwarder package. Use `@lightdash-tools/mcp` only.
 6. Broad admin operations remain on `@lightdash-tools/client` / CLI, not on the MCP binary.
 
 ## Consequences
@@ -40,7 +40,7 @@ Free-form `LIGHTDASH_TOOLS_MCP_PATH` / persona env knobs would fight path-is-ide
 **Negative / trade-offs**
 
 - Broad “full” MCP catalog is intentionally out of product until a future persona re-adds tools to the shared registry.
-- Existing clients of `semantic-layer-mcp` or `/mcp` must migrate to `@lightdash-tools/mcp` and `/semantic-layer/v1/mcp`.
+- Former `@lightdash-tools/semantic-layer-mcp` / `/mcp` clients must use `@lightdash-tools/mcp` and `/semantic-layer/v1/mcp` (binary `lightdash-mcp`, tools `ldt__*`). The shim package was removed (never published to npm).
 - `LIGHTDASH_TOOLS_MCP_PATH` is ignored (deprecated).
 
 ## References

@@ -1,7 +1,7 @@
 import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { setStaticSafetyMode, setDryRunMode } from '../config.js';
+import { setStaticSafetyMode, setDryRunMode } from '../config/runtime.js';
 import { getDefaultPersona } from '../personas/index.js';
 
 import { registerToolsByIds } from './registry.js';

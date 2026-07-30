@@ -3,7 +3,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 
-import { initAuditLog } from '../audit.js';
+import { initAuditLog } from '../audit/audit.js';
+import { runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import {
   MCP_AUTH_MODE_LIGHTDASH_OAUTH,
   MCP_AUTH_MODE_NONE,
@@ -32,10 +33,9 @@ import {
   emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
-import { getClient, getAuditLogPath } from '../config.js';
+import { getClient, getAuditLogPath } from '../config/runtime.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
 import { createLightdashMcpServer } from '../server.js';
-import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';

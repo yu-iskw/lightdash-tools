@@ -17,7 +17,6 @@ COPY packages/common/package.json packages/common/
 COPY packages/client/package.json packages/client/
 COPY packages/cli/package.json packages/cli/
 COPY packages/mcp/package.json packages/mcp/
-COPY packages/semantic-layer-mcp/package.json packages/semantic-layer-mcp/
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
   pnpm install --frozen-lockfile
 COPY . .

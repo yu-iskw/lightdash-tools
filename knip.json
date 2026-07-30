@@ -38,10 +38,6 @@
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
       "project": ["src/**/*.ts"]
-    },
-    "packages/semantic-layer-mcp": {
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@lightdash-tools/mcp"]
     }
   }
 }
