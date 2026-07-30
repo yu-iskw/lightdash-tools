@@ -36,7 +36,7 @@ export class ChartsClient extends BaseApiClient {
     if (options?.offset != null) params.offset = options.offset;
     if (options?.languageMap != null) params.languageMap = options.languageMap;
     return this.http.get<ChartAsCodeListResults>(
-      `/projects/${projectUuid}/charts/code`,
+      `/projects/${projectUuid}/code/charts`,
       Object.keys(params).length ? { params } : undefined,
     );
   }
@@ -48,7 +48,7 @@ export class ChartsClient extends BaseApiClient {
     body: UpsertChartAsCodeBody,
   ): Promise<ChartAsCodeUpsertResults> {
     return this.http.post<ChartAsCodeUpsertResults>(
-      `/projects/${projectUuid}/charts/${encodeURIComponent(slug)}/code`,
+      `/projects/${projectUuid}/code/charts/${encodeURIComponent(slug)}`,
       body,
     );
   }

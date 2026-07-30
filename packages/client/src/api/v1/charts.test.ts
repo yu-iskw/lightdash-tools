@@ -26,12 +26,12 @@ describe('ChartsClient', () => {
     expect(result).toEqual(charts);
   });
 
-  it('getChartsAsCode should call GET /projects/{projectUuid}/charts/code with no params when no options', async () => {
+  it('getChartsAsCode should call GET /projects/{projectUuid}/code/charts with no params when no options', async () => {
     const client = new ChartsClient(mockHttp);
     const results = { offset: 0, total: 1, missingIds: [], charts: [] };
     vi.mocked(mockHttp.get).mockResolvedValue(results);
     const result = await client.getChartsAsCode('p1');
-    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/charts/code', undefined);
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/code/charts', undefined);
     expect(result).toEqual(results);
   });
 
@@ -44,12 +44,12 @@ describe('ChartsClient', () => {
       offset: 10,
       languageMap: true,
     });
-    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/charts/code', {
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/code/charts', {
       params: { ids: ['slug-a', 'slug-b'], offset: 10, languageMap: true },
     });
   });
 
-  it('upsertChartAsCode should call POST /projects/{projectUuid}/charts/{slug}/code with body', async () => {
+  it('upsertChartAsCode should call POST /projects/{projectUuid}/code/charts/{slug} with body', async () => {
     const client = new ChartsClient(mockHttp);
     const body = {
       name: 'My Chart',
@@ -73,7 +73,7 @@ describe('ChartsClient', () => {
     const apiResult = { promoted: [], errors: [] };
     vi.mocked(mockHttp.post).mockResolvedValue(apiResult);
     const result = await client.upsertChartAsCode('p1', 'my-chart', body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/charts/my-chart/code', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/code/charts/my-chart', body);
     expect(result).toEqual(apiResult);
   });
 
@@ -100,6 +100,6 @@ describe('ChartsClient', () => {
     } as Parameters<ChartsClient['upsertChartAsCode']>[2];
     vi.mocked(mockHttp.post).mockResolvedValue({});
     await client.upsertChartAsCode('p1', 'chart/slug', body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/charts/chart%2Fslug/code', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/code/charts/chart%2Fslug', body);
   });
 });

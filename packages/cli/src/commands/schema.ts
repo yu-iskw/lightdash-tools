@@ -42,13 +42,13 @@ const LEGACY_SCHEMA_REGISTRY: Record<string, SchemaEntry> = {
     params: ['projectUuid'],
   },
   'charts.code.list': {
-    path: '/api/v1/projects/{projectUuid}/charts/code',
+    path: '/api/v1/projects/{projectUuid}/code/charts',
     method: 'GET',
     description: 'Get charts in code representation',
     params: ['projectUuid'],
   },
   'charts.code.upsert': {
-    path: '/api/v1/projects/{projectUuid}/charts/{slug}/code',
+    path: '/api/v1/projects/{projectUuid}/code/charts/{slug}',
     method: 'POST',
     description: 'Create or update chart by slug',
     params: ['projectUuid', 'slug'],

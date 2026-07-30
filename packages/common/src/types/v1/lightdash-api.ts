@@ -109,6 +109,8 @@ export namespace LightdashApi {
       components['schemas']['Omit_ChartAsCode.chartConfig-or-description_'] & {
         description?: string | null;
         chartConfig: components['schemas']['AnyType'];
+        spaceNames?: components['schemas']['Record_string.string_'];
+        force?: boolean;
         publicSpaceCreate?: boolean;
         skipSpaceCreate?: boolean;
       };
@@ -117,6 +119,19 @@ export namespace LightdashApi {
   export namespace Dashboards {
     export type DashboardBasicDetailsWithTileTypes =
       components['schemas']['DashboardBasicDetailsWithTileTypes'];
+    export type DashboardAsCodeListResults =
+      components['schemas']['ApiDashboardAsCodeListResponse']['results'];
+    export type DashboardAsCodeUpsertResults =
+      components['schemas']['ApiDashboardAsCodeUpsertResponse']['results'];
+    export type UpsertDashboardAsCodeBody =
+      components['schemas']['Omit_DashboardAsCode.tiles-or-description_'] & {
+        description?: string | null;
+        tiles: components['schemas']['AnyType'];
+        spaceNames?: components['schemas']['Record_string.string_'];
+        force?: boolean;
+        publicSpaceCreate?: boolean;
+        skipSpaceCreate?: boolean;
+      };
   }
 
   export namespace Spaces {
@@ -318,6 +333,9 @@ export type ChartAsCodeListResults = Charts.ChartAsCodeListResults;
 export type ChartAsCodeUpsertResults = Charts.ChartAsCodeUpsertResults;
 export type UpsertChartAsCodeBody = Charts.UpsertChartAsCodeBody;
 export type DashboardBasicDetailsWithTileTypes = Dashboards.DashboardBasicDetailsWithTileTypes;
+export type DashboardAsCodeListResults = Dashboards.DashboardAsCodeListResults;
+export type DashboardAsCodeUpsertResults = Dashboards.DashboardAsCodeUpsertResults;
+export type UpsertDashboardAsCodeBody = Dashboards.UpsertDashboardAsCodeBody;
 export type SpaceSummary = Spaces.SpaceSummary;
 export type Space = Spaces.Space;
 export type CreateSpace = Spaces.CreateSpace;
