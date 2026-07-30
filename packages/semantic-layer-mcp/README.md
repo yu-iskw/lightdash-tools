@@ -24,19 +24,16 @@ Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2
 
 See [ADR-0040](../../docs/adr/0040-oauth-backed-streamable-http-mcp.md), [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md).
 
-Optional on both transports:
-
-- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` / `--projects` (empty = unrestricted allowlist)
-- **Pin a project** (optional): HTTP `X-Lightdash-Project` header, or stdio `LIGHTDASH_TOOLS_PINNED_PROJECT` / `--pin-project` — same idea as [official Lightdash MCP](https://docs.lightdash.com/references/integrations/lightdash-mcp)
-
 ## Pin a project (`X-Lightdash-Project`)
 
-When the header (or stdio pin) is a **valid project UUID**:
+HTTP only — same as [official Lightdash MCP](https://docs.lightdash.com/references/integrations/lightdash-mcp#pin-a-project-with-the-x-lightdash-project-header). There is no env or CLI pin on this package.
+
+When the header is a **valid project UUID**:
 
 - It is stored on the request context as `governance.pinnedProjectUuid` for upcoming tool handlers to consume (no tools enforce it yet)
 - Once `list_projects` / `set_project` are registered, they will be omitted from `tools/list` when pinned
 - Invalid UUID values are **ignored** (no pin)
-- Access is still enforced by the caller’s Lightdash permissions and any process allowlist
+- Access is still enforced by the caller’s Lightdash permissions
 - Prompts still require an explicit `projectUuid` argument until tools use the pin
 
 ### Cursor (remote HTTP + pin)
@@ -56,14 +53,6 @@ When the header (or stdio pin) is a **valid project UUID**:
 
 (Plus OAuth / discovery as for remote HTTP. Host holds OAuth client credentials.)
 
-### Stdio pin
-
-```bash
-LIGHTDASH_TOOLS_PINNED_PROJECT=00000000-0000-0000-0000-000000000000 \
-  node packages/semantic-layer-mcp/dist/bin.js stdio
-# or: --pin-project 00000000-0000-0000-0000-000000000000
-```
-
 ## Install / run
 
 ```bash
@@ -81,7 +70,53 @@ LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1 \
   node packages/semantic-layer-mcp/dist/bin.js serve-http
 ```
 
-### Cursor (stdio + PAT)
+### Docker (stdio + PAT)
+
+Build from the **monorepo root** (Docker reads `.dockerignore` from the build context root; this repo keeps a symlink `.dockerignore` → `packages/semantic-layer-mcp/.dockerignore`):
+
+```bash
+docker build \
+  -f packages/semantic-layer-mcp/Dockerfile \
+  -t lightdash-semantic-layer-mcp:local \
+  .
+```
+
+Image CMD is **stdio only** (`node dist/bin.js stdio`). Rebuild after code changes — Cursor does not rebuild the image.
+
+Required in `./.env` (or the host env Cursor inherits):
+
+| Variable            | Required |
+| ------------------- | -------- |
+| `LIGHTDASH_URL`     | yes      |
+| `LIGHTDASH_API_KEY` | yes      |
+
+The server never loads `.env` itself. Cursor loads it via official STDIO `envFile`; Docker forwards named vars with `-e NAME` (no value).
+
+```json
+{
+  "mcpServers": {
+    "lightdash-semantic-layer-mcp-local": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "-e",
+        "LIGHTDASH_URL",
+        "-e",
+        "LIGHTDASH_API_KEY",
+        "lightdash-semantic-layer-mcp:local"
+      ],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  }
+}
+```
+
+This image is **not** for HTTP/OAuth or Cloud Run (`serve-http` remains a separate host/Cloud Run path).
+
+### Cursor (stdio + PAT, host Node)
 
 ```json
 {
@@ -135,7 +170,7 @@ Same shape as [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md), but:
 - CMD: `node packages/semantic-layer-mcp/dist/bin.js serve-http`
 - No `LIGHTDASH_TOOLS_SAFETY_MODE` (compile-only fixed tools)
 - No OAuth client secrets on the service
-- Keep `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` if you need a project fence
+- Optional project scope via `X-Lightdash-Project` on each request (not env allowlist)
 
 ## Related
 

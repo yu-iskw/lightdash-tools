@@ -3,7 +3,8 @@
  *
  * Package-is-allowlist: only handlers registered here appear in tools/list.
  * Future list/set project tools should skip registration when
- * `governance.pinnedProjectUuid` is set (official Lightdash MCP pin behavior).
+ * `governance.pinnedProjectUuid` is set from HTTP `X-Lightdash-Project`
+ * (official Lightdash MCP pin behavior).
  */
 
 import type { McpContextProvider } from '../request-context.js';

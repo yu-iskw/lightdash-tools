@@ -1,33 +1,18 @@
 /**
  * Optional project pin (Lightdash-compatible `X-Lightdash-Project`).
+ * HTTP request header only — not env/CLI.
  * @see https://docs.lightdash.com/references/integrations/lightdash-mcp
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 
-import { ENV_LIGHTDASH_TOOLS_PINNED_PROJECT, validateUuid } from '@lightdash-tools/common';
+import { validateUuid } from '@lightdash-tools/common';
 
 import type { IncomingMessage } from 'node:http';
 
 const HEADER_LIGHTDASH_PROJECT = 'x-lightdash-project';
 
 const projectPinAls = new AsyncLocalStorage<string | undefined>();
-
-/** CLI `--pin-project` override; `undefined` wrapper means “use env”. */
-let staticPinnedProject: { value: string | undefined } | undefined;
-
-/**
- * Sets process pin from CLI (`--pin-project`). Invalid UUID → no pin (overrides env).
- * Mirrors `setStaticAllowedProjectUuids` for the allowlist.
- */
-export function setStaticPinnedProjectUuid(uuid: string | undefined): void {
-  staticPinnedProject = { value: uuid };
-}
-
-/** Clears CLI override so env pin applies (tests / process reset). */
-export function clearStaticPinnedProjectUuid(): void {
-  staticPinnedProject = undefined;
-}
 
 /**
  * Parses a project pin. Invalid UUIDs are ignored (official Lightdash MCP behavior).
@@ -50,17 +35,9 @@ export function extractPinnedProjectFromRequest(req: IncomingMessage): string | 
   return parsePinnedProjectUuid(raw);
 }
 
-function getProcessPinnedProjectUuid(): string | undefined {
-  if (staticPinnedProject !== undefined) return staticPinnedProject.value;
-  // eslint-disable-next-line security/detect-object-injection -- fixed env name constant
-  return parsePinnedProjectUuid(process.env[ENV_LIGHTDASH_TOOLS_PINNED_PROJECT]);
-}
-
-/** Request-scoped pin (HTTP) wins over CLI/env process pin. */
+/** Request-scoped pin from `X-Lightdash-Project` (HTTP ALS). */
 export function getPinnedProjectUuid(): string | undefined {
-  const fromRequest = projectPinAls.getStore();
-  if (fromRequest !== undefined) return fromRequest;
-  return getProcessPinnedProjectUuid();
+  return projectPinAls.getStore();
 }
 
 export function runWithProjectPinAsync<T>(
