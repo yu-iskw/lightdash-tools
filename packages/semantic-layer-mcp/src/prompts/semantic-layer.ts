@@ -64,9 +64,12 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
         [
           'Discover the Lightdash semantic layer for this project.',
           `Project: ${projectUuid}.${topic}`,
-          'Use list/search tools (list_metrics, list_explores) before get_explore.',
+          'Always use list_explores with search/limit. Do not use the default first-N explore list.',
+          'Warehouse table names are search hints, not explore IDs. Disambiguate near-duplicates by exact label, then dataset path, then tags.',
+          'list_metrics is catalog-wide: filter data[].tableName === chosen explore id; get_metric tableName is that explore id (not the warehouse label).',
+          'Prefer list_dimensions rows where table === explore id (base table). Compile field IDs are fieldId / {table}_{name}.',
           HARD_BANS,
-          'Summarize relevant explores, metrics, and dimensions. Do not compile or run a query unless asked.',
+          'Deliverable: shortlist name/label/tags/fieldId only. Do not paste full get_explore, dimensions, or lineage JSON. Do not compile unless asked.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
         ].join('\n'),
       );
@@ -92,9 +95,12 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
         [
           'Compose a Lightdash metric query and compile it. Do not run the query.',
           `Project: ${projectUuid}.${topic}${explore}`,
-          'Discover fields with list/get explore and metric tools, then call compile_query.',
+          'Always search explores; disambiguate if many matches. Prefer base-table dimensions (table === explore id).',
+          'list_metrics: filter tableName === explore id; get_metric tableName is the explore id. Metric fieldIds are {exploreId}_{metricName}.',
+          'Use list_dimensions fieldId values ({table}_{name}) in metricQuery. Short names may compile with an empty SELECT—treat that as failure and fix fieldIds.',
+          'metricQuery needs exploreName, dimensions, metrics, filters, sorts, limit, tableCalculations.',
           HARD_BANS,
-          'Return the compiled result (or compile errors). Stop after compile_query.',
+          'Deliverable: compiled SQL (verify expected columns) or compile errors. No raw dumps. Stop after compile_query.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
         ].join('\n'),
       );
@@ -119,8 +125,11 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           'Debug a failing Lightdash compile_query call and re-compile until it succeeds or you explain blockers.',
           `Project: ${projectUuid}`,
           `Explore: ${exploreId}.${err}`,
-          'Inspect explore/metric/dimension definitions, fix the metricQuery, then compile_query again.',
+          'Check field IDs use {table}_{name} (from list_dimensions fieldId). Empty SELECT or missing columns means bad fieldIds—fix and re-compile.',
+          'If get_field_lineage with fieldId returns null/empty, retry with the field short name (do not paste full lineage).',
+          'get_metric tableName must be the explore id, not the warehouse label.',
           HARD_BANS,
+          'Deliverable: successful compile (SQL with expected columns) or a clear blocker. Stop when compile succeeds or cannot proceed.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
         ].join('\n'),
       );

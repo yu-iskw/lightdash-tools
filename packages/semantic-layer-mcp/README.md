@@ -15,6 +15,10 @@ Tool surface is **package-is-allowlist**: only handlers registered in code appea
 
 Tool names are **unprefixed** (not `ldt__`). Follow the playbook resource `lightdash://playbooks/semantic-layer`.
 
+- `list_explores` returns compact summaries `{ name, label, tags }` with optional `search` / `limit` (defaults: limit 50 with search, 100 without). Always search on large projects; disambiguate near-duplicates by label, dataset path, then tags.
+- `list_dimensions` includes `fieldId` as `{table}_{name}` for `compile_query` (prefer base-table rows where `table` equals the explore id; short names may compile with an empty `SELECT`).
+- Warehouse table names are search hints, not explore IDs. `list_metrics` is catalog-wide—filter `tableName === explore id`; `get_metric` needs that same id (not the warehouse label).
+
 ## MCP SDK (v2, compatibility-first)
 
 Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2-migration.md):

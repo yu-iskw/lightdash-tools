@@ -48,12 +48,24 @@ describe('registerPlaybookResource', () => {
     expect(result.contents[0].text).toMatch(/SQL runner/i);
   });
 
-  it('getPlaybookMarkdown lists only registered MVP tools', () => {
+  it('getPlaybookMarkdown lists only registered MVP tools and postmortem rules', () => {
     const md = getPlaybookMarkdown();
     expect(md).toContain('Allowed tools');
     expect(md).toContain('compile_query');
     expect(md).toContain('get_metric');
     expect(md).toContain('list_explores');
+    expect(md).toContain('Progressive discovery');
+    expect(md).toContain('Always search');
+    expect(md).toContain('Name bridging');
+    expect(md).toContain('Explore disambiguation');
+    expect(md).toContain('Metrics catalog vs explore');
+    expect(md).toContain('Prefer base-table fields');
+    expect(md).toContain('empty `SELECT`');
+    expect(md).toContain('Field lineage');
+    expect(md).toContain('Answer shape');
+    expect(md).toContain('{table}_{name}');
+    expect(md).toContain('metricQuery skeleton');
+    expect(md).toContain('Stop / deliverables');
     expect(md).not.toContain('search_field_values');
     expect(md).not.toMatch(/catalog helpers/i);
   });

@@ -5,6 +5,7 @@
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import { z } from 'zod';
 
+import { summarizeExplores, withDimensionFieldIds } from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
 import { jsonToolResult, wrapTool } from './shared.js';
 
@@ -19,14 +20,32 @@ export function registerExploresTools(
     'list_explores',
     {
       title: 'List explores',
-      description: 'List all explores in a project',
-      inputSchema: z.object({ projectUuid: projectUuidField() }),
+      description:
+        'List explore summaries (name, label, tags) for a project; optional search and limit',
+      inputSchema: z.object({
+        projectUuid: projectUuidField(),
+        search: z.string().optional().describe('Filter by name, label, or tag'),
+        limit: z.number().int().positive().optional().describe('Max explores to return'),
+      }),
       annotations: READ_ONLY_DEFAULT,
     },
-    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
-      const explores = await c.v1.explores.listExplores(projectUuid);
-      return jsonToolResult(explores);
-    }),
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({
+          projectUuid,
+          search,
+          limit,
+        }: {
+          projectUuid: string;
+          search?: string;
+          limit?: number;
+        }) => {
+          const explores = await c.v1.explores.listExplores(projectUuid);
+          const list = Array.isArray(explores) ? explores : [];
+          return jsonToolResult(summarizeExplores(list, { search, limit }));
+        },
+    ),
   );
 
   server.registerTool(
@@ -55,7 +74,8 @@ export function registerExploresTools(
     'list_dimensions',
     {
       title: 'List dimensions',
-      description: 'List all dimensions for a specific explore',
+      description:
+        'List dimensions for an explore; each item includes fieldId ({table}_{name}) for compile_query',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
@@ -67,7 +87,8 @@ export function registerExploresTools(
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
-          return jsonToolResult(result);
+          const list = Array.isArray(result) ? result : [];
+          return jsonToolResult(withDimensionFieldIds(list));
         },
     ),
   );
