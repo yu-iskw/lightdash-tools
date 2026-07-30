@@ -3,6 +3,7 @@
  */
 
 import { getPinnedProjectUuid } from '../project-pin.js';
+
 import { projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,

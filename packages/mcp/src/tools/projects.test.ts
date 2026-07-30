@@ -2,6 +2,7 @@ import { SafetyMode } from '@lightdash-tools/common';
 import { describe, expect, it, vi } from 'vitest';
 
 import { runWithProjectPinAsync } from '../project-pin.js';
+
 import { registerListProjects } from './projects.js';
 
 import type { McpContextProvider } from '../request-context.js';
