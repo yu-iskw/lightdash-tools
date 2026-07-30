@@ -38,6 +38,10 @@
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
       "project": ["src/**/*.ts"]
+    },
+    "packages/semantic-layer-mcp": {
+      "entry": ["src/http.ts", "src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
     }
   }
 }

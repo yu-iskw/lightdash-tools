@@ -1,0 +1,106 @@
+# @lightdash-tools/semantic-layer-mcp
+
+MCP server for **semantic-layer discovery and query composition** (compile only). No query execution, content mutation, or AI-agent tools.
+
+Tool surface is **package-is-allowlist**: only handlers registered in code appear in `tools/list`. There is no safety-mode or dry-run filter.
+
+## MCP SDK (v2, compatibility-first)
+
+Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2-migration.md):
+
+| Choice       | Detail                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------- |
+| Primary SDK  | Exact `@modelcontextprotocol/server@2.0.0` + `@modelcontextprotocol/node@2.0.0` (HTTP) |
+| Stdio        | `server.connect(new StdioServerTransport())` — **not** `serveStdio`                    |
+| HTTP         | Stateful `NodeStreamableHTTPServerTransport` — **not** `createMcpHandler`              |
+| Protocol era | Host-negotiated (smoke tests use `2024-11-05`)                                         |
+
+## Auth modes
+
+| Transport | Auth                                          | Server env                                                                                                                                                            | Host (Cursor/Claude)                                                                                    |
+| --------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **stdio** | PAT                                           | `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`                                                                                                                                  | Inject those env vars                                                                                   |
+| **HTTP**  | Lightdash OAuth (identity-only, experimental) | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`, `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` in production | `LIGHTDASH_OAUTH_CLIENT_ID` / `LIGHTDASH_OAUTH_CLIENT_SECRET` on the **host** — never on the MCP server |
+
+See [ADR-0040](../../docs/adr/0040-oauth-backed-streamable-http-mcp.md), [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md).
+
+Optional on both transports: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` / `--projects` (empty = unrestricted).
+
+## Install / run
+
+```bash
+pnpm --filter @lightdash-tools/semantic-layer-mcp build
+
+# Stdio (PAT)
+LIGHTDASH_URL=https://app.lightdash.cloud LIGHTDASH_API_KEY=... \
+  node packages/semantic-layer-mcp/dist/bin.js stdio
+
+# HTTP (OAuth resource server)
+LIGHTDASH_URL=https://app.lightdash.cloud \
+LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://mcp.example.com \
+LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth \
+LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1 \
+  node packages/semantic-layer-mcp/dist/bin.js serve-http
+```
+
+### Cursor (stdio + PAT)
+
+```json
+{
+  "mcpServers": {
+    "lightdash-semantic-layer": {
+      "command": "node",
+      "args": ["/absolute/path/to/packages/semantic-layer-mcp/dist/bin.js", "stdio"],
+      "env": {
+        "LIGHTDASH_URL": "https://app.lightdash.cloud",
+        "LIGHTDASH_API_KEY": "<pat>"
+      }
+    }
+  }
+}
+```
+
+### Cursor (remote HTTP + OAuth)
+
+OAuth client credentials stay in the host config. Point Cursor at your Cloud Run HTTPS URL with Streamable HTTP + Lightdash OAuth discovery (same flow as [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md), binary `lightdash-semantic-layer-mcp serve-http`).
+
+### Claude Code (stdio)
+
+```bash
+claude mcp add --transport stdio \
+  -s user lightdash-semantic-layer \
+  --env LIGHTDASH_URL=https://app.lightdash.cloud \
+  --env LIGHTDASH_API_KEY="<pat>" \
+  -- node /absolute/path/to/packages/semantic-layer-mcp/dist/bin.js stdio
+```
+
+## Prompts (user-controlled)
+
+| Name                                 | Purpose                                                |
+| ------------------------------------ | ------------------------------------------------------ |
+| `lightdash_semantic_explore`         | Find explores/metrics/dimensions                       |
+| `lightdash_semantic_compose_compile` | Compose a metric query and `compile_query` (never run) |
+| `lightdash_semantic_compile_debug`   | Fix compile errors and re-compile                      |
+
+## Playbook resource
+
+| Field | Value                                  |
+| ----- | -------------------------------------- |
+| Name  | `semantic_layer_playbook`              |
+| URI   | `lightdash://playbooks/semantic-layer` |
+| MIME  | `text/markdown`                        |
+
+## Cloud Run (sketch)
+
+Same shape as [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md), but:
+
+- CMD: `node packages/semantic-layer-mcp/dist/bin.js serve-http`
+- No `LIGHTDASH_TOOLS_SAFETY_MODE` (compile-only fixed tools)
+- No OAuth client secrets on the service
+- Keep `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` if you need a project fence
+
+## Related
+
+- [ADR-0040](../../docs/adr/0040-oauth-backed-streamable-http-mcp.md), [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2-migration.md)
+- [docs/compatibility/mcp-clients.md](../../docs/compatibility/mcp-clients.md)
+- [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md)

@@ -76,6 +76,18 @@ Then: `cursor-agent mcp list` / `cursor-agent mcp list-tools lightdash` (or IDE 
 
 4. For stdio configs see [RFC-0041 appendices](../rfc/0041-compatibility-first-mcp-sdk-v2-migration.md). Prefer env injection from the host; do not commit secrets.
 
+### Semantic-layer MCP (stdio + HTTP OAuth)
+
+`@lightdash-tools/semantic-layer-mcp` is **stdio-first** for local PAT wiring and supports **Streamable HTTP** with `lightdash-oauth` for Cloud Run. Same ADR-0041 transports as monolith MCP. Automated coverage: `stdio.process.test.ts`, `lightdash-oauth-middleware.test.ts`. OAuth client credentials stay on Cursor/Claude — not on the server.
+
+```bash
+pnpm --filter @lightdash-tools/semantic-layer-mcp build
+# Stdio: node …/dist/bin.js stdio  (+ LIGHTDASH_URL + LIGHTDASH_API_KEY)
+# HTTP:  node …/dist/bin.js serve-http  (+ PUBLIC_URL + EXPERIMENTAL_IDENTITY_OAUTH in prod)
+```
+
+Package README documents Cursor/Claude snippets and Cloud Run differences (no safety-mode; optional project allowlist).
+
 ### Streamable HTTP / OAuth
 
 For remote HTTP and experimental `lightdash-oauth`, follow [mcp-oauth-http.md](../mcp-oauth-http.md) and [cursor-lightdash-oauth-mcp.md](../cursor-lightdash-oauth-mcp.md). Record OAuth column results separately from plain HTTP `none` / `shared-key`.

@@ -212,7 +212,11 @@ export default [
   },
   // Enforce no deprecated API calls in CLI and MCP (ADR-0036)
   {
-    files: ['packages/cli/src/**/*.ts', 'packages/mcp/src/**/*.ts'],
+    files: [
+      'packages/cli/src/**/*.ts',
+      'packages/mcp/src/**/*.ts',
+      'packages/semantic-layer-mcp/src/**/*.ts',
+    ],
     rules: {
       '@typescript-eslint/no-deprecated': 'error',
     },
