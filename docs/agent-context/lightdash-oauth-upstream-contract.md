@@ -62,4 +62,4 @@ The live test validates `validateLightdashAccessToken()` and `LightdashClient.v1
 
 ## JWT scope claims are not trusted for Lightdash OAuth
 
-Lightdash OAuth access tokens are typically **opaque**. MCP-local `mcp:read` / `mcp:write` enforcement applies only when tokens carry decodable JWT scope claims. In `lightdash-oauth` mode, `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES` is rejected at startup. Do not enable `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES` for production OAuth deployments.
+Lightdash OAuth access tokens are typically **opaque**. MCP-local `mcp:read` / `mcp:write` enforcement applies only when tokens carry decodable JWT scope claims. In `lightdash-oauth` mode, `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`, `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`, and `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES` are rejected at startup.

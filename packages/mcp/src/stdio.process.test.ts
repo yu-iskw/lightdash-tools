@@ -122,7 +122,7 @@ describe('stdio process smoke', () => {
       serverInfo?: { name?: string };
       protocolVersion?: string;
     };
-    expect(initResult.serverInfo?.name).toBe('lightdash-mcp');
+    expect(initResult.serverInfo?.name).toBe('lightdash-mcp-semantic-layer');
     expect(initResult.protocolVersion).toBeTruthy();
 
     writeLine(child, {

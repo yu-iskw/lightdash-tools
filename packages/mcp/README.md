@@ -1,6 +1,8 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash: exposes projects, charts, dashboards, spaces, users, and groups as tools. Uses `@lightdash-tools/client` for all API access.
+MCP server for Lightdash **semantic-layer** discovery and query composition (compile only). Tools live in a shared registry; the shipped `semantic-layer` persona selects nine `ldt__*` tools, prompts, and a playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0042](../../docs/adr/0042-shared-mcp-tool-registry-and-persona-manifests-with-fixed-paths.md).
+
+Broad admin surfaces (charts, dashboards, users, AI agents, …) are **not** registered on this binary — use `@lightdash-tools/client` or the CLI.
 
 ## Installation
 
@@ -43,35 +45,39 @@ Production requires `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1`. Non-rea
 
 ## Environment variables
 
-### Required
+Preferred names use the `LIGHTDASH_TOOLS_*` / `LIGHTDASH_TOOLS_MCP_*` prefixes (see ADR-0035). Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
 
-- `LIGHTDASH_URL` — Lightdash instance base URL (e.g. `https://app.lightdash.cloud`).
-- `LIGHTDASH_API_KEY` — Personal access token or API key. Required for STDIO and HTTP `none` / `shared-key` modes; **not required** for HTTP `lightdash-oauth` mode (clients authenticate with OAuth bearer tokens).
+### Stdio
 
-### Optional (both modes)
+| Required                             | Optional (process guardrails)                                                                |
+| :----------------------------------- | :------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_SAFETY_MODE`, `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, `LIGHTDASH_TOOLS_DRY_RUN` |
 
-- `LIGHTDASH_TOOLS_SAFETY_MODE` — Safety mode for dynamic enforcement (`read-only`, `write-idempotent`, `write-destructive`). See [Safety Modes](#safety-modes) for details.
-- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` — Comma-separated project UUIDs to restrict operations (empty = all allowed). CLI `--projects` overrides.
-- `LIGHTDASH_TOOLS_DRY_RUN` — Set to `1`, `true`, or `yes` to simulate write operations without executing.
+Do **not** set `LIGHTDASH_TOOLS_MCP_*` for stdio.
 
-Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
+### HTTP `shared-key` (production-ready)
 
-### Streamable HTTP only
+| Required                                                                                                           | Common optional                                                                                            |
+| :----------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`, `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key`, `LIGHTDASH_TOOLS_MCP_SHARED_KEY` | `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, session limits, process guardrails |
 
-Preferred names use the `LIGHTDASH_TOOLS_MCP_*` prefix (see ADR-0035). Legacy `MCP_*` names still work with deprecation warnings.
+### HTTP `lightdash-oauth` (experimental identity-only)
 
-- `LIGHTDASH_TOOLS_MCP_AUTH_MODE` — `none` (default), `shared-key`, or `lightdash-oauth` (experimental identity-only OAuth).
-- `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH` — Required (`1`) for `lightdash-oauth` in `NODE_ENV=production`. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
-- `LIGHTDASH_TOOLS_MCP_HTTP_PORT` — Port for the HTTP server (default: `3100`). Alias: `MCP_HTTP_PORT`, `MCP_SERVER_PORT`.
-- `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` — Public HTTPS base URL for OAuth metadata (required in `lightdash-oauth` mode). Alias: `MCP_PUBLIC_URL`.
-- `LIGHTDASH_TOOLS_MCP_SHARED_KEY` — Shared endpoint secret for `shared-key` mode. Alias: `MCP_API_KEY`.
-- `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` — Comma-separated CORS origin allowlist. Required in production `lightdash-oauth` mode unless `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN=1`. Alias: `MCP_ALLOWED_ORIGINS`.
-- `LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT` — Per OAuth subject in-memory session cap (default: `10`; `0` = unlimited per subject).
-- `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_WRITE_IN_IDENTITY_OAUTH` — Allow safety modes broader than `read-only` in production `lightdash-oauth` (explicit risk acceptance).
-- `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN` — Reflect any browser `Origin` when CORS allowlist is empty (not for production OAuth without explicit acceptance).
-- `MCP_AUTH_ENABLED` — Legacy alias: when set, implies `LIGHTDASH_TOOLS_MCP_AUTH_MODE=shared-key`.
+| Required                                                                                                                                                                              | Common optional                                                                                                                                                    |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`; in `NODE_ENV=production` also `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` | `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` (required in production unless any-origin danger flag), token cache TTL, process guardrails |
 
-In `lightdash-oauth` mode, `LIGHTDASH_API_KEY` is not required. Clients authenticate with Lightdash OAuth and send `Authorization: Bearer <access-token>`. The server exposes protected-resource metadata and validates tokens via `GET /api/v1/user` (identity only — not resource/audience binding). Lightdash exposes `/.well-known/oauth-authorization-server` for OAuth discovery; prefer discovery where supported, with static endpoint configuration as fallback.
+`LIGHTDASH_API_KEY` is **not** required. Clients send `Authorization: Bearer <access-token>`. Validation is identity-only via `GET /api/v1/user` — not resource/audience binding.
+
+**Do not set in `lightdash-oauth`:** `LIGHTDASH_TOOLS_MCP_PATH`, `LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES`, `LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED`, `LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES` (startup rejects them).
+
+### Advanced (HTTP)
+
+Session TTL/max/cleanup, body size, host bind, and danger/experimental overrides (`DANGEROUSLY_*`, `VALIDATE_TOKEN`, insecure public URL, write-in-identity-oauth) are documented in [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+
+Legacy `MCP_*` aliases still warn and map to `LIGHTDASH_TOOLS_MCP_*`; migrate before a future minor removes them.
+
+Endpoint path is persona-owned: `/semantic-layer/v1/mcp` (setting `LIGHTDASH_TOOLS_MCP_PATH` is rejected).
 
 See also:
 
@@ -121,31 +127,22 @@ export LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH="1"
 npx @lightdash-tools/mcp serve-http
 ```
 
-The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /mcp`. Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
+The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /semantic-layer/v1/mcp` (persona-owned fixed path; `/mcp` returns 404). Sessions are created on first `initialize`; subsequent requests must include the `Mcp-Session-Id` header returned by the server.
+
+**Local Compose (dev):** `docker compose -f docker-compose.dev.yml --profile semantic-layer up --build` then Cursor `url: http://localhost:8080/semantic-layer/v1/mcp`.
 
 **Auth modes (HTTP):** default is `none` (unauthenticated endpoint; startup warning). For **production** use `shared-key`. `lightdash-oauth` is experimental identity-only OAuth — see [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
 ## Tools
 
-The server registers the following tools (names prefixed with `ldt__`):
+The `semantic-layer` persona registers these tools (names prefixed with `ldt__`):
 
-- **Projects**: `list_projects`, `get_project`, `validate_project`, `get_validation_results`
-- **Explores**: `list_explores`, `get_explore`
-- **Charts**: `list_charts`, `list_charts_as_code`, `upsert_chart_as_code`
-- **Dashboards**: `list_dashboards`
-- **Spaces**: `list_spaces`, `get_space`
-- **Users**: `list_organization_members`, `get_member` (member deletion is client-only; see [ADR-0037](../../docs/adr/0037-agent-safe-mcp-cli-surface.md))
-- **Groups**: `list_groups`, `get_group`
-- **Metrics**: `list_metrics`
-- **Schedulers**: `list_schedulers`
-- **Tags**: `list_tags`
-- **Query**: `compile_query`
-- **Content**: `search_content` (v2)
-- **AI Agents**:
-  - **Admin**: `list_admin_agents`, `list_admin_agent_threads`, `get_ai_organization_settings`, `update_ai_organization_settings`
-  - **Agent Management**: `list_project_agents`, `get_project_agent`, `create_project_agent`, `update_project_agent`, `delete_project_agent`
-  - **Conversations**: `list_agent_threads`, `get_agent_thread`, `generate_agent_message`, `continue_agent_thread`
-  - **Evaluations**: `list_agent_evaluations`, `get_agent_evaluation`, `create_agent_evaluation`, `update_agent_evaluation`, `append_agent_evaluation_prompts`, `run_agent_evaluation`, `list_agent_evaluation_runs`, `get_agent_evaluation_run_results`, `delete_agent_evaluation`
+- **Projects**: `list_projects`, `get_project`
+- **Explores**: `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage`
+- **Metrics**: `list_metrics`, `get_metric`
+- **Query**: `compile_query` (empty SELECT → `isError`; no run-query)
+
+Prompts and playbook: `lightdash://playbooks/semantic-layer` (cite `ldt__*` names only).
 
 ### CLI Binary
 

@@ -1,4 +1,5 @@
 import type { McpAuthMode } from '../auth/auth-mode.js';
+import type { PersonaId } from '../personas/types.js';
 import type { McpContextProvider } from '../request-context.js';
 import type { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -16,6 +17,8 @@ export interface SessionEntry {
   lastAccessAt: number;
   auth: SessionAuthState;
   contextProvider?: McpContextProvider;
+  /** Persona that owns this session (must match request path). */
+  personaId: PersonaId;
 }
 
 export class SessionStore {

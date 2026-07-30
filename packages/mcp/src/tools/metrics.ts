@@ -1,5 +1,5 @@
 /**
- * MCP tools: metrics (list, get).
+ * MCP tools: metrics (list, get) — shared catalog.
  */
 
 import { z } from 'zod';
@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
-  READ_ONLY_DEFAULT,
+  jsonToolResult,
   registerToolSafe,
   wrapToolAnnotated,
 } from './shared.js';
@@ -15,20 +15,21 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export function registerMetricsTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerListMetrics(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_metrics',
     {
       title: 'List metrics',
-      description: 'List metrics in a project data catalog',
+      description:
+        'List metrics in the project catalog. Search with metric keywords (e.g. nps), not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
       inputSchema: {
         projectUuid: projectUuidField(),
-        search: z.string().optional().describe('Search query'),
-        page: z.number().optional().describe('Page number'),
-        pageSize: z.number().optional().describe('Page size'),
+        search: z.string().optional().describe('Metric keyword search (not warehouse/table label)'),
+        page: z.number().int().positive().optional().describe('Page number (1-based)'),
+        pageSize: z.number().int().positive().optional().describe('Page size'),
       },
-      annotations: READ_ONLY_DEFAULT,
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
@@ -44,7 +45,42 @@ export function registerMetricsTools(server: McpServer, contextProvider: McpCont
           pageSize?: number;
         }) => {
           const result = await c.v1.metrics.listMetrics(projectUuid, params);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
+        },
+    ),
+  );
+}
+
+export function registerGetMetric(server: McpServer, contextProvider: McpContextProvider): void {
+  registerToolSafe(
+    server,
+    'get_metric',
+    {
+      title: 'Get metric',
+      description:
+        'Get a metric by explore id (tableName) and metric name. tableName must be the full explore id, not the warehouse label.',
+      inputSchema: {
+        projectUuid: projectUuidField(),
+        tableName: z.string().describe('Full explore id (same as tableName on catalog rows)'),
+        metricName: z.string().describe('Metric name'),
+      },
+      annotations: READ_ONLY_CAPABILITY.annotations,
+    },
+    wrapToolAnnotated(
+      contextProvider,
+      READ_ONLY_CAPABILITY,
+      (c) =>
+        async ({
+          projectUuid,
+          tableName,
+          metricName,
+        }: {
+          projectUuid: string;
+          tableName: string;
+          metricName: string;
+        }) => {
+          const result = await c.v1.metrics.getMetric(projectUuid, tableName, metricName);
+          return jsonToolResult(result);
         },
     ),
   );

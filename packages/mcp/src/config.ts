@@ -74,35 +74,6 @@ export function getAuditLogPath(): string | undefined {
   return process.env.LIGHTDASH_TOOLS_AUDIT_LOG || undefined;
 }
 
-/** MCP capability profiles (RFC Phase 2). */
-export const MCP_PROFILE_CORE_LIFECYCLE = 'core-lifecycle' as const;
-export const MCP_PROFILE_EVALUATIONS = 'evaluations' as const;
-
-export const DEFAULT_MCP_PROFILES = [MCP_PROFILE_CORE_LIFECYCLE, MCP_PROFILE_EVALUATIONS] as const;
-
-export type McpProfile = (typeof DEFAULT_MCP_PROFILES)[number];
-
-/**
- * Active MCP capability profiles from LIGHTDASH_TOOLS_MCP_PROFILES (comma-separated).
- * Defaults to core-lifecycle and evaluations when unset.
- */
-export function getMcpProfiles(): Set<McpProfile> {
-  const raw = process.env.LIGHTDASH_TOOLS_MCP_PROFILES;
-  const names = raw
-    ? raw
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [...DEFAULT_MCP_PROFILES];
-  return new Set(names as McpProfile[]);
-}
-
-/** Returns true when the given profile is enabled. */
-export function hasMcpProfile(profile: McpProfile, profiles?: Set<McpProfile>): boolean {
-  const active = profiles ?? getMcpProfiles();
-  return active.has(profile);
-}
-
 /**
  * Builds a LightdashClient from environment variables (and optional overrides).
  * Throws if LIGHTDASH_URL or LIGHTDASH_API_KEY are missing.

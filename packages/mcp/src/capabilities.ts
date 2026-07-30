@@ -1,47 +1,30 @@
 /**
- * RFC Phase 2 MCP capability registration (tools, resources, prompts, completion).
+ * Register tools / prompts / resources for a persona.
  */
 
-import {
-  getMcpProfiles,
-  hasMcpProfile,
-  MCP_PROFILE_CORE_LIFECYCLE,
-  MCP_PROFILE_EVALUATIONS,
-} from './config.js';
-import { registerPrompts } from './prompts/index.js';
-import { registerResources } from './resources/index.js';
-import { registerTools } from './tools/index.js';
+import { getDefaultPersona } from './personas/index.js';
+import { registerToolsByIds } from './tools/registry.js';
 
-import type { McpProfile } from './config.js';
+import type { PersonaDefinition } from './personas/types.js';
 import type { McpContextProvider } from './request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type RegisterCapabilitiesOptions = {
-  /** Override active profiles (defaults to LIGHTDASH_TOOLS_MCP_PROFILES). */
-  profiles?: Set<McpProfile>;
+  /** Persona to register (defaults to the sole shipped persona). */
+  persona?: PersonaDefinition;
 };
 
 /**
- * Registers MCP capabilities based on active profiles.
- * Tools are always registered; resources, prompts, and completion are profile-gated.
+ * Registers MCP capabilities for the given persona.
+ * Tools come from the shared registry via persona.toolIds.
  */
 export function registerCapabilities(
   server: McpServer,
   contextProvider: McpContextProvider,
   options?: RegisterCapabilitiesOptions,
 ): void {
-  const profiles = options?.profiles ?? getMcpProfiles();
-
-  registerTools(server, contextProvider);
-
-  if (hasMcpProfile(MCP_PROFILE_EVALUATIONS, profiles)) {
-    registerResources(server, contextProvider);
-  }
-
-  if (
-    hasMcpProfile(MCP_PROFILE_CORE_LIFECYCLE, profiles) ||
-    hasMcpProfile(MCP_PROFILE_EVALUATIONS, profiles)
-  ) {
-    registerPrompts(server, contextProvider, profiles);
-  }
+  const persona = options?.persona ?? getDefaultPersona();
+  registerToolsByIds(server, contextProvider, persona.toolIds);
+  persona.registerPrompts(server);
+  persona.registerResources(server);
 }

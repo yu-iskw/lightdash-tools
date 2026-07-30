@@ -12,6 +12,7 @@ import {
   MCP_AUTH_MODE_SHARED_KEY,
   MCP_HTTP_AUTH_MODES,
 } from '../auth/auth-mode.js';
+import { getDefaultPersona } from '../personas/index.js';
 
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
@@ -48,12 +49,7 @@ import {
   ENV_MCP_SESSION_CLEANUP_MS,
   ENV_MCP_SESSION_TTL_MS,
 } from './env.js';
-import {
-  normalizeLightdashUrl,
-  normalizeMcpPath,
-  normalizePublicUrl,
-  isLocalHttpOrigin,
-} from './normalize-url.js';
+import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
@@ -322,16 +318,37 @@ function assertAllowedOriginsPolicy(
   );
 }
 
-function assertLightdashOAuthScopePolicy(authMode: McpAuthMode, requiredScopes: string[]): void {
-  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH || requiredScopes.length === 0) {
+function assertLightdashOAuthScopePolicy(
+  authMode: McpAuthMode,
+  requiredScopes: string[],
+  scopesSupportedEnvSet: boolean,
+  grantAllScopesWhenUnknown: boolean,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
     return;
   }
 
-  throw new Error(
-    `${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} cannot be set when auth mode is ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}. ` +
-      `Lightdash OAuth access credentials are opaque, so MCP cannot verify JWT scope claims from Lightdash. ` +
-      `Leave ${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} unset and rely on Lightdash RBAC plus LIGHTDASH_TOOLS_SAFETY_MODE.`,
-  );
+  if (requiredScopes.length > 0) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} cannot be set when auth mode is ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}. ` +
+        `Lightdash OAuth access credentials are opaque, so MCP cannot verify JWT scope claims from Lightdash. ` +
+        `Leave ${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} unset and rely on Lightdash RBAC plus LIGHTDASH_TOOLS_SAFETY_MODE.`,
+    );
+  }
+
+  if (scopesSupportedEnvSet) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED} cannot be set when auth mode is ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}. ` +
+        `Lightdash OAuth credentials are opaque; leave scopes unset (metadata uses an empty scopes_supported list).`,
+    );
+  }
+
+  if (grantAllScopesWhenUnknown) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES} cannot be set when auth mode is ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}. ` +
+        `Identity-only OAuth does not enforce MCP-local scopes.`,
+    );
+  }
 }
 
 function defaultScopesSupported(authMode: McpAuthMode): string[] {
@@ -363,13 +380,6 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
     console.warn(
       `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
         'Use only for local development.',
-    );
-  }
-
-  if (config.scopesSupported.length > 0) {
-    console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED} advertises OAuth scopes, but Lightdash OAuth credentials are opaque. ` +
-        'MCP-local scope enforcement applies only when access tokens carry decodable JWT scope claims.',
     );
   }
 
@@ -441,6 +451,13 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
   }
 
+  if (readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) !== undefined) {
+    throw new Error(
+      `${ENV_LIGHTDASH_TOOLS_MCP_PATH} is unused and rejected. ` +
+        `The MCP endpoint path is persona-owned (${getDefaultPersona().path}); leave this variable unset.`,
+    );
+  }
+
   const authMode = resolveAuthMode(env);
   assertAuthModeProductionPolicy(authMode, env);
 
@@ -455,11 +472,12 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const allowedOriginsRaw = readStringEnv(env, ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS, [
     { name: ENV_MCP_ALLOWED_ORIGINS, newName: ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS },
   ]);
+  const allowedOrigins = parseCsv(allowedOriginsRaw);
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
-  const mcpPathRaw = readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) ?? '/mcp';
-  const mcpPath = normalizeMcpPath(mcpPathRaw);
+  // Persona-owned fixed path (no LIGHTDASH_TOOLS_MCP_PATH).
+  const mcpPath = getDefaultPersona().path;
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, mcpPath) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl, env);
 
@@ -475,7 +493,6 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES, env),
     false,
   );
-  assertGrantAllScopesPolicy(env, grantAllScopesWhenUnknown);
 
   const experimentalIdentityOAuth = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
@@ -496,10 +513,18 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     readEnv(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN, env),
     false,
   );
-  assertAllowedOriginsPolicy(authMode, parseCsv(allowedOriginsRaw), dangerouslyAllowAnyOrigin, env);
+  assertAllowedOriginsPolicy(authMode, allowedOrigins, dangerouslyAllowAnyOrigin, env);
 
   const requiredScopes = readScopeList(env, ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES, []);
-  assertLightdashOAuthScopePolicy(authMode, requiredScopes);
+  const scopesSupportedEnvSet =
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED, env) !== undefined;
+  assertLightdashOAuthScopePolicy(
+    authMode,
+    requiredScopes,
+    scopesSupportedEnvSet,
+    grantAllScopesWhenUnknown,
+  );
+  assertGrantAllScopesPolicy(env, grantAllScopesWhenUnknown);
 
   return {
     lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
@@ -518,7 +543,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     mcpPath,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
-    allowedOrigins: parseCsv(allowedOriginsRaw),
+    allowedOrigins,
     maxBodyBytes: readNumberEnv(
       env,
       ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,

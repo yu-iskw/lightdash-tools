@@ -49,8 +49,9 @@ describe('MCP protocol contract (InMemoryTransport)', () => {
     await mcpClient.connect(clientTransport);
 
     const { tools } = await mcpClient.listTools();
-    expect(tools.length).toBeGreaterThan(0);
+    expect(tools).toHaveLength(9);
     expect(tools.every((t) => t.name.startsWith(TOOL_PREFIX))).toBe(true);
     expect(tools.some((t) => t.name === `${TOOL_PREFIX}list_projects`)).toBe(true);
+    expect(tools.some((t) => t.name === `${TOOL_PREFIX}compile_query`)).toBe(true);
   });
 });

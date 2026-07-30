@@ -13,6 +13,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
+  ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
 } from './env.js';
@@ -82,11 +83,13 @@ describe('loadMcpHttpConfig', () => {
   it('loads lightdash-oauth config when public URL is set', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud/';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
-    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com/mcp/';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
+      'https://mcp.example.com/semantic-layer/v1/mcp/';
 
     const config = loadMcpHttpConfig();
     expect(config.authMode).toBe('lightdash-oauth');
     expect(config.publicUrl).toBe('https://mcp.example.com');
+    expect(config.mcpPath).toBe('/semantic-layer/v1/mcp');
     expect(config.lightdashUrl).toBe('https://app.lightdash.cloud');
     expect(config.validateToken).toBe(true);
     expect(config.scopesSupported).toEqual([]);
@@ -99,6 +102,24 @@ describe('loadMcpHttpConfig', () => {
     process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES] = 'mcp:read';
 
     expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES);
+  });
+
+  it('rejects scopes_supported for lightdash-oauth mode at startup', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED] = 'mcp:read';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED);
+  });
+
+  it('rejects grant-all-scopes for lightdash-oauth mode at startup', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES] = '1';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES);
   });
 
   it('rejects lightdash-oauth in production without experimental identity opt-in', () => {
@@ -325,23 +346,29 @@ describe('loadMcpHttpConfig', () => {
     expect(config.port).toBe(3200);
   });
 
-  it('normalizes MCP path values', () => {
+  it('rejects LIGHTDASH_TOOLS_MCP_PATH because the endpoint path is persona-owned', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
-    process.env[ENV_LIGHTDASH_TOOLS_MCP_PATH] = 'mcp/';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PATH] = '/ignored-custom-path';
 
-    const config = loadMcpHttpConfig();
-    expect(config.mcpPath).toBe('/mcp');
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PATH);
   });
 
-  it('strips configured mcpPath suffix from public URL', () => {
+  it('uses fixed semantic-layer persona MCP path when PATH is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+
+    const config = loadMcpHttpConfig();
+    expect(config.mcpPath).toBe('/semantic-layer/v1/mcp');
+  });
+
+  it('strips persona mcpPath suffix from public URL', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE] = 'lightdash-oauth';
-    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com/custom/mcp';
-    process.env[ENV_LIGHTDASH_TOOLS_MCP_PATH] = '/custom/mcp';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
+      'https://mcp.example.com/semantic-layer/v1/mcp';
 
     const config = loadMcpHttpConfig();
     expect(config.publicUrl).toBe('https://mcp.example.com');
-    expect(config.mcpPath).toBe('/custom/mcp');
+    expect(config.mcpPath).toBe('/semantic-layer/v1/mcp');
   });
 
   it('rejects grant-all-scopes override in production', () => {

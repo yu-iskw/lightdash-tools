@@ -160,27 +160,9 @@ importers:
 
   packages/semantic-layer-mcp:
     dependencies:
-      '@lightdash-tools/client':
+      '@lightdash-tools/mcp':
         specifier: workspace:*
-        version: link:../client
-      '@lightdash-tools/common':
-        specifier: workspace:*
-        version: link:../common
-      '@modelcontextprotocol/node':
-        specifier: 2.0.0
-        version: 2.0.0(@modelcontextprotocol/server@2.0.0)(hono@4.12.32)
-      '@modelcontextprotocol/server':
-        specifier: 2.0.0
-        version: 2.0.0
-      commander:
-        specifier: ^15.0.0
-        version: 15.0.0
-      hono:
-        specifier: ^4.12.32
-        version: 4.12.32
-      zod:
-        specifier: ^4.4.3
-        version: 4.4.3
+        version: link:../mcp
     devDependencies:
       '@types/node':
         specifier: ^25.9.3

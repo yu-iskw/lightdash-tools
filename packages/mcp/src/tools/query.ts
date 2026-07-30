@@ -1,13 +1,14 @@
 /**
- * MCP tools: query (compile).
+ * MCP tools: query (compile only) — shared catalog.
  */
 
 import { z } from 'zod';
 
-import { projectUuidField } from './schema-fields.js';
+import { extractCompiledSql, isEmptySelectSql } from './explore-helpers.js';
+import { exploreIdField, projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
-  READ_ONLY_DEFAULT,
+  jsonToolResult,
   registerToolSafe,
   wrapToolAnnotated,
 } from './shared.js';
@@ -15,21 +16,22 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export function registerQueryTools(server: McpServer, contextProvider: McpContextProvider): void {
+export function registerCompileQuery(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'compile_query',
     {
       title: 'Compile query',
-      description: 'Compile a metric query for an explore without executing it',
+      description:
+        'Compile a metric query for an explore without executing it. Empty SELECT (no columns) is returned as an error — use fieldId `{table}_{name}`, not short names.',
       inputSchema: {
         projectUuid: projectUuidField(),
-        exploreId: z.string().describe('Explore ID'),
+        exploreId: exploreIdField(),
         metricQuery: z
           .record(z.string(), z.unknown())
           .describe('Metric query object (dimensions, metrics, filters, etc.)'),
       },
-      annotations: READ_ONLY_DEFAULT,
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
@@ -49,7 +51,22 @@ export function registerQueryTools(server: McpServer, contextProvider: McpContex
             exploreId,
             metricQuery as never,
           );
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          const sql = extractCompiledSql(result);
+          if (sql && isEmptySelectSql(sql)) {
+            return {
+              content: [
+                {
+                  type: 'text' as const,
+                  text:
+                    'Error: compile_query produced an empty SELECT (no columns). ' +
+                    'Use fieldId values like `{table}_{name}` from list_dimensions (base table), ' +
+                    'not short field names. Re-compile after fixing metricQuery.',
+                },
+              ],
+              isError: true,
+            };
+          }
+          return jsonToolResult(result);
         },
     ),
   );

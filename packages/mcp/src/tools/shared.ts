@@ -105,22 +105,13 @@ export type ToolOptions = {
   _meta?: Record<string, unknown>;
 };
 
-// Re-export presets for convenience and backward compatibility in tools
-export {
-  READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
-  WRITE_NONDESTRUCTIVE,
-  WRITE_OPEN_WORLD,
-  WRITE_DESTRUCTIVE,
-} from '@lightdash-tools/common';
+// Re-export presets used by tools and tests
+export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 
 export {
   RequiredMcpScope,
   READ_ONLY_CAPABILITY,
   WRITE_IDEMPOTENT_CAPABILITY,
-  WRITE_NONDESTRUCTIVE_CAPABILITY,
-  WRITE_OPEN_WORLD_CAPABILITY,
-  WRITE_DESTRUCTIVE_CAPABILITY,
   type McpToolCapability,
 } from '../auth/mcp-tool-capability.js';
 

@@ -1,36 +1,11 @@
 #!/usr/bin/env node
-import { Command } from 'commander';
+/**
+ * Deprecated shim: forwards to @lightdash-tools/mcp (semantic-layer persona).
+ */
+import { createRequire } from 'node:module';
 
-const program = new Command();
+console.error(
+  'DEPRECATED: @lightdash-tools/semantic-layer-mcp is deprecated. Use @lightdash-tools/mcp (`lightdash-mcp`). Streamable HTTP path: /semantic-layer/v1/mcp',
+);
 
-function runStdio(): void {
-  void import('./index.js');
-}
-
-function runHttp(): void {
-  void import('./http.js');
-}
-
-program
-  .name('lightdash-semantic-layer-mcp')
-  .description('MCP server for Lightdash semantic-layer discovery and compile-only workflows')
-  .version('0.6.0')
-  .action(() => {
-    runStdio();
-  });
-
-program
-  .command('stdio')
-  .description('Run MCP server on stdio (default)')
-  .action(() => {
-    runStdio();
-  });
-
-program
-  .command('serve-http')
-  .description('Run MCP server on Streamable HTTP (auth: none+PAT or lightdash-oauth)')
-  .action(() => {
-    runHttp();
-  });
-
-program.parse(process.argv);
+createRequire(__filename)('@lightdash-tools/mcp/dist/bin.js');
