@@ -11,13 +11,6 @@ import {
 
 import type { McpContextProvider } from '../request-context.js';
 
-export {
-  createAgentUuidCompleter,
-  createEvalUuidCompleter,
-  createProjectUuidCompleter,
-  createRunUuidCompleter,
-} from './ai-agents.js';
-
 /** Completion callbacks keyed by template variable name (for resource templates). */
 export type AiAgentCompletionCallbacks = {
   projectUuid: (

@@ -8,8 +8,6 @@ import type { McpProfile } from '../config.js';
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export { registerAiAgentPrompts } from './ai-agents.js';
-
 export function registerPrompts(
   server: McpServer,
   contextProvider: McpContextProvider,
