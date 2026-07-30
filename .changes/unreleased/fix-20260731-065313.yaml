@@ -1,0 +1,3 @@
+kind: fix
+body: Filter list_dimensions by explore.baseTable and restore HTTP X-Lightdash-Project pin on @lightdash-tools/mcp
+time: 2026-07-31T06:53:13.510877+09:00

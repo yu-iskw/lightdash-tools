@@ -5,9 +5,10 @@
  *   0. Static safety filter — skips registration when the tool exceeds LIGHTDASH_TOOLS_SAFETY_MODE.
  *   1. Audit log wrapper    — captures timing and outcome for every call.
  *   2. Project allowlist      — rejects calls targeting disallowed project UUIDs at runtime.
- *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   4. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
- *   5. Raw handler            — the actual tool implementation.
+ *   3. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
+ *   4. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   5. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
+ *   6. Raw handler            — the actual tool implementation.
  */
 
 import {
@@ -35,6 +36,7 @@ import {
   isDryRunMode,
 } from '../config/runtime.js';
 import { toMcpErrorMessage } from '../errors.js';
+import { getPinnedProjectUuid } from '../project-pin.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -258,6 +260,30 @@ export function registerToolSafe(
       return validationError;
     }
     return validatedInner(args, extra);
+  };
+
+  // ── HTTP project pin wrapper ──────────────────────────────────────────────
+  // When X-Lightdash-Project is set (ALS), reject tools that target another project.
+  const pinInner = finalHandler;
+  finalHandler = async (args, extra): Promise<TextContent> => {
+    const pinned = getPinnedProjectUuid();
+    if (pinned) {
+      const projectUuids = extractProjectUuids(args);
+      const mismatched = projectUuids.filter((uuid) => uuid !== pinned);
+      if (mismatched.length > 0) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
+            },
+          ],
+          isError: true,
+          _lightdashBlocked: true,
+        } as BlockedContent;
+      }
+    }
+    return pinInner(args, extra);
   };
 
   // ── Project allowlist wrapper ─────────────────────────────────────────────

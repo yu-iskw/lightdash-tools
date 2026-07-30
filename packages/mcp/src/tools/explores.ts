@@ -4,7 +4,11 @@
 
 import { z } from 'zod';
 
-import { summarizeDimensions, summarizeExplores } from './explore-helpers.js';
+import {
+  flattenExploreDimensions,
+  summarizeDimensions,
+  summarizeExplores,
+} from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
@@ -87,7 +91,7 @@ export function registerListDimensions(
     {
       title: 'List dimensions',
       description:
-        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === exploreId); set baseTableOnly=false for joined tables.',
+        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === explore.baseTable); set baseTableOnly=false for joined tables.',
       inputSchema: {
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
@@ -111,10 +115,11 @@ export function registerListDimensions(
           exploreId: string;
           baseTableOnly?: boolean;
         }) => {
-          const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
+          const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
+          const { baseTable, dimensions } = flattenExploreDimensions(explore);
           const baseOnly = baseTableOnly !== false;
           return jsonToolResult(
-            summarizeDimensions(result, baseOnly ? { baseTable: exploreId } : undefined),
+            summarizeDimensions(dimensions, baseOnly ? { baseTable } : undefined),
           );
         },
     ),

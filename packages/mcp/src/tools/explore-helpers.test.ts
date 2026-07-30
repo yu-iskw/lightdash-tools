@@ -2,13 +2,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
   extractCompiledSql,
+  flattenExploreDimensions,
   isEmptySelectSql,
   summarizeDimensions,
   summarizeExplores,
   toExploreSummary,
 } from './explore-helpers.js';
 
-import type { ApiExploresResults } from '@lightdash-tools/common';
+import type { ApiExploreResults, ApiExploresResults } from '@lightdash-tools/common';
 
 describe('toExploreSummary', () => {
   it('keeps name, label, tags, dataset path, and errors/warnings', () => {
@@ -163,6 +164,33 @@ describe('summarizeDimensions', () => {
         { baseTable: 'orders' },
       ),
     ).toEqual([{ name: 'a', table: 'orders', fieldId: 'orders_a' }]);
+  });
+
+  it('uses explore.baseTable when it differs from explore name/id', () => {
+    const explore = {
+      name: 'eda_orders_explore',
+      baseTable: 'orders',
+      tables: {
+        orders: {
+          dimensions: {
+            id: { name: 'id', table: 'orders', label: 'Id', type: 'string' },
+          },
+        },
+        customers: {
+          dimensions: {
+            name: { name: 'name', table: 'customers', label: 'Name', type: 'string' },
+          },
+        },
+      },
+    } as unknown as ApiExploreResults;
+
+    const { baseTable, dimensions } = flattenExploreDimensions(explore);
+    expect(baseTable).toBe('orders');
+    expect(summarizeDimensions(dimensions, { baseTable })).toEqual([
+      { name: 'id', table: 'orders', label: 'Id', type: 'string', fieldId: 'orders_id' },
+    ]);
+    // Filtering by exploreId (name) would drop every base-table dimension.
+    expect(summarizeDimensions(dimensions, { baseTable: explore.name })).toEqual([]);
   });
 });
 

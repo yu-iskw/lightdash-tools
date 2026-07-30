@@ -2,6 +2,7 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
+import { getPinnedProjectUuid } from '../project-pin.js';
 import { projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
@@ -19,11 +20,17 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
     'list_projects',
     {
       title: 'List projects',
-      description: 'List all projects in the current organization',
+      description:
+        'List all projects in the current organization (or the single pinned project when X-Lightdash-Project is set)',
       inputSchema: {},
       annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
+      const pinned = getPinnedProjectUuid();
+      if (pinned) {
+        const project = await c.v1.projects.getProject(pinned);
+        return jsonToolResult([project]);
+      }
       const projects = await c.v1.projects.listProjects();
       return jsonToolResult(projects);
     }),

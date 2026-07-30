@@ -10,7 +10,7 @@ Discover the Lightdash semantic layer and **compose + compile** metric queries. 
 | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `ldt__list_projects` / `ldt__get_project` | Confirm project UUID ↔ name                                                                                      |
 | `ldt__list_explores`                      | Summaries (`name`, `label`, `tags`, `databaseName`, `schemaName`, `errors?`); **always** pass `search` + `limit` |
-| `ldt__list_dimensions`                    | Compact `{ name, label, table, type, fieldId }`; **default = base table only**                                   |
+| `ldt__list_dimensions`                    | Compact `{ name, label, table, type, fieldId }`; **default = `table === explore.baseTable`**                     |
 | `ldt__list_metrics` / `ldt__get_metric`   | Catalog search; filter `tableName === exploreId`                                                                 |
 | `ldt__compile_query`                      | Compile only — never “run”                                                                                       |
 | `ldt__get_explore`                        | **Rare** — full explore JSON is huge (~100KB–700KB+)                                                             |
@@ -51,7 +51,7 @@ Search `medico_session_summary` often returns many siblings (`eda_…`, `reporti
 ## Progressive discovery
 
 1. `ldt__list_explores` with search → disambiguate → note explore id.
-2. `ldt__list_dimensions` (default base-table) for `fieldId`s. Set `baseTableOnly=false` only if you need joined-table fields (payload grows a lot).
+2. `ldt__list_dimensions` (default: `table === explore.baseTable`, which may differ from explore id) for `fieldId`s. Set `baseTableOnly=false` only if you need joined-table fields (payload grows a lot).
 3. `ldt__list_metrics` with a **specific metric keyword** from the question (`nps`, `session`, …). **Not** the table name / explore id (those often return **zero** hits). **Not** ultra-broad tokens alone (`count`, `sum`) as a first try — they flood the catalog; if used, still filter `tableName === exploreId`.
 4. Call `ldt__get_explore` only if catalog metrics are insufficient and you need explore-local metric names.
 5. `ldt__compile_query` with `fieldId`s → verify SQL columns → **stop**.

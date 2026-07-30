@@ -2,7 +2,7 @@
  * Client-side helpers for explore tool responses (summary / filter / fieldId).
  */
 
-import type { ApiExploresResults } from '@lightdash-tools/common';
+import type { ApiExploreResults, ApiExploresResults } from '@lightdash-tools/common';
 
 export type ExploreSummary = {
   name: string;
@@ -81,6 +81,23 @@ export function summarizeExplores(
     summaries.push(summary);
   }
   return summaries;
+}
+
+/**
+ * Flatten all dimensions from an explore and return the authoritative base table name.
+ * Prefer `explore.baseTable` over `explore.name` / exploreId — they can differ.
+ */
+export function flattenExploreDimensions(explore: ApiExploreResults): {
+  baseTable: string;
+  dimensions: DimensionLike[];
+} {
+  const dimensions: DimensionLike[] = [];
+  for (const table of Object.values(explore.tables)) {
+    for (const dim of Object.values(table.dimensions)) {
+      dimensions.push(dim);
+    }
+  }
+  return { baseTable: explore.baseTable, dimensions };
 }
 
 /**

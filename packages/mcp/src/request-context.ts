@@ -14,6 +14,8 @@ export interface LightdashMcpRequestContext {
     safetyMode: SafetyMode;
     dryRun: boolean;
     allowedProjectUuids: string[];
+    /** HTTP-only pin from `X-Lightdash-Project` (ALS). */
+    pinnedProjectUuid?: string;
   };
 }
 

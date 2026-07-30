@@ -35,6 +35,7 @@ import {
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath } from '../config/runtime.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
+import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
 import { createLightdashMcpServer } from '../server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
@@ -607,16 +608,19 @@ async function handleHttpRequest(
   }
 
   const sid = getSessionId(req);
+  const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
-  if (req.method === 'POST') {
-    await handleMcpPost({ req, res, config, sessionStore, persona }, sid);
-    return;
-  }
+  await runWithProjectPinAsync(pinnedProjectUuid, async () => {
+    if (req.method === 'POST') {
+      await handleMcpPost({ req, res, config, sessionStore, persona }, sid);
+      return;
+    }
 
-  if (req.method === 'GET' || req.method === 'DELETE') {
-    await handleMcpGetOrDelete({ req, res, config, sessionStore, persona }, sid);
-    return;
-  }
+    if (req.method === 'GET' || req.method === 'DELETE') {
+      await handleMcpGetOrDelete({ req, res, config, sessionStore, persona }, sid);
+      return;
+    }
 
-  res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+    res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+  });
 }

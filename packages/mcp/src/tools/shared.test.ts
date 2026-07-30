@@ -7,6 +7,7 @@ import {
   setStaticAllowedProjectUuids,
   setDryRunMode,
 } from '../config/runtime.js';
+import { runWithProjectPinAsync } from '../project-pin.js';
 
 import {
   registerToolSafe,
@@ -468,6 +469,59 @@ describe('registerToolSafe', () => {
       const result = await handler({ projectUuids: [PROJECT_X, PROJECT_Y] });
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain('not in the list of allowed projects');
+    });
+  });
+
+  describe('HTTP project pin', () => {
+    it('allows matching projectUuid when pin is set', async () => {
+      registerToolSafe(
+        mockServer,
+        'pinned_ok',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+      await runWithProjectPinAsync(PROJECT_A, async () => {
+        const result = await handler({ projectUuid: PROJECT_A });
+        expect(result.isError).toBeUndefined();
+        expect(result.content[0].text).toBe('success');
+      });
+    });
+
+    it('blocks mismatched projectUuid when pin is set', async () => {
+      registerToolSafe(
+        mockServer,
+        'pinned_block',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+      await runWithProjectPinAsync(PROJECT_A, async () => {
+        const result = await handler({ projectUuid: PROJECT_B });
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).toContain('do not match the pinned project');
+        expect(result.content[0].text).toContain(PROJECT_A);
+        expect(result.content[0].text).toContain(PROJECT_B);
+      });
+      expect(mockHandler).not.toHaveBeenCalled();
+    });
+
+    it('allows tools with no projectUuid when pin is set', async () => {
+      registerToolSafe(
+        mockServer,
+        'pinned_no_uuid',
+        { description: 'List', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+      await runWithProjectPinAsync(PROJECT_A, async () => {
+        const result = await handler({});
+        expect(result.isError).toBeUndefined();
+        expect(result.content[0].text).toBe('success');
+      });
     });
   });
 

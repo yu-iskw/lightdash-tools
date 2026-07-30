@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-07-31]: `list_dimensions` must filter with `explore.baseTable`, not exploreId — when they differ, `{ baseTable: exploreId }` drops all base-table dims. HTTP `X-Lightdash-Project` pin lives in `project-pin.ts` ALS → `governance.pinnedProjectUuid`; `registerToolSafe` blocks mismatched `projectUuid`s and pinned `list_projects` returns `[getProject(pin)]`.
 - [2026-07-30]: MCP `src` tidy: deleted package-level `prompts/`/`resources/`/`completion/`/`tasks/`/`tools/ai-agents/`/`utils/`; runtime config is `config/runtime.ts`; audit helpers live under `audit/`. Persona owns prompts/resources.
 - [2026-07-30]: Semantic-layer Compose HTTP uses `LIGHTDASH_TOOLS_MCP_AUTH_MODE=none` + PAT from `.env` (`docker compose -f docker-compose.dev.yml --profile semantic-layer up`). Cursor is `url: http://localhost:8080/semantic-layer/v1/mcp` only — no OAuth `auth` block. `none` is rejected when `NODE_ENV=production`.
 - [2026-02-05]: Initial setup of the comprehensive skills reference and self-improvement guidelines.
