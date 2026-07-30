@@ -55,15 +55,12 @@ describe('registerSemanticLayerPrompts', () => {
     expect(textMsg.content.type).toBe('text');
     expect(textMsg.content.text).toContain('proj-1');
     expect(textMsg.content.text).toMatch(/Do not run/i);
-    expect(textMsg.content.text).toMatch(/SQL/i);
     expect(textMsg.content.text).toContain('compile_query');
-    expect(textMsg.content.text).toContain('{table}_{name}');
-    expect(textMsg.content.text).toMatch(/empty SELECT/i);
-    expect(textMsg.content.text).toMatch(/tableName === explore id/i);
-    expect(textMsg.content.text).toMatch(/base-table/i);
-    expect(textMsg.content.text).toMatch(/list_dimensions/i);
     expect(textMsg.content.text).toContain('Stop after compile_query');
     expect(textMsg.content.text).not.toContain('search_field_values');
+    // Procedure lives in the playbook, not duplicated in the prompt body.
+    expect(textMsg.content.text).not.toMatch(/Always search explores/i);
+    expect(textMsg.content.text).not.toMatch(/empty SELECT/i);
 
     const resourceMsg = result.messages[1];
     expect(resourceMsg.content.type).toBe('resource');
@@ -77,7 +74,7 @@ describe('registerSemanticLayerPrompts', () => {
     expect(resourceMsg.content.resource?.text).not.toContain('search_field_values');
   });
 
-  it('explore and compile_debug prompts include project, playbook URI, and postmortem cues', async () => {
+  it('explore and compile_debug prompts include project context and embed playbook', async () => {
     registerSemanticLayerPrompts(server);
 
     const exploreHandler = registerPromptSpy.mock.calls.find(
@@ -89,11 +86,7 @@ describe('registerSemanticLayerPrompts', () => {
     const explore = await exploreHandler({ projectUuid: 'p-explore' });
     expect(explore.messages[0].content.text).toContain('p-explore');
     expect(explore.messages[0].content.text).toMatch(/shortlist/i);
-    expect(explore.messages[0].content.text).toMatch(/search hints/i);
-    expect(explore.messages[0].content.text).toMatch(/Always use list_explores with search/i);
-    expect(explore.messages[0].content.text).toMatch(/Disambiguate/i);
-    expect(explore.messages[0].content.text).toMatch(/tableName === chosen explore id/i);
-    expect(explore.messages[0].content.text).toContain('{table}_{name}');
+    expect(explore.messages[0].content.text).toMatch(/Do not compile unless asked/i);
     expect(explore.messages[1].content.resource?.uri).toBe(SEMANTIC_LAYER_PLAYBOOK_URI);
 
     const debugHandler = registerPromptSpy.mock.calls.find(
@@ -110,10 +103,6 @@ describe('registerSemanticLayerPrompts', () => {
     expect(debug.messages[0].content.text).toContain('p-debug');
     expect(debug.messages[0].content.text).toContain('ex-1');
     expect(debug.messages[0].content.text).toContain('unknown field');
-    expect(debug.messages[0].content.text).toContain('{table}_{name}');
-    expect(debug.messages[0].content.text).toMatch(/Empty SELECT/i);
-    expect(debug.messages[0].content.text).toMatch(/get_field_lineage/i);
-    expect(debug.messages[0].content.text).toMatch(/explore id/i);
     expect(debug.messages[1].content.resource?.uri).toBe(SEMANTIC_LAYER_PLAYBOOK_URI);
   });
 });

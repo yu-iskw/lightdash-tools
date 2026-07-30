@@ -5,7 +5,7 @@
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import { z } from 'zod';
 
-import { summarizeExplores, withDimensionFieldIds } from './explore-helpers.js';
+import { summarizeDimensions, summarizeExplores } from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
 import { jsonToolResult, wrapTool } from './shared.js';
 
@@ -21,10 +21,10 @@ export function registerExploresTools(
     {
       title: 'List explores',
       description:
-        'List explore summaries (name, label, tags) for a project; optional search and limit',
+        'List explore summaries (name, label, tags, databaseName, schemaName); optional search and limit',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
-        search: z.string().optional().describe('Filter by name, label, or tag'),
+        search: z.string().optional().describe('Filter by name, label, tag, database, or schema'),
         limit: z.number().int().positive().optional().describe('Max explores to return'),
       }),
       annotations: READ_ONLY_DEFAULT,
@@ -74,7 +74,7 @@ export function registerExploresTools(
     {
       title: 'List dimensions',
       description:
-        'List dimensions for an explore; each item includes fieldId ({table}_{name}) for compile_query',
+        'List compact dimensions for an explore (name, label, table, type, fieldId) for compile_query',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
@@ -86,7 +86,7 @@ export function registerExploresTools(
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
-          return jsonToolResult(withDimensionFieldIds(result));
+          return jsonToolResult(summarizeDimensions(result));
         },
     ),
   );

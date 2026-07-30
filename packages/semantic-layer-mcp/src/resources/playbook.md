@@ -7,7 +7,7 @@ Discover the Lightdash semantic layer and **compose + compile** metric queries. 
 ## Allowed tools
 
 - `list_projects`, `get_project`
-- Explores: `list_explores` (summaries; optional `search` / `limit`), `get_explore`, `list_dimensions` (includes `fieldId`), `get_field_lineage`
+- Explores: `list_explores` (summaries; optional `search` / `limit`), `get_explore`, `list_dimensions` (compact + `fieldId`), `get_field_lineage`
 - Metrics: `list_metrics`, `get_metric`
 - `compile_query`
 
@@ -29,7 +29,7 @@ Those tools are not on this server. Stop after a successful compile (or after re
 1. Prefer `list_metrics` with `search` and `list_explores` with `search` / `limit`.
 2. Do **not** paste full explore catalogs or full `get_explore` / `list_dimensions` / lineage JSON into the user-facing answer (payloads can be hundreds of KB).
 3. Call `get_explore` only for the single explore you will compile against — and only if you need explore-scoped metric _names_ you cannot get from `list_metrics`.
-4. Prefer `list_dimensions` (with `fieldId`) over dumping the whole explore when selecting fields.
+4. Prefer `list_dimensions` (compact `{ name, label, table, type, fieldId }`) over dumping the whole explore when selecting fields.
 
 ## Always search
 
@@ -44,7 +44,7 @@ Warehouse / BigQuery table names (e.g. `medico_session_summary`) are **search hi
 When many explores match (e.g. `eda_`, `reporting_`, `mre_`, raw `dwh_pharma__…`):
 
 1. Prefer exact `label` match to the warehouse table name.
-2. Then prefer dataset path segments in `name` (`dwh_pharma` / `dm_pharma`).
+2. Then prefer dataset path via `schemaName` / `databaseName` (and path segments in `name` such as `dwh_pharma` / `dm_pharma`).
 3. Then prefer tags (e.g. `lightdash`).
 4. State the chosen explore id briefly in the answer.
 
@@ -64,11 +64,16 @@ When many explores match (e.g. `eda_`, `reporting_`, `mre_`, raw `dwh_pharma__�
 
 Use `{table}_{name}` / `fieldId` from `list_dimensions` (e.g. `…__medico_session_summary_session_start_time_jst`).
 
-Short keys alone are unsafe: `compile_query` may **succeed with an empty `SELECT`** (no error). Treat empty or missing expected columns in compiled SQL as failure — fix field IDs and re-compile.
+Short keys alone are unsafe. Two failure modes:
+
+1. `compile_query` may **succeed with an empty `SELECT`** (no error) — treat that as failure.
+2. Or it may hard-error (`Tried to reference … unknown field id`).
+
+Fix field IDs and re-compile. Prefer `fieldId` from `list_dimensions` when present.
 
 ## Field lineage
 
-Call `get_field_lineage` with `fieldId` first. If the result is null or empty, retry with the field’s short `name`. Summarize lineage; do not paste the full graph.
+Call `get_field_lineage` with either `fieldId` (`{table}_{name}`) or the field’s short `name` (both resolve). Summarize lineage; do not paste the full graph.
 
 ## Answer shape
 

@@ -2,30 +2,62 @@
  * Client-side helpers for explore tool responses (summary / filter / fieldId).
  */
 
+import type { ApiExploresResults } from '@lightdash-tools/common';
+
 export type ExploreSummary = {
   name: string;
-  label?: string;
+  label: string;
   tags?: string[];
+  databaseName?: string;
+  schemaName?: string;
+  errors?: unknown[];
+  warnings?: unknown[];
 };
 
-/** Map a raw explore list item to a compact summary. */
-export function toExploreSummary(explore: unknown): ExploreSummary | undefined {
-  if (!explore || typeof explore !== 'object') return undefined;
-  const record = explore as Record<string, unknown>;
-  const name = record.name;
-  if (typeof name !== 'string' || name.length === 0) return undefined;
-  const summary: ExploreSummary = { name };
-  if (typeof record.label === 'string') summary.label = record.label;
-  if (Array.isArray(record.tags)) {
-    summary.tags = record.tags.filter((t): t is string => typeof t === 'string');
+export type DimensionSummary = {
+  name: string;
+  label?: string;
+  table: string;
+  type?: string;
+  fieldId: string;
+};
+
+type DimensionLike = {
+  name: string;
+  table: string;
+  label?: string;
+  type?: string;
+};
+
+/** Map a summary explore to a compact MCP payload (drops fat explore fields). */
+export function toExploreSummary(explore: ApiExploresResults[number]): ExploreSummary {
+  const summary: ExploreSummary = {
+    name: explore.name,
+    label: explore.label,
+  };
+  if (Array.isArray(explore.tags)) {
+    summary.tags = explore.tags;
+  }
+  if ('databaseName' in explore && typeof explore.databaseName === 'string') {
+    summary.databaseName = explore.databaseName;
+  }
+  if ('schemaName' in explore && typeof explore.schemaName === 'string') {
+    summary.schemaName = explore.schemaName;
+  }
+  if ('errors' in explore && Array.isArray(explore.errors)) {
+    summary.errors = explore.errors;
+  }
+  if ('warnings' in explore && Array.isArray(explore.warnings)) {
+    summary.warnings = explore.warnings;
   }
   return summary;
 }
 
 function matchesSearch(summary: ExploreSummary, query: string): boolean {
-  if (!query) return true;
   if (summary.name.toLowerCase().includes(query)) return true;
-  if (summary.label?.toLowerCase().includes(query)) return true;
+  if (summary.label.toLowerCase().includes(query)) return true;
+  if (summary.databaseName?.toLowerCase().includes(query)) return true;
+  if (summary.schemaName?.toLowerCase().includes(query)) return true;
   return (summary.tags ?? []).some((tag) => tag.toLowerCase().includes(query));
 }
 
@@ -34,11 +66,10 @@ function matchesSearch(summary: ExploreSummary, query: string): boolean {
  * Default limit: 50 when search is set, otherwise 100.
  */
 export function summarizeExplores(
-  explores: unknown[],
+  explores: ApiExploresResults,
   options?: { search?: string; limit?: number },
 ): ExploreSummary[] {
-  const search = options?.search;
-  const query = search?.trim().toLowerCase() ?? '';
+  const query = options?.search?.trim().toLowerCase() ?? '';
   const defaultLimit = query.length > 0 ? 50 : 100;
   const limit = Math.max(0, options?.limit ?? defaultLimit);
 
@@ -46,21 +77,22 @@ export function summarizeExplores(
   for (const explore of explores) {
     if (summaries.length >= limit) break;
     const summary = toExploreSummary(explore);
-    if (!summary) continue;
-    if (search !== undefined && !matchesSearch(summary, query)) continue;
+    if (query && !matchesSearch(summary, query)) continue;
     summaries.push(summary);
   }
   return summaries;
 }
 
-/** Attach compile_query fieldId `{table}_{name}` when table and name are present. */
-export function withDimensionFieldIds(dimensions: unknown[]): unknown[] {
+/** Compact dimensions with compile_query fieldId `{table}_{name}`. */
+export function summarizeDimensions(dimensions: readonly DimensionLike[]): DimensionSummary[] {
   return dimensions.map((dim) => {
-    if (!dim || typeof dim !== 'object') return dim;
-    const record = dim as Record<string, unknown>;
-    const table = record.table;
-    const name = record.name;
-    if (typeof table !== 'string' || typeof name !== 'string') return dim;
-    return { ...record, fieldId: `${table}_${name}` };
+    const summary: DimensionSummary = {
+      name: dim.name,
+      table: dim.table,
+      fieldId: `${dim.table}_${dim.name}`,
+    };
+    if (typeof dim.label === 'string') summary.label = dim.label;
+    if (typeof dim.type === 'string') summary.type = dim.type;
+    return summary;
   });
 }

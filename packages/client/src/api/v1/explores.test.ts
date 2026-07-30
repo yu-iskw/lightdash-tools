@@ -61,6 +61,7 @@ describe('ExploresClient', () => {
     const explore = {
       tables: {
         t1: {
+          name: 't1',
           dimensions: {
             d1: { name: 'd1' },
           },
@@ -72,5 +73,24 @@ describe('ExploresClient', () => {
     vi.mocked(mockHttp.get).mockResolvedValue(explore);
     const result = await client.getFieldLineage('p1', 'e1', 'd1');
     expect(result).toEqual({ upstream: [] });
+  });
+
+  it('getFieldLineage should resolve {table}_{name} fieldIds', async () => {
+    const client = new ExploresClient(mockHttp);
+    const explore = {
+      tables: {
+        t1: {
+          name: 't1',
+          dimensions: {
+            d1: { name: 'd1' },
+          },
+          metrics: {},
+          lineageGraph: { upstream: ['x'] },
+        },
+      },
+    };
+    vi.mocked(mockHttp.get).mockResolvedValue(explore);
+    const result = await client.getFieldLineage('p1', 'e1', 't1_d1');
+    expect(result).toEqual({ upstream: ['x'] });
   });
 });
