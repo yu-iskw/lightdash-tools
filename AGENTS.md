@@ -176,6 +176,8 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **MCP SDK v2 split packages (ADR-0041):** `@lightdash-tools/mcp` depends on exact `@modelcontextprotocol/server@2.0.0` and `@modelcontextprotocol/node@2.0.0` (plus `hono` peer), not the v1 monolith `@modelcontextprotocol/sdk`. Keep legacy-era serving via `server.connect(StdioServerTransport)` and stateful `NodeStreamableHTTPServerTransport`; do not switch to `serveStdio` / `createMcpHandler` without an explicit protocol-era decision. Tests may use `@modelcontextprotocol/client` as a devDependency.
 - **MCP package tests are CommonJS under `tsc`:** `packages/mcp/tsconfig.json` uses `"module": "commonjs"` and compiles `*.test.ts` into `dist/`. Do not use `import.meta` in MCP tests — it fails `pnpm --filter @lightdash-tools/mcp build`. Resolve the repo root with `process.cwd()` (Vitest runs from the monorepo root).
 - **Stdio MCP smoke env:** `EnvContextProvider` calls `getClient()` at construct time, so `LIGHTDASH_URL` and `LIGHTDASH_API_KEY` must be set before the process starts. Dummy values are enough for initialize/tools/list; the Lightdash API is only hit on tool execution.
+- **OpenAPI pin lives in `config/lightdash-openapi-ref.txt`:** `generate:types` fetches swagger from that commit SHA (not floating `main`). Bump the pin, regenerate, then fix breakages — never hand-edit `openapi-types.ts`.
+- **`LightdashUser` / `AuthenticatedUser` avatar fields:** Upstream now requires `avatarUrl` and `avatarGradient` (`string | null`). Fixtures using `satisfies AuthenticatedUser` must include both after an OpenAPI sync.
 
 ## Learned User Preferences
 

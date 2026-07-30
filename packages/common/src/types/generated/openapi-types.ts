@@ -4,6 +4,699 @@
  */
 
 export interface paths {
+  '/api/v1/projects/{projectUuid}/code/charts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List charts as code
+     * @description Get charts in code representation
+     */
+    get: operations['getCodeCharts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/dashboards': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List dashboards as code
+     * @description Get dashboards in code representation
+     */
+    get: operations['getCodeDashboards'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/sqlCharts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get SQL charts as code
+     * @description Gets SQL charts in code representation
+     */
+    get: operations['getCodeSqlCharts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/virtualViews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List virtual views as code
+     * @description Get virtual views in code representation
+     */
+    get: operations['getCodeVirtualViews'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/scheduledDeliveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List scheduled deliveries as code
+     * @description Get scheduled deliveries in code representation
+     */
+    get: operations['getCodeScheduledDeliveries'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List alerts as code
+     * @description Get alerts in code representation
+     */
+    get: operations['getCodeAlerts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/googleSheets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Google Sheets syncs as code
+     * @description Get Google Sheets syncs in code representation
+     */
+    get: operations['getCodeGoogleSheetsSyncs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/spaces': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List spaces as code
+     * @description Get spaces and their direct access policy in code representation
+     */
+    get: operations['getCodeSpaces'];
+    put?: never;
+    /**
+     * Upsert space as code
+     * @description Create or update a space and its direct access policy from code
+     */
+    post: operations['upsertCodeSpace'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/spaces/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List spaces as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getSpacesAsCode'];
+    put?: never;
+    /**
+     * Upsert space as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertSpaceAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/aiAgents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getCodeAiAgents'];
+    put?: never;
+    post: operations['upsertCodeAiAgents'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/externalConnections': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List external connections as code
+     * @description Get data-app external connections in code representation. Enterprise
+     *     only; requires the manage ExternalConnection permission. Secrets are
+     *     never included.
+     */
+    get: operations['getCodeExternalConnections'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/virtualViews/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert virtual view as code
+     * @description Upsert a virtual view from code representation
+     */
+    post: operations['upsertCodeVirtualView'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/scheduledDeliveries/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert scheduled delivery as code
+     * @description Upsert a scheduled delivery from code representation
+     */
+    post: operations['upsertCodeScheduledDelivery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/alerts/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert alert as code
+     * @description Upsert an alert from code representation
+     */
+    post: operations['upsertCodeAlert'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/googleSheets/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert Google Sheets sync as code
+     * @description Upsert a Google Sheets sync from code representation
+     */
+    post: operations['upsertCodeGoogleSheetsSync'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/charts/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert chart as code
+     * @description Upsert a chart from code representation
+     */
+    post: operations['upsertCodeChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/sqlCharts/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert SQL chart as code
+     * @description Upserts an SQL chart from code representation
+     */
+    post: operations['upsertCodeSqlChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/dashboards/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert dashboard as code
+     * @description Upsert a dashboard from code representation
+     */
+    post: operations['upsertCodeDashboard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/code/externalConnections/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert external connection as code
+     * @description Create or update a data-app external connection from its code
+     *     representation. Enterprise only; requires the manage ExternalConnection
+     *     permission. The body nests the document under `connection`; the optional
+     *     `secret` rides alongside it and is never part of the YAML document.
+     */
+    post: operations['upsertCodeExternalConnection'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/charts/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List charts as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getChartsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/dashboards/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List dashboards as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getDashboardsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/sqlCharts/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List SQL charts as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getSqlChartsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/virtualViews/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List virtual views as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getVirtualViewsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/scheduledDeliveries/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List scheduled deliveries as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getScheduledDeliveriesAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/alerts/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List alerts as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getAlertsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/googleSheets/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Google Sheets syncs as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getGoogleSheetsSyncsAsCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI agents as code (deprecated)
+     * @deprecated
+     */
+    get: operations['getAiAgentsAsCode'];
+    put?: never;
+    /**
+     * Upsert AI agents as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertAiAgentsAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/virtualViews/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert virtual view as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertVirtualViewAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/scheduledDeliveries/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert scheduled delivery as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertScheduledDeliveryAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/alerts/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert alert as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertAlertAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/googleSheets/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert Google Sheets sync as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertGoogleSheetsSyncAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/charts/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert chart as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertChartAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/sqlCharts/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert SQL chart as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertSqlChartAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/dashboards/{slug}/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upsert dashboard as code (deprecated)
+     * @deprecated
+     */
+    post: operations['upsertDashboardAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/snowflake/sso/is-authenticated': {
     parameters: {
       query?: never;
@@ -296,6 +989,258 @@ export interface paths {
     patch: operations['UpdateScimGroup'];
     trace?: never;
   };
+  '/api/v1/schedulers/{schedulerUuid}/ai-augmentation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get scheduler AI augmentation
+     * @description Get the AI augmentation attached to a scheduled delivery, or null.
+     */
+    get: operations['getSchedulerAiAugmentation'];
+    /**
+     * Upsert scheduler AI augmentation
+     * @description Attach or replace the AI augmentation on a scheduled delivery.
+     */
+    put: operations['upsertSchedulerAiAugmentation'];
+    post?: never;
+    /**
+     * Delete scheduler AI augmentation
+     * @description Remove the AI augmentation from a scheduled delivery.
+     */
+    delete: operations['deleteSchedulerAiAugmentation'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getResolvedProjectHomepage'];
+    put?: never;
+    post: operations['createProjectHomepage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/view-as': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['viewHomepageAs'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/builder': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getProjectHomepageForBuilder'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/link-metadata': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getHomepageLinkMetadata'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/recently-viewed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getHomepageRecentlyViewed'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/assignments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getHomepageAssignments'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/group-priorities': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['updateHomepageGroupPriorities'];
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/list': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['listProjectHomepages'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/{homepageUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['deleteProjectHomepage'];
+    options?: never;
+    head?: never;
+    patch: operations['updateProjectHomepageDraft'];
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/{homepageUuid}/discard-draft': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['discardProjectHomepageDraft'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/homepage/{homepageUuid}/publish': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['publishProjectHomepage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/announcements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['listProjectAnnouncements'];
+    put?: never;
+    post: operations['createProjectAnnouncement'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/announcements/{announcementUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete: operations['deleteProjectAnnouncement'];
+    options?: never;
+    head?: never;
+    patch: operations['updateProjectAnnouncement'];
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/announcements/images': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['uploadProjectAnnouncementImage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/databricks/sso/is-authenticated': {
     parameters: {
       query?: never;
@@ -430,6 +1375,79 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/documents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List agent documents
+     * @description List the knowledge documents this agent can use: the organization level
+     *     documents plus the ones granted to this agent in this project.
+     */
+    get: operations['listAgentDocuments'];
+    put?: never;
+    /**
+     * Create agent document
+     * @description Create a knowledge document scoped to this project and agent.
+     */
+    post: operations['createAgentDocument'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/documents/{documentUuid}/content': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get agent document content
+     * @description Read the full content of a knowledge document this agent can use.
+     */
+    get: operations['getAgentDocumentContent'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update agent document content
+     * @description Replace the name and content of a knowledge document this agent can use.
+     */
+    patch: operations['updateAgentDocumentContent'];
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/documents/{documentUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete agent document
+     * @description Delete a knowledge document this agent can use.
+     */
+    delete: operations['deleteAgentDocument'];
+    options?: never;
+    head?: never;
+    /**
+     * Update agent document
+     * @description Choose whether the full knowledge document is included in every prompt.
+     */
+    patch: operations['updateAgentDocument'];
+    trace?: never;
+  };
   '/api/v1/aiAgents/documents': {
     parameters: {
       query?: never;
@@ -437,8 +1455,18 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
+    /**
+     * List AI agent documents
+     * @description List every knowledge document in the organization.
+     */
     get: operations['listAiAgentDocuments'];
     put?: never;
+    /**
+     * Create AI agent document
+     * @description Create a knowledge document. The projectUuid and agentAccess body fields
+     *     are deprecated: scope the document by creating it on the agent route
+     *     instead. Without them the document is available to every agent.
+     */
     post: operations['createAiAgentDocument'];
     delete?: never;
     options?: never;
@@ -456,6 +1484,10 @@ export interface paths {
     get?: never;
     put?: never;
     post?: never;
+    /**
+     * Delete AI agent document
+     * @description Delete a knowledge document anywhere in the organization.
+     */
     delete: operations['deleteAiAgentDocument'];
     options?: never;
     head?: never;
@@ -504,6 +1536,22 @@ export interface paths {
     get: operations['listMcpServers'];
     put?: never;
     post: operations['createMcpServer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/mcpServers/{mcpServerUuid}/credential': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['updateMcpServerBearerCredential'];
     delete?: never;
     options?: never;
     head?: never;
@@ -638,6 +1686,22 @@ export interface paths {
     patch: operations['updateAgent'];
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/memories/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getAiAgentMemory'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/mcpServers': {
     parameters: {
       query?: never;
@@ -750,6 +1814,22 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/avatar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['uploadAgentAvatar'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads': {
     parameters: {
       query?: never;
@@ -774,6 +1854,49 @@ export interface paths {
       cookie?: never;
     };
     get: operations['getAgentThread'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/pull-request': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI agent thread pull request
+     * @description Get the writeback pull request associated with a thread — the PR the
+     *     agent opened in this thread, or the PR a verification thread verifies.
+     */
+    get: operations['getAgentThreadPullRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/pull-requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI agent thread pull requests
+     * @description List every pull request the coding agent has opened in this thread (its
+     *     workstreams), each enriched with live PR state where available. A thread
+     *     can drive several PRs across one or more repos.
+     */
+    get: operations['listAgentThreadWorkstreams'];
     put?: never;
     post?: never;
     delete?: never;
@@ -824,6 +1947,38 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['streamAgentThreadResponse'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/messages/{messageUuid}/interrupt': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['interruptAgentThreadMessage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/messages/{messageUuid}/steers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['createAgentThreadMessageSteer'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1038,6 +2193,22 @@ export interface paths {
     patch: operations['updateArtifactVersionSavedDashboard'];
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/artifacts/{artifactUuid}/versions/{versionUuid}/savedSql': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch: operations['updateArtifactVersionSavedSql'];
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/artifacts/{artifactUuid}/versions/{versionUuid}/verified': {
     parameters: {
       query?: never;
@@ -1160,22 +2331,6 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['appendInstruction'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads/{threadUuid}/messages/{promptUuid}/revert-change': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post: operations['revertChange'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1542,6 +2697,215 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/orgs/{orgUuid}/code/roles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List custom roles as code
+     * @description Get custom roles in code representation
+     */
+    get: operations['GetCodeCustomRoles'];
+    put?: never;
+    /**
+     * Upsert custom role as code
+     * @description Upsert a custom role from code representation
+     */
+    post: operations['UpsertCodeCustomRole'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/orgs/{orgUuid}/code/users': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['GetCodeOrganizationUsers'];
+    put?: never;
+    post: operations['UpsertCodeOrganizationUser'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/orgs/{orgUuid}/code/groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['GetCodeOrganizationGroups'];
+    put?: never;
+    post: operations['UpsertCodeOrganizationGroup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/orgs/{orgUuid}/roles/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List custom roles as code (deprecated)
+     * @deprecated
+     */
+    get: operations['GetCustomRolesAsCode'];
+    put?: never;
+    /**
+     * Upsert custom role as code (deprecated)
+     * @deprecated
+     */
+    post: operations['UpsertCustomRoleAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/orgs/{orgUuid}/users/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List organization users as code (deprecated)
+     * @deprecated
+     */
+    get: operations['GetOrganizationUsersAsCode'];
+    put?: never;
+    /**
+     * Upsert organization user as code (deprecated)
+     * @deprecated
+     */
+    post: operations['UpsertOrganizationUserAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/orgs/{orgUuid}/groups/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List organization groups as code (deprecated)
+     * @deprecated
+     */
+    get: operations['GetOrganizationGroupsAsCode'];
+    put?: never;
+    /**
+     * Upsert organization group as code (deprecated)
+     * @deprecated
+     */
+    post: operations['UpsertOrganizationGroupAsCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/agent-onboarding': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start agent onboarding run
+     * @description Start a server-side agent onboarding run for a prepared project.
+     *     Returns the existing run when one is already active for the project.
+     */
+    post: operations['createAgentOnboardingRun'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/agent-onboarding/{agentOnboardingRunUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get agent onboarding run
+     * @description Get the durable state and progress events of an agent onboarding run.
+     */
+    get: operations['getAgentOnboardingRun'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/agent-onboarding/{agentOnboardingRunUuid}/file': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get onboarding run file
+     * @description Read the latest persisted contents of a generated onboarding file.
+     */
+    get: operations['getAgentOnboardingFile'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/agent-onboarding/{agentOnboardingRunUuid}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel agent onboarding run
+     * @description Request cancellation of an agent onboarding run.
+     */
+    post: operations['cancelAgentOnboardingRun'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v2/orgs/{orgUuid}/roles': {
     parameters: {
       query?: never;
@@ -1658,6 +3022,133 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Deep Research runs
+     * @description List the caller's Deep Research runs attached to an agent thread.
+     */
+    get: operations['listAiDeepResearchRuns'];
+    put?: never;
+    /**
+     * Start Deep Research run
+     * @description Start a durable Deep Research investigation.
+     */
+    post: operations['createAiDeepResearchRun'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research/{aiDeepResearchRunUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Deep Research run
+     * @description Get the durable state and result of a Deep Research run.
+     */
+    get: operations['getAiDeepResearchRun'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research/{aiDeepResearchRunUuid}/charts/{chartKey}/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh Deep Research chart
+     * @description Re-execute the metric query behind a warehouse-backed report chart to
+     *     load its live results instead of the persisted snapshot.
+     */
+    post: operations['refreshAiDeepResearchChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research/{aiDeepResearchRunUuid}/events': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Deep Research events
+     * @description List persisted progress for a Deep Research run in chronological order.
+     *     Pass the returned cursor unchanged to receive only newer events. The
+     *     cursor remains usable when no new events are available.
+     */
+    get: operations['listAiDeepResearchEvents'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research/{aiDeepResearchRunUuid}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Deep Research run
+     * @description Cancel a queued run immediately or request cancellation for a running run.
+     */
+    post: operations['cancelAiDeepResearchRun'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgentMemories/{memoryUuid}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update memory status
+     * @description Changes whether a memory is available to the AI agent.
+     */
+    patch: operations['updateAiAgentMemoryStatus'];
+    trace?: never;
+  };
   '/api/v1/aiAgents/admin/threads': {
     parameters: {
       query?: never;
@@ -1670,6 +3161,106 @@ export interface paths {
      * @description Get all AI agent threads for admin
      */
     get: operations['getAllThreads'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/evals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI agent evaluations
+     * @description Get all AI agent evaluations for admin
+     */
+    get: operations['getAllEvals'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/evals/{evalUuid}/prompts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI agent evaluation prompts
+     * @description Get the prompts of an AI agent evaluation for admin
+     */
+    get: operations['getAdminEvalPrompts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/mcp-activity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List MCP activity
+     * @description Get MCP tool call activity for admin
+     */
+    get: operations['getMcpActivity'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/mcp-activity/stats': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get MCP activity stats
+     * @description Get aggregated MCP tool call stats for admin
+     */
+    get: operations['getMcpActivityStats'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/projects/{projectUuid}/prompt-activity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get project AI agent prompt activity
+     * @description Get prompt activity for one project
+     */
+    get: operations['getProjectPromptActivity'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1698,6 +3289,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/aiAgents/admin/memories': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List AI agent memories
+     * @description Get all AI agent memories for admin
+     */
+    get: operations['getAllAiAgentMemories'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/aiAgents/admin/review-items': {
     parameters: {
       query?: never;
@@ -1711,7 +3322,11 @@ export interface paths {
      */
     get: operations['getAiAgentReviewItems'];
     put?: never;
-    post?: never;
+    /**
+     * Create AI agent review item
+     * @description Create a manual AI agent issue
+     */
+    post: operations['createAiAgentReviewItem'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1742,6 +3357,168 @@ export interface paths {
     patch: operations['updateAiAgentReviewItemStatus'];
     trace?: never;
   };
+  '/api/v1/aiAgents/admin/review-replay-capture': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Capture AI review judge replay inputs
+     * @description Rebuild judge replay inputs for historical review signals so the eval
+     *     scoreboard can replay the judge offline. Read-only; feature-flag gated.
+     */
+    post: operations['captureAiAgentReviewReplayInputs'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/activity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI agent review item activity
+     * @description Get the remediation activity feed for a review item
+     */
+    get: operations['getAiAgentReviewItemActivity'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/pr-diff': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI agent review item PR diff
+     * @description Get the file diff of the pull request linked to a review item
+     */
+    get: operations['getAiAgentReviewItemPrDiff'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/by-preview-thread/{threadUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI agent review item by preview thread
+     * @description Get the review item linked to a remediation preview work thread
+     */
+    get: operations['getAiAgentReviewItemByPreviewThread'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/reorder': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Reorder AI agent review items on the board
+     * @description Persist the board's manual card order for one lane. Declared before the
+     *     `{fingerprint}` route so "reorder" isn't matched as a fingerprint.
+     */
+    patch: operations['reorderAiAgentReviewItems'];
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/assignee': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update AI agent review item assignee
+     * @description Set the assignee on an AI agent review item
+     */
+    patch: operations['updateAiAgentReviewItemAssignee'];
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/priority': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update AI agent review item priority
+     * @description Set the priority on an AI agent review item
+     */
+    patch: operations['updateAiAgentReviewItemPriority'];
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/comments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Add AI agent review item comment
+     * @description Add a comment to an AI agent review item
+     */
+    post: operations['addAiAgentReviewItemComment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/aiAgents/admin/review-items/{fingerprint}/writeback': {
     parameters: {
       query?: never;
@@ -1757,6 +3534,27 @@ export interface paths {
      *     project-context root cause)
      */
     post: operations['createAiAgentReviewItemWriteback'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/aiAgents/admin/review-items/{fingerprint}/retest': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Retest an AI agent review remediation
+     * @description Re-verify a remediation after its PR changed: recompiles the existing
+     *     preview and re-runs the Test-fix verification thread.
+     */
+    post: operations['retestAiAgentReviewRemediation'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1800,6 +3598,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/aiAgents/admin/review-notification-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get AI review notification settings
+     * @description Get AI review notification settings
+     */
+    get: operations['getAiReviewNotificationSettings'];
+    /**
+     * Update AI review notification settings
+     * @description Update AI review notification settings
+     */
+    put: operations['updateAiReviewNotificationSettings'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/aiAgents/admin/settings': {
     parameters: {
       query?: never;
@@ -1822,6 +3644,71 @@ export interface paths {
      * @description Update AI organization settings
      */
     patch: operations['upsertAiOrganizationSettings'];
+    trace?: never;
+  };
+  '/api/v1/warehouse-connect/code': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create connect code
+     * @description Creates a short-lived, single-use connect code the Lightdash CLI can use
+     *     to deposit warehouse credentials on behalf of the current user
+     */
+    post: operations['CreateWarehouseConnectCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/warehouse-connect/deposit': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Deposit connection
+     * @description Deposits durable warehouse credentials against a connect code. Called by
+     *     the Lightdash CLI; the connect code is the bearer credential, so this
+     *     endpoint is intentionally unauthenticated
+     */
+    post: operations['DepositWarehouseConnection'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/warehouse-connect/claim': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Claim connect code
+     * @description Retrieves credentials deposited against a connect code created by the
+     *     current user. Returns them until the code expires; expired codes are
+     *     deleted by a scheduled cleanup job
+     */
+    post: operations['ClaimWarehouseConnectCode'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   '/api/v1/projects/{projectUuid}/validate': {
@@ -2084,6 +3971,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/user/warehouseCredentials/redshift/aws-sso/start': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start Redshift AWS SSO login
+     * @description Start Redshift AWS SSO login
+     */
+    post: operations['startRedshiftAwsSsoWarehouseCredentials'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/user/warehouseCredentials/redshift/aws-sso/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete Redshift AWS SSO login
+     * @description Complete Redshift AWS SSO login
+     */
+    post: operations['completeRedshiftAwsSsoWarehouseCredentials'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/user/warehouseCredentials/{uuid}': {
     parameters: {
       query?: never;
@@ -2122,6 +4049,38 @@ export interface paths {
     get: operations['getLoginOptions'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/user/login-email-otp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['LoginEmailOtp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/user/login-email-otp/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['VerifyLoginEmailOtp'];
     delete?: never;
     options?: never;
     head?: never;
@@ -2204,6 +4163,53 @@ export interface paths {
      * @description Get account information
      */
     get: operations['GetAccount'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/user/me/avatar': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Upload avatar
+     * @description Upload a profile avatar. Send raw image bytes as the body with an
+     *     image/png, image/jpeg or image/webp Content-Type. The image is
+     *     center-cropped, resized and re-encoded server-side.
+     */
+    put: operations['UpdateMyAvatar'];
+    post?: never;
+    /**
+     * Delete avatar
+     * @description Remove the current user's uploaded avatar.
+     */
+    delete: operations['DeleteMyAvatar'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/users/{userUuid}/avatar/{contentHash}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get user avatar
+     * @description Serve a user's avatar image. Content-addressed by hash, so responses
+     *     are immutable and cached by the browser indefinitely.
+     */
+    get: operations['GetUserAvatar'];
     put?: never;
     post?: never;
     delete?: never;
@@ -3053,6 +5059,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/slack/card-image/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Slack card image
+     * @description Get a Slack AI agent card image.
+     *     Falls back to a placeholder image if the image is not found.
+     *
+     *     Intentionally public (no auth): Slack's unfurl bot fetches preview images
+     *     without user credentials. Access is guarded by an unguessable 21-char
+     *     nanoid (only minted server-side and shared with Slack during the unfurl of
+     *     a resource the user already has access to), strict `{id}` validation, and
+     *     no-store / noindex response headers.
+     */
+    get: operations['getSlackCardImage'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/slack/install': {
     parameters: {
       query?: never;
@@ -3809,6 +5842,81 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/prompts/{name}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get prompt
+     * @description Get public instructions for a named prompt
+     */
+    get: operations['GetPrompt'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/dbt-sources': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List dbt sources
+     * @description List the dbt sources connected to a project (the primary source plus any
+     *     additional sources), without credentials.
+     */
+    get: operations['ListProjectDbtSources'];
+    put?: never;
+    /**
+     * Add dbt source
+     * @description Add an additional dbt source to a project.
+     */
+    post: operations['CreateProjectDbtSource'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/dbt-sources/{projectDbtSourceUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get dbt source
+     * @description Get a single dbt source including its connection, with credentials
+     *     stripped — used to pre-fill the edit form.
+     */
+    get: operations['GetProjectDbtSource'];
+    put?: never;
+    post?: never;
+    /**
+     * Remove dbt source
+     * @description Remove an additional dbt source from a project. The primary source cannot
+     *     be removed.
+     */
+    delete: operations['DeleteProjectDbtSource'];
+    options?: never;
+    head?: never;
+    /**
+     * Update dbt source
+     * @description Update an additional dbt source's name or connection.
+     */
+    patch: operations['UpdateProjectDbtSource'];
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}': {
     parameters: {
       query?: never;
@@ -3827,6 +5935,26 @@ export interface paths {
     options?: never;
     head?: never;
     patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/details': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update project details
+     * @description Update simple project details without changing its connection configuration
+     */
+    patch: operations['UpdateProjectDetails'];
     trace?: never;
   };
   '/api/v1/projects/{projectUuid}/charts': {
@@ -4290,6 +6418,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/upstreamDiff': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get upstream diff
+     * @description Diff a preview project against the project it was copied from, using the
+     *     catalog index. Detects added/removed fields and label changes; does not
+     *     detect SQL-only field changes.
+     */
+    get: operations['getUpstreamDiff'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/previews-config': {
     parameters: {
       query?: never;
@@ -4312,6 +6462,28 @@ export interface paths {
      * @description Update preview project expiration settings for a project
      */
     patch: operations['updateProjectPreviewExpirationSettings'];
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/preview-expiration': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update preview expiration
+     * @description Update the expiration date of a preview project. The expiration is
+     *     recomputed from now, clamped to the upstream project's maximum preview
+     *     expiration. Omit expiresInHours to reset to the upstream default.
+     */
+    patch: operations['updatePreviewExpiresAt'];
     trace?: never;
   };
   '/api/v1/projects/{projectUuid}/schedulerSettings': {
@@ -4416,126 +6588,6 @@ export interface paths {
      */
     put: operations['replaceYamlTags'];
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/charts/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List charts as code
-     * @description Get charts in code representation
-     */
-    get: operations['getChartsAsCode'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/dashboards/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List dashboards as code
-     * @description Get dashboards in code representation
-     */
-    get: operations['getDashboardsAsCode'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/charts/{slug}/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upsert chart as code
-     * @description Upsert a chart from code representation
-     */
-    post: operations['upsertChartAsCode'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/sqlCharts/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get SQL charts as code
-     * @description Gets SQL charts in code representation
-     */
-    get: operations['getSqlChartsAsCode'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/sqlCharts/{slug}/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upsert SQL chart as code
-     * @description Upserts an SQL chart from code representation
-     */
-    post: operations['upsertSqlChartAsCode'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/dashboards/{slug}/code': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Upsert dashboard as code
-     * @description Upsert a dashboard from code representation
-     */
-    post: operations['upsertDashboardAsCode'];
     delete?: never;
     options?: never;
     head?: never;
@@ -4863,7 +6915,12 @@ export interface paths {
      *     upload pattern — no multipart wrapping required.
      */
     post: operations['UploadOrganizationDesignFile'];
-    delete?: never;
+    /**
+     * Delete all files from organization design
+     * @description Delete every file in an organization design, keeping the design itself.
+     *     Idempotent — succeeds when the design already has no files.
+     */
+    delete: operations['DeleteAllOrganizationDesignFiles'];
     options?: never;
     head?: never;
     patch?: never;
@@ -4922,6 +6979,54 @@ export interface paths {
      * @description Update the current user's organization
      */
     patch: operations['UpdateMyOrganization'];
+    trace?: never;
+  };
+  '/api/v1/org/brand': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get organization brand
+     * @description Get the organization's brand profile, previously fetched from Brandfetch.
+     *     Returns null if no brand profile has been fetched yet.
+     */
+    get: operations['GetOrganizationBrand'];
+    /**
+     * Save organization brand
+     * @description Save the organization's brand appearance as edited by the user. Stores the
+     *     provided colors, logos, fonts and domain as-is without calling Brandfetch.
+     */
+    put: operations['SaveOrganizationBrand'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/org/brand/fetch': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fetch organization brand
+     * @description Fetch the brand profile for a domain from Brandfetch without storing it.
+     *     Used to preview a brand in the appearance settings before saving.
+     *     Requires the Brandfetch API key to be configured on the instance.
+     */
+    post: operations['FetchOrganizationBrand'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   '/api/v1/org/{organizationUuid}': {
@@ -5211,6 +7316,27 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/org/playground-projects/ensure': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Ensure playground project
+     * @description Return the organization's existing project or provision its sample-data
+     *     playground when the new onboarding flow is available.
+     */
+    post: operations['EnsurePlaygroundProject'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/org/impersonation': {
     parameters: {
       query?: never;
@@ -5295,6 +7421,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/metricsExplorer/{explore}/{metric}/runMetricSeries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Run metric series query
+     * @description Run a metric time series query for a sparkline
+     */
+    post: operations['runMetricSeries'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/metricsExplorer/{explore}/{metric}/compileMetricTotalQuery': {
     parameters: {
       query?: never;
@@ -5310,6 +7456,70 @@ export interface paths {
      */
     post: operations['compileMetricTotalQuery'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/invite-links/{inviteLinkCode}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get invite link
+     * @description Get an invite link by its code. Public endpoint used by the invite
+     *     acceptance page.
+     */
+    get: operations['GetInviteLink'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/invite-links/{inviteCode}/activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['ActivateInviteLink'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/invite-links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create invite link
+     * @description Invite a new user to the organization and create an invite link for
+     *     them. If the email already belongs to a pending user, a new invite
+     *     link is generated for them. Only available to organization admins.
+     */
+    post: operations['CreateInviteLink'];
+    /**
+     * Revoke all invite links
+     * @description Revoke all invite links in the organization. Only available to
+     *     organization admins.
+     */
+    delete: operations['RevokeAllInviteLinks'];
     options?: never;
     head?: never;
     patch?: never;
@@ -5495,6 +7705,26 @@ export interface paths {
      * @description Upload results from query to Google Sheet
      */
     post: operations['uploadGsheet'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/gdrive/upload-gsheet-from-rows': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Upload rows to Google Sheet
+     * @description Upload client-supplied rows to a new Google Sheet (data apps).
+     */
+    post: operations['uploadGsheetFromRows'];
     delete?: never;
     options?: never;
     head?: never;
@@ -6151,7 +8381,66 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/promote': {
+  '/api/v1/org/{organizationUuid}/email-whitelabel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get email whitelabel configuration
+     * @description Returns the organization's email sending domain configuration, or null if
+     *     none has been set up.
+     */
+    get: operations['GetEmailWhitelabel'];
+    /**
+     * Set up email sending domain
+     * @description Sets up (or replaces) the organization's sending domain and returns the
+     *     DNS records to publish. Does not start sending — the domain must be
+     *     verified and enabled first.
+     */
+    put: operations['SetupEmailWhitelabel'];
+    post?: never;
+    /**
+     * Delete email sending domain
+     * @description Removes the sending domain and reverts the organization to the Lightdash
+     *     sending identity.
+     */
+    delete: operations['DeleteEmailWhitelabel'];
+    options?: never;
+    head?: never;
+    /**
+     * Enable or disable email sending domain
+     * @description Enables or disables sending from the verified domain. Can only be enabled
+     *     once both DKIM and return-path are verified.
+     */
+    patch: operations['UpdateEmailWhitelabel'];
+    trace?: never;
+  };
+  '/api/v1/org/{organizationUuid}/email-whitelabel/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify email sending domain
+     * @description Triggers verification of the DNS records with the email provider and
+     *     returns the refreshed status. Safe to call repeatedly while DNS
+     *     propagates.
+     */
+    post: operations['VerifyEmailWhitelabel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/promote': {
     parameters: {
       query?: never;
       header?: never;
@@ -6171,7 +8460,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/promoteDiff': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/promoteDiff': {
     parameters: {
       query?: never;
       header?: never;
@@ -6191,7 +8480,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/history': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/history': {
     parameters: {
       query?: never;
       header?: never;
@@ -6211,7 +8500,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/version/{versionUuid}': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/version/{versionUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -6231,7 +8520,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/rollback/{versionUuid}': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/rollback/{versionUuid}': {
     parameters: {
       query?: never;
       header?: never;
@@ -6251,7 +8540,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/schedulers': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/schedulers': {
     parameters: {
       query?: never;
       header?: never;
@@ -6276,7 +8565,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v1/dashboards/{dashboardUuid}/verification': {
+  '/api/v1/dashboards/{dashboardUuidOrSlug}/verification': {
     parameters: {
       query?: never;
       header?: never;
@@ -6889,6 +9178,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/bigquery/sso/projects/recommendation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get BigQuery project recommendation
+     * @description Get the recommended BigQuery project based on dataset size
+     */
+    get: operations['GetBigQueryProjectRecommendation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/bigquery/sso/is-authenticated': {
     parameters: {
       query?: never;
@@ -6990,7 +9299,7 @@ export interface paths {
     };
     /**
      * List organization role assignments
-     * @description List organization role assignments (system roles only)
+     * @description List organization role assignments
      */
     get: operations['GetOrganizationRoleAssignments'];
     put?: never;
@@ -7012,7 +9321,7 @@ export interface paths {
     put?: never;
     /**
      * Assign organization role to user
-     * @description Assign system role to user at organization level
+     * @description Assign system or organization-level custom role to user at organization level
      */
     post: operations['UpsertOrganizationUserRoleAssignment'];
     delete?: never;
@@ -7035,86 +9344,6 @@ export interface paths {
      * @description Duplicate a role
      */
     post: operations['DuplicateRole'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/changesets': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List changesets
-     * @description Get active changeset for a project
-     */
-    get: operations['listActiveChangesetWithChanges'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/changesets/changes/{changeUuid}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get change
-     * @description Get a specific change by UUID
-     */
-    get: operations['getChange'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/changesets/changes/{changeUuid}/revert': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Revert change
-     * @description Revert a specific change
-     */
-    post: operations['revertChangesetChange'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/projects/{projectUuid}/changesets/revert-all': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Revert all changes
-     * @description Revert all changes in the active changeset
-     */
-    post: operations['revertAllChanges'];
     delete?: never;
     options?: never;
     head?: never;
@@ -7682,6 +9911,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/dashboards/{dashboardUuid}/exports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Export dashboard content
+     * @description Export dashboard content
+     */
+    post: operations['exportDashboardContentV2'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v2/dashboards/{dashboardUuid}/schedulers': {
     parameters: {
       query?: never;
@@ -7895,6 +10144,3303 @@ export interface components {
       /** @enum {string} */
       status: 'error';
     };
+    /** @enum {string} */
+    'ChartType.BIG_NUMBER': 'big_number';
+    /** @enum {string} */
+    Compact:
+      | 'auto'
+      | 'thousands'
+      | 'millions'
+      | 'billions'
+      | 'trillions'
+      | 'kilobytes'
+      | 'megabytes'
+      | 'gigabytes'
+      | 'terabytes'
+      | 'petabytes'
+      | 'kibibytes'
+      | 'mebibytes'
+      | 'gibibytes'
+      | 'tebibytes'
+      | 'pebibytes';
+    CompactOrAlias:
+      | components['schemas']['Compact']
+      | (
+          | 'K'
+          | 'thousand'
+          | 'M'
+          | 'million'
+          | 'B'
+          | 'billion'
+          | 'T'
+          | 'trillion'
+          | 'KB'
+          | 'kilobyte'
+          | 'MB'
+          | 'megabyte'
+          | 'GB'
+          | 'gigabyte'
+          | 'TB'
+          | 'terabyte'
+          | 'PB'
+          | 'petabyte'
+          | 'KiB'
+          | 'kibibyte'
+          | 'MiB'
+          | 'mebibyte'
+          | 'GiB'
+          | 'gibibyte'
+          | 'TiB'
+          | 'tebibyte'
+          | 'PiB'
+          | 'pebibyte'
+        );
+    /** @enum {string} */
+    ComparisonFormatTypes: 'raw' | 'percentage';
+    FieldTarget: {
+      /** @description Field ID to filter on */
+      fieldId: string;
+    };
+    /** @enum {string} */
+    FilterOperator:
+      | 'isNull'
+      | 'notNull'
+      | 'equals'
+      | 'notEquals'
+      | 'startsWith'
+      | 'endsWith'
+      | 'include'
+      | 'doesNotInclude'
+      | 'lessThan'
+      | 'lessThanOrEqual'
+      | 'greaterThan'
+      | 'greaterThanOrEqual'
+      | 'inThePast'
+      | 'notInThePast'
+      | 'inTheNext'
+      | 'inTheCurrent'
+      | 'notInTheCurrent'
+      | 'inBetween'
+      | 'notInBetween'
+      | 'inPeriodToDate';
+    'BaseFilterRule_FilterOperator.number-or-string_': {
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      /** @description Values to filter by */
+      values?: (number | string)[];
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Unique identifier for the filter rule */
+      id: string;
+    };
+    'ConditionalFormattingWithValues_number-or-string_': components['schemas']['BaseFilterRule_FilterOperator.number-or-string_'] & {
+      /** @description Values to compare against */
+      values: (number | string)[];
+    };
+    'ConditionalFormattingWithCompareTarget_number-or-string_': components['schemas']['BaseFilterRule_FilterOperator.number-or-string_'] & {
+      /** @description Values to compare against */
+      values?: (number | string)[];
+      /** @description Target field to compare against */
+      compareTarget: components['schemas']['FieldTarget'] | null;
+    };
+    ConditionalFormattingWithFilterOperator:
+      | components['schemas']['ConditionalFormattingWithValues_number-or-string_']
+      | components['schemas']['ConditionalFormattingWithCompareTarget_number-or-string_'];
+    /** @enum {string} */
+    ConditionalFormattingColorApplyTo: 'cell' | 'text' | 'row';
+    ConditionalFormattingTextStyle: {
+      /** @description Underline matching cell text */
+      underline?: boolean;
+      /** @description Render matching cell text in italics */
+      italic?: boolean;
+      /** @description Render matching cell text in bold */
+      bold?: boolean;
+    };
+    ConditionalFormattingConfigWithSingleColor: {
+      /** @description Text styling (bold/italic/underline) applied to matching cell text */
+      textStyle?: components['schemas']['ConditionalFormattingTextStyle'];
+      /** @description Apply formatting to cell background or text */
+      applyTo?: components['schemas']['ConditionalFormattingColorApplyTo'];
+      /** @description Rules for single-color conditional formatting */
+      rules: components['schemas']['ConditionalFormattingWithFilterOperator'][];
+      /** @description Color for dark mode */
+      darkColor?: string;
+      /** @description Color for single-color conditional formatting */
+      color: string;
+      /** @description Target field for the formatting rule */
+      target: components['schemas']['FieldTarget'] | null;
+    };
+    ConditionalFormattingColorRange: {
+      /** @description End color for gradient */
+      end: string;
+      /** @description Start color for gradient */
+      start: string;
+    };
+    'ConditionalFormattingMinMax_number-or-auto_': {
+      /** @description Maximum value (number or 'auto') */
+      max: number | 'auto';
+      /** @description Minimum value (number or 'auto') */
+      min: number | 'auto';
+    };
+    ConditionalFormattingConfigWithColorRange: {
+      /** @description Text styling (bold/italic/underline) applied to matching cell text */
+      textStyle?: components['schemas']['ConditionalFormattingTextStyle'];
+      /** @description Apply formatting to cell background or text */
+      applyTo?: components['schemas']['ConditionalFormattingColorApplyTo'];
+      /** @description Rule for color range formatting (min/max values) */
+      rule: components['schemas']['ConditionalFormattingMinMax_number-or-auto_'];
+      /** @description Color range for gradient conditional formatting */
+      color: components['schemas']['ConditionalFormattingColorRange'];
+      /** @description Target field for the formatting rule */
+      target: components['schemas']['FieldTarget'] | null;
+    };
+    ConditionalFormattingConfig:
+      | components['schemas']['ConditionalFormattingConfigWithSingleColor']
+      | components['schemas']['ConditionalFormattingConfigWithColorRange'];
+    BigNumber: {
+      comparisonField?: string;
+      /** @description Conditional formatting rules */
+      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
+      /** @description Custom label for the comparison value */
+      comparisonLabel?: string;
+      /** @description Flip positive/negative colors (red for increase, green for decrease) */
+      flipColors?: boolean;
+      /** @description Format for comparison value */
+      comparisonFormat?: components['schemas']['ComparisonFormatTypes'];
+      /** @description Show comparison with previous value */
+      showComparison?: boolean;
+      /** @description Include table name in the label */
+      showTableNamesInLabel?: boolean;
+      /** @description Show the label above the number */
+      showBigNumberLabel?: boolean;
+      /** @description Field ID to display as the big number */
+      selectedField?: string;
+      /** @description Number formatting style (compact notation) */
+      style?: components['schemas']['CompactOrAlias'];
+      /** @description Custom label for the big number */
+      label?: string;
+    };
+    BigNumberConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['BigNumber'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.BIG_NUMBER'];
+    };
+    /** @enum {string} */
+    'ChartType.CARTESIAN': 'cartesian';
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.string_': Record<string, never>;
+    /** @description Make all properties in T optional */
+    Partial_CompleteCartesianChartLayout_: {
+      /** @description Field ID to use for the X axis */
+      xField?: string;
+      /** @description Field IDs to use for the Y axis */
+      yField?: string[];
+      /** @description Swap X and Y axes (creates horizontal bar charts) */
+      flipAxes?: boolean;
+      /** @description Show vertical grid lines */
+      showGridX?: boolean;
+      /** @description Show horizontal grid lines */
+      showGridY?: boolean;
+      /** @description Show the X axis */
+      showXAxis?: boolean;
+      /** @description Show the Y axis */
+      showYAxis?: boolean;
+      /** @description Controls left/primary Y-axis visibility */
+      showLeftYAxis?: boolean;
+      /** @description Controls right/secondary Y-axis visibility */
+      showRightYAxis?: boolean;
+      /** @description Stack series together (true for default stacking, or string for stack group name) */
+      stack?: string | boolean;
+      /** @description Connect null data points with a line */
+      connectNulls?: boolean;
+      /** @description Color each bar by its category value instead of using a single series color */
+      colorByCategory?: boolean;
+      /** @description Per-category color overrides (maps category value to hex color) */
+      categoryColorOverrides?: components['schemas']['Record_string.string_'];
+    };
+    CartesianChartLayout: components['schemas']['Partial_CompleteCartesianChartLayout_'];
+    /**
+     * @description High-level legend placement preset. Set to 'outsideRight' or 'outsideLeft' to
+     *     render the legend beside the plot with reserved grid space. Undefined behaves
+     *     like 'custom' (no override of the existing legend position fields).
+     * @enum {string}
+     */
+    LegendPlacement: 'custom' | 'outsideRight' | 'outsideLeft';
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.boolean_': {
+      [key: string]: boolean;
+    };
+    EchartsLegend: {
+      /** @description Legend entries toggled off by name. Missing entries default to visible. */
+      selected?: components['schemas']['Record_string.boolean_'];
+      /**
+       * @description High-level placement preset. Overrides orient/top/right/bottom/left
+       *     when set to an outside value.
+       */
+      placement?: components['schemas']['LegendPlacement'];
+      /**
+       * @description Legend icon shape
+       * @enum {string}
+       */
+      icon?: 'circle' | 'rect' | 'roundRect' | 'triangle' | 'diamond' | 'pin' | 'arrow' | 'none';
+      /**
+       * @description Legend alignment
+       * @enum {string}
+       */
+      align?: 'auto' | 'left' | 'right';
+      /** @description Legend height */
+      height?: string;
+      /** @description Legend width */
+      width?: string;
+      /** @description Left position */
+      left?: string;
+      /** @description Bottom position */
+      bottom?: string;
+      /** @description Right position */
+      right?: string;
+      /** @description Top position */
+      top?: string;
+      /**
+       * @description Legend orientation
+       * @enum {string}
+       */
+      orient?: 'horizontal' | 'vertical';
+      /**
+       * @description Legend type (plain or scrollable)
+       * @enum {string}
+       */
+      type?: 'plain' | 'scroll';
+      /** @description Show the legend */
+      show?: boolean;
+    };
+    EchartsGrid: {
+      /** @description Grid height */
+      height?: string;
+      /** @description Grid width */
+      width?: string;
+      /** @description Left padding */
+      left?: string;
+      /** @description Bottom padding */
+      bottom?: string;
+      /** @description Right padding */
+      right?: string;
+      /** @description Top padding */
+      top?: string;
+      /** @description Whether the grid area contains axis labels */
+      containLabel?: boolean;
+    };
+    PivotValue: {
+      /** @description Pivot value */
+      value: unknown;
+      /** @description Pivot field ID */
+      field: string;
+    };
+    PivotReference: {
+      /** @description Pivot values for this reference (for pivoted data) */
+      pivotValues?: components['schemas']['PivotValue'][];
+      /** @description Field ID being referenced */
+      field: string;
+    };
+    /** @enum {string} */
+    CartesianSeriesType: 'line' | 'bar' | 'scatter' | 'area';
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.unknown_': {
+      [key: string]: unknown;
+    };
+    MarkLineData: {
+      /**
+       * @description Dynamic value type
+       * @enum {string}
+       */
+      dynamicValue?: 'average';
+      /** @description Label configuration for this data point */
+      label?: {
+        /**
+         * @description Label position
+         * @enum {string}
+         */
+        position?: 'start' | 'middle' | 'end';
+        /** @description Label formatter */
+        formatter?: string;
+      };
+      /** @description Line style for this data point */
+      lineStyle?: {
+        /** @description Line color */
+        color: string;
+      };
+      /** @description Unique identifier for this mark line */
+      uuid: string;
+      /** @description Point type (e.g., 'average') */
+      type?: string;
+      /** @description Value to display */
+      value?: string;
+      /** @description Name of the reference line */
+      name?: string;
+      /** @description X axis value for vertical line */
+      xAxis?: string;
+      /** @description Y axis value for horizontal line */
+      yAxis?: string;
+    };
+    MarkLine: {
+      /** @description Label configuration */
+      label?: {
+        /** @description Label formatter */
+        formatter?: string;
+      };
+      /** @description Line style configuration */
+      lineStyle?: {
+        /** @description Line type */
+        type: string;
+        /**
+         * Format: double
+         * @description Line width
+         */
+        width: number;
+        /** @description Line color */
+        color: string;
+      };
+      /** @description Symbol at line endpoints */
+      symbol?: string;
+      /** @description Reference line data points */
+      data: components['schemas']['MarkLineData'][];
+    };
+    Series: {
+      /** @description Whether this series is currently filtered out */
+      isFilteredOut?: boolean;
+      /** @description Reference line configuration */
+      markLine?: components['schemas']['MarkLine'];
+      /** @description Use smooth curves for line/area charts */
+      smooth?: boolean;
+      /** @description Show symbols/markers on data points */
+      showSymbol?: boolean;
+      /** @description Area fill style (presence indicates area chart) */
+      areaStyle?: components['schemas']['Record_string.unknown_'];
+      /** @description Hide this series from the chart */
+      hidden?: boolean;
+      /** @description Data label configuration */
+      label?: {
+        /** @description Show the metric field name */
+        showSeriesName?: boolean;
+        /** @description Show the legend/pivot name */
+        showLabel?: boolean;
+        /** @description Show the metric value */
+        showValue?: boolean;
+        /** @description Show labels even when they overlap */
+        showOverlappingLabels?: boolean;
+        /**
+         * @description Position of data labels
+         * @enum {string}
+         */
+        position?: 'left' | 'top' | 'right' | 'bottom' | 'inside';
+        /** @description Show data labels on points */
+        show?: boolean;
+      };
+      /**
+       * Format: double
+       * @description Index of Y axis to use (for dual Y axis charts)
+       */
+      yAxisIndex?: number;
+      /** @description Color for the series (hex code) */
+      color?: string;
+      /** @description Display name for the series */
+      name?: string;
+      /** @description Stack total label configuration */
+      stackLabel?: {
+        /** @description Show stack total labels */
+        show?: boolean;
+      };
+      /** @description Stack group name (series with same stack name are stacked) */
+      stack?: string;
+      /** @description Series visualization type */
+      type: components['schemas']['CartesianSeriesType'];
+      /** @description Field references for this series */
+      encode: {
+        /** @description Hash of yRef (computed) */
+        y?: string;
+        /** @description Hash of xRef (computed) */
+        x?: string;
+        /** @description Y axis field reference */
+        yRef: components['schemas']['PivotReference'];
+        /** @description X axis field reference */
+        xRef: components['schemas']['PivotReference'];
+      };
+    };
+    Axis: {
+      /**
+       * Format: double
+       * @description Rotation angle for axis labels
+       */
+      rotate?: number;
+      /** @description Reverse the axis direction */
+      inverse?: boolean;
+      /** @description Offset from maximum value */
+      maxOffset?: string;
+      /** @description Offset from minimum value */
+      minOffset?: string;
+      /**
+       * Format: double
+       * @description Minimum interval between ticks (e.g. 1 to force integer ticks)
+       */
+      minInterval?: number;
+      /** @description Maximum value (or 'dataMax' for auto) */
+      max?: string;
+      /** @description Minimum value (or 'dataMin' for auto) */
+      min?: string;
+      /** @description Axis title */
+      name?: string;
+    };
+    /** @enum {string} */
+    XAxisSortType: 'default' | 'category' | 'bar_totals';
+    XAxis: components['schemas']['Axis'] & {
+      /**
+       * Format: double
+       * @description Number of items visible at once in the data-zoom window
+       */
+      dataZoomItemCount?: number;
+      /**
+       * @description Where the initial data-zoom window anchors when data zoom is enabled
+       * @enum {string}
+       */
+      dataZoomAnchor?: 'start' | 'end';
+      /** @description Enable data zoom slider for this axis */
+      enableDataZoom?: boolean;
+      /** @description How to sort the X axis */
+      sortType?: components['schemas']['XAxisSortType'];
+    };
+    /** @enum {string} */
+    TooltipSortBy: 'default' | 'alphabetical' | 'value_ascending' | 'value_descending';
+    /** @description Make all properties in T optional */
+    Partial_CompleteEChartsConfig_: {
+      /** @description Legend configuration */
+      legend?: components['schemas']['EchartsLegend'];
+      /** @description Grid (chart area) configuration */
+      grid?: components['schemas']['EchartsGrid'];
+      /** @description Chart series configuration */
+      series?: components['schemas']['Series'][];
+      /** @description X axis configuration */
+      xAxis?: components['schemas']['XAxis'][];
+      /** @description Y axis configuration */
+      yAxis?: components['schemas']['Axis'][];
+      /** @description Tooltip formatter template */
+      tooltip?: string;
+      /** @description How to sort tooltip items */
+      tooltipSort?: components['schemas']['TooltipSortBy'];
+      /** @description Show tick marks on axes */
+      showAxisTicks?: boolean;
+      /**
+       * Format: double
+       * @description Font size for axis labels
+       */
+      axisLabelFontSize?: number;
+      /**
+       * Format: double
+       * @description Font size for axis titles
+       */
+      axisTitleFontSize?: number;
+    };
+    EChartsConfig: components['schemas']['Partial_CompleteEChartsConfig_'];
+    SeriesMetadata: {
+      /** @description Color for the series */
+      color: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.SeriesMetadata_': {
+      [key: string]: components['schemas']['SeriesMetadata'];
+    };
+    RowLimit: {
+      /**
+       * Format: double
+       * @description Number of rows to show or hide
+       */
+      count: number;
+      /**
+       * @description Whether to target the first or last N rows
+       * @enum {string}
+       */
+      direction: 'first' | 'last';
+      /**
+       * @description Whether to show or hide the selected rows
+       * @enum {string}
+       */
+      mode: 'show' | 'hide';
+    };
+    CartesianChart: {
+      /**
+       * Format: double
+       * @description Maximum number of pivot columns to display
+       */
+      columnLimit?: number;
+      /** @description Limit displayed rows to first/last N */
+      rowLimit?: components['schemas']['RowLimit'];
+      /** @description Metadata for series (colors, etc.) */
+      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
+      /** @description Conditional formatting rules */
+      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
+      /** @description ECharts-specific configuration */
+      eChartsConfig: components['schemas']['EChartsConfig'];
+      /** @description Layout configuration for the chart axes and orientation */
+      layout: components['schemas']['CartesianChartLayout'];
+    };
+    CartesianChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['CartesianChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.CARTESIAN'];
+    };
+    /** @enum {string} */
+    'ChartType.CUSTOM': 'custom';
+    CustomVis: {
+      /** @description Custom visualization specification (Vega-Lite or other) */
+      spec?: components['schemas']['Record_string.unknown_'];
+    };
+    CustomVisConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['CustomVis'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.CUSTOM'];
+    };
+    /** @enum {string} */
+    'ChartType.PIE': 'pie';
+    /** @enum {string} */
+    PieChartValueLabel: 'hidden' | 'inside' | 'outside';
+    /** @description Make all properties in T optional */
+    Partial_PieChartValueOptions_: {
+      /** @enum {string} */
+      valueLabel?: 'hidden' | 'inside' | 'outside';
+      showValue?: boolean;
+      showPercentage?: boolean;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.Partial_PieChartValueOptions__': {
+      [key: string]: components['schemas']['Partial_PieChartValueOptions_'];
+    };
+    /** @enum {string} */
+    PieChartLegendPosition: 'horizontal' | 'vertical';
+    PieChart: {
+      /** @description Metadata for series (colors, etc.) */
+      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
+      /**
+       * Format: double
+       * @description Maximum character length for legend items
+       */
+      legendMaxItemLength?: number;
+      /** @description Legend position/orientation */
+      legendPosition?: components['schemas']['PieChartLegendPosition'];
+      /** @description Show the chart legend */
+      showLegend?: boolean;
+      /** @description Custom sort order for groups/slices */
+      groupSortOverrides?: string[];
+      /** @description Per-slice value display options */
+      groupValueOptionOverrides?: components['schemas']['Record_string.Partial_PieChartValueOptions__'];
+      /** @description Custom colors for each group/slice */
+      groupColorOverrides?: components['schemas']['Record_string.string_'];
+      /** @description Custom labels for each group/slice */
+      groupLabelOverrides?: components['schemas']['Record_string.string_'];
+      /** @description Show percentage on slices */
+      showPercentage?: boolean;
+      /** @description Show the actual value on slices */
+      showValue?: boolean;
+      /** @description Position of value labels on slices */
+      valueLabel?: components['schemas']['PieChartValueLabel'];
+      /** @description Display as donut chart with hole in center */
+      isDonut?: boolean;
+      /** @description Field ID of the metric to display */
+      metricId?: string;
+      /** @description Field IDs used for grouping/slicing the pie */
+      groupFieldIds?: string[];
+    };
+    PieChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['PieChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.PIE'];
+    };
+    /** @enum {string} */
+    'ChartType.FUNNEL': 'funnel';
+    /** @enum {string} */
+    FunnelChartDataInput: 'row' | 'column';
+    /** @enum {string} */
+    FunnelChartLabelPosition: 'inside' | 'left' | 'right' | 'hidden';
+    /** @enum {string} */
+    FunnelChartLegendPosition: 'horizontal' | 'vertical';
+    FunnelChart: {
+      /** @description Legend orientation */
+      legendPosition?: components['schemas']['FunnelChartLegendPosition'];
+      /** @description Show the chart legend */
+      showLegend?: boolean;
+      /** @description Label display configuration */
+      labels?: {
+        /** @description Show percentage */
+        showPercentage?: boolean;
+        /** @description Show the actual value */
+        showValue?: boolean;
+        /** @description Position of labels */
+        position?: components['schemas']['FunnelChartLabelPosition'];
+      };
+      /** @description Custom colors for funnel stages */
+      colorOverrides?: components['schemas']['Record_string.string_'];
+      /** @description Custom labels for funnel stages */
+      labelOverrides?: components['schemas']['Record_string.string_'];
+      /** @description Metadata for series (colors, etc.) */
+      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
+      /** @description Field ID to display in funnel */
+      fieldId?: string;
+      /** @description How data is structured (row-based or column-based) */
+      dataInput?: components['schemas']['FunnelChartDataInput'];
+    };
+    FunnelChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['FunnelChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.FUNNEL'];
+    };
+    /** @enum {string} */
+    'ChartType.TABLE': 'table';
+    ColumnProperties: {
+      /** Format: double */
+      width?: number;
+      /** @description Color for negative bars in diverging bar display (hex code). Falls back to `color` when unset. */
+      negativeColor?: string;
+      /** @description Color for bar display style (hex code) */
+      color?: string;
+      /**
+       * @description How to display the cell value
+       * @enum {string}
+       */
+      displayStyle?: 'text' | 'bar';
+      /** @description Freeze the column (stick to left side) */
+      frozen?: boolean;
+      /** @description Custom display name for the column */
+      name?: string;
+      /** @description Whether the column is visible */
+      visible?: boolean;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.ColumnProperties_': {
+      [key: string]: components['schemas']['ColumnProperties'];
+    };
+    TableChart: {
+      /** @description Limit displayed rows to first/last N */
+      rowLimit?: components['schemas']['RowLimit'];
+      /** @description Display metrics as rows instead of columns */
+      metricsAsRows?: boolean;
+      /** @description Conditional formatting rules */
+      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
+      /** @description Column-specific configuration */
+      columns?: components['schemas']['Record_string.ColumnProperties_'];
+      /**
+       * @description Visually deduplicate repeated row-index dimension values across consecutive
+       *     rows without showing aggregate subtotal rows. When `showSubtotals` is true,
+       *     grouping is implicitly active and this flag is ignored. Defaults to false.
+       */
+      showRowGrouping?: boolean;
+      /** @description Default subtotal rows to expanded (vs. collapsed). Only meaningful when showSubtotals is true. */
+      showSubtotalsExpanded?: boolean;
+      /** @description Show subtotal rows */
+      showSubtotals?: boolean;
+      /** @description Show total results count */
+      showResultsTotal?: boolean;
+      /** @description Hide row number column */
+      hideRowNumbers?: boolean;
+      /** @description Show table names in column headers */
+      showTableNames?: boolean;
+      /** @description Show row totals/calculations */
+      showRowCalculation?: boolean;
+      /** @description Show column totals/calculations */
+      showColumnCalculation?: boolean;
+    };
+    TableChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['TableChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.TABLE'];
+    };
+    /** @enum {string} */
+    'ChartType.TREEMAP': 'treemap';
+    TreemapChart: {
+      /**
+       * Format: double
+       * @description Value threshold for end color
+       */
+      endColorThreshold?: number;
+      /**
+       * Format: double
+       * @description Value threshold for start color
+       */
+      startColorThreshold?: number;
+      /** @description Use dynamic color scaling based on values */
+      useDynamicColors?: boolean;
+      /** @description End color for color gradient (hex code) */
+      endColor?: string;
+      /** @description Start color for color gradient (hex code) */
+      startColor?: string;
+      /** @description Field ID for node color value */
+      colorMetricId?: string;
+      /** @description Field ID for node size */
+      sizeMetricId?: string;
+      /** @description Field IDs for hierarchical grouping */
+      groupFieldIds?: string[];
+      /**
+       * Format: double
+       * @description Depth of leaf nodes to display
+       */
+      leafDepth?: number;
+      /**
+       * Format: double
+       * @description Minimum size for visible nodes
+       */
+      visibleMin?: number;
+    };
+    TreemapChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['TreemapChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.TREEMAP'];
+    };
+    /** @enum {string} */
+    'ChartType.GAUGE': 'gauge';
+    GaugeSection: {
+      /** @description Color for this section (hex code) */
+      color: string;
+      /** @description Field ID to use as max value */
+      maxFieldId?: string;
+      /** @description Field ID to use as min value */
+      minFieldId?: string;
+      /**
+       * Format: double
+       * @description End value for this section
+       */
+      max: number;
+      /**
+       * Format: double
+       * @description Start value for this section
+       */
+      min: number;
+    };
+    GaugeChart: {
+      /** @description Custom label for the percentage display */
+      customPercentageLabel?: string;
+      /** @description Show value as percentage */
+      showPercentage?: boolean;
+      /** @description Custom label for the gauge value */
+      customLabel?: string;
+      /** @description Color sections/ranges for the gauge */
+      sections?: components['schemas']['GaugeSection'][];
+      /** @description Show min/max labels on the gauge */
+      showAxisLabels?: boolean;
+      /** @description Field ID to use as the max value */
+      maxFieldId?: string;
+      /**
+       * Format: double
+       * @description Maximum value for the gauge
+       */
+      max?: number;
+      /**
+       * Format: double
+       * @description Minimum value for the gauge
+       */
+      min?: number;
+      /** @description Field ID for the gauge value */
+      selectedField?: string;
+    };
+    GaugeChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['GaugeChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.GAUGE'];
+    };
+    /** @enum {string} */
+    'ChartType.DATA_APP_VIZ': 'data_app_viz';
+    /** @description Maps a data app viz's field name → the host query field id bound to it. */
+    DataAppVizFieldMapping: components['schemas']['Record_string.string_'];
+    /** @description A persisted config value; its shape is set by the option's declared `type`. */
+    DataAppVizOptionValue: boolean | number | string;
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.DataAppVizOptionValue_': {
+      [key: string]: components['schemas']['DataAppVizOptionValue'];
+    };
+    /** @description Maps a declared config option's name → the value the user chose for it. */
+    DataAppVizOptionValues: components['schemas']['Record_string.DataAppVizOptionValue_'];
+    DataAppVizChart: {
+      /**
+       * @description Only options the user explicitly changed — declared defaults are never
+       *     seeded here, they're resolved at render time. Absent on charts saved
+       *     before config options shipped.
+       */
+      optionValues?: components['schemas']['DataAppVizOptionValues'];
+      fieldMapping: components['schemas']['DataAppVizFieldMapping'];
+      /** @description The reusable data app viz this chart renders with (by reference). */
+      dataAppVizUuid: string;
+    };
+    DataAppVizChartConfig: {
+      /** @description Reference to a data app viz plus its field mapping. */
+      config?: components['schemas']['DataAppVizChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.DATA_APP_VIZ'];
+    };
+    /** @enum {string} */
+    'ChartType.MAP': 'map';
+    /** @enum {string} */
+    MapChartLocation: 'USA' | 'world' | 'europe' | 'custom';
+    /** @enum {string} */
+    MapChartType: 'scatter' | 'area' | 'heatmap' | 'hexbin';
+    /** @enum {string} */
+    MapHexbinSizingMode: 'dynamic' | 'fixed';
+    /** @enum {string} */
+    MapHexbinValueBasis: 'count' | 'field';
+    /** @enum {string} */
+    MapHexbinAggregation: 'sum' | 'avg' | 'min' | 'max';
+    /** @enum {string} */
+    MapTileBackground: 'none' | 'openstreetmap' | 'light' | 'dark' | 'satellite' | 'voyager';
+    MapFieldConfig: {
+      /** @description Custom label for the field */
+      label?: string;
+      /** @description Whether to show this field in tooltips */
+      visible?: boolean;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.MapFieldConfig_': {
+      [key: string]: components['schemas']['MapFieldConfig'];
+    };
+    MapChart: {
+      /** @description Save the current map zoom/position */
+      saveMapExtent?: boolean;
+      /** @description Field-specific configuration for tooltips */
+      fieldConfig?: components['schemas']['Record_string.MapFieldConfig_'];
+      /** @description Color for regions with no data (hex code) */
+      noDataColor?: string;
+      /** @description Background color for the map (hex code) */
+      backgroundColor?: string;
+      /** @description Map tile background style for dark mode (uses dark default when undefined) */
+      darkModeTileBackground?: components['schemas']['MapTileBackground'];
+      /** @description Map tile background style */
+      tileBackground?: components['schemas']['MapTileBackground'];
+      /**
+       * Format: double
+       * @description Data layer opacity (0.1 to 1)
+       */
+      dataLayerOpacity?: number;
+      /** @description Configuration for H3 hexagonal binning visualization */
+      hexbinConfig?: {
+        /**
+         * @description Fill color for empty bins. Hex6 (#rrggbb) = solid fill, hex8
+         *     (#rrggbbaa) = fill with alpha, null/undefined = outline only.
+         */
+        emptyBinColor?: string | null;
+        /**
+         * @description Render outlined empty cells across the visible map area, so the user
+         *     can see "where there is no data" relative to the hex grid.
+         */
+        showEmptyBins?: boolean;
+        /** @description Aggregation applied when valueBasis = FIELD. Defaults to SUM. */
+        aggregation?: components['schemas']['MapHexbinAggregation'];
+        /**
+         * @description What drives cell color: count of points (default) or an aggregation
+         *     over a chosen value field (controlled via the chart's `valueFieldId`).
+         */
+        valueBasis?: components['schemas']['MapHexbinValueBasis'];
+        /**
+         * Format: double
+         * @description H3 resolution (0-15) used when sizingMode is FIXED. Ignored otherwise.
+         */
+        fixedResolution?: number;
+        /** @description How bin size is determined. Defaults to DYNAMIC if unset. */
+        sizingMode?: components['schemas']['MapHexbinSizingMode'];
+        /**
+         * Format: double
+         * @description Opacity of hex polygons (0.1 to 1)
+         */
+        opacity?: number;
+      };
+      /** @description Configuration for heatmap visualization */
+      heatmapConfig?: {
+        /**
+         * Format: double
+         * @description Opacity of the heatmap layer
+         */
+        opacity?: number;
+        /**
+         * Format: double
+         * @description Blur amount for heat points
+         */
+        blur?: number;
+        /**
+         * Format: double
+         * @description Radius of heat points
+         */
+        radius?: number;
+      };
+      /** @description Field ID for bubble size (scatter maps) */
+      sizeFieldId?: string;
+      /**
+       * Format: double
+       * @description Maximum bubble size for scatter maps
+       */
+      maxBubbleSize?: number;
+      /**
+       * Format: double
+       * @description Minimum bubble size for scatter maps
+       */
+      minBubbleSize?: number;
+      /**
+       * Format: double
+       * @description Default center longitude
+       */
+      defaultCenterLon?: number;
+      /**
+       * Format: double
+       * @description Default center latitude
+       */
+      defaultCenterLat?: number;
+      /**
+       * Format: double
+       * @description Default zoom level
+       */
+      defaultZoom?: number;
+      /** @description Per-value color overrides for categorical color fields */
+      colorOverrides?: components['schemas']['Record_string.string_'];
+      /** @description Array of colors for the value gradient */
+      colorRange?: string[];
+      /** @description Show the map legend */
+      showLegend?: boolean;
+      /** @description Field ID for the value to display */
+      valueFieldId?: string;
+      /** @description Property key in GeoJSON to match against data */
+      geoJsonPropertyKey?: string;
+      /** @description Field ID for location/region names (area maps) */
+      locationFieldId?: string;
+      /** @description Field ID for longitude values */
+      longitudeFieldId?: string;
+      /** @description Field ID for latitude values */
+      latitudeFieldId?: string;
+      /** @description How to display location data */
+      locationType?: components['schemas']['MapChartType'];
+      /** @description URL to custom GeoJSON file */
+      customGeoJsonUrl?: string;
+      /** @description Type of map to display */
+      mapType?: components['schemas']['MapChartLocation'];
+    };
+    MapChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['MapChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.MAP'];
+    };
+    /** @enum {string} */
+    'ChartType.SANKEY': 'sankey';
+    /**
+     * @description How nodes are laid out:
+     *     - `multi-step`: depth-unrolled journeys (default)
+     *     - `merged`: one node per label, journeys preserved (acyclic flows only)
+     *     - `direct`: two-column source→target pairs, no chaining
+     * @enum {string}
+     */
+    SankeyNodeLayout: 'multi-step' | 'merged' | 'direct';
+    SankeyChart: {
+      /** @description How nodes are laid out across steps */
+      nodeLayout?: components['schemas']['SankeyNodeLayout'];
+      /**
+       * @description Orientation of the diagram
+       * @enum {string}
+       */
+      orient?: 'horizontal' | 'vertical';
+      /**
+       * @description Node alignment
+       * @enum {string}
+       */
+      nodeAlign?: 'left' | 'right' | 'justify';
+      /** @description Field ID for the link value metric */
+      metricFieldId?: string;
+      /** @description Field ID for the target node dimension */
+      targetFieldId?: string;
+      /** @description Field ID for the source node dimension */
+      sourceFieldId?: string;
+    };
+    SankeyChartConfig: {
+      /** @description Chart-type-specific configuration */
+      config?: components['schemas']['SankeyChart'];
+      /** @description Type of chart visualization */
+      type: components['schemas']['ChartType.SANKEY'];
+    };
+    ChartConfig:
+      | components['schemas']['BigNumberConfig']
+      | components['schemas']['CartesianChartConfig']
+      | components['schemas']['CustomVisConfig']
+      | components['schemas']['PieChartConfig']
+      | components['schemas']['FunnelChartConfig']
+      | components['schemas']['TableChartConfig']
+      | components['schemas']['TreemapChartConfig']
+      | components['schemas']['GaugeChartConfig']
+      | components['schemas']['DataAppVizChartConfig']
+      | components['schemas']['MapChartConfig']
+      | components['schemas']['SankeyChartConfig'];
+    ParameterValue: string | number | string[] | number[];
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.ParameterValue_': {
+      [key: string]: components['schemas']['ParameterValue'];
+    };
+    ParametersValuesMap: components['schemas']['Record_string.ParameterValue_'];
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.Exclude_keyofPick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery__': {
+      /** @description Display name of the chart */
+      name: string;
+      /** @description Optional description of what this chart displays */
+      description?: string;
+      /** @description The explore/table name this chart queries from */
+      tableName: string;
+      /** @description Visualization configuration for the chart */
+      chartConfig: components['schemas']['ChartConfig'];
+      /** @description Pivot table configuration */
+      pivotConfig?: {
+        rows?: string[];
+        columns: string[];
+      };
+      /** @description Unique identifier slug for this chart */
+      slug: string;
+      /** @description Parameter values for the chart query */
+      parameters?: components['schemas']['ParametersValuesMap'];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery_': components['schemas']['Pick_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.Exclude_keyofPick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery__'];
+    /**
+     * @description Coordinates of a single pivot column, used to anchor a row sort to that
+     *     specific column when results are pivoted.
+     */
+    PivotSortAnchor: {
+      value: (string | number | boolean) | null;
+      reference: string;
+    };
+    SortField: {
+      /** @description Pins the row-sort anchor to a specific pivot column. Ignored for non-pivoted results. */
+      pivotValues?: components['schemas']['PivotSortAnchor'][];
+      /** @description Sort null values first */
+      nullsFirst?: boolean;
+      /** @description Sort in descending order */
+      descending: boolean;
+      /** @description Field ID to sort by */
+      fieldId: string;
+    };
+    /** @enum {string} */
+    CustomFormatType:
+      | 'default'
+      | 'percent'
+      | 'currency'
+      | 'number'
+      | 'id'
+      | 'date'
+      | 'timestamp'
+      | 'bytes_si'
+      | 'bytes_iec'
+      | 'custom';
+    /** @enum {string} */
+    NumberSeparator:
+      | 'default'
+      | 'commaPeriod'
+      | 'spacePeriod'
+      | 'periodComma'
+      | 'noSeparatorPeriod'
+      | 'apostrophePeriod';
+    /** @enum {string} */
+    TimeFrames:
+      | 'RAW'
+      | 'YEAR'
+      | 'QUARTER'
+      | 'MONTH'
+      | 'WEEK'
+      | 'DAY'
+      | 'HOUR'
+      | 'MINUTE'
+      | 'SECOND'
+      | 'MILLISECOND'
+      | 'DAY_OF_WEEK_INDEX'
+      | 'DAY_OF_MONTH_NUM'
+      | 'DAY_OF_YEAR_NUM'
+      | 'WEEK_NUM'
+      | 'MONTH_NUM'
+      | 'QUARTER_NUM'
+      | 'YEAR_NUM'
+      | 'DAY_OF_WEEK_NAME'
+      | 'MONTH_NAME'
+      | 'QUARTER_NAME'
+      | 'HOUR_OF_DAY_NUM'
+      | 'MINUTE_OF_HOUR_NUM';
+    CustomFormat: {
+      /** @description Format type */
+      type: components['schemas']['CustomFormatType'];
+      /**
+       * Format: double
+       * @description Number of decimal places
+       */
+      round?: number;
+      /** @description Number separator style */
+      separator?: components['schemas']['NumberSeparator'];
+      /** @description Currency code (e.g., USD, GBP, EUR) */
+      currency?: string;
+      /** @description Compact format for large numbers (K, M, B, T) or byte units */
+      compact?: components['schemas']['CompactOrAlias'];
+      /** @description Prefix to prepend to formatted values */
+      prefix?: string;
+      /** @description Suffix to append to formatted values */
+      suffix?: string;
+      /** @description Time interval for date formatting */
+      timeInterval?: components['schemas']['TimeFrames'];
+      /** @description Custom format string */
+      custom?: string;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    TableCalculationType: 'number' | 'string' | 'date' | 'timestamp' | 'boolean';
+    /** @enum {string} */
+    TableCalculationTotalMode: 'formula' | 'sum_of_rows' | 'none';
+    TableCalculationBase: {
+      /** @description How column totals are computed for this calculation */
+      totalMode?: components['schemas']['TableCalculationTotalMode'];
+      /** @description Data type of the calculation result */
+      type?: components['schemas']['TableCalculationType'];
+      /** @description Formatting options for the calculation */
+      format?: components['schemas']['CustomFormat'];
+      /** @description Display name shown in the UI */
+      displayName: string;
+      /** @description Internal name of the table calculation */
+      name: string;
+      /**
+       * Format: double
+       * @description Display order index
+       */
+      index?: number;
+    };
+    SqlTableCalculation: components['schemas']['TableCalculationBase'] & {
+      /** @description SQL expression for the calculation (can reference fields with ${table.field}) */
+      sql: string;
+    };
+    /** @enum {string} */
+    'TableCalculationTemplateType.PERCENT_CHANGE_FROM_PREVIOUS': 'percent_change_from_previous';
+    /** @enum {string} */
+    'TableCalculationTemplateType.PERCENT_OF_PREVIOUS_VALUE': 'percent_of_previous_value';
+    /** @enum {string} */
+    'TableCalculationTemplateType.PERCENT_OF_COLUMN_TOTAL': 'percent_of_column_total';
+    /** @enum {string} */
+    'TableCalculationTemplateType.RANK_IN_COLUMN': 'rank_in_column';
+    /** @enum {string} */
+    'TableCalculationTemplateType.RUNNING_TOTAL': 'running_total';
+    /** @enum {string} */
+    'TableCalculationTemplateType.WINDOW_FUNCTION': 'window_function';
+    /** @enum {string} */
+    WindowFunctionType:
+      | 'row_number'
+      | 'percent_rank'
+      | 'cume_dist'
+      | 'rank'
+      | 'sum'
+      | 'avg'
+      | 'count'
+      | 'min'
+      | 'max';
+    /** @enum {string} */
+    FrameType: 'rows' | 'range';
+    /** @enum {string} */
+    FrameBoundaryType:
+      'unbounded_preceding' | 'preceding' | 'current_row' | 'following' | 'unbounded_following';
+    FrameBoundary: {
+      /**
+       * Format: double
+       * @description Offset for PRECEDING/FOLLOWING
+       */
+      offset?: number;
+      /** @description Boundary type */
+      type: components['schemas']['FrameBoundaryType'];
+    };
+    FrameClause: {
+      /** @description End boundary of the frame */
+      end: components['schemas']['FrameBoundary'];
+      /** @description Start boundary of the frame */
+      start?: components['schemas']['FrameBoundary'];
+      /** @description Type of frame (ROWS or RANGE) */
+      frameType: components['schemas']['FrameType'];
+    };
+    TableCalculationTemplate:
+      | {
+          partitionBy?: string[];
+          /** @description Fields to order by for window functions */
+          orderBy: {
+            /** @enum {string|null} */
+            order: 'asc' | 'desc' | null;
+            fieldId: string;
+          }[];
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.PERCENT_CHANGE_FROM_PREVIOUS'];
+        }
+      | {
+          partitionBy?: string[];
+          /** @description Fields to order by for window functions */
+          orderBy: {
+            /** @enum {string|null} */
+            order: 'asc' | 'desc' | null;
+            fieldId: string;
+          }[];
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.PERCENT_OF_PREVIOUS_VALUE'];
+        }
+      | {
+          /** @description Fields to partition by */
+          partitionBy?: string[];
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.PERCENT_OF_COLUMN_TOTAL'];
+        }
+      | {
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.RANK_IN_COLUMN'];
+        }
+      | {
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.RUNNING_TOTAL'];
+        }
+      | {
+          /** @description Frame clause for window functions */
+          frame?: components['schemas']['FrameClause'];
+          /** @description Fields to partition by for window functions */
+          partitionBy: string[];
+          /** @description Fields to order by for window functions */
+          orderBy: {
+            /** @enum {string|null} */
+            order: 'asc' | 'desc' | null;
+            fieldId: string;
+          }[];
+          /** @description Field ID to apply the template to */
+          fieldId: string | null;
+          /** @description Window function type */
+          windowFunction: components['schemas']['WindowFunctionType'];
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.WINDOW_FUNCTION'];
+        };
+    TemplateTableCalculation: components['schemas']['TableCalculationBase'] & {
+      /** @description Template-based calculation (alternative to sql) */
+      template: components['schemas']['TableCalculationTemplate'];
+    };
+    FormulaTableCalculation: components['schemas']['TableCalculationBase'] & {
+      /** @description Spreadsheet-like formula compiled to SQL at query time */
+      formula: string;
+    };
+    TableCalculation:
+      | components['schemas']['SqlTableCalculation']
+      | components['schemas']['TemplateTableCalculation']
+      | components['schemas']['FormulaTableCalculation'];
+    /** @enum {string} */
+    MetricType:
+      | 'percentile'
+      | 'average'
+      | 'count'
+      | 'count_distinct'
+      | 'sum'
+      | 'sum_distinct'
+      | 'average_distinct'
+      | 'min'
+      | 'max'
+      | 'percent_of_previous'
+      | 'percent_of_total'
+      | 'running_total'
+      | 'number'
+      | 'median'
+      | 'string'
+      | 'date'
+      | 'timestamp'
+      | 'boolean';
+    /** @enum {string} */
+    Format: 'km' | 'mi' | 'si' | 'usd' | 'gbp' | 'eur' | 'jpy' | 'dkk' | 'id' | 'percent';
+    /** @description Filter rule for metrics, targeting fields by reference */
+    MetricFilterRule: {
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      /** @description Values to filter by */
+      values?: components['schemas']['AnyType'][];
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Unique identifier for the filter */
+      id: string;
+      /** @description Target field for the filter */
+      target: {
+        /** @description Field reference to filter on (e.g., 'table_name.field_name') */
+        fieldRef: string;
+      };
+      /** @description Additional settings for date/time filters */
+      settings?: components['schemas']['AnyType'];
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+    } & {
+      [key: string]: unknown;
+    };
+    FieldId: string;
+    AdditionalMetric: {
+      /** @description Display label for the metric */
+      label?: string;
+      /** @description Aggregation type */
+      type: components['schemas']['MetricType'];
+      /** @description Description of what the metric measures */
+      description?: string;
+      /** @description SQL expression (e.g., ${TABLE}.column_name) */
+      sql: string;
+      /** @description Whether the metric is hidden from users */
+      hidden?: boolean;
+      /**
+       * Format: double
+       * @description Number of decimal places
+       */
+      round?: number;
+      /** @description Compact format for large numbers */
+      compact?: components['schemas']['CompactOrAlias'];
+      /** @description Format string (legacy format specification) */
+      format?: components['schemas']['Format'] | string;
+      /** @description Number separator style for grouping/decimal characters */
+      separator?: components['schemas']['NumberSeparator'];
+      /** @description Table name the metric belongs to */
+      table: string;
+      /** @description Internal name of the metric */
+      name: string;
+      /**
+       * Format: double
+       * @description Display order index
+       */
+      index?: number;
+      /** @description Filters to apply to this metric */
+      filters?: components['schemas']['MetricFilterRule'][];
+      /** @description Name of the base dimension/column this metric aggregates */
+      baseDimensionName?: string;
+      /** @description Name of the explore metric this metric was cloned from */
+      baseMetricName?: string;
+      /** @description Unique identifier for the metric */
+      uuid?: string | null;
+      /**
+       * Format: double
+       * @description Percentile value for percentile metrics
+       */
+      percentile?: number;
+      distinctKeys?: string[];
+      /** @description Formatting configuration */
+      formatOptions?: components['schemas']['CustomFormat'];
+      /**
+       * @description Optional marker for metrics generated by the system.
+       *     Currently used for Period-over-Period (PoP) previous-period metrics.
+       * @enum {string}
+       */
+      generationType?: 'periodOverPeriod';
+      /** @description For PoP-generated metrics, the base metric id that this metric is derived from. */
+      baseMetricId?: components['schemas']['FieldId'];
+      /** @description For PoP-generated metrics, the time dimension id used for the comparison. */
+      timeDimensionId?: components['schemas']['FieldId'];
+      /** @description For PoP-generated metrics, the granularity used for the comparison. */
+      granularity?: components['schemas']['TimeFrames'];
+      /**
+       * Format: double
+       * @description For PoP-generated metrics, the number of periods to offset by (>= 1).
+       */
+      periodOffset?: number;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'BinType.FIXED_NUMBER': 'fixed_number';
+    /** @enum {string} */
+    'CustomDimensionType.BIN': 'bin';
+    /** @enum {string} */
+    CustomDimensionType: 'bin' | 'sql';
+    FixedNumberBinDimension: {
+      /** @description Unique identifier for the custom dimension */
+      id: string;
+      /** @description Display name for the custom dimension */
+      name: string;
+      /** @description Table this custom dimension belongs to */
+      table: string;
+      /** @description Type of custom dimension (bin or sql) */
+      type: components['schemas']['CustomDimensionType.BIN'];
+      /** @description Field ID of the parent dimension to bin */
+      dimensionId: components['schemas']['FieldId'];
+      binType: components['schemas']['BinType.FIXED_NUMBER'];
+      /** Format: double */
+      binNumber: number;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'BinType.FIXED_WIDTH': 'fixed_width';
+    FixedWidthBinDimension: {
+      /** @description Unique identifier for the custom dimension */
+      id: string;
+      /** @description Display name for the custom dimension */
+      name: string;
+      /** @description Table this custom dimension belongs to */
+      table: string;
+      /** @description Type of custom dimension (bin or sql) */
+      type: components['schemas']['CustomDimensionType.BIN'];
+      /** @description Field ID of the parent dimension to bin */
+      dimensionId: components['schemas']['FieldId'];
+      binType: components['schemas']['BinType.FIXED_WIDTH'];
+      /** Format: double */
+      binWidth: number;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'BinType.CUSTOM_RANGE': 'custom_range';
+    BinRange: {
+      /**
+       * Format: double
+       * @description End value for this bin range (undefined for the last range)
+       */
+      to?: number;
+      /**
+       * Format: double
+       * @description Start value for this bin range (undefined for the first range)
+       */
+      from?: number;
+    };
+    CustomRangeBinDimension: {
+      /** @description Unique identifier for the custom dimension */
+      id: string;
+      /** @description Display name for the custom dimension */
+      name: string;
+      /** @description Table this custom dimension belongs to */
+      table: string;
+      /** @description Type of custom dimension (bin or sql) */
+      type: components['schemas']['CustomDimensionType.BIN'];
+      /** @description Field ID of the parent dimension to bin */
+      dimensionId: components['schemas']['FieldId'];
+      binType: components['schemas']['BinType.CUSTOM_RANGE'];
+      customRange: components['schemas']['BinRange'][];
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'BinType.CUSTOM_GROUP': 'custom_group';
+    /** @enum {string} */
+    GroupValueMatchType: 'exact' | 'startsWith' | 'endsWith' | 'includes';
+    GroupValueRule: {
+      value: string;
+      matchType: components['schemas']['GroupValueMatchType'];
+    };
+    BinGroup: {
+      /** @description Rules that match values into this group */
+      values: components['schemas']['GroupValueRule'][];
+      /** @description Display name for this group (e.g. "North America") */
+      name: string;
+    };
+    CustomGroupBinDimension: {
+      /** @description Unique identifier for the custom dimension */
+      id: string;
+      /** @description Display name for the custom dimension */
+      name: string;
+      /** @description Table this custom dimension belongs to */
+      table: string;
+      /** @description Type of custom dimension (bin or sql) */
+      type: components['schemas']['CustomDimensionType.BIN'];
+      /** @description Field ID of the parent dimension to bin */
+      dimensionId: components['schemas']['FieldId'];
+      binType: components['schemas']['BinType.CUSTOM_GROUP'];
+      customGroups: components['schemas']['BinGroup'][];
+    } & {
+      [key: string]: unknown;
+    };
+    CustomBinDimension:
+      | components['schemas']['FixedNumberBinDimension']
+      | components['schemas']['FixedWidthBinDimension']
+      | components['schemas']['CustomRangeBinDimension']
+      | components['schemas']['CustomGroupBinDimension'];
+    /** @enum {string} */
+    'CustomDimensionType.SQL': 'sql';
+    /** @enum {string} */
+    DimensionType: 'string' | 'number' | 'timestamp' | 'date' | 'boolean';
+    CustomSqlDimension: {
+      /** @description Unique identifier for the custom dimension */
+      id: string;
+      /** @description Display name for the custom dimension */
+      name: string;
+      /** @description Table this custom dimension belongs to */
+      table: string;
+      /** @description Type of custom dimension (bin or sql) */
+      type: components['schemas']['CustomDimensionType.SQL'];
+      /** @description SQL expression for the custom dimension */
+      sql: string;
+      /** @description Data type of the dimension result */
+      dimensionType: components['schemas']['DimensionType'];
+    } & {
+      [key: string]: unknown;
+    };
+    CustomDimension:
+      components['schemas']['CustomBinDimension'] | components['schemas']['CustomSqlDimension'];
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Metric.formatOptions_': {
+      formatOptions?: components['schemas']['CustomFormat'];
+    };
+    MetricOverrides: {
+      [key: string]: components['schemas']['Pick_Metric.formatOptions_'];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Dimension.formatOptions_': {
+      formatOptions?: components['schemas']['CustomFormat'];
+    };
+    DimensionOverrides: {
+      [key: string]: components['schemas']['Pick_Dimension.formatOptions_'];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_CompiledDimension.name-or-label-or-table_': Record<string, never>;
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_MetricQuery.Exclude_keyofMetricQuery.filters__': {
+      /** @description The name of the explore to query */
+      exploreName: string;
+      /** @description List of dimension field IDs to include */
+      dimensions: string[];
+      /** @description List of metric field IDs to include */
+      metrics: string[];
+      /** @description Sort configuration for query results */
+      sorts: components['schemas']['SortField'][];
+      /**
+       * Format: double
+       * @description Maximum number of rows to return
+       */
+      limit: number;
+      /** @description Custom calculations to perform on query results */
+      tableCalculations: components['schemas']['TableCalculation'][];
+      /** @description Custom metrics defined inline (ad-hoc metrics not in the dbt model) */
+      additionalMetrics?: components['schemas']['AdditionalMetric'][];
+      /** @description Custom dimensions defined inline */
+      customDimensions?: components['schemas']['CustomDimension'][];
+      /** @description Override formatting options for existing metrics */
+      metricOverrides?: components['schemas']['MetricOverrides'];
+      /** @description Override formatting options for existing dimensions */
+      dimensionOverrides?: components['schemas']['DimensionOverrides'];
+      /** @description Timezone for date/time values (e.g., 'America/Los_Angeles', 'UTC') */
+      timezone?: string;
+      /**
+       * @description Dimension field IDs used as pivot columns (from chart's pivotConfig.columns).
+       *     Used by row_total() to determine non-pivot dimensions for GROUP BY.
+       */
+      pivotDimensions?: string[];
+      metadata?: {
+        hasADateDimension: components['schemas']['Pick_CompiledDimension.name-or-label-or-table_'];
+      };
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_MetricQuery.filters_': components['schemas']['Pick_MetricQuery.Exclude_keyofMetricQuery.filters__'];
+    FilterGroupInput:
+      components['schemas']['OrFilterGroupInput'] | components['schemas']['AndFilterGroupInput'];
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_FilterRule.Exclude_keyofFilterRule.id__': {
+      /** @description Target field for the filter */
+      target: components['schemas']['FieldTarget'];
+      /** @description Additional settings for date/time filters */
+      settings?: unknown;
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Values to filter by */
+      values?: unknown[];
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_FilterRule.id_': components['schemas']['Pick_FilterRule.Exclude_keyofFilterRule.id__'];
+    /**
+     * @description Permissive filter types for chart-as-code uploads where `id` may be omitted.
+     *     Filter IDs are auto-generated during upsert if absent.
+     *     After normalization these become the strict runtime types (FilterGroup, Filters).
+     */
+    FilterRuleInput: components['schemas']['Omit_FilterRule.id_'] & {
+      id?: string;
+    };
+    FilterGroupItemInput:
+      components['schemas']['FilterGroupInput'] | components['schemas']['FilterRuleInput'];
+    OrFilterGroupInput: {
+      or: components['schemas']['FilterGroupItemInput'][];
+      id?: string;
+    };
+    AndFilterGroupInput: {
+      and: components['schemas']['FilterGroupItemInput'][];
+      id?: string;
+    };
+    FiltersInput: {
+      tableCalculations?: components['schemas']['FilterGroupInput'];
+      metrics?: components['schemas']['FilterGroupInput'];
+      dimensions?: components['schemas']['FilterGroupInput'];
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.CHART': 'chart';
+    ContentVerificationInfo: {
+      /** Format: date-time */
+      verifiedAt: string;
+      verifiedBy: {
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      };
+    };
+    ChartAsCode: components['schemas']['Omit_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery_'] & {
+      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
+      verification?: components['schemas']['ContentVerificationInfo'] | null;
+      /**
+       * @description Declarative verification state.
+       *     `true` verifies the chart on upload, `false` unverifies it, `undefined` leaves the
+       *     current state untouched. Download sets this to `true` when the chart is verified.
+       */
+      verified?: boolean;
+      /**
+       * Format: date-time
+       * @description Timestamp when this chart was downloaded from Lightdash
+       */
+      downloadedAt?: string;
+      /** @description Slug of the space containing this chart */
+      spaceSlug: string;
+      /** @description Content type discriminator */
+      contentType?: components['schemas']['ContentAsCodeType.CHART'];
+      /**
+       * Format: double
+       * @description Schema version for this chart configuration
+       */
+      version: number;
+      /** @description Slug of the dashboard this chart belongs to (if any) */
+      dashboardSlug?: string;
+      /** @description Table configuration. Defaults to empty column order if omitted. */
+      tableConfig?: {
+        columnOrder: string[];
+      };
+      /**
+       * Format: date-time
+       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
+       */
+      updatedAt?: string;
+      metricQuery: components['schemas']['Omit_MetricQuery.filters_'] & {
+        filters: components['schemas']['FiltersInput'];
+      };
+    };
+    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
+    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined__._recurseIntoArrays-true__': Record<
+      string,
+      never
+    >;
+    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
+    'PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined___._recurseIntoArrays-true__': {
+      chart?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined__._recurseIntoArrays-true__'];
+    };
+    /**
+     * @description Create a type from another type with all keys and nested keys set to optional.
+     *
+     *     Use-cases:
+     *     - Merging a default settings/config object with another object, the second object would be a deep partial of the default object.
+     *     - Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test.
+     */
+    'PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined___._recurseIntoArrays-true__'];
+    /** @enum {string} */
+    'ContentAsCodeType.SPACE': 'space';
+    /** @enum {string} */
+    SpaceMemberRole: 'viewer' | 'editor' | 'admin';
+    SpaceAsCodeUserAccess: {
+      role: components['schemas']['SpaceMemberRole'];
+      /** @description Primary email of a human organization member. */
+      email: string;
+    };
+    SpaceAsCodeGroupAccess: {
+      role: components['schemas']['SpaceMemberRole'];
+      /** @description Exact, case-sensitive organization group name. */
+      name: string;
+    };
+    SpaceAsCodeAccess: {
+      groups: components['schemas']['SpaceAsCodeGroupAccess'][];
+      users: components['schemas']['SpaceAsCodeUserAccess'][];
+      projectMemberAccessRole: components['schemas']['SpaceMemberRole'] | null;
+      inheritParentPermissions: boolean;
+    };
+    SpaceAsCode: {
+      /** @description Omission leaves the existing access policy unchanged. */
+      access?: components['schemas']['SpaceAsCodeAccess'];
+      /** @description Full portable hierarchy path used for identity and cross-referencing. */
+      slug: string;
+      /** @description The original human-readable space name (preserves emoji, casing, etc.) */
+      spaceName: string;
+      /**
+       * @description Optional only for backwards-compatible metadata-only files.
+       * @enum {number}
+       */
+      version?: 1;
+      contentType: components['schemas']['ContentAsCodeType.SPACE'];
+    };
+    ApiChartAsCodeListResponse: {
+      results: {
+        /** Format: double */
+        offset: number;
+        /** Format: double */
+        total: number;
+        spaces: components['schemas']['SpaceAsCode'][];
+        missingIds: string[];
+        languageMap?: components['schemas']['PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__'][];
+        charts: components['schemas']['ChartAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    DashboardParameterValue: {
+      value: components['schemas']['ParameterValue'];
+      parameterName: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.DashboardParameterValue_': {
+      [key: string]: components['schemas']['DashboardParameterValue'];
+    };
+    DashboardParameters: components['schemas']['Record_string.DashboardParameterValue_'];
+    /** @enum {string} */
+    DateGranularity: 'Second' | 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month' | 'Quarter' | 'Year';
+    DateZoomControl: {
+      hidden?: boolean;
+      granularity: components['schemas']['DateGranularity'] | string;
+      name: string;
+      uuid: string;
+    };
+    DateZoomTileTarget: {
+      tableName: string | null;
+      fieldId: string | null;
+      controlUuid: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.DateZoomTileTarget_': {
+      [key: string]: components['schemas']['DateZoomTileTarget'];
+    };
+    DateZoomConfig: {
+      tileTargets: components['schemas']['Record_string.DateZoomTileTarget_'];
+      controls: components['schemas']['DateZoomControl'][];
+    };
+    DashboardConfig: {
+      /** @description Editor-authored note shown to viewers while filter rules are unmet */
+      requiredFiltersNote?: string;
+      dateZoomConfig?: components['schemas']['DateZoomConfig'];
+      defaultDateZoomGranularity?: components['schemas']['DateGranularity'] | string;
+      dateZoomGranularities?: (components['schemas']['DateGranularity'] | string)[];
+      parameterOrder?: string[];
+      pinnedParameters?: string[];
+      isAddFilterDisabled?: boolean;
+      isDateZoomDisabled: boolean;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.Exclude_keyofPick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs__': {
+      description?: string;
+      parameters?: components['schemas']['DashboardParameters'];
+      config?: components['schemas']['DashboardConfig'];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs_': components['schemas']['Pick_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.Exclude_keyofPick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs__'];
+    DashboardTabAsCode: {
+      hidden?: boolean;
+      /** Format: double */
+      order: number;
+      name: string;
+      /** @description Legacy project-local identifier. Accepted on upload for backwards compatibility. */
+      uuid?: string;
+      /** @description Portable tab identifier used by new downloads. */
+      slug?: string;
+    };
+    /** @enum {string} */
+    DashboardTileTypes: 'saved_chart' | 'sql_chart' | 'markdown' | 'loom' | 'heading' | 'data_app';
+    DashboardTileAsCodeBase: {
+      /** @description Legacy project-local tab reference. Accepted on upload for backwards compatibility. */
+      tabUuid?: string | null;
+      /** @description Portable reference to the dashboard tab containing this tile. */
+      tabSlug?: string | null;
+      /** Format: double */
+      w: number;
+      /** Format: double */
+      h: number;
+      /** Format: double */
+      y: number;
+      /** Format: double */
+      x: number;
+      type: components['schemas']['DashboardTileTypes'];
+      tileSlug?: string;
+      uuid?: string;
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.SAVED_CHART': 'saved_chart';
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DashboardChartTileProperties-at-properties.title-or-hideTitle-or-chartName_': {
+      title?: string;
+      hideTitle?: boolean;
+      chartName?: string | null;
+    };
+    DashboardChartTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: components['schemas']['Pick_DashboardChartTileProperties-at-properties.title-or-hideTitle-or-chartName_'] & {
+        chartSlug: string | null;
+      };
+      type: components['schemas']['DashboardTileTypes.SAVED_CHART'];
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.SQL_CHART': 'sql_chart';
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DashboardSqlChartTileProperties-at-properties.title-or-hideTitle-or-chartName_': {
+      title?: string;
+      hideTitle?: boolean;
+      chartName: string;
+    };
+    DashboardSqlChartTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: components['schemas']['Pick_DashboardSqlChartTileProperties-at-properties.title-or-hideTitle-or-chartName_'] & {
+        chartSlug: string | null;
+      };
+      type: components['schemas']['DashboardTileTypes.SQL_CHART'];
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.MARKDOWN': 'markdown';
+    DashboardMarkdownTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: {
+        hideFrame?: boolean;
+        content: string;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.MARKDOWN'];
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.LOOM': 'loom';
+    DashboardLoomTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: {
+        url: string;
+        hideTitle?: boolean;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.LOOM'];
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.HEADING': 'heading';
+    DashboardHeadingTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: {
+        showDivider?: boolean;
+        text: string;
+        title?: unknown;
+      };
+      type: components['schemas']['DashboardTileTypes.HEADING'];
+    };
+    /** @enum {string} */
+    'DashboardTileTypes.DATA_APP': 'data_app';
+    DashboardDataAppTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
+      properties: {
+        appDeletedAt?: string | null;
+        appUuid: string;
+        hideTitle?: boolean;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.DATA_APP'];
+    };
+    DashboardTileAsCode:
+      | components['schemas']['DashboardChartTileAsCode']
+      | components['schemas']['DashboardSqlChartTileAsCode']
+      | components['schemas']['DashboardMarkdownTileAsCode']
+      | components['schemas']['DashboardLoomTileAsCode']
+      | components['schemas']['DashboardHeadingTileAsCode']
+      | components['schemas']['DashboardDataAppTileAsCode'];
+    /** @enum {string} */
+    'ContentAsCodeType.DASHBOARD': 'dashboard';
+    DashboardFieldTarget: {
+      fallbackType?: components['schemas']['DimensionType'];
+      isSqlColumn?: boolean;
+      tableName: string;
+      fieldId: string;
+    };
+    DashboardTileTarget: components['schemas']['DashboardFieldTarget'] | false;
+    /**
+     * @description Deliberately an index-signature literal, not `Record<string, ...>`. When
+     *     TSOA first resolves `Record<string, DashboardTileTarget>` inside a mapped
+     *     type (e.g. `Omit<DashboardFilterRule, 'id'>` in content-as-code types), it
+     *     caches an EMPTY model under the shared `Record_string.DashboardTileTarget_`
+     *     name, and request validation then strips every tileTargets entry from
+     *     bodies — silently breaking dashboard filters on SQL chart tiles. The
+     *     index-signature form resolves correctly in every context.
+     */
+    DashboardTileTargets: {
+      [key: string]: components['schemas']['DashboardTileTarget'];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id__': {
+      label?: string;
+      /** @description Target field for the filter */
+      target: components['schemas']['DashboardFieldTarget'];
+      /** @description Additional settings for date/time filters */
+      settings?: unknown;
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Values to filter by */
+      values?: unknown[];
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      tileTargets?: components['schemas']['DashboardTileTargets'];
+      singleValue?: boolean;
+      /**
+       * @description Dashboard filters sharing a requiredGroupId form an "any-one required"
+       *     group: the dashboard is locked until at least one member has a value.
+       */
+      requiredGroupId?: string;
+      /**
+       * @description Tab UUIDs where this filter is locked. When the active tab is in this
+       *     list, viewers see the filter but cannot change it, and URL / embed
+       *     filter overrides targeting the same field are ignored on that tab.
+       *     Empty or omitted means the filter is not locked anywhere.
+       */
+      lockedTabUuids?: string[];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_DashboardFilterRule.id_': components['schemas']['Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id__'];
+    'FilterRule_FilterOperator.DashboardFieldTarget.AnyType.AnyType_': {
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      /** @description Values to filter by */
+      values?: components['schemas']['AnyType'][];
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Unique identifier for the filter */
+      id: string;
+      /** @description Target field for the filter */
+      target: components['schemas']['DashboardFieldTarget'];
+      /** @description Additional settings for date/time filters */
+      settings?: components['schemas']['AnyType'];
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+    } & {
+      [key: string]: unknown;
+    };
+    DashboardFilterRule: components['schemas']['FilterRule_FilterOperator.DashboardFieldTarget.AnyType.AnyType_'] & {
+      /**
+       * @description Tab UUIDs where this filter is locked. When the active tab is in this
+       *     list, viewers see the filter but cannot change it, and URL / embed
+       *     filter overrides targeting the same field are ignored on that tab.
+       *     Empty or omitted means the filter is not locked anywhere.
+       */
+      lockedTabUuids?: string[];
+      /**
+       * @description Dashboard filters sharing a requiredGroupId form an "any-one required"
+       *     group: the dashboard is locked until at least one member has a value.
+       */
+      requiredGroupId?: string;
+      singleValue?: boolean;
+      label?: string;
+      tileTargets?: components['schemas']['DashboardTileTargets'];
+    };
+    DashboardAsCode: components['schemas']['Omit_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs_'] & {
+      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
+      verification?: components['schemas']['ContentVerificationInfo'] | null;
+      /**
+       * @description Declarative verification state.
+       *     `true` verifies the dashboard on upload, `false` unverifies it, `undefined` leaves the
+       *     current state untouched. Download sets this to `true` when the dashboard is verified.
+       */
+      verified?: boolean;
+      filters?: {
+        tableCalculations?: components['schemas']['DashboardFilterRule'][];
+        metrics?: components['schemas']['DashboardFilterRule'][];
+        dimensions?: components['schemas']['Omit_DashboardFilterRule.id_'][];
+      };
+      /** Format: date-time */
+      downloadedAt?: string;
+      spaceSlug: string;
+      contentType?: components['schemas']['ContentAsCodeType.DASHBOARD'];
+      /** Format: double */
+      version: number;
+      tiles: components['schemas']['DashboardTileAsCode'][];
+      /**
+       * Format: date-time
+       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
+       */
+      updatedAt?: string;
+      tabs: components['schemas']['DashboardTabAsCode'][];
+      slug: string;
+      name: string;
+    };
+    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
+    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__': Record<
+      string,
+      never
+    >;
+    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
+    'PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__': {
+      dashboard?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined__._recurseIntoArrays-true__'];
+    };
+    /**
+     * @description Create a type from another type with all keys and nested keys set to optional.
+     *
+     *     Use-cases:
+     *     - Merging a default settings/config object with another object, the second object would be a deep partial of the default object.
+     *     - Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test.
+     */
+    'PartialDeep_DashboardAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--description_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined___._recurseIntoArrays-true__'];
+    ApiDashboardAsCodeListResponse: {
+      results: {
+        /** Format: double */
+        offset: number;
+        /** Format: double */
+        total: number;
+        spaces: components['schemas']['SpaceAsCode'][];
+        missingIds: string[];
+        languageMap?: components['schemas']['PartialDeep_DashboardAsCodeLanguageMap._recurseIntoArrays-true__'][];
+        dashboards: components['schemas']['DashboardAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    ChartKind:
+      | 'line'
+      | 'horizontal_bar'
+      | 'vertical_bar'
+      | 'scatter'
+      | 'area'
+      | 'mixed'
+      | 'pie'
+      | 'table'
+      | 'big_number'
+      | 'funnel'
+      | 'custom'
+      | 'treemap'
+      | 'gauge'
+      | 'map'
+      | 'sankey'
+      | 'data_app_viz';
+    VizBaseConfig: {
+      type: components['schemas']['ChartKind'];
+      metadata: {
+        /** Format: double */
+        version: number;
+      };
+    };
+    /** @enum {string} */
+    'ChartKind.VERTICAL_BAR': 'vertical_bar';
+    /** @enum {string} */
+    'ChartKind.LINE': 'line';
+    /** @enum {string} */
+    VizIndexType: 'time' | 'category';
+    /** @enum {string} */
+    VizAggregationOptions: 'sum' | 'count' | 'avg' | 'min' | 'max' | 'any';
+    /** @enum {string} */
+    SortByDirection: 'ASC' | 'DESC';
+    VizSortBy: {
+      /** @description Pins the row-sort anchor to a specific pivot column. */
+      pivotValues?: components['schemas']['PivotSortAnchor'][];
+      nullsFirst?: boolean;
+      direction: components['schemas']['SortByDirection'];
+      reference: string;
+    };
+    /** @enum {string} */
+    StackType: 'none' | 'stack' | 'stack100';
+    PivotChartLayout: {
+      stack?: boolean | components['schemas']['StackType'];
+      sortBy?: components['schemas']['VizSortBy'][];
+      groupBy?: {
+        reference: string;
+      }[];
+      y: {
+        aggregation: components['schemas']['VizAggregationOptions'];
+        reference: string;
+      }[];
+      x?: {
+        type: components['schemas']['VizIndexType'];
+        reference: string;
+      };
+    };
+    /** @enum {string} */
+    'CartesianSeriesType.LINE': 'line';
+    /** @enum {string} */
+    'CartesianSeriesType.BAR': 'bar';
+    /** @enum {string} */
+    ValueLabelPositionOptions: 'hidden' | 'top' | 'bottom' | 'left' | 'right' | 'inside';
+    /** @enum {number} */
+    AxisSide: 0 | 1;
+    CartesianChartDisplay: {
+      stack?: boolean | components['schemas']['StackType'];
+      legend?: {
+        /** @enum {string} */
+        align: 'start' | 'center' | 'end';
+        /** @enum {string} */
+        position: 'top' | 'bottom' | 'left' | 'right';
+      };
+      series?: {
+        [key: string]: {
+          whichYAxis?: components['schemas']['AxisSide'];
+          valueLabelPosition?: components['schemas']['ValueLabelPositionOptions'];
+          type?:
+            | components['schemas']['CartesianSeriesType.LINE']
+            | components['schemas']['CartesianSeriesType.BAR'];
+          color?: string;
+          /** Format: double */
+          yAxisIndex?: number;
+          format?: components['schemas']['Format'];
+          label?: string;
+        };
+      };
+      yAxis?: {
+        format?: components['schemas']['Format'];
+        position?: string;
+        label?: string;
+      }[];
+      xAxis?: {
+        dateFormat?: string;
+        type?: components['schemas']['VizIndexType'];
+        label?: string;
+      };
+    };
+    VizCartesianChartConfig: components['schemas']['VizBaseConfig'] & {
+      display?: components['schemas']['CartesianChartDisplay'];
+      fieldConfig?: components['schemas']['PivotChartLayout'];
+      type:
+        components['schemas']['ChartKind.VERTICAL_BAR'] | components['schemas']['ChartKind.LINE'];
+    };
+    /** @enum {string} */
+    'ChartKind.PIE': 'pie';
+    VizPieChartDisplay: {
+      isDonut?: boolean;
+    };
+    VizPieChartConfig: components['schemas']['VizBaseConfig'] & {
+      display?: components['schemas']['VizPieChartDisplay'];
+      fieldConfig?: components['schemas']['PivotChartLayout'];
+      type: components['schemas']['ChartKind.PIE'];
+    };
+    /** @enum {string} */
+    'ChartKind.TABLE': 'table';
+    VizColumnConfig: {
+      barConfig?: {
+        color?: string;
+        /** Format: double */
+        max?: number;
+        /** Format: double */
+        min?: number;
+      };
+      /** @enum {string} */
+      displayStyle?: 'text' | 'bar';
+      aggregation?: components['schemas']['VizAggregationOptions'];
+      /** Format: double */
+      order?: number;
+      frozen: boolean;
+      label: string;
+      reference: string;
+      visible: boolean;
+    };
+    VizColumnsConfig: {
+      [key: string]: components['schemas']['VizColumnConfig'];
+    };
+    VizTableDisplay: Record<string, never>;
+    VizTableConfig: components['schemas']['VizBaseConfig'] & {
+      display?: components['schemas']['VizTableDisplay'];
+      columns: components['schemas']['VizColumnsConfig'];
+      type: components['schemas']['ChartKind.TABLE'];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_SqlChart.name-or-description-or-slug-or-sql-or-limit-or-config-or-chartKind_': {
+      name: string;
+      description: string | null;
+      slug: string;
+      /** Format: double */
+      limit: number;
+      config: components['schemas']['VizBaseConfig'] &
+        (
+          | components['schemas']['VizCartesianChartConfig']
+          | components['schemas']['VizPieChartConfig']
+          | components['schemas']['VizTableConfig']
+        );
+      sql: string;
+      chartKind: components['schemas']['ChartKind'];
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.SQL_CHART': 'sql_chart';
+    SqlChartAsCode: components['schemas']['Pick_SqlChart.name-or-description-or-slug-or-sql-or-limit-or-config-or-chartKind_'] & {
+      /** Format: date-time */
+      downloadedAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+      spaceSlug: string;
+      contentType?: components['schemas']['ContentAsCodeType.SQL_CHART'];
+      /** Format: double */
+      version: number;
+    };
+    ApiSqlChartAsCodeListResponse: {
+      results: {
+        /** Format: double */
+        offset: number;
+        /** Format: double */
+        total: number;
+        spaces: components['schemas']['SpaceAsCode'][];
+        missingIds: string[];
+        sqlCharts: components['schemas']['SqlChartAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.VIRTUAL_VIEW': 'virtual_view';
+    ResultColumn: {
+      type: components['schemas']['DimensionType'];
+      reference: string;
+    };
+    VirtualViewAsCode: {
+      parameters: components['schemas']['ParametersValuesMap'] | null;
+      columns: components['schemas']['ResultColumn'][];
+      sql: string;
+      /** @description Mutable display label. */
+      name: string;
+      /** @description Immutable project-scoped explore name used by downstream content. */
+      slug: string;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.VIRTUAL_VIEW'];
+    };
+    VirtualViewAsCodeSkip: {
+      reason: string;
+      slug: string;
+    };
+    ApiVirtualViewAsCodeListResponse: {
+      results: {
+        missingSlugs: string[];
+        skipped: components['schemas']['VirtualViewAsCodeSkip'][];
+        virtualViews: components['schemas']['VirtualViewAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'SchedulerFormat.CSV': 'csv';
+    /** @enum {string} */
+    'SchedulerFormat.XLSX': 'xlsx';
+    SchedulerCsvOptions: {
+      /** @enum {string} */
+      xlsxFileLayout?: 'zip' | 'workbook';
+      exportPivotedData?: boolean;
+      asAttachment?: boolean;
+      limit: number | ('table' | 'all');
+      formatted: boolean;
+    };
+    /** @enum {string} */
+    'SchedulerFormat.IMAGE': 'image';
+    SchedulerImageOptions: {
+      pagePerTab?: boolean;
+      withPdf?: boolean;
+    };
+    /** @enum {string} */
+    'SchedulerFormat.PDF': 'pdf';
+    SchedulerPdfOptions: {
+      pagePerTab?: boolean;
+    };
+    ScheduledDeliveryFormatAsCode:
+      | {
+          options: components['schemas']['SchedulerCsvOptions'];
+          format:
+            | components['schemas']['SchedulerFormat.CSV']
+            | components['schemas']['SchedulerFormat.XLSX'];
+        }
+      | {
+          options: components['schemas']['SchedulerImageOptions'];
+          format: components['schemas']['SchedulerFormat.IMAGE'];
+        }
+      | {
+          options: components['schemas']['SchedulerPdfOptions'];
+          format: components['schemas']['SchedulerFormat.PDF'];
+        };
+    /** @enum {string} */
+    'ContentAsCodeType.SCHEDULED_DELIVERY': 'scheduled_delivery';
+    ScheduledDeliveryTargetAsCode:
+      | {
+          recipient: string;
+          /** @enum {string} */
+          type: 'email';
+        }
+      | {
+          channel: string;
+          /** @enum {string} */
+          type: 'slack';
+        };
+    ScheduledDeliveryAsCodeBase: {
+      /** Format: date-time */
+      downloadedAt?: string;
+      targets: components['schemas']['ScheduledDeliveryTargetAsCode'][];
+      includeLinks: boolean;
+      enabled: boolean;
+      timezone: string | null;
+      cron: string;
+      message: string | null;
+      name: string;
+      slug: string;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.SCHEDULED_DELIVERY'];
+    };
+    ChartScheduledDeliveryAsCode: components['schemas']['ScheduledDeliveryFormatAsCode'] &
+      components['schemas']['ScheduledDeliveryAsCodeBase'] & {
+        /** @enum {number|null} */
+        selectedTabs: null;
+        /** @enum {number|null} */
+        customViewportWidth: null;
+        parameters: components['schemas']['ParametersValuesMap'] | null;
+        filters: components['schemas']['FiltersInput'] | null;
+        resource: {
+          slug: string;
+          /** @enum {string} */
+          type: 'chart';
+        };
+      };
+    DashboardScheduledDeliveryAsCode: components['schemas']['ScheduledDeliveryFormatAsCode'] &
+      components['schemas']['ScheduledDeliveryAsCodeBase'] & {
+        /** @description Portable dashboard-tab slugs, resolved to UUIDs on upload. */
+        selectedTabs: string[] | null;
+        /** Format: double */
+        customViewportWidth: number | null;
+        parameters: components['schemas']['ParametersValuesMap'] | null;
+        filters: components['schemas']['Omit_DashboardFilterRule.id_'][] | null;
+        resource: {
+          slug: string;
+          /** @enum {string} */
+          type: 'dashboard';
+        };
+      };
+    ScheduledDeliveryAsCode:
+      | components['schemas']['ChartScheduledDeliveryAsCode']
+      | components['schemas']['DashboardScheduledDeliveryAsCode'];
+    ScheduledDeliveryAsCodeSkip: {
+      reason: string;
+      name: string;
+    };
+    ApiScheduledDeliveryAsCodeListResponse: {
+      results: {
+        skipped: components['schemas']['ScheduledDeliveryAsCodeSkip'][];
+        scheduledDeliveries: components['schemas']['ScheduledDeliveryAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.ALERT': 'alert';
+    /** @enum {string} */
+    ThresholdOperator: 'greaterThan' | 'lessThan' | 'increasedBy' | 'decreasedBy';
+    ThresholdOptions: {
+      /** Format: double */
+      value: number;
+      fieldId: string;
+      operator: components['schemas']['ThresholdOperator'];
+    };
+    /** @enum {string} */
+    NotificationFrequency: 'always' | 'once';
+    AlertAsCode: {
+      /** Format: date-time */
+      downloadedAt?: string;
+      parameters: components['schemas']['ParametersValuesMap'] | null;
+      filters: components['schemas']['FiltersInput'] | null;
+      notificationFrequency: components['schemas']['NotificationFrequency'];
+      thresholds: components['schemas']['ThresholdOptions'][];
+      resource: {
+        slug: string;
+        /** @enum {string} */
+        type: 'chart';
+      };
+      targets: components['schemas']['ScheduledDeliveryTargetAsCode'][];
+      includeLinks: boolean;
+      enabled: boolean;
+      timezone: string | null;
+      cron: string;
+      message: string | null;
+      name: string;
+      slug: string;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.ALERT'];
+    };
+    ApiAlertAsCodeListResponse: {
+      results: {
+        skipped: components['schemas']['ScheduledDeliveryAsCodeSkip'][];
+        alerts: components['schemas']['AlertAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.GOOGLE_SHEETS_SYNC': 'google_sheets_sync';
+    GoogleSheetsSyncAsCodeBase: {
+      /** Format: date-time */
+      downloadedAt?: string;
+      destination: {
+        tabName: string | null;
+        url: string;
+        organizationName: string;
+        spreadsheetName: string;
+        spreadsheetId: string;
+      };
+      includeLinks: boolean;
+      enabled: boolean;
+      timezone: string | null;
+      cron: string;
+      message: string | null;
+      name: string;
+      slug: string;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.GOOGLE_SHEETS_SYNC'];
+    };
+    ChartGoogleSheetsSyncAsCode: components['schemas']['GoogleSheetsSyncAsCodeBase'] & {
+      /** @enum {number|null} */
+      selectedTabs: null;
+      /** @enum {number|null} */
+      customViewportWidth: null;
+      parameters: components['schemas']['ParametersValuesMap'] | null;
+      filters: components['schemas']['FiltersInput'] | null;
+      resource: {
+        slug: string;
+        /** @enum {string} */
+        type: 'chart';
+      };
+    };
+    DashboardGoogleSheetsSyncAsCode: components['schemas']['GoogleSheetsSyncAsCodeBase'] & {
+      selectedTabs: string[] | null;
+      /** Format: double */
+      customViewportWidth: number | null;
+      parameters: components['schemas']['ParametersValuesMap'] | null;
+      filters: components['schemas']['Omit_DashboardFilterRule.id_'][] | null;
+      resource: {
+        slug: string;
+        /** @enum {string} */
+        type: 'dashboard';
+      };
+    };
+    GoogleSheetsSyncAsCode:
+      | components['schemas']['ChartGoogleSheetsSyncAsCode']
+      | components['schemas']['DashboardGoogleSheetsSyncAsCode'];
+    ApiGoogleSheetsSyncAsCodeListResponse: {
+      results: {
+        skipped: components['schemas']['ScheduledDeliveryAsCodeSkip'][];
+        googleSheetsSyncs: components['schemas']['GoogleSheetsSyncAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    SpaceAsCodeSkip: {
+      reason: string;
+      slug: string;
+    };
+    ApiSpaceAsCodeListResponse: {
+      results: {
+        skipped: components['schemas']['SpaceAsCodeSkip'][];
+        spaces: components['schemas']['SpaceAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.AI_AGENT': 'ai_agent';
+    AiAgentModelConfig: {
+      reasoning?: boolean;
+      modelProvider: string;
+      modelName: string;
+    };
+    AgentAsCodeEvaluationPrompt: {
+      expectedResponse: string | null;
+      prompt: string;
+    };
+    AgentAsCodeEvaluation: {
+      prompts: components['schemas']['AgentAsCodeEvaluationPrompt'][];
+      title: string;
+    };
+    AgentAsCode: {
+      /** Format: date-time */
+      downloadedAt?: string;
+      /** Format: date-time */
+      updatedAt?: string;
+      evaluations?: components['schemas']['AgentAsCodeEvaluation'][];
+      modelConfig: components['schemas']['AiAgentModelConfig'] | null;
+      enableUserContext: boolean;
+      enableContentTools: boolean;
+      enableSelfImprovement: boolean;
+      enableDataAccess: boolean;
+      tags: string[] | null;
+      instruction: string | null;
+      imageUrl: string | null;
+      description: string | null;
+      name: string;
+      slug: string;
+      /** @enum {number} */
+      agentVersion: 1 | 2;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.AI_AGENT'];
+    };
+    ApiAgentAsCodeListResponse: {
+      results: {
+        /** Format: double */
+        offset: number;
+        /** Format: double */
+        total: number;
+        missingIds: string[];
+        agents: components['schemas']['AgentAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'ContentAsCodeType.EXTERNAL_CONNECTION': 'external_connection';
+    /** @enum {string} */
+    ExternalConnectionAuthType: 'none' | 'api_key' | 'bearer_token' | 'google_service_account';
+    /** @enum {string} */
+    ExternalConnectionMethod: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+    /** @enum {string} */
+    ApiKeyLocation: 'header' | 'query';
+    /**
+     * @description Portable document for an external connection, stored as
+     *     `lightdash/external-connections/<slug>.yml`. Never carries the secret —
+     *     uploads resolve it from the LIGHTDASH_EXTERNAL_CONNECTION_SECRET_<SLUG>
+     *     environment variable on the CLI side.
+     */
+    ExternalConnectionAsCode: {
+      customHeaders: components['schemas']['Record_string.string_'] | null;
+      oauthScopes: string[] | null;
+      apiKeyLocation: components['schemas']['ApiKeyLocation'] | null;
+      apiKeyName: string | null;
+      /** Format: double */
+      rateLimitPerMinute: number | null;
+      /** Format: double */
+      timeoutMs: number;
+      /** Format: double */
+      requestMaxBytes: number;
+      /** Format: double */
+      responseMaxBytes: number;
+      allowedContentTypes: string[];
+      allowedMethods: components['schemas']['ExternalConnectionMethod'][];
+      allowedPathPrefixes: string[];
+      instructions: string | null;
+      origin: string;
+      authType: components['schemas']['ExternalConnectionAuthType'];
+      name: string;
+      slug: string;
+      /** Format: double */
+      version: number;
+      contentType: components['schemas']['ContentAsCodeType.EXTERNAL_CONNECTION'];
+    };
+    ApiExternalConnectionAsCodeListResponse: {
+      results: {
+        /** Format: double */
+        offset: number;
+        /** Format: double */
+        total: number;
+        missingSlugs: string[];
+        externalConnections: components['schemas']['ExternalConnectionAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'PromotionAction.CREATE': 'create';
+    /** @enum {string} */
+    'PromotionAction.UPDATE': 'update';
+    /** @enum {string} */
+    'PromotionAction.NO_CHANGES': 'no changes';
+    ApiVirtualViewAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiScheduledDeliveryAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAlertAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiGoogleSheetsSyncAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    PromotionAction: 'no changes' | 'create' | 'update' | 'delete';
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Space.organizationUuid-or-projectUuid-or-uuid-or-name-or-inheritParentPermissions-or-projectMemberAccessRole-or-pinnedListUuid-or-pinnedListOrder-or-slug-or-parentSpaceUuid-or-path_': {
+      name: string;
+      slug: string;
+      uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
+      inheritParentPermissions: boolean;
+      projectMemberAccessRole: components['schemas']['SpaceMemberRole'] | null;
+      pinnedListUuid: string | null;
+      /** Format: double */
+      pinnedListOrder: number | null;
+      parentSpaceUuid: string | null;
+      path: string;
+    };
+    SpaceSummaryBase: components['schemas']['Pick_Space.organizationUuid-or-projectUuid-or-uuid-or-name-or-inheritParentPermissions-or-projectMemberAccessRole-or-pinnedListUuid-or-pinnedListOrder-or-slug-or-parentSpaceUuid-or-path_'] & {
+      deletedBy?: {
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      };
+      /** Format: date-time */
+      deletedAt?: string;
+      /** Format: double */
+      appCount: number;
+      /** Format: double */
+      childSpaceCount: number;
+      /** Format: double */
+      dashboardCount: number;
+      /** Format: double */
+      chartCount: number;
+    };
+    PromotedSpace: components['schemas']['SpaceSummaryBase'];
+    DashboardFilters: {
+      tableCalculations: components['schemas']['DashboardFilterRule'][];
+      metrics: components['schemas']['DashboardFilterRule'][];
+      dimensions: components['schemas']['DashboardFilterRule'][];
+    };
+    DashboardTab: {
+      hidden?: boolean;
+      /** Format: double */
+      order: number;
+      name: string;
+      uuid: string;
+    };
+    /** @description Make all properties in T required */
+    Required_CreateDashboardTileBase_: {
+      uuid: string;
+      type: components['schemas']['DashboardTileTypes'];
+      /** Format: double */
+      x: number;
+      /** Format: double */
+      y: number;
+      /** Format: double */
+      h: number;
+      /** Format: double */
+      w: number;
+      tabUuid?: string | null;
+    };
+    DashboardTileBase: components['schemas']['Required_CreateDashboardTileBase_'];
+    DashboardChartTileProperties: {
+      properties: {
+        chartSlug?: string | null;
+        lastVersionChartKind?: components['schemas']['ChartKind'] | null;
+        chartName?: string | null;
+        belongsToDashboard?: boolean;
+        savedChartUuid: string | null;
+        hideTitle?: boolean;
+        title?: string;
+      };
+      type: components['schemas']['DashboardTileTypes.SAVED_CHART'];
+    };
+    DashboardChartTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardChartTileProperties'];
+    DashboardMarkdownTileProperties: {
+      properties: {
+        hideFrame?: boolean;
+        content: string;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.MARKDOWN'];
+    };
+    DashboardMarkdownTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardMarkdownTileProperties'];
+    DashboardLoomTileProperties: {
+      properties: {
+        url: string;
+        hideTitle?: boolean;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.LOOM'];
+    };
+    DashboardLoomTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardLoomTileProperties'];
+    DashboardSqlChartTileProperties: {
+      properties: {
+        chartSlug?: string | null;
+        hideTitle?: boolean;
+        chartName: string;
+        savedSqlUuid: string | null;
+        title?: string;
+      };
+      type: components['schemas']['DashboardTileTypes.SQL_CHART'];
+    };
+    DashboardSqlChartTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardSqlChartTileProperties'];
+    DashboardHeadingTileProperties: {
+      properties: {
+        showDivider?: boolean;
+        text: string;
+        title?: unknown;
+      };
+      type: components['schemas']['DashboardTileTypes.HEADING'];
+    };
+    DashboardHeadingTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardHeadingTileProperties'];
+    DashboardDataAppTileProperties: {
+      properties: {
+        appDeletedAt?: string | null;
+        appUuid: string;
+        hideTitle?: boolean;
+        title: string;
+      };
+      type: components['schemas']['DashboardTileTypes.DATA_APP'];
+    };
+    DashboardDataAppTile: components['schemas']['DashboardTileBase'] &
+      components['schemas']['DashboardDataAppTileProperties'];
+    DashboardTile:
+      | components['schemas']['DashboardChartTile']
+      | components['schemas']['DashboardMarkdownTile']
+      | components['schemas']['DashboardLoomTile']
+      | components['schemas']['DashboardSqlChartTile']
+      | components['schemas']['DashboardHeadingTile']
+      | components['schemas']['DashboardDataAppTile'];
+    UpdatedByUser: {
+      userUuid: string;
+      firstName: string;
+      lastName: string;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Dashboard.Exclude_keyofDashboard.inheritsFromOrgOrProject-or-access__': {
+      name: string;
+      description?: string;
+      slug: string;
+      parameters?: components['schemas']['DashboardParameters'];
+      filters: components['schemas']['DashboardFilters'];
+      tabs: components['schemas']['DashboardTab'][];
+      config?: components['schemas']['DashboardConfig'];
+      uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
+      pinnedListUuid: string | null;
+      /** Format: double */
+      pinnedListOrder: number | null;
+      /** Format: double */
+      dashboardVersionId: number;
+      versionUuid: string;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
+      /** Format: date-time */
+      updatedAt: string;
+      tiles: components['schemas']['DashboardTile'][];
+      updatedByUser?: components['schemas']['UpdatedByUser'];
+      spaceUuid: string;
+      spaceName: string;
+      /** Format: double */
+      views: number;
+      firstViewedAt: string | null;
+      colorPaletteUuid: string | null;
+      /** Format: date-time */
+      deletedAt?: string;
+      deletedBy?: {
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      } | null;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_Dashboard.inheritsFromOrgOrProject-or-access_': components['schemas']['Pick_Dashboard.Exclude_keyofDashboard.inheritsFromOrgOrProject-or-access__'];
+    DashboardDAO: components['schemas']['Omit_Dashboard.inheritsFromOrgOrProject-or-access_'];
+    PromotedDashboard: components['schemas']['DashboardDAO'] & {
+      spacePath: string;
+      spaceSlug: string;
+    };
+    FilterGroup: components['schemas']['OrFilterGroup'] | components['schemas']['AndFilterGroup'];
+    FilterRule: {
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      /** @description Values to filter by */
+      values?: components['schemas']['AnyType'][];
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Unique identifier for the filter */
+      id: string;
+      /** @description Target field for the filter */
+      target: components['schemas']['FieldTarget'];
+      /** @description Additional settings for date/time filters */
+      settings?: components['schemas']['AnyType'];
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+    } & {
+      [key: string]: unknown;
+    };
+    FilterGroupItem: components['schemas']['FilterGroup'] | components['schemas']['FilterRule'];
+    OrFilterGroup: {
+      /** @description Array of filters or nested groups combined with OR logic */
+      or: components['schemas']['FilterGroupItem'][];
+      /** @description Unique identifier for the filter group */
+      id: string;
+    };
+    AndFilterGroup: {
+      /** @description Array of filters or nested groups combined with AND logic */
+      and: components['schemas']['FilterGroupItem'][];
+      /** @description Unique identifier for the filter group */
+      id: string;
+    };
+    Filters: {
+      /** @description Table calculation filter group */
+      tableCalculations?: components['schemas']['FilterGroup'];
+      /** @description Metric filter group */
+      metrics?: components['schemas']['FilterGroup'];
+      /** @description Dimension filter group */
+      dimensions?: components['schemas']['FilterGroup'];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_CompiledDimension.label-or-name-or-table_': {
+      name: string;
+      label: string;
+      table: string;
+    };
+    MetricQuery: {
+      metadata?: {
+        hasADateDimension: components['schemas']['Pick_CompiledDimension.label-or-name-or-table_'];
+      };
+      /**
+       * @description Dimension field IDs used as pivot columns (from chart's pivotConfig.columns).
+       *     Used by row_total() to determine non-pivot dimensions for GROUP BY.
+       */
+      pivotDimensions?: components['schemas']['FieldId'][];
+      /** @description Timezone for date/time values (e.g., 'America/Los_Angeles', 'UTC') */
+      timezone?: string;
+      /** @description Override formatting options for existing dimensions */
+      dimensionOverrides?: components['schemas']['DimensionOverrides'];
+      /** @description Override formatting options for existing metrics */
+      metricOverrides?: components['schemas']['MetricOverrides'];
+      /** @description Custom dimensions defined inline */
+      customDimensions?: components['schemas']['CustomDimension'][];
+      /** @description Custom metrics defined inline (ad-hoc metrics not in the dbt model) */
+      additionalMetrics?: components['schemas']['AdditionalMetric'][];
+      /** @description Custom calculations to perform on query results */
+      tableCalculations: components['schemas']['TableCalculation'][];
+      /**
+       * Format: double
+       * @description Maximum number of rows to return
+       */
+      limit: number;
+      /** @description Sort configuration for query results */
+      sorts: components['schemas']['SortField'][];
+      /** @description Filter rules to apply to the query */
+      filters: components['schemas']['Filters'];
+      /** @description List of metric field IDs to include */
+      metrics: components['schemas']['FieldId'][];
+      /** @description List of dimension field IDs to include */
+      dimensions: components['schemas']['FieldId'][];
+      /** @description The name of the explore to query */
+      exploreName: string;
+    };
+    /**
+     * @description Where a resolved colour palette came from. The `config` and `default` cases
+     *     carry no entity reference; the rest expose the UUID and human-readable name
+     *     of the entity (organization, project, space, dashboard or chart) that owns
+     *     the winning palette in the resolution chain.
+     */
+    ColorPaletteSource:
+      | {
+          /** @enum {string} */
+          type: 'config';
+        }
+      | {
+          /** @enum {string} */
+          type: 'default';
+        }
+      | {
+          name: string;
+          uuid: string;
+          /** @enum {string} */
+          type: 'organization';
+        }
+      | {
+          name: string;
+          uuid: string;
+          /** @enum {string} */
+          type: 'project';
+        }
+      | {
+          name: string;
+          uuid: string;
+          /** @enum {string} */
+          type: 'space';
+        }
+      | {
+          name: string;
+          uuid: string;
+          /** @enum {string} */
+          type: 'dashboard';
+        }
+      | {
+          name: string;
+          uuid: string;
+          /** @enum {string} */
+          type: 'chart';
+        };
+    ResolvedProjectColorPalette: {
+      source: components['schemas']['ColorPaletteSource'];
+      paletteName: string | null;
+      paletteUuid: string | null;
+      darkColors: string[] | null;
+      colors: string[];
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_SavedChart.Exclude_keyofSavedChart.inheritsFromOrgOrProject-or-access__': {
+      /** @description Display name of the chart */
+      name: string;
+      /** @description Optional description of what this chart displays */
+      description?: string;
+      /** @description The explore/table name this chart queries from */
+      tableName: string;
+      /** @description The query configuration defining what data to fetch */
+      metricQuery: components['schemas']['MetricQuery'];
+      /** @description Visualization configuration for the chart */
+      chartConfig: components['schemas']['ChartConfig'];
+      /** @description Pivot table configuration */
+      pivotConfig?: {
+        rows?: string[];
+        columns: string[];
+      };
+      /** @description Unique identifier slug for this chart */
+      slug: string;
+      /** @description Parameter values for the chart query */
+      parameters?: components['schemas']['ParametersValuesMap'];
+      uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
+      pinnedListUuid: string | null;
+      /** Format: double */
+      pinnedListOrder: number | null;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
+      /**
+       * Format: date-time
+       * @description Timestamp when the chart was last updated
+       */
+      updatedAt: string;
+      updatedByUser?: components['schemas']['UpdatedByUser'];
+      spaceUuid: string;
+      spaceName: string;
+      /**
+       * @description Chart-level palette override pointer. `null` means inherit from the
+       *     containing dashboard / space / project / org. Writable via
+       *     `UpdateSavedChart`.
+       */
+      colorPaletteUuid: string | null;
+      /** Format: date-time */
+      deletedAt?: string;
+      deletedBy?: {
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      } | null;
+      /** @description Table view configuration */
+      tableConfig: {
+        columnOrder: string[];
+      };
+      dashboardUuid: string | null;
+      dashboardName: string | null;
+      /** @deprecated */
+      colorPalette: string[];
+      /**
+       * @description Fully resolved palette for this chart, computed from the
+       *     org → project → space → dashboard → chart hierarchy. Read-only — set
+       *     the chart's own palette via `colorPaletteUuid`.
+       */
+      resolvedColorPalette: components['schemas']['ResolvedProjectColorPalette'];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_SavedChart.inheritsFromOrgOrProject-or-access_': components['schemas']['Pick_SavedChart.Exclude_keyofSavedChart.inheritsFromOrgOrProject-or-access__'];
+    SavedChartDAO: components['schemas']['Omit_SavedChart.inheritsFromOrgOrProject-or-access_'];
+    PromotedChart: components['schemas']['SavedChartDAO'] & {
+      oldUuid: string;
+      spacePath: string;
+      spaceSlug: string;
+    };
+    PromotedSqlChart: {
+      spacePath: string;
+      spaceSlug: string;
+      description: string | null;
+      name: string;
+      projectUuid: string;
+      slug: string;
+      oldUuid: string;
+      uuid: string;
+    };
+    PromotedApp: {
+      name: string;
+      uuid: string;
+    };
+    PromotionChanges: {
+      dataApps?: {
+        data: components['schemas']['PromotedApp'];
+        action: components['schemas']['PromotionAction'];
+      }[];
+      sqlCharts?: {
+        data: components['schemas']['PromotedSqlChart'];
+        action: components['schemas']['PromotionAction'];
+      }[];
+      charts: {
+        data: components['schemas']['PromotedChart'];
+        action: components['schemas']['PromotionAction'];
+      }[];
+      dashboards: {
+        data: components['schemas']['PromotedDashboard'];
+        action: components['schemas']['PromotionAction'];
+      }[];
+      spaces: {
+        data: components['schemas']['PromotedSpace'];
+        action: components['schemas']['PromotionAction'];
+      }[];
+    };
+    ApiChartAsCodeUpsertResponse: {
+      results: components['schemas']['PromotionChanges'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_ChartAsCode.Exclude_keyofChartAsCode.chartConfig-or-description__': {
+      /** @description Display name of the chart */
+      name: string;
+      /** @description The explore/table name this chart queries from */
+      tableName: string;
+      metricQuery: components['schemas']['Omit_MetricQuery.filters_'] & {
+        filters: components['schemas']['FiltersInput'];
+      };
+      /** @description Pivot table configuration */
+      pivotConfig?: {
+        rows?: string[];
+        columns: string[];
+      };
+      /** @description Unique identifier slug for this chart */
+      slug: string;
+      /** @description Parameter values for the chart query */
+      parameters?: components['schemas']['ParametersValuesMap'];
+      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
+      verification?: components['schemas']['ContentVerificationInfo'] | null;
+      /**
+       * Format: date-time
+       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
+       */
+      updatedAt?: string;
+      /** @description Table configuration. Defaults to empty column order if omitted. */
+      tableConfig?: {
+        columnOrder: string[];
+      };
+      /** @description Slug of the dashboard this chart belongs to (if any) */
+      dashboardSlug?: string;
+      /**
+       * Format: double
+       * @description Schema version for this chart configuration
+       */
+      version: number;
+      /** @description Content type discriminator */
+      contentType?: components['schemas']['ContentAsCodeType.CHART'];
+      /** @description Slug of the space containing this chart */
+      spaceSlug: string;
+      /**
+       * Format: date-time
+       * @description Timestamp when this chart was downloaded from Lightdash
+       */
+      downloadedAt?: string;
+      /**
+       * @description Declarative verification state.
+       *     `true` verifies the chart on upload, `false` unverifies it, `undefined` leaves the
+       *     current state untouched. Download sets this to `true` when the chart is verified.
+       */
+      verified?: boolean;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_ChartAsCode.chartConfig-or-description_': components['schemas']['Pick_ChartAsCode.Exclude_keyofChartAsCode.chartConfig-or-description__'];
+    ApiSqlChartAsCodeUpsertResponse: {
+      results: components['schemas']['PromotionChanges'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_SqlChartAsCode.Exclude_keyofSqlChartAsCode.config-or-description__': {
+      name: string;
+      slug: string;
+      /** Format: double */
+      limit: number;
+      sql: string;
+      chartKind: components['schemas']['ChartKind'];
+      /** Format: date-time */
+      updatedAt?: string;
+      /** Format: double */
+      version: number;
+      contentType?: components['schemas']['ContentAsCodeType.SQL_CHART'];
+      spaceSlug: string;
+      /** Format: date-time */
+      downloadedAt?: string;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_SqlChartAsCode.config-or-description_': components['schemas']['Pick_SqlChartAsCode.Exclude_keyofSqlChartAsCode.config-or-description__'];
+    ApiDashboardAsCodeUpsertResponse: {
+      results: components['schemas']['PromotionChanges'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DashboardAsCode.Exclude_keyofDashboardAsCode.tiles-or-description__': {
+      name: string;
+      slug: string;
+      parameters?: components['schemas']['DashboardParameters'];
+      filters?: {
+        tableCalculations?: components['schemas']['DashboardFilterRule'][];
+        metrics?: components['schemas']['DashboardFilterRule'][];
+        dimensions?: components['schemas']['Omit_DashboardFilterRule.id_'][];
+      };
+      tabs: components['schemas']['DashboardTabAsCode'][];
+      config?: components['schemas']['DashboardConfig'];
+      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
+      verification?: components['schemas']['ContentVerificationInfo'] | null;
+      /**
+       * Format: date-time
+       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
+       */
+      updatedAt?: string;
+      /** Format: double */
+      version: number;
+      contentType?: components['schemas']['ContentAsCodeType.DASHBOARD'];
+      spaceSlug: string;
+      /** Format: date-time */
+      downloadedAt?: string;
+      /**
+       * @description Declarative verification state.
+       *     `true` verifies the dashboard on upload, `false` unverifies it, `undefined` leaves the
+       *     current state untouched. Download sets this to `true` when the dashboard is verified.
+       */
+      verified?: boolean;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_DashboardAsCode.tiles-or-description_': components['schemas']['Pick_DashboardAsCode.Exclude_keyofDashboardAsCode.tiles-or-description__'];
+    /** @enum {string} */
+    SpaceAsCodeAction: 'CREATE' | 'UPDATE' | 'NO_CHANGES';
+    ApiSpaceAsCodeUpsertResponse: {
+      results: {
+        /** @description Destructive effects that could not be represented in the input file. */
+        warnings?: string[];
+        action: components['schemas']['SpaceAsCodeAction'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AgentAsCodeUpsertChanges: {
+      deleted: string[];
+      unchanged: string[];
+      updated: string[];
+      created: string[];
+    };
+    ApiAgentAsCodeUpsertResponse: {
+      results: components['schemas']['AgentAsCodeUpsertChanges'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiExternalConnectionAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /**
+     * @description Deliberately a flat wrapper, NOT `ExternalConnectionAsCode & { secret }`:
+     *     TSOA validates intersection bodies in remove-extras mode, which empties
+     *     Record<string, string> fields (customHeaders). Same workaround as
+     *     ApiTestExternalConnectionConfigRequest.
+     */
+    ApiExternalConnectionAsCodeUpsertRequest: {
+      /**
+       * @description Resolved by the CLI from LIGHTDASH_EXTERNAL_CONNECTION_SECRET_<SLUG> at
+       *     upload time. Omitted = leave any stored secret unchanged.
+       */
+      secret?: string;
+      connection: components['schemas']['ExternalConnectionAsCode'];
+    };
     ApiSuccessEmpty: {
       results?: unknown;
       /** @enum {string} */
@@ -7975,9 +13521,9 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ServiceAccount.expiresAt-or-description_': {
+      description: string;
       /** Format: date-time */
       expiresAt: string | null;
-      description: string;
     };
     /**
      * @description Project-scoped grant for a Member-shape SA. When `projectAccess` is non-empty
@@ -8138,13 +13684,13 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ScimUser.Exclude_keyofScimUser.id__': {
-      'urn:lightdash:params:scim:schemas:extension:2.0:User'?: components['schemas']['LightdashScimExtension'];
-      schemas: string[];
-      userName: string;
       name?: {
         familyName?: string;
         givenName?: string;
       };
+      'urn:lightdash:params:scim:schemas:extension:2.0:User'?: components['schemas']['LightdashScimExtension'];
+      schemas: string[];
+      userName: string;
       active?: boolean;
       emails?: {
         primary?: boolean;
@@ -8416,13 +13962,467 @@ export interface components {
     } & {
       [key: string]: unknown;
     };
+    /**
+     * @description Enterprise-only AI augmentation attached to a scheduled delivery. On each
+     *     fire the agent (or ambient fast model) writes the delivery message from the
+     *     delivery's content and the prompt. Persisted in the EE `scheduler_ai_augmentation`
+     *     satellite table, not on the scheduler itself, so OSS carries none of it.
+     */
+    SchedulerAiAugmentation:
+      | {
+          sourceThreadUuid: string | null;
+          agentUuid: string;
+          prompt: string;
+          /** @enum {string} */
+          type: 'agent';
+        }
+      | {
+          prompt: string;
+          /** @enum {string} */
+          type: 'fast_model';
+        };
+    ApiSchedulerAiAugmentationResponse: {
+      results: components['schemas']['SchedulerAiAugmentation'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /**
+     * Format: uuid
+     * @description Stringified UUIDv4.
+     *     See [RFC 4112](https://tools.ietf.org/html/rfc4122)
+     */
+    UUID: string;
+    HomepageMarkdownBlock: {
+      config: {
+        content: string;
+      };
+      /** @enum {string} */
+      type: 'markdown';
+      id: string;
+    };
+    /**
+     * @description How much of the opening view the hero claims. `full` centres it in the
+     *     viewport; `compact` gives it only the height of its own content. Absent in
+     *     stored configs means "let the layout decide" — see resolveHeroDensity.
+     * @enum {string}
+     */
+    HomepageHeroDensity: 'full' | 'compact';
+    HomepageAskAiHeroBlock: {
+      config: {
+        density?: components['schemas']['HomepageHeroDensity'];
+        /**
+         * @description Replaces the prompt suggestions with the setup checklist.
+         *     Optional for configs persisted before this field existed.
+         */
+        showRecommendedActions?: boolean;
+        showGreeting: boolean;
+      };
+      /** @enum {string} */
+      type: 'ask-ai-hero';
+      id: string;
+    };
+    /**
+     * @description Day-part greeting ("Good afternoon, Ada") with an optional line under it.
+     *     The AI hero has its own built-in greeting; this is the standalone one for
+     *     pages that don't lead with a composer.
+     */
+    HomepageGreetingBlock: {
+      config: {
+        density?: components['schemas']['HomepageHeroDensity'];
+        subtitle: string;
+      };
+      /** @enum {string} */
+      type: 'greeting';
+      id: string;
+    };
+    HomepageCollectionItemRef: {
+      uuid: string;
+      /** @enum {string} */
+      contentType: 'chart' | 'dashboard' | 'space' | 'data_app';
+    };
+    /**
+     * @description Where a collection block's items come from.
+     *
+     *     `manual` reads the block's own `items`. Every other source is a live rule
+     *     resolved per viewer at render time — which is the point: a snapshot of
+     *     "most viewed" is stale the week after it's taken, and a frozen copy of the
+     *     pin list stops tracking pins the moment it's published.
+     *
+     *     `favorites` and `recently-viewed` are per-viewer; the rest are project-wide.
+     * @enum {string}
+     */
+    HomepageCollectionSource:
+      'manual' | 'most-viewed' | 'recently-updated' | 'pinned' | 'favorites' | 'recently-viewed';
+    HomepageCollectionBlock: {
+      config: {
+        /**
+         * Format: double
+         * @description How many items to show. Absent means DEFAULT_COLLECTION_LIMIT.
+         */
+        limit?: number;
+        /** @description Applies to every source, including manual. */
+        verifiedOnly?: boolean;
+        source?: components['schemas']['HomepageCollectionSource'];
+        /**
+         * @description The hand-picked items. Read only when `source` is `manual`, which
+         *     is what an absent `source` means — every config stored before
+         *     sources existed is a manual collection.
+         */
+        items: components['schemas']['HomepageCollectionItemRef'][];
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'collection';
+      id: string;
+    };
+    /** @enum {string} */
+    HomepageResourceKind: 'video' | 'doc' | 'link' | 'claude' | 'youtube' | 'data-app';
+    HomepageResourceItem: {
+      appUuid?: string;
+      imageUrl?: string;
+      description?: string;
+      kind: components['schemas']['HomepageResourceKind'];
+      url: string;
+      title: string;
+    };
+    /** @enum {string} */
+    HomepageResourcesLayout: 'card' | 'list';
+    HomepageResourcesBlock: {
+      config: {
+        layout?: components['schemas']['HomepageResourcesLayout'];
+        items: components['schemas']['HomepageResourceItem'][];
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'resources';
+      id: string;
+    };
+    HomepageAnnouncementsBlock: {
+      /** @description Feed reference — items live in `project_announcements`. */
+      config: {
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'announcements';
+      id: string;
+    };
+    HomepageMetricRef: {
+      label: string;
+      metricName: string;
+      tableName: string;
+    };
+    HomepageMetricsBlock: {
+      config: {
+        items: components['schemas']['HomepageMetricRef'][];
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'metrics';
+      id: string;
+    };
+    HomepageQuickActionTarget:
+      | {
+          /** @enum {string} */
+          type: 'ask-ai';
+        }
+      | {
+          /** @enum {string} */
+          type: 'run-query';
+        }
+      | {
+          /** @enum {string} */
+          type: 'browse-dashboards';
+        }
+      | {
+          /** @enum {string} */
+          type: 'browse-spaces';
+        }
+      | {
+          label: string;
+          dashboardUuid: string;
+          /** @enum {string} */
+          type: 'dashboard';
+        };
+    /**
+     * @description Any quick action can be promoted to the row's primary one, which renders
+     *     as the same chip inverted. Optional so older configs still load.
+     */
+    HomepageQuickAction: components['schemas']['HomepageQuickActionTarget'] & {
+      primary?: boolean;
+    };
+    HomepageQuickActionsBlock: {
+      config: {
+        actions: components['schemas']['HomepageQuickAction'][];
+      };
+      /** @enum {string} */
+      type: 'quick-actions';
+      id: string;
+    };
+    HomepageFavoritesBlock: {
+      config: {
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'favorites';
+      id: string;
+    };
+    HomepageRecentBlock: {
+      config: {
+        title: string;
+      };
+      /** @enum {string} */
+      type: 'recent';
+      id: string;
+    };
+    HomepageBlock:
+      | components['schemas']['HomepageMarkdownBlock']
+      | components['schemas']['HomepageAskAiHeroBlock']
+      | components['schemas']['HomepageGreetingBlock']
+      | components['schemas']['HomepageCollectionBlock']
+      | components['schemas']['HomepageResourcesBlock']
+      | components['schemas']['HomepageAnnouncementsBlock']
+      | components['schemas']['HomepageMetricsBlock']
+      | components['schemas']['HomepageQuickActionsBlock']
+      | components['schemas']['HomepageFavoritesBlock']
+      | components['schemas']['HomepageRecentBlock'];
+    HomepageRow: {
+      blocks: components['schemas']['HomepageBlock'][];
+      id: string;
+    };
+    HomepageConfig: {
+      rows: components['schemas']['HomepageRow'][];
+      /** @enum {number} */
+      version: 1;
+    };
+    PublishedProjectHomepage: {
+      config: components['schemas']['HomepageConfig'];
+      name: string;
+      homepageUuid: string;
+    };
+    ResolvedHomepage: {
+      homepage: components['schemas']['PublishedProjectHomepage'];
+      /** @enum {string} */
+      type: 'homepage';
+    };
+    'ApiSuccess_ResolvedHomepage-or-null_': {
+      results: components['schemas']['ResolvedHomepage'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiResolvedHomepageResponse: components['schemas']['ApiSuccess_ResolvedHomepage-or-null_'];
+    HomepageResolutionSource:
+      | {
+          /** Format: double */
+          priority: number;
+          groupUuid: string;
+          /** @enum {string} */
+          type: 'group';
+        }
+      | {
+          role: components['schemas']['ProjectMemberRole'];
+          /** @enum {string} */
+          type: 'role';
+        }
+      | {
+          /** @enum {string} */
+          type: 'default';
+        };
+    HomepageViewAsReason: components['schemas']['HomepageResolutionSource'];
+    HomepageViewAsResult: {
+      reason: components['schemas']['HomepageViewAsReason'] | null;
+      resolved: components['schemas']['ResolvedHomepage'] | null;
+    };
+    ApiSuccess_HomepageViewAsResult_: {
+      results: components['schemas']['HomepageViewAsResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiHomepageViewAsResponse: components['schemas']['ApiSuccess_HomepageViewAsResult_'];
+    ProjectHomepage: {
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      createdByUserUuid: string | null;
+      isDefault: boolean;
+      publishedConfig: components['schemas']['HomepageConfig'] | null;
+      draftConfig: components['schemas']['HomepageConfig'];
+      name: string;
+      projectUuid: string;
+      homepageUuid: string;
+    };
+    'ApiSuccess_ProjectHomepage-or-null_': {
+      results: components['schemas']['ProjectHomepage'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiProjectHomepageOrNullResponse: components['schemas']['ApiSuccess_ProjectHomepage-or-null_'];
+    /** @description Detected metadata for a pasted resource URL (Claude Artifact / YouTube). */
+    HomepageLinkMetadata: {
+      imageUrl: string | null;
+      description: string | null;
+      title: string | null;
+      kind: components['schemas']['HomepageResourceKind'];
+    };
+    ApiSuccess_HomepageLinkMetadata_: {
+      results: components['schemas']['HomepageLinkMetadata'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiHomepageLinkMetadataResponse: components['schemas']['ApiSuccess_HomepageLinkMetadata_'];
+    HomepageRecentlyViewedItem: {
+      /** Format: date-time */
+      viewedAt: string;
+      uuid: string;
+      /** @enum {string} */
+      contentType: 'chart' | 'dashboard';
+    };
+    'ApiSuccess_HomepageRecentlyViewedItem-Array_': {
+      results: components['schemas']['HomepageRecentlyViewedItem'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiRecentlyViewedResponse: components['schemas']['ApiSuccess_HomepageRecentlyViewedItem-Array_'];
+    HomepageAssignment: {
+      /** Format: double */
+      priority: number;
+      role: components['schemas']['ProjectMemberRole'] | null;
+      groupName: string | null;
+      groupUuid: string | null;
+      /** @enum {string} */
+      targetType: 'group' | 'role';
+      homepageName: string;
+      homepageUuid: string;
+      assignmentUuid: string;
+    };
+    'ApiSuccess_HomepageAssignment-Array_': {
+      results: components['schemas']['HomepageAssignment'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiHomepageAssignmentsResponse: components['schemas']['ApiSuccess_HomepageAssignment-Array_'];
+    UpdateHomepageGroupPrioritiesRequest: {
+      /** @description Group uuids in priority order — first wins for multi-group users */
+      groupUuids: string[];
+    };
+    'ApiSuccess_ProjectHomepage-Array_': {
+      results: components['schemas']['ProjectHomepage'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiProjectHomepagesResponse: components['schemas']['ApiSuccess_ProjectHomepage-Array_'];
+    ApiSuccess_ProjectHomepage_: {
+      results: components['schemas']['ProjectHomepage'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiProjectHomepageResponse: components['schemas']['ApiSuccess_ProjectHomepage_'];
+    CreateProjectHomepageRequest: {
+      duplicateFrom?: string;
+      name: string;
+    };
+    UpdateProjectHomepageDraftRequest: {
+      /**
+       * Format: date-time
+       * @description Compare-and-set token: the updatedAt the client based its edit on
+       */
+      baseUpdatedAt: string;
+      draftConfig: components['schemas']['HomepageConfig'];
+      name?: string;
+    };
+    HomepageAudience:
+      | {
+          /** @enum {string} */
+          type: 'everyone';
+        }
+      | {
+          groupUuids: string[];
+          /** @enum {string} */
+          type: 'groups';
+        }
+      | {
+          roles: components['schemas']['ProjectMemberRole'][];
+          /** @enum {string} */
+          type: 'roles';
+        };
+    PublishProjectHomepageRequest: {
+      audience: components['schemas']['HomepageAudience'];
+    };
+    /**
+     * @description Curated announcement categories a data team uses to signal intent to
+     *     business users. Fixed set (not user-managed) — each maps to a label + colour
+     *     in `ANNOUNCEMENT_CATEGORY_META`.
+     * @enum {string}
+     */
+    AnnouncementCategory: 'launch' | 'update' | 'heads_up';
+    ProjectAnnouncement: {
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      authorName: string | null;
+      createdByUserUuid: string | null;
+      /**
+       * @description Slack channel the announcement will notify when it publishes. Always
+       *     null once published (consumed) — only drafts carry a value, and drafts
+       *     are only visible to users who can manage announcements.
+       */
+      pendingSlackChannelId: string | null;
+      published: boolean;
+      pinned: boolean;
+      category: components['schemas']['AnnouncementCategory'] | null;
+      body: string | null;
+      title: string;
+      projectUuid: string;
+      announcementUuid: string;
+    };
+    AnnouncementsPage: {
+      /** Format: double */
+      totalCount: number;
+      items: components['schemas']['ProjectAnnouncement'][];
+    };
+    ApiSuccess_AnnouncementsPage_: {
+      results: components['schemas']['AnnouncementsPage'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAnnouncementsResponse: components['schemas']['ApiSuccess_AnnouncementsPage_'];
+    ApiSuccess_ProjectAnnouncement_: {
+      results: components['schemas']['ProjectAnnouncement'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAnnouncementResponse: components['schemas']['ApiSuccess_ProjectAnnouncement_'];
+    CreateAnnouncementRequest: {
+      /**
+       * @description Transient (not persisted): when set, publishing posts a notification to
+       *     this Slack channel. Requires the org to have Slack installed.
+       */
+      slackChannelId?: string | null;
+      category: components['schemas']['AnnouncementCategory'] | null;
+      body: string | null;
+      title: string;
+    };
+    /** @description PATCH semantics: omitted fields are left unchanged */
+    UpdateAnnouncementRequest: {
+      /** @description Only drafts: set to retarget the Slack notification, null to cancel it */
+      slackChannelId?: string | null;
+      pinned?: boolean;
+      category?: components['schemas']['AnnouncementCategory'] | null;
+      body?: string | null;
+      title?: string;
+    };
+    'ApiSuccess__url-string__': {
+      results: {
+        url: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAnnouncementImageUploadResponse: components['schemas']['ApiSuccess__url-string__'];
     /** @enum {string} */
     ManagedAgentScheduleOption:
       'every_6_hours' | 'every_12_hours' | 'daily' | 'every_2_days' | 'weekly';
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.boolean_': {
-      [key: string]: boolean;
-    };
     ManagedAgentSettings: {
       /** Format: date-time */
       updatedAt: string;
@@ -8494,10 +14494,6 @@ export interface components {
       | 'insight';
     /** @enum {string} */
     ManagedAgentTargetType: 'chart' | 'dashboard' | 'space' | 'project';
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.unknown_': {
-      [key: string]: unknown;
-    };
     ManagedAgentActionUser: {
       lastName: string;
       firstName: string;
@@ -8520,28 +14516,205 @@ export interface components {
       projectUuid: string;
       actionUuid: string;
     };
+    /** @description READ shape returned by the API — NEVER includes the secret value. */
+    ExternalConnection: {
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      updatedByUserUuid: string | null;
+      createdByUserUuid: string | null;
+      hasSecret: boolean;
+      customHeaders: components['schemas']['Record_string.string_'] | null;
+      oauthScopes: string[] | null;
+      apiKeyLocation: components['schemas']['ApiKeyLocation'] | null;
+      apiKeyName: string | null;
+      /** Format: double */
+      rateLimitPerMinute: number | null;
+      /** Format: double */
+      timeoutMs: number;
+      /** Format: double */
+      requestMaxBytes: number;
+      /** Format: double */
+      responseMaxBytes: number;
+      allowedContentTypes: string[];
+      allowedMethods: components['schemas']['ExternalConnectionMethod'][];
+      allowedPathPrefixes: string[];
+      instructions: string | null;
+      origin: string;
+      type: components['schemas']['ExternalConnectionAuthType'];
+      slug: string;
+      name: string;
+      organizationUuid: string;
+      projectUuid: string;
+      externalConnectionUuid: string;
+    };
+    ApiExternalConnectionResponse: {
+      results: components['schemas']['ExternalConnection'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description WRITE shape — includes the secret. */
+    CreateExternalConnection: {
+      secret?: string | null;
+      customHeaders?: components['schemas']['Record_string.string_'] | null;
+      oauthScopes?: string[] | null;
+      apiKeyLocation?: components['schemas']['ApiKeyLocation'] | null;
+      apiKeyName?: string | null;
+      /** Format: double */
+      rateLimitPerMinute?: number | null;
+      /** Format: double */
+      timeoutMs?: number;
+      /** Format: double */
+      requestMaxBytes?: number;
+      /** Format: double */
+      responseMaxBytes?: number;
+      allowedContentTypes: string[];
+      allowedMethods: components['schemas']['ExternalConnectionMethod'][];
+      allowedPathPrefixes: string[];
+      instructions?: string | null;
+      origin: string;
+      type: components['schemas']['ExternalConnectionAuthType'];
+      name: string;
+    };
+    ApiExternalConnectionListResponse: {
+      results: components['schemas']['ExternalConnection'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description Make all properties in T optional */
+    Partial_CreateExternalConnection_: {
+      name?: string;
+      type?: components['schemas']['ExternalConnectionAuthType'];
+      origin?: string;
+      instructions?: string | null;
+      allowedPathPrefixes?: string[];
+      allowedMethods?: ('GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE')[];
+      allowedContentTypes?: string[];
+      /** Format: double */
+      responseMaxBytes?: number;
+      /** Format: double */
+      requestMaxBytes?: number;
+      /** Format: double */
+      timeoutMs?: number;
+      /** Format: double */
+      rateLimitPerMinute?: number | null;
+      apiKeyName?: string | null;
+      apiKeyLocation?: components['schemas']['ApiKeyLocation'] | null;
+      oauthScopes?: string[] | null;
+      customHeaders?: components['schemas']['Record_string.string_'] | null;
+      secret?: string | null;
+    };
+    /** @description Omitted/blank `secret` means the stored secret is left unchanged. */
+    UpdateExternalConnection: components['schemas']['Partial_CreateExternalConnection_'];
+    ApiAppExternalConnectionListResponse: {
+      results: {
+        connection: components['schemas']['ExternalConnection'];
+        alias: string;
+      }[];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ExternalFetchResponse: {
+      truncated: boolean;
+      body: unknown;
+      contentType: string;
+      /** Format: double */
+      status: number;
+    };
+    ApiExternalFetchResponse: {
+      results: components['schemas']['ExternalFetchResponse'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ExternalFetchRequest: {
+      body?: unknown;
+      query?: components['schemas']['Record_string.string_'];
+      path: string;
+      method?: components['schemas']['ExternalConnectionMethod'];
+      connectionAlias: string;
+    };
+    ApiTestExternalConnectionResponse: {
+      results: components['schemas']['ExternalFetchResponse'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiTestExternalConnectionRequest: {
+      body?: unknown;
+      query?: components['schemas']['Record_string.string_'];
+      path: string;
+      method?: components['schemas']['ExternalConnectionMethod'];
+    };
+    /**
+     * @description Test an unsaved connection config (incl. plaintext secret) before creating
+     *     it. Runs through the same SSRF-guarded proxy core, persisting nothing.
+     *     Deliberately a flat object, NOT `ApiTestExternalConnectionRequest & {...}`:
+     *     TSOA validates intersection bodies in remove-extras mode, which empties
+     *     Record<string, string> fields (query, config.customHeaders).
+     */
+    ApiTestExternalConnectionConfigRequest: {
+      config: components['schemas']['CreateExternalConnection'];
+      body?: unknown;
+      query?: components['schemas']['Record_string.string_'];
+      path: string;
+      method?: components['schemas']['ExternalConnectionMethod'];
+    };
+    /** @description The request that produced a sample (stored alongside the response). */
+    ExternalConnectionSampleRequest: {
+      body?: unknown;
+      query?: components['schemas']['Record_string.string_'];
+      path: string;
+      method: components['schemas']['ExternalConnectionMethod'];
+    };
+    /** @description READ shape for a persisted sample row. */
+    ExternalConnectionSample: {
+      /** Format: date-time */
+      createdAt: string;
+      response: unknown;
+      request: components['schemas']['ExternalConnectionSampleRequest'];
+      label: string | null;
+      externalConnectionUuid: string;
+      sampleUuid: string;
+    };
+    ApiSaveExternalConnectionSampleResponse: {
+      results: components['schemas']['ExternalConnectionSample'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiSaveExternalConnectionSampleRequest: {
+      response: unknown;
+      request: components['schemas']['ExternalConnectionSampleRequest'];
+      label?: string | null;
+    };
+    ApiListExternalConnectionSamplesResponse: {
+      results: components['schemas']['ExternalConnectionSample'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Organization.name-or-createdAt-or-organizationUuid_': {
+    'Pick_Organization.name-or-organizationUuid-or-createdAt_': {
       /** @description The name of the organization */
       name: string;
-      /** Format: date-time */
-      createdAt?: string;
       /**
        * Format: uuid
        * @description The unique identifier of the organization
        */
       organizationUuid: string;
+      /** Format: date-time */
+      createdAt?: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_LightdashUser.userUuid-or-firstName-or-lastName_': Record<string, never>;
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Embed.Exclude_keyofEmbed.encodedSecret__': {
       projectUuid: string;
-      organization: components['schemas']['Pick_Organization.name-or-createdAt-or-organizationUuid_'];
+      organization: components['schemas']['Pick_Organization.name-or-organizationUuid-or-createdAt_'];
       dashboardUuids: string[];
       allowAllDashboards: boolean;
       chartUuids: string[];
       allowAllCharts: boolean;
+      allowAllApps: boolean;
+      appUuids: string[];
       createdAt: string;
       user: components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
     };
@@ -8557,10 +14730,13 @@ export interface components {
       status: 'ok';
     };
     CreateEmbedRequestBody: {
+      appUuids?: string[];
       chartUuids?: string[];
       dashboardUuids?: string[];
     };
     UpdateEmbed: {
+      appUuids?: string[];
+      allowAllApps?: boolean;
       allowAllCharts?: boolean;
       chartUuids?: string[];
       allowAllDashboards: boolean;
@@ -8577,6 +14753,7 @@ export interface components {
     /** @enum {string} */
     FilterInteractivityValues: 'some' | 'all' | 'none';
     CommonEmbedJwtContent: {
+      stickyHeader?: boolean;
       canViewDataApps?: boolean;
       canViewUnderlyingData?: boolean;
       canExplore?: boolean;
@@ -8588,6 +14765,7 @@ export interface components {
         enabled: boolean;
       };
       dashboardFiltersInteractivity?: {
+        canAddFilters?: boolean;
         hidden?: boolean;
         allowedFilters?: string[] | null;
         enabled: components['schemas']['FilterInteractivityValues'] | boolean;
@@ -8618,6 +14796,36 @@ export interface components {
     EmbedJwtContentChart: components['schemas']['CommonChartEmbedJwtContent'] & {
       contentId: string;
     };
+    CommonDataAppEmbedJwtContent: {
+      parameterInteractivity?: unknown;
+      dashboardFiltersInteractivity?: unknown;
+      isPreview?: boolean;
+      projectUuid?: string;
+      /** @enum {string} */
+      type: 'dataApp';
+    };
+    EmbedJwtContentDataApp: components['schemas']['CommonDataAppEmbedJwtContent'] & {
+      appUuid: string;
+    };
+    EmbedJwtContentAiAgent: {
+      canExplore?: boolean;
+      agentUuid: string;
+      projectUuid?: string;
+      /** @enum {string} */
+      type: 'aiAgent';
+    };
+    EmbedJwtContentMetricsCatalog: {
+      canExplore?: boolean;
+      projectUuid?: string;
+      /** @enum {string} */
+      type: 'metricsCatalog';
+    };
+    EmbedJwtContentApiAccess: {
+      serviceAccountUserUuid: string;
+      projectUuid?: string;
+      /** @enum {string} */
+      type: 'apiAccess';
+    };
     EmbedWriteActions: {
       spaceUuid: string;
       userUuid?: string;
@@ -8640,239 +14848,12 @@ export interface components {
       content:
         | components['schemas']['EmbedJwtContentDashboardUuid']
         | components['schemas']['EmbedJwtContentDashboardSlug']
-        | components['schemas']['EmbedJwtContentChart'];
+        | components['schemas']['EmbedJwtContentChart']
+        | components['schemas']['EmbedJwtContentDataApp']
+        | components['schemas']['EmbedJwtContentAiAgent']
+        | components['schemas']['EmbedJwtContentMetricsCatalog']
+        | components['schemas']['EmbedJwtContentApiAccess'];
     };
-    ContentVerificationInfo: {
-      /** Format: date-time */
-      verifiedAt: string;
-      verifiedBy: {
-        lastName: string;
-        firstName: string;
-        userUuid: string;
-      };
-    };
-    /** @enum {string} */
-    DashboardTileTypes: 'saved_chart' | 'sql_chart' | 'markdown' | 'loom' | 'heading' | 'data_app';
-    /** @description Make all properties in T required */
-    Required_CreateDashboardTileBase_: {
-      uuid: string;
-      type: components['schemas']['DashboardTileTypes'];
-      /** Format: double */
-      x: number;
-      /** Format: double */
-      y: number;
-      /** Format: double */
-      h: number;
-      /** Format: double */
-      w: number;
-      tabUuid?: string | null;
-    };
-    DashboardTileBase: components['schemas']['Required_CreateDashboardTileBase_'];
-    /** @enum {string} */
-    'DashboardTileTypes.SAVED_CHART': 'saved_chart';
-    /** @enum {string} */
-    ChartKind:
-      | 'line'
-      | 'horizontal_bar'
-      | 'vertical_bar'
-      | 'scatter'
-      | 'area'
-      | 'mixed'
-      | 'pie'
-      | 'table'
-      | 'big_number'
-      | 'funnel'
-      | 'custom'
-      | 'treemap'
-      | 'gauge'
-      | 'map'
-      | 'sankey';
-    DashboardChartTileProperties: {
-      properties: {
-        chartSlug?: string | null;
-        lastVersionChartKind?: components['schemas']['ChartKind'] | null;
-        chartName?: string | null;
-        belongsToDashboard?: boolean;
-        savedChartUuid: string | null;
-        hideTitle?: boolean;
-        title?: string;
-      };
-      type: components['schemas']['DashboardTileTypes.SAVED_CHART'];
-    };
-    DashboardChartTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardChartTileProperties'];
-    /** @enum {string} */
-    'DashboardTileTypes.MARKDOWN': 'markdown';
-    DashboardMarkdownTileProperties: {
-      properties: {
-        hideFrame?: boolean;
-        content: string;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.MARKDOWN'];
-    };
-    DashboardMarkdownTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardMarkdownTileProperties'];
-    /** @enum {string} */
-    'DashboardTileTypes.LOOM': 'loom';
-    DashboardLoomTileProperties: {
-      properties: {
-        url: string;
-        hideTitle?: boolean;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.LOOM'];
-    };
-    DashboardLoomTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardLoomTileProperties'];
-    /** @enum {string} */
-    'DashboardTileTypes.SQL_CHART': 'sql_chart';
-    DashboardSqlChartTileProperties: {
-      properties: {
-        chartSlug?: string | null;
-        hideTitle?: boolean;
-        chartName: string;
-        savedSqlUuid: string | null;
-        title?: string;
-      };
-      type: components['schemas']['DashboardTileTypes.SQL_CHART'];
-    };
-    DashboardSqlChartTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardSqlChartTileProperties'];
-    /** @enum {string} */
-    'DashboardTileTypes.HEADING': 'heading';
-    DashboardHeadingTileProperties: {
-      properties: {
-        showDivider?: boolean;
-        text: string;
-        title?: unknown;
-      };
-      type: components['schemas']['DashboardTileTypes.HEADING'];
-    };
-    DashboardHeadingTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardHeadingTileProperties'];
-    /** @enum {string} */
-    'DashboardTileTypes.DATA_APP': 'data_app';
-    DashboardDataAppTileProperties: {
-      properties: {
-        appDeletedAt?: string | null;
-        appUuid: string;
-        hideTitle?: boolean;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.DATA_APP'];
-    };
-    DashboardDataAppTile: components['schemas']['DashboardTileBase'] &
-      components['schemas']['DashboardDataAppTileProperties'];
-    DashboardTile:
-      | components['schemas']['DashboardChartTile']
-      | components['schemas']['DashboardMarkdownTile']
-      | components['schemas']['DashboardLoomTile']
-      | components['schemas']['DashboardSqlChartTile']
-      | components['schemas']['DashboardHeadingTile']
-      | components['schemas']['DashboardDataAppTile'];
-    /** @enum {string} */
-    DimensionType: 'string' | 'number' | 'timestamp' | 'date' | 'boolean';
-    DashboardFieldTarget: {
-      fallbackType?: components['schemas']['DimensionType'];
-      isSqlColumn?: boolean;
-      tableName: string;
-      fieldId: string;
-    };
-    /** @enum {string} */
-    FilterOperator:
-      | 'isNull'
-      | 'notNull'
-      | 'equals'
-      | 'notEquals'
-      | 'startsWith'
-      | 'endsWith'
-      | 'include'
-      | 'doesNotInclude'
-      | 'lessThan'
-      | 'lessThanOrEqual'
-      | 'greaterThan'
-      | 'greaterThanOrEqual'
-      | 'inThePast'
-      | 'notInThePast'
-      | 'inTheNext'
-      | 'inTheCurrent'
-      | 'notInTheCurrent'
-      | 'inBetween'
-      | 'notInBetween'
-      | 'inPeriodToDate';
-    'FilterRule_FilterOperator.DashboardFieldTarget.AnyType.AnyType_': {
-      /** @description Values to filter by */
-      values?: components['schemas']['AnyType'][];
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Unique identifier for the filter */
-      id: string;
-      /** @description Target field for the filter */
-      target: components['schemas']['DashboardFieldTarget'];
-      /** @description Additional settings for date/time filters */
-      settings?: components['schemas']['AnyType'];
-      /** @description Whether this filter is disabled */
-      disabled?: boolean;
-      /** @description Whether this filter is required */
-      required?: boolean;
-      /**
-       * @description Overrides the field/explore case-sensitivity for this rule only.
-       *     Used by internal features like autocomplete search that must always
-       *     match case-insensitively regardless of the field's configured setting.
-       */
-      caseSensitive?: boolean;
-    } & {
-      [key: string]: unknown;
-    };
-    DashboardTileTarget: components['schemas']['DashboardFieldTarget'] | false;
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.DashboardTileTarget_': {
-      [key: string]: components['schemas']['DashboardTileTarget'];
-    };
-    DashboardFilterRule: components['schemas']['FilterRule_FilterOperator.DashboardFieldTarget.AnyType.AnyType_'] & {
-      /**
-       * @description Tab UUIDs where this filter is locked. When the active tab is in this
-       *     list, viewers see the filter but cannot change it, and URL / embed
-       *     filter overrides targeting the same field are ignored on that tab.
-       *     Empty or omitted means the filter is not locked anywhere.
-       */
-      lockedTabUuids?: string[];
-      singleValue?: boolean;
-      label?: string;
-      tileTargets?: components['schemas']['Record_string.DashboardTileTarget_'];
-    };
-    DashboardFilters: {
-      tableCalculations: components['schemas']['DashboardFilterRule'][];
-      metrics: components['schemas']['DashboardFilterRule'][];
-      dimensions: components['schemas']['DashboardFilterRule'][];
-    };
-    ParameterValue: string | number | string[] | number[];
-    DashboardParameterValue: {
-      value: components['schemas']['ParameterValue'];
-      parameterName: string;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.DashboardParameterValue_': {
-      [key: string]: components['schemas']['DashboardParameterValue'];
-    };
-    DashboardParameters: components['schemas']['Record_string.DashboardParameterValue_'];
-    UpdatedByUser: {
-      userUuid: string;
-      firstName: string;
-      lastName: string;
-    } & {
-      [key: string]: unknown;
-    };
-    DashboardTab: {
-      hidden?: boolean;
-      /** Format: double */
-      order: number;
-      name: string;
-      uuid: string;
-    };
-    /** @enum {string} */
-    SpaceMemberRole: 'viewer' | 'editor' | 'admin';
     /** @enum {string} */
     OrganizationMemberRole:
       'member' | 'viewer' | 'interactive_viewer' | 'editor' | 'developer' | 'admin';
@@ -8886,16 +14867,6 @@ export interface components {
       hasDirectAccess: boolean;
       role: components['schemas']['SpaceMemberRole'];
       userUuid: string;
-    };
-    /** @enum {string} */
-    DateGranularity: 'Second' | 'Minute' | 'Hour' | 'Day' | 'Week' | 'Month' | 'Quarter' | 'Year';
-    DashboardConfig: {
-      defaultDateZoomGranularity?: components['schemas']['DateGranularity'] | string;
-      dateZoomGranularities?: (components['schemas']['DateGranularity'] | string)[];
-      parameterOrder?: string[];
-      pinnedParameters?: string[];
-      isAddFilterDisabled?: boolean;
-      isDateZoomDisabled: boolean;
     };
     Dashboard: {
       deletedBy?: {
@@ -8954,6 +14925,7 @@ export interface components {
           enabled: boolean;
         };
         dashboardFiltersInteractivity?: {
+          canAddFilters?: boolean;
           hidden?: boolean;
           allowedFilters?: string[] | null;
           enabled: components['schemas']['FilterInteractivityValues'] | boolean;
@@ -8985,126 +14957,20 @@ export interface components {
     'Record_string.string-or-string-Array_': {
       [key: string]: string | string[];
     };
-    /** @enum {string} */
-    TimeFrames:
-      | 'RAW'
-      | 'YEAR'
-      | 'QUARTER'
-      | 'MONTH'
-      | 'WEEK'
-      | 'DAY'
-      | 'HOUR'
-      | 'MINUTE'
-      | 'SECOND'
-      | 'MILLISECOND'
-      | 'DAY_OF_WEEK_INDEX'
-      | 'DAY_OF_MONTH_NUM'
-      | 'DAY_OF_YEAR_NUM'
-      | 'WEEK_NUM'
-      | 'MONTH_NUM'
-      | 'QUARTER_NUM'
-      | 'YEAR_NUM'
-      | 'DAY_OF_WEEK_NAME'
-      | 'MONTH_NAME'
-      | 'QUARTER_NAME'
-      | 'HOUR_OF_DAY_NUM'
-      | 'MINUTE_OF_HOUR_NUM';
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.string_': {
-      [key: string]: string;
+    /**
+     * @description Whether a TIMESTAMP column stores an instant ('aware') or a bare wall clock
+     *     ('naive'). Absent means unknown — never assume 'aware' for a missing value.
+     * @enum {string}
+     */
+    TimestampDomain: 'aware' | 'naive';
+    FilterAutocompleteValue: {
+      label?: string;
+      value: string;
     };
-    /** @enum {string} */
-    CustomFormatType:
-      | 'default'
-      | 'percent'
-      | 'currency'
-      | 'number'
-      | 'id'
-      | 'date'
-      | 'timestamp'
-      | 'bytes_si'
-      | 'bytes_iec'
-      | 'custom';
-    /** @enum {string} */
-    NumberSeparator:
-      | 'default'
-      | 'commaPeriod'
-      | 'spacePeriod'
-      | 'periodComma'
-      | 'noSeparatorPeriod'
-      | 'apostrophePeriod';
-    /** @enum {string} */
-    Compact:
-      | 'thousands'
-      | 'millions'
-      | 'billions'
-      | 'trillions'
-      | 'kilobytes'
-      | 'megabytes'
-      | 'gigabytes'
-      | 'terabytes'
-      | 'petabytes'
-      | 'kibibytes'
-      | 'mebibytes'
-      | 'gibibytes'
-      | 'tebibytes'
-      | 'pebibytes';
-    CompactOrAlias:
-      | components['schemas']['Compact']
-      | (
-          | 'K'
-          | 'thousand'
-          | 'M'
-          | 'million'
-          | 'B'
-          | 'billion'
-          | 'T'
-          | 'trillion'
-          | 'KB'
-          | 'kilobyte'
-          | 'MB'
-          | 'megabyte'
-          | 'GB'
-          | 'gigabyte'
-          | 'TB'
-          | 'terabyte'
-          | 'PB'
-          | 'petabyte'
-          | 'KiB'
-          | 'kibibyte'
-          | 'MiB'
-          | 'mebibyte'
-          | 'GiB'
-          | 'gibibyte'
-          | 'TiB'
-          | 'tebibyte'
-          | 'PiB'
-          | 'pebibyte'
-        );
-    CustomFormat: {
-      /** @description Format type */
-      type: components['schemas']['CustomFormatType'];
-      /**
-       * Format: double
-       * @description Number of decimal places
-       */
-      round?: number;
-      /** @description Number separator style */
-      separator?: components['schemas']['NumberSeparator'];
-      /** @description Currency code (e.g., USD, GBP, EUR) */
-      currency?: string;
-      /** @description Compact format for large numbers (K, M, B, T) or byte units */
-      compact?: components['schemas']['CompactOrAlias'];
-      /** @description Prefix to prepend to formatted values */
-      prefix?: string;
-      /** @description Suffix to append to formatted values */
-      suffix?: string;
-      /** @description Time interval for date formatting */
-      timeInterval?: components['schemas']['TimeFrames'];
-      /** @description Custom format string */
-      custom?: string;
-    } & {
-      [key: string]: unknown;
+    FilterAutocompleteConfig: {
+      labelDimension?: string;
+      fetchFromWarehouse: boolean;
+      values?: components['schemas']['FilterAutocompleteValue'][];
     };
     /** @enum {string} */
     FieldType: 'metric' | 'dimension';
@@ -9126,8 +14992,6 @@ export interface components {
       };
       path: string;
     };
-    /** @enum {string} */
-    Format: 'km' | 'mi' | 'usd' | 'gbp' | 'eur' | 'jpy' | 'dkk' | 'id' | 'percent';
     FieldUrl: {
       label: string;
       url: string;
@@ -9171,11 +15035,18 @@ export interface components {
       requiredAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       anyAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       timeInterval?: components['schemas']['TimeFrames'];
+      /**
+       * @description Overridden display label for this dimension's grain (project
+       *     `granularity_labels`); undefined when no override — callers fall back
+       *     to `timeFrameConfigs[timeInterval].getLabel()`.
+       */
+      timeIntervalLabel?: string;
       timeIntervalBaseDimensionName?: string;
       timeIntervalBaseDimensionType?: components['schemas']['DimensionType'];
       customTimeInterval?: string;
       isAdditionalDimension?: boolean;
       skipTimezoneConversion?: boolean;
+      timestampDomain?: components['schemas']['TimestampDomain'];
       colors?: components['schemas']['Record_string.string_'];
       isIntervalBase?: boolean;
       aiHint?: string | string[];
@@ -9190,6 +15061,7 @@ export interface components {
         url: string;
       };
       richText?: string;
+      filterAutocomplete?: components['schemas']['FilterAutocompleteConfig'];
       spotlight?: {
         segmentBy?: boolean;
         filterBy?: boolean;
@@ -9199,54 +15071,6 @@ export interface components {
     };
     /** @enum {string} */
     'FieldType.METRIC': 'metric';
-    /** @enum {string} */
-    MetricType:
-      | 'percentile'
-      | 'average'
-      | 'count'
-      | 'count_distinct'
-      | 'sum'
-      | 'sum_distinct'
-      | 'average_distinct'
-      | 'min'
-      | 'max'
-      | 'percent_of_previous'
-      | 'percent_of_total'
-      | 'running_total'
-      | 'number'
-      | 'median'
-      | 'string'
-      | 'date'
-      | 'timestamp'
-      | 'boolean';
-    /** @description Filter rule for metrics, targeting fields by reference */
-    MetricFilterRule: {
-      /** @description Values to filter by */
-      values?: components['schemas']['AnyType'][];
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Unique identifier for the filter */
-      id: string;
-      /** @description Target field for the filter */
-      target: {
-        /** @description Field reference to filter on (e.g., 'table_name.field_name') */
-        fieldRef: string;
-      };
-      /** @description Additional settings for date/time filters */
-      settings?: components['schemas']['AnyType'];
-      /** @description Whether this filter is disabled */
-      disabled?: boolean;
-      /** @description Whether this filter is required */
-      required?: boolean;
-      /**
-       * @description Overrides the field/explore case-sensitivity for this rule only.
-       *     Used by internal features like autocomplete search that must always
-       *     match case-insensitively regardless of the field's configured setting.
-       */
-      caseSensitive?: boolean;
-    } & {
-      [key: string]: unknown;
-    };
     DefaultTimeDimension: {
       interval: components['schemas']['TimeFrames'];
       field: string;
@@ -9287,6 +15111,8 @@ export interface components {
       distinctKeys?: string[];
       formatOptions?: components['schemas']['CustomFormat'];
       dimensionReference?: string;
+      baseDimensionType?: components['schemas']['DimensionType'];
+      baseDimensionTimeInterval?: components['schemas']['TimeFrames'];
       requiredAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       anyAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       defaultTimeDimension?: components['schemas']['DefaultTimeDimension'];
@@ -9321,1417 +15147,6 @@ export interface components {
       savedChartUuid: string;
       tileUuid: string;
     }[];
-    FieldId: string;
-    FilterGroup: components['schemas']['OrFilterGroup'] | components['schemas']['AndFilterGroup'];
-    FieldTarget: {
-      /** @description Field ID to filter on */
-      fieldId: string;
-    };
-    FilterRule: {
-      /** @description Values to filter by */
-      values?: components['schemas']['AnyType'][];
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Unique identifier for the filter */
-      id: string;
-      /** @description Target field for the filter */
-      target: components['schemas']['FieldTarget'];
-      /** @description Additional settings for date/time filters */
-      settings?: components['schemas']['AnyType'];
-      /** @description Whether this filter is disabled */
-      disabled?: boolean;
-      /** @description Whether this filter is required */
-      required?: boolean;
-      /**
-       * @description Overrides the field/explore case-sensitivity for this rule only.
-       *     Used by internal features like autocomplete search that must always
-       *     match case-insensitively regardless of the field's configured setting.
-       */
-      caseSensitive?: boolean;
-    } & {
-      [key: string]: unknown;
-    };
-    FilterGroupItem: components['schemas']['FilterGroup'] | components['schemas']['FilterRule'];
-    OrFilterGroup: {
-      /** @description Array of filters or nested groups combined with OR logic */
-      or: components['schemas']['FilterGroupItem'][];
-      /** @description Unique identifier for the filter group */
-      id: string;
-    };
-    AndFilterGroup: {
-      /** @description Array of filters or nested groups combined with AND logic */
-      and: components['schemas']['FilterGroupItem'][];
-      /** @description Unique identifier for the filter group */
-      id: string;
-    };
-    Filters: {
-      /** @description Table calculation filter group */
-      tableCalculations?: components['schemas']['FilterGroup'];
-      /** @description Metric filter group */
-      metrics?: components['schemas']['FilterGroup'];
-      /** @description Dimension filter group */
-      dimensions?: components['schemas']['FilterGroup'];
-    };
-    /**
-     * @description Coordinates of a single pivot column, used to anchor a row sort to that
-     *     specific column when results are pivoted.
-     */
-    PivotSortAnchor: {
-      value: (string | number | boolean) | null;
-      reference: string;
-    };
-    SortField: {
-      /** @description Pins the row-sort anchor to a specific pivot column. Ignored for non-pivoted results. */
-      pivotValues?: components['schemas']['PivotSortAnchor'][];
-      /** @description Sort null values first */
-      nullsFirst?: boolean;
-      /** @description Sort in descending order */
-      descending: boolean;
-      /** @description Field ID to sort by */
-      fieldId: string;
-    };
-    /** @enum {string} */
-    TableCalculationType: 'number' | 'string' | 'date' | 'timestamp' | 'boolean';
-    TableCalculationBase: {
-      /** @description Data type of the calculation result */
-      type?: components['schemas']['TableCalculationType'];
-      /** @description Formatting options for the calculation */
-      format?: components['schemas']['CustomFormat'];
-      /** @description Display name shown in the UI */
-      displayName: string;
-      /** @description Internal name of the table calculation */
-      name: string;
-      /**
-       * Format: double
-       * @description Display order index
-       */
-      index?: number;
-    };
-    SqlTableCalculation: components['schemas']['TableCalculationBase'] & {
-      /** @description SQL expression for the calculation (can reference fields with ${table.field}) */
-      sql: string;
-    };
-    /** @enum {string} */
-    'TableCalculationTemplateType.PERCENT_CHANGE_FROM_PREVIOUS': 'percent_change_from_previous';
-    /** @enum {string} */
-    'TableCalculationTemplateType.PERCENT_OF_PREVIOUS_VALUE': 'percent_of_previous_value';
-    /** @enum {string} */
-    'TableCalculationTemplateType.PERCENT_OF_COLUMN_TOTAL': 'percent_of_column_total';
-    /** @enum {string} */
-    'TableCalculationTemplateType.RANK_IN_COLUMN': 'rank_in_column';
-    /** @enum {string} */
-    'TableCalculationTemplateType.RUNNING_TOTAL': 'running_total';
-    /** @enum {string} */
-    'TableCalculationTemplateType.WINDOW_FUNCTION': 'window_function';
-    /** @enum {string} */
-    WindowFunctionType:
-      | 'row_number'
-      | 'percent_rank'
-      | 'cume_dist'
-      | 'rank'
-      | 'sum'
-      | 'avg'
-      | 'count'
-      | 'min'
-      | 'max';
-    /** @enum {string} */
-    FrameType: 'rows' | 'range';
-    /** @enum {string} */
-    FrameBoundaryType:
-      'unbounded_preceding' | 'preceding' | 'current_row' | 'following' | 'unbounded_following';
-    FrameBoundary: {
-      /**
-       * Format: double
-       * @description Offset for PRECEDING/FOLLOWING
-       */
-      offset?: number;
-      /** @description Boundary type */
-      type: components['schemas']['FrameBoundaryType'];
-    };
-    FrameClause: {
-      /** @description End boundary of the frame */
-      end: components['schemas']['FrameBoundary'];
-      /** @description Start boundary of the frame */
-      start?: components['schemas']['FrameBoundary'];
-      /** @description Type of frame (ROWS or RANGE) */
-      frameType: components['schemas']['FrameType'];
-    };
-    TableCalculationTemplate:
-      | {
-          partitionBy?: string[];
-          /** @description Fields to order by for window functions */
-          orderBy: {
-            /** @enum {string|null} */
-            order: 'asc' | 'desc' | null;
-            fieldId: string;
-          }[];
-          /** @description Field ID to apply the template to */
-          fieldId: string;
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.PERCENT_CHANGE_FROM_PREVIOUS'];
-        }
-      | {
-          partitionBy?: string[];
-          /** @description Fields to order by for window functions */
-          orderBy: {
-            /** @enum {string|null} */
-            order: 'asc' | 'desc' | null;
-            fieldId: string;
-          }[];
-          /** @description Field ID to apply the template to */
-          fieldId: string;
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.PERCENT_OF_PREVIOUS_VALUE'];
-        }
-      | {
-          /** @description Fields to partition by */
-          partitionBy?: string[];
-          /** @description Field ID to apply the template to */
-          fieldId: string;
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.PERCENT_OF_COLUMN_TOTAL'];
-        }
-      | {
-          /** @description Field ID to apply the template to */
-          fieldId: string;
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.RANK_IN_COLUMN'];
-        }
-      | {
-          /** @description Field ID to apply the template to */
-          fieldId: string;
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.RUNNING_TOTAL'];
-        }
-      | {
-          /** @description Frame clause for window functions */
-          frame?: components['schemas']['FrameClause'];
-          /** @description Fields to partition by for window functions */
-          partitionBy: string[];
-          /** @description Fields to order by for window functions */
-          orderBy: {
-            /** @enum {string|null} */
-            order: 'asc' | 'desc' | null;
-            fieldId: string;
-          }[];
-          /** @description Field ID to apply the template to */
-          fieldId: string | null;
-          /** @description Window function type */
-          windowFunction: components['schemas']['WindowFunctionType'];
-          /** @description Type of template calculation */
-          type: components['schemas']['TableCalculationTemplateType.WINDOW_FUNCTION'];
-        };
-    TemplateTableCalculation: components['schemas']['TableCalculationBase'] & {
-      /** @description Template-based calculation (alternative to sql) */
-      template: components['schemas']['TableCalculationTemplate'];
-    };
-    FormulaTableCalculation: components['schemas']['TableCalculationBase'] & {
-      /** @description Spreadsheet-like formula compiled to SQL at query time */
-      formula: string;
-    };
-    TableCalculation:
-      | components['schemas']['SqlTableCalculation']
-      | components['schemas']['TemplateTableCalculation']
-      | components['schemas']['FormulaTableCalculation'];
-    AdditionalMetric: {
-      /** @description Display label for the metric */
-      label?: string;
-      /** @description Aggregation type */
-      type: components['schemas']['MetricType'];
-      /** @description Description of what the metric measures */
-      description?: string;
-      /** @description SQL expression (e.g., ${TABLE}.column_name) */
-      sql: string;
-      /** @description Whether the metric is hidden from users */
-      hidden?: boolean;
-      /**
-       * Format: double
-       * @description Number of decimal places
-       */
-      round?: number;
-      /** @description Compact format for large numbers */
-      compact?: components['schemas']['CompactOrAlias'];
-      /** @description Format string (legacy format specification) */
-      format?: components['schemas']['Format'] | string;
-      /** @description Number separator style for grouping/decimal characters */
-      separator?: components['schemas']['NumberSeparator'];
-      /** @description Table name the metric belongs to */
-      table: string;
-      /** @description Internal name of the metric */
-      name: string;
-      /**
-       * Format: double
-       * @description Display order index
-       */
-      index?: number;
-      /** @description Filters to apply to this metric */
-      filters?: components['schemas']['MetricFilterRule'][];
-      /** @description Name of the base dimension/column this metric aggregates */
-      baseDimensionName?: string;
-      /** @description Unique identifier for the metric */
-      uuid?: string | null;
-      /**
-       * Format: double
-       * @description Percentile value for percentile metrics
-       */
-      percentile?: number;
-      distinctKeys?: string[];
-      /** @description Formatting configuration */
-      formatOptions?: components['schemas']['CustomFormat'];
-      /**
-       * @description Optional marker for metrics generated by the system.
-       *     Currently used for Period-over-Period (PoP) previous-period metrics.
-       * @enum {string}
-       */
-      generationType?: 'periodOverPeriod';
-      /** @description For PoP-generated metrics, the base metric id that this metric is derived from. */
-      baseMetricId?: components['schemas']['FieldId'];
-      /** @description For PoP-generated metrics, the time dimension id used for the comparison. */
-      timeDimensionId?: components['schemas']['FieldId'];
-      /** @description For PoP-generated metrics, the granularity used for the comparison. */
-      granularity?: components['schemas']['TimeFrames'];
-      /**
-       * Format: double
-       * @description For PoP-generated metrics, the number of periods to offset by (>= 1).
-       */
-      periodOffset?: number;
-    } & {
-      [key: string]: unknown;
-    };
-    /** @enum {string} */
-    'BinType.FIXED_NUMBER': 'fixed_number';
-    /** @enum {string} */
-    'CustomDimensionType.BIN': 'bin';
-    /** @enum {string} */
-    CustomDimensionType: 'bin' | 'sql';
-    FixedNumberBinDimension: {
-      /** @description Unique identifier for the custom dimension */
-      id: string;
-      /** @description Display name for the custom dimension */
-      name: string;
-      /** @description Table this custom dimension belongs to */
-      table: string;
-      /** @description Type of custom dimension (bin or sql) */
-      type: components['schemas']['CustomDimensionType.BIN'];
-      /** @description Field ID of the parent dimension to bin */
-      dimensionId: components['schemas']['FieldId'];
-      binType: components['schemas']['BinType.FIXED_NUMBER'];
-      /** Format: double */
-      binNumber: number;
-    } & {
-      [key: string]: unknown;
-    };
-    /** @enum {string} */
-    'BinType.FIXED_WIDTH': 'fixed_width';
-    FixedWidthBinDimension: {
-      /** @description Unique identifier for the custom dimension */
-      id: string;
-      /** @description Display name for the custom dimension */
-      name: string;
-      /** @description Table this custom dimension belongs to */
-      table: string;
-      /** @description Type of custom dimension (bin or sql) */
-      type: components['schemas']['CustomDimensionType.BIN'];
-      /** @description Field ID of the parent dimension to bin */
-      dimensionId: components['schemas']['FieldId'];
-      binType: components['schemas']['BinType.FIXED_WIDTH'];
-      /** Format: double */
-      binWidth: number;
-    } & {
-      [key: string]: unknown;
-    };
-    /** @enum {string} */
-    'BinType.CUSTOM_RANGE': 'custom_range';
-    BinRange: {
-      /**
-       * Format: double
-       * @description End value for this bin range (undefined for the last range)
-       */
-      to?: number;
-      /**
-       * Format: double
-       * @description Start value for this bin range (undefined for the first range)
-       */
-      from?: number;
-    };
-    CustomRangeBinDimension: {
-      /** @description Unique identifier for the custom dimension */
-      id: string;
-      /** @description Display name for the custom dimension */
-      name: string;
-      /** @description Table this custom dimension belongs to */
-      table: string;
-      /** @description Type of custom dimension (bin or sql) */
-      type: components['schemas']['CustomDimensionType.BIN'];
-      /** @description Field ID of the parent dimension to bin */
-      dimensionId: components['schemas']['FieldId'];
-      binType: components['schemas']['BinType.CUSTOM_RANGE'];
-      customRange: components['schemas']['BinRange'][];
-    } & {
-      [key: string]: unknown;
-    };
-    /** @enum {string} */
-    'BinType.CUSTOM_GROUP': 'custom_group';
-    /** @enum {string} */
-    GroupValueMatchType: 'exact' | 'startsWith' | 'endsWith' | 'includes';
-    GroupValueRule: {
-      value: string;
-      matchType: components['schemas']['GroupValueMatchType'];
-    };
-    BinGroup: {
-      /** @description Rules that match values into this group */
-      values: components['schemas']['GroupValueRule'][];
-      /** @description Display name for this group (e.g. "North America") */
-      name: string;
-    };
-    CustomGroupBinDimension: {
-      /** @description Unique identifier for the custom dimension */
-      id: string;
-      /** @description Display name for the custom dimension */
-      name: string;
-      /** @description Table this custom dimension belongs to */
-      table: string;
-      /** @description Type of custom dimension (bin or sql) */
-      type: components['schemas']['CustomDimensionType.BIN'];
-      /** @description Field ID of the parent dimension to bin */
-      dimensionId: components['schemas']['FieldId'];
-      binType: components['schemas']['BinType.CUSTOM_GROUP'];
-      customGroups: components['schemas']['BinGroup'][];
-    } & {
-      [key: string]: unknown;
-    };
-    CustomBinDimension:
-      | components['schemas']['FixedNumberBinDimension']
-      | components['schemas']['FixedWidthBinDimension']
-      | components['schemas']['CustomRangeBinDimension']
-      | components['schemas']['CustomGroupBinDimension'];
-    /** @enum {string} */
-    'CustomDimensionType.SQL': 'sql';
-    CustomSqlDimension: {
-      /** @description Unique identifier for the custom dimension */
-      id: string;
-      /** @description Display name for the custom dimension */
-      name: string;
-      /** @description Table this custom dimension belongs to */
-      table: string;
-      /** @description Type of custom dimension (bin or sql) */
-      type: components['schemas']['CustomDimensionType.SQL'];
-      /** @description SQL expression for the custom dimension */
-      sql: string;
-      /** @description Data type of the dimension result */
-      dimensionType: components['schemas']['DimensionType'];
-    } & {
-      [key: string]: unknown;
-    };
-    CustomDimension:
-      components['schemas']['CustomBinDimension'] | components['schemas']['CustomSqlDimension'];
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Metric.formatOptions_': {
-      formatOptions?: components['schemas']['CustomFormat'];
-    };
-    MetricOverrides: {
-      [key: string]: components['schemas']['Pick_Metric.formatOptions_'];
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Dimension.formatOptions_': {
-      formatOptions?: components['schemas']['CustomFormat'];
-    };
-    DimensionOverrides: {
-      [key: string]: components['schemas']['Pick_Dimension.formatOptions_'];
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_CompiledDimension.label-or-name-or-table_': {
-      name: string;
-      label: string;
-      table: string;
-    };
-    MetricQuery: {
-      metadata?: {
-        hasADateDimension: components['schemas']['Pick_CompiledDimension.label-or-name-or-table_'];
-      };
-      /**
-       * @description Dimension field IDs used as pivot columns (from chart's pivotConfig.columns).
-       *     Used by row_total() to determine non-pivot dimensions for GROUP BY.
-       */
-      pivotDimensions?: components['schemas']['FieldId'][];
-      /** @description Timezone for date/time values (e.g., 'America/Los_Angeles', 'UTC') */
-      timezone?: string;
-      /** @description Override formatting options for existing dimensions */
-      dimensionOverrides?: components['schemas']['DimensionOverrides'];
-      /** @description Override formatting options for existing metrics */
-      metricOverrides?: components['schemas']['MetricOverrides'];
-      /** @description Custom dimensions defined inline */
-      customDimensions?: components['schemas']['CustomDimension'][];
-      /** @description Custom metrics defined inline (ad-hoc metrics not in the dbt model) */
-      additionalMetrics?: components['schemas']['AdditionalMetric'][];
-      /** @description Custom calculations to perform on query results */
-      tableCalculations: components['schemas']['TableCalculation'][];
-      /**
-       * Format: double
-       * @description Maximum number of rows to return
-       */
-      limit: number;
-      /** @description Sort configuration for query results */
-      sorts: components['schemas']['SortField'][];
-      /** @description Filter rules to apply to the query */
-      filters: components['schemas']['Filters'];
-      /** @description List of metric field IDs to include */
-      metrics: components['schemas']['FieldId'][];
-      /** @description List of dimension field IDs to include */
-      dimensions: components['schemas']['FieldId'][];
-      /** @description The name of the explore to query */
-      exploreName: string;
-    };
-    /** @enum {string} */
-    'ChartType.BIG_NUMBER': 'big_number';
-    /** @enum {string} */
-    ComparisonFormatTypes: 'raw' | 'percentage';
-    'BaseFilterRule_FilterOperator.number-or-string_': {
-      /** @description Values to filter by */
-      values?: (number | string)[];
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Unique identifier for the filter rule */
-      id: string;
-    };
-    'ConditionalFormattingWithValues_number-or-string_': components['schemas']['BaseFilterRule_FilterOperator.number-or-string_'] & {
-      /** @description Values to compare against */
-      values: (number | string)[];
-    };
-    'ConditionalFormattingWithCompareTarget_number-or-string_': components['schemas']['BaseFilterRule_FilterOperator.number-or-string_'] & {
-      /** @description Values to compare against */
-      values?: (number | string)[];
-      /** @description Target field to compare against */
-      compareTarget: components['schemas']['FieldTarget'] | null;
-    };
-    ConditionalFormattingWithFilterOperator:
-      | components['schemas']['ConditionalFormattingWithValues_number-or-string_']
-      | components['schemas']['ConditionalFormattingWithCompareTarget_number-or-string_'];
-    /** @enum {string} */
-    ConditionalFormattingColorApplyTo: 'cell' | 'text' | 'row';
-    ConditionalFormattingConfigWithSingleColor: {
-      /** @description Apply formatting to cell background or text */
-      applyTo?: components['schemas']['ConditionalFormattingColorApplyTo'];
-      /** @description Rules for single-color conditional formatting */
-      rules: components['schemas']['ConditionalFormattingWithFilterOperator'][];
-      /** @description Color for dark mode */
-      darkColor?: string;
-      /** @description Color for single-color conditional formatting */
-      color: string;
-      /** @description Target field for the formatting rule */
-      target: components['schemas']['FieldTarget'] | null;
-    };
-    ConditionalFormattingColorRange: {
-      /** @description End color for gradient */
-      end: string;
-      /** @description Start color for gradient */
-      start: string;
-    };
-    'ConditionalFormattingMinMax_number-or-auto_': {
-      /** @description Maximum value (number or 'auto') */
-      max: number | 'auto';
-      /** @description Minimum value (number or 'auto') */
-      min: number | 'auto';
-    };
-    ConditionalFormattingConfigWithColorRange: {
-      /** @description Apply formatting to cell background or text */
-      applyTo?: components['schemas']['ConditionalFormattingColorApplyTo'];
-      /** @description Rule for color range formatting (min/max values) */
-      rule: components['schemas']['ConditionalFormattingMinMax_number-or-auto_'];
-      /** @description Color range for gradient conditional formatting */
-      color: components['schemas']['ConditionalFormattingColorRange'];
-      /** @description Target field for the formatting rule */
-      target: components['schemas']['FieldTarget'] | null;
-    };
-    ConditionalFormattingConfig:
-      | components['schemas']['ConditionalFormattingConfigWithSingleColor']
-      | components['schemas']['ConditionalFormattingConfigWithColorRange'];
-    BigNumber: {
-      comparisonField?: string;
-      /** @description Conditional formatting rules */
-      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
-      /** @description Custom label for the comparison value */
-      comparisonLabel?: string;
-      /** @description Flip positive/negative colors (red for increase, green for decrease) */
-      flipColors?: boolean;
-      /** @description Format for comparison value */
-      comparisonFormat?: components['schemas']['ComparisonFormatTypes'];
-      /** @description Show comparison with previous value */
-      showComparison?: boolean;
-      /** @description Include table name in the label */
-      showTableNamesInLabel?: boolean;
-      /** @description Show the label above the number */
-      showBigNumberLabel?: boolean;
-      /** @description Field ID to display as the big number */
-      selectedField?: string;
-      /** @description Number formatting style (compact notation) */
-      style?: components['schemas']['CompactOrAlias'];
-      /** @description Custom label for the big number */
-      label?: string;
-    };
-    BigNumberConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['BigNumber'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.BIG_NUMBER'];
-    };
-    /** @enum {string} */
-    'ChartType.CARTESIAN': 'cartesian';
-    /** @description Make all properties in T optional */
-    Partial_CompleteCartesianChartLayout_: {
-      /** @description Field ID to use for the X axis */
-      xField?: string;
-      /** @description Field IDs to use for the Y axis */
-      yField?: string[];
-      /** @description Swap X and Y axes (creates horizontal bar charts) */
-      flipAxes?: boolean;
-      /** @description Show vertical grid lines */
-      showGridX?: boolean;
-      /** @description Show horizontal grid lines */
-      showGridY?: boolean;
-      /** @description Show the X axis */
-      showXAxis?: boolean;
-      /** @description Show the Y axis */
-      showYAxis?: boolean;
-      /** @description Controls left/primary Y-axis visibility */
-      showLeftYAxis?: boolean;
-      /** @description Controls right/secondary Y-axis visibility */
-      showRightYAxis?: boolean;
-      /** @description Stack series together (true for default stacking, or string for stack group name) */
-      stack?: string | boolean;
-      /** @description Connect null data points with a line */
-      connectNulls?: boolean;
-      /** @description Color each bar by its category value instead of using a single series color */
-      colorByCategory?: boolean;
-      /** @description Per-category color overrides (maps category value to hex color) */
-      categoryColorOverrides?: components['schemas']['Record_string.string_'];
-    };
-    CartesianChartLayout: components['schemas']['Partial_CompleteCartesianChartLayout_'];
-    /**
-     * @description High-level legend placement preset. Set to 'outsideRight' or 'outsideLeft' to
-     *     render the legend beside the plot with reserved grid space. Undefined behaves
-     *     like 'custom' (no override of the existing legend position fields).
-     * @enum {string}
-     */
-    LegendPlacement: 'custom' | 'outsideRight' | 'outsideLeft';
-    EchartsLegend: {
-      /**
-       * @description High-level placement preset. Overrides orient/top/right/bottom/left
-       *     when set to an outside value.
-       */
-      placement?: components['schemas']['LegendPlacement'];
-      /**
-       * @description Legend icon shape
-       * @enum {string}
-       */
-      icon?: 'circle' | 'rect' | 'roundRect' | 'triangle' | 'diamond' | 'pin' | 'arrow' | 'none';
-      /**
-       * @description Legend alignment
-       * @enum {string}
-       */
-      align?: 'auto' | 'left' | 'right';
-      /** @description Legend height */
-      height?: string;
-      /** @description Legend width */
-      width?: string;
-      /** @description Left position */
-      left?: string;
-      /** @description Bottom position */
-      bottom?: string;
-      /** @description Right position */
-      right?: string;
-      /** @description Top position */
-      top?: string;
-      /**
-       * @description Legend orientation
-       * @enum {string}
-       */
-      orient?: 'horizontal' | 'vertical';
-      /**
-       * @description Legend type (plain or scrollable)
-       * @enum {string}
-       */
-      type?: 'plain' | 'scroll';
-      /** @description Show the legend */
-      show?: boolean;
-    };
-    EchartsGrid: {
-      /** @description Grid height */
-      height?: string;
-      /** @description Grid width */
-      width?: string;
-      /** @description Left padding */
-      left?: string;
-      /** @description Bottom padding */
-      bottom?: string;
-      /** @description Right padding */
-      right?: string;
-      /** @description Top padding */
-      top?: string;
-      /** @description Whether the grid area contains axis labels */
-      containLabel?: boolean;
-    };
-    PivotValue: {
-      /** @description Pivot value */
-      value: unknown;
-      /** @description Pivot field ID */
-      field: string;
-    };
-    PivotReference: {
-      /** @description Pivot values for this reference (for pivoted data) */
-      pivotValues?: components['schemas']['PivotValue'][];
-      /** @description Field ID being referenced */
-      field: string;
-    };
-    /** @enum {string} */
-    CartesianSeriesType: 'line' | 'bar' | 'scatter' | 'area';
-    MarkLineData: {
-      /**
-       * @description Dynamic value type
-       * @enum {string}
-       */
-      dynamicValue?: 'average';
-      /** @description Label configuration for this data point */
-      label?: {
-        /**
-         * @description Label position
-         * @enum {string}
-         */
-        position?: 'start' | 'middle' | 'end';
-        /** @description Label formatter */
-        formatter?: string;
-      };
-      /** @description Line style for this data point */
-      lineStyle?: {
-        /** @description Line color */
-        color: string;
-      };
-      /** @description Unique identifier for this mark line */
-      uuid: string;
-      /** @description Point type (e.g., 'average') */
-      type?: string;
-      /** @description Value to display */
-      value?: string;
-      /** @description Name of the reference line */
-      name?: string;
-      /** @description X axis value for vertical line */
-      xAxis?: string;
-      /** @description Y axis value for horizontal line */
-      yAxis?: string;
-    };
-    MarkLine: {
-      /** @description Label configuration */
-      label?: {
-        /** @description Label formatter */
-        formatter?: string;
-      };
-      /** @description Line style configuration */
-      lineStyle?: {
-        /** @description Line type */
-        type: string;
-        /**
-         * Format: double
-         * @description Line width
-         */
-        width: number;
-        /** @description Line color */
-        color: string;
-      };
-      /** @description Symbol at line endpoints */
-      symbol?: string;
-      /** @description Reference line data points */
-      data: components['schemas']['MarkLineData'][];
-    };
-    Series: {
-      /** @description Whether this series is currently filtered out */
-      isFilteredOut?: boolean;
-      /** @description Reference line configuration */
-      markLine?: components['schemas']['MarkLine'];
-      /** @description Use smooth curves for line/area charts */
-      smooth?: boolean;
-      /** @description Show symbols/markers on data points */
-      showSymbol?: boolean;
-      /** @description Area fill style (presence indicates area chart) */
-      areaStyle?: components['schemas']['Record_string.unknown_'];
-      /** @description Hide this series from the chart */
-      hidden?: boolean;
-      /** @description Data label configuration */
-      label?: {
-        /** @description Show the metric field name */
-        showSeriesName?: boolean;
-        /** @description Show the legend/pivot name */
-        showLabel?: boolean;
-        /** @description Show the metric value */
-        showValue?: boolean;
-        /** @description Show labels even when they overlap */
-        showOverlappingLabels?: boolean;
-        /**
-         * @description Position of data labels
-         * @enum {string}
-         */
-        position?: 'left' | 'top' | 'right' | 'bottom' | 'inside';
-        /** @description Show data labels on points */
-        show?: boolean;
-      };
-      /**
-       * Format: double
-       * @description Index of Y axis to use (for dual Y axis charts)
-       */
-      yAxisIndex?: number;
-      /** @description Color for the series (hex code) */
-      color?: string;
-      /** @description Display name for the series */
-      name?: string;
-      /** @description Stack total label configuration */
-      stackLabel?: {
-        /** @description Show stack total labels */
-        show?: boolean;
-      };
-      /** @description Stack group name (series with same stack name are stacked) */
-      stack?: string;
-      /** @description Series visualization type */
-      type: components['schemas']['CartesianSeriesType'];
-      /** @description Field references for this series */
-      encode: {
-        /** @description Hash of yRef (computed) */
-        y?: string;
-        /** @description Hash of xRef (computed) */
-        x?: string;
-        /** @description Y axis field reference */
-        yRef: components['schemas']['PivotReference'];
-        /** @description X axis field reference */
-        xRef: components['schemas']['PivotReference'];
-      };
-    };
-    Axis: {
-      /**
-       * Format: double
-       * @description Rotation angle for axis labels
-       */
-      rotate?: number;
-      /** @description Reverse the axis direction */
-      inverse?: boolean;
-      /** @description Offset from maximum value */
-      maxOffset?: string;
-      /** @description Offset from minimum value */
-      minOffset?: string;
-      /** @description Maximum value (or 'dataMax' for auto) */
-      max?: string;
-      /** @description Minimum value (or 'dataMin' for auto) */
-      min?: string;
-      /** @description Axis title */
-      name?: string;
-    };
-    /** @enum {string} */
-    XAxisSortType: 'default' | 'category' | 'bar_totals';
-    XAxis: components['schemas']['Axis'] & {
-      /**
-       * Format: double
-       * @description Number of items visible at once in the data-zoom window
-       */
-      dataZoomItemCount?: number;
-      /**
-       * @description Where the initial data-zoom window anchors when data zoom is enabled
-       * @enum {string}
-       */
-      dataZoomAnchor?: 'start' | 'end';
-      /** @description Enable data zoom slider for this axis */
-      enableDataZoom?: boolean;
-      /** @description How to sort the X axis */
-      sortType?: components['schemas']['XAxisSortType'];
-    };
-    /** @enum {string} */
-    TooltipSortBy: 'default' | 'alphabetical' | 'value_ascending' | 'value_descending';
-    /** @description Make all properties in T optional */
-    Partial_CompleteEChartsConfig_: {
-      /** @description Legend configuration */
-      legend?: components['schemas']['EchartsLegend'];
-      /** @description Grid (chart area) configuration */
-      grid?: components['schemas']['EchartsGrid'];
-      /** @description Chart series configuration */
-      series?: components['schemas']['Series'][];
-      /** @description X axis configuration */
-      xAxis?: components['schemas']['XAxis'][];
-      /** @description Y axis configuration */
-      yAxis?: components['schemas']['Axis'][];
-      /** @description Tooltip formatter template */
-      tooltip?: string;
-      /** @description How to sort tooltip items */
-      tooltipSort?: components['schemas']['TooltipSortBy'];
-      /** @description Show tick marks on axes */
-      showAxisTicks?: boolean;
-      /**
-       * Format: double
-       * @description Font size for axis labels
-       */
-      axisLabelFontSize?: number;
-      /**
-       * Format: double
-       * @description Font size for axis titles
-       */
-      axisTitleFontSize?: number;
-    };
-    EChartsConfig: components['schemas']['Partial_CompleteEChartsConfig_'];
-    SeriesMetadata: {
-      /** @description Color for the series */
-      color: string;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.SeriesMetadata_': {
-      [key: string]: components['schemas']['SeriesMetadata'];
-    };
-    RowLimit: {
-      /**
-       * Format: double
-       * @description Number of rows to show or hide
-       */
-      count: number;
-      /**
-       * @description Whether to target the first or last N rows
-       * @enum {string}
-       */
-      direction: 'first' | 'last';
-      /**
-       * @description Whether to show or hide the selected rows
-       * @enum {string}
-       */
-      mode: 'show' | 'hide';
-    };
-    CartesianChart: {
-      /**
-       * Format: double
-       * @description Maximum number of pivot columns to display
-       */
-      columnLimit?: number;
-      /** @description Limit displayed rows to first/last N */
-      rowLimit?: components['schemas']['RowLimit'];
-      /** @description Metadata for series (colors, etc.) */
-      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
-      /** @description Conditional formatting rules */
-      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
-      /** @description ECharts-specific configuration */
-      eChartsConfig: components['schemas']['EChartsConfig'];
-      /** @description Layout configuration for the chart axes and orientation */
-      layout: components['schemas']['CartesianChartLayout'];
-    };
-    CartesianChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['CartesianChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.CARTESIAN'];
-    };
-    /** @enum {string} */
-    'ChartType.CUSTOM': 'custom';
-    CustomVis: {
-      /** @description Custom visualization specification (Vega-Lite or other) */
-      spec?: components['schemas']['Record_string.unknown_'];
-    };
-    CustomVisConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['CustomVis'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.CUSTOM'];
-    };
-    /** @enum {string} */
-    'ChartType.PIE': 'pie';
-    /** @enum {string} */
-    PieChartValueLabel: 'hidden' | 'inside' | 'outside';
-    /** @description Make all properties in T optional */
-    Partial_PieChartValueOptions_: {
-      /** @enum {string} */
-      valueLabel?: 'hidden' | 'inside' | 'outside';
-      showValue?: boolean;
-      showPercentage?: boolean;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.Partial_PieChartValueOptions__': {
-      [key: string]: components['schemas']['Partial_PieChartValueOptions_'];
-    };
-    /** @enum {string} */
-    PieChartLegendPosition: 'horizontal' | 'vertical';
-    PieChart: {
-      /** @description Metadata for series (colors, etc.) */
-      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
-      /**
-       * Format: double
-       * @description Maximum character length for legend items
-       */
-      legendMaxItemLength?: number;
-      /** @description Legend position/orientation */
-      legendPosition?: components['schemas']['PieChartLegendPosition'];
-      /** @description Show the chart legend */
-      showLegend?: boolean;
-      /** @description Custom sort order for groups/slices */
-      groupSortOverrides?: string[];
-      /** @description Per-slice value display options */
-      groupValueOptionOverrides?: components['schemas']['Record_string.Partial_PieChartValueOptions__'];
-      /** @description Custom colors for each group/slice */
-      groupColorOverrides?: components['schemas']['Record_string.string_'];
-      /** @description Custom labels for each group/slice */
-      groupLabelOverrides?: components['schemas']['Record_string.string_'];
-      /** @description Show percentage on slices */
-      showPercentage?: boolean;
-      /** @description Show the actual value on slices */
-      showValue?: boolean;
-      /** @description Position of value labels on slices */
-      valueLabel?: components['schemas']['PieChartValueLabel'];
-      /** @description Display as donut chart with hole in center */
-      isDonut?: boolean;
-      /** @description Field ID of the metric to display */
-      metricId?: string;
-      /** @description Field IDs used for grouping/slicing the pie */
-      groupFieldIds?: string[];
-    };
-    PieChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['PieChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.PIE'];
-    };
-    /** @enum {string} */
-    'ChartType.FUNNEL': 'funnel';
-    /** @enum {string} */
-    FunnelChartDataInput: 'row' | 'column';
-    /** @enum {string} */
-    FunnelChartLabelPosition: 'inside' | 'left' | 'right' | 'hidden';
-    /** @enum {string} */
-    FunnelChartLegendPosition: 'horizontal' | 'vertical';
-    FunnelChart: {
-      /** @description Legend orientation */
-      legendPosition?: components['schemas']['FunnelChartLegendPosition'];
-      /** @description Show the chart legend */
-      showLegend?: boolean;
-      /** @description Label display configuration */
-      labels?: {
-        /** @description Show percentage */
-        showPercentage?: boolean;
-        /** @description Show the actual value */
-        showValue?: boolean;
-        /** @description Position of labels */
-        position?: components['schemas']['FunnelChartLabelPosition'];
-      };
-      /** @description Custom colors for funnel stages */
-      colorOverrides?: components['schemas']['Record_string.string_'];
-      /** @description Custom labels for funnel stages */
-      labelOverrides?: components['schemas']['Record_string.string_'];
-      /** @description Metadata for series (colors, etc.) */
-      metadata?: components['schemas']['Record_string.SeriesMetadata_'];
-      /** @description Field ID to display in funnel */
-      fieldId?: string;
-      /** @description How data is structured (row-based or column-based) */
-      dataInput?: components['schemas']['FunnelChartDataInput'];
-    };
-    FunnelChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['FunnelChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.FUNNEL'];
-    };
-    /** @enum {string} */
-    'ChartType.TABLE': 'table';
-    ColumnProperties: {
-      /** Format: double */
-      width?: number;
-      /** @description Color for bar display style (hex code) */
-      color?: string;
-      /**
-       * @description How to display the cell value
-       * @enum {string}
-       */
-      displayStyle?: 'text' | 'bar';
-      /** @description Freeze the column (stick to left side) */
-      frozen?: boolean;
-      /** @description Custom display name for the column */
-      name?: string;
-      /** @description Whether the column is visible */
-      visible?: boolean;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.ColumnProperties_': {
-      [key: string]: components['schemas']['ColumnProperties'];
-    };
-    TableChart: {
-      /** @description Limit displayed rows to first/last N */
-      rowLimit?: components['schemas']['RowLimit'];
-      /** @description Display metrics as rows instead of columns */
-      metricsAsRows?: boolean;
-      /** @description Conditional formatting rules */
-      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
-      /** @description Column-specific configuration */
-      columns?: components['schemas']['Record_string.ColumnProperties_'];
-      /**
-       * @description Visually deduplicate repeated row-index dimension values across consecutive
-       *     rows without showing aggregate subtotal rows. When `showSubtotals` is true,
-       *     grouping is implicitly active and this flag is ignored. Defaults to false.
-       */
-      showRowGrouping?: boolean;
-      /** @description Default subtotal rows to expanded (vs. collapsed). Only meaningful when showSubtotals is true. */
-      showSubtotalsExpanded?: boolean;
-      /** @description Show subtotal rows */
-      showSubtotals?: boolean;
-      /** @description Show total results count */
-      showResultsTotal?: boolean;
-      /** @description Hide row number column */
-      hideRowNumbers?: boolean;
-      /** @description Show table names in column headers */
-      showTableNames?: boolean;
-      /** @description Show row totals/calculations */
-      showRowCalculation?: boolean;
-      /** @description Show column totals/calculations */
-      showColumnCalculation?: boolean;
-    };
-    TableChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['TableChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.TABLE'];
-    };
-    /** @enum {string} */
-    'ChartType.TREEMAP': 'treemap';
-    TreemapChart: {
-      /**
-       * Format: double
-       * @description Value threshold for end color
-       */
-      endColorThreshold?: number;
-      /**
-       * Format: double
-       * @description Value threshold for start color
-       */
-      startColorThreshold?: number;
-      /** @description Use dynamic color scaling based on values */
-      useDynamicColors?: boolean;
-      /** @description End color for color gradient (hex code) */
-      endColor?: string;
-      /** @description Start color for color gradient (hex code) */
-      startColor?: string;
-      /** @description Field ID for node color value */
-      colorMetricId?: string;
-      /** @description Field ID for node size */
-      sizeMetricId?: string;
-      /** @description Field IDs for hierarchical grouping */
-      groupFieldIds?: string[];
-      /**
-       * Format: double
-       * @description Depth of leaf nodes to display
-       */
-      leafDepth?: number;
-      /**
-       * Format: double
-       * @description Minimum size for visible nodes
-       */
-      visibleMin?: number;
-    };
-    TreemapChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['TreemapChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.TREEMAP'];
-    };
-    /** @enum {string} */
-    'ChartType.GAUGE': 'gauge';
-    GaugeSection: {
-      /** @description Color for this section (hex code) */
-      color: string;
-      /** @description Field ID to use as max value */
-      maxFieldId?: string;
-      /** @description Field ID to use as min value */
-      minFieldId?: string;
-      /**
-       * Format: double
-       * @description End value for this section
-       */
-      max: number;
-      /**
-       * Format: double
-       * @description Start value for this section
-       */
-      min: number;
-    };
-    GaugeChart: {
-      /** @description Custom label for the percentage display */
-      customPercentageLabel?: string;
-      /** @description Show value as percentage */
-      showPercentage?: boolean;
-      /** @description Custom label for the gauge value */
-      customLabel?: string;
-      /** @description Color sections/ranges for the gauge */
-      sections?: components['schemas']['GaugeSection'][];
-      /** @description Show min/max labels on the gauge */
-      showAxisLabels?: boolean;
-      /** @description Field ID to use as the max value */
-      maxFieldId?: string;
-      /**
-       * Format: double
-       * @description Maximum value for the gauge
-       */
-      max?: number;
-      /**
-       * Format: double
-       * @description Minimum value for the gauge
-       */
-      min?: number;
-      /** @description Field ID for the gauge value */
-      selectedField?: string;
-    };
-    GaugeChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['GaugeChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.GAUGE'];
-    };
-    /** @enum {string} */
-    'ChartType.MAP': 'map';
-    /** @enum {string} */
-    MapChartLocation: 'USA' | 'world' | 'europe' | 'custom';
-    /** @enum {string} */
-    MapChartType: 'scatter' | 'area' | 'heatmap' | 'hexbin';
-    /** @enum {string} */
-    MapHexbinSizingMode: 'dynamic' | 'fixed';
-    /** @enum {string} */
-    MapHexbinValueBasis: 'count' | 'field';
-    /** @enum {string} */
-    MapHexbinAggregation: 'sum' | 'avg' | 'min' | 'max';
-    /** @enum {string} */
-    MapTileBackground: 'none' | 'openstreetmap' | 'light' | 'dark' | 'satellite' | 'voyager';
-    MapFieldConfig: {
-      /** @description Custom label for the field */
-      label?: string;
-      /** @description Whether to show this field in tooltips */
-      visible?: boolean;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.MapFieldConfig_': {
-      [key: string]: components['schemas']['MapFieldConfig'];
-    };
-    MapChart: {
-      /** @description Save the current map zoom/position */
-      saveMapExtent?: boolean;
-      /** @description Field-specific configuration for tooltips */
-      fieldConfig?: components['schemas']['Record_string.MapFieldConfig_'];
-      /** @description Color for regions with no data (hex code) */
-      noDataColor?: string;
-      /** @description Background color for the map (hex code) */
-      backgroundColor?: string;
-      /** @description Map tile background style for dark mode (uses dark default when undefined) */
-      darkModeTileBackground?: components['schemas']['MapTileBackground'];
-      /** @description Map tile background style */
-      tileBackground?: components['schemas']['MapTileBackground'];
-      /**
-       * Format: double
-       * @description Data layer opacity (0.1 to 1)
-       */
-      dataLayerOpacity?: number;
-      /** @description Configuration for H3 hexagonal binning visualization */
-      hexbinConfig?: {
-        /**
-         * @description Fill color for empty bins. Hex6 (#rrggbb) = solid fill, hex8
-         *     (#rrggbbaa) = fill with alpha, null/undefined = outline only.
-         */
-        emptyBinColor?: string | null;
-        /**
-         * @description Render outlined empty cells across the visible map area, so the user
-         *     can see "where there is no data" relative to the hex grid.
-         */
-        showEmptyBins?: boolean;
-        /** @description Aggregation applied when valueBasis = FIELD. Defaults to SUM. */
-        aggregation?: components['schemas']['MapHexbinAggregation'];
-        /**
-         * @description What drives cell color: count of points (default) or an aggregation
-         *     over a chosen value field (controlled via the chart's `valueFieldId`).
-         */
-        valueBasis?: components['schemas']['MapHexbinValueBasis'];
-        /**
-         * Format: double
-         * @description H3 resolution (0-15) used when sizingMode is FIXED. Ignored otherwise.
-         */
-        fixedResolution?: number;
-        /** @description How bin size is determined. Defaults to DYNAMIC if unset. */
-        sizingMode?: components['schemas']['MapHexbinSizingMode'];
-        /**
-         * Format: double
-         * @description Opacity of hex polygons (0.1 to 1)
-         */
-        opacity?: number;
-      };
-      /** @description Configuration for heatmap visualization */
-      heatmapConfig?: {
-        /**
-         * Format: double
-         * @description Opacity of the heatmap layer
-         */
-        opacity?: number;
-        /**
-         * Format: double
-         * @description Blur amount for heat points
-         */
-        blur?: number;
-        /**
-         * Format: double
-         * @description Radius of heat points
-         */
-        radius?: number;
-      };
-      /** @description Field ID for bubble size (scatter maps) */
-      sizeFieldId?: string;
-      /**
-       * Format: double
-       * @description Maximum bubble size for scatter maps
-       */
-      maxBubbleSize?: number;
-      /**
-       * Format: double
-       * @description Minimum bubble size for scatter maps
-       */
-      minBubbleSize?: number;
-      /**
-       * Format: double
-       * @description Default center longitude
-       */
-      defaultCenterLon?: number;
-      /**
-       * Format: double
-       * @description Default center latitude
-       */
-      defaultCenterLat?: number;
-      /**
-       * Format: double
-       * @description Default zoom level
-       */
-      defaultZoom?: number;
-      /** @description Per-value color overrides for categorical color fields */
-      colorOverrides?: components['schemas']['Record_string.string_'];
-      /** @description Array of colors for the value gradient */
-      colorRange?: string[];
-      /** @description Show the map legend */
-      showLegend?: boolean;
-      /** @description Field ID for the value to display */
-      valueFieldId?: string;
-      /** @description Property key in GeoJSON to match against data */
-      geoJsonPropertyKey?: string;
-      /** @description Field ID for location/region names (area maps) */
-      locationFieldId?: string;
-      /** @description Field ID for longitude values */
-      longitudeFieldId?: string;
-      /** @description Field ID for latitude values */
-      latitudeFieldId?: string;
-      /** @description How to display location data */
-      locationType?: components['schemas']['MapChartType'];
-      /** @description URL to custom GeoJSON file */
-      customGeoJsonUrl?: string;
-      /** @description Type of map to display */
-      mapType?: components['schemas']['MapChartLocation'];
-    };
-    MapChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['MapChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.MAP'];
-    };
-    /** @enum {string} */
-    'ChartType.SANKEY': 'sankey';
-    /**
-     * @description How nodes are laid out:
-     *     - `multi-step`: depth-unrolled journeys (default)
-     *     - `merged`: one node per label, journeys preserved (acyclic flows only)
-     *     - `direct`: two-column source→target pairs, no chaining
-     * @enum {string}
-     */
-    SankeyNodeLayout: 'multi-step' | 'merged' | 'direct';
-    SankeyChart: {
-      /** @description How nodes are laid out across steps */
-      nodeLayout?: components['schemas']['SankeyNodeLayout'];
-      /**
-       * @description Orientation of the diagram
-       * @enum {string}
-       */
-      orient?: 'horizontal' | 'vertical';
-      /**
-       * @description Node alignment
-       * @enum {string}
-       */
-      nodeAlign?: 'left' | 'right' | 'justify';
-      /** @description Field ID for the link value metric */
-      metricFieldId?: string;
-      /** @description Field ID for the target node dimension */
-      targetFieldId?: string;
-      /** @description Field ID for the source node dimension */
-      sourceFieldId?: string;
-    };
-    SankeyChartConfig: {
-      /** @description Chart-type-specific configuration */
-      config?: components['schemas']['SankeyChart'];
-      /** @description Type of chart visualization */
-      type: components['schemas']['ChartType.SANKEY'];
-    };
-    ChartConfig:
-      | components['schemas']['BigNumberConfig']
-      | components['schemas']['CartesianChartConfig']
-      | components['schemas']['CustomVisConfig']
-      | components['schemas']['PieChartConfig']
-      | components['schemas']['FunnelChartConfig']
-      | components['schemas']['TableChartConfig']
-      | components['schemas']['TreemapChartConfig']
-      | components['schemas']['GaugeChartConfig']
-      | components['schemas']['MapChartConfig']
-      | components['schemas']['SankeyChartConfig'];
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.ParameterValue_': {
-      [key: string]: components['schemas']['ParameterValue'];
-    };
-    ParametersValuesMap: components['schemas']['Record_string.ParameterValue_'];
-    /**
-     * @description Where a resolved colour palette came from. The `config` and `default` cases
-     *     carry no entity reference; the rest expose the UUID and human-readable name
-     *     of the entity (organization, project, space, dashboard or chart) that owns
-     *     the winning palette in the resolution chain.
-     */
-    ColorPaletteSource:
-      | {
-          /** @enum {string} */
-          type: 'config';
-        }
-      | {
-          /** @enum {string} */
-          type: 'default';
-        }
-      | {
-          name: string;
-          uuid: string;
-          /** @enum {string} */
-          type: 'organization';
-        }
-      | {
-          name: string;
-          uuid: string;
-          /** @enum {string} */
-          type: 'project';
-        }
-      | {
-          name: string;
-          uuid: string;
-          /** @enum {string} */
-          type: 'space';
-        }
-      | {
-          name: string;
-          uuid: string;
-          /** @enum {string} */
-          type: 'dashboard';
-        }
-      | {
-          name: string;
-          uuid: string;
-          /** @enum {string} */
-          type: 'chart';
-        };
-    ResolvedProjectColorPalette: {
-      source: components['schemas']['ColorPaletteSource'];
-      paletteName: string | null;
-      paletteUuid: string | null;
-      darkColors: string[] | null;
-      colors: string[];
-    };
     SavedChart: {
       deletedBy?: {
         lastName: string;
@@ -10784,6 +15199,8 @@ export interface components {
       chartConfig: components['schemas']['ChartConfig'];
       /** @description Pivot table configuration */
       pivotConfig?: {
+        /** @description Ordered fields to render on the pivot row axis */
+        rows?: string[];
         /** @description Fields to use as pivot columns */
         columns: string[];
       };
@@ -10804,9 +15221,9 @@ export interface components {
     JoinRelationship: 'one-to-many' | 'many-to-one' | 'one-to-one' | 'many-to-many';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ExploreJoin.table-or-sqlOn-or-type-or-hidden-or-always-or-relationship_': {
-      type?: components['schemas']['DbtModelJoinType'];
-      table: string;
       hidden?: boolean;
+      table: string;
+      type?: components['schemas']['DbtModelJoinType'];
       sqlOn: string;
       always?: boolean;
       relationship?: components['schemas']['JoinRelationship'];
@@ -10823,6 +15240,12 @@ export interface components {
       fieldRef: string;
     };
     JoinModelRequiredFilterRule: {
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
       /** @description Values to filter by */
       values?: components['schemas']['AnyType'][];
       /** @description Filter operator */
@@ -10849,13 +15272,14 @@ export interface components {
     ModelRequiredFilterRule:
       | components['schemas']['MetricFilterRule']
       | components['schemas']['JoinModelRequiredFilterRule'];
-    GroupType: {
+    FieldGroupType: {
+      aiHint?: string | string[];
       description?: string;
       label: string;
     };
     /** @description Construct a type with a set of properties K of type T */
-    'Record_string.GroupType_': {
-      [key: string]: components['schemas']['GroupType'];
+    'Record_string.FieldGroupType_': {
+      [key: string]: components['schemas']['FieldGroupType'];
     };
     /** @enum {string} */
     InlineErrorType:
@@ -10866,7 +15290,8 @@ export interface components {
       | 'FIELD_ERROR'
       | 'SET_VALIDATION_ERROR'
       | 'INVALID_PARAMETER'
-      | 'DUPLICATE_FIELD_NAME';
+      | 'DUPLICATE_FIELD_NAME'
+      | 'WAREHOUSE_COLUMN_ERROR';
     InlineError: {
       message: string;
       type: components['schemas']['InlineErrorType'];
@@ -10879,7 +15304,7 @@ export interface components {
       aiHint?: string | string[];
       defaultShowUnderlyingValues?: string[];
       defaultTimeDimension?: components['schemas']['DefaultTimeDimension'];
-      groupDetails?: components['schemas']['Record_string.GroupType_'];
+      groupDetails?: components['schemas']['Record_string.FieldGroupType_'];
       anyAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       requiredAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       hidden?: boolean;
@@ -10930,11 +15355,18 @@ export interface components {
       requiredAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       anyAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
       timeInterval?: components['schemas']['TimeFrames'];
+      /**
+       * @description Overridden display label for this dimension's grain (project
+       *     `granularity_labels`); undefined when no override — callers fall back
+       *     to `timeFrameConfigs[timeInterval].getLabel()`.
+       */
+      timeIntervalLabel?: string;
       timeIntervalBaseDimensionName?: string;
       timeIntervalBaseDimensionType?: components['schemas']['DimensionType'];
       customTimeInterval?: string;
       isAdditionalDimension?: boolean;
       skipTimezoneConversion?: boolean;
+      timestampDomain?: components['schemas']['TimestampDomain'];
       colors?: components['schemas']['Record_string.string_'];
       isIntervalBase?: boolean;
       aiHint?: string | string[];
@@ -10949,6 +15381,7 @@ export interface components {
         url: string;
       };
       richText?: string;
+      filterAutocomplete?: components['schemas']['FilterAutocompleteConfig'];
       spotlight?: {
         segmentBy?: boolean;
         filterBy?: boolean;
@@ -10967,7 +15400,15 @@ export interface components {
     FieldCompilationError: {
       message: string;
     };
+    CompiledMetricRelativeDateFilter: {
+      compiledSql: string;
+      fieldId: string;
+      id: string;
+    };
+    CompiledMetricTimestampFilter: components['schemas']['CompiledMetricRelativeDateFilter'];
     CompiledProperties: {
+      compiledTimestampFilters?: components['schemas']['CompiledMetricTimestampFilter'][];
+      compiledRelativeDateFilters?: components['schemas']['CompiledMetricRelativeDateFilter'][];
       compiledDistinctKeys?: string[];
       compiledValueSql?: string;
       /**
@@ -11001,12 +15442,16 @@ export interface components {
       [key: string]: components['schemas']['LineageNodeDependency'][];
     };
     LineageGraph: components['schemas']['Record_string.LineageNodeDependency-Array_'];
+    LightdashParameterOption: {
+      value: string | number;
+      label: string;
+    };
     LightdashProjectParameter: {
       options_from_dimension?: {
         dimension: string;
         model: string;
       };
-      options?: string[] | number[];
+      options?: string[] | number[] | components['schemas']['LightdashParameterOption'][];
       allow_custom_values?: boolean;
       multiple?: boolean;
       default?: components['schemas']['ParameterValue'];
@@ -11050,6 +15495,31 @@ export interface components {
       | 'spark';
     /** @enum {string} */
     ExploreType: 'virtual' | 'default' | 'pre_aggregate';
+    /** @description Make all properties in T optional */
+    'Partial_Record_TimeFrames.string__': {
+      RAW?: string;
+      YEAR?: string;
+      QUARTER?: string;
+      MONTH?: string;
+      WEEK?: string;
+      DAY?: string;
+      HOUR?: string;
+      MINUTE?: string;
+      SECOND?: string;
+      MILLISECOND?: string;
+      DAY_OF_WEEK_INDEX?: string;
+      DAY_OF_MONTH_NUM?: string;
+      DAY_OF_YEAR_NUM?: string;
+      WEEK_NUM?: string;
+      MONTH_NUM?: string;
+      QUARTER_NUM?: string;
+      YEAR_NUM?: string;
+      DAY_OF_WEEK_NAME?: string;
+      MONTH_NAME?: string;
+      QUARTER_NAME?: string;
+      HOUR_OF_DAY_NUM?: string;
+      MINUTE_OF_HOUR_NUM?: string;
+    };
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.string-Array_': {
       [key: string]: string[];
@@ -11079,14 +15549,18 @@ export interface components {
     };
     Explore: {
       /**
-       * @description Non-fatal warnings from partial compilation.
-       *     Present when some joins or fields failed to compile but the explore is still usable.
-       *     Only populated when PARTIAL_COMPILATION_ENABLED=true.
+       * @description Non-fatal compilation or validation warnings (e.g. fields that failed to
+       *     compile, warehouse-rejected column references). The explore is still usable.
        */
       warnings?: components['schemas']['InlineError'][];
       preAggregateSource?: components['schemas']['PreAggregateSource'];
       preAggregates?: components['schemas']['PreAggregateDef'][];
       savedParameterValues?: components['schemas']['ParametersValuesMap'];
+      /**
+       * @description Project `granularity_labels` overrides, keyed by TimeFrames. Consumed
+       *     by the date zoom to relabel standard granularities.
+       */
+      granularityLabels?: components['schemas']['Partial_Record_TimeFrames.string__'];
       parameters?: components['schemas']['Record_string.LightdashProjectParameter_'];
       aiHint?: string | string[];
       spotlight?: {
@@ -11111,7 +15585,7 @@ export interface components {
       joinedTables: components['schemas']['CompiledExploreJoin'][];
       baseTable: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -11284,11 +15758,11 @@ export interface components {
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.Item-or-AdditionalMetric_': {
       [key: string]:
-        | components['schemas']['Field']
-        | components['schemas']['Metric']
         | components['schemas']['TableCalculation']
         | components['schemas']['AdditionalMetric']
-        | components['schemas']['CustomDimension'];
+        | components['schemas']['CustomDimension']
+        | components['schemas']['Metric']
+        | components['schemas']['Field'];
     };
     ApiEmbedChartAndResultsResponse: {
       results: {
@@ -11313,10 +15787,10 @@ export interface components {
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.Field-or-TableCalculation-or-CustomDimension-or-Metric_': {
       [key: string]:
-        | components['schemas']['Field']
-        | components['schemas']['Metric']
         | components['schemas']['TableCalculation']
-        | components['schemas']['CustomDimension'];
+        | components['schemas']['CustomDimension']
+        | components['schemas']['Metric']
+        | components['schemas']['Field'];
     };
     ItemsMap: components['schemas']['Record_string.Field-or-TableCalculation-or-CustomDimension-or-Metric_'];
     ApiExecuteAsyncDashboardChartQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] & {
@@ -11331,141 +15805,14 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ExecuteAsyncDashboardChartRequestParams.dashboardFilters-or-dashboardSorts-or-pivotResults-or-invalidateCache-or-dateZoom-or-parameters-or-limit_': {
+      parameters?: components['schemas']['ParametersValuesMap'];
+      /** Format: double */
+      limit?: number | null;
       dashboardFilters: components['schemas']['DashboardFilters'];
       dashboardSorts: components['schemas']['SortField'][];
       pivotResults?: boolean;
       invalidateCache?: boolean;
       dateZoom?: components['schemas']['DateZoom'];
-      parameters?: components['schemas']['ParametersValuesMap'];
-      /** Format: double */
-      limit?: number | null;
-    };
-    VizBaseConfig: {
-      type: components['schemas']['ChartKind'];
-      metadata: {
-        /** Format: double */
-        version: number;
-      };
-    };
-    /** @enum {string} */
-    'ChartKind.VERTICAL_BAR': 'vertical_bar';
-    /** @enum {string} */
-    'ChartKind.LINE': 'line';
-    /** @enum {string} */
-    VizIndexType: 'time' | 'category';
-    /** @enum {string} */
-    VizAggregationOptions: 'sum' | 'count' | 'avg' | 'min' | 'max' | 'any';
-    /** @enum {string} */
-    SortByDirection: 'ASC' | 'DESC';
-    VizSortBy: {
-      /** @description Pins the row-sort anchor to a specific pivot column. */
-      pivotValues?: components['schemas']['PivotSortAnchor'][];
-      nullsFirst?: boolean;
-      direction: components['schemas']['SortByDirection'];
-      reference: string;
-    };
-    /** @enum {string} */
-    StackType: 'none' | 'stack' | 'stack100';
-    PivotChartLayout: {
-      stack?: boolean | components['schemas']['StackType'];
-      sortBy?: components['schemas']['VizSortBy'][];
-      groupBy?: {
-        reference: string;
-      }[];
-      y: {
-        aggregation: components['schemas']['VizAggregationOptions'];
-        reference: string;
-      }[];
-      x?: {
-        type: components['schemas']['VizIndexType'];
-        reference: string;
-      };
-    };
-    /** @enum {string} */
-    'CartesianSeriesType.LINE': 'line';
-    /** @enum {string} */
-    'CartesianSeriesType.BAR': 'bar';
-    /** @enum {string} */
-    ValueLabelPositionOptions: 'hidden' | 'top' | 'bottom' | 'left' | 'right' | 'inside';
-    /** @enum {number} */
-    AxisSide: 0 | 1;
-    CartesianChartDisplay: {
-      stack?: boolean | components['schemas']['StackType'];
-      legend?: {
-        /** @enum {string} */
-        align: 'start' | 'center' | 'end';
-        /** @enum {string} */
-        position: 'top' | 'bottom' | 'left' | 'right';
-      };
-      series?: {
-        [key: string]: {
-          whichYAxis?: components['schemas']['AxisSide'];
-          valueLabelPosition?: components['schemas']['ValueLabelPositionOptions'];
-          type?:
-            | components['schemas']['CartesianSeriesType.LINE']
-            | components['schemas']['CartesianSeriesType.BAR'];
-          color?: string;
-          /** Format: double */
-          yAxisIndex?: number;
-          format?: components['schemas']['Format'];
-          label?: string;
-        };
-      };
-      yAxis?: {
-        format?: components['schemas']['Format'];
-        position?: string;
-        label?: string;
-      }[];
-      xAxis?: {
-        dateFormat?: string;
-        type?: components['schemas']['VizIndexType'];
-        label?: string;
-      };
-    };
-    VizCartesianChartConfig: components['schemas']['VizBaseConfig'] & {
-      display?: components['schemas']['CartesianChartDisplay'];
-      fieldConfig?: components['schemas']['PivotChartLayout'];
-      type:
-        components['schemas']['ChartKind.VERTICAL_BAR'] | components['schemas']['ChartKind.LINE'];
-    };
-    /** @enum {string} */
-    'ChartKind.PIE': 'pie';
-    VizPieChartDisplay: {
-      isDonut?: boolean;
-    };
-    VizPieChartConfig: components['schemas']['VizBaseConfig'] & {
-      display?: components['schemas']['VizPieChartDisplay'];
-      fieldConfig?: components['schemas']['PivotChartLayout'];
-      type: components['schemas']['ChartKind.PIE'];
-    };
-    /** @enum {string} */
-    'ChartKind.TABLE': 'table';
-    VizColumnConfig: {
-      barConfig?: {
-        color?: string;
-        /** Format: double */
-        max?: number;
-        /** Format: double */
-        min?: number;
-      };
-      /** @enum {string} */
-      displayStyle?: 'text' | 'bar';
-      aggregation?: components['schemas']['VizAggregationOptions'];
-      /** Format: double */
-      order?: number;
-      frozen: boolean;
-      label: string;
-      reference: string;
-      visible: boolean;
-    };
-    VizColumnsConfig: {
-      [key: string]: components['schemas']['VizColumnConfig'];
-    };
-    VizTableDisplay: Record<string, never>;
-    VizTableConfig: components['schemas']['VizBaseConfig'] & {
-      display?: components['schemas']['VizTableDisplay'];
-      columns: components['schemas']['VizColumnsConfig'];
-      type: components['schemas']['ChartKind.TABLE'];
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_SpaceSummary.uuid-or-name-or-userAccess_': {
@@ -11541,12 +15888,12 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ExecuteAsyncDashboardSqlChartRequestParams.dashboardFilters-or-dashboardSorts-or-invalidateCache-or-parameters-or-limit_': {
-      dashboardFilters: components['schemas']['DashboardFilters'];
-      dashboardSorts: components['schemas']['SortField'][];
-      invalidateCache?: boolean;
       parameters?: components['schemas']['ParametersValuesMap'];
       /** Format: double */
       limit?: number;
+      dashboardFilters: components['schemas']['DashboardFilters'];
+      dashboardSorts: components['schemas']['SortField'][];
+      invalidateCache?: boolean;
     };
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.number_': {
@@ -11608,6 +15955,8 @@ export interface components {
       /** Format: date-time */
       refreshedAt: string;
       cached: boolean;
+      resultsWithLabels?: components['schemas']['FilterAutocompleteValue'][];
+      /** @deprecated */
       results: unknown[];
       search: string;
     };
@@ -11622,7 +15971,7 @@ export interface components {
     };
     ApiGenerateAppResponse: components['schemas']['ApiSuccess__appUuid-string--version-number__'];
     /** @enum {string} */
-    DataAppTemplate: 'custom' | 'dashboard' | 'slideshow' | 'pdf';
+    DataAppTemplate: 'custom' | 'dashboard' | 'slideshow' | 'pdf' | 'data_app_viz';
     /**
      * @description A saved-chart reference attached to a generation request.
      *     `includeSampleData` is opt-in per chart: when true the backend runs the
@@ -11630,6 +15979,12 @@ export interface components {
      *     sandbox so Claude can see actual values (e.g. "season 2026 only").
      */
     AppChartReference: {
+      /**
+       * @description When true the app runs this chart live by UUID (linked) instead of
+       *     copying its metric query inline. Optional for backwards compatibility —
+       *     omitted (older clients) is treated as false (copy) on the server.
+       */
+      linkLive?: boolean;
       includeSampleData: boolean;
       uuid: string;
     };
@@ -11653,7 +16008,18 @@ export interface components {
     };
     /** @enum {string} */
     DataAppClaudeModel: 'opus' | 'sonnet' | 'haiku';
+    /**
+     * @description An external connection attached to a generation request. Linked to the app
+     *     (under `alias`) server-side at creation — before the catalog stage — so the
+     *     generated app can call it via `client.externalFetch(alias, …)`. Validated
+     *     (must belong to the app's project) before linking.
+     */
+    AppExternalConnectionReference: {
+      alias: string;
+      externalConnectionUuid: string;
+    };
     GenerateAppRequestBody: {
+      externalConnections?: components['schemas']['AppExternalConnectionReference'][];
       designUuid?: string | null;
       claudeModel?: components['schemas']['DataAppClaudeModel'];
       spaceUuid?: string;
@@ -11661,10 +16027,137 @@ export interface components {
       dashboard?: components['schemas']['AppDashboardReference'];
       charts?: components['schemas']['AppChartReference'][];
       appUuid?: string;
+      fileIds?: string[];
+      /** @deprecated */
       imageIds?: string[];
       template?: components['schemas']['DataAppTemplate'];
       prompt: string;
     };
+    /** @description Minimal app shape for the embed config's standalone-app allowlist picker. */
+    EmbedProjectApp: {
+      name: string;
+      appUuid: string;
+    };
+    'ApiSuccess_EmbedProjectApp-Array_': {
+      results: components['schemas']['EmbedProjectApp'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiEmbedProjectAppsResponse: components['schemas']['ApiSuccess_EmbedProjectApp-Array_'];
+    /** @enum {string} */
+    DataAppVizFieldType: 'dimension' | 'metric' | 'series';
+    DataAppVizField: {
+      required: boolean;
+      type: components['schemas']['DataAppVizFieldType'];
+      label: string;
+      name: string;
+    };
+    DataAppVizConfigOption:
+      | {
+          default: boolean;
+          group?: string;
+          label: string;
+          name: string;
+          /** @enum {string} */
+          type: 'boolean';
+        }
+      | {
+          default: string;
+          choices: {
+            label: string;
+            value: string;
+          }[];
+          group?: string;
+          label: string;
+          name: string;
+          /** @enum {string} */
+          type: 'select';
+        }
+      | {
+          /** Format: double */
+          max?: number;
+          /** Format: double */
+          min?: number;
+          /** Format: double */
+          default: number;
+          group?: string;
+          label: string;
+          name: string;
+          /** @enum {string} */
+          type: 'number';
+        }
+      | {
+          default: string;
+          group?: string;
+          label: string;
+          name: string;
+          /** @enum {string} */
+          type: 'text';
+        }
+      | {
+          default: string;
+          group?: string;
+          label: string;
+          name: string;
+          /** @enum {string} */
+          type: 'color';
+        };
+    /**
+     * @description Declared by a viz that colours from the resolved Lightdash palette. Not a
+     *     config option: it carries no value of its own, it only asks the config panel
+     *     for the standard palette picker, whose choice is stored as the chart's
+     *     palette and delivered on `colorPalette`. There is one palette per chart, so
+     *     a viz either declares this or it does not.
+     */
+    DataAppVizPaletteDeclaration: {
+      /** @description Tab to place the picker in, matching a config option `group`. */
+      group?: string;
+    };
+    /** @description The full declaration a data app viz emits: data-binding fields + config form. */
+    DataAppVizSchema: {
+      /** @description Null when the viz colours nothing from the resolved palette. */
+      colorPalette: components['schemas']['DataAppVizPaletteDeclaration'] | null;
+      configOptions: components['schemas']['DataAppVizConfigOption'][];
+      fields: components['schemas']['DataAppVizField'][];
+    };
+    DataAppViz: {
+      createdByUserUuid: string;
+      /** Format: date-time */
+      createdAt: string;
+      schema: components['schemas']['DataAppVizSchema'] | null;
+      spaceUuid: string | null;
+      projectUuid: string;
+      description: string;
+      name: string;
+      dataAppVizUuid: string;
+    };
+    KnexPaginateArgs: {
+      /** Format: double */
+      page: number;
+      /** Format: double */
+      pageSize: number;
+    };
+    'KnexPaginatedData_DataAppViz-Array_': {
+      pagination?: components['schemas']['KnexPaginateArgs'] & {
+        /** Format: double */
+        totalResults: number;
+        /** Format: double */
+        totalPageCount: number;
+      };
+      data: components['schemas']['DataAppViz'][];
+    };
+    'ApiSuccess_KnexPaginatedData_DataAppViz-Array__': {
+      results: components['schemas']['KnexPaginatedData_DataAppViz-Array_'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiListDataAppVizsResponse: components['schemas']['ApiSuccess_KnexPaginatedData_DataAppViz-Array__'];
+    ApiSuccess_DataAppViz_: {
+      results: components['schemas']['DataAppViz'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiGetDataAppVizResponse: components['schemas']['ApiSuccess_DataAppViz_'];
     'ApiSuccess__questions-string-Array__': {
       results: {
         questions: string[];
@@ -11674,25 +16167,33 @@ export interface components {
     };
     ApiClarifyAppResponse: components['schemas']['ApiSuccess__questions-string-Array__'];
     ApiClarifyAppRequest: {
+      fileIds?: string[];
+      /** @deprecated */
       imageIds?: string[];
       dashboard?: components['schemas']['AppDashboardReference'];
       charts?: components['schemas']['AppChartReference'][];
       template?: components['schemas']['DataAppTemplate'];
       prompt: string;
     };
-    'ApiSuccess__imageId-string__': {
+    'ApiSuccess__fileId-string--imageId_deprecated-true_-string--filename_description-Sanitizedoriginalfilename.canonicalizedserver-side._-string--mimeType_description-NormalizedMIMEtypeasstoredonthestagedS3object._-string__': {
       results: {
+        /** @description Normalized MIME type as stored on the staged S3 object. */
+        mimeType: string;
+        /** @description Sanitized original filename, canonicalized server-side. */
+        filename: string;
+        /** @deprecated */
         imageId: string;
+        fileId: string;
       };
       /** @enum {string} */
       status: 'ok';
     };
-    ApiAppImageUploadResponse: components['schemas']['ApiSuccess__imageId-string__'];
+    ApiAppFileUploadResponse: components['schemas']['ApiSuccess__fileId-string--imageId_deprecated-true_-string--filename_description-Sanitizedoriginalfilename.canonicalizedserver-side._-string--mimeType_description-NormalizedMIMEtypeasstoredonthestagedS3object._-string__'];
     /**
      * @description Exclude from T those types that are assignable to U
      * @enum {string}
      */
-    'Exclude_DataAppTemplate.custom_': 'dashboard' | 'slideshow' | 'pdf';
+    'Exclude_DataAppTemplate.custom_': 'dashboard' | 'slideshow' | 'pdf' | 'data_app_viz';
     /** @enum {string} */
     AppVersionStatus:
       | 'pending'
@@ -11703,13 +16204,41 @@ export interface components {
       | 'packaging'
       | 'ready'
       | 'error';
+    /** @enum {string} */
+    AppVersionStatusHistoryEntryKind: 'stage' | 'thinking' | 'tool';
+    AppVersionStatusHistoryEntry: {
+      kind: components['schemas']['AppVersionStatusHistoryEntryKind'];
+      timestamp: string;
+      message: string;
+    };
     AppVersionImageResource: {
       imageId: string;
     };
+    /**
+     * @description A non-image file attached to a generation request (JSON, Tableau workbook,
+     *     markdown, code, PDF…). Filename and MIME type are canonicalized server-side
+     *     from the staged S3 object at version creation, so the chat can render a
+     *     named chip without touching S3.
+     */
+    AppVersionFileResource: {
+      mimeType: string;
+      filename: string;
+      fileId: string;
+    };
     AppVersionChartResource: {
+      /**
+       * @description Whether this chart was attached as a live link — persists the linked
+       *     chip indicator across reloads. Optional for backwards compatibility.
+       */
+      linkLive?: boolean;
       chartKind: string | null;
       chartName: string;
       chartUuid: string;
+    };
+    AppVersionExternalConnectionResource: {
+      alias: string;
+      name: string;
+      externalConnectionUuid: string;
     };
     AppVersionDesignSnapshot: {
       /** Format: double */
@@ -11718,14 +16247,25 @@ export interface components {
       designUuid: string;
     };
     AppVersionResources: {
+      vizSchema?: components['schemas']['DataAppVizSchema'] | null;
       design?: components['schemas']['AppVersionDesignSnapshot'] | null;
       claudeModel?: components['schemas']['DataAppClaudeModel'];
       clarifications: components['schemas']['AppClarification'][];
+      dashboardUuid?: string | null;
       dashboardName: string | null;
+      externalConnections?: components['schemas']['AppVersionExternalConnectionResource'][];
       charts: components['schemas']['AppVersionChartResource'][];
+      files?: components['schemas']['AppVersionFileResource'][];
       images: components['schemas']['AppVersionImageResource'][];
     };
+    AppVersionDependencyEntry: {
+      version: string;
+      name: string;
+    };
     ApiAppVersionSummary: {
+      dependencies?: {
+        custom: components['schemas']['AppVersionDependencyEntry'][];
+      };
       resources: components['schemas']['AppVersionResources'] | null;
       createdByUser: {
         lastName: string;
@@ -11736,20 +16276,25 @@ export interface components {
       statusUpdatedAt: string | null;
       /** Format: date-time */
       createdAt: string;
+      error: string | null;
+      statusHistory: components['schemas']['AppVersionStatusHistoryEntry'][];
       statusMessage: string | null;
       status: components['schemas']['AppVersionStatus'];
       prompt: string;
       /** Format: double */
       version: number;
     };
-    'ApiSuccess__appUuid-string--name-string--description-string--createdByUserUuid-string--spaceUuid-string-or-null--template-Exclude_DataAppTemplate.custom_-or-null--pinnedListUuid-string-or-null--pinnedListOrder-number-or-null--versions-ApiAppVersionSummary-Array--hasMore-boolean__': {
+    'ApiSuccess__appUuid-string--name-string--description-string--createdByUserUuid-string--spaceUuid-string-or-null--spaceName-string-or-null--template-Exclude_DataAppTemplate.custom_-or-null--pinnedListUuid-string-or-null--pinnedListOrder-number-or-null--versions-ApiAppVersionSummary-Array--hasMore-boolean--latestReadyVersion-number-or-null__': {
       results: {
+        /** Format: double */
+        latestReadyVersion: number | null;
         hasMore: boolean;
         versions: components['schemas']['ApiAppVersionSummary'][];
         /** Format: double */
         pinnedListOrder: number | null;
         pinnedListUuid: string | null;
         template: components['schemas']['Exclude_DataAppTemplate.custom_'] | null;
+        spaceName: string | null;
         spaceUuid: string | null;
         createdByUserUuid: string;
         description: string;
@@ -11759,10 +16304,40 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    ApiGetAppResponse: components['schemas']['ApiSuccess__appUuid-string--name-string--description-string--createdByUserUuid-string--spaceUuid-string-or-null--template-Exclude_DataAppTemplate.custom_-or-null--pinnedListUuid-string-or-null--pinnedListOrder-number-or-null--versions-ApiAppVersionSummary-Array--hasMore-boolean__'];
+    ApiGetAppResponse: components['schemas']['ApiSuccess__appUuid-string--name-string--description-string--createdByUserUuid-string--spaceUuid-string-or-null--spaceName-string-or-null--template-Exclude_DataAppTemplate.custom_-or-null--pinnedListUuid-string-or-null--pinnedListOrder-number-or-null--versions-ApiAppVersionSummary-Array--hasMore-boolean--latestReadyVersion-number-or-null__'];
     ApiCancelAppVersionResponse: components['schemas']['ApiSuccessEmpty'];
     ApiRestoreAppVersionResponse: components['schemas']['ApiSuccess__appUuid-string--version-number__'];
     ApiDuplicateAppResponse: components['schemas']['ApiSuccess__appUuid-string--version-number__'];
+    ApiUpgradeAppResponse: components['schemas']['ApiSuccess__appUuid-string--version-number__'];
+    /**
+     * @description A feature the frontend's SDK registry says may be new to this app.
+     *     Mirrors the SdkFeature shape from
+     */
+    UpgradeCandidateFeature: {
+      /**
+       * @description Agent-facing app-code wiring the feature needs before it works;
+       *     absent = activates automatically on the new SDK.
+       */
+      wiring?: string;
+      description: string;
+      label: string;
+      key: string;
+    };
+    /**
+     * @description What the app's running bundle reported about itself via the SDK's
+     *     `lightdash:sdk:manifest` message. Both fields absent for legacy bundles
+     *     whose SDK predates feature reporting. Forwarded into the upgrade prompt —
+     *     the backend does not validate against any registry.
+     *
+     *     candidateFeatures is the authoritative "possibly new" list computed by the
+     *     frontend from its own SDK registry — the in-sandbox agent only verifies and
+     *     filters it, never discovers features on its own.
+     */
+    UpgradeAppRequestBody: {
+      candidateFeatures?: components['schemas']['UpgradeCandidateFeature'][];
+      reportedFeatures?: string[];
+      reportedSdkVersion?: string;
+    };
     /** @enum {string} */
     PromoteAppAction: 'create' | 'update';
     /**
@@ -11831,6 +16406,86 @@ export interface components {
       status: 'ok';
     };
     ApiPreviewTokenResponse: components['schemas']['ApiSuccess__token-string__'];
+    DataAppManifestExternalConnection: {
+      connectionSlug: string;
+      alias: string;
+    };
+    DataAppManifest: {
+      scaffoldingVersion?: string;
+      downloadedAt: string;
+      externalConnections?: components['schemas']['DataAppManifestExternalConnection'][];
+      vizSchema?: components['schemas']['DataAppVizSchema'];
+      template: components['schemas']['Exclude_DataAppTemplate.custom_'] | null;
+      description: string;
+      name: string;
+      /** Format: double */
+      version: number;
+      slug?: string;
+      projectUuid: string;
+      appUuid?: string;
+      /** @enum {number} */
+      codeVersion: 1;
+    };
+    DataAppCodeFile: {
+      contentBase64: string;
+      path: string;
+    };
+    DataAppDependencies: {
+      lockfile: string;
+      packageJson: string;
+    };
+    DataAppCode: {
+      dependencies?: components['schemas']['DataAppDependencies'];
+      files: components['schemas']['DataAppCodeFile'][];
+      manifest: components['schemas']['DataAppManifest'];
+    };
+    DataAppContextFile: {
+      contentBase64: string;
+      path: string;
+    };
+    DataAppThemeContext: {
+      /** Format: double */
+      skippedAssetCount: number;
+      assets: components['schemas']['DataAppContextFile'][];
+      instructions: components['schemas']['DataAppContextFile'] | null;
+    };
+    DataAppContext: {
+      theme: components['schemas']['DataAppThemeContext'];
+      promptHistory: components['schemas']['DataAppContextFile'];
+      parameters: components['schemas']['DataAppContextFile'] | null;
+      semanticLayer: components['schemas']['DataAppContextFile'];
+    };
+    DataAppCodeDownload: components['schemas']['DataAppCode'] & {
+      context: components['schemas']['DataAppContext'];
+    };
+    ApiSuccess_DataAppCodeDownload_: {
+      results: components['schemas']['DataAppCodeDownload'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiGetAppCodeResponse: components['schemas']['ApiSuccess_DataAppCodeDownload_'];
+    /** @description A resource UUID or its URL slug. Resolve to a real UUID before using as a key. */
+    UuidOrSlug: string;
+    'ApiSuccess__appUuid-string--version-number--action-create-or-append--slug-string--warnings_63_-string-Array__': {
+      results: {
+        warnings?: string[];
+        slug: string;
+        /** @enum {string} */
+        action: 'create' | 'append';
+        /** Format: double */
+        version: number;
+        appUuid: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiImportAppCodeResponse: components['schemas']['ApiSuccess__appUuid-string--version-number--action-create-or-append--slug-string--warnings_63_-string-Array__'];
+    ImportAppCodeRequestBody: {
+      createNew?: boolean;
+      spaceUuid?: string;
+      targetAppUuid?: string;
+      code: components['schemas']['DataAppCode'];
+    };
     'ApiSuccess__imageUrl-string__': {
       results: {
         imageUrl: string;
@@ -11839,17 +16494,16 @@ export interface components {
       status: 'ok';
     };
     ApiAppImageUrlResponse: components['schemas']['ApiSuccess__imageUrl-string__'];
+    'ApiSuccess__thumbnailUrl-string__': {
+      results: {
+        thumbnailUrl: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAppThumbnailUrlResponse: components['schemas']['ApiSuccess__thumbnailUrl-string__'];
     /** @enum {string} */
     SchedulerFormat: 'csv' | 'xlsx' | 'image' | 'gsheets' | 'pdf';
-    SchedulerCsvOptions: {
-      exportPivotedData?: boolean;
-      asAttachment?: boolean;
-      limit: number | ('table' | 'all');
-      formatted: boolean;
-    };
-    SchedulerImageOptions: {
-      withPdf?: boolean;
-    };
     SchedulerGsheetsOptions: {
       tabName?: string;
       url: string;
@@ -11857,24 +16511,11 @@ export interface components {
       gdriveName: string;
       gdriveId: string;
     };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.never_': Record<string, never>;
-    SchedulerPdfOptions: components['schemas']['Record_string.never_'];
     SchedulerOptions:
       | components['schemas']['SchedulerCsvOptions']
       | components['schemas']['SchedulerImageOptions']
       | components['schemas']['SchedulerGsheetsOptions']
       | components['schemas']['SchedulerPdfOptions'];
-    /** @enum {string} */
-    ThresholdOperator: 'greaterThan' | 'lessThan' | 'increasedBy' | 'decreasedBy';
-    ThresholdOptions: {
-      /** Format: double */
-      value: number;
-      fieldId: string;
-      operator: components['schemas']['ThresholdOperator'];
-    };
-    /** @enum {string} */
-    NotificationFrequency: 'always' | 'once';
     SchedulerBase: {
       projectName?: string | null;
       projectUuid?: string | null;
@@ -11903,9 +16544,12 @@ export interface components {
       createdAt: string;
       message?: string;
       name: string;
+      slug: string;
       schedulerUuid: string;
     };
     ChartScheduler: components['schemas']['SchedulerBase'] & {
+      parameters?: components['schemas']['ParametersValuesMap'];
+      filters?: components['schemas']['Filters'];
       /** @enum {number|null} */
       appUuid: null;
       /** @enum {number|null} */
@@ -11937,7 +16581,15 @@ export interface components {
       /** @enum {number|null} */
       savedChartUuid: null;
     };
+    /**
+     * @description A data app's shareable URL state (the page's `?state=` param, parsed),
+     *     snapshotted onto the scheduler so the delivery renders that view.
+     *     Keep the size cap in sync with MAX_URL_STATE_CHARS in
+     *     packages/query-sdk/src/urlState.ts and useAppUrlStateSync.
+     */
+    SchedulerAppState: components['schemas']['Record_string.unknown_'];
     AppScheduler: components['schemas']['SchedulerBase'] & {
+      appState?: components['schemas']['SchedulerAppState'];
       appUuid: string;
       /** @enum {number|null} */
       savedSqlUuid: null;
@@ -12062,12 +16714,6 @@ export interface components {
       name: string;
       appUuid: string;
     };
-    KnexPaginateArgs: {
-      /** Format: double */
-      page: number;
-      /** Format: double */
-      pageSize: number;
-    };
     'ApiSuccess__data-ApiAppSummary-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number___': {
       results: {
         pagination?: components['schemas']['KnexPaginateArgs'] & {
@@ -12082,6 +16728,71 @@ export interface components {
       status: 'ok';
     };
     ApiMyAppsResponse: components['schemas']['ApiSuccess__data-ApiAppSummary-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number___'];
+    /**
+     * @description What one generation cost, aggregated across every `claude` CLI invocation in
+     *     that version's pipeline — including build-fix retries.
+     *
+     *     This is spend attributable to a generation, not all data-app AI spend: the
+     *     short prompt-clarification and app-naming calls happen outside any version.
+     *
+     *     `costUsd` is the CLI's own figure, computed from public list prices, so treat
+     *     it as an estimate rather than an invoice.
+     */
+    DataAppGenerationUsage: {
+      /** Format: double */
+      costUsd: number;
+      /** Format: double */
+      durationApiMs: number;
+      /** Format: double */
+      numTurns: number;
+      /** Format: double */
+      cacheCreationInputTokens: number;
+      /** Format: double */
+      cacheReadInputTokens: number;
+      /** Format: double */
+      outputTokens: number;
+      /** Format: double */
+      inputTokens: number;
+    };
+    /**
+     * @description One data app generation event — a row of the org-wide activity log. Backed by
+     *     an `app_versions` row, so it covers both new apps and iterations, and both
+     *     successful and failed generations.
+     */
+    DataAppActivityEvent: {
+      usage: components['schemas']['DataAppGenerationUsage'] | null;
+      user: {
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      } | null;
+      projectName: string;
+      projectUuid: string;
+      /** Format: date-time */
+      createdAt: string;
+      claudeModel: components['schemas']['DataAppClaudeModel'];
+      prompt: string;
+      status: components['schemas']['AppVersionStatus'];
+      /** Format: double */
+      version: number;
+      appDeleted: boolean;
+      appName: string;
+      appUuid: string;
+    };
+    'ApiSuccess__data-DataAppActivityEvent-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number___': {
+      results: {
+        pagination?: components['schemas']['KnexPaginateArgs'] & {
+          /** Format: double */
+          totalResults: number;
+          /** Format: double */
+          totalPageCount: number;
+        };
+        data: components['schemas']['DataAppActivityEvent'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiDataAppActivityResponse: components['schemas']['ApiSuccess__data-DataAppActivityEvent-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number___'];
     AiRouter: {
       /** Format: date-time */
       updatedAt: string;
@@ -12234,10 +16945,10 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Field.name-or-label-or-description-or-type_': {
-      description?: string;
       name: string;
-      type: string;
+      description?: string;
       label: string;
+      type: string;
     };
     GenerateChartMetadataRequest: {
       chartConfigJson?: string;
@@ -12261,11 +16972,11 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Field.name-or-label-or-description-or-type-or-table_': {
-      description?: string;
       name: string;
-      type: string;
+      description?: string;
       label: string;
       table: string;
+      type: string;
     };
     TableCalculationFieldContext: components['schemas']['Pick_Field.name-or-label-or-description-or-type-or-table_'] & {
       /** @enum {string} */
@@ -12275,6 +16986,25 @@ export interface components {
       currentSql?: string;
       existingTableCalculations?: string[];
       fieldsContext: components['schemas']['TableCalculationFieldContext'][];
+      tableName: string;
+      prompt: string;
+    };
+    GeneratedCustomDimension: {
+      dimensionType: components['schemas']['DimensionType'];
+      displayName: string;
+      sql: string;
+    };
+    ApiAiGenerateCustomDimensionResponse: {
+      results: components['schemas']['GeneratedCustomDimension'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    CustomDimensionFieldContext: components['schemas']['Pick_Field.name-or-label-or-description-or-type-or-table_'] & {
+      id: string;
+    };
+    GenerateCustomDimensionRequest: {
+      currentSql?: string;
+      fieldsContext: components['schemas']['CustomDimensionFieldContext'][];
       tableName: string;
       prompt: string;
     };
@@ -12336,21 +17066,22 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiAgentDocument.Exclude_keyofAiAgentDocument.storageKey__': {
       name: string;
+      uuid: string;
+      organizationUuid: string;
       projectUuid: string | null;
       /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
       createdAt: string;
-      organizationUuid: string;
-      uuid: string;
       originalFilename: string;
       mimeType: string;
       /** Format: double */
       contentSizeBytes: number;
+      alwaysIncludeInContext: boolean;
       summary: components['schemas']['AiAgentDocumentStructuredSummary'];
       agentAccess: string[];
       createdByUserUuid: string | null;
       updatedByUserUuid: string | null;
-      /** Format: date-time */
-      updatedAt: string;
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_AiAgentDocument.storageKey_': components['schemas']['Pick_AiAgentDocument.Exclude_keyofAiAgentDocument.storageKey__'];
@@ -12370,6 +17101,7 @@ export interface components {
       agentAccess: string[];
       storageKey: string;
       summary: components['schemas']['AiAgentDocumentStructuredSummary'];
+      alwaysIncludeInContext: boolean;
       /** Format: double */
       contentSizeBytes: number;
       mimeType: string;
@@ -12384,8 +17116,43 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /** @description Body of POST /api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/documents. */
+    ApiCreateAgentDocument: {
+      content: string;
+      mimeType: string;
+      originalFilename: string;
+      name: string;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_AiAgentDocument.uuid-or-name-or-mimeType_': {
+      name: string;
+      uuid: string;
+      mimeType: string;
+    };
+    AiAgentDocumentContent: components['schemas']['Pick_AiAgentDocument.uuid-or-name-or-mimeType_'] & {
+      content: string;
+    };
+    ApiAiAgentDocumentContentResponse: {
+      results: components['schemas']['AiAgentDocumentContent'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiUpdateAgentDocumentContent: {
+      content: string;
+      name: string;
+    };
+    ApiUpdateAgentDocument: {
+      alwaysIncludeInContext: boolean;
+    };
+    /**
+     * @description Body of POST /api/v1/aiAgents/documents. Both scope fields are deprecated:
+     *     scope now comes from the agent-scoped route path. Once they are removed this
+     *     endpoint only creates organization level documents.
+     */
     ApiCreateAiAgentDocument: {
+      /** @deprecated */
       agentAccess?: string[];
+      /** @deprecated */
       projectUuid?: string | null;
       content: string;
       mimeType: string;
@@ -12393,17 +17160,19 @@ export interface components {
       name: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version_': {
-      description: string | null;
+    'Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version_': {
       name: string;
+      description: string | null;
+      uuid: string;
+      organizationUuid: string;
       projectUuid: string;
       /** Format: date-time */
-      createdAt: string;
-      organizationUuid: string;
-      uuid: string;
-      userAccess: string[];
-      /** Format: date-time */
       updatedAt: string;
+      /** Format: double */
+      version: number;
+      /** Format: date-time */
+      createdAt: string;
+      userAccess: string[];
       integrations: {
         channelId: string;
         /** @enum {string} */
@@ -12412,15 +17181,18 @@ export interface components {
       tags: string[] | null;
       instruction: string | null;
       imageUrl: string | null;
+      /** @enum {string|null} */
+      imageUrlSource: 'upload' | 'url' | null;
       groupAccess: string[];
       spaceAccess: string[];
       enableDataAccess: boolean;
       enableSelfImprovement: boolean;
       enableContentTools: boolean;
-      /** Format: double */
-      version: number;
+      enableUserContext: boolean;
+      adminOnly: boolean;
+      modelConfig: components['schemas']['AiAgentModelConfig'] | null;
     };
-    AiAgentSummary: components['schemas']['Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version_'];
+    AiAgentSummary: components['schemas']['Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version_'];
     ApiAiAgentSummaryResponse: {
       results: components['schemas']['AiAgentSummary'][];
       /** @enum {string} */
@@ -12477,13 +17249,18 @@ export interface components {
     ApiAiMcpServerResponse: components['schemas']['ApiSuccess_AiMcpServer_'];
     ApiCreateAiMcpServer: {
       credentials?: {
-        bearerToken: string;
+        clientSecret?: string;
+        clientId?: string;
+        bearerToken?: string;
       } | null;
       credentialScope?: components['schemas']['AiMcpCredentialScope'];
       allowOAuthCredentialSharing?: boolean;
       authType: components['schemas']['AiMcpServerAuthType'];
       url: string;
       name: string;
+    };
+    ApiUpdateAiMcpServerCredentialBody: {
+      bearerToken: string;
     };
     AiMcpGithubAvailability: {
       alreadyConnected: boolean;
@@ -12530,6 +17307,8 @@ export interface components {
     ApiAiMcpOAuthCredentialRequest: {
       credentialScope?: components['schemas']['AiMcpCredentialScope'];
     };
+    /** @enum {string} */
+    AiThreadCreatedFrom: 'slack' | 'web_app' | 'evals' | 'scheduler';
     AiAgentUser: {
       name: string;
       uuid: string;
@@ -12542,7 +17321,7 @@ export interface components {
       };
       titleGeneratedAt: string | null;
       title: string | null;
-      createdFrom: string;
+      createdFrom: components['schemas']['AiThreadCreatedFrom'];
       createdAt: string;
       agentUuid: string;
       uuid: string;
@@ -12567,17 +17346,19 @@ export interface components {
     };
     ApiAiAgentProjectThreadSummaryListResponse: components['schemas']['ApiSuccess_KnexPaginatedData_AiAgentProjectThreadSummary-Array__'];
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version_': {
-      description: string | null;
+    'Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version_': {
       name: string;
+      description: string | null;
+      uuid: string;
+      organizationUuid: string;
       projectUuid: string;
       /** Format: date-time */
-      createdAt: string;
-      organizationUuid: string;
-      uuid: string;
-      userAccess: string[];
-      /** Format: date-time */
       updatedAt: string;
+      /** Format: double */
+      version: number;
+      /** Format: date-time */
+      createdAt: string;
+      userAccess: string[];
       integrations: {
         channelId: string;
         /** @enum {string} */
@@ -12586,20 +17367,83 @@ export interface components {
       tags: string[] | null;
       instruction: string | null;
       imageUrl: string | null;
+      /** @enum {string|null} */
+      imageUrlSource: 'upload' | 'url' | null;
       groupAccess: string[];
       spaceAccess: string[];
       enableDataAccess: boolean;
       enableSelfImprovement: boolean;
       enableContentTools: boolean;
-      /** Format: double */
-      version: number;
+      enableUserContext: boolean;
+      adminOnly: boolean;
+      modelConfig: components['schemas']['AiAgentModelConfig'] | null;
     };
-    AiAgent: components['schemas']['Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version_'];
+    AiAgent: components['schemas']['Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version_'];
     ApiAiAgentResponse: {
       results: components['schemas']['AiAgent'];
       /** @enum {string} */
       status: 'ok';
     };
+    AiProjectContextTypedObjectRef:
+      | {
+          name: string;
+          /** @enum {string} */
+          type: 'explore';
+        }
+      | {
+          fieldId: string;
+          explore: string;
+          /** @enum {string} */
+          type: 'field';
+        };
+    /** @enum {string} */
+    AiAgentMemoryStatus: 'active' | 'superseded' | 'retired';
+    /**
+     * @description Never affects which memories are recalled: selection, pull, ranking and
+     *     access all filter on ownership alone. The label IS rendered into the injected
+     *     fence, so it shapes how the agent treats an entry it already has.
+     *     `project` means "nominate for review", never "safe to broadcast".
+     * @enum {string}
+     */
+    AiAgentMemoryScope: 'user' | 'project';
+    AiAgentMemorySource: {
+      threadSummary: string;
+      threadTitle: string | null;
+      threadUuid: string;
+      agentUuid: string | null;
+      slug: string;
+    };
+    AiAgentMemory: {
+      replacementSlug: string | null;
+      provenance:
+        | {
+            source: components['schemas']['AiAgentMemorySource'];
+            /** @enum {string} */
+            type: 'source_thread';
+          }
+        | {
+            sources: components['schemas']['AiAgentMemorySource'][];
+            /** @enum {string} */
+            type: 'consolidated';
+          };
+      /** Format: double */
+      citedCount: number;
+      generatedAt: string;
+      scope: components['schemas']['AiAgentMemoryScope'];
+      status: components['schemas']['AiAgentMemoryStatus'];
+      objects: components['schemas']['AiProjectContextTypedObjectRef'][];
+      terms: string[];
+      rawMemory: string;
+      title: string;
+      slug: string;
+      uuid: string;
+    };
+    ApiSuccess_AiAgentMemory_: {
+      results: components['schemas']['AiAgentMemory'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentMemoryResponse: components['schemas']['ApiSuccess_AiAgentMemory_'];
     AiAgentMcpServerTool: components['schemas']['AiMcpServerTool'] & {
       enabled: boolean;
       agentUuid: string;
@@ -12745,9 +17589,11 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-version_': {
-      description: string | null;
       name: string;
+      description: string | null;
       projectUuid: string;
+      /** Format: double */
+      version: number;
       userAccess: string[];
       integrations: {
         channelId: string;
@@ -12761,18 +17607,21 @@ export interface components {
       spaceAccess: string[];
       enableDataAccess: boolean;
       enableSelfImprovement: boolean;
-      /** Format: double */
-      version: number;
     };
     ApiCreateAiAgent: components['schemas']['Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-version_'] & {
+      modelConfig?: components['schemas']['AiAgentModelConfig'] | null;
       mcpServerUuids?: string[];
+      adminOnly?: boolean;
+      enableUserContext?: boolean;
       enableContentTools?: boolean;
     };
     /** @description Make all properties in T optional */
-    'Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version__': {
-      description?: string | null;
+    'Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version__': {
       name?: string;
+      description?: string | null;
       projectUuid?: string;
+      /** Format: double */
+      version?: number;
       userAccess?: string[];
       integrations?: {
         channelId: string;
@@ -12787,13 +17636,20 @@ export interface components {
       enableDataAccess?: boolean;
       enableSelfImprovement?: boolean;
       enableContentTools?: boolean;
-      /** Format: double */
-      version?: number;
+      enableUserContext?: boolean;
+      adminOnly?: boolean;
+      modelConfig?: components['schemas']['AiAgentModelConfig'] | null;
     };
-    ApiUpdateAiAgent: components['schemas']['Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-version__'] & {
+    ApiUpdateAiAgent: components['schemas']['Partial_Pick_AiAgent.projectUuid-or-integrations-or-tags-or-name-or-description-or-instruction-or-imageUrl-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-adminOnly-or-modelConfig-or-version__'] & {
       mcpServerUuids?: string[];
       uuid: string;
     };
+    ApiSuccess_AiAgent_: {
+      results: components['schemas']['AiAgent'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentAvatarUploadResponse: components['schemas']['ApiSuccess_AiAgent_'];
     AiAgentThreadSummary: {
       user: components['schemas']['AiAgentUser'];
       firstMessage: {
@@ -12802,7 +17658,7 @@ export interface components {
       };
       titleGeneratedAt: string | null;
       title: string | null;
-      createdFrom: string;
+      createdFrom: components['schemas']['AiThreadCreatedFrom'];
       createdAt: string;
       agentUuid: string;
       uuid: string;
@@ -12822,6 +17678,220 @@ export interface components {
       dashboardParameters?: components['schemas']['ParametersValuesMap'];
       dashboardFilters?: components['schemas']['DashboardFilters'];
     };
+    AiDashboardActiveTab: {
+      name: string;
+      uuid: string;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id-or-tileTargets-or-lockedTabUuids-or-requiredGroupId__': {
+      label?: string;
+      /** @description Target field for the filter */
+      target: components['schemas']['DashboardFieldTarget'];
+      /** @description Additional settings for date/time filters */
+      settings?: unknown;
+      /** @description Whether this filter is disabled */
+      disabled?: boolean;
+      /** @description Whether this filter is required */
+      required?: boolean;
+      /**
+       * @description Overrides the field/explore case-sensitivity for this rule only.
+       *     Used by internal features like autocomplete search that must always
+       *     match case-insensitively regardless of the field's configured setting.
+       */
+      caseSensitive?: boolean;
+      /** @description Filter operator */
+      operator: components['schemas']['FilterOperator'];
+      /** @description Values to filter by */
+      values?: unknown[];
+      /**
+       * @description For the `equals` operator on string fields, also match rows where the
+       *     field is null (compiles to `field IN (...) OR field IS NULL`). Lets users
+       *     combine null with selected values in a single "is" rule.
+       */
+      includeNull?: boolean;
+      singleValue?: boolean;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_DashboardFilterRule.id-or-tileTargets-or-lockedTabUuids-or-requiredGroupId_': components['schemas']['Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id-or-tileTargets-or-lockedTabUuids-or-requiredGroupId__'];
+    AiDashboardFilterRule: components['schemas']['Omit_DashboardFilterRule.id-or-tileTargets-or-lockedTabUuids-or-requiredGroupId_'];
+    AiDashboardFilters: {
+      tableCalculations: components['schemas']['AiDashboardFilterRule'][];
+      metrics: components['schemas']['AiDashboardFilterRule'][];
+      dimensions: components['schemas']['AiDashboardFilterRule'][];
+    };
+    AiDashboardRuntimeOverrides: {
+      dateZoom?: components['schemas']['DateZoom'] | null;
+      dashboardParameters?: components['schemas']['ParametersValuesMap'];
+      dashboardFilters?: components['schemas']['AiDashboardFilters'];
+      activeTab?: components['schemas']['AiDashboardActiveTab'];
+    };
+    /** @enum {string} */
+    PullRequestProvider: 'github' | 'gitlab';
+    /** @enum {string} */
+    AiAgentReviewItemPrState: 'open' | 'merged' | 'closed';
+    AiProjectContextObjectRef: string | components['schemas']['AiProjectContextTypedObjectRef'];
+    AiAgentJudgeProjectContextEntry: {
+      objects: components['schemas']['AiProjectContextObjectRef'][];
+      terms: string[];
+      content: string;
+      /** @enum {string} */
+      kind: 'definition' | 'context';
+      id: string | null;
+      /** @enum {string} */
+      op: 'create' | 'update';
+    };
+    /** @enum {string} */
+    AiAgentRecommendationAction:
+      | 'update_semantic_yaml'
+      | 'update_agent_instructions'
+      | 'add_knowledge_document'
+      | 'enable_data_access'
+      | 'enable_sql_mode'
+      | 'enable_self_improvement'
+      | 'configure_mcp_server'
+      | 'adjust_explore_tags'
+      | 'update_access'
+      | 'route_to_product_work'
+      | 'request_more_evidence'
+      | 'no_action';
+    AiAgentSemanticTargetRef:
+      | {
+          modelName: string;
+          /** @enum {string} */
+          type: 'model';
+        }
+      | {
+          exploreName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'explore';
+        }
+      | {
+          exploreName?: string;
+          joinName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'join';
+        }
+      | {
+          dimensionName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'dimension';
+        }
+      | {
+          dimensionName?: string;
+          metricName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'metric';
+        }
+      | {
+          dimensionName: string;
+          parentDimensionName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'additional_dimension';
+        }
+      | {
+          fieldName: string;
+          exploreName: string;
+          modelName: string;
+          /** @enum {string} */
+          type: 'required_filter';
+        }
+      | {
+          targetName: string;
+          /** @enum {string} */
+          targetType: 'model' | 'dimension' | 'metric';
+          modelName: string;
+          /** @enum {string} */
+          type: 'ai_hint';
+        };
+    /** @enum {string} */
+    AiAgentConfigurationSetting:
+      | 'instructions'
+      | 'knowledge_documents'
+      | 'data_access'
+      | 'self_improvement'
+      | 'sql_mode'
+      | 'mcp_servers'
+      | 'explore_tags'
+      | 'space_access'
+      | 'user_or_group_access'
+      | 'unknown';
+    AiAgentTargetRef:
+      | components['schemas']['AiAgentSemanticTargetRef']
+      | {
+          agentUuid: string;
+          /** @enum {string} */
+          type: 'agent';
+        }
+      | {
+          setting: components['schemas']['AiAgentConfigurationSetting'];
+          /** @enum {string} */
+          type: 'agent_config';
+        }
+      | {
+          capabilityKey: string;
+          /** @enum {string} */
+          type: 'product_capability';
+        }
+      | {
+          key: string;
+          /** @enum {string} */
+          type: 'runtime';
+        }
+      | {
+          tileUuid: string | null;
+          dashboardUuid: string | null;
+          chartUuid: string | null;
+          /** @enum {string} */
+          type: 'content';
+        };
+    AiAgentRecommendation: {
+      targetRefs: components['schemas']['AiAgentTargetRef'][];
+      rationale: string;
+      title: string;
+      actionType: components['schemas']['AiAgentRecommendationAction'];
+    };
+    AiPromptProposedChangePayload:
+      | {
+          entry: components['schemas']['AiAgentJudgeProjectContextEntry'];
+          /** @enum {string} */
+          changeKind: 'project_context';
+        }
+      | {
+          recommendation: components['schemas']['AiAgentRecommendation'];
+          /** @enum {string} */
+          changeKind: 'semantic_layer';
+        };
+    /** @enum {string} */
+    AiAgentRootCause:
+      | 'semantic_layer'
+      | 'project_context'
+      | 'agent_configuration'
+      | 'product_capability'
+      | 'runtime_reliability'
+      | 'feedback_quality'
+      | 'not_a_failure'
+      | 'ambiguous';
+    AiAgentEvidenceExcerpt: {
+      redacted: boolean;
+      text: string;
+      /** @enum {string} */
+      source:
+        | 'user_prompt'
+        | 'assistant_answer'
+        | 'next_user_prompt'
+        | 'conversation_context'
+        | 'tool_call'
+        | 'tool_result'
+        | 'agent_config';
+    };
+    /** @enum {string} */
+    AiAgentReviewRemediationStatus:
+      'queued' | 'running' | 'pr_open' | 'preview_ready' | 'resolved' | 'failed';
     AiPromptContextItem:
       | {
           chartKind: components['schemas']['ChartKind'] | null;
@@ -12834,15 +17904,83 @@ export interface components {
           type: 'chart';
         }
       | {
+          runtimeOverrides: components['schemas']['AiDashboardRuntimeOverrides'] | null;
           displayName: string | null;
           pinnedVersionUuid: string | null;
           dashboardSlug: string | null;
           dashboardUuid: string;
           /** @enum {string} */
           type: 'dashboard';
+        }
+      | {
+          displayName: string | null;
+          promptUuid: string | null;
+          threadUuid: string;
+          /** @enum {string} */
+          type: 'thread';
+        }
+      | {
+          path: string;
+          /** @enum {string} */
+          type: 'file';
+        }
+      | {
+          fullName: string;
+          /** @enum {string} */
+          type: 'repository';
+        }
+      | {
+          title: string | null;
+          status: components['schemas']['AiAgentReviewItemPrState'] | null;
+          provider: components['schemas']['PullRequestProvider'] | null;
+          /** Format: double */
+          prNumber: number | null;
+          prUrl: string;
+          /** @enum {string} */
+          type: 'pull_request';
+        }
+      | {
+          payload: components['schemas']['AiPromptProposedChangePayload'];
+          fingerprint: string;
+          /** @enum {string} */
+          type: 'proposed_change';
+        }
+      | {
+          evidenceExcerpts: components['schemas']['AiAgentEvidenceExcerpt'][];
+          /** Format: double */
+          findingCount: number;
+          rootCause: components['schemas']['AiAgentRootCause'];
+          title: string;
+          fingerprint: string;
+          /** @enum {string} */
+          type: 'review_finding';
+        }
+      | {
+          projectName: string | null;
+          status: components['schemas']['AiAgentReviewRemediationStatus'] | null;
+          previewThreadUuid: string | null;
+          previewProjectUuid: string;
+          /** @enum {string} */
+          type: 'preview_environment';
         };
     AiPromptContext: components['schemas']['AiPromptContextItem'][];
+    AiPromptSteer: {
+      /** Format: double */
+      consumedStep: number | null;
+      consumedAt: string | null;
+      createdAt: string;
+      message: string;
+      promptUuid: string;
+      uuid: string;
+    };
     AiAgentMessageUser_AiAgentUser_: {
+      /**
+       * @description Hidden turn: the agent received and responded to this prompt, but the UI
+       *     should not render its user bubble (e.g. the post-merge migration prompt
+       *     injected from the writeback PR card).
+       */
+      hidden: boolean;
+      steers: components['schemas']['AiPromptSteer'][];
       context: components['schemas']['AiPromptContext'];
       user: components['schemas']['AiAgentUser'];
       createdAt: string;
@@ -12897,7 +18035,7 @@ export interface components {
      * @description Exclude from T those types that are assignable to U
      * @enum {string}
      */
-    'Exclude_ToolName.proposeChange_':
+    'Exclude_ToolName.never_':
       | 'generateDashboard'
       | 'generateVisualization'
       | 'runSql'
@@ -12911,14 +18049,20 @@ export interface components {
       | 'findExplores'
       | 'findFields'
       | 'searchSemanticLayer'
+      | 'analyzeFieldImpact'
       | 'discoverFields'
+      | 'grepFields'
+      | 'getMetadata'
       | 'searchFieldValues'
       | 'findDashboards'
       | 'findCharts'
       | 'getDashboardCharts'
       | 'readContent'
+      | 'resolveUrl'
       | 'editContent'
       | 'createContent'
+      | 'createScheduledDelivery'
+      | 'updateUserName'
       | 'runContentQuery'
       | 'improveContext'
       | 'listProjects'
@@ -12926,51 +18070,27 @@ export interface components {
       | 'loadSkill'
       | 'loadProjectContext'
       | 'editDbtProject'
-      | 'repoShell'
+      | 'editProjectContext'
+      | 'editRepo'
+      | 'syncDbtProject'
+      | 'exploreRepo'
+      | 'discoverRepos'
+      | 'listWorkstreams'
+      | 'closePullRequest'
+      | 'getPullRequestDiff'
       | 'setupPreviewDeploy'
       | 'runQuery'
       | 'runSavedChart'
       | 'listWarehouseTables'
       | 'describeWarehouseTable'
       | 'listKnowledgeDocuments'
-      | 'getKnowledgeDocumentContent';
+      | 'getKnowledgeDocumentContent'
+      | 'readPinnedThread'
+      | 'submitResearchReport';
     AiAgentToolResult: components['schemas']['AiAgentBaseToolResult'] &
       (
         | {
             metadata:
-              | {
-                  /** @enum {string} */
-                  userFeedback?: 'rejected' | 'accepted';
-                  changeUuid: string;
-                  /** @enum {string} */
-                  status: 'success';
-                }
-              | {
-                  /** @enum {string} */
-                  status: 'error';
-                };
-            /** @enum {string} */
-            toolName: 'proposeChange';
-            /** @enum {string} */
-            toolType: 'built-in';
-          }
-        | {
-            metadata:
-              | {
-                  /** @enum {string} */
-                  userFeedback?: 'rejected' | 'accepted';
-                  changeUuid: string;
-                  /** @enum {string} */
-                  status: 'success';
-                }
-              | {
-                  /** @enum {string} */
-                  status: 'error';
-                }
-              | {
-                  /** @enum {string} */
-                  status: 'success' | 'error';
-                }
               | {
                   /** @enum {string} */
                   status: 'error' | 'success';
@@ -12990,6 +18110,15 @@ export interface components {
                       name: string;
                     }[];
                     exploreSearchResults?: {
+                      requiredFilters?: {
+                        required: boolean;
+                        settings?: unknown;
+                        values?: unknown[];
+                        operator: string;
+                        tableName: string;
+                        fieldRef: string;
+                        fieldId: string;
+                      }[];
                       joinedTables?: string[] | null;
                       /** Format: double */
                       searchRank?: number | null;
@@ -13026,7 +18155,10 @@ export interface components {
                         label: string;
                         name: string;
                       }[];
+                      error?: string;
                       label: string;
+                      /** @enum {string} */
+                      status?: 'error' | 'success';
                     }[];
                   };
                   /** @enum {string} */
@@ -13038,6 +18170,10 @@ export interface components {
                   name: string;
                   /** @enum {string} */
                   status: 'success';
+                }
+              | {
+                  /** @enum {string} */
+                  status: 'error';
                 }
               | {
                   /** @enum {string} */
@@ -13068,6 +18204,15 @@ export interface components {
                           fieldId: string;
                         }[];
                         explore: {
+                          requiredFilters?: {
+                            required: boolean;
+                            settings?: unknown;
+                            values?: unknown[];
+                            operator: string;
+                            tableName: string;
+                            fieldRef: string;
+                            fieldId: string;
+                          }[];
                           joinedTables: string[];
                           baseTable: string;
                           label: string;
@@ -13108,11 +18253,27 @@ export interface components {
                   status: 'success';
                 }
               | {
+                  aiWritebackRunUuid: string;
+                  /** @enum {string} */
+                  status: 'pending';
+                }
+              | {
+                  dbtSourceOptions?:
+                    | {
+                        projectSubPath: string | null;
+                        branch: string | null;
+                        repository: string | null;
+                        isPrimary: boolean;
+                        name: string;
+                        projectDbtSourceUuid: string;
+                      }[]
+                    | null;
+                  needsDbtSourceSelection?: boolean | null;
                   steps?:
                     | {
-                        /** @enum {string} */
-                        kind: 'read' | 'edit' | 'search' | 'compile' | 'stage';
                         label: string;
+                        /** @enum {string} */
+                        kind: 'compile' | 'edit' | 'read' | 'search' | 'stage';
                       }[]
                     | null;
                   previewUrl?: string | null;
@@ -13130,9 +18291,11 @@ export interface components {
               | {
                   /** @enum {string|null} */
                   errorCode?:
-                    | 'unknown'
+                    | 'git_write_permission'
                     | 'github_not_installed'
                     | 'gitlab_not_installed'
+                    | 'pull_request_not_open'
+                    | 'unknown'
                     | 'unsupported_source_control'
                     | null;
                   /** @enum {string} */
@@ -13144,6 +18307,11 @@ export interface components {
                   slug: string;
                   /** @enum {string} */
                   status: 'success';
+                }
+              | {
+                  chartImageUrl?: string | null;
+                  /** @enum {string} */
+                  status: 'error' | 'success';
                 }
               | {
                   /** @enum {string} */
@@ -13168,7 +18336,7 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 };
-            toolName: components['schemas']['Exclude_ToolName.proposeChange_'];
+            toolName: components['schemas']['Exclude_ToolName.never_'];
             /** @enum {string} */
             toolType: 'built-in';
           }
@@ -13190,13 +18358,13 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiArtifact.artifactUuid-or-versionNumber-or-versionUuid-or-title-or-description-or-artifactType_': {
       description: string | null;
+      title: string | null;
+      versionUuid: string;
       artifactUuid: string;
       /** Format: double */
       versionNumber: number;
-      versionUuid: string;
-      title: string | null;
       /** @enum {string} */
-      artifactType: 'dashboard' | 'chart';
+      artifactType: 'chart' | 'dashboard';
     };
     AiAgentMessageAssistantArtifact: components['schemas']['Pick_AiArtifact.artifactUuid-or-versionNumber-or-versionUuid-or-title-or-description-or-artifactType_'];
     AiPromptTokenUsage: {
@@ -13205,11 +18373,7 @@ export interface components {
     };
     AiAgentMessageAssistant: {
       tokenUsage: components['schemas']['AiPromptTokenUsage'] | null;
-      modelConfig: {
-        reasoning?: boolean;
-        modelProvider: string;
-        modelName: string;
-      } | null;
+      modelConfig: components['schemas']['AiAgentModelConfig'] | null;
       referencedArtifacts: components['schemas']['AiAgentMessageAssistantArtifact'][] | null;
       artifacts: components['schemas']['AiAgentMessageAssistantArtifact'][] | null;
       savedQueryUuid: string | null;
@@ -13220,6 +18384,7 @@ export interface components {
       /** Format: double */
       humanScore: number | null;
       createdAt: string;
+      interrupted: boolean;
       errorMessage: string | null;
       message: string | null;
       threadUuid: string;
@@ -13248,6 +18413,57 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /**
+     * @description Overview of the writeback PR a thread is associated with — either the PR the
+     *     agent opened in this thread, or the PR a remediation verification thread is
+     *     verifying. Live GitHub fields (state, counts) are null when the fetch fails;
+     *     `summary` falls back to the PR title when no stored summary exists.
+     */
+    AiAgentThreadPullRequest: {
+      commitSha: string | null;
+      /** Format: double */
+      changedFiles: number | null;
+      /** Format: double */
+      deletions: number | null;
+      /** Format: double */
+      additions: number | null;
+      /** @enum {string|null} */
+      state: 'open' | 'merged' | 'closed' | null;
+      summary: string | null;
+      title: string | null;
+      /** Format: double */
+      prNumber: number | null;
+      repo: string | null;
+      prUrl: string;
+    };
+    'ApiSuccess_AiAgentThreadPullRequest-or-null_': {
+      results: components['schemas']['AiAgentThreadPullRequest'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentThreadPullRequestResponse: components['schemas']['ApiSuccess_AiAgentThreadPullRequest-or-null_'];
+    /**
+     * @description One pull request a chat thread has opened with the coding agent (a
+     *     "workstream" — one sandbox + one PR). A thread can hold several, across one or
+     *     more repos. `state` is resolved live from the git host where possible (null
+     *     when it couldn't be fetched, e.g. GitLab or a transient error).
+     */
+    AiAgentThreadWorkstream: {
+      /** @enum {string|null} */
+      state: 'open' | 'merged' | 'closed' | null;
+      summary: string | null;
+      title: string | null;
+      /** Format: double */
+      prNumber: number;
+      repository: string;
+      prUrl: string;
+    };
+    'ApiSuccess_AiAgentThreadWorkstream-Array_': {
+      results: components['schemas']['AiAgentThreadWorkstream'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentThreadWorkstreamsResponse: components['schemas']['ApiSuccess_AiAgentThreadWorkstream-Array_'];
     ApiSuccess_AiAgentThreadSummary_: {
       results: components['schemas']['AiAgentThreadSummary'];
       /** @enum {string} */
@@ -13263,18 +18479,51 @@ export interface components {
           type: 'chart';
         }
       | {
+          runtimeOverrides?: components['schemas']['AiDashboardRuntimeOverrides'];
           dashboardSlug?: string | null;
           dashboardUuid: string;
           /** @enum {string} */
           type: 'dashboard';
+        }
+      | {
+          promptUuid?: string | null;
+          threadUuid: string;
+          /** @enum {string} */
+          type: 'thread';
+        }
+      | {
+          path: string;
+          /** @enum {string} */
+          type: 'file';
+        }
+      | {
+          fullName: string;
+          /** @enum {string} */
+          type: 'repository';
+        }
+      | {
+          prUrl: string;
+          /** @enum {string} */
+          type: 'pull_request';
+        }
+      | {
+          fingerprint: string;
+          /** @enum {string} */
+          type: 'proposed_change';
+        }
+      | {
+          fingerprint: string;
+          /** @enum {string} */
+          type: 'review_finding';
+        }
+      | {
+          previewProjectUuid: string;
+          /** @enum {string} */
+          type: 'preview_environment';
         };
     AiPromptContextInput: components['schemas']['AiPromptContextItemInput'][];
     ApiAiAgentThreadCreateRequest: {
-      modelConfig?: {
-        reasoning?: boolean;
-        modelProvider: string;
-        modelName: string;
-      };
+      modelConfig?: components['schemas']['AiAgentModelConfig'];
       context?: components['schemas']['AiPromptContextInput'];
       prompt?: string;
     };
@@ -13285,11 +18534,13 @@ export interface components {
     };
     ApiAiAgentThreadMessageCreateResponse: components['schemas']['ApiSuccess_AiAgentMessageUser_AiAgentUser__'];
     ApiAiAgentThreadMessageCreateRequest: {
-      modelConfig?: {
-        reasoning?: boolean;
-        modelProvider: string;
-        modelName: string;
-      };
+      /**
+       * @description Inject the prompt as a hidden turn — the agent responds to it, but the UI
+       *     does not render the user bubble. Used by the post-merge content-migration
+       *     prompt sent from the writeback PR card.
+       */
+      hidden?: boolean;
+      modelConfig?: components['schemas']['AiAgentModelConfig'];
       context?: components['schemas']['AiPromptContextInput'];
       prompt: string;
     };
@@ -13315,6 +18566,12 @@ export interface components {
        */
       toolHints?: string[];
       /**
+       * @description Skips the SQL human-approval gate for this stream. Used by the review
+       *     remediation workspace so Continue PR turns run frictionlessly. Defaults
+       *     to false — normal chat still asks the user to approve SQL.
+       */
+      autoApproveSql?: boolean;
+      /**
        * @description Per-thread toggle that decides whether the agent gets access to the
        *     runSql / listWarehouseTables / describeWarehouseTable tools for this
        *     stream. Frontend tracks the toggle in its slice; passed in on every
@@ -13322,6 +18579,26 @@ export interface components {
        *     API callers) so the safer "semantic layer only" mode is the default.
        */
       enableSqlMode?: boolean;
+    };
+    'ApiSuccess__interrupted-true__': {
+      results: {
+        /** @enum {boolean} */
+        interrupted: true;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentThreadMessageInterruptResponse: components['schemas']['ApiSuccess__interrupted-true__'];
+    'ApiSuccess__steer-AiPromptSteer__': {
+      results: {
+        steer: components['schemas']['AiPromptSteer'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentThreadMessageSteerResponse: components['schemas']['ApiSuccess__steer-AiPromptSteer__'];
+    ApiCreateAiAgentThreadMessageSteer: {
+      message: string;
     };
     ApiAiAgentThreadGenerateResponse: {
       results: {
@@ -13338,6 +18615,8 @@ export interface components {
       status: 'ok';
     };
     ApiCloneThreadResponse: components['schemas']['ApiSuccess_AiAgentThreadSummary_'];
+    /** @enum {string} */
+    AiClonedThreadCreatedFrom: 'web_app' | 'evals';
     AiAgentExploreAccessSummary: {
       metrics: string[];
       dimensions: string[];
@@ -13353,18 +18632,19 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiArtifact.Exclude_keyofAiArtifact.chartConfig-or-dashboardConfig__': {
       description: string | null;
+      title: string | null;
+      versionUuid: string;
       /** Format: date-time */
       createdAt: string;
       artifactUuid: string;
       /** Format: double */
       versionNumber: number;
-      versionUuid: string;
-      title: string | null;
       /** @enum {string} */
-      artifactType: 'dashboard' | 'chart';
+      artifactType: 'chart' | 'dashboard';
       threadUuid: string;
       promptUuid: string | null;
       savedQueryUuid: string | null;
+      savedSqlUuid: string | null;
       savedDashboardUuid: string | null;
       /** Format: date-time */
       versionCreatedAt: string;
@@ -13412,9 +18692,28 @@ export interface components {
       metadata: components['schemas']['AiVizMetadata'];
       query: components['schemas']['ApiExecuteAsyncMetricQueryResults'];
       type: components['schemas']['AiResultType'];
+      /** @enum {string} */
+      source: 'semantic';
     };
-    ApiAiAgentThreadMessageVizQueryResponse: {
-      results: components['schemas']['ApiAiAgentThreadMessageVizQuery'];
+    /** @enum {string} */
+    'AiResultType.TABLE_RESULT': 'table';
+    ApiExecuteAsyncSqlQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] &
+      Record<string, never>;
+    ApiAiAgentSqlArtifactVizQuery: {
+      metadata: components['schemas']['AiVizMetadata'];
+      /** Format: double */
+      limit: number;
+      sql: string;
+      query: components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+      type: components['schemas']['AiResultType.TABLE_RESULT'];
+      /** @enum {string} */
+      source: 'sql';
+    };
+    ApiAiAgentArtifactVizQuery:
+      | components['schemas']['ApiAiAgentThreadMessageVizQuery']
+      | components['schemas']['ApiAiAgentSqlArtifactVizQuery'];
+    ApiAiAgentArtifactVizQueryResponse: {
+      results: components['schemas']['ApiAiAgentArtifactVizQuery'];
       /** @enum {string} */
       status: 'ok';
     };
@@ -13438,6 +18737,11 @@ export interface components {
     };
     ApiAiAgentThreadShareResponse: components['schemas']['ApiSuccess_AiAgentThreadShare_'];
     ApiCloneAiAgentThreadShareResponse: components['schemas']['ApiSuccess_AiAgentThreadSummary_'];
+    ApiAiAgentThreadMessageVizQueryResponse: {
+      results: components['schemas']['ApiAiAgentThreadMessageVizQuery'];
+      /** @enum {string} */
+      status: 'ok';
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiAgentEvaluation.evalUuid_': {
       evalUuid: string;
@@ -13491,11 +18795,11 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiAgentEvaluation.evalUuid-or-agentUuid-or-title-or-description-or-createdAt-or-updatedAt_': {
       description: string | null;
-      /** Format: date-time */
-      createdAt: string;
+      title: string;
       /** Format: date-time */
       updatedAt: string;
-      title: string;
+      /** Format: date-time */
+      createdAt: string;
       evalUuid: string;
       agentUuid: string;
     };
@@ -13618,10 +18922,6 @@ export interface components {
     ApiAppendInstructionRequest: {
       instruction: string;
     };
-    ApiRevertChangeResponse: components['schemas']['ApiSuccessEmpty'];
-    ApiRevertChangeRequest: {
-      changeUuid: string;
-    };
     PreAggregateDailyStatResult: {
       updatedAt: string;
       preAggregateName: string | null;
@@ -13657,7 +18957,9 @@ export interface components {
     };
     TilePreAggregateAuditHit: {
       preAggregateName: string;
+      exploreLabel: string;
       exploreName: string;
+      chartName: string;
       savedChartUuid: string;
       tileType: components['schemas']['DashboardTileTypes.SAVED_CHART'];
       tileName: string;
@@ -13668,7 +18970,9 @@ export interface components {
     TilePreAggregateAuditMiss: {
       missFieldLabel: string | null;
       miss: components['schemas']['PreAggregateMatchMiss'];
+      exploreLabel: string;
       exploreName: string;
+      chartName: string;
       savedChartUuid: string;
       tileType: components['schemas']['DashboardTileTypes.SAVED_CHART'];
       tileName: string;
@@ -13738,10 +19042,6 @@ export interface components {
         };
     /** @enum {string} */
     PreAggregateMaterializationStatus: 'in_progress' | 'active' | 'superseded' | 'failed';
-    ResultColumn: {
-      type: components['schemas']['DimensionType'];
-      reference: string;
-    };
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.ResultColumn_': {
       [key: string]: components['schemas']['ResultColumn'];
@@ -13812,7 +19112,8 @@ export interface components {
     /** @enum {string} */
     'WarehouseTypes.SNOWFLAKE': 'snowflake';
     /** @enum {string} */
-    SnowflakeAuthenticationType: 'password' | 'private_key' | 'sso' | 'external_browser' | 'none';
+    SnowflakeAuthenticationType:
+      'password' | 'private_key' | 'sso' | 'external_browser' | 'oauth_authorization_code' | 'none';
     /** @enum {number} */
     WeekDay: 0 | 1 | 2 | 3 | 4 | 5 | 6;
     /** @description From T, pick a set of properties whose keys are in the union K */
@@ -13844,10 +19145,13 @@ export interface components {
     SnowflakeCredentials: components['schemas']['Omit_CreateSnowflakeCredentials.SensitiveCredentialsFieldNames_'];
     /** @enum {string} */
     'WarehouseTypes.REDSHIFT': 'redshift';
+    /** @enum {string} */
+    RedshiftAuthenticationType: 'password' | 'iam' | 'iam_browser';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateRedshiftCredentials.Exclude_keyofCreateRedshiftCredentials.SensitiveCredentialsFieldNames__': {
       type: components['schemas']['WarehouseTypes.REDSHIFT'];
       requireUserCredentials?: boolean;
+      authenticationType?: components['schemas']['RedshiftAuthenticationType'];
       schema: string;
       /** Format: double */
       threads?: number;
@@ -13869,6 +19173,18 @@ export interface components {
       keepalivesIdle?: number;
       sslmode?: string;
       ra3Node?: boolean;
+      region?: string;
+      isServerless?: boolean;
+      clusterIdentifier?: string;
+      workgroupName?: string;
+      autoCreate?: boolean;
+      dbGroups?: string[];
+      assumeRoleArn?: string;
+      assumeRoleExternalId?: string;
+      awsSsoStartUrl?: string;
+      awsSsoRegion?: string;
+      awsSsoAccountId?: string;
+      awsSsoRoleName?: string;
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_CreateRedshiftCredentials.SensitiveCredentialsFieldNames_': components['schemas']['Pick_CreateRedshiftCredentials.Exclude_keyofCreateRedshiftCredentials.SensitiveCredentialsFieldNames__'];
@@ -13915,6 +19231,7 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateBigqueryCredentials.Exclude_keyofCreateBigqueryCredentials.SensitiveCredentialsFieldNames__': {
       type: components['schemas']['WarehouseTypes.BIGQUERY'];
+      project: string;
       requireUserCredentials?: boolean;
       authenticationType?: components['schemas']['BigqueryAuthenticationType'];
       /** Format: double */
@@ -13924,7 +19241,6 @@ export interface components {
       dataTimezone?: string;
       /** Format: double */
       timeoutSeconds?: number;
-      project: string;
       dataset: string;
       /** @enum {string} */
       priority?: 'interactive' | 'batch';
@@ -14015,10 +19331,10 @@ export interface components {
       startOfWeek?: components['schemas']['WeekDay'] | null;
       dataTimezone?: string;
       region: string;
-      s3StagingDir: string;
-      s3DataDir?: string;
       assumeRoleArn?: string;
       assumeRoleExternalId?: string;
+      s3StagingDir: string;
+      s3DataDir?: string;
       workGroup?: string;
       /** Format: double */
       numRetries?: number;
@@ -14097,8 +19413,8 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateDucklakeDataPathS3.Exclude_keyofCreateDucklakeDataPathS3.accessKeyId-or-secretAccessKey__': {
       type: components['schemas']['DucklakeDataPathType.S3'];
-      region?: string;
       url: string;
+      region?: string;
       endpoint?: string;
       forcePathStyle?: boolean;
       useSsl?: boolean;
@@ -14143,9 +19459,23 @@ export interface components {
       dataPath: components['schemas']['DucklakeDataPath'];
       catalog: components['schemas']['DucklakeCatalog'];
     };
+    /** @enum {string} */
+    'DuckdbConnectionType.EMBEDDED': 'embedded';
+    CreateDuckdbEmbeddedCredentials: {
+      schema?: string;
+      /** Format: double */
+      startOfWeek?: number;
+      dataTimezone?: string;
+      requireUserCredentials?: boolean;
+      dataset: string;
+      connectionType: components['schemas']['DuckdbConnectionType.EMBEDDED'];
+      type: components['schemas']['WarehouseTypes.DUCKDB'];
+    };
+    DuckdbEmbeddedCredentials: components['schemas']['CreateDuckdbEmbeddedCredentials'];
     DuckdbCredentials:
       | components['schemas']['DuckdbMotherduckCredentials']
-      | components['schemas']['DuckdbDucklakeCredentials'];
+      | components['schemas']['DuckdbDucklakeCredentials']
+      | components['schemas']['DuckdbEmbeddedCredentials'];
     WarehouseCredentials:
       | components['schemas']['SnowflakeCredentials']
       | components['schemas']['RedshiftCredentials']
@@ -14175,8 +19505,8 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_OrganizationWarehouseCredentials.organizationWarehouseCredentialsUuid-or-name-or-description-or-warehouseType_': {
-      description: string | null;
       name: string;
+      description: string | null;
       organizationWarehouseCredentialsUuid: string;
       warehouseType: components['schemas']['WarehouseTypes'];
     };
@@ -14201,6 +19531,22 @@ export interface components {
       useSshTunnel?: boolean;
     };
     CreateRedshiftCredentials: components['schemas']['SshTunnelConfiguration'] & {
+      awsSsoRoleName?: string;
+      awsSsoAccountId?: string;
+      awsSsoRegion?: string;
+      awsSsoStartUrl?: string;
+      assumeRoleExternalId?: string;
+      assumeRoleArn?: string;
+      sessionToken?: string;
+      secretAccessKey?: string;
+      accessKeyId?: string;
+      dbGroups?: string[];
+      autoCreate?: boolean;
+      workgroupName?: string;
+      clusterIdentifier?: string;
+      isServerless?: boolean;
+      region?: string;
+      authenticationType?: components['schemas']['RedshiftAuthenticationType'];
       /** Format: double */
       timeoutSeconds?: number;
       dataTimezone?: string;
@@ -14216,7 +19562,7 @@ export interface components {
       /** Format: double */
       port: number;
       requireUserCredentials?: boolean;
-      password: string;
+      password?: string;
       user: string;
       host: string;
       type: components['schemas']['WarehouseTypes.REDSHIFT'];
@@ -14232,7 +19578,9 @@ export interface components {
       /** Format: double */
       retries?: number;
       requireUserCredentials?: boolean;
-      keyfileContents: components['schemas']['Record_string.string_'];
+      keyfileContents: {
+        [key: string]: string;
+      };
       authenticationType?: components['schemas']['BigqueryAuthenticationType'];
       /** @enum {string} */
       priority?: 'interactive' | 'batch';
@@ -14365,6 +19713,7 @@ export interface components {
       workGroup?: string;
       assumeRoleExternalId?: string;
       assumeRoleArn?: string;
+      sessionToken?: string;
       secretAccessKey?: string;
       accessKeyId?: string;
       authenticationType?: components['schemas']['AthenaAuthenticationType'];
@@ -14443,7 +19792,8 @@ export interface components {
     };
     CreateDuckdbCredentials:
       | components['schemas']['CreateDuckdbMotherduckCredentials']
-      | components['schemas']['CreateDuckdbDucklakeCredentials'];
+      | components['schemas']['CreateDuckdbDucklakeCredentials']
+      | components['schemas']['CreateDuckdbEmbeddedCredentials'];
     CreateWarehouseCredentials:
       | components['schemas']['CreateRedshiftCredentials']
       | components['schemas']['CreateBigqueryCredentials']
@@ -14695,6 +20045,234 @@ export interface components {
       passcode: string;
       domain: string;
     };
+    /** @enum {string} */
+    RoleLevel: 'project' | 'organization';
+    CustomRoleAsCode: {
+      scopes: string[];
+      level: components['schemas']['RoleLevel'];
+      description: string | null;
+      name: string;
+      /** @enum {number} */
+      version: 1;
+    };
+    ApiCustomRoleAsCodeListResponse: {
+      results: {
+        customRoles: components['schemas']['CustomRoleAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiCustomRoleAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    UserAsCodeRole:
+      | {
+          name: components['schemas']['OrganizationMemberRole'];
+          /** @enum {string} */
+          type: 'system';
+        }
+      | {
+          name: string;
+          /** @enum {string} */
+          type: 'custom';
+        };
+    UserAsCode: {
+      role: components['schemas']['UserAsCodeRole'];
+      disabled: boolean;
+      email: string;
+      /** @enum {number} */
+      version: 1;
+    };
+    ApiUserAsCodeListResponse: {
+      results: {
+        users: components['schemas']['UserAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    UserAsCodeLifecycleStatus: 'ready' | 'awaiting authentication';
+    /** @enum {string} */
+    UserAsCodeInvitationStatus:
+      | 'not requested'
+      | 'sent'
+      | 'skipped authenticated'
+      | 'skipped disabled'
+      | 'skipped valid invite';
+    ApiUserAsCodeUpsertResponse: {
+      results: {
+        invitation: components['schemas']['UserAsCodeInvitationStatus'];
+        lifecycle: components['schemas']['UserAsCodeLifecycleStatus'];
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    GroupAsCode: {
+      members: string[];
+      name: string;
+      /** @enum {number} */
+      version: 1;
+    };
+    ApiGroupAsCodeListResponse: {
+      results: {
+        groups: components['schemas']['GroupAsCode'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiGroupAsCodeUpsertResponse: {
+      results: {
+        action:
+          | components['schemas']['PromotionAction.CREATE']
+          | components['schemas']['PromotionAction.UPDATE']
+          | components['schemas']['PromotionAction.NO_CHANGES'];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    RoadmapItemStatus: 'Backlog' | 'Building' | 'Shipped' | 'Canceled';
+    /** @enum {string} */
+    RoadmapItemPriority: 'Urgent' | 'High' | 'Medium' | 'Low' | 'No priority';
+    RoadmapItem: {
+      pullRequestUrl: string | null;
+      issueUrl: string | null;
+      updatedAt: string;
+      createdAt: string;
+      priority: components['schemas']['RoadmapItemPriority'];
+      status: components['schemas']['RoadmapItemStatus'];
+      description: string | null;
+      title: string;
+      ticketId: string;
+    };
+    RoadmapPagination: {
+      /** Format: double */
+      totalPages: number;
+      /** Format: double */
+      totalIssues: number;
+      /** Format: double */
+      pageSize: number;
+      /** Format: double */
+      page: number;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_RoadmapItemStatus.number_': {
+      /** Format: double */
+      Backlog: number;
+      /** Format: double */
+      Building: number;
+      /** Format: double */
+      Shipped: number;
+      /** Format: double */
+      Canceled: number;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_RoadmapItemPriority.number_': {
+      /** Format: double */
+      Urgent: number;
+      /** Format: double */
+      High: number;
+      /** Format: double */
+      Medium: number;
+      /** Format: double */
+      Low: number;
+      /** Format: double */
+      'No priority': number;
+    };
+    RoadmapFacets: {
+      priorityCounts: components['schemas']['Record_RoadmapItemPriority.number_'];
+      statusCounts: components['schemas']['Record_RoadmapItemStatus.number_'];
+    };
+    RoadmapResults: {
+      facets: components['schemas']['RoadmapFacets'];
+      pagination: components['schemas']['RoadmapPagination'];
+      data: components['schemas']['RoadmapItem'][];
+    };
+    ApiRoadmapResponse: {
+      results: components['schemas']['RoadmapResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    AgentOnboardingRunStatus: 'queued' | 'running' | 'failed' | 'completed' | 'cancelled';
+    /** @enum {string} */
+    AgentOnboardingStage:
+      | 'preparing_project'
+      | 'exploring_warehouse'
+      | 'deploying_semantic_layer'
+      | 'building_dashboard'
+      | 'verifying'
+      | 'handoff';
+    AgentOnboardingRunEvent: {
+      createdAt: string;
+      stage: components['schemas']['AgentOnboardingStage'] | null;
+      message: string;
+      /** @enum {string} */
+      eventType: 'stage' | 'step' | 'log';
+    };
+    AgentOnboardingHandoff: {
+      dashboardUrl: string | null;
+      summary: string | null;
+    };
+    AgentOnboardingUsage: {
+      /** Format: double */
+      numTurns: number | null;
+      /** Format: double */
+      outputTokens: number | null;
+      /** Format: double */
+      inputTokens: number | null;
+      /** Format: double */
+      costUsd: number | null;
+    };
+    AgentOnboardingFile: {
+      updatedAt: string;
+      /** Format: double */
+      sizeBytes: number;
+      path: string;
+    };
+    AgentOnboardingRun: {
+      completedAt: string | null;
+      startedAt: string | null;
+      updatedAt: string;
+      createdAt: string;
+      errorMessage: string | null;
+      files: components['schemas']['AgentOnboardingFile'][];
+      usage: components['schemas']['AgentOnboardingUsage'] | null;
+      handoff: components['schemas']['AgentOnboardingHandoff'] | null;
+      events: components['schemas']['AgentOnboardingRunEvent'][];
+      stage: components['schemas']['AgentOnboardingStage'] | null;
+      status: components['schemas']['AgentOnboardingRunStatus'];
+      projectUuid: string;
+      agentOnboardingRunUuid: string;
+    };
+    ApiSuccess_AgentOnboardingRun_: {
+      results: components['schemas']['AgentOnboardingRun'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAgentOnboardingRunResponse: components['schemas']['ApiSuccess_AgentOnboardingRun_'];
+    AgentOnboardingFileContent: components['schemas']['AgentOnboardingFile'] & {
+      /** @enum {string} */
+      encoding: 'utf8' | 'base64';
+      content: string;
+    };
+    ApiSuccess_AgentOnboardingFileContent_: {
+      results: components['schemas']['AgentOnboardingFileContent'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAgentOnboardingFileResponse: components['schemas']['ApiSuccess_AgentOnboardingFileContent_'];
     Role: {
       /** Format: date-time */
       updatedAt: string | null;
@@ -14704,6 +20282,7 @@ export interface components {
       /** @enum {string} */
       ownerType: 'user' | 'system';
       organizationUuid: string | null;
+      level: components['schemas']['RoleLevel'];
       description: string | null;
       name: string;
       roleUuid: string;
@@ -14715,6 +20294,7 @@ export interface components {
     };
     CreateRole: {
       scopes?: string[];
+      level?: components['schemas']['RoleLevel'];
       description?: string;
       name: string;
     };
@@ -14723,7 +20303,7 @@ export interface components {
         remove: string[];
         add: string[];
       };
-      description?: string;
+      description?: string | null;
       name?: string;
     };
     ApiUnassignRoleFromUserResponse: components['schemas']['ApiSuccessEmpty'];
@@ -14763,7 +20343,39 @@ export interface components {
       /** @enum {string} */
       kind: 'read' | 'edit' | 'search' | 'compile' | 'stage';
     };
+    /**
+     * @description One dbt source a writeback run can target, surfaced when a project has more
+     *     than one and the run needs the caller to choose. `projectDbtSourceUuid` is
+     *     the project's own uuid for the primary source and a row uuid for additional
+     *     sources — the same identifier the project's dbt-sources list returns, so the
+     *     caller can echo it straight back as `dbtSourceUuid`.
+     */
+    AiWritebackDbtSourceOption: {
+      projectSubPath: string | null;
+      branch: string | null;
+      repository: string | null;
+      isPrimary: boolean;
+      name: string;
+      projectDbtSourceUuid: string;
+    };
     AiWritebackRunResult: {
+      /** @description The dbt sources to choose from when `needsDbtSourceSelection` is set. */
+      dbtSourceOptions?: components['schemas']['AiWritebackDbtSourceOption'][];
+      /**
+       * @description Set when the project has several dbt sources and the run could not decide
+       *     which one the prompt targets. No sandbox is started and no pull request is
+       *     opened; `dbtSourceOptions` lists the choices and the caller should re-run
+       *     with `dbtSourceUuid` set to one of them. Absent on a normal run.
+       */
+      needsDbtSourceSelection?: boolean;
+      /**
+       * @description The dbt source this run targeted: a `project_dbt_sources` row uuid for an
+       *     additional source, or `null` for the project's primary dbt connection. A
+       *     thread stays bound to this source across resumes — one thread, one PR.
+       *     Optional so an older server's response (which omits it) doesn't surface as
+       *     `undefined` on a newer typed client.
+       */
+      dbtSourceUuid?: string | null;
       /** @description Ordered actions the sandbox took, for the chat UI's step rows. */
       steps: components['schemas']['AiWritebackStep'][];
       repository: string;
@@ -14800,12 +20412,39 @@ export interface components {
      *     pull request is opened against the repo if the agent changes any files.
      *
      *     The target repository (owner, repo) and the dbt project sub-folder are
-     *     resolved server-side from the Lightdash project's dbt connection — identified
-     *     by the `projectUuid` path parameter — so the caller only supplies the prompt.
+     *     resolved server-side from the chosen dbt source — by default the Lightdash
+     *     project's primary dbt connection (identified by the `projectUuid` path
+     *     parameter), or the source named by `dbtSourceUuid` when the project has more
+     *     than one dbt source.
      */
     AiWritebackRequestBody: {
+      /**
+       * @description Which of the project's dbt sources to target, when it has more than one
+       *     (see {@link AiWritebackDbtSourceOption}). Pass the project's own uuid (or
+       *     omit) to target the primary dbt connection. When omitted and the project
+       *     has several sources, the run infers the target from the prompt and asks
+       *     the caller to choose if it can't (see `needsDbtSourceSelection`).
+       */
+      dbtSourceUuid?: string;
       prompt: string;
     };
+    /** @enum {string} */
+    AiWritebackFailureStage:
+      'sandbox' | 'install' | 'clone' | 'agent' | 'commit' | 'push' | 'pull_request';
+    AiWritebackRunStatus:
+      | components['schemas']['AiWritebackFailureStage']
+      | ('pending' | 'ready' | 'error' | 'cancelled');
+    AiWritebackRunStatusResult: {
+      errorMessage: string | null;
+      prUrl: string | null;
+      status: components['schemas']['AiWritebackRunStatus'];
+    };
+    ApiSuccess_AiWritebackRunStatusResult_: {
+      results: components['schemas']['AiWritebackRunStatusResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiWritebackRunStatusResponse: components['schemas']['ApiSuccess_AiWritebackRunStatusResult_'];
     /**
      * @description Per-project record of whether a project's git repo has Lightdash CI/CD set
      *     up. Populated as a secondary task of the AI writeback sandbox agent: while it
@@ -14872,6 +20511,18 @@ export interface components {
     CiChecks: {
       checks: components['schemas']['CiCheck'][];
       /**
+       * @description Whether the PR is open or closed. A closed-but-not-merged PR is terminal
+       *     too, so the card shows "Closed" and offers neither merge nor close.
+       * @enum {string}
+       */
+      state: 'open' | 'closed';
+      /**
+       * @description Whether the PR is already merged. Once merged the provider's
+       *     `mergeState` is no longer meaningful, so consumers show a terminal
+       *     "Merged" state and suppress the merge action.
+       */
+      merged: boolean;
+      /**
        * @description Whether the PR can actually be merged per the repo's policy — resolved
        *     from the provider, NOT inferred from `overall`. Drives the merge-
        *     readiness verdict so a failing-but-not-required check doesn't read as
@@ -14892,9 +20543,59 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /** @description Outcome of closing a pull request. */
+    ClosePullRequestResult: {
+      /** @enum {string} */
+      state: 'open' | 'closed';
+    };
+    ApiClosePullRequestResponse: {
+      results: components['schemas']['ClosePullRequestResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description Body for closing a write-back pull request from the chat PR card. */
+    ClosePullRequestRequestBody: {
+      /** @description The PR/MR URL of the write-back pull request to close. */
+      prUrl: string;
+    };
+    /**
+     * @description The raw unified diff of a write-back pull request (or a single pinned commit
+     *     within it), for the chat card's diff viewer. Null when it can't be resolved
+     *     (unsupported source control, no app installation, PR not found, diff too
+     *     large for the provider to return).
+     */
+    ApiPullRequestDiffResponse: {
+      results: {
+        diff: string;
+      } | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description Outcome of a pull request merge. */
+    MergePullRequestResult: {
+      /** @description The resulting merge commit SHA, when the provider returns one. */
+      sha: string | null;
+      merged: boolean;
+    };
+    ApiMergePullRequestResponse: {
+      results: components['schemas']['MergePullRequestResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description Body for merging a write-back pull request from the chat PR card. */
+    MergePullRequestRequestBody: {
+      /**
+       * @description The commit the card is pinned to. When set the merge only proceeds if the
+       *     PR's head still points at this SHA, so a user never merges a commit they
+       *     haven't seen (a later turn may have pushed a newer head).
+       */
+      sha?: string;
+      /** @description The PR/MR URL of the write-back pull request to merge. */
+      prUrl: string;
+    };
     /**
      * @description The project's source files, read from the read-only repo virtual file system
-     *     (the same VFS the agent's repoShell sees). Used by the chat input's
+     *     (the same VFS the agent's exploreRepo tool sees). Used by the chat input's
      *     `@`-mention file picker. Paths are relative to the project's dbt sub-folder,
      *     so an
      */
@@ -14907,16 +20608,281 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    GitRepo: {
+      writable?: boolean;
+      /** @enum {string} */
+      provider?: 'github' | 'gitlab';
+      defaultBranch: string;
+      ownerLogin: string;
+      fullName: string;
+      name: string;
+    };
+    /**
+     * @description The repositories the agent can read for a project, used by the chat input's
+     *     `@`-mention repository picker. This is the same union the agent's repo VFS
+     *     mounts (the org installation's repos plus the linked user's own), gated by the
+     *     project's `view:SourceCode` ability — unlike the org-wide `/github/repos/list`
+     *     endpoint, it never exposes repo names to users without source-code access.
+     */
+    ApiProjectRepositoriesResponse: {
+      results: components['schemas']['GitRepo'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    AiDeepResearchEntryPoint: 'homepage' | 'ask_ai';
+    /** @enum {string} */
+    AiDeepResearchEffort: 'high' | 'medium' | 'low' | 'xhigh';
+    /** @enum {string} */
+    AiDeepResearchRunStatus:
+      'queued' | 'running' | 'failed' | 'completed' | 'cancelled' | 'partially_completed';
+    AiDeepResearchChartConfig: {
+      secondaryYAxisLabel: string | null;
+      secondaryYAxisMetric: string | null;
+      yAxisLabel: string;
+      xAxisLabel: string;
+      /** @enum {string|null} */
+      funnelDataInput: 'row' | 'column' | null;
+      /** @enum {string|null} */
+      lineType: 'line' | 'area' | null;
+      stackBars: boolean | null;
+      /** @enum {string|null} */
+      xAxisType: 'category' | 'time' | null;
+      groupBy: string[] | null;
+      yAxisMetrics: string[] | null;
+      xAxisDimension: string | null;
+      /** @enum {string} */
+      defaultVizType: 'table' | 'bar' | 'horizontal' | 'line' | 'scatter' | 'pie' | 'funnel';
+    };
+    AiDeepResearchChartSnapshotValue: (string | number | boolean) | null;
+    /** @description The rendered dataset of a report chart, frozen at publish time. */
+    AiDeepResearchChartSnapshot: {
+      /** @description Raw row values ordered by `columnOrder`; formatted client-side. */
+      rows: components['schemas']['AiDeepResearchChartSnapshotValue'][][];
+      /** @description Field ids ordering the values in each row. */
+      columnOrder: string[];
+      truncated: boolean;
+      /** Format: double */
+      rowCount: number;
+      takenAt: string;
+    };
+    /**
+     * @description Everything the UI needs to render one report chart, keyed by chart key in
+     *     `AiDeepResearchRun.resultChartData`. Written entirely by the backend at
+     *     publish time; the markdown only carries compact <chart> references.
+     */
+    AiDeepResearchChartData: {
+      /** @description Null only for reports persisted before snapshots existed. */
+      snapshot: components['schemas']['AiDeepResearchChartSnapshot'] | null;
+      /** @description Selected + filter fields; drives labels and value formatting. */
+      fields: components['schemas']['ItemsMap'];
+      /** @description Real for warehouse charts, synthesized for inline ones. */
+      metricQuery: components['schemas']['MetricQuery'];
+      /** @description Inline charts: verified executions the data was derived from. */
+      derivedFrom: string[] | null;
+      /** @description Warehouse charts: the verified execution this chart is evidence of. */
+      queryUuid: string | null;
+      chartConfig: components['schemas']['AiDeepResearchChartConfig'];
+      title: string;
+      /** @enum {string} */
+      source: 'warehouse' | 'inline';
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.AiDeepResearchChartData_': {
+      [key: string]: components['schemas']['AiDeepResearchChartData'];
+    };
+    AiDeepResearchChartDataMap: components['schemas']['Record_string.AiDeepResearchChartData_'];
+    AiDeepResearchBudget: {
+      /** Format: double */
+      maxResultRows: number;
+      /** Format: double */
+      maxWarehouseQueries: number;
+      /** Format: double */
+      maxToolCalls: number;
+    };
+    AiDeepResearchExecutionContextSnapshot: {
+      effectivePermissions: {
+        autoApproveSql: boolean;
+        canUseSelfImprovementTools: boolean;
+        canUseContentTools: boolean;
+        canUseDataTools: boolean;
+        canRunSql: boolean;
+        canManageAgent: boolean;
+      };
+      repository: {
+        availableSkillNames: string[];
+        repoFsSupportsCodeSearch: boolean | null;
+        repoFsRoot: string | null;
+        repoDiscoveryEnabled: boolean | null;
+        previewDeploySetupEnabled: boolean | null;
+        codingAgentEnabled: boolean | null;
+        aiWritebackEnabled: boolean | null;
+        projectContextEnabled: boolean | null;
+      };
+      knowledgeDocuments: {
+        alwaysIncludeInContext: boolean;
+        updatedAt: string;
+        name: string;
+        uuid: string;
+      }[];
+      tools: {
+        selectedMcpServers: {
+          enabledToolNames: string[];
+          name: string;
+          uuid: string;
+        }[];
+        availableToolNames: string[];
+      };
+      model: {
+        /** @enum {string|null} */
+        keyManagement: 'lightdash-managed' | 'self-managed' | null;
+        reasoningEnabled: boolean | null;
+        modelName: string | null;
+        provider: string | null;
+      };
+      agent: {
+        enableUserContext: boolean;
+        enableContentTools: boolean;
+        enableSelfImprovement: boolean;
+        enableDataAccess: boolean;
+        spaceAccess: string[];
+        tags: string[] | null;
+        hasInstruction: boolean;
+        updatedAt: string;
+        /** Format: double */
+        version: number;
+        name: string;
+        uuid: string;
+      };
+      capturedAt: string;
+      /** @enum {string} */
+      resolutionStage: 'preflight' | 'execution';
+      /** @enum {number} */
+      schemaVersion: 1;
+    };
+    AiDeepResearchRun: {
+      completedAt: string | null;
+      startedAt: string | null;
+      updatedAt: string;
+      createdAt: string;
+      cancellationRequestedAt: string | null;
+      errorMessage: string | null;
+      executionContextSnapshot:
+        components['schemas']['AiDeepResearchExecutionContextSnapshot'] | null;
+      budget: components['schemas']['AiDeepResearchBudget'];
+      /** @description Render data for each referenced chart, keyed by chart key. */
+      resultChartData: components['schemas']['AiDeepResearchChartDataMap'] | null;
+      /** @description The report narrative with compact <chart> references. */
+      resultMarkdown: string | null;
+      status: components['schemas']['AiDeepResearchRunStatus'];
+      prompt: string;
+      effort: components['schemas']['AiDeepResearchEffort'];
+      entryPoint: components['schemas']['AiDeepResearchEntryPoint'];
+      mcpServerUuids: string[];
+      promptUuid: string;
+      aiThreadUuid: string;
+      agentUuid: string;
+      projectUuid: string;
+      aiDeepResearchRunUuid: string;
+    };
+    ApiSuccess_AiDeepResearchRun_: {
+      results: components['schemas']['AiDeepResearchRun'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiDeepResearchRunResponse: components['schemas']['ApiSuccess_AiDeepResearchRun_'];
+    AiDeepResearchRequestBody: {
+      /** @description Product surface that accepted the run. */
+      entryPoint: components['schemas']['AiDeepResearchEntryPoint'];
+      /** @description Agent-attached MCP servers enabled for this run. */
+      mcpServerUuids: string[];
+      /** @description Thread message that captured this prompt. */
+      promptUuid: string;
+      /** @description Agent thread to attach the run to. Must be owned by the caller. */
+      threadUuid: string;
+      /** @description Server-owned execution budget tier. Defaults to medium. */
+      effort?: components['schemas']['AiDeepResearchEffort'];
+      /** @description Agent whose complete runtime configuration will execute this run. */
+      agentUuid: string;
+      prompt: string;
+    };
+    'ApiSuccess_AiDeepResearchRun-Array_': {
+      results: components['schemas']['AiDeepResearchRun'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiDeepResearchRunListResponse: components['schemas']['ApiSuccess_AiDeepResearchRun-Array_'];
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.never_': Record<string, never>;
+    /** @enum {string} */
+    AiDeepResearchPhase: 'planning' | 'investigating' | 'validating' | 'synthesizing';
+    /** @enum {string} */
+    AiDeepResearchActivity:
+      'lightdash_metadata' | 'warehouse_query' | 'web_search' | 'web_fetch' | 'reporting';
+    AiDeepResearchProgress: {
+      /** Format: double */
+      total: number | null;
+      /** Format: double */
+      current: number | null;
+      activity: components['schemas']['AiDeepResearchActivity'] | null;
+      phase: components['schemas']['AiDeepResearchPhase'];
+    };
+    AiDeepResearchEvent:
+      | {
+          createdAt: string;
+          payload: {
+            status: components['schemas']['AiDeepResearchRunStatus'];
+          };
+          /** @enum {string} */
+          eventType: 'status_changed';
+          aiDeepResearchRunUuid: string;
+          aiDeepResearchEventUuid: string;
+        }
+      | {
+          createdAt: string;
+          payload: components['schemas']['Record_string.never_'];
+          /** @enum {string} */
+          eventType: 'cancellation_requested';
+          aiDeepResearchRunUuid: string;
+          aiDeepResearchEventUuid: string;
+        }
+      | {
+          createdAt: string;
+          payload: {
+            progress: components['schemas']['AiDeepResearchProgress'];
+          };
+          /** @enum {string} */
+          eventType: 'progress';
+          aiDeepResearchRunUuid: string;
+          aiDeepResearchEventUuid: string;
+        };
+    AiDeepResearchEventsPage: {
+      nextCursor: string | null;
+      events: components['schemas']['AiDeepResearchEvent'][];
+    };
+    ApiSuccess_AiDeepResearchEventsPage_: {
+      results: components['schemas']['AiDeepResearchEventsPage'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiDeepResearchEventsResponse: components['schemas']['ApiSuccess_AiDeepResearchEventsPage_'];
+    ApiUpdateAiAgentMemoryStatusResponse: components['schemas']['ApiSuccessEmpty'];
+    /** @enum {string} */
+    AiAgentMemoryEditableStatus: 'active' | 'retired';
+    ApiUpdateAiAgentMemoryStatusRequest: {
+      status: components['schemas']['AiAgentMemoryEditableStatus'];
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_AiAgentThreadSummary_AiAgentUser-and-_slackUserId-string-or-null--email-string-or-null__.user-or-createdAt-or-createdFrom-or-title-or-uuid_': {
+      uuid: string;
+      title: string | null;
       createdAt: string;
       user: components['schemas']['AiAgentUser'] & {
         email: string | null;
         slackUserId: string | null;
       };
-      uuid: string;
-      title: string | null;
-      createdFrom: string;
+      /** @enum {string} */
+      createdFrom: 'slack' | 'web_app' | 'evals' | 'scheduler';
     };
     ThreadSummary: components['schemas']['Pick_AiAgentThreadSummary_AiAgentUser-and-_slackUserId-string-or-null--email-string-or-null__.user-or-createdAt-or-createdFrom-or-title-or-uuid_'];
     /** @description From T, pick a set of properties whose keys are in the union K */
@@ -14967,19 +20933,231 @@ export interface components {
     ApiAiAgentAdminConversationsResponse: components['schemas']['ApiSuccess_KnexPaginatedData_AiAgentAdminConversationsSummary__'];
     /** @enum {string} */
     AiAgentAdminSortField: 'createdAt' | 'title';
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_AiAgentEvaluationRunSummary.runUuid-or-status-or-createdAt-or-completedAt_': {
+      /** Format: date-time */
+      createdAt: string;
+      runUuid: string;
+      /** @enum {string} */
+      status: 'pending' | 'running' | 'failed' | 'completed';
+      /** Format: date-time */
+      completedAt: string | null;
+    };
+    AiAgentAdminEvalSummary: {
+      latestRun:
+        | components['schemas']['Pick_AiAgentEvaluationRunSummary.runUuid-or-status-or-createdAt-or-completedAt_']
+        | null;
+      /** Format: double */
+      promptCount: number;
+      project: {
+        name: string;
+        uuid: string;
+      };
+      agent: components['schemas']['Pick_AiAgentSummary.uuid-or-name-or-imageUrl_'];
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      description: string | null;
+      title: string;
+      evalUuid: string;
+    };
+    AiAgentAdminEvalsSummary: {
+      evals: components['schemas']['AiAgentAdminEvalSummary'][];
+    };
+    KnexPaginatedData_AiAgentAdminEvalsSummary_: {
+      pagination?: components['schemas']['KnexPaginateArgs'] & {
+        /** Format: double */
+        totalResults: number;
+        /** Format: double */
+        totalPageCount: number;
+      };
+      data: components['schemas']['AiAgentAdminEvalsSummary'];
+    };
+    ApiSuccess_KnexPaginatedData_AiAgentAdminEvalsSummary__: {
+      results: components['schemas']['KnexPaginatedData_AiAgentAdminEvalsSummary_'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentAdminEvalsResponse: components['schemas']['ApiSuccess_KnexPaginatedData_AiAgentAdminEvalsSummary__'];
+    AiAgentAdminEvalPrompt: {
+      /** Format: date-time */
+      createdAt: string;
+      threadUuid: string | null;
+      expectedResponse: string | null;
+      prompt: string | null;
+      evalPromptUuid: string;
+    };
+    'ApiSuccess__prompts-AiAgentAdminEvalPrompt-Array__': {
+      results: {
+        prompts: components['schemas']['AiAgentAdminEvalPrompt'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentAdminEvalPromptsResponse: components['schemas']['ApiSuccess__prompts-AiAgentAdminEvalPrompt-Array__'];
     /** @enum {string} */
-    AiAgentRootCause:
-      | 'semantic_layer'
-      | 'project_context'
-      | 'agent_configuration'
-      | 'data_gap'
-      | 'product_capability'
-      | 'runtime_reliability'
-      | 'feedback_quality'
-      | 'not_a_failure'
-      | 'ambiguous';
+    McpActivityStatus: 'success' | 'error';
+    /**
+     * @description Server-computed display group for session-grouped activity: a session
+     *     split into segments on 1h inactivity gaps (sessionless calls chunk the
+     *     same way under a shared no-session block). Counts cover the whole
+     *     segment, not just the loaded page. Null when the query isn't
+     *     session-grouped (e.g. sorted by duration).
+     */
+    McpActivitySessionGroup: {
+      /** Format: double */
+      errorCount: number;
+      /** Format: double */
+      callCount: number;
+      key: string;
+    };
+    McpActivityItem: {
+      sessionGroup: components['schemas']['McpActivitySessionGroup'] | null;
+      sessionId: string | null;
+      protocolVersion: string | null;
+      authType: string;
+      userAgent: string | null;
+      clientVersion: string | null;
+      clientName: string | null;
+      /** Format: double */
+      durationMs: number;
+      errorMessage: string | null;
+      status: components['schemas']['McpActivityStatus'];
+      toolArgs: components['schemas']['Record_string.unknown_'];
+      toolName: string;
+      agent: {
+        name: string;
+        uuid: string;
+      } | null;
+      project: {
+        name: string;
+        uuid: string;
+      } | null;
+      user: {
+        email: string | null;
+        name: string;
+        uuid: string;
+      };
+      createdAt: string;
+      uuid: string;
+    };
+    McpActivitySummary: {
+      toolCalls: components['schemas']['McpActivityItem'][];
+    };
+    KnexPaginatedData_McpActivitySummary_: {
+      pagination?: components['schemas']['KnexPaginateArgs'] & {
+        /** Format: double */
+        totalResults: number;
+        /** Format: double */
+        totalPageCount: number;
+      };
+      data: components['schemas']['McpActivitySummary'];
+    };
+    ApiSuccess_KnexPaginatedData_McpActivitySummary__: {
+      results: components['schemas']['KnexPaginatedData_McpActivitySummary_'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiMcpActivityResponse: components['schemas']['ApiSuccess_KnexPaginatedData_McpActivitySummary__'];
     /** @enum {string} */
-    AiAgentReviewItemStatus: 'open' | 'in_progress' | 'resolved' | 'dismissed' | 'duplicate';
+    McpActivitySortField: 'createdAt' | 'durationMs';
+    McpActivityToolCount: {
+      /** Format: double */
+      count: number;
+      toolName: string;
+    };
+    McpActivityAgentCount: {
+      /** Format: double */
+      count: number;
+      agent: {
+        name: string;
+        uuid: string;
+      } | null;
+    };
+    McpActivityStats: {
+      recentErrors: components['schemas']['McpActivityItem'][];
+      agents: components['schemas']['McpActivityAgentCount'][];
+      topTools: components['schemas']['McpActivityToolCount'][];
+      /** Format: double */
+      errorCalls: number;
+      /** Format: double */
+      totalCalls: number;
+    };
+    ApiSuccess_McpActivityStats_: {
+      results: components['schemas']['McpActivityStats'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiMcpActivityStatsResponse: components['schemas']['ApiSuccess_McpActivityStats_'];
+    AiAgentAdminPromptActivityPoint: {
+      /** Format: double */
+      promptCount: number;
+      date: string;
+    };
+    'ApiSuccess_AiAgentAdminPromptActivityPoint-Array_': {
+      results: components['schemas']['AiAgentAdminPromptActivityPoint'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentAdminPromptActivityResponse: components['schemas']['ApiSuccess_AiAgentAdminPromptActivityPoint-Array_'];
+    AiAgentAdminMemoryItem: {
+      generatedAt: string;
+      lastPulledAt: string | null;
+      /** Format: double */
+      pulledCount: number;
+      lastCitedAt: string | null;
+      /** Format: double */
+      citedCount: number;
+      sourceThreadUuid: string | null;
+      user: {
+        email: string | null;
+        name: string;
+        uuid: string;
+      } | null;
+      agent: {
+        imageUrl: string | null;
+        name: string;
+        uuid: string;
+      } | null;
+      project: {
+        name: string;
+        uuid: string;
+      };
+      scope: components['schemas']['AiAgentMemoryScope'];
+      status: components['schemas']['AiAgentMemoryStatus'];
+      summary: string;
+      title: string;
+      slug: string;
+      uuid: string;
+    };
+    AiAgentAdminMemoriesSummary: {
+      memories: components['schemas']['AiAgentAdminMemoryItem'][];
+    };
+    KnexPaginatedData_AiAgentAdminMemoriesSummary_: {
+      pagination?: components['schemas']['KnexPaginateArgs'] & {
+        /** Format: double */
+        totalResults: number;
+        /** Format: double */
+        totalPageCount: number;
+      };
+      data: components['schemas']['AiAgentAdminMemoriesSummary'];
+    };
+    ApiSuccess_KnexPaginatedData_AiAgentAdminMemoriesSummary__: {
+      results: components['schemas']['KnexPaginatedData_AiAgentAdminMemoriesSummary_'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentAdminMemoriesResponse: components['schemas']['ApiSuccess_KnexPaginatedData_AiAgentAdminMemoriesSummary__'];
+    /** @enum {string} */
+    AiAgentAdminMemorySortField: 'generatedAt' | 'citedCount';
+    /** @enum {string} */
+    AiAgentReviewItemSource: 'ai_finding' | 'manual';
+    /** @enum {string} */
+    AiAgentReviewItemPriority: 'urgent' | 'high' | 'medium' | 'low' | 'none';
+    /** @enum {string} */
+    AiAgentReviewItemStatus:
+      'triage' | 'open' | 'in_progress' | 'resolved' | 'dismissed' | 'duplicate';
     /** @enum {string} */
     AiAgentReviewItemDismissedReason:
       'not_actionable' | 'expected_behavior' | 'duplicate' | 'low_confidence' | 'other';
@@ -14987,14 +21165,15 @@ export interface components {
     AiAgentReviewItemOwnerType:
       'semantic_layer_owner' | 'agent_admin' | 'product' | 'support' | 'unknown';
     /** @enum {string} */
-    AiAgentReviewItemPrState: 'open' | 'merged' | 'closed';
-    /** @enum {string} */
     AiAgentReviewItemWritebackStatus: 'queued' | 'running' | 'completed' | 'failed';
     AiAgentReviewItem: {
       /** Format: date-time */
       updatedAt: string;
       /** Format: date-time */
       createdAt: string;
+      createdByUserUuid: string | null;
+      /** Format: double */
+      boardPosition: number | null;
       prWritebackMessage: string | null;
       prWritebackStatus: components['schemas']['AiAgentReviewItemWritebackStatus'] | null;
       prState: components['schemas']['AiAgentReviewItemPrState'] | null;
@@ -15013,17 +21192,18 @@ export interface components {
       ownerType: components['schemas']['AiAgentReviewItemOwnerType'];
       dismissedReason: components['schemas']['AiAgentReviewItemDismissedReason'] | null;
       status: components['schemas']['AiAgentReviewItemStatus'];
+      targetRefs: components['schemas']['AiAgentTargetRef'][];
+      priority: components['schemas']['AiAgentReviewItemPriority'];
       primaryRootCause: components['schemas']['AiAgentRootCause'];
       description: string;
       title: string;
       agentUuid: string | null;
       projectUuid: string | null;
       organizationUuid: string;
+      source: components['schemas']['AiAgentReviewItemSource'];
       fingerprint: string;
       uuid: string;
     };
-    /** @enum {string} */
-    PullRequestProvider: 'github' | 'gitlab';
     /** @enum {string} */
     AiAgentReviewItemWritebackStrategy: 'semantic_layer' | 'project_context';
     /** @enum {string} */
@@ -15031,12 +21211,14 @@ export interface components {
       | 'reviews_disabled'
       | 'unsupported_root_cause'
       | 'missing_project'
+      | 'missing_agent'
       | 'missing_project_context_entry'
       | 'project_context_disabled'
       | 'unsupported_source_control'
       | 'git_app_not_installed'
       | 'missing_writeback_config'
       | 'pull_request_open'
+      | 'source_thread_writeback_exists'
       | 'terminal_state'
       | 'writeback_in_progress';
     AiAgentReviewItemWritebackEligibility:
@@ -15055,9 +21237,6 @@ export interface components {
           /** @enum {boolean} */
           eligible: false;
         };
-    /** @enum {string} */
-    AiAgentReviewRemediationStatus:
-      'queued' | 'running' | 'pr_open' | 'preview_ready' | 'resolved' | 'failed';
     AiAgentReviewRemediation: {
       /** Format: date-time */
       updatedAt: string;
@@ -15075,11 +21254,12 @@ export interface components {
       previewProjectUuid: string | null;
       linkedPrUrl: string | null;
       pullRequestUuid: string | null;
+      workThreadUuid: string | null;
       sourceAgentUuid: string;
       sourceProjectUuid: string;
-      sourceThreadUuid: string;
-      sourcePromptUuid: string;
-      sourceFindingUuid: string;
+      sourceThreadUuid: string | null;
+      sourcePromptUuid: string | null;
+      sourceFindingUuid: string | null;
       organizationUuid: string;
       fingerprint: string;
       uuid: string;
@@ -15095,137 +21275,6 @@ export interface components {
       | 'runtime_reliability_ticket'
       | 'feedback_needed'
       | 'no_action';
-    AiAgentSemanticTargetRef:
-      | {
-          modelName: string;
-          /** @enum {string} */
-          type: 'model';
-        }
-      | {
-          exploreName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'explore';
-        }
-      | {
-          exploreName?: string;
-          joinName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'join';
-        }
-      | {
-          dimensionName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'dimension';
-        }
-      | {
-          dimensionName?: string;
-          metricName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'metric';
-        }
-      | {
-          dimensionName: string;
-          parentDimensionName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'additional_dimension';
-        }
-      | {
-          fieldName: string;
-          exploreName: string;
-          modelName: string;
-          /** @enum {string} */
-          type: 'required_filter';
-        }
-      | {
-          targetName: string;
-          /** @enum {string} */
-          targetType: 'model' | 'dimension' | 'metric';
-          modelName: string;
-          /** @enum {string} */
-          type: 'ai_hint';
-        };
-    /** @enum {string} */
-    AiAgentConfigurationSetting:
-      | 'instructions'
-      | 'knowledge_documents'
-      | 'data_access'
-      | 'self_improvement'
-      | 'sql_mode'
-      | 'mcp_servers'
-      | 'explore_tags'
-      | 'space_access'
-      | 'user_or_group_access'
-      | 'unknown';
-    AiAgentTargetRef:
-      | components['schemas']['AiAgentSemanticTargetRef']
-      | {
-          agentUuid: string;
-          /** @enum {string} */
-          type: 'agent';
-        }
-      | {
-          setting: components['schemas']['AiAgentConfigurationSetting'];
-          /** @enum {string} */
-          type: 'agent_config';
-        }
-      | {
-          capabilityKey: string;
-          /** @enum {string} */
-          type: 'product_capability';
-        }
-      | {
-          key: string;
-          /** @enum {string} */
-          type: 'runtime';
-        };
-    AiAgentEvidenceExcerpt: {
-      redacted: boolean;
-      text: string;
-      /** @enum {string} */
-      source:
-        | 'user_prompt'
-        | 'assistant_answer'
-        | 'next_user_prompt'
-        | 'conversation_context'
-        | 'tool_call'
-        | 'tool_result'
-        | 'agent_config';
-    };
-    /** @enum {string} */
-    AiAgentRecommendationAction:
-      | 'update_semantic_yaml'
-      | 'update_agent_instructions'
-      | 'add_knowledge_document'
-      | 'enable_data_access'
-      | 'enable_sql_mode'
-      | 'enable_self_improvement'
-      | 'configure_mcp_server'
-      | 'adjust_explore_tags'
-      | 'update_access'
-      | 'route_to_product_work'
-      | 'request_more_evidence'
-      | 'no_action';
-    AiAgentRecommendation: {
-      targetRefs: components['schemas']['AiAgentTargetRef'][];
-      rationale: string;
-      title: string;
-      actionType: components['schemas']['AiAgentRecommendationAction'];
-    };
-    AiAgentJudgeProjectContextEntry: {
-      objects: string[];
-      terms: string[];
-      content: string;
-      /** @enum {string} */
-      kind: 'definition' | 'context';
-      id: string | null;
-      /** @enum {string} */
-      op: 'create' | 'update';
-    };
     AiAgentReviewItemSummary: components['schemas']['AiAgentReviewItem'] & {
       latestFinding: {
         /** Format: date-time */
@@ -15262,9 +21311,247 @@ export interface components {
       status: 'ok';
     };
     ApiAiAgentReviewItemResponse: components['schemas']['ApiSuccess_AiAgentReviewItemSummary_'];
+    CreateAiAgentReviewItem: {
+      targetRefs: components['schemas']['AiAgentTargetRef'][];
+      priority: components['schemas']['AiAgentReviewItemPriority'];
+      primaryRootCause: components['schemas']['AiAgentRootCause'] | null;
+      assignedToUserUuid: string | null;
+      agentUuid: string | null;
+      projectUuid: string;
+      description: string | null;
+      title: string;
+    };
+    AiAgentReviewReplayCaptureEntry: {
+      input: unknown;
+      captureError: string | null;
+      threadUuid: string | null;
+      promptUuid: string | null;
+      signalUuid: string;
+    };
+    'ApiSuccess_AiAgentReviewReplayCaptureEntry-Array_': {
+      results: components['schemas']['AiAgentReviewReplayCaptureEntry'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentReviewReplayCaptureResponse: components['schemas']['ApiSuccess_AiAgentReviewReplayCaptureEntry-Array_'];
+    AiAgentReviewReplayCaptureRequest: {
+      signalUuids: string[];
+    };
+    AiAgentReviewRemediationEventDetail:
+      | {
+          payload: {
+            sourcePromptUuid: string | null;
+            sourceThreadUuid: string | null;
+            excerpt: string | null;
+          };
+          /** @enum {string} */
+          eventType: 'finding_opened';
+        }
+      | {
+          payload: {
+            /** Format: double */
+            deletions: number | null;
+            /** Format: double */
+            additions: number | null;
+            files: string[];
+          };
+          /** @enum {string} */
+          eventType: 'writeback_completed';
+        }
+      | {
+          payload: {
+            /** Format: double */
+            prNumber: number | null;
+            prUrl: string;
+          };
+          /** @enum {string} */
+          eventType: 'pr_opened';
+        }
+      | {
+          payload: {
+            prUrl: string | null;
+          };
+          /** @enum {string} */
+          eventType: 'pr_updated';
+        }
+      | {
+          payload: {
+            previewProjectUuid: string;
+          };
+          /** @enum {string} */
+          eventType: 'preview_compiled';
+        }
+      | {
+          payload: {
+            previewThreadUuid: string;
+          };
+          /** @enum {string} */
+          eventType: 'verification_completed';
+        }
+      | {
+          payload: {
+            prUrl: string;
+          };
+          /** @enum {string} */
+          eventType: 'pr_merged';
+        }
+      | {
+          payload: {
+            prUrl: string;
+          };
+          /** @enum {string} */
+          eventType: 'pr_closed';
+        }
+      | {
+          payload: components['schemas']['Record_string.never_'];
+          /** @enum {string} */
+          eventType: 'resolved';
+        }
+      | {
+          payload: {
+            errorMessage: string | null;
+          };
+          /** @enum {string} */
+          eventType: 'failed';
+        };
+    AiAgentReviewRemediationEvent: {
+      createdByUserUuid: string | null;
+      /** Format: date-time */
+      occurredAt: string;
+      remediationUuid: string | null;
+      uuid: string;
+    } & components['schemas']['AiAgentReviewRemediationEventDetail'];
+    AiAgentReviewItemEventDetail:
+      | {
+          payload: {
+            rootCause: components['schemas']['AiAgentRootCause'] | null;
+          };
+          /** @enum {string} */
+          eventType: 'created';
+        }
+      | {
+          payload: {
+            dismissedReason: components['schemas']['AiAgentReviewItemDismissedReason'] | null;
+            to: components['schemas']['AiAgentReviewItemStatus'];
+            from: components['schemas']['AiAgentReviewItemStatus'] | null;
+          };
+          /** @enum {string} */
+          eventType: 'status_changed';
+        }
+      | {
+          payload: {
+            toUserUuid: string | null;
+            fromUserUuid: string | null;
+          };
+          /** @enum {string} */
+          eventType: 'assignee_changed';
+        }
+      | {
+          payload: {
+            promptUuid: string;
+            threadUuid: string;
+          };
+          /** @enum {string} */
+          eventType: 'recurred';
+        }
+      | {
+          payload: {
+            to: components['schemas']['AiAgentReviewItemPriority'];
+            from: components['schemas']['AiAgentReviewItemPriority'];
+          };
+          /** @enum {string} */
+          eventType: 'priority_changed';
+        }
+      | {
+          payload: {
+            body: string;
+          };
+          /** @enum {string} */
+          eventType: 'comment_added';
+        };
+    AiAgentReviewItemEvent: {
+      createdByUserUuid: string | null;
+      /** Format: date-time */
+      occurredAt: string;
+      fingerprint: string;
+      uuid: string;
+    } & components['schemas']['AiAgentReviewItemEventDetail'];
+    /** @description One row of the merged issue activity feed. */
+    AiAgentReviewActivityEvent:
+      | ({
+          /** @enum {string} */
+          kind: 'remediation';
+        } & components['schemas']['AiAgentReviewRemediationEvent'])
+      | ({
+          /** @enum {string} */
+          kind: 'issue';
+        } & components['schemas']['AiAgentReviewItemEvent']);
+    /**
+     * @description The in-flight step of a remediation, derived from current status + which
+     *     events exist — never stored. Renders as the single accented "live" row.
+     * @enum {string}
+     */
+    AiAgentReviewRemediationLiveState: 'writeback' | 'compiling' | 'verifying';
+    AiAgentReviewItemActivity: {
+      /**
+       * @description True when the PR changed after the latest verdict — derived from event
+       *     ordering (latest pr_opened/pr_updated/writeback_completed occurred after
+       *     the latest verification_completed). Drives the "Retest" prompt.
+       */
+      verdictStale: boolean;
+      /** @description Streaming progress text for the live row (writeback step messages). */
+      liveMessage: string | null;
+      liveState: components['schemas']['AiAgentReviewRemediationLiveState'] | null;
+      events: components['schemas']['AiAgentReviewActivityEvent'][];
+    };
+    ApiSuccess_AiAgentReviewItemActivity_: {
+      results: components['schemas']['AiAgentReviewItemActivity'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentReviewItemActivityResponse: components['schemas']['ApiSuccess_AiAgentReviewItemActivity_'];
+    AiAgentReviewItemPrDiffFile: {
+      after: string;
+      before: string;
+      /** Format: double */
+      deletions: number;
+      /** Format: double */
+      additions: number;
+      status: string;
+      path: string;
+    };
+    AiAgentReviewItemPrDiff: {
+      truncated: boolean;
+      /** Format: double */
+      totalDeletions: number;
+      /** Format: double */
+      totalAdditions: number;
+      files: components['schemas']['AiAgentReviewItemPrDiffFile'][];
+      prUrl: string;
+    };
+    ApiSuccess_AiAgentReviewItemPrDiff_: {
+      results: components['schemas']['AiAgentReviewItemPrDiff'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiAgentReviewItemPrDiffResponse: components['schemas']['ApiSuccess_AiAgentReviewItemPrDiff_'];
+    ReorderAiAgentReviewItems: {
+      orderedFingerprints: string[];
+    };
     UpdateAiAgentReviewItemStatus: {
+      /** Format: double */
+      boardPosition?: number | null;
       dismissedReason: components['schemas']['AiAgentReviewItemDismissedReason'] | null;
       status: components['schemas']['AiAgentReviewItemStatus'];
+    };
+    UpdateAiAgentReviewItemAssignee: {
+      assignedToUserUuid: string | null;
+    };
+    UpdateAiAgentReviewItemPriority: {
+      priority: components['schemas']['AiAgentReviewItemPriority'];
+    };
+    CreateAiAgentReviewItemComment: {
+      body: string;
     };
     /**
      * @description Preview of the file change a writeback PR would make, computed deterministically
@@ -15273,6 +21560,7 @@ export interface components {
      */
     AiAgentReviewItemWritebackPreview:
       | {
+          upgradesFileToV2: boolean;
           entryId: string;
           /** @enum {string} */
           op: 'create' | 'update';
@@ -15377,12 +21665,68 @@ export interface components {
       status: 'ok';
     };
     ApiAiAgentReviewSignalsResponse: components['schemas']['ApiSuccess_AiAgentReviewSignalSummary-Array_'];
+    AiReviewNotificationSettings: {
+      slackChannelId: string | null;
+      enabled: boolean;
+      organizationUuid: string;
+    };
+    ApiSuccess_AiReviewNotificationSettings_: {
+      results: components['schemas']['AiReviewNotificationSettings'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiReviewNotificationSettingsResponse: components['schemas']['ApiSuccess_AiReviewNotificationSettings_'];
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_AiReviewNotificationSettings.enabled-or-slackChannelId_': {
+      enabled: boolean;
+      slackChannelId: string | null;
+    };
+    UpdateAiReviewNotificationSettings: components['schemas']['Pick_AiReviewNotificationSettings.enabled-or-slackChannelId_'];
+    AiOrgProviderModelVisibility: {
+      allowedModels?: string[];
+      enabled: boolean;
+    };
+    /** @description Make all properties in T optional */
+    'Partial_Record_ByoAiProvider.AiOrgProviderModelVisibility__': {
+      anthropic?: components['schemas']['AiOrgProviderModelVisibility'];
+      openai?: components['schemas']['AiOrgProviderModelVisibility'];
+    };
+    AiOrgModelVisibility: components['schemas']['Partial_Record_ByoAiProvider.AiOrgProviderModelVisibility__'];
+    /** @description Make all properties in T optional */
+    'Partial_Record_DataAppClaudeModel.boolean__': {
+      opus?: boolean;
+      sonnet?: boolean;
+      haiku?: boolean;
+    };
+    /**
+     * @description Org-admin control over which Data App Claude models users can pick.
+     *     A model is hidden only when explicitly set to `false`; an absent key (or a
+     *     null/undefined visibility map) defaults to visible.
+     */
+    DataAppModelVisibility: components['schemas']['Partial_Record_DataAppClaudeModel.boolean__'];
+    AiProviderApiKeysSet: {
+      openai: boolean;
+      anthropic: boolean;
+    };
+    AiProviderApiKeyHints: {
+      openai: string | null;
+      anthropic: string | null;
+    };
     AiOrganizationSettings: {
+      providerApiKeyHints: components['schemas']['AiProviderApiKeyHints'];
+      providerApiKeysSet: components['schemas']['AiProviderApiKeysSet'];
+      dataAppModelVisibility?: components['schemas']['DataAppModelVisibility'] | null;
+      modelVisibility?: components['schemas']['AiOrgModelVisibility'] | null;
+      defaultAiAgentModelConfig: components['schemas']['AiAgentModelConfig'] | null;
+      mcpContentWritesEnabled: boolean;
       aiAgentReviewsEnabled: boolean;
       aiAgentsVisible: boolean;
       organizationUuid: string;
     };
     ComputedAiOrganizationSettings: {
+      aiAgentReviewsPausedByByok?: boolean;
+      configurableModelOptions?: components['schemas']['AiModelOption'][] | null;
+      defaultAiAgentModelOptions: components['schemas']['AiModelOption'][];
       isTrial: boolean;
       isCopilotEnabled: boolean;
     };
@@ -15399,12 +21743,116 @@ export interface components {
       status: 'ok';
     };
     ApiUpdateAiOrganizationSettingsResponse: components['schemas']['ApiSuccess_AiOrganizationSettings_'];
-    /** @description Make all properties in T optional */
-    'Partial_Omit_AiOrganizationSettings.organizationUuid__': {
-      aiAgentsVisible?: boolean;
-      aiAgentReviewsEnabled?: boolean;
+    UpdateAiProviderApiKeys: {
+      openai?: string | null;
+      anthropic?: string | null;
     };
-    UpdateAiOrganizationSettings: components['schemas']['Partial_Omit_AiOrganizationSettings.organizationUuid__'];
+    UpdateAiOrganizationSettings: {
+      providerApiKeys?: components['schemas']['UpdateAiProviderApiKeys'];
+      dataAppModelVisibility?: components['schemas']['DataAppModelVisibility'] | null;
+      modelVisibility?: components['schemas']['AiOrgModelVisibility'] | null;
+      defaultAiAgentModelConfig?: components['schemas']['AiAgentModelConfig'] | null;
+      mcpContentWritesEnabled?: boolean;
+      aiAgentReviewsEnabled?: boolean;
+      aiAgentsVisible?: boolean;
+    };
+    WarehouseConnectCode: {
+      /** Format: date-time */
+      expiresAt: string;
+      code: string;
+    };
+    ApiWarehouseConnectCodeResponse: {
+      results: components['schemas']['WarehouseConnectCode'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiDepositWarehouseConnectionResponse: {
+      results?: unknown;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_CreateSnowflakeCredentials.Exclude_keyofCreateSnowflakeCredentials.database-or-warehouse-or-schema__': {
+      type: components['schemas']['WarehouseTypes.SNOWFLAKE'];
+      user: string;
+      password?: string;
+      privateKey?: string;
+      privateKeyPass?: string;
+      token?: string;
+      refreshToken?: string;
+      account: string;
+      requireUserCredentials?: boolean;
+      authenticationType?: components['schemas']['SnowflakeAuthenticationType'];
+      role?: string;
+      /** Format: double */
+      threads?: number;
+      clientSessionKeepAlive?: boolean;
+      queryTag?: string;
+      accessUrl?: string;
+      startOfWeek?: components['schemas']['WeekDay'] | null;
+      dataTimezone?: string;
+      quotedIdentifiersIgnoreCase?: boolean;
+      disableTimestampConversion?: boolean;
+      /** Format: double */
+      timeoutSeconds?: number;
+      override?: boolean;
+      organizationWarehouseCredentialsUuid?: string;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_CreateSnowflakeCredentials.database-or-warehouse-or-schema_': components['schemas']['Pick_CreateSnowflakeCredentials.Exclude_keyofCreateSnowflakeCredentials.database-or-warehouse-or-schema__'];
+    /** @description Make all properties in T optional */
+    'Partial_Pick_CreateSnowflakeCredentials.database-or-warehouse-or-schema__': {
+      database?: string;
+      warehouse?: string;
+      schema?: string;
+    };
+    DepositSnowflakeCredentials: components['schemas']['Omit_CreateSnowflakeCredentials.database-or-warehouse-or-schema_'] &
+      components['schemas']['Partial_Pick_CreateSnowflakeCredentials.database-or-warehouse-or-schema__'];
+    WarehouseConnectInventory: {
+      schemas: {
+        name: string;
+        database: string;
+      }[];
+      roles: {
+        isDefault: boolean;
+        name: string;
+      }[];
+      warehouses: {
+        state: string | null;
+        size: string | null;
+        name: string;
+      }[];
+      databases: {
+        /** Format: double */
+        sizeBytes?: number | null;
+        comment: string | null;
+        name: string;
+      }[];
+    };
+    DepositWarehouseConnectionRequest: {
+      inventory: components['schemas']['WarehouseConnectInventory'] | null;
+      credentials: components['schemas']['DepositSnowflakeCredentials'];
+      code: string;
+    };
+    WarehouseConnectCodeClaimResult:
+      | {
+          /** @enum {string} */
+          status: 'pending';
+        }
+      | {
+          inventory: components['schemas']['WarehouseConnectInventory'] | null;
+          credentials: components['schemas']['DepositSnowflakeCredentials'];
+          /** @enum {string} */
+          status: 'deposited';
+        };
+    ApiWarehouseConnectCodeClaimResponse: {
+      results: components['schemas']['WarehouseConnectCodeClaimResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ClaimWarehouseConnectCodeRequest: {
+      code: string;
+    };
     ApiJobScheduledResponse: {
       results: {
         jobId: string;
@@ -15474,6 +21922,7 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ValidationResponseBase.Exclude_keyofValidationResponseBase.name__': {
       projectUuid: string;
+      spaceUuid?: string;
       /** Format: date-time */
       createdAt: string;
       error: string;
@@ -15485,7 +21934,6 @@ export interface components {
        */
       validationId: number | null;
       errorType: components['schemas']['ValidationErrorType'];
-      spaceUuid?: string;
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_ValidationResponseBase.name_': components['schemas']['Pick_ValidationResponseBase.Exclude_keyofValidationResponseBase.name__'];
@@ -15508,13 +21956,13 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ValidationErrorChartResponse.error-or-errorType-or-fieldName-or-name-or-projectUuid-or-chartUuid-or-source-or-chartName_': {
       name: string;
+      chartName?: string;
       projectUuid: string;
       error: string;
       source?: components['schemas']['ValidationSourceType'];
       errorType: components['schemas']['ValidationErrorType'];
       fieldName?: string;
       chartUuid?: string;
-      chartName?: string;
     };
     CreateChartValidation: components['schemas']['Pick_ValidationErrorChartResponse.error-or-errorType-or-fieldName-or-name-or-projectUuid-or-chartUuid-or-source-or-chartName_'];
     'ApiSuccess__errors-CreateChartValidation-Array__': {
@@ -15528,13 +21976,13 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ValidationErrorDashboardResponse.error-or-errorType-or-fieldName-or-name-or-projectUuid-or-dashboardUuid-or-chartName-or-source_': {
       name: string;
+      chartName?: string;
       projectUuid: string;
+      dashboardUuid?: string;
       error: string;
       source?: components['schemas']['ValidationSourceType'];
       errorType: components['schemas']['ValidationErrorType'];
       fieldName?: string;
-      chartName?: string;
-      dashboardUuid?: string;
     };
     CreateDashboardValidation: components['schemas']['Pick_ValidationErrorDashboardResponse.error-or-errorType-or-fieldName-or-name-or-projectUuid-or-dashboardUuid-or-chartName-or-source_'];
     'ApiSuccess__errors-CreateDashboardValidation-Array__': {
@@ -15545,6 +21993,16 @@ export interface components {
       status: 'ok';
     };
     ApiDashboardValidationResponse: components['schemas']['ApiSuccess__errors-CreateDashboardValidation-Array__'];
+    /** @enum {string} */
+    UserAvatarGradientId: 'lilac' | 'blush' | 'amethyst' | 'sunrise' | 'slate' | 'pearl';
+    HexColor: string;
+    MeshColor: string;
+    SolidColor: string;
+    UserAvatarColorValue:
+      | components['schemas']['UserAvatarGradientId']
+      | components['schemas']['HexColor']
+      | components['schemas']['MeshColor']
+      | components['schemas']['SolidColor'];
     LightdashUser: {
       userUuid: string;
       firstName: string;
@@ -15567,6 +22025,8 @@ export interface components {
       /** Format: date-time */
       updatedAt: string;
       timezone: string | null;
+      avatarUrl: string | null;
+      avatarGradient: components['schemas']['UserAvatarColorValue'] | null;
       isPending?: boolean;
     } & {
       [key: string]: unknown;
@@ -15607,8 +22067,13 @@ export interface components {
       lastName: string;
       firstName: string;
     };
+    CreateEmailOnlyUserArgs: {
+      email: components['schemas']['Email'];
+    };
     RegisterOrActivateUser:
-      components['schemas']['ActivateUserWithInviteCode'] | components['schemas']['CreateUserArgs'];
+      | components['schemas']['ActivateUserWithInviteCode']
+      | components['schemas']['CreateUserArgs']
+      | components['schemas']['CreateEmailOnlyUserArgs'];
     EmailStatus: {
       otp?: components['schemas']['EmailOneTimePassword'];
       isVerified: boolean;
@@ -15646,14 +22111,20 @@ export interface components {
       status: 'ok';
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_CreateRedshiftCredentials-or-CreatePostgresCredentials-or-CreateSnowflakeCredentials-or-CreateTrinoCredentials-or-CreateClickhouseCredentials.type-or-user_': {
+    'Pick_CreateRedshiftCredentials.type-or-user-or-authenticationType-or-assumeRoleArn_': {
+      type: components['schemas']['WarehouseTypes.REDSHIFT'];
       user: string;
+      authenticationType?: components['schemas']['RedshiftAuthenticationType'];
+      assumeRoleArn?: string;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_CreatePostgresCredentials-or-CreateSnowflakeCredentials-or-CreateTrinoCredentials-or-CreateClickhouseCredentials.type-or-user_': {
       type:
         | components['schemas']['WarehouseTypes.POSTGRES']
-        | components['schemas']['WarehouseTypes.REDSHIFT']
         | components['schemas']['WarehouseTypes.SNOWFLAKE']
         | components['schemas']['WarehouseTypes.TRINO']
         | components['schemas']['WarehouseTypes.CLICKHOUSE'];
+      user: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateBigqueryCredentials.type_': {
@@ -15681,7 +22152,8 @@ export interface components {
     UserWarehouseCredentials: {
       project: components['schemas']['UserWarehouseCredentialsProject'] | null;
       credentials:
-        | components['schemas']['Pick_CreateRedshiftCredentials-or-CreatePostgresCredentials-or-CreateSnowflakeCredentials-or-CreateTrinoCredentials-or-CreateClickhouseCredentials.type-or-user_']
+        | components['schemas']['Pick_CreateRedshiftCredentials.type-or-user-or-authenticationType-or-assumeRoleArn_']
+        | components['schemas']['Pick_CreatePostgresCredentials-or-CreateSnowflakeCredentials-or-CreateTrinoCredentials-or-CreateClickhouseCredentials.type-or-user_']
         | components['schemas']['Pick_CreateBigqueryCredentials.type_']
         | components['schemas']['Pick_CreateDatabricksCredentials.type_']
         | components['schemas']['Pick_CreateAthenaCredentials.type_']
@@ -15696,40 +22168,53 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateRedshiftCredentials.type-or-user-or-password_': {
-      user: string;
       type: components['schemas']['WarehouseTypes.REDSHIFT'];
-      password: string;
+      user: string;
+      password?: string;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_CreateRedshiftCredentials.type-or-user-or-authenticationType-or-accessKeyId-or-secretAccessKey-or-sessionToken-or-assumeRoleArn-or-assumeRoleExternalId_': {
+      type: components['schemas']['WarehouseTypes.REDSHIFT'];
+      user: string;
+      accessKeyId?: string;
+      secretAccessKey?: string;
+      sessionToken?: string;
+      authenticationType?: components['schemas']['RedshiftAuthenticationType'];
+      assumeRoleArn?: string;
+      assumeRoleExternalId?: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreatePostgresCredentials.type-or-user-or-password_': {
-      user: string;
       type: components['schemas']['WarehouseTypes.POSTGRES'];
+      user: string;
       password: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateSnowflakeCredentials.type-or-user-or-password-or-authenticationType-or-refreshToken_': {
-      user: string;
       type: components['schemas']['WarehouseTypes.SNOWFLAKE'];
+      user: string;
       password?: string;
       refreshToken?: string;
       authenticationType?: components['schemas']['SnowflakeAuthenticationType'];
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateTrinoCredentials.type-or-user-or-password_': {
-      user: string;
       type: components['schemas']['WarehouseTypes.TRINO'];
+      user: string;
       password: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateClickhouseCredentials.type-or-user-or-password_': {
-      user: string;
       type: components['schemas']['WarehouseTypes.CLICKHOUSE'];
+      user: string;
       password: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateBigqueryCredentials.type-or-keyfileContents-or-authenticationType_': {
       type: components['schemas']['WarehouseTypes.BIGQUERY'];
-      keyfileContents: components['schemas']['Record_string.string_'];
+      keyfileContents: {
+        [key: string]: string;
+      };
       authenticationType?: components['schemas']['BigqueryAuthenticationType'];
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
@@ -15760,6 +22245,7 @@ export interface components {
     UpsertUserWarehouseCredentials: {
       credentials:
         | components['schemas']['Pick_CreateRedshiftCredentials.type-or-user-or-password_']
+        | components['schemas']['Pick_CreateRedshiftCredentials.type-or-user-or-authenticationType-or-accessKeyId-or-secretAccessKey-or-sessionToken-or-assumeRoleArn-or-assumeRoleExternalId_']
         | components['schemas']['Pick_CreatePostgresCredentials.type-or-user-or-password_']
         | components['schemas']['Pick_CreateSnowflakeCredentials.type-or-user-or-password-or-authenticationType-or-refreshToken_']
         | components['schemas']['Pick_CreateTrinoCredentials.type-or-user-or-password_']
@@ -15771,11 +22257,53 @@ export interface components {
         | components['schemas']['Pick_CreateDuckdbMotherduckCredentials.type-or-token_'];
       name: string;
     };
+    RedshiftAwsSsoStartResults: {
+      /** Format: double */
+      interval: number;
+      /** Format: double */
+      expiresIn: number;
+      userCode: string;
+      verificationUriComplete: string;
+      verificationUri: string;
+    };
+    RedshiftAwsSsoStartResponse: {
+      results: components['schemas']['RedshiftAwsSsoStartResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    RedshiftAwsSsoStartRequest: {
+      region?: string;
+      startUrl?: string;
+      projectUuid?: string;
+    };
+    RedshiftAwsSsoCompleteResults:
+      | {
+          /** @enum {string} */
+          status: 'pending';
+        }
+      | {
+          credentials: components['schemas']['UserWarehouseCredentials'];
+          /** @enum {string} */
+          status: 'authenticated';
+        };
+    RedshiftAwsSsoCompleteResponse: {
+      results: components['schemas']['RedshiftAwsSsoCompleteResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    RedshiftAwsSsoCompleteRequest: {
+      databaseUser?: string;
+      credentialsName?: string;
+      projectName?: string;
+      projectUuid?: string;
+      roleName?: string;
+      accountId?: string;
+    };
     /** @enum {string} */
     OpenIdIdentityIssuerType:
       'google' | 'okta' | 'oneLogin' | 'azuread' | 'oidc' | 'snowflake' | 'databricks' | 'slack';
     /** @enum {string} */
-    LocalIssuerTypes: 'email' | 'apiToken';
+    LocalIssuerTypes: 'email' | 'emailOtp' | 'apiToken';
     LoginOptionTypes:
       components['schemas']['OpenIdIdentityIssuerType'] | components['schemas']['LocalIssuerTypes'];
     LoginOptions: {
@@ -15787,6 +22315,22 @@ export interface components {
       results: components['schemas']['LoginOptions'];
       /** @enum {string} */
       status: 'ok';
+    };
+    ApiLoginEmailOtpResponse: {
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiLoginEmailOtpRequest: {
+      email: string;
+    };
+    ApiVerifyLoginEmailOtpResponse: {
+      results: components['schemas']['LightdashUser'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiVerifyLoginEmailOtpRequest: {
+      passcode: string;
+      email: string;
     };
     PersonalAccessToken: {
       description: string;
@@ -15805,24 +22349,24 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_PersonalAccessToken.expiresAt-or-description_': {
+      description: string;
       /** Format: date-time */
       expiresAt: string | null;
-      description: string;
     };
     CreatePersonalAccessToken: components['schemas']['Pick_PersonalAccessToken.expiresAt-or-description_'] & {
       autoGenerated: boolean;
     };
     /** @description Make all properties in T optional */
-    'Partial_Pick_Organization.name-or-createdAt-or-organizationUuid__': {
+    'Partial_Pick_Organization.name-or-organizationUuid-or-createdAt__': {
       /** @description The name of the organization */
       name?: string;
-      /** Format: date-time */
-      createdAt?: string;
       /**
        * Format: uuid
        * @description The unique identifier of the organization
        */
       organizationUuid?: string;
+      /** Format: date-time */
+      createdAt?: string;
     };
     SessionAuth: {
       source: string;
@@ -15848,11 +22392,9 @@ export interface components {
       type: 'pat';
     };
     /**
-     * @description The URL interface represents an object providing static methods used for creating object URLs.
+     * @description The **`URL`** interface is used to parse, construct, normalize, and encode URL.
      *
      *     [MDN Reference](https://developer.mozilla.org/docs/Web/API/URL)
-     *     `URL` class is a global reference for `import { URL } from 'url'`
-     *     https://nodejs.org/api/url.html#the-whatwg-url-api
      */
     'url.URL': string;
     OauthAuth: {
@@ -15877,7 +22419,7 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Account.Exclude_keyofAccount.user-or-keyofAccountHelpers__': {
-      organization: components['schemas']['Partial_Pick_Organization.name-or-createdAt-or-organizationUuid__'];
+      organization: components['schemas']['Partial_Pick_Organization.name-or-organizationUuid-or-createdAt__'];
       authentication:
         | components['schemas']['SessionAuth']
         | components['schemas']['JwtAuth']
@@ -15907,17 +22449,30 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    ApiUserAvatarResponse: {
+      results: {
+        avatarUrl: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
     UserAttributeValue: {
+      /** @deprecated */
       value: string;
+      values: string[];
       email: string;
       userUuid: string;
     };
     GroupAttributeValue: {
+      /** @deprecated */
       value: string;
+      values: string[];
       groupUuid: string;
     };
     UserAttribute: {
+      /** @deprecated */
       attributeDefault: string | null;
+      attributeDefaults: string[] | null;
       groups: components['schemas']['GroupAttributeValue'][];
       users: components['schemas']['UserAttributeValue'][];
       description?: string;
@@ -15937,24 +22492,27 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_UserAttribute.name-or-description-or-attributeDefault_': {
-      description?: string;
-      name: string;
-      attributeDefault: string | null;
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_UserAttributeValue.Exclude_keyofUserAttributeValue.email__': {
+    CreateUserAttributeValue: {
+      /** @deprecated */
+      value?: string;
+      values?: string[];
       userUuid: string;
-      value: string;
     };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_UserAttributeValue.email_': components['schemas']['Pick_UserAttributeValue.Exclude_keyofUserAttributeValue.email__'];
-    CreateUserAttributeValue: components['schemas']['Omit_UserAttributeValue.email_'];
-    CreateGroupAttributeValue: components['schemas']['GroupAttributeValue'];
-    CreateUserAttribute: components['schemas']['Pick_UserAttribute.name-or-description-or-attributeDefault_'] & {
+    CreateGroupAttributeValue: {
+      /** @deprecated */
+      value?: string;
+      values?: string[];
+      groupUuid: string;
+    };
+    CreateUserAttribute: {
       groups: components['schemas']['CreateGroupAttributeValue'][];
       users: components['schemas']['CreateUserAttributeValue'][];
+      /** @deprecated */
+      attributeDefault?: (string[] | string) | null;
+      /** @description Canonical default value(s). null/empty means no default. */
+      attributeDefaults?: string[] | null;
+      description?: string;
+      name: string;
     };
     UserWithCount: {
       /** Format: double */
@@ -16208,192 +22766,6 @@ export interface components {
       versionedData?: components['schemas']['UpdateVersionedSqlChart'];
       unversionedData?: components['schemas']['UpdateUnversionedSqlChart'];
     };
-    /** @enum {string} */
-    PromotionAction: 'no changes' | 'create' | 'update' | 'delete';
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Space.organizationUuid-or-projectUuid-or-uuid-or-name-or-inheritParentPermissions-or-projectMemberAccessRole-or-pinnedListUuid-or-pinnedListOrder-or-slug-or-parentSpaceUuid-or-path_': {
-      name: string;
-      projectUuid: string;
-      organizationUuid: string;
-      uuid: string;
-      inheritParentPermissions: boolean;
-      projectMemberAccessRole: components['schemas']['SpaceMemberRole'] | null;
-      pinnedListUuid: string | null;
-      /** Format: double */
-      pinnedListOrder: number | null;
-      slug: string;
-      parentSpaceUuid: string | null;
-      path: string;
-    };
-    SpaceSummaryBase: components['schemas']['Pick_Space.organizationUuid-or-projectUuid-or-uuid-or-name-or-inheritParentPermissions-or-projectMemberAccessRole-or-pinnedListUuid-or-pinnedListOrder-or-slug-or-parentSpaceUuid-or-path_'] & {
-      deletedBy?: {
-        lastName: string;
-        firstName: string;
-        userUuid: string;
-      };
-      /** Format: date-time */
-      deletedAt?: string;
-      /** Format: double */
-      appCount: number;
-      /** Format: double */
-      childSpaceCount: number;
-      /** Format: double */
-      dashboardCount: number;
-      /** Format: double */
-      chartCount: number;
-    };
-    PromotedSpace: components['schemas']['SpaceSummaryBase'];
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Dashboard.Exclude_keyofDashboard.inheritsFromOrgOrProject-or-access__': {
-      description?: string;
-      name: string;
-      projectUuid: string;
-      organizationUuid: string;
-      uuid: string;
-      parameters?: components['schemas']['DashboardParameters'];
-      pinnedListUuid: string | null;
-      /** Format: double */
-      pinnedListOrder: number | null;
-      slug: string;
-      /** Format: date-time */
-      updatedAt: string;
-      versionUuid: string;
-      spaceUuid: string;
-      /** Format: double */
-      dashboardVersionId: number;
-      verification: components['schemas']['ContentVerificationInfo'] | null;
-      tiles: components['schemas']['DashboardTile'][];
-      filters: components['schemas']['DashboardFilters'];
-      updatedByUser?: components['schemas']['UpdatedByUser'];
-      spaceName: string;
-      /** Format: double */
-      views: number;
-      firstViewedAt: string | null;
-      tabs: components['schemas']['DashboardTab'][];
-      config?: components['schemas']['DashboardConfig'];
-      colorPaletteUuid: string | null;
-      /** Format: date-time */
-      deletedAt?: string;
-      deletedBy?: {
-        lastName: string;
-        firstName: string;
-        userUuid: string;
-      } | null;
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_Dashboard.inheritsFromOrgOrProject-or-access_': components['schemas']['Pick_Dashboard.Exclude_keyofDashboard.inheritsFromOrgOrProject-or-access__'];
-    DashboardDAO: components['schemas']['Omit_Dashboard.inheritsFromOrgOrProject-or-access_'];
-    PromotedDashboard: components['schemas']['DashboardDAO'] & {
-      spacePath: string;
-      spaceSlug: string;
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_SavedChart.Exclude_keyofSavedChart.inheritsFromOrgOrProject-or-access__': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
-      /** @description Display name of the chart */
-      name: string;
-      projectUuid: string;
-      organizationUuid: string;
-      uuid: string;
-      /** @description Parameter values for the chart query */
-      parameters?: components['schemas']['ParametersValuesMap'];
-      pinnedListUuid: string | null;
-      /** Format: double */
-      pinnedListOrder: number | null;
-      /** @description Unique identifier slug for this chart */
-      slug: string;
-      /**
-       * Format: date-time
-       * @description Timestamp when the chart was last updated
-       */
-      updatedAt: string;
-      /** @description Visualization configuration for the chart */
-      chartConfig: components['schemas']['ChartConfig'];
-      spaceUuid: string;
-      dashboardUuid: string | null;
-      verification: components['schemas']['ContentVerificationInfo'] | null;
-      updatedByUser?: components['schemas']['UpdatedByUser'];
-      spaceName: string;
-      /**
-       * @description Chart-level palette override pointer. `null` means inherit from the
-       *     containing dashboard / space / project / org. Writable via
-       *     `UpdateSavedChart`.
-       */
-      colorPaletteUuid: string | null;
-      /** Format: date-time */
-      deletedAt?: string;
-      deletedBy?: {
-        lastName: string;
-        firstName: string;
-        userUuid: string;
-      } | null;
-      /** @description The explore/table name this chart queries from */
-      tableName: string;
-      /** @description The query configuration defining what data to fetch */
-      metricQuery: components['schemas']['MetricQuery'];
-      /** @description Pivot table configuration */
-      pivotConfig?: {
-        columns: string[];
-      };
-      /** @description Table view configuration */
-      tableConfig: {
-        columnOrder: string[];
-      };
-      dashboardName: string | null;
-      /** @deprecated */
-      colorPalette: string[];
-      /**
-       * @description Fully resolved palette for this chart, computed from the
-       *     org → project → space → dashboard → chart hierarchy. Read-only — set
-       *     the chart's own palette via `colorPaletteUuid`.
-       */
-      resolvedColorPalette: components['schemas']['ResolvedProjectColorPalette'];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_SavedChart.inheritsFromOrgOrProject-or-access_': components['schemas']['Pick_SavedChart.Exclude_keyofSavedChart.inheritsFromOrgOrProject-or-access__'];
-    SavedChartDAO: components['schemas']['Omit_SavedChart.inheritsFromOrgOrProject-or-access_'];
-    PromotedChart: components['schemas']['SavedChartDAO'] & {
-      oldUuid: string;
-      spacePath: string;
-      spaceSlug: string;
-    };
-    PromotedSqlChart: {
-      spacePath: string;
-      spaceSlug: string;
-      description: string | null;
-      name: string;
-      projectUuid: string;
-      slug: string;
-      oldUuid: string;
-      uuid: string;
-    };
-    PromotedApp: {
-      name: string;
-      uuid: string;
-    };
-    PromotionChanges: {
-      dataApps?: {
-        data: components['schemas']['PromotedApp'];
-        action: components['schemas']['PromotionAction'];
-      }[];
-      sqlCharts?: {
-        data: components['schemas']['PromotedSqlChart'];
-        action: components['schemas']['PromotionAction'];
-      }[];
-      charts: {
-        data: components['schemas']['PromotedChart'];
-        action: components['schemas']['PromotionAction'];
-      }[];
-      dashboards: {
-        data: components['schemas']['PromotedDashboard'];
-        action: components['schemas']['PromotionAction'];
-      }[];
-      spaces: {
-        data: components['schemas']['PromotedSpace'];
-        action: components['schemas']['PromotionAction'];
-      }[];
-    };
     ApiPromotionChangesResponse: {
       results: components['schemas']['PromotionChanges'];
       /** @enum {string} */
@@ -16416,6 +22788,8 @@ export interface components {
       parameterValues?: components['schemas']['ParametersValuesMap'];
       columns: components['schemas']['VizColumn'][];
       sql: string;
+      /** @description Optional display label. Defaults to a friendly version of name. */
+      label?: string;
       name: string;
     };
     UpdateVirtualViewPayload: components['schemas']['CreateVirtualViewPayload'];
@@ -16463,10 +22837,11 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateSchedulerAndTargets.Exclude_keyofCreateSchedulerAndTargets.savedChartUuid-or-dashboardUuid-or-savedSqlUuid-or-createdBy__': {
       name: string;
-      cron: string;
-      projectUuid?: string | null;
-      enabled: boolean;
+      slug?: string;
       timezone?: string;
+      projectUuid?: string | null;
+      cron: string;
+      enabled: boolean;
       message?: string;
       format: components['schemas']['SchedulerFormat'];
       projectSchedulerTimezone?: string;
@@ -16478,6 +22853,8 @@ export interface components {
       includeLinks: boolean;
       projectName?: string | null;
       targets: components['schemas']['CreateSchedulerTarget'][];
+      aiAugmentation?: components['schemas']['SchedulerAiAugmentation'] | null;
+      sourceSchedulerUuid?: string;
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_CreateSchedulerAndTargets.savedChartUuid-or-dashboardUuid-or-savedSqlUuid-or-createdBy_': components['schemas']['Pick_CreateSchedulerAndTargets.Exclude_keyofCreateSchedulerAndTargets.savedChartUuid-or-dashboardUuid-or-savedSqlUuid-or-createdBy__'];
@@ -16500,19 +22877,19 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_SavedChart.uuid-or-name-or-description-or-spaceName-or-spaceUuid-or-projectUuid-or-organizationUuid-or-pinnedListUuid-or-dashboardUuid-or-dashboardName-or-slug_': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
       /** @description Display name of the chart */
       name: string;
-      projectUuid: string;
-      organizationUuid: string;
-      uuid: string;
-      pinnedListUuid: string | null;
+      /** @description Optional description of what this chart displays */
+      description?: string;
       /** @description Unique identifier slug for this chart */
       slug: string;
+      uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
+      pinnedListUuid: string | null;
       spaceUuid: string;
-      dashboardUuid: string | null;
       spaceName: string;
+      dashboardUuid: string | null;
       dashboardName: string | null;
     };
     /** @enum {string} */
@@ -16526,7 +22903,8 @@ export interface components {
       | 'gauge'
       | 'custom'
       | 'map'
-      | 'sankey';
+      | 'sankey'
+      | 'data_app_viz';
     /** @enum {string} */
     ChartSourceType: 'dbt_explore' | 'sql';
     ChartSummary: components['schemas']['Pick_SavedChart.uuid-or-name-or-description-or-spaceName-or-spaceUuid-or-projectUuid-or-organizationUuid-or-pinnedListUuid-or-dashboardUuid-or-dashboardName-or-slug_'] & {
@@ -16571,18 +22949,18 @@ export interface components {
       };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Dashboard.uuid-or-name-or-description-or-updatedAt-or-projectUuid-or-updatedByUser-or-organizationUuid-or-spaceUuid-or-views-or-firstViewedAt-or-pinnedListUuid-or-pinnedListOrder_': {
-      description?: string;
       name: string;
-      projectUuid: string;
-      organizationUuid: string;
+      description?: string;
       uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
       pinnedListUuid: string | null;
       /** Format: double */
       pinnedListOrder: number | null;
       /** Format: date-time */
       updatedAt: string;
-      spaceUuid: string;
       updatedByUser?: components['schemas']['UpdatedByUser'];
+      spaceUuid: string;
       /** Format: double */
       views: number;
       firstViewedAt: string | null;
@@ -16593,6 +22971,8 @@ export interface components {
     };
     SpaceDashboard: components['schemas']['DashboardBasicDetails'];
     SpaceAccessUserMetadata: {
+      avatarGradient: components['schemas']['UserAvatarColorValue'] | null;
+      avatarUrl: string | null;
       isInternal: boolean;
       email: string;
       lastName: string;
@@ -16795,10 +23175,25 @@ export interface components {
       | 'aiAgentReviewClassifier'
       | 'aiAgentReviewWriteback'
       | 'aiAgentReviewRemediationPreview'
+      | 'aiAgentReviewRemediationCompile'
+      | 'aiAgentReviewRemediationRun'
+      | 'sendReviewNotification'
       | 'embedArtifactVersion'
       | 'generateArtifactQuestion'
       | 'appGeneratePipeline'
+      | 'appBuildFromSource'
+      | 'aiWritebackPipeline'
+      | 'aiDeepResearch'
+      | 'agentOnboardingRun'
+      | 'aiAgentEditDbtProjectPipeline'
       | 'sweepStaleAppLocks'
+      | 'sweepStaleAiWritebackRuns'
+      | 'sweepStaleAiDeepResearchRuns'
+      | 'sweepAiAgentMemoryThreads'
+      | 'aiAgentMemoryDistill'
+      | 'consolidateAiAgentMemories'
+      | 'consolidateAiAgentMemoryPartition'
+      | 'cleanMcpToolCalls'
       | 'handleScheduledDelivery'
       | 'sendSlackNotification'
       | 'sendEmailNotification'
@@ -16820,6 +23215,7 @@ export interface components {
       | 'indexCatalog'
       | 'generateDailyJobs'
       | 'exportCsvDashboard'
+      | 'exportContent'
       | 'renameResources'
       | 'materializePreAggregate'
       | 'cleanQueryHistory'
@@ -16830,7 +23226,10 @@ export interface components {
       | 'cleanDeploySessions'
       | 'managedAgentHeartbeat'
       | 'cleanExpiredPreviews'
-      | 'ingestProjectContext';
+      | 'ingestProjectContext'
+      | 'compactUsageEvents'
+      | 'pollEmailWhitelabelVerification'
+      | 'cleanWarehouseConnectCodes';
     BaseSchedulerLog: {
       /** Format: date-time */
       createdAt: string;
@@ -16865,10 +23264,17 @@ export interface components {
     MissingTargetsPartialFailure: {
       type: components['schemas']['PartialFailureType.MISSING_TARGETS'];
     };
+    /** @enum {string} */
+    'PartialFailureType.AI_AUGMENTATION': 'ai_augmentation';
+    AiAugmentationPartialFailure: {
+      error: string;
+      type: components['schemas']['PartialFailureType.AI_AUGMENTATION'];
+    };
     PartialFailure:
       | components['schemas']['DashboardChartPartialFailure']
       | components['schemas']['DashboardSqlChartPartialFailure']
-      | components['schemas']['MissingTargetsPartialFailure'];
+      | components['schemas']['MissingTargetsPartialFailure']
+      | components['schemas']['AiAugmentationPartialFailure'];
     /**
      * @description Outcome of evaluating a threshold-alert scheduler against the latest query results.
      *     Emitted on `SchedulerDetails.thresholdStatus` and on the `scheduler_job.completed`
@@ -17029,9 +23435,9 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy_': {
+      versionUuid: string;
       /** Format: date-time */
       createdAt: string;
-      versionUuid: string;
       chartUuid: string;
       createdBy:
         components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
@@ -17153,8 +23559,8 @@ export interface components {
     PullRequestReviewContext: {
       sourceAgentUuid: string;
       sourceProjectUuid: string;
-      sourceThreadUuid: string;
-      sourceFindingUuid: string;
+      sourceThreadUuid: string | null;
+      sourceFindingUuid: string | null;
       primaryRootCause: components['schemas']['AiAgentRootCause'];
       reviewStatus: components['schemas']['AiAgentReviewItemStatus'];
       reviewTitle: string;
@@ -17185,6 +23591,12 @@ export interface components {
        *     without the enterprise AI write-back feature.
        */
       aiThreadUuid: string | null;
+      /**
+       * @description Two-line user-facing "what this PR does", written by the AI write-back
+       *     agent at PR creation. Null for non-AI PRs and PRs predating the field —
+       *     consumers fall back to the live PR title.
+       */
+      summary: string | null;
       prUrl: string;
       /** Format: double */
       prNumber: number;
@@ -17223,12 +23635,6 @@ export interface components {
       status: 'ok';
     };
     /** @enum {string} */
-    'DbtProjectType.DBT': 'dbt';
-    DbtProjectEnvironmentVariable: {
-      value: string;
-      key: string;
-    };
-    /** @enum {string} */
     DbtProjectType:
       | 'dbt'
       | 'dbt_cloud_ide'
@@ -17238,6 +23644,44 @@ export interface components {
       | 'azure_devops'
       | 'none'
       | 'manifest';
+    /**
+     * @description Non-sensitive view of a dbt source for API responses — never includes the
+     *     decrypted connection (which holds credentials). The primary source is
+     *     synthesised from the project's own dbt_connection. `repository`, `branch` and
+     *     `projectSubPath` are the git-backed source's identity (null for non-git
+     *     connections); they are safe to expose — only secrets are stripped.
+     *
+     *     `hasCredentialError` is always `false` for the synthesised primary source.
+     *     See `ProjectDbtSource` for what it means on an additional source.
+     */
+    ProjectDbtSourceSummary: {
+      hasCredentialError: boolean;
+      projectSubPath: string | null;
+      branch: string | null;
+      repository: string | null;
+      type: components['schemas']['DbtProjectType'] | null;
+      /** Format: double */
+      precedence: number;
+      isPrimary: boolean;
+      name: string;
+      projectDbtSourceUuid: string;
+    };
+    ApiProjectDbtSourcesResponse: {
+      results: components['schemas']['ProjectDbtSourceSummary'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiProjectDbtSourceResponse: {
+      results: components['schemas']['ProjectDbtSourceSummary'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    'DbtProjectType.DBT': 'dbt';
+    DbtProjectEnvironmentVariable: {
+      value: string;
+      key: string;
+    };
     DbtLocalProjectConfig: {
       type: components['schemas']['DbtProjectType.DBT'];
       target?: string;
@@ -17256,6 +23700,7 @@ export interface components {
       environment_id: string;
       discovery_api_endpoint?: string;
       tags?: string[];
+      webhook_hmac_secret?: string;
     } & {
       [key: string]: unknown;
     };
@@ -17353,8 +23798,30 @@ export interface components {
       | components['schemas']['DbtAzureDevOpsProjectConfig']
       | components['schemas']['DbtNoneProjectConfig']
       | components['schemas']['DbtManifestProjectConfig'];
+    ApiCreateProjectDbtSource: {
+      dbtConnection: components['schemas']['DbtProjectConfig'];
+      name: string;
+    };
+    /**
+     * @description A single dbt source including its connection, with sensitive credentials
+     *     (tokens, keys) stripped — used to pre-fill the edit form. Secrets left out
+     *     here are preserved on update via `mergeMissingDbtConfigSecrets`.
+     */
+    ProjectDbtSourceWithConnection: components['schemas']['ProjectDbtSourceSummary'] & {
+      dbtConnection: components['schemas']['DbtProjectConfig'] | null;
+    };
+    ApiProjectDbtSourceWithConnectionResponse: {
+      results: components['schemas']['ProjectDbtSourceWithConnection'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiUpdateProjectDbtSource: {
+      dbtConnection?: components['schemas']['DbtProjectConfig'];
+      name?: string;
+    };
     /** @enum {string} */
-    SupportedDbtVersions: 'v1.4' | 'v1.5' | 'v1.6' | 'v1.7' | 'v1.8' | 'v1.9' | 'v1.10' | 'v1.11';
+    SupportedDbtVersions:
+      'v1.4' | 'v1.5' | 'v1.6' | 'v1.7' | 'v1.8' | 'v1.9' | 'v1.10' | 'v1.11' | 'v1.12';
     /** @enum {string} */
     DbtVersionOptionLatest: 'latest';
     DbtVersionOption:
@@ -17362,6 +23829,29 @@ export interface components {
       | components['schemas']['DbtVersionOptionLatest'];
     /** @description Project-wide default settings that can be overridden at explore or field level */
     ProjectDefaults: {
+      /**
+       * @description Override the display label of standard granularities (e.g. `week`:
+       *     "Week starting Monday"). Keyed by standard granularity name; applies to
+       *     Explorer dimension labels, the Explorer sidebar tree, and the date zoom.
+       */
+      granularity_labels?: components['schemas']['Record_string.string_'];
+      /**
+       * @description Extra time intervals appended to the built-in defaults for date/timestamp
+       *     dimensions that do not declare their own `time_intervals`. Values may be
+       *     standard granularities (e.g. `hour`) or `custom_granularities` keys.
+       */
+      additional_time_intervals?: {
+        timestamp?: (components['schemas']['TimeFrames'] | string)[];
+        date?: (components['schemas']['TimeFrames'] | string)[];
+      };
+      /**
+       * @description Default behavior for column totals in results tables.
+       *     When false, the extra warehouse query that calculates column totals
+       *     is not run by default for new queries. Charts that explicitly enable
+       *     "Show column totals" still calculate them.
+       *     Defaults to true if not specified.
+       */
+      column_totals?: boolean;
       /**
        * @description Default case sensitivity for string filters across the project.
        *     When false, all string filters will be case insensitive by default.
@@ -17371,6 +23861,7 @@ export interface components {
       case_sensitive?: boolean;
     };
     Project: {
+      provisioningSource?: string | null;
       /** Format: date-time */
       expiresAt: string | null;
       colorPaletteUuid: string | null;
@@ -17399,6 +23890,27 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Project.name-or-projectUuid-or-organizationUuid-or-type-or-upstreamProjectUuid-or-createdByUserUuid-or-provisioningSource_': {
+      name: string;
+      type: components['schemas']['ProjectType'];
+      organizationUuid: string;
+      projectUuid: string;
+      createdByUserUuid: string | null;
+      upstreamProjectUuid?: string;
+      provisioningSource?: string | null;
+    };
+    ProjectSummary: components['schemas']['Pick_Project.name-or-projectUuid-or-organizationUuid-or-type-or-upstreamProjectUuid-or-createdByUserUuid-or-provisioningSource_'];
+    ApiSuccess_ProjectSummary_: {
+      results: components['schemas']['ProjectSummary'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description Make all properties in T optional */
+    'Partial_Pick_Project.name__': {
+      name?: string;
+    };
+    UpdateProjectDetails: components['schemas']['Partial_Pick_Project.name__'];
     ApiChartListResponse: {
       results: components['schemas']['SpaceQuery'][];
       /** @enum {string} */
@@ -17525,6 +24037,14 @@ export interface components {
     UpdateDefaultUserSpaces: {
       hasDefaultUserSpaces: boolean;
     };
+    GroupType: {
+      description?: string;
+      label: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.GroupType_': {
+      [key: string]: components['schemas']['GroupType'];
+    };
     ApiTableGroupsResults: components['schemas']['Record_string.GroupType_'];
     ApiSuccess_ApiTableGroupsResults_: {
       results: components['schemas']['ApiTableGroupsResults'];
@@ -17614,22 +24134,23 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-pivotConfig-or-chartConfig-or-tableConfig-or-parameters_': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
       /** @description Display name of the chart */
       name: string;
-      /** @description Parameter values for the chart query */
-      parameters?: components['schemas']['ParametersValuesMap'];
-      /** @description Visualization configuration for the chart */
-      chartConfig: components['schemas']['ChartConfig'];
+      /** @description Optional description of what this chart displays */
+      description?: string;
       /** @description The explore/table name this chart queries from */
       tableName: string;
       /** @description The query configuration defining what data to fetch */
       metricQuery: components['schemas']['MetricQuery'];
+      /** @description Visualization configuration for the chart */
+      chartConfig: components['schemas']['ChartConfig'];
       /** @description Pivot table configuration */
       pivotConfig?: {
+        rows?: string[];
         columns: string[];
       };
+      /** @description Parameter values for the chart query */
+      parameters?: components['schemas']['ParametersValuesMap'];
       /** @description Table view configuration */
       tableConfig: {
         columnOrder: string[];
@@ -17637,11 +24158,13 @@ export interface components {
     };
     CreateChartBase: components['schemas']['Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-pivotConfig-or-chartConfig-or-tableConfig-or-parameters_'];
     CreateChartInSpace: components['schemas']['CreateChartBase'] & {
+      colorPaletteUuid?: string | null;
       /** @enum {number|null} */
       dashboardUuid?: null;
       spaceUuid?: string;
     };
     CreateChartInDashboard: components['schemas']['CreateChartBase'] & {
+      colorPaletteUuid?: string | null;
       /** @enum {number|null} */
       spaceUuid?: null;
       dashboardUuid: string;
@@ -17661,8 +24184,8 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Dashboard.uuid-or-name-or-description-or-spaceUuid_': {
-      description?: string;
       name: string;
+      description?: string;
       uuid: string;
       spaceUuid: string;
     };
@@ -17670,6 +24193,34 @@ export interface components {
     ApiCreatePreviewResults: {
       compileJobUuid: string;
       projectUuid: string;
+    };
+    /**
+     * @description Field-level diff between a preview project and the project it was copied from
+     *     (`upstreamProjectUuid`), computed in SQL over the `catalog_search` index.
+     *
+     *     Detects added/removed fields and label changes. It does not detect SQL-only
+     *     changes (same name/label, different SQL) — that would require walking the
+     *     cached explore definitions, which is too expensive to do per request.
+     * @enum {string}
+     */
+    UpstreamFieldChangeKind: 'added' | 'removed' | 'label_changed';
+    UpstreamFieldDiff: {
+      previewLabel: string | null;
+      upstreamLabel: string | null;
+      fieldType: string | null;
+      fieldName: string;
+      tableName: string;
+      exploreName: string;
+      change: components['schemas']['UpstreamFieldChangeKind'];
+    };
+    ApiUpstreamDiffResults: {
+      fields: components['schemas']['UpstreamFieldDiff'][];
+      upstreamProjectUuid: string;
+    };
+    ApiUpstreamDiffResponse: {
+      results: components['schemas']['ApiUpstreamDiffResults'];
+      /** @enum {string} */
+      status: 'ok';
     };
     PreviewExpirationProjectSettings: {
       /** Format: double */
@@ -17689,6 +24240,21 @@ export interface components {
       maxPreviewExpirationHours: number;
       /** Format: double */
       defaultPreviewExpirationHours: number;
+    };
+    PreviewExpiresAt: {
+      /** Format: date-time */
+      expiresAt: string;
+      projectUuid: string;
+    };
+    ApiSuccess_PreviewExpiresAt_: {
+      results: components['schemas']['PreviewExpiresAt'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiPreviewExpiresAtResponse: components['schemas']['ApiSuccess_PreviewExpiresAt_'];
+    UpdatePreviewExpiresAt: {
+      /** Format: double */
+      expiresInHours?: number;
     };
     UpdateSchedulerSettings: {
       schedulerFailureContactOverride?: string | null;
@@ -17734,546 +24300,6 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.Exclude_keyofPick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery__': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
-      /** @description Display name of the chart */
-      name: string;
-      /** @description Parameter values for the chart query */
-      parameters?: components['schemas']['ParametersValuesMap'];
-      /** @description Unique identifier slug for this chart */
-      slug: string;
-      /** @description Visualization configuration for the chart */
-      chartConfig: components['schemas']['ChartConfig'];
-      /** @description The explore/table name this chart queries from */
-      tableName: string;
-      /** @description Pivot table configuration */
-      pivotConfig?: {
-        columns: string[];
-      };
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery_': components['schemas']['Pick_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.Exclude_keyofPick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery__'];
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_CompiledDimension.name-or-label-or-table_': Record<string, never>;
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_MetricQuery.Exclude_keyofMetricQuery.filters__': {
-      /**
-       * Format: double
-       * @description Maximum number of rows to return
-       */
-      limit: number;
-      /** @description Timezone for date/time values (e.g., 'America/Los_Angeles', 'UTC') */
-      timezone?: string;
-      /** @description The name of the explore to query */
-      exploreName: string;
-      /** @description List of dimension field IDs to include */
-      dimensions: string[];
-      /** @description List of metric field IDs to include */
-      metrics: string[];
-      /** @description Sort configuration for query results */
-      sorts: components['schemas']['SortField'][];
-      /** @description Custom calculations to perform on query results */
-      tableCalculations: components['schemas']['TableCalculation'][];
-      /** @description Custom metrics defined inline (ad-hoc metrics not in the dbt model) */
-      additionalMetrics?: components['schemas']['AdditionalMetric'][];
-      /** @description Custom dimensions defined inline */
-      customDimensions?: components['schemas']['CustomDimension'][];
-      /** @description Override formatting options for existing metrics */
-      metricOverrides?: components['schemas']['MetricOverrides'];
-      /** @description Override formatting options for existing dimensions */
-      dimensionOverrides?: components['schemas']['DimensionOverrides'];
-      /**
-       * @description Dimension field IDs used as pivot columns (from chart's pivotConfig.columns).
-       *     Used by row_total() to determine non-pivot dimensions for GROUP BY.
-       */
-      pivotDimensions?: string[];
-      metadata?: {
-        hasADateDimension: components['schemas']['Pick_CompiledDimension.name-or-label-or-table_'];
-      };
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_MetricQuery.filters_': components['schemas']['Pick_MetricQuery.Exclude_keyofMetricQuery.filters__'];
-    FilterGroupInput:
-      components['schemas']['OrFilterGroupInput'] | components['schemas']['AndFilterGroupInput'];
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_FilterRule.Exclude_keyofFilterRule.id__': {
-      /** @description Target field for the filter */
-      target: components['schemas']['FieldTarget'];
-      /** @description Additional settings for date/time filters */
-      settings?: unknown;
-      /** @description Whether this filter is disabled */
-      disabled?: boolean;
-      /** @description Whether this filter is required */
-      required?: boolean;
-      /**
-       * @description Overrides the field/explore case-sensitivity for this rule only.
-       *     Used by internal features like autocomplete search that must always
-       *     match case-insensitively regardless of the field's configured setting.
-       */
-      caseSensitive?: boolean;
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Values to filter by */
-      values?: unknown[];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_FilterRule.id_': components['schemas']['Pick_FilterRule.Exclude_keyofFilterRule.id__'];
-    /**
-     * @description Permissive filter types for chart-as-code uploads where `id` may be omitted.
-     *     Filter IDs are auto-generated during upsert if absent.
-     *     After normalization these become the strict runtime types (FilterGroup, Filters).
-     */
-    FilterRuleInput: components['schemas']['Omit_FilterRule.id_'] & {
-      id?: string;
-    };
-    FilterGroupItemInput:
-      components['schemas']['FilterGroupInput'] | components['schemas']['FilterRuleInput'];
-    OrFilterGroupInput: {
-      or: components['schemas']['FilterGroupItemInput'][];
-      id?: string;
-    };
-    AndFilterGroupInput: {
-      and: components['schemas']['FilterGroupItemInput'][];
-      id?: string;
-    };
-    FiltersInput: {
-      tableCalculations?: components['schemas']['FilterGroupInput'];
-      metrics?: components['schemas']['FilterGroupInput'];
-      dimensions?: components['schemas']['FilterGroupInput'];
-    };
-    /** @enum {string} */
-    'ContentAsCodeType.CHART': 'chart';
-    ChartAsCode: components['schemas']['Omit_Pick_SavedChart.name-or-description-or-tableName-or-metricQuery-or-chartConfig-or-pivotConfig-or-slug-or-parameters_.metricQuery_'] & {
-      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
-      verification?: components['schemas']['ContentVerificationInfo'] | null;
-      /**
-       * @description Declarative verification state.
-       *     `true` verifies the chart on upload, `false` unverifies it, `undefined` leaves the
-       *     current state untouched. Download sets this to `true` when the chart is verified.
-       */
-      verified?: boolean;
-      /**
-       * Format: date-time
-       * @description Timestamp when this chart was downloaded from Lightdash
-       */
-      downloadedAt?: string;
-      /** @description Slug of the space containing this chart */
-      spaceSlug: string;
-      /** @description Content type discriminator */
-      contentType?: components['schemas']['ContentAsCodeType.CHART'];
-      /**
-       * Format: double
-       * @description Schema version for this chart configuration
-       */
-      version: number;
-      /** @description Slug of the dashboard this chart belongs to (if any) */
-      dashboardSlug?: string;
-      /** @description Table configuration. Defaults to empty column order if omitted. */
-      tableConfig?: {
-        columnOrder: string[];
-      };
-      /**
-       * Format: date-time
-       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
-       */
-      updatedAt?: string;
-      metricQuery: components['schemas']['Omit_MetricQuery.filters_'] & {
-        filters: components['schemas']['FiltersInput'];
-      };
-    };
-    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__': Record<
-      string,
-      never
-    >;
-    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__': {
-      chart?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__'];
-    };
-    /**
-     * @description Create a type from another type with all keys and nested keys set to optional.
-     *
-     *     Use-cases:
-     *     - Merging a default settings/config object with another object, the second object would be a deep partial of the default object.
-     *     - Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test.
-     */
-    'PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__chart_58___91_x-string_93__58__name_63_-string-or-undefined--chartConfig_63__58__type-ChartType.CARTESIAN--config_63__58__eChartsConfig_58__series_63__58__name_63_-string-or-undefined--markLine_63__58__data_58__name_63_-string-or-undefined_-Array_-or-undefined_-Array-or-undefined--xAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined--yAxis_63__58__name_63_-string-or-undefined_-Array-or-undefined__-or-undefined_-or-_type-ChartType.PIE--config_63__58__groupLabelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.FUNNEL--config_63__58__labelOverrides_63_-Record_string.string_-or-undefined_-or-undefined_-or-_type-ChartType.BIG_NUMBER--config_63__58__label_63_-string-or-undefined--comparisonLabel_63_-string-or-undefined--comparisonField_63_-string-or-undefined_-or-undefined_-or-_type-ChartType.TABLE--config_63__58__columns_63_-Record_string._name-string__-or-undefined_-or-undefined_-or-_type-ChartType.CUSTOM--config_63__58__spec_63_-Record_string.unknown_-or-undefined_-or-undefined_-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__'];
-    /** @enum {string} */
-    'ContentAsCodeType.SPACE': 'space';
-    SpaceAsCode: {
-      /** @description The space slug used for file naming and cross-referencing */
-      slug: string;
-      /** @description The original human-readable space name (preserves emoji, casing, etc.) */
-      spaceName: string;
-      contentType: components['schemas']['ContentAsCodeType.SPACE'];
-    };
-    ApiChartAsCodeListResponse: {
-      results: {
-        /** Format: double */
-        offset: number;
-        /** Format: double */
-        total: number;
-        spaces: components['schemas']['SpaceAsCode'][];
-        missingIds: string[];
-        languageMap?: components['schemas']['PartialDeep_ChartAsCodeLanguageMap._recurseIntoArrays-true__'][];
-        charts: components['schemas']['ChartAsCode'][];
-      };
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.Exclude_keyofPick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs__': {
-      description?: string;
-      parameters?: components['schemas']['DashboardParameters'];
-      config?: components['schemas']['DashboardConfig'];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs_': components['schemas']['Pick_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.Exclude_keyofPick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs__'];
-    DashboardTabAsCode: {
-      hidden?: boolean;
-      /** Format: double */
-      order: number;
-      name: string;
-      uuid: string;
-    };
-    DashboardTileAsCodeBase: {
-      tabUuid?: string | null;
-      /** Format: double */
-      w: number;
-      /** Format: double */
-      h: number;
-      /** Format: double */
-      y: number;
-      /** Format: double */
-      x: number;
-      type: components['schemas']['DashboardTileTypes'];
-      tileSlug?: string;
-      uuid?: string;
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DashboardChartTileProperties-at-properties.title-or-hideTitle-or-chartName_': {
-      title?: string;
-      chartName?: string | null;
-      hideTitle?: boolean;
-    };
-    DashboardChartTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: components['schemas']['Pick_DashboardChartTileProperties-at-properties.title-or-hideTitle-or-chartName_'] & {
-        chartSlug: string | null;
-      };
-      type: components['schemas']['DashboardTileTypes.SAVED_CHART'];
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DashboardSqlChartTileProperties-at-properties.title-or-hideTitle-or-chartName_': {
-      title?: string;
-      chartName: string;
-      hideTitle?: boolean;
-    };
-    DashboardSqlChartTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: components['schemas']['Pick_DashboardSqlChartTileProperties-at-properties.title-or-hideTitle-or-chartName_'] & {
-        chartSlug: string | null;
-      };
-      type: components['schemas']['DashboardTileTypes.SQL_CHART'];
-    };
-    DashboardMarkdownTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: {
-        hideFrame?: boolean;
-        content: string;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.MARKDOWN'];
-    };
-    DashboardLoomTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: {
-        url: string;
-        hideTitle?: boolean;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.LOOM'];
-    };
-    DashboardHeadingTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: {
-        showDivider?: boolean;
-        text: string;
-        title?: unknown;
-      };
-      type: components['schemas']['DashboardTileTypes.HEADING'];
-    };
-    DashboardDataAppTileAsCode: components['schemas']['DashboardTileAsCodeBase'] & {
-      properties: {
-        appDeletedAt?: string | null;
-        appUuid: string;
-        hideTitle?: boolean;
-        title: string;
-      };
-      type: components['schemas']['DashboardTileTypes.DATA_APP'];
-    };
-    DashboardTileAsCode:
-      | components['schemas']['DashboardChartTileAsCode']
-      | components['schemas']['DashboardSqlChartTileAsCode']
-      | components['schemas']['DashboardMarkdownTileAsCode']
-      | components['schemas']['DashboardLoomTileAsCode']
-      | components['schemas']['DashboardHeadingTileAsCode']
-      | components['schemas']['DashboardDataAppTileAsCode'];
-    /** @enum {string} */
-    'ContentAsCodeType.DASHBOARD': 'dashboard';
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id__': {
-      label?: string;
-      /** @description Target field for the filter */
-      target: components['schemas']['DashboardFieldTarget'];
-      /** @description Additional settings for date/time filters */
-      settings?: unknown;
-      /** @description Whether this filter is disabled */
-      disabled?: boolean;
-      /** @description Whether this filter is required */
-      required?: boolean;
-      /**
-       * @description Overrides the field/explore case-sensitivity for this rule only.
-       *     Used by internal features like autocomplete search that must always
-       *     match case-insensitively regardless of the field's configured setting.
-       */
-      caseSensitive?: boolean;
-      /** @description Filter operator */
-      operator: components['schemas']['FilterOperator'];
-      /** @description Values to filter by */
-      values?: unknown[];
-      tileTargets?: components['schemas']['Record_string.DashboardTileTarget_'];
-      singleValue?: boolean;
-      /**
-       * @description Tab UUIDs where this filter is locked. When the active tab is in this
-       *     list, viewers see the filter but cannot change it, and URL / embed
-       *     filter overrides targeting the same field are ignored on that tab.
-       *     Empty or omitted means the filter is not locked anywhere.
-       */
-      lockedTabUuids?: string[];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_DashboardFilterRule.id_': components['schemas']['Pick_DashboardFilterRule.Exclude_keyofDashboardFilterRule.id__'];
-    DashboardAsCode: components['schemas']['Omit_Pick_Dashboard.name-or-description-or-tabs-or-slug-or-config-or-parameters_.name-or-slug-or-tabs_'] & {
-      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
-      verification?: components['schemas']['ContentVerificationInfo'] | null;
-      /**
-       * @description Declarative verification state.
-       *     `true` verifies the dashboard on upload, `false` unverifies it, `undefined` leaves the
-       *     current state untouched. Download sets this to `true` when the dashboard is verified.
-       */
-      verified?: boolean;
-      filters?: {
-        tableCalculations?: components['schemas']['DashboardFilterRule'][];
-        metrics?: components['schemas']['DashboardFilterRule'][];
-        dimensions?: components['schemas']['Omit_DashboardFilterRule.id_'][];
-      };
-      /** Format: date-time */
-      downloadedAt?: string;
-      spaceSlug: string;
-      contentType?: components['schemas']['ContentAsCodeType.DASHBOARD'];
-      /** Format: double */
-      version: number;
-      tiles: components['schemas']['DashboardTileAsCode'][];
-      /**
-       * Format: date-time
-       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
-       */
-      updatedAt?: string;
-      tabs: components['schemas']['DashboardTabAsCode'][];
-      slug: string;
-      name: string;
-    };
-    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__': Record<
-      string,
-      never
-    >;
-    /** @description Same as `PartialDeep`, but accepts only `object`s as inputs. Internal helper for `PartialDeep`. */
-    'PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__': {
-      dashboard?: components['schemas']['PartialObjectDeep___91_x-string_93__58__name_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined--description_63_-string-or-undefined__._recurseIntoArrays-true__'];
-    };
-    /**
-     * @description Create a type from another type with all keys and nested keys set to optional.
-     *
-     *     Use-cases:
-     *     - Merging a default settings/config object with another object, the second object would be a deep partial of the default object.
-     *     - Mocking and testing complex entities, where populating an entire object with its keys would be redundant in terms of the mock or test.
-     */
-    'PartialDeep_DashboardAsCodeLanguageMap._recurseIntoArrays-true__': components['schemas']['PartialObjectDeep__dashboard_58___91_x-string_93__58__name_63_-string-or-undefined--tiles_63__58__40__type-DashboardTileTypes.SAVED_CHART-or-DashboardTileTypes.SQL_CHART--properties_58__title-string--chartName-string__-or-_type-DashboardTileTypes.MARKDOWN--properties_58__title-string--content-string__-or-_type-DashboardTileTypes.LOOM--properties_58__title-string__-or-_type-DashboardTileTypes.HEADING--properties_58__text-string__-or-_type-DashboardTileTypes.DATA_APP--properties_58__title-string___41_-Array-or-undefined--description_63_-string-or-undefined___._recurseIntoArrays-true__'];
-    ApiDashboardAsCodeListResponse: {
-      results: {
-        /** Format: double */
-        offset: number;
-        /** Format: double */
-        total: number;
-        spaces: components['schemas']['SpaceAsCode'][];
-        missingIds: string[];
-        languageMap?: components['schemas']['PartialDeep_DashboardAsCodeLanguageMap._recurseIntoArrays-true__'][];
-        dashboards: components['schemas']['DashboardAsCode'][];
-      };
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiChartAsCodeUpsertResponse: {
-      results: components['schemas']['PromotionChanges'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_ChartAsCode.Exclude_keyofChartAsCode.chartConfig-or-description__': {
-      /** @description Display name of the chart */
-      name: string;
-      /** @description Parameter values for the chart query */
-      parameters?: components['schemas']['ParametersValuesMap'];
-      /** @description Unique identifier slug for this chart */
-      slug: string;
-      /**
-       * Format: date-time
-       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
-       */
-      updatedAt?: string;
-      /**
-       * Format: double
-       * @description Schema version for this chart configuration
-       */
-      version: number;
-      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
-      verification?: components['schemas']['ContentVerificationInfo'] | null;
-      /** @description The explore/table name this chart queries from */
-      tableName: string;
-      metricQuery: components['schemas']['Omit_MetricQuery.filters_'] & {
-        filters: components['schemas']['FiltersInput'];
-      };
-      /** @description Pivot table configuration */
-      pivotConfig?: {
-        columns: string[];
-      };
-      /** @description Table configuration. Defaults to empty column order if omitted. */
-      tableConfig?: {
-        columnOrder: string[];
-      };
-      /** @description Slug of the dashboard this chart belongs to (if any) */
-      dashboardSlug?: string;
-      /** @description Content type discriminator */
-      contentType?: components['schemas']['ContentAsCodeType.CHART'];
-      /** @description Slug of the space containing this chart */
-      spaceSlug: string;
-      /**
-       * Format: date-time
-       * @description Timestamp when this chart was downloaded from Lightdash
-       */
-      downloadedAt?: string;
-      /**
-       * @description Declarative verification state.
-       *     `true` verifies the chart on upload, `false` unverifies it, `undefined` leaves the
-       *     current state untouched. Download sets this to `true` when the chart is verified.
-       */
-      verified?: boolean;
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_ChartAsCode.chartConfig-or-description_': components['schemas']['Pick_ChartAsCode.Exclude_keyofChartAsCode.chartConfig-or-description__'];
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_SqlChart.name-or-description-or-slug-or-sql-or-limit-or-config-or-chartKind_': {
-      description: string | null;
-      name: string;
-      /** Format: double */
-      limit: number;
-      slug: string;
-      config: components['schemas']['VizBaseConfig'] &
-        (
-          | components['schemas']['VizCartesianChartConfig']
-          | components['schemas']['VizPieChartConfig']
-          | components['schemas']['VizTableConfig']
-        );
-      sql: string;
-      chartKind: components['schemas']['ChartKind'];
-    };
-    /** @enum {string} */
-    'ContentAsCodeType.SQL_CHART': 'sql_chart';
-    SqlChartAsCode: components['schemas']['Pick_SqlChart.name-or-description-or-slug-or-sql-or-limit-or-config-or-chartKind_'] & {
-      /** Format: date-time */
-      downloadedAt?: string;
-      /** Format: date-time */
-      updatedAt?: string;
-      spaceSlug: string;
-      contentType?: components['schemas']['ContentAsCodeType.SQL_CHART'];
-      /** Format: double */
-      version: number;
-    };
-    ApiSqlChartAsCodeListResponse: {
-      results: {
-        /** Format: double */
-        offset: number;
-        /** Format: double */
-        total: number;
-        spaces: components['schemas']['SpaceAsCode'][];
-        missingIds: string[];
-        sqlCharts: components['schemas']['SqlChartAsCode'][];
-      };
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiSqlChartAsCodeUpsertResponse: {
-      results: components['schemas']['PromotionChanges'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_SqlChartAsCode.Exclude_keyofSqlChartAsCode.config-or-description__': {
-      name: string;
-      /** Format: double */
-      limit: number;
-      slug: string;
-      /** Format: date-time */
-      updatedAt?: string;
-      /** Format: double */
-      version: number;
-      contentType?: components['schemas']['ContentAsCodeType.SQL_CHART'];
-      spaceSlug: string;
-      /** Format: date-time */
-      downloadedAt?: string;
-      sql: string;
-      chartKind: components['schemas']['ChartKind'];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_SqlChartAsCode.config-or-description_': components['schemas']['Pick_SqlChartAsCode.Exclude_keyofSqlChartAsCode.config-or-description__'];
-    ApiDashboardAsCodeUpsertResponse: {
-      results: components['schemas']['PromotionChanges'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DashboardAsCode.Exclude_keyofDashboardAsCode.tiles-or-description__': {
-      name: string;
-      parameters?: components['schemas']['DashboardParameters'];
-      slug: string;
-      /**
-       * Format: date-time
-       * @description Not modifiable by user, but useful to know if it has been updated. Defaults to now if omitted.
-       */
-      updatedAt?: string;
-      /** Format: double */
-      version: number;
-      /** @description Detailed verification info (who/when). Read-only; ignored on upload. */
-      verification?: components['schemas']['ContentVerificationInfo'] | null;
-      filters?: {
-        tableCalculations?: components['schemas']['DashboardFilterRule'][];
-        metrics?: components['schemas']['DashboardFilterRule'][];
-        dimensions?: components['schemas']['Omit_DashboardFilterRule.id_'][];
-      };
-      tabs: components['schemas']['DashboardTabAsCode'][];
-      config?: components['schemas']['DashboardConfig'];
-      contentType?: components['schemas']['ContentAsCodeType.DASHBOARD'];
-      spaceSlug: string;
-      /** Format: date-time */
-      downloadedAt?: string;
-      /**
-       * @description Declarative verification state.
-       *     `true` verifies the dashboard on upload, `false` unverifies it, `undefined` leaves the
-       *     current state untouched. Download sets this to `true` when the dashboard is verified.
-       */
-      verified?: boolean;
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_DashboardAsCode.tiles-or-description_': components['schemas']['Pick_DashboardAsCode.Exclude_keyofDashboardAsCode.tiles-or-description__'];
     ApiRefreshResults: {
       jobUuid: string;
     };
@@ -18289,9 +24315,7 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /** @enum {string} */
-    ContentType: 'chart' | 'dashboard' | 'space' | 'data_app';
-    VerifiedContentListItem: {
+    VerifiedContentListItemBase: {
       /** Format: date-time */
       verifiedAt: string;
       verifiedBy: {
@@ -18299,20 +24323,39 @@ export interface components {
         firstName: string;
         userUuid: string;
       };
+      /** Format: date-time */
+      lastUpdatedAt: string | null;
+      /** Format: double */
+      views: number;
       spaceName: string;
       spaceUuid: string;
+      description: string | null;
       name: string;
       contentUuid: string;
-      contentType: components['schemas']['ContentType'];
       uuid: string;
     };
+    /** @enum {string} */
+    'ContentType.CHART': 'chart';
+    VerifiedChartListItem: components['schemas']['VerifiedContentListItemBase'] & {
+      exploreName: string | null;
+      chartKind: components['schemas']['ChartKind'];
+      contentType: components['schemas']['ContentType.CHART'];
+    };
+    /** @enum {string} */
+    'ContentType.DASHBOARD': 'dashboard';
+    VerifiedDashboardListItem: components['schemas']['VerifiedContentListItemBase'] & {
+      contentType: components['schemas']['ContentType.DASHBOARD'];
+    };
+    VerifiedContentListItem:
+      | components['schemas']['VerifiedChartListItem']
+      | components['schemas']['VerifiedDashboardListItem'];
     ApiVerifiedContentListResponse: {
       results: components['schemas']['VerifiedContentListItem'][];
       /** @enum {string} */
       status: 'ok';
     };
     /** @enum {string} */
-    CompilationSource: 'cli_deploy' | 'refresh_dbt' | 'create_project';
+    CompilationSource: 'cli_deploy' | 'refresh_dbt' | 'create_project' | 'project_connection_form';
     /** @description Make all properties in T optional */
     Partial_Explore_: {
       name?: string;
@@ -18321,7 +24364,7 @@ export interface components {
       /** @deprecated */
       groupLabel?: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -18350,13 +24393,17 @@ export interface components {
       };
       aiHint?: string | string[];
       parameters?: components['schemas']['Record_string.LightdashProjectParameter_'];
+      /**
+       * @description Project `granularity_labels` overrides, keyed by TimeFrames. Consumed
+       *     by the date zoom to relabel standard granularities.
+       */
+      granularityLabels?: components['schemas']['Partial_Record_TimeFrames.string__'];
       savedParameterValues?: components['schemas']['ParametersValuesMap'];
       preAggregates?: components['schemas']['PreAggregateDef'][];
       preAggregateSource?: components['schemas']['PreAggregateSource'];
       /**
-       * @description Non-fatal warnings from partial compilation.
-       *     Present when some joins or fields failed to compile but the explore is still usable.
-       *     Only populated when PARTIAL_COMPILATION_ENABLED=true.
+       * @description Non-fatal compilation or validation warnings (e.g. fields that failed to
+       *     compile, warehouse-rejected column references). The explore is still usable.
        */
       warnings?: components['schemas']['InlineError'][];
     };
@@ -18367,7 +24414,7 @@ export interface components {
       /** @deprecated */
       groupLabel?: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -18436,17 +24483,17 @@ export interface components {
     'ResourceViewItemType.DASHBOARD': 'dashboard';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_DashboardBasicDetails.uuid-or-spaceUuid-or-description-or-name-or-views-or-firstViewedAt-or-pinnedListUuid-or-pinnedListOrder-or-updatedAt-or-updatedByUser-or-validationErrors-or-verification_': {
-      description?: string;
       name: string;
+      description?: string;
       uuid: string;
       pinnedListUuid: string | null;
       /** Format: double */
       pinnedListOrder: number | null;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
       /** Format: date-time */
       updatedAt: string;
-      spaceUuid: string;
-      verification: components['schemas']['ContentVerificationInfo'] | null;
       updatedByUser?: components['schemas']['UpdatedByUser'];
+      spaceUuid: string;
       /** Format: double */
       views: number;
       firstViewedAt: string | null;
@@ -18463,28 +24510,28 @@ export interface components {
     'ResourceViewItemType.CHART': 'chart';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_SpaceQuery.uuid-or-name-or-chartType-or-chartKind-or-firstViewedAt-or-views-or-pinnedListUuid-or-pinnedListOrder-or-spaceUuid-or-description-or-updatedAt-or-updatedByUser-or-validationErrors-or-verification-or-slug_': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
       /** @description Display name of the chart */
       name: string;
+      /** @description Optional description of what this chart displays */
+      description?: string;
+      /** @description Unique identifier slug for this chart */
+      slug: string;
       uuid: string;
+      chartKind?: components['schemas']['ChartKind'];
       pinnedListUuid: string | null;
       /** Format: double */
       pinnedListOrder: number | null;
-      /** @description Unique identifier slug for this chart */
-      slug: string;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
       /**
        * Format: date-time
        * @description Timestamp when the chart was last updated
        */
       updatedAt: string;
-      spaceUuid: string;
-      verification: components['schemas']['ContentVerificationInfo'] | null;
       updatedByUser?: components['schemas']['UpdatedByUser'];
+      spaceUuid: string;
       /** Format: double */
       views: number;
       firstViewedAt: string | null;
-      chartKind?: components['schemas']['ChartKind'];
       validationErrors?: components['schemas']['ValidationSummary'][];
       chartType?: components['schemas']['ChartType'];
     };
@@ -18500,9 +24547,9 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Space.projectUuid-or-uuid-or-name-or-pinnedListUuid-or-pinnedListOrder-or-organizationUuid-or-parentSpaceUuid-or-path-or-inheritParentPermissions_': {
       name: string;
-      projectUuid: string;
-      organizationUuid: string;
       uuid: string;
+      organizationUuid: string;
+      projectUuid: string;
       inheritParentPermissions: boolean;
       pinnedListUuid: string | null;
       /** Format: double */
@@ -18652,6 +24699,13 @@ export interface components {
        */
       scheduledDeliveryExpirationSeconds: number | null;
       /**
+       * @description Per-org enablement of the semantic-layer Postgres wire integration
+       *     (surfaced on the project settings page). Like impersonation this has no
+       *     instance/env default — it's opt-in only, so `null` (or no stored row)
+       *     resolves to `false`.
+       */
+      semanticLayerPgwireEnabled: boolean | null;
+      /**
        * @description Per-org consent for the Lightdash support team to impersonate users in
        *     the org while helping with a support request. Unlike the OIDC toggles
        *     this has no instance/env default — it's opt-in only, so `null` (or no
@@ -18697,6 +24751,13 @@ export interface components {
        *     stored row) resolves to `false`.
        */
       supportImpersonationEnabled?: boolean | null;
+      /**
+       * @description Per-org enablement of the semantic-layer Postgres wire integration
+       *     (surfaced on the project settings page). Like impersonation this has no
+       *     instance/env default — it's opt-in only, so `null` (or no stored row)
+       *     resolves to `false`.
+       */
+      semanticLayerPgwireEnabled?: boolean | null;
       /**
        * Format: double
        * @description Base lifetime (seconds) of this org's scheduled-delivery download links —
@@ -18820,6 +24881,26 @@ export interface components {
     ApiOrganizationDesignFileResponse: components['schemas']['ApiSuccess_ApiOrganizationDesignFile_'];
     /** @description Details of a user's Organization */
     Organization: {
+      /**
+       * @description Postgres wire protocol connection details for the semantic layer, only
+       *     populated on the authenticated `GET /org` response (not the public health
+       *     endpoint). `enabled` reflects whether the instance exposes a pgwire port
+       *     and is returned to every org member; `host`/`port` are the infra endpoint
+       *     clients connect to and are only populated for org admins (null otherwise).
+       */
+      pgWire?: {
+        /** Format: double */
+        port: number | null;
+        host: string | null;
+        /**
+         * @description Whether the server requires TLS (clients must use sslmode=require
+         *     or stricter). False only on instances that explicitly opted out.
+         *     Optional for API backwards compatibility — the server always
+         *     returns it; treat absence as true.
+         */
+        tlsRequired?: boolean;
+        enabled: boolean;
+      };
       /** Format: date-time */
       createdAt?: string;
       /** @description The project a user sees when they first log in to the organization */
@@ -18855,20 +24936,99 @@ export interface components {
     'Partial_Omit_Organization.organizationUuid-or-needsProject__': {
       /** @description The name of the organization */
       name?: string;
-      /** Format: date-time */
-      createdAt?: string;
       /** @description The active color palette uuid for all projects in the organization */
       colorPaletteUuid?: string;
+      /** Format: date-time */
+      createdAt?: string;
       /** @description The default color palette for all projects in the organization */
       chartColors?: string[];
       /** @description The default dark color palette for all projects in the organization */
       chartDarkColors?: string[];
       /** @description The project a user sees when they first log in to the organization */
       defaultProjectUuid?: string;
+      /**
+       * @description Postgres wire protocol connection details for the semantic layer, only
+       *     populated on the authenticated `GET /org` response (not the public health
+       *     endpoint). `enabled` reflects whether the instance exposes a pgwire port
+       *     and is returned to every org member; `host`/`port` are the infra endpoint
+       *     clients connect to and are only populated for org admins (null otherwise).
+       */
+      pgWire?: {
+        /** Format: double */
+        port: number | null;
+        host: string | null;
+        tlsRequired?: boolean;
+        enabled: boolean;
+      };
     };
     UpdateOrganization: components['schemas']['Partial_Omit_Organization.organizationUuid-or-needsProject__'];
+    /**
+     * @description Brand profile fetched from the Brandfetch Brand API and stored on the
+     *     organization. https://docs.brandfetch.com/reference/brand-api
+     */
+    OrganizationBrandLogo: {
+      /** @description File format, e.g. 'svg', 'png', 'jpeg' */
+      format: string | null;
+      url: string;
+      /**
+       * @description Colour of the artwork itself: 'light' is a light/white logo (for dark
+       *     backgrounds), 'dark' is a dark logo (for light backgrounds).
+       */
+      theme: string | null;
+      /** @description Brandfetch logo type, e.g. 'logo', 'symbol', 'icon', 'other' */
+      type: string;
+    };
+    OrganizationBrandColor: {
+      /** Format: double */
+      brightness: number | null;
+      /** @description Brandfetch color type, e.g. 'accent', 'brand', 'dark', 'light' */
+      type: string;
+      hex: string;
+    };
+    OrganizationBrandFont: {
+      origin: string | null;
+      /** @description Brandfetch font type, e.g. 'title' or 'body' */
+      type: string;
+      name: string;
+    };
+    OrganizationBrand: {
+      /** Format: date-time */
+      updatedAt: string;
+      fonts: components['schemas']['OrganizationBrandFont'][];
+      colors: components['schemas']['OrganizationBrandColor'][];
+      logos: components['schemas']['OrganizationBrandLogo'][];
+      description: string | null;
+      name: string | null;
+      /** @description Domain the brand was fetched for, e.g. 'acme.com' */
+      domain: string;
+      /** Format: uuid */
+      organizationUuid: string;
+    };
+    ApiOrganizationBrandResponse: {
+      results: components['schemas']['OrganizationBrand'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    UpdateOrganizationBrandRequest: {
+      /** @description Company domain or website URL, e.g. 'acme.com' */
+      domain: string;
+    };
+    /**
+     * @description The editable brand payload persisted when the user saves their brand
+     *     appearance. Unlike a fetch, this does not call Brandfetch — it stores the
+     *     values exactly as edited in the settings form.
+     */
+    SaveOrganizationBrandRequest: {
+      fonts: components['schemas']['OrganizationBrandFont'][];
+      colors: components['schemas']['OrganizationBrandColor'][];
+      logos: components['schemas']['OrganizationBrandLogo'][];
+      description: string | null;
+      name: string | null;
+      domain: string;
+    };
     /** @description Summary of a project under an organization */
     OrganizationProject: {
+      provisioningSource?: string | null;
       /** Format: date-time */
       expiresAt: string | null;
       warehouseType?: components['schemas']['WarehouseTypes'];
@@ -18893,6 +25053,10 @@ export interface components {
     };
     /** @description Profile for a user's membership in an organization */
     OrganizationMemberProfile: {
+      /** @description Explicit gradient placeholder override; null falls back to the deterministic gradient */
+      avatarGradient: components['schemas']['UserAvatarColorValue'] | null;
+      /** @description Content-addressed path to the uploaded avatar image; null when none uploaded */
+      avatarUrl: string | null;
       /** @description Whether the user doesn't have an authentication method (password or openId) */
       isPending?: boolean;
       /** @description Whether the user's invite to the organization has expired */
@@ -18936,12 +25100,6 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /**
-     * Format: uuid
-     * @description Stringified UUIDv4.
-     *     See [RFC 4112](https://tools.ietf.org/html/rfc4122)
-     */
-    UUID: string;
     OrganizationMemberProfileUpdate: {
       role: components['schemas']['OrganizationMemberRole'];
     };
@@ -19140,6 +25298,7 @@ export interface components {
     };
     ApiCreateProjectResults: {
       contentCopyError?: string;
+      accessCopyError?: string;
       hasContentCopy: boolean;
       project: components['schemas']['Project'];
     };
@@ -19156,8 +25315,8 @@ export interface components {
       type: components['schemas']['ProjectType'];
       pinnedListUuid?: string;
       organizationWarehouseCredentialsUuid?: string;
-      dbtConnection: components['schemas']['DbtProjectConfig'];
       upstreamProjectUuid?: string;
+      dbtConnection: components['schemas']['DbtProjectConfig'];
       dbtVersion: components['schemas']['DbtVersionOption'];
       projectDefaults?: components['schemas']['ProjectDefaults'];
       copyWarehouseConnectionFromUpstreamProject?: boolean;
@@ -19170,6 +25329,15 @@ export interface components {
     'Omit_CreateProject.warehouseConnection_': components['schemas']['Pick_CreateProject.Exclude_keyofCreateProject.warehouseConnection__'];
     CreateProjectOptionalCredentials: components['schemas']['Omit_CreateProject.warehouseConnection_'] & {
       warehouseConnection?: components['schemas']['CreateWarehouseCredentials'];
+    };
+    EnsurePlaygroundProjectResults: {
+      created: boolean;
+      projectUuid: string;
+    };
+    ApiEnsurePlaygroundProjectResponse: {
+      results: components['schemas']['EnsurePlaygroundProjectResults'];
+      /** @enum {string} */
+      status: 'ok';
     };
     ImpersonationOrganizationSettings: {
       impersonationEnabled: boolean;
@@ -19207,7 +25375,26 @@ export interface components {
       metadata?: components['schemas']['NotificationDashboardTileCommentMetadata'];
       resourceType: components['schemas']['ApiNotificationResourceType.DashboardComments'];
     };
-    Notification: components['schemas']['NotificationDashboardComment'];
+    /** @enum {string} */
+    'ApiNotificationResourceType.AiReview': 'aiReview';
+    /** @enum {string} */
+    AiReviewNotificationEvent: 'needs_review' | 'assigned';
+    NotificationAiReview: components['schemas']['NotificationBase'] & {
+      metadata: {
+        searchParams: string;
+        /** Format: double */
+        count: number;
+        projectUuid: string;
+        rootCause: string;
+        title: string;
+        event: components['schemas']['AiReviewNotificationEvent'];
+        fingerprint: string;
+      };
+      resourceType: components['schemas']['ApiNotificationResourceType.AiReview'];
+    };
+    Notification:
+      | components['schemas']['NotificationDashboardComment']
+      | components['schemas']['NotificationAiReview'];
     ApiNotificationsResults: components['schemas']['Notification'][];
     ApiGetNotifications: {
       results: components['schemas']['ApiNotificationsResults'];
@@ -19215,7 +25402,7 @@ export interface components {
       status: 'ok';
     };
     /** @enum {string} */
-    ApiNotificationResourceType: 'dashboardComments';
+    ApiNotificationResourceType: 'dashboardComments' | 'aiReview';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Notification.viewed_': {
       viewed: boolean;
@@ -19245,11 +25432,63 @@ export interface components {
     };
     /** @enum {string} */
     MetricTotalComparisonType: 'none' | 'previous_period' | 'rolling_days';
+    MetricExploreDataPoint: {
+      compareMetric: {
+        label: string | null;
+        /** Format: double */
+        value: number | null;
+      };
+      metric: {
+        label: string | null;
+        /** Format: double */
+        value: number | null;
+      };
+      segment: string | null;
+      /** Format: date-time */
+      date: string;
+    };
+    MetricExploreDataPointWithDateValue: components['schemas']['MetricExploreDataPoint'] & {
+      /** Format: double */
+      dateValue: number;
+    };
+    MetricsExplorerQueryResults: {
+      points: components['schemas']['MetricExploreDataPointWithDateValue'][];
+      metric: components['schemas']['MetricWithAssociatedTimeDimension'];
+    };
+    ApiMetricsExplorerQueryResults: {
+      results: components['schemas']['MetricsExplorerQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
     ApiCompiledQueryResults: {
       compilationErrors?: string[];
       parameterReferences: string[];
       pivotQuery?: string;
       query: string;
+    };
+    /** @enum {string} */
+    InviteLinkPurpose: 'member' | 'setup';
+    InviteLink: {
+      purpose: components['schemas']['InviteLinkPurpose'];
+      email: string;
+      userUuid: string;
+      organizationUuid: string;
+      inviteUrl: string;
+      inviteCode: string;
+      /** Format: date-time */
+      expiresAt: string;
+    };
+    ApiInviteLinkResponse: {
+      results: components['schemas']['InviteLink'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    CreateInviteLink: {
+      purpose?: components['schemas']['InviteLinkPurpose'];
+      role?: components['schemas']['OrganizationMemberRole'];
+      /** Format: date-time */
+      expiresAt?: string;
+      email: string;
     };
     ApiStartImpersonationResponse: {
       /** @enum {number|null} */
@@ -19320,6 +25559,8 @@ export interface components {
       visibleMetricFieldIds?: string[];
       hiddenMetricFieldIds?: string[];
       columnOrder?: string[];
+      /** @description Ordered dimension and value field IDs rendered once on the row axis. */
+      rowFieldIds?: string[];
       metricsAsRows: boolean;
       pivotDimensions: string[];
     };
@@ -19333,11 +25574,23 @@ export interface components {
       exploreId: string;
       projectUuid: string;
     };
-    GitRepo: {
-      defaultBranch: string;
-      ownerLogin: string;
-      fullName: string;
-      name: string;
+    /** @enum {string} */
+    GsheetColumnType: 'string' | 'number' | 'date' | 'timestamp' | 'boolean';
+    GsheetColumn: {
+      type?: components['schemas']['GsheetColumnType'];
+      label?: string;
+      key: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.string-or-number-or-boolean-or-null_': {
+      [key: string]: (string | number | boolean) | null;
+    };
+    GsheetRow: components['schemas']['Record_string.string-or-number-or-boolean-or-null_'];
+    UploadGsheetFromRows: {
+      rows: components['schemas']['GsheetRow'][];
+      columns: components['schemas']['GsheetColumn'][];
+      title: string;
+      projectUuid: string;
     };
     /**
      * @description A user's personally linked GitHub account. When present, write-backs are
@@ -19516,6 +25769,8 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /** @enum {string} */
+    ContentType: 'chart' | 'dashboard' | 'space' | 'data_app';
     ToggleFavoriteResponse: {
       contentUuid: string;
       contentType: components['schemas']['ContentType'];
@@ -19556,13 +25811,13 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Explore.SummaryExploreFields_': {
       name: string;
-      type?: components['schemas']['ExploreType'];
       label: string;
+      type?: components['schemas']['ExploreType'];
       tags: string[];
       /** @deprecated */
       groupLabel?: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -19571,9 +25826,8 @@ export interface components {
       aiHint?: string | string[];
       preAggregateSource?: components['schemas']['PreAggregateSource'];
       /**
-       * @description Non-fatal warnings from partial compilation.
-       *     Present when some joins or fields failed to compile but the explore is still usable.
-       *     Only populated when PARTIAL_COMPILATION_ENABLED=true.
+       * @description Non-fatal compilation or validation warnings (e.g. fields that failed to
+       *     compile, warehouse-rejected column references). The explore is still usable.
        */
       warnings?: components['schemas']['InlineError'][];
     };
@@ -19585,13 +25839,13 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ExploreError.SummaryExploreErrorFields_': {
       name: string;
-      type?: components['schemas']['ExploreType'];
       label: string;
+      type?: components['schemas']['ExploreType'];
       tags?: string[];
       /** @deprecated */
       groupLabel?: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -19615,6 +25869,9 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Explore.Exclude_keyofExplore.unfilteredTables__': {
       name: string;
+      parameters?: components['schemas']['Record_string.LightdashProjectParameter_'];
+      label: string;
+      caseSensitive?: boolean;
       type?: components['schemas']['ExploreType'];
       spotlight?: {
         owner?: string;
@@ -19622,15 +25879,12 @@ export interface components {
         /** @enum {string} */
         visibility: 'show' | 'hide';
       };
-      label: string;
-      parameters?: components['schemas']['Record_string.LightdashProjectParameter_'];
       tags: string[];
       warehouse?: string;
-      caseSensitive?: boolean;
       /** @deprecated */
       groupLabel?: string;
       /**
-       * @description Nested groups for the sidebar (max 3 levels). Group keys resolve to
+       * @description Nested groups for the sidebar (max 5 levels). Group keys resolve to
        *     labels/descriptions via the project-level `table_groups` config
        *     (fetched separately); missing keys fall back to using the key as
        *     the label.
@@ -19646,13 +25900,17 @@ export interface components {
       ymlPath?: string;
       sqlPath?: string;
       aiHint?: string | string[];
+      /**
+       * @description Project `granularity_labels` overrides, keyed by TimeFrames. Consumed
+       *     by the date zoom to relabel standard granularities.
+       */
+      granularityLabels?: components['schemas']['Partial_Record_TimeFrames.string__'];
       savedParameterValues?: components['schemas']['ParametersValuesMap'];
       preAggregates?: components['schemas']['PreAggregateDef'][];
       preAggregateSource?: components['schemas']['PreAggregateSource'];
       /**
-       * @description Non-fatal warnings from partial compilation.
-       *     Present when some joins or fields failed to compile but the explore is still usable.
-       *     Only populated when PARTIAL_COMPILATION_ENABLED=true.
+       * @description Non-fatal compilation or validation warnings (e.g. fields that failed to
+       *     compile, warehouse-rejected column references). The explore is still usable.
        */
       warnings?: components['schemas']['InlineError'][];
     };
@@ -19687,6 +25945,79 @@ export interface components {
           /** @enum {boolean} */
           valid: false;
         };
+    /**
+     * @description Lifecycle of an organization's sending domain.
+     *
+     *     - `pending` — records handed over, waiting on DNS to propagate & verify.
+     *     - `verified` — both DKIM and return-path verified, ready to enable.
+     *     - `enabled` — verified and turned on; report emails send from this domain.
+     *     - `failed` — verification did not complete within the timeout window; the
+     *       admin can re-check to restart.
+     * @enum {string}
+     */
+    EmailWhitelabelStatus: 'pending' | 'verified' | 'enabled' | 'failed';
+    /**
+     * @description A single DNS record the customer must add at their DNS provider. Values are
+     *     always the real, per-domain values returned by the provider — never a
+     *     templated example.
+     */
+    EmailDnsRecord: {
+      verified: boolean;
+      /** @description The value the record must resolve to (right-hand side). */
+      value: string;
+      /** @description The host / name of the record (left-hand side). */
+      name: string;
+      /** @enum {string} */
+      type: 'TXT' | 'CNAME';
+      /** @enum {string} */
+      purpose: 'dkim' | 'return-path';
+    };
+    /**
+     * @description The full sender-identity configuration for an organization, as returned to
+     *     the setup UI. `null` from the API means the org has not started setup.
+     */
+    OrganizationEmailWhitelabel: {
+      /** Format: date-time */
+      createdAt: string;
+      /**
+       * Format: date-time
+       * @description Last time the provider was polled for verification, null if never.
+       */
+      lastCheckedAt: string | null;
+      dnsRecords: components['schemas']['EmailDnsRecord'][];
+      isEnabled: boolean;
+      /** @description Both DKIM and return-path verified — required before enabling. */
+      isVerified: boolean;
+      returnPathVerified: boolean;
+      dkimVerified: boolean;
+      status: components['schemas']['EmailWhitelabelStatus'];
+      /** @description Display name shown in the From header, or null to use the Lightdash default. */
+      fromName: string | null;
+      /** @description The address emails are sent from, e.g. `reports@customer.com`. */
+      fromEmail: string;
+      /** @description Domain (or subdomain) emails are sent from, e.g. `reports.customer.com`. */
+      domain: string;
+      organizationUuid: string;
+    };
+    ApiEmailWhitelabelResponse: {
+      results: components['schemas']['OrganizationEmailWhitelabel'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /**
+     * @description Create (or replace) the org's sending domain. Suggest a subdomain like
+     *     `reports.customer.com` in the UI to keep it isolated from the customer's
+     *     primary mail reputation.
+     */
+    CreateEmailWhitelabel: {
+      fromName?: string | null;
+      fromEmail: string;
+      domain: string;
+    };
+    /** @description Toggle sending on/off. Can only be enabled once fully verified. */
+    UpdateEmailWhitelabel: {
+      isEnabled: boolean;
+    };
     ApiPromoteDashboardResponse: {
       results: components['schemas']['DashboardDAO'];
       /** @enum {string} */
@@ -19740,8 +26071,15 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    GsheetExportProgress: {
+      /** Format: double */
+      attempt: number;
+      /** @enum {string} */
+      phase: 'query' | 'upload';
+    };
     ApiCsvUrlResponse: {
       results: {
+        progress: components['schemas']['GsheetExportProgress'] | null;
         truncated: boolean;
         status: string;
         url: string;
@@ -19768,6 +26106,9 @@ export interface components {
       replies?: components['schemas']['Comment'][];
       replyTo?: string;
       user: {
+        avatarGradient: components['schemas']['UserAvatarColorValue'] | null;
+        avatarUrl: string | null;
+        userUuid: string;
         name: string;
       };
       /** Format: date-time */
@@ -19789,8 +26130,8 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Field.name-or-label-or-fieldType-or-tableLabel-or-description_': {
-      description?: string;
       name: string;
+      description?: string;
       label: string;
       fieldType: components['schemas']['FieldType'];
       tableLabel: string;
@@ -19850,8 +26191,8 @@ export interface components {
       };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_TableBase.name-or-label-or-groupLabel-or-description-or-requiredAttributes-or-anyAttributes_': {
-      description?: string;
       name: string;
+      description?: string;
       label: string;
       groupLabel?: string;
       requiredAttributes?: components['schemas']['Record_string.string-or-string-Array_'];
@@ -19933,15 +26274,17 @@ export interface components {
     MetricsTreeNode: components['schemas']['MetricsTreeNodePosition'] & {
       source: components['schemas']['MetricsTreeSource'];
       tableName: string;
+      label: string;
       name: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_CatalogField.catalogSearchUuid-or-name-or-tableName_': {
+    'Pick_CatalogField.catalogSearchUuid-or-name-or-label-or-tableName_': {
       name: string;
       tableName: string;
+      label: string;
       catalogSearchUuid: string;
     };
-    CatalogMetricsTreeNode: components['schemas']['Pick_CatalogField.catalogSearchUuid-or-name-or-tableName_'];
+    CatalogMetricsTreeNode: components['schemas']['Pick_CatalogField.catalogSearchUuid-or-name-or-label-or-tableName_'];
     CatalogMetricsTreeEdge: {
       createdFrom: components['schemas']['MetricsTreeSource'];
       projectUuid: string;
@@ -20027,16 +26370,16 @@ export interface components {
     ApiCatalogMetadataResults: components['schemas']['CatalogMetadata'];
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_ChartSummary.uuid-or-name-or-description-or-spaceUuid-or-spaceName-or-dashboardName-or-dashboardUuid-or-chartKind_': {
-      /** @description Optional description of what this chart displays */
-      description?: string;
       /** @description Display name of the chart */
       name: string;
+      /** @description Optional description of what this chart displays */
+      description?: string;
       uuid: string;
-      spaceUuid: string;
-      dashboardUuid: string | null;
-      spaceName: string;
-      dashboardName: string | null;
       chartKind?: components['schemas']['ChartKind'];
+      spaceUuid: string;
+      spaceName: string;
+      dashboardUuid: string | null;
+      dashboardName: string | null;
     };
     CatalogAnalytics: {
       charts: (components['schemas']['Pick_ChartSummary.uuid-or-name-or-description-or-spaceUuid-or-spaceName-or-dashboardName-or-dashboardUuid-or-chartKind_'] & {
@@ -20106,6 +26449,8 @@ export interface components {
       sourceCatalogSearchUuid: string;
     };
     BigqueryDataset: {
+      /** Format: double */
+      sizeBytes?: number | null;
       datasetId: string;
       location?: string;
       projectId: string;
@@ -20121,6 +26466,14 @@ export interface components {
     };
     ApiBigqueryProjects: {
       results: components['schemas']['BigqueryProject'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    BigqueryProjectRecommendation: {
+      projectId: string | null;
+    };
+    ApiBigqueryProjectRecommendation: {
+      results: components['schemas']['BigqueryProjectRecommendation'];
       /** @enum {string} */
       status: 'ok';
     };
@@ -20167,18 +26520,6 @@ export interface components {
     };
     ApiRoleWithScopesResponse: {
       results: components['schemas']['RoleWithScopes'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ChangesetTSOACompat: components['schemas']['Record_string.unknown_'];
-    ApiChangesetsResponseTSOACompat: {
-      results: components['schemas']['ChangesetTSOACompat'][];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ChangeTSOACompat: components['schemas']['Record_string.unknown_'];
-    ApiGetChangeResponseTSOACompat: {
-      results: components['schemas']['ChangeTSOACompat'];
       /** @enum {string} */
       status: 'ok';
     };
@@ -20315,11 +26656,11 @@ export interface components {
       status: 'ok';
     };
     /**
-     * @description Kinds of totals derivable from an executed pivot query. Follow-up PRs
-     *     will widen the union to enable the commented-out variants below.
+     * @description Kinds of totals derivable from an executed pivot query.
      * @enum {string}
      */
-    CalculateTotalKind: 'columnTotal' | 'rowTotal' | 'columnSubtotal';
+    CalculateTotalKind:
+      'grandTotal' | 'columnTotal' | 'rowTotal' | 'columnSubtotal' | 'rowSubtotal';
     ExecuteAsyncCalculateTotalRequestParams: {
       invalidateCache?: boolean;
       subtotalDimensions?: string[];
@@ -20365,10 +26706,6 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__': {
-      dateZoom?: components['schemas']['DateZoom'];
-      /** Format: double */
-      limit: number;
-      timezone?: string;
       filters: {
         tableCalculations?: unknown;
         metrics?: unknown;
@@ -20378,15 +26715,19 @@ export interface components {
       dimensions: string[];
       metrics: string[];
       sorts: components['schemas']['SortField'][];
+      /** Format: double */
+      limit: number;
       tableCalculations: components['schemas']['TableCalculation'][];
       additionalMetrics?: components['schemas']['AdditionalMetric'][];
       customDimensions?: components['schemas']['CustomDimension'][];
       metricOverrides?: components['schemas']['MetricOverrides'];
       dimensionOverrides?: components['schemas']['DimensionOverrides'];
+      timezone?: string;
       pivotDimensions?: string[];
       metadata?: {
         hasADateDimension: components['schemas']['Pick_CompiledDimension.name-or-label-or-table_'];
       };
+      dateZoom?: components['schemas']['DateZoom'];
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_MetricQueryRequest.csvLimit_': components['schemas']['Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__'];
@@ -20397,6 +26738,8 @@ export interface components {
       query: components['schemas']['Omit_MetricQueryRequest.csvLimit_'];
     };
     ApiExecuteAsyncFieldValueSearchResults: {
+      labelFieldId: string | null;
+      valueFieldId: string;
       cacheMetadata: components['schemas']['CacheMetadata'];
       queryUuid: string;
     };
@@ -20415,6 +26758,8 @@ export interface components {
       table: string;
     };
     ExecuteAsyncSavedChartRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      dashboardFilters?: components['schemas']['DashboardFilters'];
+      filters?: components['schemas']['Filters'];
       pivotResults?: boolean;
       /** Format: double */
       limit?: number | null;
@@ -20446,8 +26791,6 @@ export interface components {
       underlyingDataItemId?: string;
       underlyingDataSourceQueryUuid: string;
     };
-    ApiExecuteAsyncSqlQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] &
-      Record<string, never>;
     ApiSuccess_ApiExecuteAsyncSqlQueryResults_: {
       results: components['schemas']['ApiExecuteAsyncSqlQueryResults'];
       /** @enum {string} */
@@ -20517,8 +26860,8 @@ export interface components {
     DownloadFileType: 'csv' | 'image' | 'jsonl' | 's3_jsonl' | 'xlsx';
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__': {
-      type?: components['schemas']['DownloadFileType'];
       pivotConfig?: components['schemas']['PivotConfig'];
+      type?: components['schemas']['DownloadFileType'];
       onlyRaw?: boolean;
       showTableNames?: boolean;
       customLabels?: components['schemas']['Record_string.string_'];
@@ -20526,6 +26869,7 @@ export interface components {
       hiddenFields?: string[];
       exportPivotedData?: boolean;
       attachmentDownloadName?: string;
+      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
     };
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_': components['schemas']['Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__'];
@@ -20546,8 +26890,8 @@ export interface components {
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateDashboard.name-or-description-or-spaceUuid-or-colorPaletteUuid_': {
-      description?: string;
       name: string;
+      description?: string;
       spaceUuid?: string;
       colorPaletteUuid?: string | null;
     };
@@ -20555,6 +26899,9 @@ export interface components {
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateDashboard.tiles-or-filters-or-parameters-or-updatedByUser-or-tabs-or-config_': {
       parameters?: components['schemas']['DashboardParameters'];
+      filters?: components['schemas']['DashboardFilters'];
+      tabs: components['schemas']['DashboardTab'][];
+      config?: components['schemas']['DashboardConfig'];
       tiles: (
         | components['schemas']['CreateDashboardChartTile']
         | components['schemas']['CreateDashboardMarkdownTile']
@@ -20563,17 +26910,19 @@ export interface components {
         | components['schemas']['CreateDashboardHeadingTile']
         | components['schemas']['CreateDashboardDataAppTile']
       )[];
-      filters?: components['schemas']['DashboardFilters'];
       updatedByUser?: components['schemas']['Pick_UpdatedByUser.userUuid_'];
-      tabs: components['schemas']['DashboardTab'][];
-      config?: components['schemas']['DashboardConfig'];
     };
     DashboardVersionedFields: components['schemas']['Pick_CreateDashboard.tiles-or-filters-or-parameters-or-updatedByUser-or-tabs-or-config_'];
-    UpdateDashboard:
+    PreserveContentVerification: {
+      preserveVerification?: boolean;
+    };
+    UpdateDashboard: (
       | components['schemas']['DashboardUnversionedFields']
       | components['schemas']['DashboardVersionedFields']
       | (components['schemas']['DashboardUnversionedFields'] &
-          components['schemas']['DashboardVersionedFields']);
+          components['schemas']['DashboardVersionedFields'])
+    ) &
+      components['schemas']['PreserveContentVerification'];
     ProjectParameterSummary: {
       modelName?: string;
       /** @enum {string} */
@@ -20633,13 +26982,27 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    ExportContentFormat:
+      | components['schemas']['SchedulerFormat.IMAGE']
+      | components['schemas']['SchedulerFormat.CSV']
+      | components['schemas']['SchedulerFormat.XLSX'];
+    ExportContentRequest: {
+      parameters?: components['schemas']['ParametersValuesMap'];
+      selectedTabs?: string[] | null;
+      /** Format: double */
+      customViewportWidth?: number;
+      dateZoomGranularity?: components['schemas']['DateGranularity'] | string;
+      dashboardFilters?: components['schemas']['DashboardFilters'];
+      options?:
+        | components['schemas']['SchedulerCsvOptions']
+        | components['schemas']['SchedulerImageOptions'];
+      format: components['schemas']['ExportContentFormat'];
+    };
     ApiDashboardPaginatedSchedulersResponse: {
       results: components['schemas']['KnexPaginatedData_SchedulerAndTargets-Array_'];
       /** @enum {string} */
       status: 'ok';
     };
-    /** @enum {string} */
-    'ContentType.CHART': 'chart';
     ChartContent: {
       contentType: components['schemas']['ContentType.CHART'];
       uuid: string;
@@ -20689,8 +27052,6 @@ export interface components {
     } & {
       [key: string]: unknown;
     };
-    /** @enum {string} */
-    'ContentType.DASHBOARD': 'dashboard';
     DashboardContent: {
       contentType: components['schemas']['ContentType.DASHBOARD'];
       uuid: string;
@@ -20795,14 +27156,28 @@ export interface components {
     };
     /** @enum {string} */
     'ContentType.DATA_APP': 'data_app';
-    DataAppContent: {
-      contentType: components['schemas']['ContentType.DATA_APP'];
-      uuid: string;
-      slug: string;
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_Content.Exclude_keyofContent.space-or-pinnedList__': {
       name: string;
       description: string | null;
+      slug: string;
+      uuid: string;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
+      /** Format: double */
+      views: number;
+      /** Format: date-time */
+      firstViewedAt: string | null;
+      contentType: components['schemas']['ContentType'];
+      organization: {
+        name: string;
+        uuid: string;
+      };
       /** Format: date-time */
       createdAt: string;
+      project: {
+        name: string;
+        uuid: string;
+      };
       createdBy: {
         lastName: string;
         firstName: string;
@@ -20815,31 +27190,52 @@ export interface components {
         firstName: string;
         uuid: string;
       } | null;
-      project: {
-        name: string;
-        uuid: string;
-      };
+    };
+    DataAppContent: {
+      name: string;
+      description: string | null;
+      slug: string;
+      uuid: string;
+      verification: components['schemas']['ContentVerificationInfo'] | null;
+      /** Format: double */
+      views: number;
+      /** Format: date-time */
+      firstViewedAt: string | null;
+      contentType: components['schemas']['ContentType.DATA_APP'];
       organization: {
         name: string;
         uuid: string;
       };
-      space: {
+      /** Format: date-time */
+      createdAt: string;
+      project: {
         name: string;
         uuid: string;
       };
+      createdBy: {
+        lastName: string;
+        firstName: string;
+        uuid: string;
+      } | null;
+      /** Format: date-time */
+      lastUpdatedAt: string | null;
+      lastUpdatedBy: {
+        lastName: string;
+        firstName: string;
+        uuid: string;
+      } | null;
+      space: {
+        name: string;
+        uuid: string;
+      } | null;
+      /** Format: double */
+      latestVersionNumber: number | null;
+      latestVersionStatus: components['schemas']['AppVersionStatus'] | null;
       pinnedList: {
         /** Format: double */
         order: number;
         uuid: string;
       } | null;
-      /** Format: double */
-      views: number;
-      /** Format: date-time */
-      firstViewedAt: string | null;
-      verification: components['schemas']['ContentVerificationInfo'] | null;
-      /** Format: double */
-      latestVersionNumber: number | null;
-      latestVersionStatus: components['schemas']['AppVersionStatus'] | null;
     } & {
       [key: string]: unknown;
     };
@@ -20863,7 +27259,7 @@ export interface components {
       status: 'ok';
     };
     /** @enum {string} */
-    ContentSortByColumns: 'name' | 'space_name' | 'last_updated_at';
+    ContentSortByColumns: 'name' | 'space_name' | 'last_updated_at' | 'views';
     ItemPayload:
       | {
           source: components['schemas']['ChartSourceType'];
@@ -20975,9 +27371,9 @@ export interface components {
       /** Format: double */
       schedulerCount: number;
       /** Format: double */
-      chartCount: number;
-      /** Format: double */
       dashboardCount: number;
+      /** Format: double */
+      chartCount: number;
     };
     DeletedDataAppContentSummary: {
       organizationUuid: string;
@@ -21066,6 +27462,1396 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  getCodeCharts: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+        languageMap?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiChartAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeDashboards: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+        languageMap?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDashboardAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeSqlCharts: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSqlChartAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeVirtualViews: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiVirtualViewAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeScheduledDeliveries: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiScheduledDeliveryAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeAlerts: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAlertAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeGoogleSheetsSyncs: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGoogleSheetsSyncAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeSpaces: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSpaceAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeSpace: {
+    parameters: {
+      query?: {
+        skipSpaceCreate?: boolean;
+        publicSpaceCreate?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpaceAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSpaceAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getSpacesAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSpaceAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertSpaceAsCode: {
+    parameters: {
+      query?: {
+        skipSpaceCreate?: boolean;
+        publicSpaceCreate?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SpaceAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSpaceAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeAiAgents: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeAiAgents: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          agents: components['schemas']['AgentAsCode'][];
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getCodeExternalConnections: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiExternalConnectionAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeVirtualView: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VirtualViewAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiVirtualViewAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeScheduledDelivery: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScheduledDeliveryAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiScheduledDeliveryAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeAlert: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AlertAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAlertAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeGoogleSheetsSync: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoogleSheetsSyncAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGoogleSheetsSyncAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_ChartAsCode.chartConfig-or-description_'] & {
+          description?: string | null;
+          chartConfig: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiChartAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeSqlChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_SqlChartAsCode.config-or-description_'] & {
+          description?: string | null;
+          config: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSqlChartAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeDashboard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_DashboardAsCode.tiles-or-description_'] & {
+          description?: string | null;
+          tiles: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDashboardAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertCodeExternalConnection: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiExternalConnectionAsCodeUpsertRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiExternalConnectionAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getChartsAsCode: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+        languageMap?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiChartAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getDashboardsAsCode: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+        languageMap?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDashboardAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getSqlChartsAsCode: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSqlChartAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getVirtualViewsAsCode: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiVirtualViewAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getScheduledDeliveriesAsCode: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiScheduledDeliveryAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAlertsAsCode: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAlertAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getGoogleSheetsSyncsAsCode: {
+    parameters: {
+      query?: {
+        slugs?: string[];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGoogleSheetsSyncAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiAgentsAsCode: {
+    parameters: {
+      query?: {
+        ids?: string[];
+        offset?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertAiAgentsAsCode: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          agents: components['schemas']['AgentAsCode'][];
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertVirtualViewAsCode: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VirtualViewAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiVirtualViewAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertScheduledDeliveryAsCode: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScheduledDeliveryAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiScheduledDeliveryAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertAlertAsCode: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AlertAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAlertAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertGoogleSheetsSyncAsCode: {
+    parameters: {
+      query?: {
+        force?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoogleSheetsSyncAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGoogleSheetsSyncAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertChartAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_ChartAsCode.chartConfig-or-description_'] & {
+          description?: string | null;
+          chartConfig: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiChartAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertSqlChartAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_SqlChartAsCode.config-or-description_'] & {
+          description?: string | null;
+          config: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSqlChartAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertDashboardAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_DashboardAsCode.tiles-or-description_'] & {
+          description?: string | null;
+          tiles: components['schemas']['AnyType'];
+          spaceNames?: components['schemas']['Record_string.string_'];
+          force?: boolean;
+          publicSpaceCreate?: boolean;
+          skipSpaceCreate?: boolean;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDashboardAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   ssoIsAuthenticated: {
     parameters: {
       query?: never;
@@ -21769,6 +29555,704 @@ export interface operations {
       };
     };
   };
+  getSchedulerAiAugmentation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedulerUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSchedulerAiAugmentationResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertSchedulerAiAugmentation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedulerUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SchedulerAiAugmentation'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSchedulerAiAugmentationResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  deleteSchedulerAiAugmentation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedulerUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getResolvedProjectHomepage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiResolvedHomepageResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createProjectHomepage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateProjectHomepageRequest'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepageResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  viewHomepageAs: {
+    parameters: {
+      query: {
+        targetType: 'user' | 'group' | 'role';
+        userUuid?: components['schemas']['UUID'];
+        groupUuid?: components['schemas']['UUID'];
+        role?: components['schemas']['ProjectMemberRole'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiHomepageViewAsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getProjectHomepageForBuilder: {
+    parameters: {
+      query?: {
+        homepageUuid?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepageOrNullResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getHomepageLinkMetadata: {
+    parameters: {
+      query: {
+        url: string;
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiHomepageLinkMetadataResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getHomepageRecentlyViewed: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiRecentlyViewedResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getHomepageAssignments: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiHomepageAssignmentsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateHomepageGroupPriorities: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateHomepageGroupPrioritiesRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  listProjectHomepages: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepagesResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  deleteProjectHomepage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        homepageUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateProjectHomepageDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        homepageUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateProjectHomepageDraftRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepageResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  discardProjectHomepageDraft: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        homepageUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepageResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  publishProjectHomepage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        homepageUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PublishProjectHomepageRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectHomepageResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  listProjectAnnouncements: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        includeUnpublished?: boolean;
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAnnouncementsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createProjectAnnouncement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAnnouncementRequest'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAnnouncementResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  deleteProjectAnnouncement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        announcementUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateProjectAnnouncement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        announcementUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAnnouncementRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAnnouncementResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  uploadProjectAnnouncementImage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAnnouncementImageUploadResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getDatabricksAccessToken: {
     parameters: {
       query?: never;
@@ -22015,6 +30499,214 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiRouterDecisionListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  listAgentDocuments: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentDocumentSummaryListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createAgentDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiCreateAgentDocument'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentDocumentResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAgentDocumentContent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+        documentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentDocumentContentResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAgentDocumentContent: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+        documentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiUpdateAgentDocumentContent'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentDocumentResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  deleteAgentDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+        documentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAgentDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+        documentUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiUpdateAgentDocument'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
         };
       };
       /** @description Error */
@@ -22352,6 +31044,42 @@ export interface operations {
       };
     };
   };
+  updateMcpServerBearerCredential: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        mcpServerUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiUpdateAiMcpServerCredentialBody'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiMcpServerResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getGithubMcpAvailability: {
     parameters: {
       query?: never;
@@ -22560,7 +31288,7 @@ export interface operations {
         page?: number;
         pageSize?: number;
         agentUuid?: string;
-        createdFrom?: 'web_app' | 'slack';
+        createdFrom?: components['schemas']['AiThreadCreatedFrom'];
         search?: string;
       };
       header?: never;
@@ -22678,6 +31406,39 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiAgentMemory: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentUuid: components['schemas']['UUID'];
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentMemoryResponse'];
         };
       };
       /** @description Error */
@@ -22960,6 +31721,38 @@ export interface operations {
       };
     };
   };
+  uploadAgentAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentAvatarUploadResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   listAgentThreads: {
     parameters: {
       query?: {
@@ -23050,6 +31843,72 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentThreadResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAgentThreadPullRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        threadUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentThreadPullRequestResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  listAgentThreadWorkstreams: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        threadUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentThreadWorkstreamsResponse'];
         };
       };
       /** @description Error */
@@ -23173,6 +32032,78 @@ export interface operations {
       };
     };
   };
+  interruptAgentThreadMessage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        threadUuid: string;
+        messageUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentThreadMessageInterruptResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createAgentThreadMessageSteer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        threadUuid: string;
+        messageUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiCreateAiAgentThreadMessageSteer'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentThreadMessageSteerResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   generateAgentThreadResponse: {
     parameters: {
       query?: never;
@@ -23242,7 +32173,7 @@ export interface operations {
   cloneAgentThread: {
     parameters: {
       query?: {
-        createdFrom?: 'web_app' | 'evals';
+        createdFrom?: components['schemas']['AiClonedThreadCreatedFrom'];
       };
       header?: never;
       path: {
@@ -23481,7 +32412,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['ApiAiAgentThreadMessageVizQueryResponse'];
+          'application/json': components['schemas']['ApiAiAgentArtifactVizQueryResponse'];
         };
       };
       /** @description Error */
@@ -23611,6 +32542,46 @@ export interface operations {
       content: {
         'application/json': {
           savedDashboardUuid: string | null;
+        };
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateArtifactVersionSavedSql: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        artifactUuid: string;
+        versionUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': {
+          savedSqlUuid: string | null;
         };
       };
     };
@@ -24009,44 +32980,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAppendInstructionResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  revertChange: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        agentUuid: string;
-        threadUuid: string;
-        promptUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ApiRevertChangeRequest'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiRevertChangeResponse'];
         };
       };
       /** @description Error */
@@ -24949,6 +33882,535 @@ export interface operations {
       };
     };
   };
+  GetCodeCustomRoles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiCustomRoleAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertCodeCustomRole: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CustomRoleAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiCustomRoleAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetCodeOrganizationUsers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUserAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertCodeOrganizationUser: {
+    parameters: {
+      query?: {
+        sendInvite?: boolean;
+      };
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUserAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetCodeOrganizationGroups: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGroupAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertCodeOrganizationGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GroupAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGroupAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetCustomRolesAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiCustomRoleAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertCustomRoleAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CustomRoleAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiCustomRoleAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetOrganizationUsersAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUserAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertOrganizationUserAsCode: {
+    parameters: {
+      query?: {
+        sendInvite?: boolean;
+      };
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UserAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUserAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetOrganizationGroupsAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGroupAsCodeListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpsertOrganizationGroupAsCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        orgUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GroupAsCode'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGroupAsCodeUpsertResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createAgentOnboardingRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentOnboardingRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAgentOnboardingRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentOnboardingRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentOnboardingRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAgentOnboardingFile: {
+    parameters: {
+      query: {
+        path: string;
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentOnboardingRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentOnboardingFileResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  cancelAgentOnboardingRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        agentOnboardingRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAgentOnboardingRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   GetOrganizationRoles: {
     parameters: {
       query?: {
@@ -25221,6 +34683,242 @@ export interface operations {
       };
     };
   };
+  listAiDeepResearchRuns: {
+    parameters: {
+      query: {
+        threadUuid: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiDeepResearchRunListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createAiDeepResearchRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiDeepResearchRequestBody'];
+      };
+    };
+    responses: {
+      /** @description Accepted */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiDeepResearchRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiDeepResearchRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        aiDeepResearchRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiDeepResearchRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  refreshAiDeepResearchChart: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        aiDeepResearchRunUuid: components['schemas']['UUID'];
+        chartKey: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentThreadMessageVizQueryResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  listAiDeepResearchEvents: {
+    parameters: {
+      query?: {
+        cursor?: string;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        aiDeepResearchRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiDeepResearchEventsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  cancelAiDeepResearchRun: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        aiDeepResearchRunUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiDeepResearchRunResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAiAgentMemoryStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        memoryUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiUpdateAiAgentMemoryStatusRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUpdateAiAgentMemoryStatusResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getAllThreads: {
     parameters: {
       query?: {
@@ -25229,7 +34927,7 @@ export interface operations {
         projectUuids?: string[];
         agentUuids?: string[];
         userUuids?: string[];
-        createdFrom?: 'slack' | 'web_app';
+        createdFrom?: components['schemas']['AiThreadCreatedFrom'];
         humanScore?: number;
         dateFrom?: string;
         dateTo?: string;
@@ -25250,6 +34948,186 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentAdminConversationsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAllEvals: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        projectUuids?: string[];
+        agentUuids?: string[];
+        search?: string;
+        sortField?: components['schemas']['AiAgentAdminSortField'];
+        sortDirection?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentAdminEvalsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAdminEvalPrompts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        evalUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentAdminEvalPromptsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getMcpActivity: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        projectUuids?: string[];
+        userUuids?: string[];
+        agentUuids?: string[];
+        toolNames?: string[];
+        clientNames?: string[];
+        status?: components['schemas']['McpActivityStatus'];
+        dateFrom?: string;
+        dateTo?: string;
+        sortField?: components['schemas']['McpActivitySortField'];
+        sortDirection?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiMcpActivityResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getMcpActivityStats: {
+    parameters: {
+      query?: {
+        projectUuids?: string[];
+        userUuids?: string[];
+        agentUuids?: string[];
+        toolNames?: string[];
+        clientNames?: string[];
+        dateFrom?: string;
+        dateTo?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiMcpActivityStatsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getProjectPromptActivity: {
+    parameters: {
+      query?: {
+        days?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentAdminPromptActivityResponse'];
         };
       };
       /** @description Error */
@@ -25292,6 +35170,45 @@ export interface operations {
       };
     };
   };
+  getAllAiAgentMemories: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+        projectUuids?: string[];
+        userUuids?: string[];
+        statuses?: components['schemas']['AiAgentMemoryStatus'][];
+        scopes?: components['schemas']['AiAgentMemoryScope'][];
+        search?: string;
+        sortField?: components['schemas']['AiAgentAdminMemorySortField'];
+        sortDirection?: 'asc' | 'desc';
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentAdminMemoriesResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getAiAgentReviewItems: {
     parameters: {
       query?: {
@@ -25310,6 +35227,39 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentReviewItemsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  createAiAgentReviewItem: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAiAgentReviewItem'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemResponse'];
         };
       };
       /** @description Error */
@@ -25389,6 +35339,270 @@ export interface operations {
       };
     };
   };
+  captureAiAgentReviewReplayInputs: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiAgentReviewReplayCaptureRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewReplayCaptureResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiAgentReviewItemActivity: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemActivityResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiAgentReviewItemPrDiff: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemPrDiffResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAiAgentReviewItemByPreviewThread: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        threadUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  reorderAiAgentReviewItems: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReorderAiAgentReviewItems'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAiAgentReviewItemAssignee: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAiAgentReviewItemAssignee'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAiAgentReviewItemPriority: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAiAgentReviewItemPriority'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  addAiAgentReviewItemComment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAiAgentReviewItemComment'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemActivityResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   createAiAgentReviewItemWriteback: {
     parameters: {
       query?: never;
@@ -25407,6 +35621,37 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentReviewItemResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  retestAiAgentReviewRemediation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        fingerprint: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiAgentReviewItemActivityResponse'];
         };
       };
       /** @description Error */
@@ -25480,6 +35725,68 @@ export interface operations {
       };
     };
   };
+  getAiReviewNotificationSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiReviewNotificationSettingsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateAiReviewNotificationSettings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateAiReviewNotificationSettings'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiReviewNotificationSettingsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getAiOrganizationSettings: {
     parameters: {
       query?: never;
@@ -25529,6 +35836,101 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiUpdateAiOrganizationSettingsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  CreateWarehouseConnectCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiWarehouseConnectCodeResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  DepositWarehouseConnection: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DepositWarehouseConnectionRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDepositWarehouseConnectionResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  ClaimWarehouseConnectCode: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ClaimWarehouseConnectCodeRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiWarehouseConnectCodeClaimResponse'];
         };
       };
       /** @description Error */
@@ -26036,6 +36438,72 @@ export interface operations {
       };
     };
   };
+  startRedshiftAwsSsoWarehouseCredentials: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RedshiftAwsSsoStartRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RedshiftAwsSsoStartResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  completeRedshiftAwsSsoWarehouseCredentials: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RedshiftAwsSsoCompleteRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RedshiftAwsSsoCompleteResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   deleteWarehouseCredentials: {
     parameters: {
       query?: never;
@@ -26124,6 +36592,72 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiGetLoginOptionsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  LoginEmailOtp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiLoginEmailOtpRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiLoginEmailOtpResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  VerifyLoginEmailOtp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiVerifyLoginEmailOtpRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiVerifyLoginEmailOtpResponse'];
         };
       };
       /** @description Error */
@@ -26297,6 +36831,94 @@ export interface operations {
         content: {
           'application/json': components['schemas']['ApiGetAccountResponse'];
         };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpdateMyAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUserAvatarResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  DeleteMyAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetUserAvatar: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        userUuid: components['schemas']['UUID'];
+        contentHash: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Error */
       default: {
@@ -28032,6 +38654,37 @@ export interface operations {
       };
     };
   };
+  getSlackCardImage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': string | unknown;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   installSlack: {
     parameters: {
       query?: never;
@@ -29107,7 +39760,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSchedulerAndTargetsWithoutIds'];
+      };
+    };
     responses: {
       /** @description Success */
       200: {
@@ -29131,7 +39788,9 @@ export interface operations {
   };
   exportSavedChartImage: {
     parameters: {
-      query?: never;
+      query?: {
+        projectUuid?: components['schemas']['UUID'];
+      };
       header?: never;
       path: {
         /** @description chartUuid for the chart to export */
@@ -29467,6 +40126,203 @@ export interface operations {
       };
     };
   };
+  GetPrompt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        name: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/markdown': string;
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'text/markdown': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  ListProjectDbtSources: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectDbtSourcesResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  CreateProjectDbtSource: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiCreateProjectDbtSource'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectDbtSourceResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetProjectDbtSource: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        projectDbtSourceUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectDbtSourceWithConnectionResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  DeleteProjectDbtSource: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        projectDbtSourceUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpdateProjectDbtSource: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        projectDbtSourceUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiUpdateProjectDbtSource'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiProjectDbtSourceResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   GetProject: {
     parameters: {
       query?: never;
@@ -29485,6 +40341,41 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiProjectResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpdateProjectDetails: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateProjectDetails'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ProjectSummary_'];
         };
       };
       /** @description Error */
@@ -30452,6 +41343,37 @@ export interface operations {
       };
     };
   };
+  getUpstreamDiff: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUpstreamDiffResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getProjectPreviewExpirationSettings: {
     parameters: {
       query?: never;
@@ -30505,6 +41427,41 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiPreviewExpirationProjectSettingsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updatePreviewExpiresAt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePreviewExpiresAt'];
+      };
+    };
+    responses: {
+      /** @description Updated */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiPreviewExpiresAtResponse'];
         };
       };
       /** @description Error */
@@ -30757,239 +41714,6 @@ export interface operations {
       };
     };
   };
-  getChartsAsCode: {
-    parameters: {
-      query?: {
-        ids?: string[];
-        offset?: number;
-        languageMap?: boolean;
-      };
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiChartAsCodeListResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  getDashboardsAsCode: {
-    parameters: {
-      query?: {
-        ids?: string[];
-        offset?: number;
-        languageMap?: boolean;
-      };
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiDashboardAsCodeListResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  upsertChartAsCode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        slug: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Omit_ChartAsCode.chartConfig-or-description_'] & {
-          description?: string | null;
-          chartConfig: components['schemas']['AnyType'];
-          spaceNames?: components['schemas']['Record_string.string_'];
-          force?: boolean;
-          publicSpaceCreate?: boolean;
-          skipSpaceCreate?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiChartAsCodeUpsertResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  getSqlChartsAsCode: {
-    parameters: {
-      query?: {
-        ids?: string[];
-        offset?: number;
-      };
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSqlChartAsCodeListResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  upsertSqlChartAsCode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        slug: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Omit_SqlChartAsCode.config-or-description_'] & {
-          description?: string | null;
-          config: components['schemas']['AnyType'];
-          spaceNames?: components['schemas']['Record_string.string_'];
-          force?: boolean;
-          publicSpaceCreate?: boolean;
-          skipSpaceCreate?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSqlChartAsCodeUpsertResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  upsertDashboardAsCode: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        slug: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Omit_DashboardAsCode.tiles-or-description_'] & {
-          description?: string | null;
-          tiles: components['schemas']['AnyType'];
-          spaceNames?: components['schemas']['Record_string.string_'];
-          force?: boolean;
-          publicSpaceCreate?: boolean;
-          skipSpaceCreate?: boolean;
-        };
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiDashboardAsCodeUpsertResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
   webhook: {
     parameters: {
       query?: never;
@@ -31165,8 +41889,8 @@ export interface operations {
         sortDirection?: 'asc' | 'desc';
         /** @description filter by triggered user UUIDs (comma-separated) */
         triggeredByUserUuids?: string;
-        /** @description filter by source ("cli_deploy", "refresh_dbt") */
-        source?: 'cli_deploy' | 'refresh_dbt' | 'create_project';
+        /** @description filter by source ("cli_deploy", "refresh_dbt", "create_project", "project_connection_form") */
+        source?: 'cli_deploy' | 'refresh_dbt' | 'create_project' | 'project_connection_form';
       };
       header?: never;
       path: {
@@ -31618,6 +42342,37 @@ export interface operations {
       };
     };
   };
+  DeleteAllOrganizationDesignFiles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        designUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   DownloadOrganizationDesignFile: {
     parameters: {
       query?: never;
@@ -31764,6 +42519,103 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetOrganizationBrand: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationBrandResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  SaveOrganizationBrand: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description the brand appearance to persist */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveOrganizationBrandRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationBrandResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  FetchOrganizationBrand: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** @description the domain to fetch the brand for */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateOrganizationBrandRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationBrandResponse'];
         };
       };
       /** @description Error */
@@ -32401,6 +43253,35 @@ export interface operations {
       };
     };
   };
+  EnsurePlaygroundProject: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiEnsurePlaygroundProjectResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   GetImpersonationSettings: {
     parameters: {
       query?: never;
@@ -32577,6 +43458,43 @@ export interface operations {
       };
     };
   };
+  runMetricSeries: {
+    parameters: {
+      query: {
+        granularity: components['schemas']['TimeFrames'];
+        startDate: string;
+        endDate: string;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        explore: string;
+        metric: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiMetricsExplorerQueryResults'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   compileMetricTotalQuery: {
     parameters: {
       query: {
@@ -32614,6 +43532,135 @@ export interface operations {
             /** @enum {string} */
             status: 'ok';
           };
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetInviteLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description the code of the invite link */
+        inviteLinkCode: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiInviteLinkResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  ActivateInviteLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        inviteCode: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiRegisterUserResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  CreateInviteLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * @description the email, role and expiry of the invite.
+     *     expiresAt defaults to 3 days from now when omitted
+     */
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateInviteLink'];
+      };
+    };
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiInviteLinkResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  RevokeAllInviteLinks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
         };
       };
       /** @description Error */
@@ -33035,6 +44082,39 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['UploadMetricGsheet'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiJobScheduledResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  uploadGsheetFromRows: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UploadGsheetFromRows'];
       };
     };
     responses: {
@@ -34247,13 +45327,179 @@ export interface operations {
       };
     };
   };
-  promoteDashboard: {
+  GetEmailWhitelabel: {
     parameters: {
       query?: never;
       header?: never;
       path: {
-        /** @description dashboardUuid for the dashboard to run */
-        dashboardUuid: string;
+        organizationUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiEmailWhitelabelResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  SetupEmailWhitelabel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateEmailWhitelabel'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiEmailWhitelabelResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  DeleteEmailWhitelabel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  UpdateEmailWhitelabel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateEmailWhitelabel'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiEmailWhitelabelResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  VerifyEmailWhitelabel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        organizationUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiEmailWhitelabelResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  promoteDashboard: {
+    parameters: {
+      query?: {
+        /** @description project to resolve a slug in, required when the slug exists in multiple projects (e.g. preview projects) */
+        projectUuid?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        /** @description uuid or slug for the dashboard to run */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34281,11 +45527,14 @@ export interface operations {
   };
   promoteDashboardDiff: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description project to resolve a slug in, required when the slug exists in multiple projects (e.g. preview projects) */
+        projectUuid?: components['schemas']['UUID'];
+      };
       header?: never;
       path: {
-        /** @description dashboardUuid for the dashboard to check diff */
-        dashboardUuid: string;
+        /** @description uuid or slug for the dashboard to check diff */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34316,8 +45565,8 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description dashboardUuid for the dashboard */
-        dashboardUuid: string;
+        /** @description uuid or slug for the dashboard */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34348,10 +45597,10 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description dashboardUuid for the dashboard */
-        dashboardUuid: string;
+        /** @description uuid or slug for the dashboard */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
         /** @description versionUuid for the dashboard version */
-        versionUuid: string;
+        versionUuid: components['schemas']['UUID'];
       };
       cookie?: never;
     };
@@ -34382,10 +45631,10 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description dashboardUuid for the dashboard */
-        dashboardUuid: string;
+        /** @description uuid or slug for the dashboard */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
         /** @description versionUuid for the dashboard version to rollback to */
-        versionUuid: string;
+        versionUuid: components['schemas']['UUID'];
       };
       cookie?: never;
     };
@@ -34416,7 +45665,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        dashboardUuid: string;
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34447,7 +45696,7 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        dashboardUuid: string;
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34478,8 +45727,8 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description The uuid of the dashboard to verify */
-        dashboardUuid: string;
+        /** @description uuid or slug of the dashboard to verify */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -34510,8 +45759,8 @@ export interface operations {
       query?: never;
       header?: never;
       path: {
-        /** @description The uuid of the dashboard to unverify */
-        dashboardUuid: string;
+        /** @description uuid or slug of the dashboard to unverify */
+        dashboardUuidOrSlug: components['schemas']['UuidOrSlug'];
       };
       cookie?: never;
     };
@@ -35714,6 +46963,35 @@ export interface operations {
       };
     };
   };
+  GetBigQueryProjectRecommendation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiBigqueryProjectRecommendation'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   checkBigqueryAuthentication: {
     parameters: {
       query?: never;
@@ -36038,132 +47316,6 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiRoleWithScopesResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  listActiveChangesetWithChanges: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiChangesetsResponseTSOACompat'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  getChange: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        changeUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiGetChangeResponseTSOACompat'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  revertChangesetChange: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        changeUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiRevertChangeResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  revertAllChanges: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiRevertChangeResponse'];
         };
       };
       /** @description Error */
@@ -37322,6 +48474,42 @@ export interface operations {
       };
     };
   };
+  exportDashboardContentV2: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description The uuid of the dashboard */
+        dashboardUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExportContentRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiJobScheduledResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getDashboardSchedulersV2: {
     parameters: {
       query?: {
@@ -37417,6 +48605,7 @@ export interface operations {
       query?: {
         projectUuids?: string[];
         spaceUuids?: string[];
+        uuids?: string[];
         parentSpaceUuid?: string;
         contentTypes?: components['schemas']['ContentType'][];
         pageSize?: number;
@@ -37424,6 +48613,7 @@ export interface operations {
         search?: string;
         sortBy?: components['schemas']['ContentSortByColumns'];
         sortDirection?: 'asc' | 'desc';
+        includePersonalDataApps?: boolean;
       };
       header?: never;
       path?: never;
