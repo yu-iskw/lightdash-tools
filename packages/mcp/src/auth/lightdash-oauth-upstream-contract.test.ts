@@ -37,6 +37,8 @@ describe('Lightdash OAuth upstream contract', () => {
       timezone: null,
       organizationUuid: 'org-uuid',
       impersonation: null,
+      avatarUrl: null,
+      avatarGradient: null,
     } satisfies LightdashApi.Users.AuthenticatedUser;
 
     expect(user.organizationUuid).toBe('org-uuid');
@@ -59,6 +61,8 @@ describe('Lightdash OAuth upstream contract', () => {
       updatedAt: '2026-01-01T00:00:00.000Z',
       timezone: null,
       impersonation: null,
+      avatarUrl: null,
+      avatarGradient: null,
     };
 
     expect(user.organizationUuid).toBeUndefined();
