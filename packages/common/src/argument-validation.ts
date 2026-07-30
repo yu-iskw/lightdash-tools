@@ -31,13 +31,7 @@ export const RESOURCE_ID_KEYS = new Set([
 export type ArgumentSource = 'body' | 'option' | 'positional';
 
 export type ArgumentSemanticType =
-  | 'boolean'
-  | 'fingerprint'
-  | 'free-text'
-  | 'json'
-  | 'number'
-  | 'slug'
-  | 'uuid';
+  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid';
 
 /** Per-argument validation metadata supplied by CLI/MCP command definitions. */
 export interface ArgumentDescriptor {

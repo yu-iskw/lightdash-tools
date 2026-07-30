@@ -1,6 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "ignoreBinaries": ["trunk"],
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true,
   "ignoreIssues": {
@@ -38,7 +37,7 @@
     },
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
-      "project": ["src/**/*.ts", "scripts/**/*.mjs"]
+      "project": ["src/**/*.ts"]
     }
   }
 }

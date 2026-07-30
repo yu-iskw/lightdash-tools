@@ -86,8 +86,7 @@ export function attachResponseInterceptors(
     },
     (error) => {
       const reqConfig = error.config as
-        | (InternalAxiosRequestConfig & { _lightdashStartTime?: number })
-        | undefined;
+        (InternalAxiosRequestConfig & { _lightdashStartTime?: number }) | undefined;
       const start = reqConfig?._lightdashStartTime;
       config?.observability?.onRequestComplete?.({
         method: reqConfig?.method ?? 'GET',
