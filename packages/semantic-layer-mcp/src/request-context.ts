@@ -11,6 +11,8 @@ export interface LightdashMcpRequestContext {
   };
   governance: {
     allowedProjectUuids: string[];
+    /** Active project pin from `X-Lightdash-Project` or `LIGHTDASH_TOOLS_PINNED_PROJECT`. */
+    pinnedProjectUuid?: string;
   };
 }
 

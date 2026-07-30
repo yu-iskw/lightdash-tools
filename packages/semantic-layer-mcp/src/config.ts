@@ -1,5 +1,5 @@
 /**
- * Server config: Lightdash client + optional project allowlist (stdio).
+ * Server config: Lightdash client + optional project allowlist.
  */
 
 import { LightdashClient, mergeConfig } from '@lightdash-tools/client';

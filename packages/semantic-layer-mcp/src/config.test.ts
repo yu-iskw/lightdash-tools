@@ -22,7 +22,7 @@ describe('project allowlist governance', () => {
   it('empty env means unrestricted (empty list)', () => {
     delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
     expect(getAllowedProjectUuids()).toEqual([]);
-    expect(buildMcpGovernance()).toEqual({ allowedProjectUuids: [] });
+    expect(buildMcpGovernance().allowedProjectUuids).toEqual([]);
   });
 
   it('reads allowed projects from LIGHTDASH_TOOLS_ALLOWED_PROJECTS', () => {

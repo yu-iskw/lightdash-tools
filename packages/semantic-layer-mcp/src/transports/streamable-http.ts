@@ -28,6 +28,7 @@ import {
   loadMcpHttpConfig,
   type McpHttpConfig,
 } from '../config/load-http-config.js';
+import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
 import { createSemanticLayerMcpServer } from '../server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
@@ -485,16 +486,19 @@ async function handleHttpRequest(
   }
 
   const sid = getSessionId(req);
+  const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
-  if (req.method === 'POST') {
-    await handleMcpPost(req, res, config, sessionStore, sid);
-    return;
-  }
+  await runWithProjectPinAsync(pinnedProjectUuid, async () => {
+    if (req.method === 'POST') {
+      await handleMcpPost(req, res, config, sessionStore, sid);
+      return;
+    }
 
-  if (req.method === 'GET' || req.method === 'DELETE') {
-    await handleMcpGetOrDelete(req, res, config, sessionStore, sid);
-    return;
-  }
+    if (req.method === 'GET' || req.method === 'DELETE') {
+      await handleMcpGetOrDelete(req, res, config, sessionStore, sid);
+      return;
+    }
 
-  res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+    res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+  });
 }

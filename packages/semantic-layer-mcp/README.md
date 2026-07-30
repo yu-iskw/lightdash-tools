@@ -24,7 +24,45 @@ Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2
 
 See [ADR-0040](../../docs/adr/0040-oauth-backed-streamable-http-mcp.md), [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md).
 
-Optional on both transports: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` / `--projects` (empty = unrestricted).
+Optional on both transports:
+
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` / `--projects` (empty = unrestricted allowlist)
+- **Pin a project** (optional): HTTP `X-Lightdash-Project` header, or stdio `LIGHTDASH_TOOLS_PINNED_PROJECT` / `--pin-project` — same idea as [official Lightdash MCP](https://docs.lightdash.com/references/integrations/lightdash-mcp)
+
+## Pin a project (`X-Lightdash-Project`)
+
+When the header (or stdio pin) is a **valid project UUID**:
+
+- It is stored on the request context as `governance.pinnedProjectUuid` for upcoming tool handlers to consume (no tools enforce it yet)
+- Once `list_projects` / `set_project` are registered, they will be omitted from `tools/list` when pinned
+- Invalid UUID values are **ignored** (no pin)
+- Access is still enforced by the caller’s Lightdash permissions and any process allowlist
+- Prompts still require an explicit `projectUuid` argument until tools use the pin
+
+### Cursor (remote HTTP + pin)
+
+```json
+{
+  "mcpServers": {
+    "lightdash-semantic-layer-sales": {
+      "url": "https://mcp.example.com/mcp",
+      "headers": {
+        "X-Lightdash-Project": "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+}
+```
+
+(Plus OAuth / discovery as for remote HTTP. Host holds OAuth client credentials.)
+
+### Stdio pin
+
+```bash
+LIGHTDASH_TOOLS_PINNED_PROJECT=00000000-0000-0000-0000-000000000000 \
+  node packages/semantic-layer-mcp/dist/bin.js stdio
+# or: --pin-project 00000000-0000-0000-0000-000000000000
+```
 
 ## Install / run
 
