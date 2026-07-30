@@ -17,10 +17,7 @@ export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
  * Capability profiles group operations for selective exposure (CLI profiles, MCP subsets).
  */
 export type CapabilityProfile =
-  | 'conversations'
-  | 'core-lifecycle'
-  | 'discovery-readonly'
-  | 'evaluations';
+  'conversations' | 'core-lifecycle' | 'discovery-readonly' | 'evaluations';
 
 /** MCP task semantics for an operation. */
 export type McpTaskSupport = {

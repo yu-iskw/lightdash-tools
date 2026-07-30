@@ -8418,11 +8418,7 @@ export interface components {
     };
     /** @enum {string} */
     ManagedAgentScheduleOption:
-      | 'every_6_hours'
-      | 'every_12_hours'
-      | 'daily'
-      | 'every_2_days'
-      | 'weekly';
+      'every_6_hours' | 'every_12_hours' | 'daily' | 'every_2_days' | 'weekly';
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.boolean_': {
       [key: string]: boolean;
@@ -8879,12 +8875,7 @@ export interface components {
     SpaceMemberRole: 'viewer' | 'editor' | 'admin';
     /** @enum {string} */
     OrganizationMemberRole:
-      | 'member'
-      | 'viewer'
-      | 'interactive_viewer'
-      | 'editor'
-      | 'developer'
-      | 'admin';
+      'member' | 'viewer' | 'interactive_viewer' | 'editor' | 'developer' | 'admin';
     SpaceAccess: {
       /** @enum {string} */
       inheritedFrom?: 'organization' | 'project' | 'group' | 'space_group' | 'parent_space';
@@ -8952,8 +8943,7 @@ export interface components {
     ApiEmbedDashboardResponse: {
       results: components['schemas']['Dashboard'] & {
         selectedPalette?:
-          | components['schemas']['Pick_OrganizationColorPalette.colors-or-darkColors_']
-          | null;
+          components['schemas']['Pick_OrganizationColorPalette.colors-or-darkColors_'] | null;
         canViewUnderlyingData?: boolean;
         canExplore?: boolean;
         canDateZoom?: boolean;
@@ -9448,11 +9438,7 @@ export interface components {
     FrameType: 'rows' | 'range';
     /** @enum {string} */
     FrameBoundaryType:
-      | 'unbounded_preceding'
-      | 'preceding'
-      | 'current_row'
-      | 'following'
-      | 'unbounded_following';
+      'unbounded_preceding' | 'preceding' | 'current_row' | 'following' | 'unbounded_following';
     FrameBoundary: {
       /**
        * Format: double
@@ -9738,8 +9724,7 @@ export interface components {
       [key: string]: unknown;
     };
     CustomDimension:
-      | components['schemas']['CustomBinDimension']
-      | components['schemas']['CustomSqlDimension'];
+      components['schemas']['CustomBinDimension'] | components['schemas']['CustomSqlDimension'];
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_Metric.formatOptions_': {
       formatOptions?: components['schemas']['CustomFormat'];
@@ -11441,8 +11426,7 @@ export interface components {
       display?: components['schemas']['CartesianChartDisplay'];
       fieldConfig?: components['schemas']['PivotChartLayout'];
       type:
-        | components['schemas']['ChartKind.VERTICAL_BAR']
-        | components['schemas']['ChartKind.LINE'];
+        components['schemas']['ChartKind.VERTICAL_BAR'] | components['schemas']['ChartKind.LINE'];
     };
     /** @enum {string} */
     'ChartKind.PIE': 'pie';
@@ -11525,13 +11509,11 @@ export interface components {
       dashboard: components['schemas']['Pick_Dashboard.uuid-or-name_'] | null;
       space: components['schemas']['Pick_SpaceSummary.uuid-or-name-or-userAccess_'];
       lastUpdatedBy:
-        | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
       /** Format: date-time */
       lastUpdatedAt: string;
       createdBy:
-        | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
       /** Format: date-time */
       createdAt: string;
       chartKind: components['schemas']['ChartKind'];
@@ -13696,10 +13678,7 @@ export interface components {
     };
     /** @enum {string} */
     TileIneligibleReason:
-      | 'non_chart_tile'
-      | 'sql_chart'
-      | 'orphaned_chart'
-      | 'explore_resolution_error';
+      'non_chart_tile' | 'sql_chart' | 'orphaned_chart' | 'explore_resolution_error';
     TilePreAggregateAuditIneligible: {
       ineligibleReason: components['schemas']['TileIneligibleReason'];
       tileType: components['schemas']['DashboardTileTypes'];
@@ -15003,18 +14982,10 @@ export interface components {
     AiAgentReviewItemStatus: 'open' | 'in_progress' | 'resolved' | 'dismissed' | 'duplicate';
     /** @enum {string} */
     AiAgentReviewItemDismissedReason:
-      | 'not_actionable'
-      | 'expected_behavior'
-      | 'duplicate'
-      | 'low_confidence'
-      | 'other';
+      'not_actionable' | 'expected_behavior' | 'duplicate' | 'low_confidence' | 'other';
     /** @enum {string} */
     AiAgentReviewItemOwnerType:
-      | 'semantic_layer_owner'
-      | 'agent_admin'
-      | 'product'
-      | 'support'
-      | 'unknown';
+      'semantic_layer_owner' | 'agent_admin' | 'product' | 'support' | 'unknown';
     /** @enum {string} */
     AiAgentReviewItemPrState: 'open' | 'merged' | 'closed';
     /** @enum {string} */
@@ -15086,12 +15057,7 @@ export interface components {
         };
     /** @enum {string} */
     AiAgentReviewRemediationStatus:
-      | 'queued'
-      | 'running'
-      | 'pr_open'
-      | 'preview_ready'
-      | 'resolved'
-      | 'failed';
+      'queued' | 'running' | 'pr_open' | 'preview_ready' | 'resolved' | 'failed';
     AiAgentReviewRemediation: {
       /** Format: date-time */
       updatedAt: string;
@@ -15642,8 +15608,7 @@ export interface components {
       firstName: string;
     };
     RegisterOrActivateUser:
-      | components['schemas']['ActivateUserWithInviteCode']
-      | components['schemas']['CreateUserArgs'];
+      components['schemas']['ActivateUserWithInviteCode'] | components['schemas']['CreateUserArgs'];
     EmailStatus: {
       otp?: components['schemas']['EmailOneTimePassword'];
       isVerified: boolean;
@@ -15808,19 +15773,11 @@ export interface components {
     };
     /** @enum {string} */
     OpenIdIdentityIssuerType:
-      | 'google'
-      | 'okta'
-      | 'oneLogin'
-      | 'azuread'
-      | 'oidc'
-      | 'snowflake'
-      | 'databricks'
-      | 'slack';
+      'google' | 'okta' | 'oneLogin' | 'azuread' | 'oidc' | 'snowflake' | 'databricks' | 'slack';
     /** @enum {string} */
     LocalIssuerTypes: 'email' | 'apiToken';
     LoginOptionTypes:
-      | components['schemas']['OpenIdIdentityIssuerType']
-      | components['schemas']['LocalIssuerTypes'];
+      components['schemas']['OpenIdIdentityIssuerType'] | components['schemas']['LocalIssuerTypes'];
     LoginOptions: {
       redirectUri?: string;
       forceRedirect?: boolean;
@@ -16188,8 +16145,7 @@ export interface components {
       groupByColumns?: components['schemas']['GroupByColumn'][];
       valuesColumns: components['schemas']['ValuesColumn'][];
       indexColumn?:
-        | components['schemas']['PivotIndexColum']
-        | components['schemas']['PivotIndexColum'][];
+        components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
     };
     ApiSqlRunnerPivotQueryPayload: components['schemas']['PivotConfiguration'] & {
       savedSqlUuid?: string;
@@ -16528,12 +16484,7 @@ export interface components {
     CreateSchedulerAndTargetsWithoutIds: components['schemas']['Omit_CreateSchedulerAndTargets.savedChartUuid-or-dashboardUuid-or-savedSqlUuid-or-createdBy_'];
     /** @enum {string} */
     SpotlightTableColumns:
-      | 'label'
-      | 'tableLabel'
-      | 'description'
-      | 'categories'
-      | 'chartUsage'
-      | 'owner';
+      'label' | 'tableLabel' | 'description' | 'categories' | 'chartUsage' | 'owner';
     ColumnConfig: {
       isVisible: boolean;
       column: components['schemas']['SpotlightTableColumns'];
@@ -17083,8 +17034,7 @@ export interface components {
       versionUuid: string;
       chartUuid: string;
       createdBy:
-        | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
     };
     ChartVersionSummary: components['schemas']['Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy_'];
     ChartHistory: {
@@ -17098,8 +17048,7 @@ export interface components {
     ChartVersion: {
       chart: components['schemas']['SavedChart'];
       createdBy:
-        | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
       /** Format: date-time */
       createdAt: string;
       versionUuid: string;
@@ -17200,11 +17149,7 @@ export interface components {
     };
     /** @enum {string} */
     PullRequestSource:
-      | 'custom_metric'
-      | 'custom_dimension'
-      | 'sql_runner'
-      | 'source_editor'
-      | 'ai_agent';
+      'custom_metric' | 'custom_dimension' | 'sql_runner' | 'source_editor' | 'ai_agent';
     PullRequestReviewContext: {
       sourceAgentUuid: string;
       sourceProjectUuid: string;
@@ -17702,8 +17647,7 @@ export interface components {
       dashboardUuid: string;
     };
     CreateSavedChart:
-      | components['schemas']['CreateChartInSpace']
-      | components['schemas']['CreateChartInDashboard'];
+      components['schemas']['CreateChartInSpace'] | components['schemas']['CreateChartInDashboard'];
     CreateDashboardWithCharts: {
       charts: components['schemas']['CreateSavedChart'][];
       spaceUuid: string;
@@ -17776,8 +17720,7 @@ export interface components {
     DbTagUpdate: components['schemas']['Partial_Pick_DbTag.name-or-color__'];
     Tag: {
       createdBy:
-        | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
       yamlReference: string | null;
       /** Format: date-time */
       createdAt: string;
@@ -17853,8 +17796,7 @@ export interface components {
     /** @description Construct a type with the properties of T except for those in type K. */
     'Omit_MetricQuery.filters_': components['schemas']['Pick_MetricQuery.Exclude_keyofMetricQuery.filters__'];
     FilterGroupInput:
-      | components['schemas']['OrFilterGroupInput']
-      | components['schemas']['AndFilterGroupInput'];
+      components['schemas']['OrFilterGroupInput'] | components['schemas']['AndFilterGroupInput'];
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_FilterRule.Exclude_keyofFilterRule.id__': {
       /** @description Target field for the filter */
@@ -17887,8 +17829,7 @@ export interface components {
       id?: string;
     };
     FilterGroupItemInput:
-      | components['schemas']['FilterGroupInput']
-      | components['schemas']['FilterRuleInput'];
+      components['schemas']['FilterGroupInput'] | components['schemas']['FilterRuleInput'];
     OrFilterGroupInput: {
       or: components['schemas']['FilterGroupItemInput'][];
       id?: string;
@@ -19759,8 +19700,7 @@ export interface components {
     };
     DashboardVersionSummary: {
       createdBy:
-        | components['schemas']['Pick_UpdatedByUser.userUuid-or-firstName-or-lastName_']
-        | null;
+        components['schemas']['Pick_UpdatedByUser.userUuid-or-firstName-or-lastName_'] | null;
       /** Format: date-time */
       createdAt: string;
       versionUuid: string;
@@ -19902,8 +19842,7 @@ export interface components {
         tableGroupLabel?: string;
         tableName: string;
         fieldValueType:
-          | components['schemas']['MetricType']
-          | components['schemas']['DimensionType'];
+          components['schemas']['MetricType'] | components['schemas']['DimensionType'];
         /** @enum {string} */
         basicType: 'string' | 'number' | 'date' | 'timestamp' | 'boolean';
         type: components['schemas']['CatalogType.Field'];
@@ -20324,8 +20263,7 @@ export interface components {
         groupByColumns?: components['schemas']['GroupByColumn'][];
         valuesColumns: components['schemas']['PivotValuesColumn'][];
         indexColumn?:
-          | components['schemas']['PivotIndexColum']
-          | components['schemas']['PivotIndexColum'][];
+          components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
         /** Format: double */
         totalColumnCount: number | null;
       } | null;
