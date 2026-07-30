@@ -94,7 +94,7 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           'Compose a Lightdash metric query and compile it. Do not run the query.',
           `Project: ${projectUuid}.${topic}${explore}`,
           HARD_BANS,
-          'Deliverable: compiled SQL (verify expected columns) or compile errors. Stop after compile_query.',
+          'Deliverable: compiled SQL (verify expected columns) or compile errors (including empty SELECT isError). Stop after compile_query.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
         ].join('\n'),
       );
@@ -120,7 +120,7 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           `Project: ${projectUuid}`,
           `Explore: ${exploreId}.${err}`,
           HARD_BANS,
-          'Deliverable: successful compile (SQL with expected columns) or a clear blocker.',
+          'Deliverable: successful compile (SQL with expected columns) or a clear blocker. Empty SELECT is an error — switch to fieldIds.',
           `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
         ].join('\n'),
       );

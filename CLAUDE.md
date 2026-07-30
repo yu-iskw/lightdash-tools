@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-07-30]: Semantic-layer Compose HTTP uses `LIGHTDASH_TOOLS_MCP_AUTH_MODE=none` + PAT from `.env` (`docker compose -f docker-compose.dev.yml --profile semantic-layer up`). Cursor is `url: http://localhost:8080/mcp` only — no OAuth `auth` block. `none` is rejected when `NODE_ENV=production`.
 - [2026-02-05]: Initial setup of the comprehensive skills reference and self-improvement guidelines.
 - [2026-02-21]: When Trunk cannot be installed (e.g., `curl https://get.trunk.io` returns 403 in restricted environments), fall back to standalone formatters already available in `package.json`: `pnpm lint:eslint` for linting, `pnpm format:eslint` for ESLint auto-fix, and `pnpm format:prettier` for Prettier formatting. These bypass Trunk entirely and are sufficient for CI/CD environments where Trunk binary download is blocked.
 - [2026-02-21]: Lightdash paginated list endpoints return a wrapper shape — `{ results: { data: { <key>: T[] }, pagination? }, status: 'ok' }` — not a bare array. Always check the `ApiXxxListResponse` type in the generated OpenAPI file before writing the client method, then extract the inner array (e.g. `response.results.data.runs`). Missed this initially; caught by PR review.

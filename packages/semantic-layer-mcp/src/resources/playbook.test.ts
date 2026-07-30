@@ -58,9 +58,13 @@ describe('registerPlaybookResource', () => {
     expect(md).toContain('Always search');
     expect(md).toContain('Name bridging');
     expect(md).toContain('Explore disambiguation');
+    expect(md).toMatch(/Skip explores that list non-empty `errors`/);
     expect(md).toContain('Metrics catalog vs explore');
+    expect(md).toMatch(/unknown field id/i);
     expect(md).toContain('Prefer base-table fields');
     expect(md).toContain('empty `SELECT`');
+    expect(md).toMatch(/defaults to base-table only/i);
+    expect(md).toMatch(/isError/i);
     expect(md).toContain('Field lineage');
     expect(md).toContain('Answer shape');
     expect(md).toContain('{table}_{name}');

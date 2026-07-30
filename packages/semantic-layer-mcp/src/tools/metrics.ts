@@ -16,10 +16,11 @@ export function registerMetricsTools(server: McpServer, contextProvider: McpCont
     'list_metrics',
     {
       title: 'List metrics',
-      description: 'List metrics in a project data catalog',
+      description:
+        'List metrics in the project catalog. Search with metric keywords (e.g. nps), not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
-        search: z.string().optional().describe('Search query'),
+        search: z.string().optional().describe('Metric keyword search (not warehouse/table label)'),
         page: z.number().optional().describe('Page number'),
         pageSize: z.number().optional().describe('Page size'),
       }),
@@ -47,10 +48,11 @@ export function registerMetricsTools(server: McpServer, contextProvider: McpCont
     'get_metric',
     {
       title: 'Get metric',
-      description: 'Get a metric by table name and metric name from the data catalog',
+      description:
+        'Get a metric by explore id (tableName) and metric name. tableName must be the full explore id, not the warehouse label.',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
-        tableName: z.string().describe('Table name'),
+        tableName: z.string().describe('Full explore id (same as tableName on catalog rows)'),
         metricName: z.string().describe('Metric name'),
       }),
       annotations: READ_ONLY_DEFAULT,

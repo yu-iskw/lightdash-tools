@@ -1,0 +1,17 @@
+services:
+  semantic-layer-mcp:
+    profiles: ['semantic-layer']
+    build:
+      context: .
+      dockerfile: packages/semantic-layer-mcp/Dockerfile
+    command: ['node', 'dist/bin.js', 'serve-http']
+    ports:
+      - '8080:8080'
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      LIGHTDASH_TOOLS_MCP_HTTP_HOST: '0.0.0.0'
+      LIGHTDASH_TOOLS_MCP_HTTP_PORT: '8080'
+      LIGHTDASH_TOOLS_MCP_PUBLIC_URL: 'http://localhost:8080'
+      LIGHTDASH_TOOLS_MCP_AUTH_MODE: 'none'

@@ -37,39 +37,40 @@ On large projects, always call `list_explores` with `search` (and `limit`). Do n
 
 ## Name bridging
 
-Warehouse / BigQuery table names (e.g. `medico_session_summary`) are **search hints**, not explore IDs. Match explore `name` / `label` (e.g. `ubie_jp_phr_dwh__dwh_pharma__medico_session_summary`).
+Warehouse / BigQuery table names (e.g. `session_summary`) are **search hints**, not explore IDs. Match explore `name` / `label` (e.g. `acme_analytics__dwh_sales__session_summary`).
 
 ## Explore disambiguation
 
-When many explores match (e.g. `eda_`, `reporting_`, `mre_`, raw `dwh_pharma__…`):
+When many explores match (e.g. `eda_`, `reporting_`, `mre_`, raw `dwh_sales__…`):
 
-1. Prefer exact `label` match to the warehouse table name.
-2. Then prefer dataset path via `schemaName` / `databaseName` (and path segments in `name` such as `dwh_pharma` / `dm_pharma`).
-3. Then prefer tags (e.g. `lightdash`).
-4. State the chosen explore id briefly in the answer.
+1. Skip explores that list non-empty `errors` (broken explores look like healthy ones otherwise).
+2. Prefer exact `label` match to the warehouse table name.
+3. Then prefer dataset path via `schemaName` / `databaseName` (and path segments in `name` such as `dwh_sales` / `dm_sales`).
+4. Then prefer tags (e.g. `lightdash`).
+5. State the chosen explore id briefly in the answer.
 
 ## Metrics catalog vs explore
 
 - `list_metrics` / `get_metric` are catalog-wide. Response shape is `{ pagination, data: Metric[] }`.
 - Filter catalog rows where `tableName` **equals the chosen explore id** (full id, not the warehouse label).
-- `get_metric` `tableName` must be that same explore id (e.g. `…__dwh_pharma__medico_session_summary`). Short labels like `medico_session_summary` fail with “Metric not found”.
+- `get_metric` `tableName` must be that same explore id (e.g. `…__dwh_sales__session_summary`). Short labels like `session_summary` fail with “Metric not found”.
 - Search with metric keywords (`nps`, `session_complete_rate`), not only the warehouse table name (table-name searches often return zero).
 - Before `compile_query`, confirm dimensions/metrics on the chosen explore. Prefer `fieldId` from `list_dimensions` for dimensions; for metrics use `{exploreId}_{metricName}`.
 
 ## Prefer base-table fields
 
-`list_dimensions` includes joined tables and can be very large. Prefer dimensions whose `table` equals the explore id (base table). Ignore joined-table fields unless the question needs them.
+`list_dimensions` **defaults to base-table only** (`table` === explore id). Set `baseTableOnly=false` only when you need joined-table fields. Prefer `fieldId` from that list for `compile_query`.
 
 ## Field IDs for `compile_query`
 
-Use `{table}_{name}` / `fieldId` from `list_dimensions` (e.g. `…__medico_session_summary_session_start_time_jst`).
+Use `{table}_{name}` / `fieldId` from `list_dimensions` (e.g. `orders_created_at`).
 
 Short keys alone are unsafe. Two failure modes:
 
-1. `compile_query` may **succeed with an empty `SELECT`** (no error) — treat that as failure.
+1. `compile_query` may **succeed upstream with an empty `SELECT`** — this server returns that as **`isError`** (fix field IDs and re-compile).
 2. Or it may hard-error (`Tried to reference … unknown field id`).
 
-Fix field IDs and re-compile. Prefer `fieldId` from `list_dimensions` when present.
+Prefer `fieldId` from `list_dimensions` when present.
 
 ## Field lineage
 

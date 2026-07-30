@@ -28,7 +28,7 @@ program
 
 program
   .command('serve-http')
-  .description('Run MCP server on Streamable HTTP (Lightdash OAuth)')
+  .description('Run MCP server on Streamable HTTP (auth: none+PAT or lightdash-oauth)')
   .action(() => {
     runHttp();
   });

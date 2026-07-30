@@ -15,9 +15,10 @@ Tool surface is **package-is-allowlist**: only handlers registered in code appea
 
 Tool names are **unprefixed** (not `ldt__`). Follow the playbook resource `lightdash://playbooks/semantic-layer`.
 
-- `list_explores` returns compact summaries `{ name, label, tags, databaseName?, schemaName? }` with optional `search` / `limit` (defaults: limit 50 with search, 100 without). Always search on large projects; disambiguate near-duplicates by label, schema/database, then tags.
-- `list_dimensions` returns compact `{ name, label, table, type, fieldId }` where `fieldId` is `{table}_{name}` for `compile_query` (prefer base-table rows where `table` equals the explore id; short names may compile with an empty `SELECT`).
-- Warehouse table names are search hints, not explore IDs. `list_metrics` is catalog-wide—filter `tableName === explore id`; `get_metric` needs that same id (not the warehouse label).
+- `list_explores` returns compact summaries `{ name, label, tags, databaseName?, schemaName?, errors?, warnings? }` with optional `search` / `limit` (defaults: limit 50 with search, 100 without). Search/limit filter client-side after the full project explore list is fetched. Always search on large projects; skip explores with `errors`; disambiguate by label, schema/database, then tags.
+- `list_dimensions` returns compact `{ name, label, table, type, fieldId }` (defaults to base-table only; `baseTableOnly=false` includes joins). Prefer those `fieldId`s for `compile_query` (short names may compile with an empty `SELECT`, which this server returns as `isError`).
+- Warehouse table names are search hints, not explore IDs. `list_metrics` is catalog-wide—search by metric keywords, then filter `tableName === explore id`; `get_metric` needs that same id (not the warehouse label).
+- `compile_query` never runs the warehouse query; empty-SELECT compiles are surfaced as tool errors.
 
 ## MCP SDK (v2, compatibility-first)
 
@@ -32,12 +33,14 @@ Follows [ADR-0041](../../docs/adr/0041-compatibility-first-mcp-typescript-sdk-v2
 
 ## Auth modes
 
-| Transport | Auth                                          | Server env                                                                                                                                                            | Host (Cursor/Claude)                                                                                    |
-| --------- | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **stdio** | PAT                                           | `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`                                                                                                                                  | Inject those env vars                                                                                   |
-| **HTTP**  | Lightdash OAuth (identity-only, experimental) | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth`, `LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1` in production | `LIGHTDASH_OAUTH_CLIENT_ID` / `LIGHTDASH_OAUTH_CLIENT_SECRET` on the **host** — never on the MCP server |
+| Transport | Auth                                             | Server env                                                                                                                                                                                                  | Host (Cursor/Claude)                                                                                                        |
+| --------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **stdio** | PAT                                              | `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`                                                                                                                                                                        | Inject those env vars                                                                                                       |
+| **HTTP**  | `none` + PAT (local) or Lightdash OAuth (hosted) | `LIGHTDASH_URL`; `none` requires `LIGHTDASH_API_KEY` + `LIGHTDASH_TOOLS_MCP_AUTH_MODE=none`; oauth needs `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` + `AUTH_MODE=lightdash-oauth` (+ experimental flag in production) | Local Compose: Cursor `url` only. Hosted OAuth: host holds `LIGHTDASH_OAUTH_CLIENT_ID` / `SECRET` — never on the MCP server |
 
 See [ADR-0040](../../docs/adr/0040-oauth-backed-streamable-http-mcp.md), [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md).
+
+**Rule:** If `LIGHTDASH_API_KEY` is set and `AUTH_MODE=none`, upstream Lightdash API calls use that PAT (`Authorization: ApiKey …`). OAuth client id/secret never live on the server and never call APIs.
 
 ## Pin a project (`X-Lightdash-Project`)
 
@@ -77,12 +80,45 @@ pnpm --filter @lightdash-tools/semantic-layer-mcp build
 LIGHTDASH_URL=https://app.lightdash.cloud LIGHTDASH_API_KEY=... \
   node packages/semantic-layer-mcp/dist/bin.js stdio
 
-# HTTP (OAuth resource server)
+# HTTP (local none+PAT)
+LIGHTDASH_URL=https://app.lightdash.cloud \
+LIGHTDASH_API_KEY=... \
+LIGHTDASH_TOOLS_MCP_AUTH_MODE=none \
+LIGHTDASH_TOOLS_MCP_PUBLIC_URL=http://localhost:8080 \
+  node packages/semantic-layer-mcp/dist/bin.js serve-http
+
+# HTTP (hosted OAuth resource server)
 LIGHTDASH_URL=https://app.lightdash.cloud \
 LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://mcp.example.com \
 LIGHTDASH_TOOLS_MCP_AUTH_MODE=lightdash-oauth \
 LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH=1 \
   node packages/semantic-layer-mcp/dist/bin.js serve-http
+```
+
+### Docker Compose (HTTP + PAT, profile `semantic-layer`)
+
+From the monorepo root with a filled `.env` (see [`.env.example`](../../.env.example)):
+
+```bash
+docker compose -f docker-compose.dev.yml --profile semantic-layer up --build
+```
+
+Or set `COMPOSE_PROFILES=semantic-layer` in `.env` / the shell. Without the profile, no MCP container starts.
+
+- Compose overrides image `CMD` to `serve-http` (stdio `CMD` stays for `docker run -i`).
+- Sets `LIGHTDASH_TOOLS_MCP_AUTH_MODE=none` and injects `LIGHTDASH_URL` / `LIGHTDASH_API_KEY` via `env_file: .env`.
+- Listens on `http://localhost:8080/mcp`.
+
+Cursor (HTTP, no OAuth browser flow):
+
+```json
+{
+  "mcpServers": {
+    "lightdash-semantic-layer-mcp-local": {
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
 ```
 
 ### Docker (stdio + PAT)
@@ -129,7 +165,7 @@ The server never loads `.env` itself. Cursor loads it via official STDIO `envFil
 }
 ```
 
-This image is **not** for HTTP/OAuth or Cloud Run (`serve-http` remains a separate host/Cloud Run path).
+This image remains available for **stdio** (`docker run -i`). For local HTTP, prefer Compose (`--profile semantic-layer`) above.
 
 ### Cursor (stdio + PAT, host Node)
 

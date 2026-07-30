@@ -1,5 +1,5 @@
 /**
- * Streamable HTTP transport — lightdash-oauth only (ADR-0040 / ADR-0041).
+ * Streamable HTTP transport — lightdash-oauth or none+PAT (ADR-0040 / ADR-0041).
  */
 
 import { randomUUID } from 'node:crypto';
@@ -7,11 +7,12 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 
-import { MCP_AUTH_MODE_LIGHTDASH_OAUTH } from '../auth/auth-mode.js';
+import { MCP_AUTH_MODE_LIGHTDASH_OAUTH, MCP_AUTH_MODE_NONE } from '../auth/auth-mode.js';
 import {
   BearerContextProvider,
   createOAuthBearerProvider,
 } from '../auth/bearer-context-provider.js';
+import { EnvContextProvider } from '../auth/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
   writeOAuthAuthFailure,
@@ -28,6 +29,7 @@ import {
   loadMcpHttpConfig,
   type McpHttpConfig,
 } from '../config/load-http-config.js';
+import { getClient } from '../config.js';
 import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
 import { createSemanticLayerMcpServer } from '../server.js';
 
@@ -76,6 +78,13 @@ function getSessionId(req: IncomingMessage): string | undefined {
   return typeof sessionId === 'string' ? sessionId : sessionId?.[0];
 }
 
+function createEnvContextProvider(): McpContextProvider {
+  return new EnvContextProvider({
+    mode: MCP_AUTH_MODE_NONE,
+    client: getClient(),
+  });
+}
+
 function closeSessionEntry(entry: SessionEntry, sessionId: string, reason: string): void {
   void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
     console.error(`Failed to close MCP session ${sessionId} (${reason}):`, err);
@@ -86,6 +95,7 @@ function createSessionTransport(
   contextProvider: McpContextProvider,
   sessionStore: SessionStore,
   auth: {
+    mode: McpHttpConfig['authMode'];
     tokenHash?: string;
     subject?: string;
     organizationUuid?: string;
@@ -102,7 +112,7 @@ function createSessionTransport(
         server: holder.server,
         lastAccessAt: Date.now(),
         auth: {
-          mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
+          mode: auth.mode,
           tokenHash: auth.tokenHash,
           subject: auth.subject,
           organizationUuid: auth.organizationUuid,
@@ -152,6 +162,10 @@ async function ensureEndpointAuth(
   res: ServerResponse,
   config: McpHttpConfig,
 ): Promise<boolean> {
+  if (config.authMode === MCP_AUTH_MODE_NONE) {
+    return true;
+  }
+
   const result = await authenticateLightdashOAuth(req, config);
   if (!result.ok) {
     writeOAuthAuthFailure(res, result);
@@ -201,7 +215,9 @@ function verifySessionAuth(
   config: McpHttpConfig,
   entry: SessionEntry | undefined,
 ): boolean {
-  if (!entry) return true;
+  if (!entry || config.authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    return true;
+  }
 
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.accessToken) {
@@ -260,7 +276,10 @@ async function handleInitializePost(
   sessionStore: SessionStore,
   body: unknown,
 ): Promise<void> {
-  const oauth = (req as OAuthRequest).lightdashOAuth;
+  const oauth =
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+      ? (req as OAuthRequest).lightdashOAuth
+      : undefined;
   const sessionSubject = oauth?.ok ? oauth.user.userUuid : undefined;
 
   if (
@@ -272,20 +291,29 @@ async function handleInitializePost(
     return;
   }
 
-  if (!oauth?.ok) {
-    writeBearerTokenRequiredFailure(res, config);
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    if (!oauth?.ok) {
+      writeBearerTokenRequiredFailure(res, config);
+      return;
+    }
+
+    const contextProvider = createOAuthBearerProvider(config, {
+      accessToken: oauth.accessToken,
+      subject: oauth.user.userUuid,
+    });
+
+    const transport = createSessionTransport(contextProvider, sessionStore, {
+      mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
+      tokenHash: contextProvider.getTokenHash(),
+      subject: oauth.user.userUuid,
+      organizationUuid: oauth.user.organizationUuid,
+    });
+    await transport.handleRequest(req, res, body);
     return;
   }
 
-  const contextProvider = createOAuthBearerProvider(config, {
-    accessToken: oauth.accessToken,
-    subject: oauth.user.userUuid,
-  });
-
-  const transport = createSessionTransport(contextProvider, sessionStore, {
-    tokenHash: contextProvider.getTokenHash(),
-    subject: oauth.user.userUuid,
-    organizationUuid: oauth.user.organizationUuid,
+  const transport = createSessionTransport(createEnvContextProvider(), sessionStore, {
+    mode: MCP_AUTH_MODE_NONE,
   });
   await transport.handleRequest(req, res, body);
 }
@@ -420,12 +448,14 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     .then(({ baseUrl }) => {
       const httpConfig = config ?? loadMcpHttpConfig();
       console.error(
-        `Lightdash semantic-layer MCP listening on ${baseUrl}${httpConfig.mcpPath} (auth: lightdash-oauth)`,
+        `Lightdash semantic-layer MCP listening on ${baseUrl}${httpConfig.mcpPath} (auth: ${httpConfig.authMode})`,
       );
-      const metadataConfig = httpConfig.publicUrl
-        ? httpConfig
-        : { ...httpConfig, publicUrl: baseUrl };
-      console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(metadataConfig)}`);
+      if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+        const metadataConfig = httpConfig.publicUrl
+          ? httpConfig
+          : { ...httpConfig, publicUrl: baseUrl };
+        console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(metadataConfig)}`);
+      }
     })
     .catch((err: unknown) => {
       console.error('Failed to start MCP HTTP server:', err);
@@ -476,7 +506,7 @@ async function handleHttpRequest(
     return;
   }
 
-  if (handleMetadata(path, res, config)) {
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {
     return;
   }
 

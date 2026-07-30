@@ -1,12 +1,20 @@
 /**
- * HTTP config for semantic-layer MCP (lightdash-oauth only).
+ * HTTP config for semantic-layer MCP (lightdash-oauth or none+PAT).
  */
 
 import {
+  ENV_LIGHTDASH_API_KEY,
   ENV_LIGHTDASH_URL,
   ENV_LIGHTDASH_PROXY_AUTHORIZATION,
   SecretString,
 } from '@lightdash-tools/client';
+
+import {
+  MCP_AUTH_MODE_LIGHTDASH_OAUTH,
+  MCP_AUTH_MODE_NONE,
+  MCP_HTTP_AUTH_MODES,
+  type McpAuthMode,
+} from '../auth/auth-mode.js';
 
 import {
   isLocalHttpOrigin,
@@ -14,10 +22,6 @@ import {
   normalizeMcpPath,
   normalizePublicUrl,
 } from './normalize-url.js';
-
-import type { McpAuthMode } from '../auth/auth-mode.js';
-
-const AUTH_MODE_LIGHTDASH_OAUTH = 'lightdash-oauth' as const;
 
 const ENV_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_URL';
 const ENV_HTTP_HOST = 'LIGHTDASH_TOOLS_MCP_HTTP_HOST';
@@ -92,16 +96,36 @@ function readIntEnv(env: NodeJS.ProcessEnv, name: string, defaultValue: string):
   return parsePositiveIntegerEnv(name, readEnv(name, env) ?? defaultValue);
 }
 
-function assertLightdashOAuthMode(env: NodeJS.ProcessEnv): void {
-  const authModeRaw = readEnv(ENV_AUTH_MODE, env) ?? AUTH_MODE_LIGHTDASH_OAUTH;
-  if (authModeRaw !== AUTH_MODE_LIGHTDASH_OAUTH) {
+function resolveAuthMode(env: NodeJS.ProcessEnv): McpAuthMode {
+  const authModeRaw = readEnv(ENV_AUTH_MODE, env) ?? MCP_AUTH_MODE_LIGHTDASH_OAUTH;
+  if (!(MCP_HTTP_AUTH_MODES as readonly string[]).includes(authModeRaw)) {
     throw new Error(
-      `${ENV_AUTH_MODE} must be ${AUTH_MODE_LIGHTDASH_OAUTH} for @lightdash-tools/semantic-layer-mcp HTTP (got ${authModeRaw}).`,
+      `${ENV_AUTH_MODE} must be ${MCP_HTTP_AUTH_MODES.join(' or ')} for @lightdash-tools/semantic-layer-mcp HTTP (got ${authModeRaw}).`,
+    );
+  }
+  return authModeRaw as McpAuthMode;
+}
+
+function assertNoneRequiresPat(env: NodeJS.ProcessEnv, authMode: McpAuthMode): void {
+  if (authMode !== MCP_AUTH_MODE_NONE) return;
+  if (!readEnv(ENV_LIGHTDASH_API_KEY, env)) {
+    throw new Error(
+      `${ENV_LIGHTDASH_API_KEY} is required when ${ENV_AUTH_MODE}=${MCP_AUTH_MODE_NONE} (upstream Lightdash API uses ApiKey PAT).`,
+    );
+  }
+  if (env.NODE_ENV === 'production') {
+    throw new Error(
+      `${ENV_AUTH_MODE}=${MCP_AUTH_MODE_NONE} is not allowed in production (unauthenticated MCP HTTP). Use ${MCP_AUTH_MODE_LIGHTDASH_OAUTH}.`,
     );
   }
 }
 
-function assertProductionIdentityOAuth(env: NodeJS.ProcessEnv, enabled: boolean): void {
+function assertProductionIdentityOAuth(
+  env: NodeJS.ProcessEnv,
+  authMode: McpAuthMode,
+  enabled: boolean,
+): void {
+  if (authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) return;
   if (env.NODE_ENV === 'production' && !enabled) {
     throw new Error(
       `Set ${ENV_EXPERIMENTAL_IDENTITY}=1 in production to acknowledge identity-only OAuth ` +
@@ -127,7 +151,10 @@ function assertPublicUrlHttps(env: NodeJS.ProcessEnv, publicUrl: string | undefi
   }
 }
 
-function resolveValidateToken(env: NodeJS.ProcessEnv): boolean {
+function resolveValidateToken(env: NodeJS.ProcessEnv, authMode: McpAuthMode): boolean {
+  if (authMode === MCP_AUTH_MODE_NONE) {
+    return false;
+  }
   const skipValidation = parseBooleanEnv(
     ENV_SKIP_TOKEN_VALIDATION,
     readEnv(ENV_SKIP_TOKEN_VALIDATION, env),
@@ -144,8 +171,9 @@ function resolveValidateToken(env: NodeJS.ProcessEnv): boolean {
 }
 
 /**
- * Loads HTTP config. Auth mode is always lightdash-oauth for this package's HTTP entry.
- * OAuth client id/secret belong on the MCP host, not this server.
+ * Loads HTTP config.
+ * - `lightdash-oauth`: Bearer on the MCP endpoint; OAuth client id/secret stay on the host.
+ * - `none`: unauthenticated MCP endpoint; upstream Lightdash calls use LIGHTDASH_API_KEY (PAT).
  */
 export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
   const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL, env);
@@ -153,7 +181,8 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     throw new Error(`${ENV_LIGHTDASH_URL} is required for HTTP mode`);
   }
 
-  assertLightdashOAuthMode(env);
+  const authMode = resolveAuthMode(env);
+  assertNoneRequiresPat(env, authMode);
 
   const mcpPath = normalizeMcpPath(readEnv(ENV_MCP_PATH, env) ?? '/mcp');
   const publicUrlRaw = readEnv(ENV_PUBLIC_URL, env);
@@ -164,10 +193,10 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     readEnv(ENV_EXPERIMENTAL_IDENTITY, env),
     false,
   );
-  assertProductionIdentityOAuth(env, experimentalIdentityOAuth);
+  assertProductionIdentityOAuth(env, authMode, experimentalIdentityOAuth);
   assertPublicUrlHttps(env, publicUrl);
 
-  const validateToken = resolveValidateToken(env);
+  const validateToken = resolveValidateToken(env, authMode);
   const portRaw = readEnv(ENV_HTTP_PORT, env) ?? readEnv('PORT', env) ?? '8080';
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
@@ -178,7 +207,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     port: parsePositiveIntegerEnv(ENV_HTTP_PORT, portRaw),
     publicUrl,
     mcpPath,
-    authMode: AUTH_MODE_LIGHTDASH_OAUTH,
+    authMode,
     allowedOrigins: parseCsv(readEnv(ENV_ALLOWED_ORIGINS, env)),
     maxBodyBytes: readIntEnv(env, ENV_MAX_BODY, String(1024 * 1024)),
     sessionTtlMs: readIntEnv(env, ENV_SESSION_TTL, String(30 * 60 * 1000)),
@@ -198,10 +227,17 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
 }
 
 export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
-  console.warn(
-    `Warning: ${ENV_AUTH_MODE}=${AUTH_MODE_LIGHTDASH_OAUTH} is experimental identity-only OAuth. ` +
-      'Tokens are not resource/audience-bound to this MCP server. OAuth client id/secret stay on the MCP host.',
-  );
+  if (config.authMode === MCP_AUTH_MODE_NONE) {
+    console.warn(
+      `Warning: ${ENV_AUTH_MODE}=${MCP_AUTH_MODE_NONE} — MCP HTTP endpoint is unauthenticated. ` +
+        `Upstream Lightdash API uses ${ENV_LIGHTDASH_API_KEY}. Use ${MCP_AUTH_MODE_LIGHTDASH_OAUTH} for hosted deployments.`,
+    );
+  } else {
+    console.warn(
+      `Warning: ${ENV_AUTH_MODE}=${MCP_AUTH_MODE_LIGHTDASH_OAUTH} is experimental identity-only OAuth. ` +
+        'Tokens are not resource/audience-bound to this MCP server. OAuth client id/secret stay on the MCP host.',
+    );
+  }
   if (config.dangerouslyAllowAnyOrigin && config.allowedOrigins.length === 0) {
     console.warn(`Warning: CORS allows any Origin (${ENV_ALLOW_ANY_ORIGIN}=1).`);
   }

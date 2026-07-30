@@ -21,7 +21,7 @@ export function registerExploresTools(
     {
       title: 'List explores',
       description:
-        'List explore summaries (name, label, tags, databaseName, schemaName); optional search and limit',
+        'List explore summaries (name, label, tags, databaseName, schemaName, errors?, warnings?); optional search/limit (client-side after full list fetch)',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
         search: z.string().optional().describe('Filter by name, label, tag, database, or schema'),
@@ -74,19 +74,34 @@ export function registerExploresTools(
     {
       title: 'List dimensions',
       description:
-        'List compact dimensions for an explore (name, label, table, type, fieldId) for compile_query',
+        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === exploreId); set baseTableOnly=false for joined tables.',
       inputSchema: z.object({
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
+        baseTableOnly: z
+          .boolean()
+          .optional()
+          .describe('When true (default), only dimensions on the explore base table'),
       }),
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
+        async ({
+          projectUuid,
+          exploreId,
+          baseTableOnly,
+        }: {
+          projectUuid: string;
+          exploreId: string;
+          baseTableOnly?: boolean;
+        }) => {
           const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
-          return jsonToolResult(summarizeDimensions(result));
+          const baseOnly = baseTableOnly !== false;
+          return jsonToolResult(
+            summarizeDimensions(result, baseOnly ? { baseTable: exploreId } : undefined),
+          );
         },
     ),
   );

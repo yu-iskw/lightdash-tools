@@ -83,9 +83,18 @@ export function summarizeExplores(
   return summaries;
 }
 
-/** Compact dimensions with compile_query fieldId `{table}_{name}`. */
-export function summarizeDimensions(dimensions: readonly DimensionLike[]): DimensionSummary[] {
-  return dimensions.map((dim) => {
+/**
+ * Compact dimensions with compile_query fieldId `{table}_{name}`.
+ * When `baseTable` is set, keep only rows whose `table` equals that id (joined tables dropped).
+ */
+export function summarizeDimensions(
+  dimensions: readonly DimensionLike[],
+  options?: { baseTable?: string },
+): DimensionSummary[] {
+  const rows = options?.baseTable
+    ? dimensions.filter((dim) => dim.table === options.baseTable)
+    : dimensions;
+  return rows.map((dim) => {
     const summary: DimensionSummary = {
       name: dim.name,
       table: dim.table,
@@ -95,4 +104,21 @@ export function summarizeDimensions(dimensions: readonly DimensionLike[]): Dimen
     if (typeof dim.type === 'string') summary.type = dim.type;
     return summary;
   });
+}
+
+/** True when compiled SQL has an empty projection (SELECT … FROM with no columns). */
+export function isEmptySelectSql(sql: string): boolean {
+  const normalized = sql.replace(/\s+/g, ' ').trim();
+  return /SELECT FROM\b/i.test(normalized);
+}
+
+/** Extract SQL text from a compile_query API payload. */
+export function extractCompiledSql(result: unknown): string | undefined {
+  if (typeof result === 'string') return result;
+  if (result && typeof result === 'object') {
+    const record = result as Record<string, unknown>;
+    if (typeof record.query === 'string') return record.query;
+    if (typeof record.compiledQuery === 'string') return record.compiledQuery;
+  }
+  return undefined;
 }

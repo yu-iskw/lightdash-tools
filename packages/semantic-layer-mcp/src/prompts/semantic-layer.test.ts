@@ -58,9 +58,9 @@ describe('registerSemanticLayerPrompts', () => {
     expect(textMsg.content.text).toContain('compile_query');
     expect(textMsg.content.text).toContain('Stop after compile_query');
     expect(textMsg.content.text).not.toContain('search_field_values');
-    // Procedure lives in the playbook, not duplicated in the prompt body.
+    // Procedure lives in the playbook; prompt may mention empty SELECT only as deliverable/isError cue.
     expect(textMsg.content.text).not.toMatch(/Always search explores/i);
-    expect(textMsg.content.text).not.toMatch(/empty SELECT/i);
+    expect(textMsg.content.text).toMatch(/empty SELECT isError/i);
 
     const resourceMsg = result.messages[1];
     expect(resourceMsg.content.type).toBe('resource');

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { summarizeDimensions, summarizeExplores, toExploreSummary } from './explore-helpers.js';
+import {
+  extractCompiledSql,
+  isEmptySelectSql,
+  summarizeDimensions,
+  summarizeExplores,
+  toExploreSummary,
+} from './explore-helpers.js';
 
 import type { ApiExploresResults } from '@lightdash-tools/common';
 
@@ -12,7 +18,7 @@ describe('toExploreSummary', () => {
         label: 'Orders',
         tags: ['sales'],
         databaseName: 'proj',
-        schemaName: 'dwh_pharma',
+        schemaName: 'analytics',
         warnings: [{ message: 'warn', type: 'FIELD_ERROR' }],
       } as unknown as ApiExploresResults[number]),
     ).toEqual({
@@ -20,7 +26,7 @@ describe('toExploreSummary', () => {
       label: 'Orders',
       tags: ['sales'],
       databaseName: 'proj',
-      schemaName: 'dwh_pharma',
+      schemaName: 'analytics',
       warnings: [{ message: 'warn', type: 'FIELD_ERROR' }],
     });
 
@@ -41,11 +47,11 @@ describe('toExploreSummary', () => {
 describe('summarizeExplores', () => {
   const explores = [
     {
-      name: 'ubie_jp_phr_dwh__dm_pharma__eda_medico_session_summary',
-      label: 'eda_medico',
+      name: 'acme_analytics__dm_sales__eda_session_summary',
+      label: 'eda_session',
       tags: ['daily'],
-      databaseName: 'ubie-jp-phr-dwh-prd',
-      schemaName: 'dm_pharma',
+      databaseName: 'acme-analytics-prd',
+      schemaName: 'dm_sales',
     },
     {
       name: 'orders',
@@ -64,13 +70,13 @@ describe('summarizeExplores', () => {
   ] as ApiExploresResults;
 
   it('filters by search on name, label, tag, or schema', () => {
-    expect(summarizeExplores(explores, { search: 'medico' })).toEqual([
+    expect(summarizeExplores(explores, { search: 'session' })).toEqual([
       {
-        name: 'ubie_jp_phr_dwh__dm_pharma__eda_medico_session_summary',
-        label: 'eda_medico',
+        name: 'acme_analytics__dm_sales__eda_session_summary',
+        label: 'eda_session',
         tags: ['daily'],
-        databaseName: 'ubie-jp-phr-dwh-prd',
-        schemaName: 'dm_pharma',
+        databaseName: 'acme-analytics-prd',
+        schemaName: 'dm_sales',
       },
     ]);
     expect(summarizeExplores(explores, { search: 'crm' })).toEqual([
@@ -82,7 +88,7 @@ describe('summarizeExplores', () => {
         schemaName: 'public',
       },
     ]);
-    expect(summarizeExplores(explores, { search: 'dm_pharma' })).toHaveLength(1);
+    expect(summarizeExplores(explores, { search: 'dm_sales' })).toHaveLength(1);
   });
 
   it('treats whitespace-only search like no search (limit 100)', () => {
@@ -115,20 +121,20 @@ describe('summarizeDimensions', () => {
     expect(
       summarizeDimensions([
         {
-          name: 'last_created_at_jst',
-          table: 'fdd',
-          label: 'Last created',
+          name: 'created_at',
+          table: 'orders',
+          label: 'Created at',
           type: 'timestamp',
         },
         { name: 'orphan', table: 't' },
       ]),
     ).toEqual([
       {
-        name: 'last_created_at_jst',
-        table: 'fdd',
-        label: 'Last created',
+        name: 'created_at',
+        table: 'orders',
+        label: 'Created at',
         type: 'timestamp',
-        fieldId: 'fdd_last_created_at_jst',
+        fieldId: 'orders_created_at',
       },
       { name: 'orphan', table: 't', fieldId: 't_orphan' },
     ]);
@@ -145,5 +151,26 @@ describe('summarizeDimensions', () => {
         ])[0],
       ).sort(),
     ).toEqual(['fieldId', 'label', 'name', 'table', 'type']);
+  });
+
+  it('filters to base table when baseTable is set', () => {
+    expect(
+      summarizeDimensions(
+        [
+          { name: 'a', table: 'orders' },
+          { name: 'b', table: 'customers' },
+        ],
+        { baseTable: 'orders' },
+      ),
+    ).toEqual([{ name: 'a', table: 'orders', fieldId: 'orders_a' }]);
+  });
+});
+
+describe('isEmptySelectSql / extractCompiledSql', () => {
+  it('detects empty SELECT projections', () => {
+    expect(isEmptySelectSql('SELECT\n\nFROM `t`')).toBe(true);
+    expect(isEmptySelectSql('SELECT col FROM t')).toBe(false);
+    expect(extractCompiledSql({ query: 'SELECT 1' })).toBe('SELECT 1');
+    expect(extractCompiledSql('raw')).toBe('raw');
   });
 });
