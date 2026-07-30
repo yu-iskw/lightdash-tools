@@ -23,7 +23,7 @@ const oauthConfig: McpHttpConfig = {
   host: '127.0.0.1',
   port: 0,
   publicUrl: 'https://mcp.example.com',
-  mcpPath: '/mcp',
+  mcpPath: '/semantic-layer/v1/mcp',
   authMode: 'lightdash-oauth',
   allowedOrigins: [],
   maxBodyBytes: 1024,
@@ -94,7 +94,7 @@ describe('streamable HTTP OAuth metadata', () => {
   it('builds protected resource metadata with issuer origin in authorization_servers', () => {
     const metadata = buildOAuthProtectedResourceMetadata(oauthConfig);
     expect(metadata.authorization_servers).toEqual(['https://app.lightdash.cloud']);
-    expect(metadata.resource).toBe('https://mcp.example.com/mcp');
+    expect(metadata.resource).toBe('https://mcp.example.com/semantic-layer/v1/mcp');
     expect(getLightdashAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
       'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
     );
@@ -102,7 +102,8 @@ describe('streamable HTTP OAuth metadata', () => {
 
   it('builds WWW-Authenticate challenges with resource_metadata for OAuth clients', () => {
     const header = buildWwwAuthenticateHeader({
-      resourceMetadataUrl: 'https://mcp.example.com/.well-known/oauth-protected-resource/mcp',
+      resourceMetadataUrl:
+        'https://mcp.example.com/.well-known/oauth-protected-resource/semantic-layer/v1/mcp',
       scope: 'mcp:read',
       error: 'invalid_token',
     });

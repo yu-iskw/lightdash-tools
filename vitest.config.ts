@@ -36,8 +36,6 @@ export default defineConfig({
         'packages/mcp/src/http.ts',
         'packages/cli/src/index.ts',
         'packages/cli/src/commands/agentops/**',
-        'packages/mcp/src/tools/agentops.ts',
-        'packages/mcp/src/prompts/**',
       ],
       thresholds: GLOBAL_THRESHOLDS,
     },

@@ -13,7 +13,7 @@ const baseConfig: McpHttpConfig = {
   host: '0.0.0.0',
   port: 3100,
   publicUrl: 'https://mcp.example.com',
-  mcpPath: '/mcp',
+  mcpPath: '/semantic-layer/v1/mcp',
   authMode: 'lightdash-oauth',
   allowedOrigins: [],
   maxBodyBytes: 1024,
@@ -46,7 +46,7 @@ describe('buildOAuthProtectedResourceMetadata', () => {
   it('includes resource and authorization_servers issuer origin', () => {
     const metadata = buildOAuthProtectedResourceMetadata(baseConfig);
     expect(metadata).toEqual({
-      resource: 'https://mcp.example.com/mcp',
+      resource: 'https://mcp.example.com/semantic-layer/v1/mcp',
       authorization_servers: ['https://app.lightdash.cloud'],
       bearer_methods_supported: ['header'],
       scopes_supported: ['mcp:read', 'mcp:write'],

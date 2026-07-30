@@ -1,13 +1,18 @@
 /**
- * MCP tools: explores (list, get).
+ * MCP tools: explores (list, get, dimensions, lineage) — shared catalog.
  */
 
 import { z } from 'zod';
 
+import {
+  flattenExploreDimensions,
+  summarizeDimensions,
+  summarizeExplores,
+} from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
 import {
   READ_ONLY_CAPABILITY,
-  READ_ONLY_DEFAULT,
+  jsonToolResult,
   registerToolSafe,
   wrapToolAnnotated,
 } from './shared.js';
@@ -15,29 +20,42 @@ import {
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export function registerExploresTools(
-  server: McpServer,
-  contextProvider: McpContextProvider,
-): void {
+export function registerListExplores(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'list_explores',
     {
       title: 'List explores',
-      description: 'List all explores in a project',
-      inputSchema: { projectUuid: projectUuidField() },
-      annotations: READ_ONLY_DEFAULT,
+      description:
+        'List explore summaries (name, label, tags, databaseName, schemaName, errors?, warnings?); optional search/limit (client-side after full list fetch)',
+      inputSchema: {
+        projectUuid: projectUuidField(),
+        search: z.string().optional().describe('Filter by name, label, tag, database, or schema'),
+        limit: z.number().int().positive().optional().describe('Max explores to return'),
+      },
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
       READ_ONLY_CAPABILITY,
       (c) =>
-        async ({ projectUuid }: { projectUuid: string }) => {
+        async ({
+          projectUuid,
+          search,
+          limit,
+        }: {
+          projectUuid: string;
+          search?: string;
+          limit?: number;
+        }) => {
           const explores = await c.v1.explores.listExplores(projectUuid);
-          return { content: [{ type: 'text', text: JSON.stringify(explores, null, 2) }] };
+          return jsonToolResult(summarizeExplores(explores, { search, limit }));
         },
     ),
   );
+}
+
+export function registerGetExplore(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
     'get_explore',
@@ -49,7 +67,7 @@ export function registerExploresTools(
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
       },
-      annotations: READ_ONLY_DEFAULT,
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
@@ -57,32 +75,61 @@ export function registerExploresTools(
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
-          return { content: [{ type: 'text', text: JSON.stringify(explore, null, 2) }] };
+          return jsonToolResult(explore);
         },
     ),
   );
+}
+
+export function registerListDimensions(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'list_dimensions',
     {
       title: 'List dimensions',
-      description: 'List all dimensions for a specific explore',
+      description:
+        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === explore.baseTable); set baseTableOnly=false for joined tables.',
       inputSchema: {
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
+        baseTableOnly: z
+          .boolean()
+          .optional()
+          .describe('When true (default), only dimensions on the explore base table'),
       },
-      annotations: READ_ONLY_DEFAULT,
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
       READ_ONLY_CAPABILITY,
       (c) =>
-        async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
-          const result = await c.v1.explores.listDimensions(projectUuid, exploreId);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+        async ({
+          projectUuid,
+          exploreId,
+          baseTableOnly,
+        }: {
+          projectUuid: string;
+          exploreId: string;
+          baseTableOnly?: boolean;
+        }) => {
+          const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
+          const { baseTable, dimensions } = flattenExploreDimensions(explore);
+          const baseOnly = baseTableOnly !== false;
+          return jsonToolResult(
+            summarizeDimensions(dimensions, baseOnly ? { baseTable } : undefined),
+          );
         },
     ),
   );
+}
+
+export function registerGetFieldLineage(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
   registerToolSafe(
     server,
     'get_field_lineage',
@@ -92,9 +139,11 @@ export function registerExploresTools(
       inputSchema: {
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
-        fieldId: z.string().describe('Field ID'),
+        fieldId: z
+          .string()
+          .describe('Field id `{table}_{name}` or short field name (see semantic-layer playbook)'),
       },
-      annotations: READ_ONLY_DEFAULT,
+      annotations: READ_ONLY_CAPABILITY.annotations,
     },
     wrapToolAnnotated(
       contextProvider,
@@ -110,7 +159,7 @@ export function registerExploresTools(
           fieldId: string;
         }) => {
           const result = await c.v1.explores.getFieldLineage(projectUuid, exploreId, fieldId);
-          return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+          return jsonToolResult(result);
         },
     ),
   );

@@ -23,11 +23,11 @@ Configure Cursor to connect to a hosted `@lightdash-tools/mcp` server running wi
 ## How OAuth works with Lightdash
 
 ```text
-Cursor  →  POST /mcp (no token)  →  401 + WWW-Authenticate
+Cursor  →  POST /semantic-layer/v1/mcp (no token)  →  401 + WWW-Authenticate
 Cursor  →  GET /.well-known/oauth-protected-resource  →  metadata
 Cursor  →  Discover AS metadata at {LIGHTDASH_URL}/.well-known/oauth-authorization-server
 Cursor  →  OAuth with Lightdash (or use static endpoints if discovery fails)
-Cursor  →  POST /mcp  Authorization: Bearer <user-access-token>
+Cursor  →  POST /semantic-layer/v1/mcp  Authorization: Bearer <user-access-token>
 MCP     →  Lightdash API with same Bearer token
 ```
 
@@ -65,13 +65,13 @@ Current Lightdash publishes OAuth Authorization Server Metadata. Prefer discover
 {
   "mcpServers": {
     "lightdash": {
-      "url": "https://lightdash-mcp.example.com/mcp"
+      "url": "https://lightdash-mcp.example.com/semantic-layer/v1/mcp"
     }
   }
 }
 ```
 
-Replace `https://lightdash-mcp.example.com` with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` host. The MCP path defaults to `/mcp`.
+Replace `https://lightdash-mcp.example.com` with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` host. The MCP path is persona-owned: `/semantic-layer/v1/mcp` (not `/mcp`).
 
 ### Fallback: static OAuth client credentials
 
@@ -91,7 +91,7 @@ Lightdash OAuth endpoints (replace `{LIGHTDASH_URL}` with your instance):
 {
   "mcpServers": {
     "lightdash": {
-      "url": "https://lightdash-mcp.example.com/mcp",
+      "url": "https://lightdash-mcp.example.com/semantic-layer/v1/mcp",
       "auth": {
         "CLIENT_ID": "${env:LIGHTDASH_OAUTH_CLIENT_ID}",
         "CLIENT_SECRET": "${env:LIGHTDASH_OAUTH_CLIENT_SECRET}",
@@ -159,7 +159,7 @@ Lightdash object-level permissions still apply per user via their OAuth token.
 | 401 after Connect                           | Expired token or validation failure                  | Run **Cursor: Clear All MCP Tokens** from the command palette; reconnect           |
 | `Session token mismatch`                    | Switched Lightdash user on same session              | Disconnect and reconnect; clear MCP tokens                                         |
 | Tools return permission errors              | Lightdash RBAC for that user                         | Expected — OAuth scoping works; user may lack project access                       |
-| `404` on `/mcp`                             | Wrong URL in `mcp.json`                              | Use full path: `https://host/mcp`                                                  |
+| `404` on `/semantic-layer/v1/mcp`           | Wrong URL in `mcp.json`                              | Use full path: `https://host/semantic-layer/v1/mcp`                                |
 | OAuth works but wrong Lightdash instance    | `LIGHTDASH_URL` on server points elsewhere           | Fix server env and redeploy                                                        |
 
 ## See also

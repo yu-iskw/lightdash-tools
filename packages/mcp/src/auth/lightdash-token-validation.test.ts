@@ -13,7 +13,7 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     host: '127.0.0.1',
     port: 3100,
     publicUrl: 'https://mcp.example.com',
-    mcpPath: '/mcp',
+    mcpPath: '/semantic-layer/v1/mcp',
     authMode: 'lightdash-oauth',
     allowedOrigins: [],
     maxBodyBytes: 1024,

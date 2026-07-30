@@ -11,6 +11,7 @@ function createMockEntry(lastAccessAt: number): SessionEntry {
     server: {} as McpServer,
     lastAccessAt,
     auth: { mode: 'lightdash-oauth', tokenHash: 'hash-a' },
+    personaId: 'semantic-layer',
   };
 }
 

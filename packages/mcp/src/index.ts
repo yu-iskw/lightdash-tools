@@ -5,9 +5,9 @@
 
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 
-import { initAuditLog } from './audit.js';
+import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/env-context-provider.js';
-import { getAuditLogPath } from './config.js';
+import { getAuditLogPath } from './config/runtime.js';
 import { createLightdashMcpServer } from './server.js';
 
 async function main(): Promise<void> {

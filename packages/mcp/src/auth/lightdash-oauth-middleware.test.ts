@@ -16,7 +16,7 @@ const baseConfig: McpHttpConfig = {
   host: '127.0.0.1',
   port: 3100,
   publicUrl: 'https://mcp.example.com',
-  mcpPath: '/mcp',
+  mcpPath: '/semantic-layer/v1/mcp',
   authMode: 'lightdash-oauth',
   allowedOrigins: [],
   maxBodyBytes: 1024,
@@ -60,7 +60,7 @@ describe('authenticateLightdashOAuth', () => {
     });
     expect(result.wwwAuthenticate).toContain('resource_metadata=');
     expect(result.wwwAuthenticate).toContain(
-      'https://mcp.example.com/.well-known/oauth-protected-resource/mcp',
+      'https://mcp.example.com/.well-known/oauth-protected-resource/semantic-layer/v1/mcp',
     );
     expect(result.wwwAuthenticate).not.toContain('scope=');
   });

@@ -28,7 +28,10 @@ function runHttp(authMode?: string): void {
 
 addGuardrailOptions(program);
 
-program.name('lightdash-mcp').description('MCP server for Lightdash AI').version('0.6.0');
+program
+  .name('lightdash-mcp')
+  .description('MCP server for Lightdash semantic-layer discovery and query composition')
+  .version('0.6.0');
 
 addGuardrailOptions(
   program

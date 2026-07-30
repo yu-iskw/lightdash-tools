@@ -234,8 +234,6 @@ export default [
       'packages/cli/src/commands/agents-crud.ts',
       'packages/cli/src/utils/file-input.ts',
       'packages/common/src/agentops/types.ts',
-      'packages/mcp/src/tools/agentops.ts',
-      'packages/mcp/src/tasks/memory-store.ts',
     ],
     rules: {
       'sonarjs/cognitive-complexity': 'off',

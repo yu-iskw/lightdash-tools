@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { registerTools } from './tools';
+import { registerToolsByIds } from './tools';
 
-describe('MCP tools', () => {
-  it('registerTools is a function', () => {
-    expect(typeof registerTools).toBe('function');
+describe('tools barrel', () => {
+  it('exports registerToolsByIds', () => {
+    expect(typeof registerToolsByIds).toBe('function');
   });
 });

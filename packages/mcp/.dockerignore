@@ -1,0 +1,11 @@
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.git
+**/coverage
+**/.trunk
+**/.cursor
+**/dist
+**/*.md
+!packages/mcp/src/personas/semantic-layer/resources/playbook.md

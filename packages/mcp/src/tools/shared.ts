@@ -5,16 +5,16 @@
  *   0. Static safety filter — skips registration when the tool exceeds LIGHTDASH_TOOLS_SAFETY_MODE.
  *   1. Audit log wrapper    — captures timing and outcome for every call.
  *   2. Project allowlist      — rejects calls targeting disallowed project UUIDs at runtime.
- *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   4. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
- *   5. Raw handler            — the actual tool implementation.
+ *   3. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
+ *   4. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   5. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
+ *   6. Raw handler            — the actual tool implementation.
  */
 
 import {
   isAllowed,
   areAllProjectsAllowed,
   extractProjectUuids,
-  hasYamlProjectDocumentArgs,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
@@ -22,6 +22,7 @@ import {
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
+import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import {
   isReadOnlyMcpScope,
   RequiredMcpScope,
@@ -33,9 +34,9 @@ import {
   getSafetyMode,
   getAllowedProjectUuids,
   isDryRunMode,
-} from '../config.js';
+} from '../config/runtime.js';
 import { toMcpErrorMessage } from '../errors.js';
-import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../tool-audit-context.js';
+import { getPinnedProjectUuid } from '../project-pin.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -105,22 +106,13 @@ export type ToolOptions = {
   _meta?: Record<string, unknown>;
 };
 
-// Re-export presets for convenience and backward compatibility in tools
-export {
-  READ_ONLY_DEFAULT,
-  WRITE_IDEMPOTENT,
-  WRITE_NONDESTRUCTIVE,
-  WRITE_OPEN_WORLD,
-  WRITE_DESTRUCTIVE,
-} from '@lightdash-tools/common';
+// Re-export presets used by tools and tests
+export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 
 export {
   RequiredMcpScope,
   READ_ONLY_CAPABILITY,
   WRITE_IDEMPOTENT_CAPABILITY,
-  WRITE_NONDESTRUCTIVE_CAPABILITY,
-  WRITE_OPEN_WORLD_CAPABILITY,
-  WRITE_DESTRUCTIVE_CAPABILITY,
   type McpToolCapability,
 } from '../auth/mcp-tool-capability.js';
 
@@ -166,7 +158,8 @@ function isGuardrailBlocked(result: TextContent): result is BlockedContent {
   );
 }
 
-function validationBlockedContent(message: string): BlockedContent {
+/** Guardrail-blocked tool result; audit wrapper strips `_lightdashBlocked`. */
+export function blockedToolContent(message: string): BlockedContent {
   return {
     content: [{ type: 'text', text: message }],
     isError: true,
@@ -179,7 +172,7 @@ function runValidation(validate: () => void, label: string): BlockedContent | un
     validate();
     return undefined;
   } catch (err) {
-    return validationBlockedContent(
+    return blockedToolContent(
       `Error: Invalid ${label}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
@@ -234,16 +227,10 @@ export function registerToolSafe(
 
   if (!isToolAllowed) {
     finalDescription = `[DISABLED in ${mode} mode] ${options.description}`;
-    finalHandler = async (): Promise<BlockedContent> => ({
-      content: [
-        {
-          type: 'text',
-          text: `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
-        },
-      ],
-      isError: true,
-      _lightdashBlocked: true,
-    });
+    finalHandler = async (): Promise<BlockedContent> =>
+      blockedToolContent(
+        `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
+      );
   } else if (isDryRunMode() && !isReadOnly) {
     // ── Dry-run wrapper ─────────────────────────────────────────────────────
     // Write operations are simulated; no API calls are made.
@@ -270,6 +257,23 @@ export function registerToolSafe(
     return validatedInner(args, extra);
   };
 
+  // ── HTTP project pin wrapper ──────────────────────────────────────────────
+  // When X-Lightdash-Project is set (ALS), reject tools that target another project.
+  const pinInner = finalHandler;
+  finalHandler = async (args, extra): Promise<TextContent> => {
+    const pinned = getPinnedProjectUuid();
+    if (pinned) {
+      const projectUuids = extractProjectUuids(args);
+      const mismatched = projectUuids.filter((uuid) => uuid !== pinned);
+      if (mismatched.length > 0) {
+        return blockedToolContent(
+          `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
+        );
+      }
+    }
+    return pinInner(args, extra);
+  };
+
   // ── Project allowlist wrapper ─────────────────────────────────────────────
   // Reject calls targeting project UUIDs not in the configured allowlist.
   // Covers both singular (projectUuid) and plural (projectUuids[]) arg shapes.
@@ -279,32 +283,13 @@ export function registerToolSafe(
     const innerHandler = finalHandler;
     finalHandler = async (args, extra): Promise<TextContent> => {
       const projectUuids = extractProjectUuids(args);
-      if (hasYamlProjectDocumentArgs(args) && projectUuids.length === 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: 'Error: Could not extract project UUID from YAML document for allowlist check. Fix bundleYaml/gateYaml or omit the document.',
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
-      }
       const deniedUuids = projectUuids.filter(
         (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
       );
       if (deniedUuids.length > 0) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
-            },
-          ],
-          isError: true,
-          _lightdashBlocked: true,
-        } as BlockedContent;
+        return blockedToolContent(
+          `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
+        );
       }
       return innerHandler(args, extra);
     };
@@ -368,16 +353,9 @@ export function wrapTool<T>(
         async () => {
           if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
             const required = requiredScopeForTool(readOnly);
-            return {
-              content: [
-                {
-                  type: 'text',
-                  text: `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
-                },
-              ],
-              isError: true,
-              _lightdashBlocked: true,
-            } as BlockedContent;
+            return blockedToolContent(
+              `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
+            );
           }
 
           const handler = fn(context.lightdashClient);

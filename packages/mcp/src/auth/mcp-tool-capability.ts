@@ -1,10 +1,4 @@
-import {
-  READ_ONLY_DEFAULT,
-  WRITE_DESTRUCTIVE,
-  WRITE_IDEMPOTENT,
-  WRITE_NONDESTRUCTIVE,
-  WRITE_OPEN_WORLD,
-} from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 
 import type { ToolAnnotations } from '@lightdash-tools/common';
 
@@ -26,21 +20,6 @@ export const READ_ONLY_CAPABILITY: McpToolCapability = {
 
 export const WRITE_IDEMPOTENT_CAPABILITY: McpToolCapability = {
   annotations: WRITE_IDEMPOTENT,
-  requiredMcpScope: RequiredMcpScope.WRITE,
-};
-
-export const WRITE_NONDESTRUCTIVE_CAPABILITY: McpToolCapability = {
-  annotations: WRITE_NONDESTRUCTIVE,
-  requiredMcpScope: RequiredMcpScope.WRITE,
-};
-
-export const WRITE_OPEN_WORLD_CAPABILITY: McpToolCapability = {
-  annotations: WRITE_OPEN_WORLD,
-  requiredMcpScope: RequiredMcpScope.WRITE,
-};
-
-export const WRITE_DESTRUCTIVE_CAPABILITY: McpToolCapability = {
-  annotations: WRITE_DESTRUCTIVE,
   requiredMcpScope: RequiredMcpScope.WRITE,
 };
 

@@ -1,6 +1,6 @@
 import { type LightdashClient } from '@lightdash-tools/client';
 
-import { getClient } from '../config.js';
+import { getClient } from '../config/runtime.js';
 import { buildMcpGovernance } from '../governance.js';
 
 import type { McpAuthMode } from './auth-mode.js';

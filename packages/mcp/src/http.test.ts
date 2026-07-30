@@ -70,7 +70,7 @@ describe('HTTP transport helpers', () => {
         'Access-Control-Allow-Origin': 'https://app.example.com',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':
-          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key',
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project',
         'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });
@@ -87,7 +87,7 @@ describe('HTTP transport helpers', () => {
         'Access-Control-Allow-Origin': 'https://browser.example.com',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':
-          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key',
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project',
         'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });

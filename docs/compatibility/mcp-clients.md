@@ -76,6 +76,19 @@ Then: `cursor-agent mcp list` / `cursor-agent mcp list-tools lightdash` (or IDE 
 
 4. For stdio configs see [RFC-0041 appendices](../rfc/0041-compatibility-first-mcp-sdk-v2-migration.md). Prefer env injection from the host; do not commit secrets.
 
+### Semantic-layer MCP (stdio + HTTP)
+
+Semantic-layer discovery/compile ships as the default persona inside `@lightdash-tools/mcp` ([ADR-0042](../adr/0042-shared-mcp-tool-registry-and-persona-manifests-with-fixed-paths.md)): nine `ldt__*` tools, fixed HTTP path `/semantic-layer/v1/mcp`. Same ADR-0041 transports. Automated coverage: `stdio.process.test.ts`, `protocol-contract.test.ts`, HTTP integration. OAuth client credentials stay on Cursor/Claude — not on the server.
+
+```bash
+pnpm --filter @lightdash-tools/mcp build
+# Stdio: node packages/mcp/dist/bin.js stdio  (+ LIGHTDASH_URL + LIGHTDASH_API_KEY)
+# HTTP:  node packages/mcp/dist/bin.js serve-http
+# Cursor url: http://localhost:8080/semantic-layer/v1/mcp
+```
+
+Package README documents Cursor/Compose snippets.
+
 ### Streamable HTTP / OAuth
 
 For remote HTTP and experimental `lightdash-oauth`, follow [mcp-oauth-http.md](../mcp-oauth-http.md) and [cursor-lightdash-oauth-mcp.md](../cursor-lightdash-oauth-mcp.md). Record OAuth column results separately from plain HTTP `none` / `shared-key`.

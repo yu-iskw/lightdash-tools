@@ -21,8 +21,10 @@ describe('normalizeMcpPath', () => {
 });
 
 describe('normalizePublicUrl', () => {
-  it('strips the default /mcp suffix', () => {
-    expect(normalizePublicUrl('https://mcp.example.com/mcp/')).toBe('https://mcp.example.com');
+  it('strips a configured MCP path suffix', () => {
+    expect(normalizePublicUrl('https://mcp.example.com/mcp/', '/mcp')).toBe(
+      'https://mcp.example.com',
+    );
   });
 
   it('strips a configured custom MCP path suffix', () => {
@@ -35,5 +37,14 @@ describe('normalizePublicUrl', () => {
     expect(normalizePublicUrl('https://mcp.example.com', '/custom/mcp')).toBe(
       'https://mcp.example.com',
     );
+  });
+
+  it('strips the semantic-layer persona path', () => {
+    expect(
+      normalizePublicUrl(
+        'https://mcp.example.com/semantic-layer/v1/mcp/',
+        '/semantic-layer/v1/mcp',
+      ),
+    ).toBe('https://mcp.example.com');
   });
 });

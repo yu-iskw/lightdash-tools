@@ -1,12 +1,12 @@
 import { LightdashClient, SecretString } from '@lightdash-tools/client';
 import { Client } from '@modelcontextprotocol/client';
-import { InMemoryTransport, McpServer } from '@modelcontextprotocol/server';
+import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { describe, it, expect } from 'vitest';
 
 import { EnvContextProvider } from './auth/env-context-provider.js';
 import { validateLightdashAccessToken } from './auth/lightdash-token-validation.js';
-import { getClient } from './config';
-import { registerTools } from './tools';
+import { getClient } from './config/runtime.js';
+import { createLightdashMcpServer } from './server.js';
 import { TOOL_PREFIX } from './tools/shared';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -29,8 +29,7 @@ describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
   it('should execute list_projects tool with real API', async () => {
     const client = getClient();
     const contextProvider = new EnvContextProvider({ client });
-    const server = new McpServer({ name: 'test-server', version: '1.0.0' });
-    registerTools(server, contextProvider);
+    const server = createLightdashMcpServer(contextProvider);
 
     const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
 
@@ -73,7 +72,7 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
       host: '127.0.0.1',
       port: 3100,
       publicUrl: 'https://mcp.example.com',
-      mcpPath: '/mcp',
+      mcpPath: '/semantic-layer/v1/mcp',
       authMode: 'lightdash-oauth',
       allowedOrigins: [],
       maxBodyBytes: 1024 * 1024,

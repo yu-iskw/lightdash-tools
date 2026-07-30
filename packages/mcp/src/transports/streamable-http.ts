@@ -3,7 +3,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 
-import { initAuditLog } from '../audit.js';
+import { initAuditLog } from '../audit/audit.js';
+import { runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import {
   MCP_AUTH_MODE_LIGHTDASH_OAUTH,
   MCP_AUTH_MODE_NONE,
@@ -32,15 +33,17 @@ import {
   emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
-import { getAuditLogPath, getClient } from '../config.js';
+import { getClient, getAuditLogPath } from '../config/runtime.js';
+import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
+import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
 import { createLightdashMcpServer } from '../server.js';
-import { runWithToolAuditAuthAsync } from '../tool-audit-context.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
 import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
+import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -104,9 +107,10 @@ function createSessionTransport(
     subject?: string;
     organizationUuid?: string;
   },
+  persona: PersonaDefinition,
 ): NodeStreamableHTTPServerTransport {
   const holder: { server: McpServer } = {
-    server: createLightdashMcpServer(contextProvider),
+    server: createLightdashMcpServer(contextProvider, { persona }),
   };
   const transport = new NodeStreamableHTTPServerTransport({
     sessionIdGenerator: () => randomUUID(),
@@ -122,6 +126,7 @@ function createSessionTransport(
           organizationUuid: auth.organizationUuid,
         },
         contextProvider,
+        personaId: persona.id,
       });
     },
     onsessionclosed: (sessionId) => {
@@ -294,6 +299,7 @@ interface SessionRequestContext {
   res: ServerResponse;
   config: McpHttpConfig;
   sessionStore: SessionStore;
+  persona: PersonaDefinition;
 }
 
 async function handleExistingSessionPost(
@@ -301,9 +307,13 @@ async function handleExistingSessionPost(
   sid: string,
   body: unknown,
 ): Promise<void> {
-  const { req, res, config, sessionStore } = ctx;
+  const { req, res, config, sessionStore, persona } = ctx;
   const entry = sessionStore.get(sid);
   if (!entry) {
+    sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
+    return;
+  }
+  if (entry.personaId !== persona.id) {
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
     return;
   }
@@ -320,13 +330,8 @@ async function handleExistingSessionPost(
   );
 }
 
-async function handleInitializePost(
-  req: IncomingMessage,
-  res: ServerResponse,
-  config: McpHttpConfig,
-  sessionStore: SessionStore,
-  body: unknown,
-): Promise<void> {
+async function handleInitializePost(ctx: SessionRequestContext, body: unknown): Promise<void> {
+  const { req, res, config, sessionStore, persona } = ctx;
   const oauth =
     config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
       ? (req as OAuthRequest).lightdashOAuth
@@ -354,12 +359,17 @@ async function handleInitializePost(
       scopes: oauth.scopes,
     });
 
-    const transport = createSessionTransport(contextProvider, sessionStore, {
-      mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
-      tokenHash: contextProvider.getTokenHash(),
-      subject: oauth.user.userUuid,
-      organizationUuid: oauth.user.organizationUuid,
-    });
+    const transport = createSessionTransport(
+      contextProvider,
+      sessionStore,
+      {
+        mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
+        tokenHash: contextProvider.getTokenHash(),
+        subject: oauth.user.userUuid,
+        organizationUuid: oauth.user.organizationUuid,
+      },
+      persona,
+    );
     await runWithToolAuditAuthAsync(
       {
         tokenHash: contextProvider.getTokenHash(),
@@ -371,9 +381,14 @@ async function handleInitializePost(
     return;
   }
 
-  const transport = createSessionTransport(createEnvContextProvider(config), sessionStore, {
-    mode: config.authMode,
-  });
+  const transport = createSessionTransport(
+    createEnvContextProvider(config),
+    sessionStore,
+    {
+      mode: config.authMode,
+    },
+    persona,
+  );
   await transport.handleRequest(req, res, body);
 }
 
@@ -384,13 +399,8 @@ function requiresProtectedEndpointAuth(config: McpHttpConfig): boolean {
   );
 }
 
-async function handleMcpPost(
-  req: IncomingMessage,
-  res: ServerResponse,
-  config: McpHttpConfig,
-  sessionStore: SessionStore,
-  sid: string | undefined,
-): Promise<void> {
+async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined): Promise<void> {
+  const { req, res, config } = ctx;
   if (requiresProtectedEndpointAuth(config)) {
     if (!(await ensureEndpointAuth(req, res, config))) {
       drainRequestBody(req);
@@ -412,12 +422,12 @@ async function handleMcpPost(
   }
 
   if (sid) {
-    await handleExistingSessionPost({ req, res, config, sessionStore }, sid, body);
+    await handleExistingSessionPost(ctx, sid, body);
     return;
   }
 
   if (body !== undefined && isInitializeMessage(body)) {
-    await handleInitializePost(req, res, config, sessionStore, body);
+    await handleInitializePost(ctx, body);
     return;
   }
 
@@ -427,12 +437,10 @@ async function handleMcpPost(
 }
 
 async function handleMcpGetOrDelete(
-  req: IncomingMessage,
-  res: ServerResponse,
-  config: McpHttpConfig,
-  sessionStore: SessionStore,
+  ctx: SessionRequestContext,
   sid: string | undefined,
 ): Promise<void> {
+  const { req, res, config, sessionStore, persona } = ctx;
   if (!sid) {
     sendJson(res, 400, { error: 'Bad Request: Mcp-Session-Id required' });
     return;
@@ -443,7 +451,7 @@ async function handleMcpGetOrDelete(
   }
 
   const entry = sessionStore.get(sid);
-  if (!entry) {
+  if (!entry || entry.personaId !== persona.id) {
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
     return;
   }
@@ -465,6 +473,7 @@ async function handleMcpGetOrDelete(
 export interface StreamableHttpServerHandle {
   port: number;
   baseUrl: string;
+  config: McpHttpConfig;
   close: () => Promise<void>;
 }
 
@@ -510,6 +519,7 @@ export async function createStreamableHttpServer(
   return {
     port,
     baseUrl,
+    config: httpConfig,
     close: () =>
       new Promise<void>((resolve, reject) => {
         clearInterval(cleanupTimer);
@@ -526,11 +536,11 @@ export async function createStreamableHttpServer(
 
 export function startStreamableHttpServer(config?: McpHttpConfig): void {
   void createStreamableHttpServer(config)
-    .then(({ baseUrl }) => {
-      const httpConfig = config ?? loadMcpHttpConfig();
-      console.error(
-        `Lightdash MCP server listening on ${baseUrl}${httpConfig.mcpPath} (auth: ${httpConfig.authMode})`,
-      );
+    .then(({ baseUrl, config: httpConfig }) => {
+      const paths = listPersonaPaths()
+        .map((p) => `${baseUrl}${p}`)
+        .join(', ');
+      console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
       if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
         const metadataConfig = httpConfig.publicUrl
           ? httpConfig
@@ -591,22 +601,26 @@ async function handleHttpRequest(
     return;
   }
 
-  if (path !== config.mcpPath) {
+  const persona = getPersonaByPath(path);
+  if (!persona) {
     sendJson(res, 404, { error: 'Not Found' });
     return;
   }
 
   const sid = getSessionId(req);
+  const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
-  if (req.method === 'POST') {
-    await handleMcpPost(req, res, config, sessionStore, sid);
-    return;
-  }
+  await runWithProjectPinAsync(pinnedProjectUuid, async () => {
+    if (req.method === 'POST') {
+      await handleMcpPost({ req, res, config, sessionStore, persona }, sid);
+      return;
+    }
 
-  if (req.method === 'GET' || req.method === 'DELETE') {
-    await handleMcpGetOrDelete(req, res, config, sessionStore, sid);
-    return;
-  }
+    if (req.method === 'GET' || req.method === 'DELETE') {
+      await handleMcpGetOrDelete({ req, res, config, sessionStore, persona }, sid);
+      return;
+    }
 
-  res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+    res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
+  });
 }

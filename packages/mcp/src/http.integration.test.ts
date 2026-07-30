@@ -117,6 +117,33 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
       return;
     }
 
+    if (req.method === 'GET' && req.url === '/api/v1/org/projects') {
+      const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
+      if (!users[token]) {
+        res.writeHead(401, { 'Content-Type': 'application/json' }).end(
+          JSON.stringify({
+            status: 'error',
+            error: { statusCode: 401, name: 'Unauthorized', message: 'Invalid token' },
+          }),
+        );
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
+        JSON.stringify({
+          status: 'ok',
+          results: [
+            {
+              projectUuid: 'project-a-uuid',
+              name: 'Project A',
+              type: 'DEFAULT',
+            },
+          ],
+        }),
+      );
+      return;
+    }
+
     res.writeHead(404).end();
   });
 
@@ -142,7 +169,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     lightdashUrl,
     host: '127.0.0.1',
     port: 0,
-    mcpPath: '/mcp',
+    mcpPath: '/semantic-layer/v1/mcp',
     authMode: 'lightdash-oauth',
     allowedOrigins: [],
     maxBodyBytes: 1024 * 1024,
@@ -177,7 +204,7 @@ async function postMcp(
     headers['Mcp-Session-Id'] = options.sessionId;
   }
 
-  return fetch(`${baseUrl}/mcp`, {
+  return fetch(`${baseUrl}/semantic-layer/v1/mcp`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
@@ -223,7 +250,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     const wwwAuthenticate = response.headers.get('www-authenticate');
     expect(wwwAuthenticate).toContain('resource_metadata=');
     expect(wwwAuthenticate).toContain(
-      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/mcp`,
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/semantic-layer/v1/mcp`,
     );
   });
 
@@ -356,7 +383,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   });
 
   it('returns 401 before parsing malformed JSON when OAuth token is missing', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -379,7 +406,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   });
 
   it('returns 400 for malformed JSON only after successful OAuth authentication', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -399,7 +426,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(response.status).toBe(200);
     const metadata = await response.json();
     expect(metadata).toEqual({
-      resource: `${mcpServer.baseUrl}/mcp`,
+      resource: `${mcpServer.baseUrl}/semantic-layer/v1/mcp`,
       authorization_servers: [mockLightdash.baseUrl],
       bearer_methods_supported: ['header'],
       scopes_supported: [],
@@ -407,11 +434,13 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   });
 
   it('serves path-specific OAuth protected resource metadata', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource/mcp`);
+    const response = await fetch(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/semantic-layer/v1/mcp`,
+    );
 
     expect(response.status).toBe(200);
     const metadata = await response.json();
-    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/mcp`);
+    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`);
   });
 
   it('maps token-a and token-b to distinct authenticated users upstream', async () => {
@@ -491,7 +520,7 @@ describe('MCP HTTP CORS integration', () => {
   });
 
   it('handles CORS preflight OPTIONS requests', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'OPTIONS',
       headers: { Origin: 'https://app.example.com' },
     });
@@ -503,7 +532,7 @@ describe('MCP HTTP CORS integration', () => {
   });
 
   it('returns 403 for disallowed origins', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'OPTIONS',
       headers: { Origin: 'https://evil.example.com' },
     });
@@ -554,7 +583,7 @@ describe('MCP HTTP unrestricted CORS integration', () => {
     });
 
     try {
-      const response = await fetch(`${restrictedServer.baseUrl}/mcp`, {
+      const response = await fetch(`${restrictedServer.baseUrl}/semantic-layer/v1/mcp`, {
         method: 'OPTIONS',
         headers: { Origin: 'https://browser.example.com' },
       });
@@ -589,7 +618,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     vi.restoreAllMocks();
   });
 
-  it('calls ldt__get_authenticated_user over an OAuth HTTP session', async () => {
+  it('calls ldt__list_projects over an OAuth HTTP session', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');
     expect(sessionId).toBeTruthy();
@@ -607,7 +636,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        params: { name: 'ldt__list_projects', arguments: {} },
         id: 2,
       },
       { token: TOKEN_A, sessionId: sessionId ?? undefined },
@@ -618,7 +647,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       result?: { content?: Array<{ text?: string }> };
     };
     const text = payload.result?.content?.[0]?.text ?? '';
-    expect(text).toContain(USER_A.userUuid);
+    expect(text).toContain('project-a-uuid');
     expect(text).not.toContain(TOKEN_A);
     expect(mockLightdash.authorizationHeaders.length).toBeGreaterThan(userCallsBefore);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
@@ -642,7 +671,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        params: { name: 'ldt__list_projects', arguments: {} },
         id: 6,
       },
       { token: TOKEN_A_REFRESHED, sessionId: sessionId ?? undefined },
@@ -652,7 +681,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     const payload = (await parseMcpResponse(callResponse)) as {
       result?: { content?: Array<{ text?: string }> };
     };
-    expect(payload.result?.content?.[0]?.text ?? '').toContain(USER_A.userUuid);
+    expect(payload.result?.content?.[0]?.text ?? '').toContain('project-a-uuid');
 
     const toolHeaders = mockLightdash.authorizationHeaders.slice(headersBeforeTool);
     expect(toolHeaders).toContain(`Bearer ${TOKEN_A_REFRESHED}`);
@@ -667,7 +696,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${OPAQUE_TOKEN_A}`);
   });
 
-  it('blocks write tools when JWT scopes omit mcp:write', async () => {
+  it('lists nine semantic-layer tools under mcp:read-only JWT scopes', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
       token: TOKEN_READ_ONLY,
     });
@@ -680,23 +709,22 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
     );
 
-    const callResponse = await postMcp(
+    const listResponse = await postMcp(
       mcpServer.baseUrl,
       {
         jsonrpc: '2.0',
-        method: 'tools/call',
-        params: { name: 'ldt__create_group', arguments: { name: 'blocked-group' } },
+        method: 'tools/list',
         id: 3,
       },
       { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
     );
 
-    expect(callResponse.status).toBe(200);
-    const payload = (await parseMcpResponse(callResponse)) as {
-      result?: { isError?: boolean; content?: Array<{ text?: string }> };
+    expect(listResponse.status).toBe(200);
+    const payload = (await parseMcpResponse(listResponse)) as {
+      result?: { tools?: Array<{ name: string }> };
     };
-    expect(payload.result?.isError).toBe(true);
-    expect(payload.result?.content?.[0]?.text ?? '').toContain('insufficient_scope');
+    expect(payload.result?.tools).toHaveLength(9);
+    expect(payload.result?.tools?.every((t) => t.name.startsWith('ldt__'))).toBe(true);
   });
 
   it('allows read tools when JWT scopes include mcp:read only', async () => {
@@ -717,7 +745,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__get_authenticated_user', arguments: {} },
+        params: { name: 'ldt__list_projects', arguments: {} },
         id: 4,
       },
       { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
@@ -728,10 +756,10 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       result?: { isError?: boolean; content?: Array<{ text?: string }> };
     };
     expect(payload.result?.isError).not.toBe(true);
-    expect(payload.result?.content?.[0]?.text ?? '').toContain(USER_A.userUuid);
+    expect(payload.result?.content?.[0]?.text ?? '').toContain('project-a-uuid');
   });
 
-  it('does not block write tools for opaque OAuth credentials without local scope claims', async () => {
+  it('does not block read tools for opaque OAuth credentials without local scope claims', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
       token: OPAQUE_TOKEN_A,
     });
@@ -749,7 +777,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__create_group', arguments: { name: 'opaque-group' } },
+        params: { name: 'ldt__list_projects', arguments: {} },
         id: 5,
       },
       { token: OPAQUE_TOKEN_A, sessionId: sessionId ?? undefined },
@@ -759,7 +787,9 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     const payload = (await parseMcpResponse(callResponse)) as {
       result?: { isError?: boolean; content?: Array<{ text?: string }> };
     };
+    expect(payload.result?.isError).not.toBe(true);
     expect(payload.result?.content?.[0]?.text ?? '').not.toContain('insufficient_scope');
+    expect(payload.result?.content?.[0]?.text ?? '').toContain('project-a-uuid');
   });
 });
 
@@ -795,7 +825,7 @@ describe('MCP HTTP OAuth transport lifecycle', () => {
     );
     expect([200, 202]).toContain(notifyResponse.status);
 
-    const getResponse = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const getResponse = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'GET',
       headers: {
         Accept: 'application/json, text/event-stream',
@@ -819,7 +849,7 @@ describe('MCP HTTP OAuth transport lifecycle', () => {
       params: { padding: 'x'.repeat(1024) },
     });
 
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -839,7 +869,7 @@ describe('MCP HTTP OAuth transport lifecycle', () => {
     const sessionId = initResponse.headers.get('mcp-session-id');
     expect(sessionId).toBeTruthy();
 
-    const deleteResponse = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const deleteResponse = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'DELETE',
       headers: {
         Accept: 'application/json, text/event-stream',
@@ -873,7 +903,7 @@ describe('MCP HTTP shared-key integration', () => {
       lightdashUrl: 'https://app.lightdash.cloud',
       host: '127.0.0.1',
       port: 0,
-      mcpPath: '/mcp',
+      mcpPath: '/semantic-layer/v1/mcp',
       authMode: 'shared-key',
       sharedKey: new SecretString('shared-secret'),
       allowedOrigins: [],
@@ -916,7 +946,7 @@ describe('MCP HTTP shared-key integration', () => {
       params: { ...INITIALIZE_BODY.params, padding: 'x'.repeat(2048) },
     });
 
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -930,7 +960,7 @@ describe('MCP HTTP shared-key integration', () => {
   });
 
   it('accepts shared key via X-API-Key header', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/mcp`, {
+    const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

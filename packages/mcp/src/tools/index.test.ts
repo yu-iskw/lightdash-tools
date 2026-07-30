@@ -1,11 +1,11 @@
-import { IRRECOVERABLE_TOOL_DENYLIST, SafetyMode } from '@lightdash-tools/common';
+import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { setStaticSafetyMode, setDryRunMode } from '../config.js';
+import { setStaticSafetyMode, setDryRunMode } from '../config/runtime.js';
+import { getDefaultPersona } from '../personas/index.js';
 
+import { registerToolsByIds } from './registry.js';
 import { TOOL_PREFIX } from './shared.js';
-
-import { registerTools } from './index.js';
 
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,7 +18,7 @@ vi.mock('@lightdash-tools/common', async (importOriginal) => {
   };
 });
 
-describe('registerTools', () => {
+describe('registerToolsByIds', () => {
   const registeredTools: Array<{ name: string; description: string }> = [];
   const mockServer = {
     registerTool: vi.fn((name: string, options: { description: string }) => {
@@ -37,33 +37,23 @@ describe('registerTools', () => {
     delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
   });
 
-  it('registers all domain tool modules on the MCP server', () => {
+  it('registers only the persona allowlist with ldt__ prefix', () => {
     const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
+    const persona = getDefaultPersona();
 
-    registerTools(mockServer as never, mockContextProvider as never);
+    registerToolsByIds(mockServer as never, mockContextProvider as never, persona.toolIds);
 
-    expect(registeredTools.length).toBeGreaterThan(30);
+    expect(registeredTools).toHaveLength(persona.toolIds.length);
     expect(registeredTools.every((t) => t.name.startsWith(TOOL_PREFIX))).toBe(true);
 
     const names = registeredTools.map((t) => t.name);
-    expect(names).toContain(`${TOOL_PREFIX}list_projects`);
-    expect(names).toContain(`${TOOL_PREFIX}get_authenticated_user`);
-    expect(names).toContain(`${TOOL_PREFIX}list_charts`);
-    expect(names).toContain(`${TOOL_PREFIX}compile_query`);
-    expect(names).toContain(`${TOOL_PREFIX}list_admin_agents`);
-    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_plan`);
-    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_apply`);
-    expect(names).toContain(`${TOOL_PREFIX}ai_agentops_evaluate_gate`);
+    expect(names).toEqual(persona.toolIds.map((id) => `${TOOL_PREFIX}${id}`));
   });
 
-  it('does not register irrecoverable tools from the agent-safe denylist', () => {
-    const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
-
-    registerTools(mockServer as never, mockContextProvider as never);
-
-    const names = registeredTools.map((t) => t.name);
-    for (const toolName of IRRECOVERABLE_TOOL_DENYLIST) {
-      expect(names).not.toContain(`${TOOL_PREFIX}${toolName}`);
-    }
+  it('covers every registry tool id via some persona allowlist', async () => {
+    const { PERSONAS } = await import('../personas/index.js');
+    const { toolRegistry } = await import('./registry.js');
+    const covered = new Set(Object.values(PERSONAS).flatMap((p) => [...p.toolIds]));
+    expect([...covered].sort()).toEqual(Object.keys(toolRegistry).sort());
   });
 });
