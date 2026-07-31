@@ -8,6 +8,7 @@ import {
   validateFingerprint,
   validateSlug,
   validateUuid,
+  validateUuidOrSlug,
 } from './input-validation';
 
 /** Object keys whose string values are treated as resource identifiers. */
@@ -38,6 +39,9 @@ export const RESOURCE_ID_KEYS = new Set([
   'organizationUuid',
   'chartUuid',
 ]);
+
+/** Keys that accept OpenAPI UuidOrSlug (UUID or slug), not UUID-only. */
+const UUID_OR_SLUG_KEYS = new Set(['dashboardUuid', 'chartUuid']);
 
 export type ArgumentSource = 'body' | 'option' | 'positional';
 
@@ -146,6 +150,10 @@ function validateResourceIdValue(key: string, value: string): void {
   }
   if (key === 'fingerprint' || key === 'toolCallId') {
     validateFingerprint(value);
+    return;
+  }
+  if (UUID_OR_SLUG_KEYS.has(key)) {
+    validateUuidOrSlug(value);
     return;
   }
   validateUuid(value);

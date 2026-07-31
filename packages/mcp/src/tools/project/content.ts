@@ -50,7 +50,7 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
         parentSpaceUuid: z.string().optional(),
         contentTypes: z.array(z.enum(['chart', 'dashboard', 'space'])).optional(),
         search: z.string().optional(),
-        sortBy: z.enum(['createdAt', 'lastViewedAt', 'name', 'updatedAt', 'views']).optional(),
+        sortBy: z.enum(['name', 'space_name', 'last_updated_at', 'views']).optional(),
         sortDirection: z.enum(['asc', 'desc']).optional(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().optional(),
@@ -65,7 +65,7 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
           parentSpaceUuid?: string;
           contentTypes?: Array<'chart' | 'dashboard' | 'space'>;
           search?: string;
-          sortBy?: 'createdAt' | 'lastViewedAt' | 'name' | 'updatedAt' | 'views';
+          sortBy?: 'last_updated_at' | 'name' | 'space_name' | 'views';
           sortDirection?: 'asc' | 'desc';
           page?: number;
           pageSize?: number;
@@ -262,7 +262,7 @@ export function registerGetProjectUserActivity(
     {
       title: 'Get project user activity',
       description:
-        'Usage evidence for a project (views, role counts). Prefer with list_content views/lastViewedAt; not a deletion list',
+        'Usage evidence for a project (views, role counts). Prefer with list_content (sortBy views or last_updated_at); not a deletion list',
       inputSchema: {
         projectUuid: projectUuidField(),
       },

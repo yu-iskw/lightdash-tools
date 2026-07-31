@@ -7,6 +7,7 @@ import {
   validateSafeOutputDir,
   validateSlug,
   validateUuid,
+  validateUuidOrSlug,
 } from './input-validation';
 
 describe('input-validation', () => {
@@ -150,6 +151,30 @@ describe('input-validation', () => {
 
     it('throws when id is not a string', () => {
       expect(() => validateSlug(123 as unknown as string)).toThrow('Slug must be a string');
+    });
+  });
+
+  describe('validateUuidOrSlug', () => {
+    const validUuid = '550e8400-e29b-41d4-a716-446655440000';
+
+    it('accepts UUIDs', () => {
+      expect(validateUuidOrSlug(validUuid)).toBe(validUuid);
+    });
+
+    it('accepts slugs such as dashboard names', () => {
+      expect(validateUuidOrSlug('sales-overview')).toBe('sales-overview');
+    });
+
+    it('rejects invalid slug characters', () => {
+      expect(() => validateUuidOrSlug('bad?')).toThrow(
+        'Slug must contain only alphanumeric characters',
+      );
+    });
+
+    it('throws when id is not a string', () => {
+      expect(() => validateUuidOrSlug(123 as unknown as string)).toThrow(
+        'Resource ID must be a string',
+      );
     });
   });
 

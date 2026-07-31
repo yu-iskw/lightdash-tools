@@ -105,6 +105,24 @@ export function validateSlug(id: string): string {
 }
 
 /**
+ * Validates an OpenAPI UuidOrSlug identifier: UUID when the string matches UUID form,
+ * otherwise a safe slug.
+ *
+ * @param id - UUID or slug to validate
+ * @returns The input if valid
+ * @throws Error if neither UUID nor slug rules pass
+ */
+export function validateUuidOrSlug(id: string): string {
+  if (typeof id !== 'string') {
+    throw new Error('Resource ID must be a string');
+  }
+  if (UUID_REGEX.test(id)) {
+    return validateUuid(id);
+  }
+  return validateSlug(id);
+}
+
+/**
  * Validates a fingerprint identifier: 1–512 chars, no control characters.
  *
  * @param id - Fingerprint to validate

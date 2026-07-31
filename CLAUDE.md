@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-01]: OAuth PRM/`WWW-Authenticate` must be persona-path-aware once multiple HTTP personas ship. Pass `persona.path` into PRM builders and auth challenges; serve `/.well-known/oauth-protected-resource{persona.path}` for every `listPersonaPaths()` entry (root PRM stays default persona). Strip all persona suffixes in `normalizePublicUrl`. `dashboardUuid`/`chartUuid` need uuid-or-slug validation; `list_content` `sortBy` must match OpenAPI `ContentSortByColumns` (`name`/`space_name`/`last_updated_at`/`views`).
 - [2026-07-31]: Organization-audit MCP persona ships at `/organization-audit/v1/mcp` with server name `lightdash-mcp-org-audit` (60-char limit). Stdio: `lightdash-mcp organization-audit`. 18 read-only primitives only (no `audit_*` mega-tools); playbook/prompts orchestrate. Tools live under `tools/{organization,project,space,semantic,lib}`. No unused-content API — use user-activity + content views.
 - [2026-07-31]: MCP tool wire prefix renamed from `ldt__` to `lightdash_` (`TOOL_PREFIX` in `packages/mcp/src/tools/shared.ts`). Breaking for clients that hardcode tool names; combined server+longest tool stays under ~60 chars for current semantic-layer tools.
 - [2026-07-31]: In this runner, `pnpm` may be missing from `PATH` until `corepack enable` is executed. Run that first, or MCP package scripts that invoke nested `pnpm` commands fail with `sh: 1: pnpm: not found`.

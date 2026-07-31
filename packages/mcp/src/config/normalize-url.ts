@@ -4,15 +4,22 @@ export function stripTrailingSlash(url: string): string {
 }
 
 /**
- * Normalizes a public MCP base URL: no trailing slash, no configured MCP path suffix.
- * Callers must pass the persona-owned path (do not default to deprecated `/mcp`).
+ * Normalizes a public MCP base URL: no trailing slash, no persona MCP path suffix.
+ * Accepts one path or several (e.g. all `listPersonaPaths()`); longer suffixes win first.
  */
-export function normalizePublicUrl(url: string, mcpPath: string): string {
+export function normalizePublicUrl(
+  url: string,
+  mcpPathOrPaths: string | readonly string[],
+): string {
   let normalized = stripTrailingSlash(url.trim());
-  const normalizedPath = normalizeMcpPath(mcpPath);
-  if (normalized.endsWith(normalizedPath)) {
-    normalized = normalized.slice(0, -normalizedPath.length);
-    normalized = stripTrailingSlash(normalized);
+  const paths = (typeof mcpPathOrPaths === 'string' ? [mcpPathOrPaths] : [...mcpPathOrPaths])
+    .map(normalizeMcpPath)
+    .sort((a, b) => b.length - a.length);
+  for (const normalizedPath of paths) {
+    if (normalized.endsWith(normalizedPath)) {
+      normalized = stripTrailingSlash(normalized.slice(0, -normalizedPath.length));
+      break;
+    }
   }
   return normalized;
 }

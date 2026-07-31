@@ -95,6 +95,11 @@ describe('streamable HTTP OAuth metadata', () => {
     );
   });
 
+  it('builds organization-audit protected resource metadata', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, '/organization-audit/v1/mcp');
+    expect(metadata.resource).toBe('https://mcp.example.com/organization-audit/v1/mcp');
+  });
+
   it('builds WWW-Authenticate challenges with resource_metadata for OAuth clients', () => {
     const header = buildWwwAuthenticateHeader({
       resourceMetadataUrl:

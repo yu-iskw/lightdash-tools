@@ -196,6 +196,15 @@ describe('argument-validation', () => {
       );
     });
 
+    it('accepts UUID or slug for dashboardUuid and chartUuid', () => {
+      expect(() => validateResourceIdsInObject({ dashboardUuid: 'sales-overview' })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ dashboardUuid: VALID_UUID })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ chartUuid: 'my-chart' })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ dashboardUuid: 'bad?' })).toThrow(
+        'Slug must contain only alphanumeric characters',
+      );
+    });
+
     it('validates fingerprint and toolCallId with fingerprint rules', () => {
       expect(() =>
         validateResourceIdsInObject({

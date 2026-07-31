@@ -47,6 +47,22 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).not.toContain('scope=');
   });
 
+  it('points resource_metadata at the requested persona path', async () => {
+    const result = await authenticateLightdashOAuth(
+      createRequest(),
+      baseConfig,
+      '/organization-audit/v1/mcp',
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.wwwAuthenticate).toContain(
+      'https://mcp.example.com/.well-known/oauth-protected-resource/organization-audit/v1/mcp',
+    );
+    expect(result.wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
+  });
+
   it('returns 401 without echoing the bearer token when validation fails', async () => {
     vi.mocked(validateLightdashAccessToken).mockRejectedValue(
       new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token'),

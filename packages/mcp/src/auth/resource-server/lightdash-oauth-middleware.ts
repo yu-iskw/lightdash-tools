@@ -31,8 +31,9 @@ export type OAuthAuthResult = OAuthAuthFailure | OAuthAuthSuccess;
 export async function authenticateLightdashOAuth(
   req: IncomingMessage,
   config: McpHttpConfig,
+  mcpPath: string = config.mcpPath,
 ): Promise<OAuthAuthResult> {
-  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config);
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
   const scope = config.requiredScopes.join(' ');
   const token = extractBearerToken(req);
 

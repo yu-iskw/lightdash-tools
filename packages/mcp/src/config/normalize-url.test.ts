@@ -47,4 +47,14 @@ describe('normalizePublicUrl', () => {
       ),
     ).toBe('https://mcp.example.com');
   });
+
+  it('strips any known persona path when given a path list', () => {
+    const paths = ['/semantic-layer/v1/mcp', '/organization-audit/v1/mcp'];
+    expect(normalizePublicUrl('https://mcp.example.com/organization-audit/v1/mcp', paths)).toBe(
+      'https://mcp.example.com',
+    );
+    expect(normalizePublicUrl('https://mcp.example.com/semantic-layer/v1/mcp/', paths)).toBe(
+      'https://mcp.example.com',
+    );
+  });
 });

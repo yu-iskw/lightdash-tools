@@ -38,6 +38,12 @@ describe('buildOAuthProtectedResourceMetadata', () => {
       'https://mcp.example.com/.well-known/oauth-authorization-server',
     );
   });
+
+  it('builds persona-specific resource metadata for organization-audit', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, '/organization-audit/v1/mcp');
+    expect(metadata.resource).toBe('https://mcp.example.com/organization-audit/v1/mcp');
+    expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
+  });
 });
 
 describe('buildWwwAuthenticateHeader', () => {
