@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildOAuthProtectedResourceMetadata,
   getAuthorizationServerMetadataUrl,
-} from '../auth/oauth-protected-resource.js';
-import { checkOrigin } from '../auth/shared-key-middleware.js';
-import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
+} from '../auth/resource-server/oauth-protected-resource.js';
+import { checkOrigin } from '../auth/resource-server/shared-key-middleware.js';
+import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,

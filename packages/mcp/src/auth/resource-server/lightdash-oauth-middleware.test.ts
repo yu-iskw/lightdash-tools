@@ -4,7 +4,7 @@ import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-o
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 import { TokenValidationError } from './token-validation-error.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 vi.mock('./lightdash-token-validation.js', () => ({

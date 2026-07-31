@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { AddressInfo } from 'node:net';
 
 function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): McpHttpConfig {

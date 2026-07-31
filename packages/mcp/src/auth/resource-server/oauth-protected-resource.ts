@@ -1,7 +1,7 @@
-import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../config/env.js';
-import { requirePublicUrl } from '../config/public-url.js';
+import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../../config/env.js';
+import { requirePublicUrl } from '../../config/public-url.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
 const OAUTH_PROTECTED_RESOURCE_CONTEXT = 'OAuth protected resource metadata';
 

@@ -1,11 +1,11 @@
-import { timingSafeEqualString } from '../transports/http-response.js';
+import { timingSafeEqualString } from '../../transports/http-response.js';
 
-import { extractBearerToken } from './bearer.js';
+import { extractBearerToken } from '../bearer.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage } from 'node:http';
 
-export { checkOrigin, timingSafeEqualString } from '../transports/http-response.js';
+export { checkOrigin, timingSafeEqualString } from '../../transports/http-response.js';
 
 export interface SharedKeyAuthSuccess {
   ok: true;

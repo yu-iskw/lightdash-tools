@@ -6,7 +6,7 @@ import {
 } from './oauth-protected-resource.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
 const baseConfig: McpHttpConfig = {
   lightdashUrl: 'https://app.lightdash.cloud',

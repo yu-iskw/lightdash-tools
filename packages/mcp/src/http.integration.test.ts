@@ -3,7 +3,7 @@ import { createServer, type Server } from 'node:http';
 import { SecretString } from '@lightdash-tools/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getAuthorizationServerMetadataUrl } from './auth/oauth-protected-resource.js';
+import { getAuthorizationServerMetadataUrl } from './auth/resource-server/oauth-protected-resource.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';

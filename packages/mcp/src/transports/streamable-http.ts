@@ -11,27 +11,30 @@ import {
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
 import {
-  createOAuthBearerProvider,
-  BearerContextProvider,
-} from '../auth/bearer-context-provider.js';
-import { EnvContextProvider } from '../auth/env-context-provider.js';
-import {
-  authenticateLightdashOAuth,
-  writeOAuthAuthFailure,
-} from '../auth/lightdash-oauth-middleware.js';
-import {
   createOAuthBroker,
   isOAuthBrokerPath,
   type OAuthBroker,
 } from '../auth/oauth-broker/routes.js';
 import {
+  createOAuthBearerProvider,
+  BearerContextProvider,
+} from '../auth/providers/bearer-context-provider.js';
+import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
+import {
+  authenticateLightdashOAuth,
+  writeOAuthAuthFailure,
+} from '../auth/resource-server/lightdash-oauth-middleware.js';
+import {
   buildOAuthProtectedResourceMetadata,
   getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
-} from '../auth/oauth-protected-resource.js';
-import { authenticateSharedKey, checkOrigin } from '../auth/shared-key-middleware.js';
+} from '../auth/resource-server/oauth-protected-resource.js';
+import {
+  authenticateSharedKey,
+  checkOrigin,
+} from '../auth/resource-server/shared-key-middleware.js';
+import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import { hashToken } from '../auth/token-hash.js';
-import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
 import {
   getOAuthCallbackUrl,
   loadMcpHttpConfig,

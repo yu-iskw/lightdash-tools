@@ -1,6 +1,6 @@
-import { sendJson } from '../transports/http-response.js';
+import { sendJson } from '../../transports/http-response.js';
 
-import { extractBearerToken } from './bearer.js';
+import { extractBearerToken } from '../bearer.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
 import { getProtectedResourceMetadataPathUrl } from './oauth-protected-resource.js';
 import { extractTokenScopes, hasRequiredScopes } from './token-scopes.js';
@@ -8,7 +8,7 @@ import { TokenValidationError } from './token-validation-error.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
 import type { ValidatedLightdashUser } from './lightdash-token-validation.js';
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
+import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 export interface OAuthAuthSuccess {
