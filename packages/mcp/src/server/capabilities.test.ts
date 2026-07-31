@@ -2,12 +2,12 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { registerCapabilities } from './capabilities.js';
-import { getDefaultPersona } from './personas/index.js';
-import { registerToolsByIds } from './tools/registry.js';
+import { getDefaultPersona } from '../personas/index.js';
+import { registerToolsByIds } from '../tools/registry.js';
 
-vi.mock('./tools/registry.js', async (importOriginal) => {
+vi.mock('../tools/registry.js', async (importOriginal) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- vitest importOriginal
-  const actual = await importOriginal<typeof import('./tools/registry.js')>();
+  const actual = await importOriginal<typeof import('../tools/registry.js')>();
   return {
     ...actual,
     registerToolsByIds: vi.fn(),

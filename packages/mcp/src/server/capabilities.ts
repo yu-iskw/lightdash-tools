@@ -2,10 +2,10 @@
  * Register tools / prompts / resources for a persona.
  */
 
-import { getDefaultPersona } from './personas/index.js';
-import { registerToolsByIds } from './tools/registry.js';
+import { getDefaultPersona } from '../personas/index.js';
+import { registerToolsByIds } from '../tools/registry.js';
 
-import type { PersonaDefinition } from './personas/types.js';
+import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from './request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 

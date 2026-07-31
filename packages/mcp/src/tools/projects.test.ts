@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { runWithProjectPinAsync } from '../project-pin.js';
+import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerListProjects } from './projects.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 
 const PINNED = '550e8400-e29b-41d4-a716-446655440000';
 const OTHER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';

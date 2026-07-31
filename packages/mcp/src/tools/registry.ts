@@ -13,7 +13,7 @@ import { registerGetMetric, registerListMetrics } from './metrics.js';
 import { registerGetProject, registerListProjects } from './projects.js';
 import { registerCompileQuery } from './query.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ToolRegistration = {

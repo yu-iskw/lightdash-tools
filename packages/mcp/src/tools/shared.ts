@@ -19,10 +19,10 @@ import {
 } from '@lightdash-tools/common';
 
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
-import { toMcpErrorMessage } from '../errors.js';
-import { getPinnedProjectUuid } from '../project-pin.js';
+import { toMcpErrorMessage } from '../server/errors.js';
+import { getPinnedProjectUuid } from '../governance/project-pin.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';

@@ -44,8 +44,11 @@ import {
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath } from '../config/runtime.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
-import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
-import { createLightdashMcpServer } from '../server.js';
+import {
+  extractPinnedProjectFromRequest,
+  runWithProjectPinAsync,
+} from '../governance/project-pin.js';
+import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
@@ -53,7 +56,7 @@ import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-respons
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const ERROR_SESSION_NOT_FOUND = 'Session not found';

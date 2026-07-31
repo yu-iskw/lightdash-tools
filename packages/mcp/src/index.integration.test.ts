@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { validateLightdashAccessToken } from './auth/resource-server/lightdash-token-validation.js';
 import { getClient } from './config/runtime.js';
-import { createLightdashMcpServer } from './server.js';
+import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';

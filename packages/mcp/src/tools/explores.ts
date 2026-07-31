@@ -12,7 +12,7 @@ import {
 import { exploreIdField, projectUuidField } from './schema-fields.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerListExplores(server: McpServer, contextProvider: McpContextProvider): void {

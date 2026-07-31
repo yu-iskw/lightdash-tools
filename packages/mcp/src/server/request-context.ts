@@ -1,4 +1,4 @@
-import type { McpAuthMode } from './auth/auth-mode.js';
+import type { McpAuthMode } from '../auth/auth-mode.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 
 export interface LightdashMcpRequestContext {

@@ -45,4 +45,4 @@ flowchart TD
 ## References
 
 - [RFC 7662](https://datatracker.ietf.org/doc/html/rfc7662) (introspection — follow-up)
-- Implementation: `packages/mcp/src/tools/shared.ts`, `packages/mcp/src/project-pin.ts`
+- Implementation: `packages/mcp/src/tools/shared.ts`, `packages/mcp/src/governance/project-pin.ts`

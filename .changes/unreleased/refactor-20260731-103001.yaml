@@ -1,0 +1,3 @@
+kind: refactor
+body: 'Reorganize MCP src namespaces: auth providers/resource-server seams, server/ and governance/ modules'
+time: 2026-07-31T10:30:01.239376+09:00

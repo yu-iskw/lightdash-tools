@@ -1,11 +1,11 @@
 import { logAuditEntry } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { runWithProjectPinAsync } from '../project-pin.js';
+import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 
 // Silence audit log output during tests
 vi.mock('@lightdash-tools/common', async (importOriginal) => {

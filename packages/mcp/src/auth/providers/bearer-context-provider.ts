@@ -3,7 +3,10 @@ import { createBearerConfig, LightdashClient, SecretString } from '@lightdash-to
 import { hashToken } from '../token-hash.js';
 
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
-import type { LightdashMcpRequestContext, McpContextProvider } from '../../request-context.js';
+import type {
+  LightdashMcpRequestContext,
+  McpContextProvider,
+} from '../../server/request-context.js';
 
 export interface BearerContextProviderOptions {
   baseUrl: string;

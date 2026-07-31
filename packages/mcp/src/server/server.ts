@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 
 import { registerCapabilities } from './capabilities.js';
-import { getDefaultPersona } from './personas/index.js';
+import { getDefaultPersona } from '../personas/index.js';
 import { PACKAGE_VERSION } from './version.js';
 
 import type { RegisterCapabilitiesOptions } from './capabilities.js';

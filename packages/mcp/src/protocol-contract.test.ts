@@ -6,10 +6,10 @@ import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createLightdashMcpServer } from './server.js';
+import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
-import type { McpContextProvider } from './request-context.js';
+import type { McpContextProvider } from './server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 function createStubContextProvider(): McpContextProvider {
