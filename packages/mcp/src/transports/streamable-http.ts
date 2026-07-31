@@ -22,15 +22,16 @@ import {
 import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
+  buildBearerRequiredFailure,
+  buildInvalidTokenFailure,
   writeOAuthAuthFailure,
 } from '../auth/resource-server/lightdash-oauth-middleware.js';
 import {
   buildOAuthProtectedResourceMetadata,
-  getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
+  resolveProtectedResourceMcpPath,
 } from '../auth/resource-server/oauth-protected-resource.js';
 import { authenticateSharedKey } from '../auth/resource-server/shared-key-middleware.js';
-import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import { hashToken } from '../auth/token-hash.js';
 import {
   getOAuthCallbackUrl,
@@ -192,24 +193,16 @@ function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig):
   }
 }
 
-function isProtectedResourceMetadataPath(path: string, config: McpHttpConfig): boolean {
-  // Cheap reject for the common persona MCP path before URL/pathname work.
-  if (!path.startsWith('/.well-known/oauth-protected-resource')) {
-    return false;
-  }
-  const rootMetadataPath = '/.well-known/oauth-protected-resource';
-  const pathSpecificMetadataPath = new URL(getProtectedResourceMetadataPathUrl(config)).pathname;
-  return path === rootMetadataPath || path === pathSpecificMetadataPath;
-}
-
-function writeProtectedResourceMetadata(res: ServerResponse, config: McpHttpConfig): void {
-  sendJson(res, 200, buildOAuthProtectedResourceMetadata(config));
-}
+/**
+ * Auth helpers for persona MCP routes. PRM path resolution lives in
+ * `oauth-protected-resource.ts` (single owner for well-known PRM grammar).
+ */
 
 async function ensureEndpointAuth(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
+  mcpPath: string,
 ): Promise<boolean> {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
     return true;
@@ -224,7 +217,7 @@ async function ensureEndpointAuth(
     return true;
   }
 
-  const result = await authenticateLightdashOAuth(req, config);
+  const result = await authenticateLightdashOAuth(req, config, mcpPath);
   if (!result.ok) {
     writeOAuthAuthFailure(res, result);
     return false;
@@ -232,42 +225,6 @@ async function ensureEndpointAuth(
 
   (req as OAuthRequest).lightdashOAuth = result;
   return true;
-}
-
-function writeBearerTokenRequiredFailure(res: ServerResponse, config: McpHttpConfig): void {
-  writeOAuthAuthFailure(res, {
-    ok: false,
-    status: 401,
-    body: {
-      error: 'invalid_request',
-      error_description: 'Bearer access token required',
-    },
-    wwwAuthenticate: buildWwwAuthenticateHeader({
-      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
-      scope: config.requiredScopes.join(' '),
-    }),
-  });
-}
-
-function writeSessionContextMismatch(
-  res: ServerResponse,
-  config: McpHttpConfig,
-  errorDescription: string,
-): void {
-  writeOAuthAuthFailure(res, {
-    ok: false,
-    status: 401,
-    body: {
-      error: 'invalid_token',
-      error_description: errorDescription,
-    },
-    wwwAuthenticate: buildWwwAuthenticateHeader({
-      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config),
-      scope: config.requiredScopes.join(' '),
-      error: 'invalid_token',
-      errorDescription,
-    }),
-  });
 }
 
 function getOAuthAuditContext(req: IncomingMessage): {
@@ -289,6 +246,7 @@ function verifySessionAuth(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
+  mcpPath: string,
   entry: SessionEntry | undefined,
 ): boolean {
   if (!entry || config.authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
@@ -297,19 +255,25 @@ function verifySessionAuth(
 
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.accessToken) {
-    writeBearerTokenRequiredFailure(res, config);
+    writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, mcpPath));
     return false;
   }
 
   if (entry.auth.subject && entry.auth.subject !== oauth.user.userUuid) {
-    writeSessionContextMismatch(res, config, 'Session subject mismatch');
+    writeOAuthAuthFailure(
+      res,
+      buildInvalidTokenFailure(config, mcpPath, 'Session subject mismatch'),
+    );
     return false;
   }
 
   const previousOrg = entry.auth.organizationUuid ?? null;
   const nextOrg = oauth.user.organizationUuid ?? null;
   if (previousOrg !== nextOrg) {
-    writeSessionContextMismatch(res, config, 'Session organization mismatch');
+    writeOAuthAuthFailure(
+      res,
+      buildInvalidTokenFailure(config, mcpPath, 'Session organization mismatch'),
+    );
     return false;
   }
 
@@ -347,7 +311,7 @@ async function handleExistingSessionPost(
     sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
     return;
   }
-  if (!verifySessionAuth(req, res, config, entry)) return;
+  if (!verifySessionAuth(req, res, config, persona.path, entry)) return;
   sessionStore.touch(sid);
   const auditAuth = getOAuthAuditContext(req);
   await runWithToolAuditAuthAsync(
@@ -377,8 +341,9 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
   }
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    // ensureEndpointAuth already ran; oauth must be present for this auth mode.
     if (!oauth?.ok) {
-      writeBearerTokenRequiredFailure(res, config);
+      writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, persona.path));
       return;
     }
 
@@ -420,12 +385,12 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
 }
 
 async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined): Promise<void> {
-  const { req, res, config } = ctx;
+  const { req, res, config, persona } = ctx;
   if (
     config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
     config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
   ) {
-    if (!(await ensureEndpointAuth(req, res, config))) {
+    if (!(await ensureEndpointAuth(req, res, config, persona.path))) {
       drainRequestBody(req);
       return;
     }
@@ -470,7 +435,7 @@ async function handleMcpGetOrDelete(
   }
 
   if (config.authMode !== MCP_AUTH_MODE_NONE) {
-    if (!(await ensureEndpointAuth(req, res, config))) return;
+    if (!(await ensureEndpointAuth(req, res, config, persona.path))) return;
   }
 
   const entry = sessionStore.get(sid);
@@ -479,7 +444,7 @@ async function handleMcpGetOrDelete(
     return;
   }
 
-  if (!verifySessionAuth(req, res, config, entry)) return;
+  if (!verifySessionAuth(req, res, config, persona.path, entry)) return;
 
   sessionStore.touch(sid);
   const auditAuth = getOAuthAuditContext(req);
@@ -647,12 +612,13 @@ async function handlePublicHttpPaths(
     return oauthBroker.handle(req, res, path);
   }
 
-  if (
-    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH &&
-    isProtectedResourceMetadataPath(path, config)
-  ) {
+  const prmMcpPath =
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+      ? resolveProtectedResourceMcpPath(path, config)
+      : undefined;
+  if (prmMcpPath !== undefined) {
     applyOptionalCorsHeaders(req, res, config, true);
-    writeProtectedResourceMetadata(res, config);
+    sendJson(res, 200, buildOAuthProtectedResourceMetadata(config, prmMcpPath));
     return true;
   }
 

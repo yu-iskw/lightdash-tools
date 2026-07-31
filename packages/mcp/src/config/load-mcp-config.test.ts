@@ -78,6 +78,15 @@ describe('loadMcpHttpConfig', () => {
     expect(config.scopesSupported).toEqual([]);
   });
 
+  it('strips organization-audit persona path from public URL', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
+      'https://mcp.example.com/organization-audit/v1/mcp';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('https://mcp.example.com');
+  });
+
   it('requires both OAuth client id and secret together', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';

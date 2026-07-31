@@ -83,6 +83,8 @@ export function validateUuid(id: string): string {
 
 /**
  * Validates a slug: 1–256 chars, alphanumeric plus `.`, `_`, `-`.
+ * Rejects `.` / `..` (and embedded `..`) so path clients cannot normalize
+ * the identifier into a parent URL segment.
  *
  * @param id - Slug to validate
  * @returns The input if valid
@@ -96,12 +98,33 @@ export function validateSlug(id: string): string {
   if (id.length < SLUG_MIN_LENGTH || id.length > SLUG_MAX_LENGTH) {
     throw new Error(`Slug must be between ${SLUG_MIN_LENGTH} and ${SLUG_MAX_LENGTH} characters`);
   }
+  if (id === '.' || id === '..' || id.includes('..')) {
+    throw new Error('Slug must not contain path traversal segments (. or ..)');
+  }
   if (!SLUG_REGEX.test(id)) {
     throw new Error(
       'Slug must contain only alphanumeric characters, dots, underscores, and hyphens',
     );
   }
   return id;
+}
+
+/**
+ * Validates an OpenAPI UuidOrSlug identifier: UUID when the string matches UUID form,
+ * otherwise a safe slug.
+ *
+ * @param id - UUID or slug to validate
+ * @returns The input if valid
+ * @throws Error if neither UUID nor slug rules pass
+ */
+export function validateUuidOrSlug(id: string): string {
+  if (typeof id !== 'string') {
+    throw new Error('Resource ID must be a string');
+  }
+  if (UUID_REGEX.test(id)) {
+    return validateUuid(id);
+  }
+  return validateSlug(id);
 }
 
 /**

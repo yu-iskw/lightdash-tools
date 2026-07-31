@@ -29,6 +29,7 @@ async function readJsonRpcResponse(
   child: ChildProcessWithoutNullStreams,
   expectedId: number,
   timeoutMs: number,
+  getStderr: () => string,
 ): Promise<JsonRpcMessage> {
   return new Promise((resolve, reject) => {
     let buffer = '';
@@ -60,7 +61,13 @@ async function readJsonRpcResponse(
 
     const onExit = (code: number | null): void => {
       cleanup();
-      reject(new Error(`MCP process exited early (code=${code}) before response id=${expectedId}`));
+      const stderr = getStderr().trim();
+      const suffix = stderr ? `\nstderr:\n${stderr}` : '';
+      reject(
+        new Error(
+          `MCP process exited early (code=${code}) before response id=${expectedId}${suffix}`,
+        ),
+      );
     };
 
     const cleanup = (): void => {
@@ -88,20 +95,25 @@ describe('stdio process smoke', () => {
   });
 
   it('initialize then tools/list over stdio', async () => {
+    let stderr = '';
     child = spawn(process.execPath, [binPath], {
       cwd: repoRoot,
       env: {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
+        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'semantic-layer',
         // Avoid inheriting real credentials or network-affecting settings.
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
     });
 
-    // Drain stderr so the child cannot block on a full pipe.
-    child.stderr.resume();
+    // Drain stderr so the child cannot block on a full pipe and preserve it for failures.
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
 
     writeLine(child, {
       jsonrpc: '2.0',
@@ -114,7 +126,7 @@ describe('stdio process smoke', () => {
       },
     });
 
-    const initResponse = await readJsonRpcResponse(child, 1, INIT_TIMEOUT_MS);
+    const initResponse = await readJsonRpcResponse(child, 1, INIT_TIMEOUT_MS, () => stderr);
     expect(initResponse.error).toBeUndefined();
     expect(initResponse.result).toBeDefined();
     const initResult = initResponse.result as {
@@ -136,7 +148,7 @@ describe('stdio process smoke', () => {
       params: {},
     });
 
-    const listResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS);
+    const listResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS, () => stderr);
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);

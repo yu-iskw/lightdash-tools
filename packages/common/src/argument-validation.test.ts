@@ -17,20 +17,30 @@ describe('argument-validation', () => {
         [
           'agentUuid',
           'artifactUuid',
+          'chartUuid',
+          'dashboardUuid',
           'evalUuid',
           'fingerprint',
+          'groupUuid',
           'mcpServerUuid',
           'messageUuid',
+          'organizationUuid',
+          'parentSpaceUuid',
           'project',
           'projectUuid',
           'projectUuids',
           'projects',
           'promptUuid',
+          'roleUuid',
           'runUuid',
           'savedQueryUuid',
+          'schedulerUuid',
           'slug',
+          'spaceUuid',
+          'spaceUuids',
           'threadUuid',
           'toolCallId',
+          'userUuid',
           'versionUuid',
         ].sort(),
       );
@@ -185,6 +195,33 @@ describe('argument-validation', () => {
     it('validates slug key with slug rules', () => {
       expect(() => validateResourceIdsInObject({ slug: 'bad slug' })).toThrow(
         'Slug must contain only alphanumeric characters',
+      );
+    });
+
+    it('accepts UUID or slug for dashboardUuid and chartUuid', () => {
+      expect(() => validateResourceIdsInObject({ dashboardUuid: 'sales-overview' })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ dashboardUuid: VALID_UUID })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ chartUuid: 'my-chart' })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ dashboardUuid: 'bad?' })).toThrow(
+        'Slug must contain only alphanumeric characters',
+      );
+      expect(() => validateResourceIdsInObject({ dashboardUuid: '..' })).toThrow(
+        'Slug must not contain path traversal segments',
+      );
+    });
+
+    it('validates spaceUuids and parentSpaceUuid as UUIDs', () => {
+      expect(() =>
+        validateResourceIdsInObject({
+          spaceUuids: [VALID_UUID],
+          parentSpaceUuid: VALID_UUID,
+        }),
+      ).not.toThrow();
+      expect(() => validateResourceIdsInObject({ spaceUuids: ['bad?'] })).toThrow(
+        'Invalid UUID format',
+      );
+      expect(() => validateResourceIdsInObject({ parentSpaceUuid: '..' })).toThrow(
+        'Invalid UUID format',
       );
     });
 

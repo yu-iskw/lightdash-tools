@@ -9,7 +9,7 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
-import { getDefaultPersona } from '../personas/index.js';
+import { getDefaultPersona, listPersonaPaths } from '../personas/index.js';
 
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
@@ -436,7 +436,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const mcpPath = getDefaultPersona().path;
-  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, mcpPath) : undefined;
+  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listPersonaPaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
 
   const validateToken = parseBooleanEnv(

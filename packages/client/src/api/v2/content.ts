@@ -15,7 +15,7 @@ export interface SearchContentParams {
   pageSize?: number;
   page?: number;
   search?: string;
-  sortBy?: 'createdAt' | 'lastViewedAt' | 'name' | 'updatedAt' | 'views';
+  sortBy?: LightdashApi.Content.ContentSortByColumns;
   sortDirection?: 'asc' | 'desc';
 }
 

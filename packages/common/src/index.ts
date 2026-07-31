@@ -31,6 +31,7 @@ export * from './audit';
 
 // Export Lightdash API models
 export * from './types/lightdash-api';
+export { CONTENT_SORT_BY_COLUMNS } from './types/v2/content';
 
 // Export raw OpenAPI types for direct use (e.g., by client package)
 export type { paths, components, operations } from './types/generated/openapi-types';

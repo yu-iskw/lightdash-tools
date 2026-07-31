@@ -9,3 +9,4 @@
 **/dist
 **/*.md
 !packages/mcp/src/personas/semantic-layer/v1/resources/playbook.md
+!packages/mcp/src/personas/organization-audit/v1/resources/playbook.md

@@ -1,8 +1,8 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash **semantic-layer** discovery and query composition (compile only). Tools live in a shared registry; the shipped `semantic-layer` persona selects nine `lightdash_*` tools, prompts, and a playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md).
+MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile) and `organization-audit` (read-only org governance). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md) and [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md).
 
-Broad admin surfaces (charts, dashboards, users, AI agents, …) are **not** registered on this binary — use `@lightdash-tools/client` or the CLI.
+Mutation/admin write surfaces are **not** registered on MCP — use `@lightdash-tools/client` or the CLI.
 
 ## Directory map
 
@@ -85,7 +85,7 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, audit log, token cache TTL |
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`.
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp` or `/organization-audit/v1/mcp`.
 
 ### HTTP shared-key / local (secondary)
 
@@ -106,15 +106,19 @@ For use with Claude Desktop or IDEs, use `npx`:
 
 ```bash
 npx @lightdash-tools/mcp
+# or explicit personas:
+npx @lightdash-tools/mcp semantic-layer
+npx @lightdash-tools/mcp organization-audit
 ```
 
 Or if installed globally:
 
 ```bash
 lightdash-mcp
+lightdash-mcp organization-audit
 ```
 
-Logging goes to stderr only; stdout is JSON-RPC.
+Logging goes to stderr only; stdout is JSON-RPC. Bare `lightdash-mcp` defaults to `semantic-layer`.
 
 ### Streamable HTTP (remote)
 
@@ -133,7 +137,12 @@ export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
 npx @lightdash-tools/mcp serve-http
 ```
 
-The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). MCP endpoint: `POST/GET/DELETE /semantic-layer/v1/mcp`. Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). Persona MCP endpoints:
+
+- `POST/GET/DELETE /semantic-layer/v1/mcp`
+- `POST/GET/DELETE /organization-audit/v1/mcp`
+
+Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
 **Local Compose (dev):**
 
@@ -142,7 +151,9 @@ The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT
 
 ## Tools
 
-The `semantic-layer` persona registers these tools (names prefixed with `lightdash_`):
+### `semantic-layer` persona
+
+Registers these tools (names prefixed with `lightdash_`):
 
 - **Projects**: `list_projects`, `get_project`
 - **Explores**: `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage`
@@ -150,6 +161,17 @@ The `semantic-layer` persona registers these tools (names prefixed with `lightda
 - **Query**: `compile_query` (empty SELECT → `isError`; no run-query)
 
 Prompts and playbook: `lightdash://playbooks/semantic-layer` (cite `lightdash_*` names only).
+
+### `organization-audit` persona
+
+Read-only organization inventory, access, content health, usage signals, and schedulers ([ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md)). MCP server display name is `lightdash-mcp-org-audit` (60-char client limit). Endpoint inventory: [docs/organization-audit-endpoint-inventory.md](../../docs/organization-audit-endpoint-inventory.md).
+
+- **Inventory**: `get_org_profile`, `list_org_members`, `get_org_member`, `list_org_groups`, `list_org_projects`
+- **Access**: `list_org_role_assignments`, `list_custom_roles`, `get_custom_role`, `list_project_roles`, `list_project_direct_access`, `list_space_access`, `resolve_effective_access`
+- **Content / health**: `list_content`, `get_dashboard_meta`, `list_validation_results`, `get_project_user_activity`
+- **Delivery**: `list_project_schedulers`, `get_scheduler`
+
+Prompts and playbook: `lightdash://playbooks/organization-audit` (host orchestrates multi-step audits via primitives). No mutation, warehouse queries, or user-activity CSV download.
 
 ### CLI Binary
 
@@ -162,18 +184,18 @@ lightdash-mcp --help
 ### CLI Options
 
 - `--http` — Run as HTTP server instead of Stdio.
-- `stdio` / `serve-http` — Explicit transport subcommands (`serve-http` accepts `--auth-mode`).
+- `stdio` / `semantic-layer` / `organization-audit` / `serve-http` — Explicit transport/persona subcommands.
 
 ## Safety (persona-first)
 
 MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md)):
 
-| Concern      | Mechanism                                                                  |
-| :----------- | :------------------------------------------------------------------------- |
-| Which tools  | Persona `toolIds` in code (shipped: semantic-layer, nine read-only tools)  |
-| Who          | Auth mode + Lightdash API RBAC                                             |
-| Where (HTTP) | Optional `X-Lightdash-Project` pin                                         |
-| Hardening    | Input validation on known ID fields + optional `LIGHTDASH_TOOLS_AUDIT_LOG` |
+| Concern      | Mechanism                                                                                          |
+| :----------- | :------------------------------------------------------------------------------------------------- |
+| Which tools  | Persona `toolIds` in code (`semantic-layer` or `organization-audit`)                               |
+| Who          | Auth mode + Lightdash API RBAC                                                                     |
+| Where (HTTP) | Optional `X-Lightdash-Project` pin                                                                 |
+| Hardening    | Input validation on known ID fields + optional `LIGHTDASH_TOOLS_AUDIT_LOG` + org-audit GET asserts |
 
 Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.
 

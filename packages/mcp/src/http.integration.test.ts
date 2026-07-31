@@ -441,6 +441,31 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(metadata.resource).toBe(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`);
   });
 
+  it('serves organization-audit path-specific OAuth protected resource metadata', async () => {
+    const response = await fetch(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/organization-audit/v1/mcp`,
+    );
+
+    expect(response.status).toBe(200);
+    const metadata = await response.json();
+    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/organization-audit/v1/mcp`);
+  });
+
+  it('returns 401 with organization-audit resource_metadata on that persona path', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/organization-audit/v1/mcp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(INITIALIZE_BODY),
+    });
+
+    expect(response.status).toBe(401);
+    const wwwAuthenticate = response.headers.get('www-authenticate');
+    expect(wwwAuthenticate).toContain(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/organization-audit/v1/mcp`,
+    );
+    expect(wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
+  });
+
   it('maps token-a and token-b to distinct authenticated users upstream', async () => {
     const responseA = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const responseB = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_B });

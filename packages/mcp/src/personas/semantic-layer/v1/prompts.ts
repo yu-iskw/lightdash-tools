@@ -4,7 +4,8 @@
 
 import { z } from 'zod';
 
-import { exploreIdField, projectUuidField } from '../../../tools/schema-fields.js';
+import { projectUuidField } from '../../../tools/lib/schema-fields.js';
+import { exploreIdField } from '../../../tools/semantic/schema-fields.js';
 
 import {
   getPlaybookMarkdown,

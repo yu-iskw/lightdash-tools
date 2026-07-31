@@ -26,6 +26,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 7. [MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
 8. [MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md)
 9. [Cross-cutting conventions](0009-cross-cutting-conventions.md)
+10. [MCP organization-audit persona read-only boundary](0010-mcp-organization-audit-persona-read-only-boundary.md)
 
 ## Old → new mapping
 

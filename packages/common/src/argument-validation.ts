@@ -8,6 +8,7 @@ import {
   validateFingerprint,
   validateSlug,
   validateUuid,
+  validateUuidOrSlug,
 } from './input-validation';
 
 /** Object keys whose string values are treated as resource identifiers. */
@@ -29,12 +30,25 @@ export const RESOURCE_ID_KEYS = new Set([
   'fingerprint',
   'savedQueryUuid',
   'slug',
+  'userUuid',
+  'groupUuid',
+  'spaceUuid',
+  'spaceUuids',
+  'parentSpaceUuid',
+  'roleUuid',
+  'dashboardUuid',
+  'schedulerUuid',
+  'organizationUuid',
+  'chartUuid',
 ]);
+
+/** Keys that accept OpenAPI UuidOrSlug (UUID or slug), not UUID-only. */
+const UUID_OR_SLUG_KEYS = new Set(['dashboardUuid', 'chartUuid']);
 
 export type ArgumentSource = 'body' | 'option' | 'positional';
 
 export type ArgumentSemanticType =
-  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid';
+  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid-or-slug' | 'uuid';
 
 /** Per-argument validation metadata supplied by CLI/MCP command definitions. */
 export interface ArgumentDescriptor {
@@ -97,6 +111,10 @@ function validateNumberArgument(value: unknown, name: string): void {
   }
 }
 
+function validateUuidOrSlugArgument(value: unknown, name: string): void {
+  validateUuidOrSlug(requireString(value, name, 'UUID or slug'));
+}
+
 function validateBySemanticType(
   value: unknown,
   semanticType: ArgumentSemanticType,
@@ -124,6 +142,9 @@ function validateBySemanticType(
     case 'uuid':
       validateUuidArgument(value, name);
       break;
+    case 'uuid-or-slug':
+      validateUuidOrSlugArgument(value, name);
+      break;
     default: {
       const exhaustive: never = semanticType;
       throw new Error(`Unknown semantic type: ${exhaustive}`);
@@ -138,6 +159,10 @@ function validateResourceIdValue(key: string, value: string): void {
   }
   if (key === 'fingerprint' || key === 'toolCallId') {
     validateFingerprint(value);
+    return;
+  }
+  if (UUID_OR_SLUG_KEYS.has(key)) {
+    validateUuidOrSlug(value);
     return;
   }
   validateUuid(value);

@@ -3,6 +3,7 @@
  */
 
 import { AiAgentsClient } from './api/v1/ai-agents';
+import { AnalyticsClient } from './api/v1/analytics';
 import { ChartsClient } from './api/v1/charts';
 import { DashboardsClient } from './api/v1/dashboards';
 import { ExploresClient } from './api/v1/explores';
@@ -18,6 +19,7 @@ import { TagsClient } from './api/v1/tags';
 import { UsersClient } from './api/v1/users';
 import { ValidationClient } from './api/v1/validation';
 import { ContentClient } from './api/v2/content';
+import { DashboardsClientV2 } from './api/v2/dashboards';
 import { OrganizationRolesClient } from './api/v2/organization-roles';
 import { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
 import { QueryClientV2 } from './api/v2/query';
@@ -48,6 +50,7 @@ export class V1ApiClients {
   readonly metrics: MetricsClient;
   readonly schedulers: SchedulersClient;
   readonly tags: TagsClient;
+  readonly analytics: AnalyticsClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -65,6 +68,7 @@ export class V1ApiClients {
     this.metrics = new MetricsClient(http);
     this.schedulers = new SchedulersClient(http);
     this.tags = new TagsClient(http);
+    this.analytics = new AnalyticsClient(http);
   }
 }
 
@@ -77,6 +81,7 @@ export class V2ApiClients {
   readonly projectRoleAssignments: ProjectRoleAssignmentsClient;
   readonly content: ContentClient;
   readonly validation: ValidationClientV2;
+  readonly dashboards: DashboardsClientV2;
 
   constructor(http: HttpClient) {
     this.query = new QueryClientV2(http);
@@ -84,6 +89,7 @@ export class V2ApiClients {
     this.projectRoleAssignments = new ProjectRoleAssignmentsClient(http);
     this.content = new ContentClient(http);
     this.validation = new ValidationClientV2(http);
+    this.dashboards = new DashboardsClientV2(http);
   }
 }
 

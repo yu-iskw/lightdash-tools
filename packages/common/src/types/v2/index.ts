@@ -19,6 +19,8 @@ import type { Users as U } from '../v1/users';
 export namespace V2 {
   export namespace Content {
     export type ApiContentResponse = Con.ApiContentResponse;
+    export type ContentType = Con.ContentType;
+    export type ContentSortByColumns = Con.ContentSortByColumns;
   }
 
   export namespace Projects {

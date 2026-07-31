@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../../personas/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PERSONA_PATH } from '../../personas/semantic-layer/v1/index.js';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
@@ -30,7 +32,11 @@ function createRequest(authorization?: string): IncomingMessage {
 
 describe('authenticateLightdashOAuth', () => {
   it('returns 401 with WWW-Authenticate resource_metadata when token is missing', async () => {
-    const result = await authenticateLightdashOAuth(createRequest(), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -47,13 +53,33 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).not.toContain('scope=');
   });
 
+  it('points resource_metadata at the requested persona path', async () => {
+    const result = await authenticateLightdashOAuth(
+      createRequest(),
+      baseConfig,
+      ORGANIZATION_AUDIT_PERSONA_PATH,
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+
+    expect(result.wwwAuthenticate).toContain(
+      'https://mcp.example.com/.well-known/oauth-protected-resource/organization-audit/v1/mcp',
+    );
+    expect(result.wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
+  });
+
   it('returns 401 without echoing the bearer token when validation fails', async () => {
     vi.mocked(validateLightdashAccessToken).mockRejectedValue(
       new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token'),
     );
 
     const token = 'secret-oauth-token';
-    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -70,7 +96,11 @@ describe('authenticateLightdashOAuth', () => {
       new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable'),
     );
 
-    const result = await authenticateLightdashOAuth(createRequest('Bearer token'), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest('Bearer token'),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -88,7 +118,11 @@ describe('authenticateLightdashOAuth', () => {
       new TokenValidationError('upstream_unavailable', 'Lightdash is temporarily unavailable', 60),
     );
 
-    const result = await authenticateLightdashOAuth(createRequest('Bearer token'), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest('Bearer token'),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -104,7 +138,11 @@ describe('authenticateLightdashOAuth', () => {
     });
 
     const token = jwtWithScope('mcp:read mcp:write');
-    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result).toEqual({
       ok: true,
@@ -124,6 +162,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer opaque-token'),
       baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
     );
 
     expect(result).toEqual({
@@ -144,7 +183,11 @@ describe('authenticateLightdashOAuth', () => {
     const payload = Buffer.from(JSON.stringify({ sub: 'user-uuid-1' })).toString('base64url');
     const token = `${header}.${payload}.signature`;
 
-    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -161,6 +204,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer opaque-token'),
       scopedConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -182,7 +226,11 @@ describe('authenticateLightdashOAuth', () => {
     const token = `${header}.${payload}.signature`;
 
     const scopedConfig = { ...baseConfig, requiredScopes: ['mcp:read'] };
-    const result = await authenticateLightdashOAuth(createRequest(`Bearer ${token}`), scopedConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      scopedConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -199,7 +247,11 @@ describe('authenticateLightdashOAuth', () => {
     });
 
     const token = jwtWithScope('mcp:read mcp:write');
-    const result = await authenticateLightdashOAuth(createRequest(`bearer ${token}`), baseConfig);
+    const result = await authenticateLightdashOAuth(
+      createRequest(`bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PERSONA_PATH,
+    );
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
