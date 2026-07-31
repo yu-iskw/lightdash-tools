@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+
 import {
   buildOAuthProtectedResourceMetadata,
   getAuthorizationServerMetadataUrl,
 } from './oauth-protected-resource.js';
-import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
 const baseConfig = makeTestMcpHttpConfig({

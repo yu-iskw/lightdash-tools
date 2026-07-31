@@ -1,6 +1,6 @@
-import type { McpHttpConfig } from '../../config/load-mcp-config.js';
+import type { McpHttpConfig } from './load-mcp-config.js';
 
-/** Shared base `McpHttpConfig` for resource-server unit tests. */
+/** Shared base `McpHttpConfig` for MCP package unit/integration tests. */
 export function makeTestMcpHttpConfig(overrides?: Partial<McpHttpConfig>): McpHttpConfig {
   return {
     lightdashUrl: 'https://app.lightdash.cloud',

@@ -1,9 +1,10 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { registerCapabilities } from './capabilities.js';
 import { getDefaultPersona } from '../personas/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
+
+import { registerCapabilities } from './capabilities.js';
 
 vi.mock('../tools/registry.js', async (importOriginal) => {
   // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- vitest importOriginal

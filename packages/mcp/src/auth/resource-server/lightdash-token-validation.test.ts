@@ -2,8 +2,9 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { describe, expect, it, vi } from 'vitest';
 
+import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
-import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 
 import type { AddressInfo } from 'node:net';
 

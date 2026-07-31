@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
-import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 import { TokenValidationError } from './token-validation-error.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';

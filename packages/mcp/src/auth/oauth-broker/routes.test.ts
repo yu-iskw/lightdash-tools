@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import { SecretString } from '@lightdash-tools/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+
 import { buildBrokerAuthorizationServerMetadata } from './as-metadata.js';
 import { buildLightdashAuthorizeUrl } from './lightdash-token.js';
 import { OAuthBrokerStore } from './pending-store.js';
@@ -11,27 +13,18 @@ import { verifyPkce } from './pkce.js';
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
 function baseConfig(overrides: Partial<McpHttpConfig> = {}): McpHttpConfig {
-  return {
-    lightdashUrl: 'https://app.lightdash.cloud',
+  return makeTestMcpHttpConfig({
     host: '0.0.0.0',
-    port: 3100,
-    publicUrl: 'https://mcp.example.com',
-    mcpPath: '/semantic-layer/v1/mcp',
-    authMode: 'lightdash-oauth',
     oauthClientId: 'ld-client',
     oauthClientSecret: new SecretString('ld-secret'),
-    allowedOrigins: [],
     maxBodyBytes: 1024 * 1024,
-    sessionTtlMs: 60_000,
-    maxSessions: 10,
     maxSessionsPerSubject: 2,
     sessionCleanupMs: 1000,
     requiredScopes: [],
     scopesSupported: [],
-    validateToken: true,
     tokenValidationCacheTtlMs: 10_000,
     ...overrides,
-  };
+  });
 }
 
 describe('oauth broker helpers', () => {

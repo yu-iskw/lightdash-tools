@@ -1,5 +1,4 @@
 import { timingSafeEqualString } from '../../transports/http-response.js';
-
 import { extractBearerToken } from '../bearer.js';
 
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';

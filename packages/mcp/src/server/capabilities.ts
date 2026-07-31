@@ -5,8 +5,8 @@
 import { getDefaultPersona } from '../personas/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
 
-import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from './request-context.js';
+import type { PersonaDefinition } from '../personas/types.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type RegisterCapabilitiesOptions = {

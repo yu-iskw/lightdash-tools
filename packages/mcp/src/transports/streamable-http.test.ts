@@ -12,31 +12,20 @@ import {
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
+import { makeTestMcpHttpConfig } from '../config/test-mcp-http-config.js';
 
 import { buildCorsHeaders, checkOrigin } from './http-response.js';
 import { createStreamableHttpServer, startStreamableHttpServer } from './streamable-http.js';
 
-import type { McpHttpConfig } from '../config/load-mcp-config.js';
-
-const oauthConfig: McpHttpConfig = {
-  lightdashUrl: 'https://app.lightdash.cloud',
-  host: '127.0.0.1',
+const oauthConfig = makeTestMcpHttpConfig({
   port: 0,
-  publicUrl: 'https://mcp.example.com',
-  mcpPath: '/semantic-layer/v1/mcp',
-  authMode: 'lightdash-oauth',
   oauthClientId: 'client-id',
-  allowedOrigins: [],
-  maxBodyBytes: 1024,
   sessionTtlMs: 10_000,
   maxSessions: 1000,
   maxSessionsPerSubject: 50,
-  sessionCleanupMs: 60_000,
-  requiredScopes: ['mcp:read'],
-  scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: false,
   tokenValidationCacheTtlMs: 60_000,
-};
+});
 
 const originalEnv = { ...process.env };
 

@@ -15,6 +15,7 @@ import {
 } from '@lightdash-tools/client';
 
 import { hashToken } from '../token-hash.js';
+
 import { TokenValidationCache } from './token-validation-cache.js';
 import { TokenValidationError } from './token-validation-error.js';
 
