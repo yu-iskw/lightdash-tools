@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-07-31]: In this runner, `pnpm` may be missing from `PATH` until `corepack enable` is executed. Run that first, or MCP package scripts that invoke nested `pnpm` commands fail with `sh: 1: pnpm: not found`.
 - [2026-07-31]: Playbook/prompt rewrite from live OAuth MCP runs on `jp-phr-dwh`: stick to user projectUuid (unpinned `list_projects` is org-wide); match explores by label **or** `name` `__{table}` (humanized labels); `_itm_*` often has zero explores; prefer explore-local metrics; `unknown field id` from short names; summarize huge `get_metric`/lineage.
 - [2026-07-31]: Semantic-layer multi-insight on large explores (e.g. `medico_session_summary`): `list_metrics` by table/explore id → often empty; by `medico` → hundreds of wrong tables. After filter `tableName === exploreId` is empty, use `get_explore` → `tables[baseTable].metrics` only. Playbook covers dimension shortlists + multi-insight cuts (trend/funnel/NPS/outcome/acquisition).
 - [2026-07-31]: Local hosted-OAuth smoke uses Cloudflare Tunnel (`cloudflared` → `:3100`, `PUBLIC_URL` in `.env` as `*.trycloudflare.com`), not free ngrok. Free ngrok interstitial breaks Cursor post-callback Mozilla PRM/AS GETs (`You are about…`); process still warns on `*.ngrok-free.app`.
