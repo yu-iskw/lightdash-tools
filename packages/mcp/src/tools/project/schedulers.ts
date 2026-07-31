@@ -7,9 +7,9 @@ import { z } from 'zod';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
-import { normalizeScheduler } from '../lib/redaction.js';
+import { destinationRedactionWarnings, normalizeScheduler } from '../lib/redaction.js';
 import { registerOrgAuditTool } from '../lib/register-org-audit.js';
-import { projectUuidField } from '../lib/schema-fields.js';
+import { allowedEmailDomainsField, projectUuidField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
@@ -57,7 +57,7 @@ export function registerListProjectSchedulers(
         search: z.string().optional(),
         formats: z.string().optional(),
         revealDestinations: z.boolean().optional(),
-        allowedEmailDomains: z.array(z.string()).optional(),
+        allowedEmailDomains: allowedEmailDomainsField(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().optional(),
         includeLatestRun: z.boolean().optional(),
@@ -114,9 +114,7 @@ export function registerListProjectSchedulers(
                 },
               ],
             },
-            warnings: reveal
-              ? []
-              : [{ code: 'REDACTED', message: 'Scheduler destinations redacted by default' }],
+            warnings: destinationRedactionWarnings(reveal),
           });
         },
     ),
@@ -135,7 +133,7 @@ export function registerGetScheduler(server: McpServer, contextProvider: McpCont
         projectUuid: projectUuidField(),
         schedulerUuid: z.string(),
         revealDestinations: z.boolean().optional(),
-        allowedEmailDomains: z.array(z.string()).optional(),
+        allowedEmailDomains: allowedEmailDomainsField(),
       },
     },
     wrapTool(
@@ -172,9 +170,7 @@ export function registerGetScheduler(server: McpServer, contextProvider: McpCont
               ...emptyCoverage(session.organizationUuid, pinned),
               projectUuids: [args.projectUuid],
             },
-            warnings: reveal
-              ? []
-              : [{ code: 'REDACTED', message: 'Scheduler destinations redacted by default' }],
+            warnings: destinationRedactionWarnings(reveal),
           });
         },
     ),

@@ -11,6 +11,7 @@ Read-only evidence collection for Lightdash organization administrators. Finding
 - Do not recommend deletion solely because content has low usage.
 - Do not claim SOC 2 / GDPR / ISO / HIPAA certification from these tools.
 - Do not crawl the whole org in one step — respect `pagination.complete` and stop after agreed page/project limits.
+- Do not request warehouse/dbt connection secrets via MCP — `warehouseConnection`, `dbtConnection`, and related credentials are never returned (ADR-0011); use `@lightdash-tools/client` or the CLI when operators need them.
 
 ## Tool catalog (`lightdash_*`)
 
@@ -36,7 +37,7 @@ Call `list_org_members` (paginate while `pagination.complete` is false, or stop 
 
 ### Phase 2 — Projects and access
 
-Call `list_org_projects`, then for a capped set of projects: `list_project_roles`, `list_project_direct_access`, `list_space_access`, and `resolve_effective_access`. Treat `list_project_direct_access` as direct grants only. Honor incomplete flags and truncation warnings.
+Call `list_org_projects`, then for a capped set of projects: `list_project_roles`, `list_project_direct_access`, `list_space_access`, and `resolve_effective_access`. Treat `list_project_direct_access` as direct grants only; emails are masked by default — pass `includeEmail=true` only when required. Pass `allowedEmailDomains` when classifying external direct-access principals. Honor incomplete flags and truncation warnings.
 
 ### Phase 3 — Content and health
 

@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 Accepted
 
+Amended by [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
+
 ## Context
 
 Organization administrators need evidence-backed inventory of identities, access, content health, usage signals, and scheduled deliveries. Extending the `semantic-layer` persona would mix governance metadata with explore/compile tools and weaken least-capability isolation ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)).
@@ -23,7 +25,7 @@ MCP [tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tool
 3. **Read-only metadata only:** registration asserts `readOnlyHint`, GET-backed operations, no warehouse query execution, no row-level data, no user-activity CSV `POST` download.
 4. Prefer v2 when semantically complete (content, roles, validation); retain v1 where required. Unsupported capabilities return coverage metadata, not silent empty success.
 5. Direct project access is labeled `direct_only` and never claimed as complete effective access. Effective access is composed with an explicit `complete` flag.
-6. Scheduler destinations are redacted by default; `revealDestinations` is opt-in.
+6. Scheduler destinations are redacted by default; `revealDestinations` is opt-in. Broader response sensitivity classes (emails, connection secrets) are defined in [ADR-0011](0011-mcp-tool-response-sensitivity-classes.md).
 7. Stdio selects the persona via explicit subcommand (`lightdash-mcp organization-audit`); bare `lightdash-mcp` remains `semantic-layer` ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md) amendment).
 8. Host-synthesized findings must carry policy assumptions and evidence; prompts must not claim compliance certification.
 9. Shared tool implementations live under `packages/mcp/src/tools/` in scope folders (`organization/`, `project/`, `space/`, `semantic/`, plus `lib/` helpers). The persona owns only `toolIds`, prompts, and playbook.

@@ -3,6 +3,7 @@
  */
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
+import { CREDENTIALS_OMITTED_WARNING, toProjectSummary } from '../lib/redaction.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 
@@ -16,18 +17,19 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
     {
       title: 'List projects',
       description:
-        'List all projects in the current organization (or the single pinned project when X-Lightdash-Project is set)',
+        'List project metadata in the current organization (or the pinned project when X-Lightdash-Project is set). Connection credentials are never returned.',
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(contextProvider, (c) => async () => {
       const pinned = getPinnedProjectUuid();
-      if (pinned) {
-        const project = await c.v1.projects.getProject(pinned);
-        return jsonToolResult([project]);
-      }
-      const projects = await c.v1.projects.listProjects();
-      return jsonToolResult(projects);
+      const projects = pinned
+        ? [await c.v1.projects.getProject(pinned)]
+        : await c.v1.projects.listProjects();
+      return jsonToolResult({
+        data: projects.map((p) => toProjectSummary(p)),
+        warnings: [CREDENTIALS_OMITTED_WARNING],
+      });
     }),
   );
 }
@@ -38,13 +40,17 @@ export function registerGetProject(server: McpServer, contextProvider: McpContex
     'get_project',
     {
       title: 'Get project',
-      description: 'Get a project by UUID',
+      description:
+        'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides)',
       inputSchema: { projectUuid: projectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },
     wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
       const project = await c.v1.projects.getProject(projectUuid);
-      return jsonToolResult(project);
+      return jsonToolResult({
+        data: toProjectSummary(project),
+        warnings: [CREDENTIALS_OMITTED_WARNING],
+      });
     }),
   );
 }

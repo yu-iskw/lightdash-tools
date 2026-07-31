@@ -4,6 +4,8 @@ MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (exp
 
 Mutation/admin write surfaces are **not** registered on MCP — use `@lightdash-tools/client` or the CLI.
 
+**Response sensitivity** ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)): `list_projects` / `get_project` return project metadata only (warehouse/dbt connection secrets are never exposed). Organization-audit tools mask emails by default (`includeEmail=true` to reveal) and redact scheduler destinations by default (`revealDestinations=true` to reveal). There is no global `withSensitive` flag.
+
 ## Directory map
 
 | Edit…                                                   | Path                                                 |

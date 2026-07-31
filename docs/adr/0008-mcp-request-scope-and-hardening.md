@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 Accepted
 
+Related to [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
+
 ## Context
 
 Process-level `LIGHTDASH_TOOLS_SAFETY_MODE`, dry-run, and project allowlist were designed for a broad MCP catalog. Personas ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)) fix the tool set in code; the shipped `semantic-layer` persona is read-only discovery/compile. Those process knobs became no-ops or overlapped HTTP project pinning, and suggested more protection than they provided. Opaque OAuth tokens cannot be authorized via local JWT scope checks ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)).

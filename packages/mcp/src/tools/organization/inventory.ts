@@ -6,40 +6,25 @@ import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
-import { maybeRedactEmail } from '../lib/redaction.js';
+import {
+  CREDENTIALS_OMITTED_WARNING,
+  emailRedactionWarnings,
+  toGroupSummary,
+  toOrgMemberSummary,
+  toProjectSummary,
+} from '../lib/redaction.js';
 import { registerOrgAuditTool } from '../lib/register-org-audit.js';
-import { projectUuidField } from '../lib/schema-fields.js';
+import {
+  allowedEmailDomainsField,
+  includeEmailField,
+  projectUuidField,
+} from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import { resolveSessionOrganization } from './binding.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-function redactGroupMembers(group: unknown, includeEmail: boolean): Record<string, unknown> {
-  const record =
-    group && typeof group === 'object' && !Array.isArray(group)
-      ? (group as Record<string, unknown>)
-      : {};
-  const members = Array.isArray(record.members) ? record.members : undefined;
-  if (!members) return record;
-  return {
-    ...record,
-    members: members.map((m) => {
-      if (!m || typeof m !== 'object') return m;
-      const member = m as Record<string, unknown>;
-      return {
-        userUuid: member.userUuid,
-        firstName: member.firstName,
-        lastName: member.lastName,
-        email: maybeRedactEmail(
-          typeof member.email === 'string' ? member.email : undefined,
-          includeEmail,
-        ),
-      };
-    }),
-  };
-}
 
 export function registerGetOrgProfile(
   server: McpServer,
@@ -94,10 +79,8 @@ export function registerListOrgMembers(
         search: z.string().optional().describe('Search query'),
         projectUuid: projectUuidField().optional(),
         includeGroups: z.boolean().optional(),
-        includeEmail: z
-          .boolean()
-          .optional()
-          .describe('Return full emails when true (default false)'),
+        includeEmail: includeEmailField(),
+        allowedEmailDomains: allowedEmailDomainsField(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().optional(),
       },
@@ -110,6 +93,7 @@ export function registerListOrgMembers(
           projectUuid?: string;
           includeGroups?: boolean;
           includeEmail?: boolean;
+          allowedEmailDomains?: string[];
           page?: number;
           pageSize?: number;
         }) => {
@@ -122,17 +106,9 @@ export function registerListOrgMembers(
             page: args.page,
             pageSize: args.pageSize,
           });
-          const data = (result.data ?? []).map((m) => ({
-            userUuid: m.userUuid,
-            organizationUuid: m.organizationUuid,
-            firstName: m.firstName,
-            lastName: m.lastName,
-            email: maybeRedactEmail(m.email, includeEmail),
-            isActive: m.isActive,
-            isInviteExpired: m.isInviteExpired,
-            role: m.role,
-            roleUuid: m.roleUuid,
-          }));
+          const data = (result.data ?? []).map((m) =>
+            toOrgMemberSummary(m, includeEmail, args.allowedEmailDomains),
+          );
           const complete = isPageComplete(
             data.length,
             result.pagination?.totalResults,
@@ -159,14 +135,7 @@ export function registerListOrgMembers(
                 },
               ],
             },
-            warnings: includeEmail
-              ? []
-              : [
-                  {
-                    code: 'REDACTED',
-                    message: 'Email addresses redacted; pass includeEmail=true to reveal',
-                  },
-                ],
+            warnings: emailRedactionWarnings(includeEmail),
           });
         },
     ),
@@ -182,25 +151,28 @@ export function registerGetOrgMember(server: McpServer, contextProvider: McpCont
       description: 'Get one organization member by UUID',
       inputSchema: {
         userUuid: z.string().describe('User UUID'),
-        includeEmail: z.boolean().optional(),
+        includeEmail: includeEmailField(),
+        allowedEmailDomains: allowedEmailDomainsField(),
       },
     },
-    wrapTool(contextProvider, (c) => async (args: { userUuid: string; includeEmail?: boolean }) => {
-      const session = await resolveSessionOrganization(c);
-      const m = await c.v1.users.getMemberByUuid(args.userUuid);
-      return jsonToolResult({
-        userUuid: m.userUuid,
-        organizationUuid: m.organizationUuid,
-        firstName: m.firstName,
-        lastName: m.lastName,
-        email: maybeRedactEmail(m.email, args.includeEmail === true),
-        isActive: m.isActive,
-        isInviteExpired: m.isInviteExpired,
-        role: m.role,
-        roleUuid: m.roleUuid,
-        coverage: emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
-      });
-    }),
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async (args: {
+          userUuid: string;
+          includeEmail?: boolean;
+          allowedEmailDomains?: string[];
+        }) => {
+          const session = await resolveSessionOrganization(c);
+          const includeEmail = args.includeEmail === true;
+          const m = await c.v1.users.getMemberByUuid(args.userUuid);
+          return jsonToolResult({
+            ...toOrgMemberSummary(m, includeEmail, args.allowedEmailDomains),
+            coverage: emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
+            warnings: emailRedactionWarnings(includeEmail),
+          });
+        },
+    ),
   );
 }
 
@@ -217,10 +189,8 @@ export function registerListOrgGroups(
       inputSchema: {
         search: z.string().optional(),
         includeMembers: z.number().int().min(0).max(100).optional(),
-        includeEmail: z
-          .boolean()
-          .optional()
-          .describe('Return full member emails when true (default false)'),
+        includeEmail: includeEmailField(),
+        allowedEmailDomains: allowedEmailDomainsField(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().optional(),
       },
@@ -232,6 +202,7 @@ export function registerListOrgGroups(
           search?: string;
           includeMembers?: number;
           includeEmail?: boolean;
+          allowedEmailDomains?: string[];
           page?: number;
           pageSize?: number;
         }) => {
@@ -244,7 +215,7 @@ export function registerListOrgGroups(
             pageSize: args.pageSize,
           });
           const raw = result.data ?? [];
-          const data = raw.map((g) => redactGroupMembers(g, includeEmail));
+          const data = raw.map((g) => toGroupSummary(g, includeEmail, args.allowedEmailDomains));
           const complete = isPageComplete(
             data.length,
             result.pagination?.totalResults,
@@ -271,15 +242,7 @@ export function registerListOrgGroups(
                 },
               ],
             },
-            warnings:
-              args.includeMembers && !includeEmail
-                ? [
-                    {
-                      code: 'REDACTED' as const,
-                      message: 'Group member emails redacted; pass includeEmail=true to reveal',
-                    },
-                  ]
-                : [],
+            warnings: args.includeMembers ? emailRedactionWarnings(includeEmail) : [],
           });
         },
     ),
@@ -310,15 +273,7 @@ export function registerListOrgProjects(
       if (!args.includePreviewProjects) {
         projects = projects.filter((p) => p.type !== 'PREVIEW');
       }
-      const data = projects.map((p) => ({
-        projectUuid: p.projectUuid,
-        name: p.name,
-        type: p.type,
-        upstreamProjectUuid: p.upstreamProjectUuid,
-        createdByUserUuid: p.createdByUserUuid,
-        createdAt: p.createdAt,
-        warehouseType: p.warehouseType,
-      }));
+      const data = projects.map((p) => toProjectSummary(p));
       return jsonToolResult({
         data,
         pagination: { returned: data.length, complete: true },
@@ -335,7 +290,7 @@ export function registerListOrgProjects(
             },
           ],
         },
-        warnings: [],
+        warnings: [CREDENTIALS_OMITTED_WARNING],
       });
     }),
   );
