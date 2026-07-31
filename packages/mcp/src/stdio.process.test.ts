@@ -64,7 +64,9 @@ async function readJsonRpcResponse(
       const stderr = getStderr().trim();
       const suffix = stderr ? `\nstderr:\n${stderr}` : '';
       reject(
-        new Error(`MCP process exited early (code=${code}) before response id=${expectedId}${suffix}`),
+        new Error(
+          `MCP process exited early (code=${code}) before response id=${expectedId}${suffix}`,
+        ),
       );
     };
 
