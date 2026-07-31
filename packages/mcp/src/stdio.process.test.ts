@@ -141,7 +141,7 @@ describe('stdio process smoke', () => {
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
     expect(listResult.tools!.length).toBeGreaterThan(0);
-    expect(listResult.tools!.some((t) => t.name === 'ldt__list_projects')).toBe(true);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_list_projects')).toBe(true);
 
     killChild(child);
     child = undefined;

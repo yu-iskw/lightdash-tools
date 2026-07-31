@@ -32,7 +32,7 @@ describe('MCP protocol contract (InMemoryTransport)', () => {
     server = undefined;
   });
 
-  it('initialize and tools/list expose ldt__ tools including list_projects', async () => {
+  it('initialize and tools/list expose lightdash_ tools including list_projects', async () => {
     const contextProvider = createStubContextProvider();
     server = createLightdashMcpServer(contextProvider);
 

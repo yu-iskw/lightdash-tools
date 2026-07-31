@@ -19,7 +19,7 @@ Create a new `packages/mcp/src/tools/<resource>.ts` and register it in
 
 | Concern            | Pattern                                                                         |
 | ------------------ | ------------------------------------------------------------------------------- |
-| Tool name          | `ldt__<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`)        |
+| Tool name          | `lightdash_<resource>_<action>` (prefix added automatically by `TOOL_PREFIX`)   |
 | Read-only tools    | `annotations: READ_ONLY_DEFAULT`                                                |
 | Idempotent writes  | `annotations: WRITE_IDEMPOTENT`                                                 |
 | Destructive writes | `annotations: WRITE_DESTRUCTIVE` (reversible only; see ADR-0004)                |
