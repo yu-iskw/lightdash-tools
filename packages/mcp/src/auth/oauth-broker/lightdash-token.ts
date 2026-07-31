@@ -49,12 +49,17 @@ export async function exchangeLightdashAuthorizationCode(
     client_secret: config.oauthClientSecret.expose(),
   });
 
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Accept: 'application/json',
+  };
+  if (config.proxyAuthorization) {
+    headers['Proxy-Authorization'] = config.proxyAuthorization.expose();
+  }
+
   const response = await fetch(tokenUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
+    headers,
     body,
   });
 

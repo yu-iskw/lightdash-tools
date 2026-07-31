@@ -21,11 +21,13 @@ import type { IssuedAuthorizationCode } from './pending-store.js';
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-/** Public DCR stub client_id shared by authorize / token / register. */
-const MCP_PUBLIC_CLIENT_ID = 'mcp-public-client' as const;
-
 /** Schemes that must never be used as OAuth redirect targets. */
 const BLOCKED_REDIRECT_SCHEMES = new Set(['javascript:', 'data:', 'vbscript:', 'file:']);
+
+const AS_BUSY = {
+  error: 'temporarily_unavailable',
+  error_description: 'Authorization server busy; retry later',
+} as const;
 
 export interface OAuthBroker {
   handle: (req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>;
@@ -116,27 +118,31 @@ function isAllowedClientRedirectUri(redirectUri: string): boolean {
   }
 }
 
-function parseAuthorizeRequest(query: URLSearchParams):
-  | {
-      ok: true;
-      value: {
-        clientId: string;
-        redirectUri: string;
-        clientState?: string;
-        codeChallenge: string;
-        resource?: string;
-        scope?: string;
-      };
-    }
-  | { ok: false; status: number; body: Record<string, string> } {
-  const responseType = query.get('response_type');
-  if (responseType !== 'code') {
+type AuthorizeParseFail = { ok: false; status: number; body: Record<string, string> };
+
+function parseRegisteredClientRedirect(
+  query: URLSearchParams,
+  store: OAuthBrokerStore,
+): AuthorizeParseFail | { ok: true; clientId: string; redirectUri: string } {
+  const clientId = query.get('client_id');
+  if (!clientId) {
     return {
       ok: false,
       status: 400,
       body: {
-        error: 'unsupported_response_type',
-        error_description: 'Only response_type=code is supported',
+        error: 'invalid_request',
+        error_description: 'client_id is required (register via /oauth/register first)',
+      },
+    };
+  }
+
+  if (!store.getClient(clientId)) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'invalid_client',
+        error_description: 'Unknown client_id; register via /oauth/register first',
       },
     };
   }
@@ -152,6 +158,53 @@ function parseAuthorizeRequest(query: URLSearchParams):
           'redirect_uri is required and must be https, localhost http, or a custom scheme',
       },
     };
+  }
+
+  if (!store.isRedirectAllowedForClient(clientId, redirectUri)) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        error_description: 'redirect_uri is not registered for this client_id',
+      },
+    };
+  }
+
+  return { ok: true, clientId, redirectUri };
+}
+
+function parseAuthorizeRequest(
+  query: URLSearchParams,
+  store: OAuthBrokerStore,
+):
+  | AuthorizeParseFail
+  | {
+      ok: true;
+      value: {
+        clientId: string;
+        redirectUri: string;
+        clientState?: string;
+        codeChallenge: string;
+        resource?: string;
+        scope?: string;
+      };
+    } {
+  const responseType = query.get('response_type');
+  if (responseType !== 'code') {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'unsupported_response_type',
+        error_description: 'Only response_type=code is supported',
+      },
+    };
+  }
+
+  const registered = parseRegisteredClientRedirect(query, store);
+  if (!registered.ok) {
+    return registered;
   }
 
   const codeChallenge = query.get('code_challenge') ?? undefined;
@@ -170,8 +223,8 @@ function parseAuthorizeRequest(query: URLSearchParams):
   return {
     ok: true,
     value: {
-      clientId: query.get('client_id') ?? MCP_PUBLIC_CLIENT_ID,
-      redirectUri,
+      clientId: registered.clientId,
+      redirectUri: registered.redirectUri,
       clientState: query.get('state') ?? undefined,
       codeChallenge,
       resource: query.get('resource') ?? undefined,
@@ -191,7 +244,7 @@ function handleAuthorize(
     return;
   }
 
-  const parsed = parseAuthorizeRequest(readQuery(req));
+  const parsed = parseAuthorizeRequest(readQuery(req), store);
   if (!parsed.ok) {
     sendJson(res, parsed.status, parsed.body);
     return;
@@ -207,10 +260,7 @@ function handleAuthorize(
     scope,
   });
   if (!pending) {
-    sendJson(res, 503, {
-      error: 'temporarily_unavailable',
-      error_description: 'Authorization server busy; retry later',
-    });
+    sendJson(res, 503, { ...AS_BUSY });
     return;
   }
 
@@ -280,17 +330,16 @@ async function handleCallback(
 
   try {
     const tokens = await exchangeLightdashAuthorizationCode(config, code);
+    // Do not persist/return refresh_token: broker only supports authorization_code.
     const issued = store.issueCode(pending, {
       accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
       expiresIn: tokens.expires_in,
       tokenType: tokens.token_type,
       scope: tokens.scope,
     });
     if (!issued) {
       redirectToClient(res, pending.redirectUri, {
-        error: 'temporarily_unavailable',
-        error_description: 'Authorization server busy; retry later',
+        ...AS_BUSY,
         state: pending.clientState,
       });
       return;
@@ -331,15 +380,15 @@ function validateTokenGrant(
 
   const code = params.get('code');
   const redirectUri = params.get('redirect_uri');
-  const clientId = params.get('client_id') ?? MCP_PUBLIC_CLIENT_ID;
+  const clientId = params.get('client_id');
   const codeVerifier = params.get('code_verifier') ?? undefined;
 
-  if (!code || !redirectUri) {
+  if (!code || !redirectUri || !clientId) {
     return {
       status: 400,
       body: {
         error: 'invalid_request',
-        error_description: 'code and redirect_uri are required',
+        error_description: 'code, redirect_uri, and client_id are required',
       },
     };
   }
@@ -403,7 +452,6 @@ async function handleToken(
     access_token: issued.accessToken,
     token_type: issued.tokenType,
     expires_in: issued.expiresIn ?? 3600,
-    refresh_token: issued.refreshToken,
     scope: issued.scope,
   });
 }
@@ -412,6 +460,7 @@ async function handleRegister(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
+  store: OAuthBrokerStore,
 ): Promise<void> {
   if (req.method !== 'POST') {
     res.writeHead(405, { Allow: 'POST' }).end();
@@ -421,14 +470,38 @@ async function handleRegister(
   const params = await readFormOrJson(req, res, config.maxBodyBytes);
   if (!params) return;
 
-  // Thin DCR stub: public client; real confidential credentials stay server-side for Lightdash.
+  // Public MCP client DCR; confidential Lightdash credentials stay server-side.
   // JSON bodies expand array redirect_uris via readFormOrJson; form bodies use repeated keys.
   const redirectUris = params.getAll('redirect_uris');
+  if (redirectUris.length === 0) {
+    sendJson(res, 400, {
+      error: 'invalid_client_metadata',
+      error_description: 'redirect_uris is required',
+    });
+    return;
+  }
+
+  for (const uri of redirectUris) {
+    if (!isAllowedClientRedirectUri(uri)) {
+      sendJson(res, 400, {
+        error: 'invalid_redirect_uri',
+        error_description:
+          'Each redirect_uri must be https, localhost http, or a non-dangerous custom scheme',
+      });
+      return;
+    }
+  }
+
+  const registered = store.registerClient(redirectUris);
+  if (!registered) {
+    sendJson(res, 503, { ...AS_BUSY });
+    return;
+  }
 
   sendJson(res, 201, {
-    client_id: MCP_PUBLIC_CLIENT_ID,
-    client_id_issued_at: Math.floor(Date.now() / 1000),
-    redirect_uris: redirectUris.length > 0 ? redirectUris : undefined,
+    client_id: registered.clientId,
+    client_id_issued_at: Math.floor(registered.createdAt / 1000),
+    redirect_uris: [...registered.redirectUris],
     grant_types: ['authorization_code'],
     response_types: ['code'],
     token_endpoint_auth_method: 'none',
@@ -489,7 +562,7 @@ export function createOAuthBroker(config: McpHttpConfig): OAuthBroker {
       }
 
       if (path === OAUTH_REGISTER_PATH) {
-        await handleRegister(req, res, config);
+        await handleRegister(req, res, config, store);
         return true;
       }
 
