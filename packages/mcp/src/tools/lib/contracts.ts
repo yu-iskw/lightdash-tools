@@ -41,28 +41,6 @@ export type AuditCoverage = {
   complete: boolean;
 };
 
-export type AuditEvidence = {
-  resourceType: string;
-  resourceUuid?: string;
-  attributes: Record<string, unknown>;
-  sourceTool: `lightdash_${string}`;
-  sourceEndpoint?: string;
-  observedAt: string;
-};
-
-export type AuditFinding = {
-  ruleId: string;
-  title: string;
-  domain: 'authorization' | 'content' | 'delivery' | 'identity' | 'semantic-layer' | 'usage';
-  severity: 'critical' | 'high' | 'info' | 'review';
-  confidence: 'high' | 'low' | 'medium';
-  status: 'not_evaluated' | 'observed' | 'suspected';
-  summary: string;
-  evidence: AuditEvidence[];
-  policyAssumptions: Record<string, unknown>;
-  remediationGuidance?: string;
-};
-
 export function emptyCoverage(organizationUuid: string, projectPin?: string): AuditCoverage {
   return {
     observedAt: new Date().toISOString(),

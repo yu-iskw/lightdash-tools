@@ -5,25 +5,26 @@
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
-import { projectUuidField } from '../schema-fields.js';
+import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
+import { maybeRedactEmail } from '../lib/redaction.js';
+import { registerOrgAuditTool } from '../lib/register-org-audit.js';
+import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import { emptyCoverage, isPageComplete } from './contracts.js';
-import { resolveSessionOrganization } from './org-binding.js';
-import { maybeRedactEmail } from './redaction.js';
-import { registerOrgAuditTool } from './register.js';
+import { resolveSessionOrganization } from './binding.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function redactGroupMembers(
-  group: Record<string, unknown>,
-  includeEmail: boolean,
-): Record<string, unknown> {
-  const members = Array.isArray(group.members) ? group.members : undefined;
-  if (!members) return group;
+function redactGroupMembers(group: unknown, includeEmail: boolean): Record<string, unknown> {
+  const record =
+    group && typeof group === 'object' && !Array.isArray(group)
+      ? (group as Record<string, unknown>)
+      : {};
+  const members = Array.isArray(record.members) ? record.members : undefined;
+  if (!members) return record;
   return {
-    ...group,
+    ...record,
     members: members.map((m) => {
       if (!m || typeof m !== 'object') return m;
       const member = m as Record<string, unknown>;
@@ -242,7 +243,7 @@ export function registerListOrgGroups(
             page: args.page,
             pageSize: args.pageSize,
           });
-          const raw = (result.data ?? []) as unknown as Array<Record<string, unknown>>;
+          const raw = result.data ?? [];
           const data = raw.map((g) => redactGroupMembers(g, includeEmail));
           const complete = isPageComplete(
             data.length,

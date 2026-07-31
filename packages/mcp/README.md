@@ -170,9 +170,8 @@ Read-only organization inventory, access, content health, usage signals, and sch
 - **Access**: `list_org_role_assignments`, `list_custom_roles`, `get_custom_role`, `list_project_roles`, `list_project_direct_access`, `list_space_access`, `resolve_effective_access`
 - **Content / health**: `list_content`, `get_dashboard_meta`, `list_validation_results`, `get_project_user_activity`
 - **Delivery**: `list_project_schedulers`, `get_scheduler`
-- **Composed**: `audit_identity_access`, `audit_content_health`, `audit_scheduled_deliveries`, `audit_org_summary`
 
-Prompts and playbook: `lightdash://playbooks/organization-audit`. No mutation, warehouse queries, or user-activity CSV download.
+Prompts and playbook: `lightdash://playbooks/organization-audit` (host orchestrates multi-step audits via primitives). No mutation, warehouse queries, or user-activity CSV download.
 
 ### CLI Binary
 

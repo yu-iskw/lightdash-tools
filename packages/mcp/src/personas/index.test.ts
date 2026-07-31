@@ -41,9 +41,9 @@ describe('personas', () => {
     expect(getDefaultPersona().toolIds).toEqual(persona.toolIds);
   });
 
-  it('organization-audit allowlists 22 tools and short server name', () => {
+  it('organization-audit allowlists 18 tools and short server name', () => {
     const persona = getPersona('organization-audit');
-    expect(persona.toolIds).toHaveLength(22);
+    expect(persona.toolIds).toHaveLength(18);
     expect(persona.toolIds).toEqual([...ORGANIZATION_AUDIT_TOOL_IDS]);
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-org-audit');
   });

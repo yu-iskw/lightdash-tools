@@ -4,15 +4,17 @@
 
 import { z } from 'zod';
 
+import { projectUuidField } from '../lib/schema-fields.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+
 import {
   flattenExploreDimensions,
   summarizeDimensions,
   summarizeExplores,
 } from './explore-helpers.js';
-import { exploreIdField, projectUuidField } from './schema-fields.js';
-import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
+import { exploreIdField } from './schema-fields.js';
 
-import type { McpContextProvider } from '../server/request-context.js';
+import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerListExplores(server: McpServer, contextProvider: McpContextProvider): void {

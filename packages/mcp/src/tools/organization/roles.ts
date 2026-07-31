@@ -2,26 +2,23 @@
  * Roles and project access primitive tools.
  */
 
-import { LightdashApiError } from '@lightdash-tools/client';
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
-import { projectUuidField } from '../schema-fields.js';
+import {
+  isForbiddenOrNotFound,
+  isUnsupportedCapabilityError,
+  visibilityFailureReason,
+} from '../lib/api-errors.js';
+import { emptyCoverage } from '../lib/contracts.js';
+import { registerOrgAuditTool } from '../lib/register-org-audit.js';
+import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import { emptyCoverage } from './contracts.js';
-import { resolveSessionOrganization } from './org-binding.js';
-import { registerOrgAuditTool } from './register.js';
+import { resolveSessionOrganization } from './binding.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-function isUnsupportedCapabilityError(err: unknown): boolean {
-  return (
-    err instanceof LightdashApiError &&
-    (err.statusCode === 403 || err.statusCode === 404 || err.statusCode === 501)
-  );
-}
 
 export function registerListOrgRoleAssignments(
   server: McpServer,
@@ -118,6 +115,29 @@ export function registerListCustomRoles(
           warnings: [],
         });
       } catch (err) {
+        if (isForbiddenOrNotFound(err)) {
+          return jsonToolResult({
+            data: [],
+            pagination: { returned: 0, complete: false },
+            coverage: {
+              ...emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
+              inaccessibleScopes: [
+                {
+                  scopeType: 'organization',
+                  scopeUuid: session.organizationUuid,
+                  reason: visibilityFailureReason(err),
+                },
+              ],
+              complete: false,
+            },
+            warnings: [
+              {
+                code: 'PARTIAL_VISIBILITY',
+                message: `Custom roles unavailable: ${err instanceof Error ? err.message : String(err)}`,
+              },
+            ],
+          });
+        }
         if (!isUnsupportedCapabilityError(err)) {
           throw err;
         }

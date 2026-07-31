@@ -2,12 +2,11 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
-import { getPinnedProjectUuid } from '../governance/project-pin.js';
+import { getPinnedProjectUuid } from '../../governance/project-pin.js';
+import { projectUuidField } from '../lib/schema-fields.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 
-import { projectUuidField } from './schema-fields.js';
-import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
-
-import type { McpContextProvider } from '../server/request-context.js';
+import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerListProjects(server: McpServer, contextProvider: McpContextProvider): void {

@@ -1,3 +1,3 @@
 kind: feat
-body: Add read-only organization-audit MCP persona at /organization-audit/v1/mcp with hybrid inventory and composed audit tools.
+body: Add read-only organization-audit MCP persona at /organization-audit/v1/mcp with 18 inventory/access/content/scheduler primitives (playbook-orchestrated; no composed audit_* tools).
 time: 2026-07-31T15:51:00.281552+09:00

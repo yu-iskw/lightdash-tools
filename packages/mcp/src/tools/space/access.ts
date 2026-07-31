@@ -9,16 +9,16 @@
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
-import { projectUuidField } from '../schema-fields.js';
+import { isForbiddenOrNotFound, visibilityFailureReason } from '../lib/api-errors.js';
+import { mapWithConcurrency } from '../lib/concurrency.js';
+import { emptyCoverage } from '../lib/contracts.js';
+import { registerOrgAuditTool } from '../lib/register-org-audit.js';
+import { projectUuidField } from '../lib/schema-fields.js';
+import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import { mapWithConcurrency } from './concurrency.js';
-import { emptyCoverage } from './contracts.js';
-import { resolveSessionOrganization } from './org-binding.js';
-import { registerOrgAuditTool } from './register.js';
-
-import type { AuditWarning } from './contracts.js';
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { AuditCoverage, AuditWarning } from '../lib/contracts.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -44,9 +44,11 @@ async function loadSpaceAccess(
 ): Promise<{
   data: SpaceAccessRow[];
   warnings: AuditWarning[];
+  inaccessibleScopes: AuditCoverage['inaccessibleScopes'];
   truncated: boolean;
 }> {
   const warnings: AuditWarning[] = [];
+  const inaccessibleScopes: AuditCoverage['inaccessibleScopes'] = [];
   let truncated = false;
 
   let spaceList: Array<{
@@ -57,39 +59,66 @@ async function loadSpaceAccess(
     inheritParentPermissions?: boolean;
     inheritsFromOrgOrProject?: boolean;
     userAccess?: unknown;
-  }>;
+  }> = [];
 
-  if (spaceUuid) {
-    spaceList = [await client.v1.spaces.getSpace(projectUuid, spaceUuid)];
-  } else {
-    const summaries = await client.v1.spaces.listSpacesInProject(projectUuid);
-    if (summaries.length > MAX_SPACES_PER_PROJECT) {
-      truncated = true;
-      warnings.push({
-        code: 'TRUNCATED',
-        message: `Space detail fetch capped at ${MAX_SPACES_PER_PROJECT} of ${summaries.length} spaces`,
+  try {
+    if (spaceUuid) {
+      spaceList = [await client.v1.spaces.getSpace(projectUuid, spaceUuid)];
+    } else {
+      const summaries = await client.v1.spaces.listSpacesInProject(projectUuid);
+      if (summaries.length > MAX_SPACES_PER_PROJECT) {
+        truncated = true;
+        warnings.push({
+          code: 'TRUNCATED',
+          message: `Space detail fetch capped at ${MAX_SPACES_PER_PROJECT} of ${summaries.length} spaces`,
+        });
+      }
+      const capped = summaries.slice(0, MAX_SPACES_PER_PROJECT);
+      spaceList = await mapWithConcurrency(capped, SPACE_FETCH_CONCURRENCY, async (summary) => {
+        try {
+          return await client.v1.spaces.getSpace(projectUuid, summary.uuid);
+        } catch (err) {
+          if (!isForbiddenOrNotFound(err)) {
+            throw err;
+          }
+          warnings.push({
+            code: 'PARTIAL_VISIBILITY',
+            message: `Could not load space detail for ${summary.uuid}`,
+            resourceUuid: summary.uuid,
+          });
+          inaccessibleScopes.push({
+            scopeType: 'space',
+            scopeUuid: summary.uuid,
+            reason: visibilityFailureReason(err),
+          });
+          return {
+            uuid: summary.uuid,
+            name: summary.name,
+            access: summary.userAccess ? [summary.userAccess] : [],
+            groupsAccess: [],
+            inheritParentPermissions: summary.inheritParentPermissions,
+            inheritsFromOrgOrProject: summary.inheritsFromOrgOrProject,
+          };
+        }
       });
     }
-    const capped = summaries.slice(0, MAX_SPACES_PER_PROJECT);
-    spaceList = await mapWithConcurrency(capped, SPACE_FETCH_CONCURRENCY, async (summary) => {
-      try {
-        return await client.v1.spaces.getSpace(projectUuid, summary.uuid);
-      } catch {
-        warnings.push({
-          code: 'PARTIAL_VISIBILITY',
-          message: `Could not load space detail for ${summary.uuid}`,
-          resourceUuid: summary.uuid,
-        });
-        return {
-          uuid: summary.uuid,
-          name: summary.name,
-          access: summary.userAccess ? [summary.userAccess] : [],
-          groupsAccess: [],
-          inheritParentPermissions: summary.inheritParentPermissions,
-          inheritsFromOrgOrProject: summary.inheritsFromOrgOrProject,
-        };
-      }
+  } catch (err) {
+    if (!isForbiddenOrNotFound(err)) {
+      throw err;
+    }
+    warnings.push({
+      code: 'PARTIAL_VISIBILITY',
+      message: spaceUuid
+        ? `Could not load space ${spaceUuid}`
+        : `Could not list spaces for project ${projectUuid}`,
+      resourceUuid: spaceUuid ?? projectUuid,
     });
+    inaccessibleScopes.push({
+      scopeType: spaceUuid ? 'space' : 'project',
+      scopeUuid: spaceUuid ?? projectUuid,
+      reason: visibilityFailureReason(err),
+    });
+    return { data: [], warnings, inaccessibleScopes, truncated };
   }
 
   const data: SpaceAccessRow[] = [];
@@ -128,7 +157,7 @@ async function loadSpaceAccess(
       });
     }
   }
-  return { data, warnings, truncated };
+  return { data, warnings, inaccessibleScopes, truncated };
 }
 
 export type EffectiveAccessRecord = {
@@ -292,7 +321,7 @@ export function registerListSpaceAccess(
       (c) =>
         async (args: { projectUuid: string; spaceUuid?: string; includeInherited?: boolean }) => {
           const session = await resolveSessionOrganization(c);
-          const { data, warnings, truncated } = await loadSpaceAccess(
+          const { data, warnings, inaccessibleScopes, truncated } = await loadSpaceAccess(
             c,
             args.projectUuid,
             args.spaceUuid,
@@ -309,6 +338,7 @@ export function registerListSpaceAccess(
             coverage: {
               ...emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
               projectUuids: [args.projectUuid],
+              inaccessibleScopes,
               complete,
               apiResolutions: [
                 {
@@ -357,17 +387,57 @@ export function registerResolveEffectiveAccess(
           });
         }
 
+        const warnings: AuditWarning[] = [];
+        const inaccessibleScopes: AuditCoverage['inaccessibleScopes'] = [];
+
+        const settle = async <T>(
+          label: string,
+          scopeType: 'organization' | 'project' | 'space',
+          promise: Promise<T>,
+        ): Promise<T | undefined> => {
+          try {
+            return await promise;
+          } catch (err) {
+            if (!isForbiddenOrNotFound(err)) throw err;
+            warnings.push({
+              code: 'PARTIAL_VISIBILITY',
+              message: `Could not load ${label}`,
+              resourceUuid: scopeType === 'organization' ? session.organizationUuid : projectUuid,
+            });
+            inaccessibleScopes.push({
+              scopeType,
+              scopeUuid: scopeType === 'organization' ? session.organizationUuid : projectUuid,
+              reason: visibilityFailureReason(err),
+            });
+            return undefined;
+          }
+        };
+
         const [orgAssignments, projectAssignments, directAccess, spaceResult] = await Promise.all([
-          c.v2.organizationRoles.listRoleAssignments(session.organizationUuid),
-          c.v2.projectRoleAssignments.listAssignments(projectUuid),
-          c.v1.projectAccess.listProjectAccess(projectUuid),
+          settle(
+            'organization role assignments',
+            'organization',
+            c.v2.organizationRoles.listRoleAssignments(session.organizationUuid),
+          ),
+          settle(
+            'project role assignments',
+            'project',
+            c.v2.projectRoleAssignments.listAssignments(projectUuid),
+          ),
+          settle(
+            'project direct access',
+            'project',
+            c.v1.projectAccess.listProjectAccess(projectUuid),
+          ),
           loadSpaceAccess(c, projectUuid, args.spaceUuid, true),
         ]);
 
+        inaccessibleScopes.push(...spaceResult.inaccessibleScopes);
+
         let records = composeEffectiveAccessRecords({
-          orgAssignments,
-          projectAssignments,
-          directAccess,
+          orgAssignments: orgAssignments ?? [],
+          projectAssignments: projectAssignments ?? [],
+          directAccess: directAccess ?? [],
           spaceAccess: spaceResult.data,
           projectUuid,
         });
@@ -387,6 +457,7 @@ export function registerResolveEffectiveAccess(
           coverage: {
             ...emptyCoverage(session.organizationUuid, pinned),
             projectUuids: [projectUuid],
+            inaccessibleScopes,
             complete: false,
           },
           warnings: [
@@ -395,6 +466,7 @@ export function registerResolveEffectiveAccess(
               message:
                 'Effective access is best-effort from observable APIs; role precedence is not invented when paths conflict',
             },
+            ...warnings,
             ...spaceResult.warnings,
             ...(truncated
               ? [

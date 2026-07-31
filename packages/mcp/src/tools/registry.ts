@@ -4,38 +4,36 @@
  */
 
 import {
+  registerGetOrgMember,
+  registerGetOrgProfile,
+  registerListOrgGroups,
+  registerListOrgMembers,
+  registerListOrgProjects,
+} from './organization/inventory.js';
+import {
+  registerGetCustomRole,
+  registerListCustomRoles,
+  registerListOrgRoleAssignments,
+  registerListProjectDirectAccess,
+  registerListProjectRoles,
+} from './organization/roles.js';
+import {
+  registerGetDashboardMeta,
+  registerGetProjectUserActivity,
+  registerListContent,
+  registerListValidationResults,
+} from './project/content.js';
+import { registerGetProject, registerListProjects } from './project/projects.js';
+import { registerGetScheduler, registerListProjectSchedulers } from './project/schedulers.js';
+import {
   registerGetExplore,
   registerGetFieldLineage,
   registerListDimensions,
   registerListExplores,
-} from './explores.js';
-import { registerGetMetric, registerListMetrics } from './metrics.js';
-import {
-  registerAuditContentHealth,
-  registerAuditIdentityAccess,
-  registerAuditOrgSummary,
-  registerAuditScheduledDeliveries,
-  registerGetCustomRole,
-  registerGetDashboardMeta,
-  registerGetOrgMember,
-  registerGetOrgProfile,
-  registerGetProjectUserActivity,
-  registerGetScheduler,
-  registerListContent,
-  registerListCustomRoles,
-  registerListOrgGroups,
-  registerListOrgMembers,
-  registerListOrgProjects,
-  registerListOrgRoleAssignments,
-  registerListProjectDirectAccess,
-  registerListProjectRoles,
-  registerListProjectSchedulers,
-  registerListSpaceAccess,
-  registerListValidationResults,
-  registerResolveEffectiveAccess,
-} from './organization-audit/index.js';
-import { registerGetProject, registerListProjects } from './projects.js';
-import { registerCompileQuery } from './query.js';
+} from './semantic/explores.js';
+import { registerGetMetric, registerListMetrics } from './semantic/metrics.js';
+import { registerCompileQuery } from './semantic/query.js';
+import { registerListSpaceAccess, registerResolveEffectiveAccess } from './space/access.js';
 
 import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -56,7 +54,7 @@ export const toolRegistry = {
   list_metrics: { register: registerListMetrics },
   list_projects: { register: registerListProjects },
 
-  // organization-audit
+  // organization inventory / access / content / delivery (shared; persona allowlists select)
   get_org_profile: { register: registerGetOrgProfile },
   list_org_members: { register: registerListOrgMembers },
   get_org_member: { register: registerGetOrgMember },
@@ -75,10 +73,6 @@ export const toolRegistry = {
   get_project_user_activity: { register: registerGetProjectUserActivity },
   list_project_schedulers: { register: registerListProjectSchedulers },
   get_scheduler: { register: registerGetScheduler },
-  audit_identity_access: { register: registerAuditIdentityAccess },
-  audit_content_health: { register: registerAuditContentHealth },
-  audit_scheduled_deliveries: { register: registerAuditScheduledDeliveries },
-  audit_org_summary: { register: registerAuditOrgSummary },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

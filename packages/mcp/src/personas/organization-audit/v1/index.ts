@@ -30,10 +30,6 @@ export const ORGANIZATION_AUDIT_TOOL_IDS = [
   'get_project_user_activity',
   'list_project_schedulers',
   'get_scheduler',
-  'audit_identity_access',
-  'audit_content_health',
-  'audit_scheduled_deliveries',
-  'audit_org_summary',
 ] as const satisfies readonly ToolId[];
 
 export const organizationAuditPersona: PersonaDefinition = {

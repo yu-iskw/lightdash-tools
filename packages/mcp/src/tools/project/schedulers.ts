@@ -5,17 +5,41 @@
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
-import { projectUuidField } from '../schema-fields.js';
+import { asPaginated, asRecord } from '../lib/api-shape.js';
+import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
+import { normalizeScheduler } from '../lib/redaction.js';
+import { registerOrgAuditTool } from '../lib/register-org-audit.js';
+import { projectUuidField } from '../lib/schema-fields.js';
+import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import { asPaginated, asRecord } from './api-shape.js';
-import { emptyCoverage, isPageComplete } from './contracts.js';
-import { resolveSessionOrganization } from './org-binding.js';
-import { normalizeScheduler } from './redaction.js';
-import { registerOrgAuditTool } from './register.js';
-
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+const SCHEDULER_MEMBERSHIP_PAGE_BUDGET = 10;
+
+/** Confirm schedulerUuid appears in the project's scheduler list (when response omits projectUuid). */
+async function schedulerBelongsToProject(
+  client: LightdashClient,
+  projectUuid: string,
+  schedulerUuid: string,
+): Promise<boolean> {
+  for (let page = 1; page <= SCHEDULER_MEMBERSHIP_PAGE_BUDGET; page += 1) {
+    const result = await client.v1.schedulers.listSchedulers(projectUuid, {
+      page,
+      pageSize: 100,
+    });
+    const { data, pagination } = asPaginated<Record<string, unknown>>(result);
+    if (data.some((row) => String(row.schedulerUuid ?? row.uuid ?? '') === schedulerUuid)) {
+      return true;
+    }
+    if (isPageComplete(data.length, pagination?.totalResults, pagination?.totalPageCount, page)) {
+      return false;
+    }
+  }
+  return false;
+}
 
 export function registerListProjectSchedulers(
   server: McpServer,
@@ -105,8 +129,10 @@ export function registerGetScheduler(server: McpServer, contextProvider: McpCont
     'get_scheduler',
     {
       title: 'Get scheduler',
-      description: 'Get one scheduler by UUID (destinations redacted by default; never executes)',
+      description:
+        'Get one scheduler by UUID within a project (destinations redacted by default; never executes)',
       inputSchema: {
+        projectUuid: projectUuidField(),
         schedulerUuid: z.string(),
         revealDestinations: z.boolean().optional(),
         allowedEmailDomains: z.array(z.string()).optional(),
@@ -116,16 +142,36 @@ export function registerGetScheduler(server: McpServer, contextProvider: McpCont
       contextProvider,
       (c) =>
         async (args: {
+          projectUuid: string;
           schedulerUuid: string;
           revealDestinations?: boolean;
           allowedEmailDomains?: string[];
         }) => {
           const session = await resolveSessionOrganization(c);
-          const raw = await c.v1.schedulers.getScheduler(args.schedulerUuid);
+          const pinned = getPinnedProjectUuid();
+          const raw = asRecord(await c.v1.schedulers.getScheduler(args.schedulerUuid));
+          const schedulerProject =
+            typeof raw.projectUuid === 'string' ? raw.projectUuid : undefined;
+          if (schedulerProject) {
+            if (schedulerProject !== args.projectUuid) {
+              return jsonToolResult({
+                error: `Scheduler ${args.schedulerUuid} belongs to project ${schedulerProject}, not ${args.projectUuid}`,
+                isError: true,
+              });
+            }
+          } else if (!(await schedulerBelongsToProject(c, args.projectUuid, args.schedulerUuid))) {
+            return jsonToolResult({
+              error: `Scheduler ${args.schedulerUuid} was not found in project ${args.projectUuid}`,
+              isError: true,
+            });
+          }
           const reveal = args.revealDestinations === true;
           return jsonToolResult({
-            ...normalizeScheduler(asRecord(raw), reveal, args.allowedEmailDomains),
-            coverage: emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
+            ...normalizeScheduler(raw, reveal, args.allowedEmailDomains),
+            coverage: {
+              ...emptyCoverage(session.organizationUuid, pinned),
+              projectUuids: [args.projectUuid],
+            },
             warnings: reveal
               ? []
               : [{ code: 'REDACTED', message: 'Scheduler destinations redacted by default' }],

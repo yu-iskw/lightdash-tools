@@ -45,7 +45,7 @@ export function registerOrganizationAuditPrompts(server: McpServer): void {
     'audit_organization',
     {
       title: 'Audit organization',
-      description: 'Evidence-backed read-only organization audit',
+      description: 'Evidence-backed read-only organization audit via primitive tools',
       argsSchema: {
         projectUuids: z.string().optional().describe('Comma-separated project UUIDs'),
         allowedEmailDomains: z
@@ -62,22 +62,23 @@ ${ORGANIZATION_AUDIT_HARD_BANS}
 Scope:
 - Use only the organization and projects visible to the authenticated caller.
 - Respect any project pin (X-Lightdash-Project).
-- Optional project filter: ${projectUuids ?? '(all accessible non-preview projects up to limits)'}.
+- Optional project filter: ${projectUuids ?? '(all accessible non-preview projects up to a small cap)'}.
 - Allowed email domains for delivery review: ${allowedEmailDomains ?? '(none — treat unknown domains carefully)'}.
 
-Procedure:
+Procedure (primitives only — there are no lightdash_audit_* tools):
 1. Resolve organization identity via lightdash_get_org_profile.
-2. Prefer lightdash_audit_org_summary for a bounded full pass, or sequence focused audit tools.
-3. Distinguish facts, inferred risks, policy assumptions, inaccessible areas, and truncation.
-4. Cite every finding with lightdash_* tool names and resource UUIDs.
-5. Do not claim formal compliance certification.`),
+2. Follow the playbook phases: identity → projects/access → content → deliveries → report.
+3. Paginate list tools only while pagination.complete is false, and stop after an agreed page/project budget.
+4. Synthesize findings yourself from returned evidence; distinguish facts, inferred risks, assumptions, inaccessible areas, and truncation.
+5. Cite every finding with lightdash_* tool names and resource UUIDs.
+6. Do not claim formal compliance certification.`),
   );
 
   server.registerPrompt(
     'review_access_governance',
     {
       title: 'Review access governance',
-      description: 'Build an effective-access model and identity findings',
+      description: 'Build an effective-access model from identity and access primitives',
       argsSchema: {},
     },
     () =>
@@ -85,7 +86,7 @@ Procedure:
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
-Use lightdash_resolve_effective_access and lightdash_audit_identity_access.
+Use lightdash_list_org_members, lightdash_list_org_role_assignments, lightdash_list_project_roles, lightdash_list_project_direct_access, lightdash_list_space_access, and lightdash_resolve_effective_access.
 Do not treat lightdash_list_project_direct_access as complete effective access.
 State assumptions and coverage gaps.`),
   );
@@ -94,7 +95,7 @@ State assumptions and coverage gaps.`),
     'review_content_governance',
     {
       title: 'Review content governance',
-      description: 'Inventory content health and ownership risks',
+      description: 'Inventory content health and ownership risks via list tools',
       argsSchema: {},
     },
     () =>
@@ -102,7 +103,8 @@ State assumptions and coverage gaps.`),
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
-Use lightdash_list_content, lightdash_list_validation_results, lightdash_get_project_user_activity, and lightdash_audit_content_health.
+Use lightdash_list_content, lightdash_list_validation_results, and lightdash_get_project_user_activity (plus lightdash_get_dashboard_meta when needed).
+Join results in the conversation — do not assume a server-side audit tool.
 Do not recommend deletion solely because content is unused.`),
   );
 
@@ -121,7 +123,7 @@ Do not recommend deletion solely because content is unused.`),
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
 Allowed email domains: ${allowedEmailDomains ?? '(none provided)'}.
-Use lightdash_list_project_schedulers and lightdash_audit_scheduled_deliveries.
+Use lightdash_list_project_schedulers and lightdash_get_scheduler.
 Redact destinations by default. External destinations are review signals, not automatic violations.`),
   );
 
@@ -141,7 +143,7 @@ ${findingSummary}
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
-Report supporting evidence, contradictory evidence, remaining uncertainty, and whether severity/confidence changed.`),
+Use only primitive list/get tools. Report supporting evidence, contradictory evidence, remaining uncertainty, and whether severity/confidence changed.`),
   );
 }
 

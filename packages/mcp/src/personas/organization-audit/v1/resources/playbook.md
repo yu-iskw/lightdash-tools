@@ -1,6 +1,6 @@
 # Organization-audit playbook
 
-Read-only evidence collection for Lightdash organization administrators. Findings are review signals, not compliance certifications.
+Read-only evidence collection for Lightdash organization administrators. Findings are review signals synthesized by the host from primitive tool results — not compliance certifications. There are no composed `audit_*` MCP tools; chain bounded `lightdash_*` reads instead.
 
 ## Hard bans
 
@@ -10,6 +10,7 @@ Read-only evidence collection for Lightdash organization administrators. Finding
 - Do not treat direct project access as complete effective access.
 - Do not recommend deletion solely because content has low usage.
 - Do not claim SOC 2 / GDPR / ISO / HIPAA certification from these tools.
+- Do not crawl the whole org in one step — respect `pagination.complete` and stop after agreed page/project limits.
 
 ## Tool catalog (`lightdash_*`)
 
@@ -21,8 +22,6 @@ Content / health: `list_content`, `get_dashboard_meta`, `list_validation_results
 
 Delivery: `list_project_schedulers`, `get_scheduler`
 
-Composed: `audit_identity_access`, `audit_content_health`, `audit_scheduled_deliveries`, `audit_org_summary`
-
 ## Phases
 
 ### Phase 0 — Scope
@@ -33,20 +32,20 @@ Composed: `audit_identity_access`, `audit_content_health`, `audit_scheduled_deli
 
 ### Phase 1 — Identity
 
-Call `list_org_members`, `list_org_groups`, `list_org_role_assignments`, `list_custom_roles`.
+Call `list_org_members` (paginate while `pagination.complete` is false, or stop after a small page budget). Optionally `list_org_groups`, `list_org_role_assignments`, `list_custom_roles`, `get_org_member` for spot checks.
 
 ### Phase 2 — Projects and access
 
-Call `list_org_projects`, then per project `list_project_roles`, `list_project_direct_access`, `list_space_access`, and `resolve_effective_access`.
+Call `list_org_projects`, then for a capped set of projects: `list_project_roles`, `list_project_direct_access`, `list_space_access`, and `resolve_effective_access`. Treat `list_project_direct_access` as direct grants only. Honor incomplete flags and truncation warnings.
 
 ### Phase 3 — Content and health
 
-Call `list_content`, `list_validation_results`, `get_project_user_activity`, then `audit_content_health`.
+Per project (capped): `list_content` (use `sortBy`/`sortDirection`/`page` intentionally), `list_validation_results`, `get_project_user_activity`. Use `get_dashboard_meta` only when needed. Host joins validation, views, and ownership into findings — do not invent a server-side crawler.
 
 ### Phase 4 — Deliveries
 
-Call `list_project_schedulers` (destinations redacted by default) and `audit_scheduled_deliveries`.
+Per project (capped): `list_project_schedulers` (destinations redacted by default; pass `revealDestinations` only when required). Use `get_scheduler` with `projectUuid` + `schedulerUuid` for one schedule. Pass `allowedEmailDomains` when reviewing external email destinations.
 
 ### Phase 5 — Report
 
-Prefer `audit_org_summary` for a bounded full pass, or focused audit tools. Always include coverage, assumptions, and evidence UUIDs.
+Synthesize findings from tool evidence in the conversation. Always include coverage gaps, assumptions, truncation, and resource UUIDs. Never claim the inventory was exhaustive when `pagination.complete` is false.

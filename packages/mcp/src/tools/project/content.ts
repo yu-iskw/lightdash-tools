@@ -5,13 +5,12 @@
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
-import { projectUuidField } from '../schema-fields.js';
+import { asPaginated, asRecord } from '../lib/api-shape.js';
+import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
+import { registerOrgAuditTool } from '../lib/register-org-audit.js';
+import { projectUuidField } from '../lib/schema-fields.js';
+import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
-
-import { asPaginated, asRecord } from './api-shape.js';
-import { emptyCoverage, isPageComplete } from './contracts.js';
-import { resolveSessionOrganization } from './org-binding.js';
-import { registerOrgAuditTool } from './register.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
