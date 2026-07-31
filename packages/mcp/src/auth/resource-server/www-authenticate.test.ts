@@ -4,28 +4,14 @@ import {
   buildOAuthProtectedResourceMetadata,
   getAuthorizationServerMetadataUrl,
 } from './oauth-protected-resource.js';
+import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
-import type { McpHttpConfig } from '../../config/load-mcp-config.js';
-
-const baseConfig: McpHttpConfig = {
-  lightdashUrl: 'https://app.lightdash.cloud',
+const baseConfig = makeTestMcpHttpConfig({
   host: '0.0.0.0',
-  port: 3100,
-  publicUrl: 'https://mcp.example.com',
-  mcpPath: '/semantic-layer/v1/mcp',
-  authMode: 'lightdash-oauth',
-  allowedOrigins: [],
-  maxBodyBytes: 1024,
   sessionTtlMs: 1000,
-  maxSessions: 10,
-  maxSessionsPerSubject: 10,
   sessionCleanupMs: 1000,
-  requiredScopes: ['mcp:read'],
-  scopesSupported: ['mcp:read', 'mcp:write'],
-  validateToken: true,
-  tokenValidationCacheTtlMs: 30_000,
-};
+});
 
 describe('getAuthorizationServerMetadataUrl', () => {
   it('builds the well-known AS metadata URL for a Lightdash issuer', () => {

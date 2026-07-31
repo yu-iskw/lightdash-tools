@@ -4,7 +4,6 @@ import {
   buildOAuthProtectedResourceMetadata,
   getAuthorizationServerMetadataUrl,
 } from '../auth/resource-server/oauth-protected-resource.js';
-import { checkOrigin } from '../auth/resource-server/shared-key-middleware.js';
 import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
@@ -14,7 +13,7 @@ import {
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
 
-import { buildCorsHeaders } from './http-response.js';
+import { buildCorsHeaders, checkOrigin } from './http-response.js';
 import { createStreamableHttpServer, startStreamableHttpServer } from './streamable-http.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';

@@ -6,13 +6,13 @@ import { EventEmitter } from 'node:events';
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  checkOrigin,
-  timingSafeEqualString,
-} from './auth/resource-server/shared-key-middleware.js';
 import { parseJsonBody, readBody } from './transports/http-body.js';
 import { isInitializeMessage } from './transports/http-request-utils.js';
-import { buildCorsHeaders } from './transports/http-response.js';
+import {
+  buildCorsHeaders,
+  checkOrigin,
+  timingSafeEqualString,
+} from './transports/http-response.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 

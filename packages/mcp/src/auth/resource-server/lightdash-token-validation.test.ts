@@ -3,30 +3,12 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { describe, expect, it, vi } from 'vitest';
 
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
+import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 
-import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { AddressInfo } from 'node:net';
 
-function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): McpHttpConfig {
-  return {
-    lightdashUrl,
-    host: '127.0.0.1',
-    port: 3100,
-    publicUrl: 'https://mcp.example.com',
-    mcpPath: '/semantic-layer/v1/mcp',
-    authMode: 'lightdash-oauth',
-    allowedOrigins: [],
-    maxBodyBytes: 1024,
-    sessionTtlMs: 60_000,
-    maxSessions: 10,
-    maxSessionsPerSubject: 10,
-    sessionCleanupMs: 60_000,
-    requiredScopes: ['mcp:read'],
-    scopesSupported: ['mcp:read', 'mcp:write'],
-    validateToken: true,
-    tokenValidationCacheTtlMs: 30_000,
-    ...overrides,
-  };
+function baseConfig(lightdashUrl: string, overrides?: Parameters<typeof makeTestMcpHttpConfig>[0]) {
+  return makeTestMcpHttpConfig({ lightdashUrl, ...overrides });
 }
 
 async function startUserApiServer(

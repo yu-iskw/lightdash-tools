@@ -29,10 +29,7 @@ import {
   getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
 } from '../auth/resource-server/oauth-protected-resource.js';
-import {
-  authenticateSharedKey,
-  checkOrigin,
-} from '../auth/resource-server/shared-key-middleware.js';
+import { authenticateSharedKey } from '../auth/resource-server/shared-key-middleware.js';
 import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import { hashToken } from '../auth/token-hash.js';
 import {
@@ -43,16 +40,16 @@ import {
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath } from '../config/runtime.js';
-import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
 import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
 } from '../governance/project-pin.js';
+import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
-import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
+import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';

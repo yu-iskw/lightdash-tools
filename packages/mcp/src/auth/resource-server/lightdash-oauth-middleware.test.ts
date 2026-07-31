@@ -2,33 +2,18 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
+import { makeTestMcpHttpConfig } from './test-mcp-http-config.js';
 import { TokenValidationError } from './token-validation-error.js';
 
-import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 vi.mock('./lightdash-token-validation.js', () => ({
   validateLightdashAccessToken: vi.fn(),
 }));
 
-const baseConfig: McpHttpConfig = {
-  lightdashUrl: 'https://app.lightdash.cloud',
-  host: '127.0.0.1',
-  port: 3100,
-  publicUrl: 'https://mcp.example.com',
-  mcpPath: '/semantic-layer/v1/mcp',
-  authMode: 'lightdash-oauth',
-  allowedOrigins: [],
-  maxBodyBytes: 1024,
-  sessionTtlMs: 60_000,
-  maxSessions: 10,
-  maxSessionsPerSubject: 10,
-  sessionCleanupMs: 60_000,
+const baseConfig = makeTestMcpHttpConfig({
   requiredScopes: [],
-  scopesSupported: ['mcp:read', 'mcp:write'],
-  validateToken: true,
-  tokenValidationCacheTtlMs: 30_000,
-};
+});
 
 function jwtWithScope(scope: string): string {
   const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');

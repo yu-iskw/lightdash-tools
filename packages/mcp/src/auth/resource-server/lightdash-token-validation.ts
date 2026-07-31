@@ -3,7 +3,7 @@
  * (`/api/v1/user` from `../lightdash-oauth-upstream-contract.js`).
  *
  * Upstream Lightdash accepts OAuth bearer tokens on this route via
- * `allowApiKeyAuthentication` (see docs/agent-context/lightdash-oauth-upstream-contract.md).
+ * `allowApiKeyAuthentication` (see `../lightdash-oauth-upstream-contract.ts`).
  */
 
 import {
