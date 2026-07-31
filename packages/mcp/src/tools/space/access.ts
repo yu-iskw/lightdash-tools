@@ -36,6 +36,58 @@ export type SpaceAccessRow = {
   inheritedRole?: string;
 };
 
+/** Maps space ACL payloads into audit rows; optionally drops inherited-only users. */
+export function buildSpaceAccessRows(
+  spaceList: Array<{
+    uuid: string;
+    name?: string;
+    access?: unknown;
+    groupsAccess?: unknown;
+  }>,
+  includeInherited = true,
+): SpaceAccessRow[] {
+  const data: SpaceAccessRow[] = [];
+  for (const space of spaceList) {
+    const access = Array.isArray(space.access) ? space.access : [];
+    const groupsAccess = Array.isArray(space.groupsAccess) ? space.groupsAccess : [];
+    for (const entry of access) {
+      if (!entry || typeof entry !== 'object') continue;
+      const row = entry as {
+        userUuid?: string;
+        role?: string;
+        hasDirectAccess?: boolean;
+        inheritedFrom?: string;
+        inheritedRole?: string;
+      };
+      if (!includeInherited && row.hasDirectAccess === false) {
+        continue;
+      }
+      data.push({
+        spaceUuid: space.uuid,
+        spaceName: space.name,
+        principalType: 'user',
+        principalUuid: row.userUuid,
+        role: row.role,
+        hasDirectAccess: row.hasDirectAccess,
+        inheritedFrom: includeInherited ? row.inheritedFrom : undefined,
+        inheritedRole: includeInherited ? row.inheritedRole : undefined,
+      });
+    }
+    for (const entry of groupsAccess) {
+      if (!entry || typeof entry !== 'object') continue;
+      const row = entry as { groupUuid?: string; spaceRole?: string };
+      data.push({
+        spaceUuid: space.uuid,
+        spaceName: space.name,
+        principalType: 'group',
+        principalUuid: row.groupUuid,
+        role: row.spaceRole,
+      });
+    }
+  }
+  return data;
+}
+
 async function loadSpaceAccess(
   client: LightdashClient,
   projectUuid: string,
@@ -121,43 +173,12 @@ async function loadSpaceAccess(
     return { data: [], warnings, inaccessibleScopes, truncated };
   }
 
-  const data: SpaceAccessRow[] = [];
-  for (const space of spaceList) {
-    const access = Array.isArray(space.access) ? space.access : [];
-    const groupsAccess = Array.isArray(space.groupsAccess) ? space.groupsAccess : [];
-    for (const entry of access) {
-      if (!entry || typeof entry !== 'object') continue;
-      const row = entry as {
-        userUuid?: string;
-        role?: string;
-        hasDirectAccess?: boolean;
-        inheritedFrom?: string;
-        inheritedRole?: string;
-      };
-      data.push({
-        spaceUuid: space.uuid,
-        spaceName: space.name,
-        principalType: 'user',
-        principalUuid: row.userUuid,
-        role: row.role,
-        hasDirectAccess: row.hasDirectAccess,
-        inheritedFrom: includeInherited ? row.inheritedFrom : undefined,
-        inheritedRole: includeInherited ? row.inheritedRole : undefined,
-      });
-    }
-    for (const entry of groupsAccess) {
-      if (!entry || typeof entry !== 'object') continue;
-      const row = entry as { groupUuid?: string; spaceRole?: string };
-      data.push({
-        spaceUuid: space.uuid,
-        spaceName: space.name,
-        principalType: 'group',
-        principalUuid: row.groupUuid,
-        role: row.spaceRole,
-      });
-    }
-  }
-  return { data, warnings, inaccessibleScopes, truncated };
+  return {
+    data: buildSpaceAccessRows(spaceList, includeInherited),
+    warnings,
+    inaccessibleScopes,
+    truncated,
+  };
 }
 
 export type EffectiveAccessRecord = {

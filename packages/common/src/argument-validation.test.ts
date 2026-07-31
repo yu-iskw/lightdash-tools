@@ -25,6 +25,7 @@ describe('argument-validation', () => {
           'mcpServerUuid',
           'messageUuid',
           'organizationUuid',
+          'parentSpaceUuid',
           'project',
           'projectUuid',
           'projectUuids',
@@ -36,6 +37,7 @@ describe('argument-validation', () => {
           'schedulerUuid',
           'slug',
           'spaceUuid',
+          'spaceUuids',
           'threadUuid',
           'toolCallId',
           'userUuid',
@@ -205,6 +207,21 @@ describe('argument-validation', () => {
       );
       expect(() => validateResourceIdsInObject({ dashboardUuid: '..' })).toThrow(
         'Slug must not contain path traversal segments',
+      );
+    });
+
+    it('validates spaceUuids and parentSpaceUuid as UUIDs', () => {
+      expect(() =>
+        validateResourceIdsInObject({
+          spaceUuids: [VALID_UUID],
+          parentSpaceUuid: VALID_UUID,
+        }),
+      ).not.toThrow();
+      expect(() => validateResourceIdsInObject({ spaceUuids: ['bad?'] })).toThrow(
+        'Invalid UUID format',
+      );
+      expect(() => validateResourceIdsInObject({ parentSpaceUuid: '..' })).toThrow(
+        'Invalid UUID format',
       );
     });
 

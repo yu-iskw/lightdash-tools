@@ -4,7 +4,45 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { composeEffectiveAccessRecords } from './access.js';
+import { buildSpaceAccessRows, composeEffectiveAccessRecords } from './access.js';
+
+describe('buildSpaceAccessRows', () => {
+  const space = {
+    uuid: 's1',
+    name: 'Sales',
+    access: [
+      {
+        userUuid: 'u-direct',
+        role: 'editor',
+        hasDirectAccess: true,
+      },
+      {
+        userUuid: 'u-inherited',
+        role: 'viewer',
+        hasDirectAccess: false,
+        inheritedFrom: 'parent_space',
+        inheritedRole: 'viewer',
+      },
+    ],
+    groupsAccess: [{ groupUuid: 'g1', spaceRole: 'viewer' }],
+  };
+
+  it('includes inherited users and provenance when includeInherited is true', () => {
+    const rows = buildSpaceAccessRows([space], true);
+    expect(rows).toHaveLength(3);
+    expect(rows.find((r) => r.principalUuid === 'u-inherited')).toMatchObject({
+      inheritedFrom: 'parent_space',
+      inheritedRole: 'viewer',
+      hasDirectAccess: false,
+    });
+  });
+
+  it('excludes inherited-only users when includeInherited is false', () => {
+    const rows = buildSpaceAccessRows([space], false);
+    expect(rows.map((r) => r.principalUuid).sort()).toEqual(['g1', 'u-direct']);
+    expect(rows.find((r) => r.principalUuid === 'u-direct')?.inheritedFrom).toBeUndefined();
+  });
+});
 
 describe('composeEffectiveAccessRecords', () => {
   it('keeps org-wide and weaker project paths without inventing precedence', () => {

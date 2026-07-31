@@ -33,6 +33,8 @@ export const RESOURCE_ID_KEYS = new Set([
   'userUuid',
   'groupUuid',
   'spaceUuid',
+  'spaceUuids',
+  'parentSpaceUuid',
   'roleUuid',
   'dashboardUuid',
   'schedulerUuid',
