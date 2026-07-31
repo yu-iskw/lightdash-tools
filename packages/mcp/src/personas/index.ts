@@ -4,18 +4,21 @@
 
 import { normalizeMcpPath } from '../config/normalize-url.js';
 
+import { organizationAuditPersona } from './organization-audit/v1/index.js';
 import { semanticLayerPersona } from './semantic-layer/v1/index.js';
 
 import type { PersonaDefinition, PersonaId } from './types.js';
 
 export type { PersonaDefinition, PersonaId } from './types.js';
 export { SEMANTIC_LAYER_PERSONA_PATH } from './semantic-layer/v1/index.js';
+export { ORGANIZATION_AUDIT_PERSONA_PATH } from './organization-audit/v1/index.js';
 
-/** Sole shipped persona until more are added under personas/. */
+/** Default stdio persona (backward compatible). */
 export const DEFAULT_PERSONA_ID: PersonaId = 'semantic-layer';
 
 export const PERSONAS: Record<PersonaId, PersonaDefinition> = {
   'semantic-layer': semanticLayerPersona,
+  'organization-audit': organizationAuditPersona,
 };
 
 const PERSONAS_BY_PATH = new Map<string, PersonaDefinition>(
@@ -42,4 +45,17 @@ export function getPersonaByPath(path: string): PersonaDefinition | undefined {
 
 export function listPersonaPaths(): string[] {
   return [...PERSONAS_BY_PATH.keys()];
+}
+
+/** Parse a CLI persona id; returns undefined when invalid. */
+export function parsePersonaId(value: string): PersonaId | undefined {
+  if (value === 'semantic-layer' || value === 'organization-audit') {
+    return value;
+  }
+  return undefined;
+}
+
+/** MCP server display name for a persona. */
+export function getPersonaServerName(persona: PersonaDefinition): string {
+  return persona.serverName ?? `lightdash-mcp-${persona.id}`;
 }

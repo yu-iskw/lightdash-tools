@@ -29,6 +29,14 @@ export const RESOURCE_ID_KEYS = new Set([
   'fingerprint',
   'savedQueryUuid',
   'slug',
+  'userUuid',
+  'groupUuid',
+  'spaceUuid',
+  'roleUuid',
+  'dashboardUuid',
+  'schedulerUuid',
+  'organizationUuid',
+  'chartUuid',
 ]);
 
 export type ArgumentSource = 'body' | 'option' | 'positional';

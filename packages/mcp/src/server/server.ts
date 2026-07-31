@@ -1,6 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/server';
 
-import { getDefaultPersona } from '../personas/index.js';
+import { getDefaultPersona, getPersonaServerName } from '../personas/index.js';
 
 import { registerCapabilities } from './capabilities.js';
 import { PACKAGE_VERSION } from './version.js';
@@ -14,7 +14,7 @@ export function createLightdashMcpServer(
 ): McpServer {
   const persona = options?.persona ?? getDefaultPersona();
   const server = new McpServer({
-    name: `lightdash-mcp-${persona.id}`,
+    name: getPersonaServerName(persona),
     version: PACKAGE_VERSION,
   });
   registerCapabilities(server, contextProvider, { ...options, persona });
