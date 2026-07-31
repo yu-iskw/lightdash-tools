@@ -1,6 +1,6 @@
 /**
  * Shared MCP tool registry: short id → register(server, ctx).
- * Wire names are always `ldt__` + id via registerToolSafe.
+ * Wire names are always `lightdash_` + id via registerToolSafe.
  */
 
 import {

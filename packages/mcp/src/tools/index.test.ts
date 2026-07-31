@@ -30,7 +30,7 @@ describe('registerToolsByIds', () => {
     mockServer.registerTool.mockClear();
   });
 
-  it('registers only the persona allowlist with ldt__ prefix', () => {
+  it('registers only the persona allowlist with lightdash_ prefix', () => {
     const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
     const persona = getDefaultPersona();
 

@@ -1,6 +1,6 @@
 # Lightdash Tools — Agent Context
 
-Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`ldt__*`). These invariants are not obvious from `--help`; agents need them made explicit.
+Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`lightdash_*`). These invariants are not obvious from `--help`; agents need them made explicit.
 
 ## Safety and Guardrails
 

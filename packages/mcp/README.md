@@ -1,6 +1,6 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash **semantic-layer** discovery and query composition (compile only). Tools live in a shared registry; the shipped `semantic-layer` persona selects nine `ldt__*` tools, prompts, and a playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md).
+MCP server for Lightdash **semantic-layer** discovery and query composition (compile only). Tools live in a shared registry; the shipped `semantic-layer` persona selects nine `lightdash_*` tools, prompts, and a playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md).
 
 Broad admin surfaces (charts, dashboards, users, AI agents, …) are **not** registered on this binary — use `@lightdash-tools/client` or the CLI.
 
@@ -28,7 +28,7 @@ That package was removed (ADR-0006). Migrate as follows:
 | `@lightdash-tools/semantic-layer-mcp` | `@lightdash-tools/mcp`   |
 | Binary `lightdash-semantic-layer-mcp` | `lightdash-mcp`          |
 | HTTP `/mcp` (old)                     | `/semantic-layer/v1/mcp` |
-| Unprefixed tool names                 | `ldt__*`                 |
+| Unprefixed tool names                 | `lightdash_*`            |
 
 ## Installation
 
@@ -142,14 +142,14 @@ The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT
 
 ## Tools
 
-The `semantic-layer` persona registers these tools (names prefixed with `ldt__`):
+The `semantic-layer` persona registers these tools (names prefixed with `lightdash_`):
 
 - **Projects**: `list_projects`, `get_project`
 - **Explores**: `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage`
 - **Metrics**: `list_metrics`, `get_metric`
 - **Query**: `compile_query` (empty SELECT → `isError`; no run-query)
 
-Prompts and playbook: `lightdash://playbooks/semantic-layer` (cite `ldt__*` names only).
+Prompts and playbook: `lightdash://playbooks/semantic-layer` (cite `lightdash_*` names only).
 
 ### CLI Binary
 

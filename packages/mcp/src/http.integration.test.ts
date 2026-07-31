@@ -561,7 +561,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     vi.restoreAllMocks();
   });
 
-  it('calls ldt__list_projects over an OAuth HTTP session', async () => {
+  it('calls lightdash_list_projects over an OAuth HTTP session', async () => {
     const initResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
     const sessionId = initResponse.headers.get('mcp-session-id');
     expect(sessionId).toBeTruthy();
@@ -579,7 +579,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__list_projects', arguments: {} },
+        params: { name: 'lightdash_list_projects', arguments: {} },
         id: 2,
       },
       { token: TOKEN_A, sessionId: sessionId ?? undefined },
@@ -614,7 +614,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__list_projects', arguments: {} },
+        params: { name: 'lightdash_list_projects', arguments: {} },
         id: 6,
       },
       { token: TOKEN_A_REFRESHED, sessionId: sessionId ?? undefined },
@@ -667,7 +667,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       result?: { tools?: Array<{ name: string }> };
     };
     expect(payload.result?.tools).toHaveLength(9);
-    expect(payload.result?.tools?.every((t) => t.name.startsWith('ldt__'))).toBe(true);
+    expect(payload.result?.tools?.every((t) => t.name.startsWith('lightdash_'))).toBe(true);
   });
 
   it('allows read tools when JWT scopes include mcp:read only', async () => {
@@ -688,7 +688,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__list_projects', arguments: {} },
+        params: { name: 'lightdash_list_projects', arguments: {} },
         id: 4,
       },
       { token: TOKEN_READ_ONLY, sessionId: sessionId ?? undefined },
@@ -720,7 +720,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
       {
         jsonrpc: '2.0',
         method: 'tools/call',
-        params: { name: 'ldt__list_projects', arguments: {} },
+        params: { name: 'lightdash_list_projects', arguments: {} },
         id: 5,
       },
       { token: OPAQUE_TOKEN_A, sessionId: sessionId ?? undefined },

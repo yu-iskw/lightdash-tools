@@ -41,7 +41,7 @@ export type OperationHttp = {
 };
 
 export type OperationMcp = {
-  /** MCP tool name without the `ldt__` prefix. */
+  /** MCP tool name without the `lightdash_` prefix. */
   toolName: string;
   annotations: ToolAnnotations;
   taskSupport: McpTaskSupport;

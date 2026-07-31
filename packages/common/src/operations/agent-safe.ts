@@ -14,5 +14,5 @@ export function listBannedMcpToolNames(): readonly string[] {
     .map((operation) => operation.mcp.toolName);
 }
 
-/** Banned MCP tool names (without `ldt__` prefix) for regression tests. */
+/** Banned MCP tool names (without `lightdash_` prefix) for regression tests. */
 export const IRRECOVERABLE_TOOL_DENYLIST = listBannedMcpToolNames();

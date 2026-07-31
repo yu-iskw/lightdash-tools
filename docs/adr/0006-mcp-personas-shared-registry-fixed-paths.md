@@ -14,7 +14,7 @@ A broad all-in-one MCP catalog mixed admin tools with discovery/compile UX. A se
 
 1. Keep one package: `@lightdash-tools/mcp` (binary `lightdash-mcp`). No per-persona npm packages.
 2. Shared tools live in `packages/mcp/src/tools/` (`ToolId` registry + registration by ids). Personas under `packages/mcp/src/personas/<id>/` own `toolIds`, prompts, resources/playbooks, and a **fixed** HTTP `path`.
-3. Ship only the `semantic-layer` persona: nine tools, path `/semantic-layer/v1/mcp`, wire names with the `ldt__` prefix (short enough for clients with combined name limits).
+3. Ship only the `semantic-layer` persona: nine tools, path `/semantic-layer/v1/mcp`, wire names with the `lightdash_` prefix (combined server+tool names stay under typical ~60-character client limits for current tools).
 4. HTTP mounts every shipped persona path from code; unknown paths 404. Stdio always uses the sole shipped persona (no `LIGHTDASH_TOOLS_MCP_PATH` / persona env).
 5. Broad admin operations remain on `@lightdash-tools/client` / CLI ([ADR-0004](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
 

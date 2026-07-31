@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
-import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
+import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT, TOOL_PREFIX } from './shared.js';
 
 import type { McpContextProvider } from '../server/request-context.js';
 
@@ -132,7 +132,7 @@ describe('registerToolSafe', () => {
         expect(result.content[0].text).toContain(PROJECT_B);
         expect('_lightdashBlocked' in result).toBe(false);
         expect(logAuditEntry).toHaveBeenCalledWith(
-          expect.objectContaining({ status: 'blocked', tool: 'ldt__pinned_block' }),
+          expect.objectContaining({ status: 'blocked', tool: `${TOOL_PREFIX}pinned_block` }),
         );
       });
       expect(mockHandler).not.toHaveBeenCalled();
@@ -170,7 +170,7 @@ describe('registerToolSafe', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Slug must');
     expect(logAuditEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'blocked', tool: 'ldt__slug_tool' }),
+      expect.objectContaining({ status: 'blocked', tool: `${TOOL_PREFIX}slug_tool` }),
     );
   });
 
@@ -189,7 +189,7 @@ describe('registerToolSafe', () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('Invalid UUID');
     expect(logAuditEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ status: 'blocked', tool: 'ldt__plural_uuid_tool' }),
+      expect.objectContaining({ status: 'blocked', tool: `${TOOL_PREFIX}plural_uuid_tool` }),
     );
   });
 
