@@ -53,7 +53,7 @@ npm install -g @lightdash-tools/mcp
 
 - Uses MCP TypeScript SDK v2 (`@modelcontextprotocol/server`, `@modelcontextprotocol/node`).
 - Speaks the established 2025-era protocol by default (not `2026-07-28` unless a future flag).
-- Client qualification matrix: [docs/compatibility/mcp-clients.md](../../docs/compatibility/mcp-clients.md).
+- Hosted OAuth client setup: [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md). Protocol/auth details: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
 ### Hosted OAuth (primary HTTP)
 
