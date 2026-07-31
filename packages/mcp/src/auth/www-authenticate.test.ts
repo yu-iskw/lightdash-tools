@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildOAuthProtectedResourceMetadata,
-  getLightdashAuthorizationServerMetadataUrl,
+  getAuthorizationServerMetadataUrl,
 } from './oauth-protected-resource.js';
 import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
@@ -25,34 +25,30 @@ const baseConfig: McpHttpConfig = {
   scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
-  grantAllScopesWhenUnknown: false,
-  experimentalIdentityOAuth: false,
-  dangerouslyAllowAnyOrigin: false,
-  dangerouslyAllowWriteInIdentityOAuth: false,
 };
 
-describe('getLightdashAuthorizationServerMetadataUrl', () => {
+describe('getAuthorizationServerMetadataUrl', () => {
   it('builds the well-known AS metadata URL for a Lightdash issuer', () => {
-    expect(getLightdashAuthorizationServerMetadataUrl('https://app.lightdash.cloud')).toBe(
+    expect(getAuthorizationServerMetadataUrl('https://app.lightdash.cloud')).toBe(
       'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
     );
-    expect(getLightdashAuthorizationServerMetadataUrl('https://app.lightdash.cloud/')).toBe(
+    expect(getAuthorizationServerMetadataUrl('https://app.lightdash.cloud/')).toBe(
       'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
     );
   });
 });
 
 describe('buildOAuthProtectedResourceMetadata', () => {
-  it('includes resource and authorization_servers issuer origin', () => {
+  it('includes resource and MCP host as authorization_servers', () => {
     const metadata = buildOAuthProtectedResourceMetadata(baseConfig);
     expect(metadata).toEqual({
       resource: 'https://mcp.example.com/semantic-layer/v1/mcp',
-      authorization_servers: ['https://app.lightdash.cloud'],
+      authorization_servers: ['https://mcp.example.com'],
       bearer_methods_supported: ['header'],
       scopes_supported: ['mcp:read', 'mcp:write'],
     });
-    expect(getLightdashAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
-      'https://app.lightdash.cloud/.well-known/oauth-authorization-server',
+    expect(getAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
+      'https://mcp.example.com/.well-known/oauth-authorization-server',
     );
   });
 });

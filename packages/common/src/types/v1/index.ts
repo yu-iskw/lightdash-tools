@@ -1,6 +1,6 @@
 /**
  * V1 API type barrel. Re-exports the same surface as LightdashApi.V1.
- * Domain files remain at types/*.ts; see ADR-0008 (file layout follow-up).
+ * Domain files remain at types/*.ts; see ADR-0003 (file layout follow-up).
  */
 
 import type { AiAgents as A } from './ai-agents';

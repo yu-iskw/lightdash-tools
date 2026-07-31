@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  extractTokenScopes,
-  hasRequiredScopes,
-  hasToolScope,
-  requiredScopeForTool,
-} from './token-scopes.js';
+import { extractTokenScopes, hasRequiredScopes } from './token-scopes.js';
 
 const SUPPORTED = ['read', 'write', 'mcp:read', 'mcp:write'] as const;
 
@@ -62,14 +57,5 @@ describe('hasRequiredScopes', () => {
   it('passes when no scopes are required', () => {
     expect(hasRequiredScopes([], [])).toBe(true);
     expect(hasRequiredScopes(undefined as unknown as string[], [])).toBe(true);
-  });
-});
-
-describe('requiredScopeForTool', () => {
-  it('maps read-only tools to mcp:read and writes to mcp:write', () => {
-    expect(requiredScopeForTool(true)).toBe('mcp:read');
-    expect(requiredScopeForTool(false)).toBe('mcp:write');
-    expect(hasToolScope(['mcp:read'], true)).toBe(true);
-    expect(hasToolScope(['mcp:read'], false)).toBe(false);
   });
 });

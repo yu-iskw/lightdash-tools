@@ -2,17 +2,10 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
-import { getAllowedProjectUuids } from '../config/runtime.js';
 import { getPinnedProjectUuid } from '../project-pin.js';
 
 import { projectUuidField } from './schema-fields.js';
-import {
-  READ_ONLY_CAPABILITY,
-  blockedToolContent,
-  jsonToolResult,
-  registerToolSafe,
-  wrapToolAnnotated,
-} from './shared.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -26,17 +19,11 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
       description:
         'List all projects in the current organization (or the single pinned project when X-Lightdash-Project is set)',
       inputSchema: {},
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(contextProvider, READ_ONLY_CAPABILITY, (c) => async () => {
+    wrapTool(contextProvider, (c) => async () => {
       const pinned = getPinnedProjectUuid();
       if (pinned) {
-        const allowed = getAllowedProjectUuids();
-        if (allowed.length > 0 && !allowed.includes(pinned)) {
-          return blockedToolContent(
-            `Error: Project(s) [${pinned}] are not in the list of allowed projects. Allowed: [${allowed.join(', ')}].`,
-          );
-        }
         const project = await c.v1.projects.getProject(pinned);
         return jsonToolResult([project]);
       }
@@ -54,16 +41,11 @@ export function registerGetProject(server: McpServer, contextProvider: McpContex
       title: 'Get project',
       description: 'Get a project by UUID',
       inputSchema: { projectUuid: projectUuidField() },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
-      contextProvider,
-      READ_ONLY_CAPABILITY,
-      (c) =>
-        async ({ projectUuid }: { projectUuid: string }) => {
-          const project = await c.v1.projects.getProject(projectUuid);
-          return jsonToolResult(project);
-        },
-    ),
+    wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid: string }) => {
+      const project = await c.v1.projects.getProject(projectUuid);
+      return jsonToolResult(project);
+    }),
   );
 }

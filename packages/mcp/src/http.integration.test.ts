@@ -3,7 +3,7 @@ import { createServer, type Server } from 'node:http';
 import { SecretString } from '@lightdash-tools/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getLightdashAuthorizationServerMetadataUrl } from './auth/oauth-protected-resource.js';
+import { getAuthorizationServerMetadataUrl } from './auth/oauth-protected-resource.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -169,8 +169,11 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     lightdashUrl,
     host: '127.0.0.1',
     port: 0,
+    publicUrl: 'http://127.0.0.1:0',
     mcpPath: '/semantic-layer/v1/mcp',
     authMode: 'lightdash-oauth',
+    oauthClientId: 'test-client-id',
+    oauthClientSecret: new SecretString('test-client-secret'),
     allowedOrigins: [],
     maxBodyBytes: 1024 * 1024,
     sessionTtlMs: 60_000,
@@ -181,10 +184,6 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
     scopesSupported: [],
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
-    grantAllScopesWhenUnknown: false,
-    experimentalIdentityOAuth: false,
-    dangerouslyAllowAnyOrigin: false,
-    dangerouslyAllowWriteInIdentityOAuth: false,
   };
 }
 
@@ -343,28 +342,27 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     });
   });
 
-  it('protected-resource metadata authorization_servers resolves to Lightdash AS metadata', async () => {
+  it('protected-resource metadata authorization_servers points at MCP broker AS metadata', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`);
     expect(response.status).toBe(200);
 
     const metadata = (await response.json()) as {
       authorization_servers: string[];
     };
-    const asMetadataUrl = getLightdashAuthorizationServerMetadataUrl(
-      metadata.authorization_servers[0],
-    );
-    expect(asMetadataUrl).toBe(`${mockLightdash.baseUrl}/.well-known/oauth-authorization-server`);
+    expect(metadata.authorization_servers).toEqual([mcpServer.baseUrl]);
+    const asMetadataUrl = getAuthorizationServerMetadataUrl(metadata.authorization_servers[0]);
+    expect(asMetadataUrl).toBe(`${mcpServer.baseUrl}/.well-known/oauth-authorization-server`);
 
     const asResponse = await fetch(asMetadataUrl);
     expect(asResponse.status).toBe(200);
     const asMetadata = (await asResponse.json()) as {
       authorization_endpoint: string;
       token_endpoint: string;
+      registration_endpoint: string;
     };
-    expect(asMetadata.authorization_endpoint).toBe(
-      `${mockLightdash.baseUrl}/api/v1/oauth/authorize`,
-    );
-    expect(asMetadata.token_endpoint).toBe(`${mockLightdash.baseUrl}/api/v1/oauth/token`);
+    expect(asMetadata.authorization_endpoint).toBe(`${mcpServer.baseUrl}/oauth/authorize`);
+    expect(asMetadata.token_endpoint).toBe(`${mcpServer.baseUrl}/oauth/token`);
+    expect(asMetadata.registration_endpoint).toBe(`${mcpServer.baseUrl}/oauth/register`);
   });
 
   it('allows token refresh for the same OAuth subject within a session', async () => {
@@ -427,7 +425,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     const metadata = await response.json();
     expect(metadata).toEqual({
       resource: `${mcpServer.baseUrl}/semantic-layer/v1/mcp`,
-      authorization_servers: [mockLightdash.baseUrl],
+      authorization_servers: [mcpServer.baseUrl],
       bearer_methods_supported: ['header'],
       scopes_supported: [],
     });
@@ -544,59 +542,6 @@ describe('MCP HTTP CORS integration', () => {
   });
 });
 
-describe('MCP HTTP unrestricted CORS integration', () => {
-  let mockLightdash: MockLightdashServer;
-  let mcpServer: McpHttpServer;
-
-  beforeEach(async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    mockLightdash = await startMockLightdashServer();
-    mcpServer = await createStreamableHttpServer({
-      ...baseOAuthConfig(mockLightdash.baseUrl),
-      allowedOrigins: [],
-      dangerouslyAllowAnyOrigin: true,
-    });
-  });
-
-  afterEach(async () => {
-    await mcpServer.close();
-    await mockLightdash.close();
-    vi.restoreAllMocks();
-  });
-
-  it('echoes CORS headers when dangerouslyAllowAnyOrigin is enabled', async () => {
-    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`, {
-      headers: { Origin: 'https://browser.example.com' },
-    });
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('access-control-allow-origin')).toBe('https://browser.example.com');
-  });
-
-  it('returns 403 for browser origins when allowlist is empty and dangerouslyAllowAnyOrigin is false', async () => {
-    const restrictedServer = await createStreamableHttpServer({
-      ...baseOAuthConfig(mockLightdash.baseUrl),
-      allowedOrigins: [],
-      dangerouslyAllowAnyOrigin: false,
-      dangerouslyAllowWriteInIdentityOAuth: false,
-    });
-
-    try {
-      const response = await fetch(`${restrictedServer.baseUrl}/semantic-layer/v1/mcp`, {
-        method: 'OPTIONS',
-        headers: { Origin: 'https://browser.example.com' },
-      });
-
-      expect(response.status).toBe(403);
-      expect(response.headers.get('access-control-allow-origin')).toBeNull();
-      expect(await response.json()).toEqual({ error: 'Forbidden: origin not allowed' });
-    } finally {
-      await restrictedServer.close();
-    }
-  });
-});
-
 describe('MCP HTTP OAuth integration (continued)', () => {
   let mockLightdash: MockLightdashServer;
   let mcpServer: McpHttpServer;
@@ -604,7 +549,6 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   beforeEach(async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'write-destructive';
     mockLightdash = await startMockLightdashServer();
     mcpServer = await createStreamableHttpServer({
       ...baseOAuthConfig(mockLightdash.baseUrl),
@@ -614,7 +558,6 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
-    delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
     vi.restoreAllMocks();
   });
 
@@ -916,10 +859,6 @@ describe('MCP HTTP shared-key integration', () => {
       scopesSupported: ['mcp:read'],
       validateToken: false,
       tokenValidationCacheTtlMs: 30_000,
-      grantAllScopesWhenUnknown: false,
-      experimentalIdentityOAuth: false,
-      dangerouslyAllowAnyOrigin: false,
-      dangerouslyAllowWriteInIdentityOAuth: false,
     });
   });
 

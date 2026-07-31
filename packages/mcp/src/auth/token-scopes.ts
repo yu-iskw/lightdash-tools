@@ -65,9 +65,10 @@ function scopesWhenUnknown(
  * Extracts OAuth scopes from JWT claims when present.
  *
  * For `lightdash-oauth`, Lightdash access tokens are typically opaque and this returns
- * `undefined` — MCP-local scope enforcement is skipped and authorization relies on Lightdash
- * RBAC plus process safety mode. Do not treat decoded JWT scopes as validated Lightdash OAuth
- * authorization unless Lightdash formally issues resource-bound JWT access tokens.
+ * `undefined` — MCP-local scope enforcement is skipped and authorization relies on the persona
+ * tool surface plus Lightdash RBAC (ADR-0006 / ADR-0008). Do not treat decoded JWT scopes as
+ * validated Lightdash OAuth authorization unless Lightdash formally issues resource-bound JWT
+ * access tokens.
  */
 export function extractTokenScopes(
   accessToken: string,
@@ -93,12 +94,4 @@ export function hasRequiredScopes(
 ): boolean {
   const granted = new Set(grantedScopes);
   return requiredScopes.every((scope) => granted.has(scope));
-}
-
-export function requiredScopeForTool(readOnly: boolean): 'mcp:read' | 'mcp:write' {
-  return readOnly ? 'mcp:read' : 'mcp:write';
-}
-
-export function hasToolScope(grantedScopes: readonly string[], readOnly: boolean): boolean {
-  return grantedScopes.includes(requiredScopeForTool(readOnly));
 }

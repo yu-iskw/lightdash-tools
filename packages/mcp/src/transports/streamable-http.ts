@@ -19,6 +19,7 @@ import {
   authenticateLightdashOAuth,
   writeOAuthAuthFailure,
 } from '../auth/lightdash-oauth-middleware.js';
+import { createOAuthBroker, type OAuthBroker } from '../auth/oauth-broker/routes.js';
 import {
   buildOAuthProtectedResourceMetadata,
   getProtectedResourceMetadataPathUrl,
@@ -28,6 +29,7 @@ import { authenticateSharedKey, checkOrigin } from '../auth/shared-key-middlewar
 import { hashToken } from '../auth/token-hash.js';
 import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
 import {
+  getOAuthCallbackUrl,
   loadMcpHttpConfig,
   requiresLightdashApiKey,
   emitMcpHttpSecurityWarnings,
@@ -71,11 +73,33 @@ function resolveListenHost(host: string): string {
   return host === '0.0.0.0' ? '127.0.0.1' : host;
 }
 
+function resolvePublicUrl(
+  publicUrl: string | undefined,
+  listenHost: string,
+  listenPort: number,
+): string {
+  if (!publicUrl) {
+    return `http://${listenHost}:${listenPort}`;
+  }
+
+  try {
+    const url = new URL(publicUrl);
+    if (url.port === '0') {
+      url.port = String(listenPort);
+      return url.origin;
+    }
+  } catch {
+    // Fall through to the configured value when URL parsing fails.
+  }
+
+  return publicUrl;
+}
+
 function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpConfig {
   const listenHost = resolveListenHost(config.host);
   return {
     ...config,
-    publicUrl: config.publicUrl ?? `http://${listenHost}:${listenPort}`,
+    publicUrl: resolvePublicUrl(config.publicUrl, listenHost, listenPort),
   };
 }
 
@@ -241,7 +265,6 @@ function writeSessionContextMismatch(
 function getOAuthAuditContext(req: IncomingMessage): {
   tokenHash?: string;
   subject?: string;
-  scopes?: string[];
 } {
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.ok) {
@@ -251,7 +274,6 @@ function getOAuthAuditContext(req: IncomingMessage): {
   return {
     tokenHash: hashToken(oauth.accessToken),
     subject: oauth.user.userUuid,
-    scopes: oauth.scopes,
   };
 }
 
@@ -287,7 +309,7 @@ function verifySessionAuth(
   if (entry.auth.tokenHash !== nextTokenHash) {
     entry.auth.tokenHash = nextTokenHash;
     if (entry.contextProvider instanceof BearerContextProvider) {
-      entry.contextProvider.updateAccessToken(oauth.accessToken, oauth.scopes);
+      entry.contextProvider.updateAccessToken(oauth.accessToken);
     }
   }
 
@@ -324,7 +346,6 @@ async function handleExistingSessionPost(
     {
       tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
       subject: auditAuth.subject ?? entry.auth.subject,
-      scopes: auditAuth.scopes,
     },
     () => entry.transport.handleRequest(req, res, body),
   );
@@ -356,7 +377,6 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
     const contextProvider = createOAuthBearerProvider(config, {
       accessToken: oauth.accessToken,
       subject: oauth.user.userUuid,
-      scopes: oauth.scopes,
     });
 
     const transport = createSessionTransport(
@@ -374,7 +394,6 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
       {
         tokenHash: contextProvider.getTokenHash(),
         subject: oauth.user.userUuid,
-        scopes: oauth.scopes,
       },
       () => transport.handleRequest(req, res, body),
     );
@@ -392,16 +411,12 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
   await transport.handleRequest(req, res, body);
 }
 
-function requiresProtectedEndpointAuth(config: McpHttpConfig): boolean {
-  return (
-    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
-    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
-  );
-}
-
 async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined): Promise<void> {
   const { req, res, config } = ctx;
-  if (requiresProtectedEndpointAuth(config)) {
+  if (
+    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+  ) {
     if (!(await ensureEndpointAuth(req, res, config))) {
       drainRequestBody(req);
       return;
@@ -464,7 +479,6 @@ async function handleMcpGetOrDelete(
     {
       tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
       subject: auditAuth.subject ?? entry.auth.subject,
-      scopes: auditAuth.scopes,
     },
     () => entry.transport.handleRequest(req, res),
   );
@@ -500,8 +514,10 @@ export async function createStreamableHttpServer(
   }, inputConfig.sessionCleanupMs);
   cleanupTimer.unref();
 
+  let oauthBroker: OAuthBroker | undefined;
+
   const server = createServer((req, res) => {
-    handleHttpRequest(req, res, httpConfig, sessionStore).catch((err) => {
+    handleHttpRequest(req, res, httpConfig, sessionStore, oauthBroker).catch((err) => {
       console.error('MCP HTTP handler error:', err);
       if (!res.headersSent) {
         sendJson(res, 500, { error: 'Internal Server Error' });
@@ -514,7 +530,10 @@ export async function createStreamableHttpServer(
   const address = server.address();
   const port = typeof address === 'object' && address !== null ? address.port : inputConfig.port;
   httpConfig = resolveHttpConfig(inputConfig, port);
-  const baseUrl = httpConfig.publicUrl!;
+  const baseUrl = httpConfig.publicUrl ?? `http://${resolveListenHost(httpConfig.host)}:${port}`;
+  if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    oauthBroker = createOAuthBroker(httpConfig);
+  }
 
   return {
     port,
@@ -542,10 +561,8 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
         .join(', ');
       console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
       if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-        const metadataConfig = httpConfig.publicUrl
-          ? httpConfig
-          : { ...httpConfig, publicUrl: baseUrl };
-        console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(metadataConfig)}`);
+        console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
+        console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);
       }
     })
     .catch((err: unknown) => {
@@ -554,22 +571,32 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     });
 }
 
-function handleCorsPreflight(
+/** Applies CORS reflect headers when the Origin is allowlisted (never blocks). */
+function applyOptionalCorsHeaders(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+): void {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+  applyResponseHeaders(res, buildCorsHeaders(origin, config.allowedOrigins));
+}
+
+/**
+ * Validates Origin and applies CORS headers for persona MCP routes.
+ * Short-circuits OPTIONS preflight with 204; returns true when the request is fully handled.
+ */
+function applyOriginGuardAndCors(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
 ): boolean {
   const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  if (!checkOrigin(origin, config.allowedOrigins, config.dangerouslyAllowAnyOrigin)) {
+  if (!checkOrigin(origin, config.allowedOrigins)) {
     sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
     return true;
   }
 
-  const corsHeaders = buildCorsHeaders(
-    origin,
-    config.allowedOrigins,
-    config.dangerouslyAllowAnyOrigin,
-  );
+  const corsHeaders = buildCorsHeaders(origin, config.allowedOrigins);
   applyResponseHeaders(res, corsHeaders);
 
   if (req.method === 'OPTIONS') {
@@ -585,19 +612,32 @@ async function handleHttpRequest(
   res: ServerResponse,
   config: McpHttpConfig,
   sessionStore: SessionStore,
+  oauthBroker: OAuthBroker | undefined,
 ): Promise<void> {
-  const path = (req.url ?? '').split('?')[0];
+  const path = (req.url ?? '').split('?')[0] ?? '';
 
-  if (handleCorsPreflight(req, res, config)) {
-    return;
-  }
-
+  // Public discovery / health / OAuth broker: do not Origin-block (empty allowlist must not 403).
   if (path === '/health/live' || path === '/health/ready') {
+    applyOptionalCorsHeaders(req, res, config);
     handleHealth(path, res, config);
     return;
   }
 
+  if (oauthBroker) {
+    applyOptionalCorsHeaders(req, res, config);
+    if (await oauthBroker.handle(req, res, path)) {
+      return;
+    }
+  } else if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    applyOptionalCorsHeaders(req, res, config);
+  }
+
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {
+    return;
+  }
+
+  // Persona MCP routes: Origin allowlist is enforced (CSRF / browser blast-radius).
+  if (applyOriginGuardAndCors(req, res, config)) {
     return;
   }
 

@@ -1,6 +1,6 @@
 /**
  * V2 API type barrel. Re-exports the same surface as LightdashApi.V2.
- * Domain files remain at types/*.ts; see ADR-0008 (file layout follow-up).
+ * Domain files remain at types/*.ts; see ADR-0003 (file layout follow-up).
  */
 
 import type { Content as Con } from './content';

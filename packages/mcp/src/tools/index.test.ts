@@ -1,7 +1,5 @@
-import { SafetyMode } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { setStaticSafetyMode, setDryRunMode } from '../config/runtime.js';
 import { getDefaultPersona } from '../personas/index.js';
 
 import { registerToolsByIds } from './registry.js';
@@ -30,11 +28,6 @@ describe('registerToolsByIds', () => {
   beforeEach(() => {
     registeredTools.length = 0;
     mockServer.registerTool.mockClear();
-    setStaticSafetyMode(SafetyMode.WRITE_DESTRUCTIVE);
-    setDryRunMode(false);
-    process.env.LIGHTDASH_TOOLS_SAFETY_MODE = SafetyMode.WRITE_DESTRUCTIVE;
-    delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
-    delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
   });
 
   it('registers only the persona allowlist with ldt__ prefix', () => {

@@ -5,12 +5,7 @@
 import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
-import {
-  READ_ONLY_CAPABILITY,
-  jsonToolResult,
-  registerToolSafe,
-  wrapToolAnnotated,
-} from './shared.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
 import type { McpContextProvider } from '../request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -29,11 +24,10 @@ export function registerListMetrics(server: McpServer, contextProvider: McpConte
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         pageSize: z.number().int().positive().optional().describe('Page size'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -64,11 +58,10 @@ export function registerGetMetric(server: McpServer, contextProvider: McpContext
         tableName: z.string().describe('Full explore id (same as tableName on catalog rows)'),
         metricName: z.string().describe('Metric name'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

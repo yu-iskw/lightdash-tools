@@ -1,7 +1,5 @@
 import { createBearerConfig, LightdashClient, SecretString } from '@lightdash-tools/client';
 
-import { buildMcpGovernance } from '../governance.js';
-
 import { hashToken } from './token-hash.js';
 
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
@@ -12,7 +10,6 @@ export interface BearerContextProviderOptions {
   accessToken: SecretString | string;
   proxyAuthorization?: SecretString;
   subject?: string;
-  scopes?: string[];
 }
 
 /** Session- or request-scoped context using a Lightdash OAuth bearer token. */
@@ -30,11 +27,10 @@ export class BearerContextProvider implements McpContextProvider {
     return this.tokenHash;
   }
 
-  updateAccessToken(accessToken: SecretString | string, scopes?: string[]): void {
+  updateAccessToken(accessToken: SecretString | string): void {
     this.options = {
       ...this.options,
       accessToken,
-      scopes: scopes ?? this.options.scopes,
     };
     this.tokenHash = hashToken(this.readAccessToken());
     this.cachedClient = undefined;
@@ -57,9 +53,7 @@ export class BearerContextProvider implements McpContextProvider {
         mode: 'lightdash-oauth',
         tokenHash: this.tokenHash,
         subject: this.options.subject,
-        scopes: this.options.scopes,
       },
-      governance: buildMcpGovernance(),
     };
   }
 
@@ -72,13 +66,12 @@ export class BearerContextProvider implements McpContextProvider {
 
 export function createOAuthBearerProvider(
   config: Pick<McpHttpConfig, 'lightdashUrl' | 'proxyAuthorization'>,
-  oauth: { accessToken: string; subject?: string; scopes?: string[] },
+  oauth: { accessToken: string; subject?: string },
 ): BearerContextProvider {
   return new BearerContextProvider({
     baseUrl: config.lightdashUrl,
     accessToken: oauth.accessToken,
     proxyAuthorization: config.proxyAuthorization,
     subject: oauth.subject,
-    scopes: oauth.scopes,
   });
 }

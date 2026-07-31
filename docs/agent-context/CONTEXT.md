@@ -10,7 +10,7 @@ Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`l
 
 ## Agent-safe surface
 
-MCP and CLI expose the same **agent-safe** tier — not the full `@lightdash-tools/client` API. See [ADR-0037](../adr/0037-agent-safe-mcp-cli-surface.md).
+MCP and CLI expose the same **agent-safe** tier — not the full `@lightdash-tools/client` API. See [ADR-0004](../adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md).
 
 | Class                        | MCP/CLI                                                   | Example                              |
 | ---------------------------- | --------------------------------------------------------- | ------------------------------------ |

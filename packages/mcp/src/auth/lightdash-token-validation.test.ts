@@ -25,10 +25,6 @@ function baseConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): M
     scopesSupported: ['mcp:read', 'mcp:write'],
     validateToken: true,
     tokenValidationCacheTtlMs: 30_000,
-    grantAllScopesWhenUnknown: false,
-    experimentalIdentityOAuth: false,
-    dangerouslyAllowAnyOrigin: false,
-    dangerouslyAllowWriteInIdentityOAuth: false,
     ...overrides,
   };
 }

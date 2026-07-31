@@ -28,10 +28,6 @@ const baseConfig: McpHttpConfig = {
   scopesSupported: ['mcp:read', 'mcp:write'],
   validateToken: true,
   tokenValidationCacheTtlMs: 30_000,
-  grantAllScopesWhenUnknown: false,
-  experimentalIdentityOAuth: false,
-  dangerouslyAllowAnyOrigin: false,
-  dangerouslyAllowWriteInIdentityOAuth: false,
 };
 
 function jwtWithScope(scope: string): string {

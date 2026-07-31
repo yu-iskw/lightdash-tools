@@ -10,6 +10,8 @@
  * @see https://github.com/lightdash/lightdash/blob/master/packages/backend/src/controllers/authentication/middlewares.ts
  */
 export const LIGHTDASH_OAUTH_VALIDATION_ENDPOINT = '/api/v1/user' as const;
+export const LIGHTDASH_OAUTH_AUTHORIZE_ENDPOINT = '/api/v1/oauth/authorize' as const;
+export const LIGHTDASH_OAUTH_TOKEN_ENDPOINT = '/api/v1/oauth/token' as const;
 
 /** Middleware chain on upstream `GetAuthenticatedUser` (TSOA `UserController`). */
 export const LIGHTDASH_GET_AUTHENTICATED_USER_MIDDLEWARE = [

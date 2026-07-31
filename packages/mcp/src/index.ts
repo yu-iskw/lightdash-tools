@@ -7,10 +7,11 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/env-context-provider.js';
-import { getAuditLogPath } from './config/runtime.js';
+import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
 import { createLightdashMcpServer } from './server.js';
 
 async function main(): Promise<void> {
+  warnIgnoredCliGuardrailEnvVars();
   initAuditLog(getAuditLogPath());
 
   const contextProvider = new EnvContextProvider();

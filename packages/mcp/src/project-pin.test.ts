@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildMcpGovernance } from './governance.js';
 import {
   extractPinnedProjectFromRequest,
+  getPinnedProjectUuid,
   parsePinnedProjectUuid,
   runWithProjectPinAsync,
 } from './project-pin.js';
@@ -36,13 +36,13 @@ describe('project pin', () => {
     expect(extractPinnedProjectFromRequest(req)).toBeUndefined();
   });
 
-  it('request pin sets governance.pinnedProjectUuid', async () => {
+  it('request pin is visible via getPinnedProjectUuid', async () => {
     await runWithProjectPinAsync(VALID, async () => {
-      expect(buildMcpGovernance().pinnedProjectUuid).toBe(VALID);
+      expect(getPinnedProjectUuid()).toBe(VALID);
     });
   });
 
-  it('no request pin means undefined governance pin', () => {
-    expect(buildMcpGovernance().pinnedProjectUuid).toBeUndefined();
+  it('no request pin means undefined pin', () => {
+    expect(getPinnedProjectUuid()).toBeUndefined();
   });
 });

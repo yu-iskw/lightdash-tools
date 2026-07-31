@@ -1,4 +1,9 @@
+import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../config/env.js';
+import { requirePublicUrl } from '../config/public-url.js';
+
 import type { McpHttpConfig } from '../config/load-mcp-config.js';
+
+const OAUTH_PROTECTED_RESOURCE_CONTEXT = 'OAuth protected resource metadata';
 
 export interface OAuthProtectedResourceMetadata {
   resource: string;
@@ -7,44 +12,36 @@ export interface OAuthProtectedResourceMetadata {
   scopes_supported: string[];
 }
 
-function requirePublicUrl(config: McpHttpConfig): string {
-  if (!config.publicUrl) {
-    throw new Error('publicUrl is required for OAuth protected resource metadata');
-  }
-  return config.publicUrl;
-}
-
 /** Builds MCP OAuth protected-resource metadata for this HTTP server. */
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
 ): OAuthProtectedResourceMetadata {
-  const publicUrl = requirePublicUrl(config);
+  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
 
-  // authorization_servers lists the Lightdash issuer origin (LIGHTDASH_URL), not the metadata
-  // document URL. Clients discover AS metadata at {issuer}/.well-known/oauth-authorization-server.
-  // lightdash-oauth remains experimental because tokens are not resource-bound to this MCP resource.
+  // Broker mode: authorization_servers is the MCP host (PUBLIC_URL). Clients discover
+  // AS metadata at {PUBLIC_URL}/.well-known/oauth-authorization-server and never need
+  // the Lightdash client secret. Identity validation remains GET /api/v1/user until
+  // upstream tokens are resource-bound.
   return {
     resource: `${publicUrl}${config.mcpPath}`,
-    authorization_servers: [config.lightdashUrl],
+    authorization_servers: [publicUrl],
     bearer_methods_supported: ['header'],
     scopes_supported: config.scopesSupported,
   };
 }
 
 export function getProtectedResourceMetadataUrl(config: McpHttpConfig): string {
-  return `${requirePublicUrl(config)}/.well-known/oauth-protected-resource`;
+  return `${requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT)}/.well-known/oauth-protected-resource`;
 }
 
 export function getProtectedResourceMetadataPathUrl(config: McpHttpConfig): string {
-  const publicUrl = requirePublicUrl(config);
+  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
   const resourcePath = config.mcpPath.replace(/^\//, '');
   return `${publicUrl}/.well-known/oauth-protected-resource/${resourcePath}`;
 }
 
-/** Well-known OAuth Authorization Server Metadata URL for a Lightdash issuer origin. */
-export function getLightdashAuthorizationServerMetadataUrl(
-  authorizationServerOrigin: string,
-): string {
+/** Well-known OAuth Authorization Server Metadata URL for an AS origin. */
+export function getAuthorizationServerMetadataUrl(authorizationServerOrigin: string): string {
   const base = authorizationServerOrigin.replace(/\/$/, '');
-  return `${base}/.well-known/oauth-authorization-server`;
+  return `${base}${OAUTH_AUTHORIZATION_SERVER_METADATA_PATH}`;
 }

@@ -1,4 +1,3 @@
-import { SafetyMode } from '@lightdash-tools/common';
 import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -22,11 +21,6 @@ function createMockContextProvider(lightdashClient: object = {}): McpContextProv
     getContext: async () => ({
       lightdashClient: lightdashClient as never,
       auth: { mode: 'env' as const },
-      governance: {
-        safetyMode: SafetyMode.READ_ONLY,
-        dryRun: false,
-        allowedProjectUuids: [],
-      },
     }),
   };
 }

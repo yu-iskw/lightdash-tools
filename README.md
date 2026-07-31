@@ -12,22 +12,15 @@ All tools are available as npm packages under the `@lightdash-tools` scope.
 
 ## AI Safety and Agent-Friendly Features
 
-Both the CLI and MCP server implement a hierarchical safety model to prevent accidental destructive operations (see [ADR 0029](docs/adr/0029-hierarchical-safety-modes-for-mcp-and-cli.md)).
+**CLI** uses a hierarchical safety stack ([ADR-0005](docs/adr/0005-cli-safety-stack.md)): `LIGHTDASH_TOOLS_SAFETY_MODE` / `--safety-mode` (`read-only` default, `write-idempotent`, `write-destructive`), plus optional dry-run, project allowlist, and audit log.
 
-You can control the safety level using the `LIGHTDASH_TOOLS_SAFETY_MODE` environment variable:
+**MCP** is persona-first ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)): capability = persona `toolIds`; HTTP may pin via `X-Lightdash-Project`; process safety-mode / allowlist / dry-run are **not** used on MCP.
 
-- `write-destructive`: Allows all operations, including deletions.
-- `write-idempotent`: Allows read operations and non-destructive writes (e.g., upsert, validate run).
-- `read-only` (default): Only allows non-modifying operations (e.g., list, get).
+**Shared agent-friendly features:**
 
-For the CLI, you can also use the global `--safety-mode` flag.
-
-**Agent-friendly features** (CLI and MCP):
-
-- **Schema introspection** — `lightdash-ai schema list` and `lightdash-ai schema get <resource>` for runtime discoverability.
-- **Dry-run** — `--dry-run` or `LIGHTDASH_TOOLS_DRY_RUN=1` to simulate mutating operations without executing.
-- **Project allowlist** — `--projects` or `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` to restrict operations to specific projects.
-- **Input validation** — Resource IDs are validated; invalid inputs (control chars, `?`, `#`, `%`, path traversal) are rejected before any API call.
+- **Agent-safe surface** — Irrecoverable ops stay off MCP/CLI ([ADR-0004](docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
+- **Input validation** — Known identifier fields only (`projectUuid`, `slug`, …).
+- **Audit log** — Optional `LIGHTDASH_TOOLS_AUDIT_LOG`.
 
 For agent-specific guidance, see [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md). For credentials, use env vars from your shell or CI; see [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
 

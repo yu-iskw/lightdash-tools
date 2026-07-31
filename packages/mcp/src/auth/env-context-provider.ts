@@ -1,7 +1,6 @@
 import { type LightdashClient } from '@lightdash-tools/client';
 
 import { getClient } from '../config/runtime.js';
-import { buildMcpGovernance } from '../governance.js';
 
 import type { McpAuthMode } from './auth-mode.js';
 import type { LightdashMcpRequestContext, McpContextProvider } from '../request-context.js';
@@ -20,7 +19,6 @@ export class EnvContextProvider implements McpContextProvider {
     return {
       lightdashClient: this.client,
       auth: { mode: this.mode },
-      governance: buildMcpGovernance(),
     };
   }
 }

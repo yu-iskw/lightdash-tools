@@ -51,7 +51,7 @@ export async function authenticateLightdashOAuth(
   try {
     const user = await validateLightdashAccessToken(config, token);
     const scopes = extractTokenScopes(token, config.scopesSupported, {
-      grantAllWhenUnknown: config.grantAllScopesWhenUnknown,
+      grantAllWhenUnknown: false,
     });
     if (
       config.requiredScopes.length > 0 &&

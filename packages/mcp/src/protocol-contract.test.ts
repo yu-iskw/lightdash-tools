@@ -2,7 +2,6 @@
  * In-memory protocol contract: createLightdashMcpServer + Client via InMemoryTransport.
  * No Lightdash network calls — stub McpContextProvider only.
  */
-import { SafetyMode } from '@lightdash-tools/common';
 import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -18,11 +17,6 @@ function createStubContextProvider(): McpContextProvider {
     getContext: async () => ({
       lightdashClient: {} as never,
       auth: { mode: 'env' as const },
-      governance: {
-        safetyMode: SafetyMode.READ_ONLY,
-        dryRun: false,
-        allowedProjectUuids: [],
-      },
     }),
   };
 }

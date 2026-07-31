@@ -298,6 +298,10 @@ describe('Safety Logic', () => {
       expect(extractProjectUuids({ projectUuids: [UUID_A, UUID_B] })).toEqual([UUID_A, UUID_B]);
     });
 
+    it('should extract projects array from MCP-style object', () => {
+      expect(extractProjectUuids({ projects: [UUID_A, UUID_B] })).toEqual([UUID_A, UUID_B]);
+    });
+
     it('should extract project from MCP-style object', () => {
       expect(extractProjectUuids({ project: UUID_A })).toEqual([UUID_A]);
     });
