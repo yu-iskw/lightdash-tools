@@ -18,20 +18,28 @@ Discover the Lightdash semantic layer and **compose + compile** metric queries. 
 
 ## Hard bans
 
-Do **not** attempt or invent: run-query / SQL runner / validation jobs / charts / dashboards / spaces / users / groups / ACL / AI agents / agentops. Those tools are not on this server.
+Do **not** attempt or invent: run-query / SQL runner / validation jobs / charts / dashboards / spaces / users / groups / ACL / AI agents / agentops. Those tools are not on this server. Use Lightdash **compile** only (not warehouse execution).
 
-## From BigQuery / `bq ls` inventory → explore
+## Project scope
 
-When the user pastes warehouse inventory (TABLE + dataset + partition field):
+1. If the user gave a **project UUID**, use it on every tool. Prefer `ldt__get_project` to confirm the name.
+2. Without an HTTP project pin, `ldt__list_projects` may return the **entire org** — do **not** switch to another project from that list.
+3. Lightdash **project UUID** ≠ warehouse cloud project. Match inventory project/dataset to explore **`databaseName`** / **`schemaName`**, not to `get_project`’s warehouse connection fields alone.
 
-| Inventory column                                                             | MCP use                                                                              |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Dataset (e.g. `dwh_pharma`)                                                  | Prefer explores with matching **`schemaName`**                                       |
-| TABLE (e.g. `medico_session_summary`)                                        | `ldt__list_explores` **`search`** = that table token; prefer **exact `label` match** |
-| Partition / time field (e.g. `session_start_time`, `session_start_time_jst`) | Candidate **dimension** `fieldId` for “by day / by time” compiles                    |
-| Full id `project.dataset.table`                                              | `databaseName` ≈ project, `schemaName` ≈ dataset, `label` ≈ table                    |
+## From warehouse inventory → explore
 
-Warehouse names are **search hints**, not explore IDs. Explore ids look like `ubie_jp_phr_dwh__dwh_pharma__medico_session_summary`.
+When the user pastes warehouse inventory (dataset / table / partition field):
+
+| Inventory hint                  | MCP use                                                                              |
+| ------------------------------- | ------------------------------------------------------------------------------------ |
+| Dataset (`{dataset}`)           | Prefer explores with matching **`schemaName`**                                       |
+| TABLE (`{table}`)               | `ldt__list_explores` **`search`** = that table token; prefer **exact `label` match** |
+| Partition / time field          | Candidate **dimension** `fieldId` for time-grain compiles                            |
+| Full id `project.dataset.table` | `databaseName` ≈ project, `schemaName` ≈ dataset, `label` ≈ table                    |
+
+Warehouse names are **search hints**, not explore IDs. Explore ids are usually compound (often `{project}__{dataset}__{table}`-style); use the explore `name` returned by tools.
+
+Some inventory tables have **no** explore. Empty `list_explores` → say so; try a related curated/summary table the user cares about.
 
 ## Always search explores
 
@@ -39,14 +47,15 @@ On large projects, **never** use the default first-N explore list (alphabetical 
 
 ## Explore disambiguation
 
-Search `medico_session_summary` often returns many siblings (`eda_…`, `reporting_…`, `mre_*`, exact warehouse table). **Do not pick the first hit.**
+Search for `{table}` often returns siblings (staging / EDA / reporting variants, and the warehouse table). **Do not pick the first hit.**
 
 1. Skip explores with non-empty `errors`.
-2. If the user named a dataset, prefer matching **`schemaName`** (e.g. `dwh_pharma` over `dm_pharma`). Skip rows with **empty** `schemaName` unless nothing else matches.
-3. Prefer **exact `label`** = warehouse table name (not `eda_medico_session_summary`).
+2. If the user named a dataset, prefer matching **`schemaName`**. Skip rows with **empty** `schemaName` unless nothing else matches.
+3. Match warehouse table via **exact `label`** = `{table}`, **or** explore **`name`** ending with / containing `__{table}` (labels may be humanized).
 4. Prefer tags such as `lightdash` when still tied.
-5. Deprioritize `eda_`, `reporting_`, `mre_`, `mre_dp_`, `mre_pd_` unless asked.
-6. State chosen explore **`name`**, `label`, and `schemaName` in the answer.
+5. Deprioritize staging / EDA / reporting-style name prefixes unless the user asked for them.
+6. Duplicate labels with version suffixes: prefer the explore **`name`** without an extra `_vN` unless the user asked for that version.
+7. State chosen explore **`name`**, `label`, and `schemaName` in the answer.
 
 ## Progressive discovery
 
@@ -59,55 +68,52 @@ Search `medico_session_summary` often returns many siblings (`eda_…`, `reporti
 
 `ldt__list_metrics` searches the **org catalog**, not “metrics on this explore”.
 
-| Search token                         | Typical result                                      |
-| ------------------------------------ | --------------------------------------------------- |
-| Warehouse table / explore id         | **Often zero** hits                                 |
-| Broad `medico` / `session` / `count` | Hundreds of **other** tables — flood                |
-| Goal keyword (`nps`, `完了`, `問診`) | May hit this explore **and** siblings — must filter |
+| Search token                   | Typical result                                      |
+| ------------------------------ | --------------------------------------------------- |
+| Warehouse table / explore id   | **Often zero** hits                                 |
+| Broad domain / entity tokens   | Hundreds of **other** tables — flood                |
+| Goal keyword from the question | May hit this explore **and** siblings — must filter |
 
 Rules:
 
-1. Response shape: `{ pagination, data: Metric[] }`. Keep rows where `tableName` **equals the full explore id**.
-2. After filter, if **zero** rows remain → call `ldt__get_explore` and read **only** `tables[baseTable].metrics` (names + labels). Do **not** paste the full explore JSON into the answer.
-3. `ldt__get_metric` `tableName` must be the full explore id. Short labels (`medico_session_summary`) → “Metric not found”.
+1. Once the explore is known, prefer **`ldt__get_explore` → `tables[baseTable].metrics` only** for the full local menu (names + labels). Do **not** paste the full explore JSON. Ignore join tables under `tables`.
+2. Optional: keyword `ldt__list_metrics` for discovery. Response shape `{ pagination, data: Metric[] }`. Keep rows where `tableName` **equals the full explore id**. Table/explore-id search often returns **zero**.
+3. `ldt__get_metric` `tableName` must be the full explore id. Short warehouse labels → “Metric not found”. Summarize; do not paste huge `availableTimeDimensions` payloads.
 4. Compile metric ids as `{exploreId}_{metricName}` (same pattern as dimension `fieldId`).
-5. Dimension-only (`metrics: []`) is valid for volume-by-time, but for “insights” prefer real explore metrics (starts, completes, rates, NPS, …).
+5. Dimension-only (`metrics: []`) is valid for volume-by-time; for “insights” prefer real explore metrics when available.
 
 ## Dimension shortlist (large explores)
 
 Base tables can expose **hundreds** of dimensions (nested structs, event arrays). Do **not** dump the full list.
 
-Prefer high-signal fields for insight queries:
+Prefer high-signal fields that appear in `list_dimensions`, by **role**:
 
-- Time grain: `*_jst_day` / `*_jst_week` / `*_jst_month` (prefer JST when both UTC and JST exist)
-- Platform / channel: `platform_web_app`, `utm_source`, `utm_medium`, `is_admedia_inflow`
-- Demographics: `selected_person_age_seg`, `selected_person_sex`
-- Clinical / product: `keyword_name`, `maincomplaint_name`, `triage_level` / `triage_type`
+- Time grains (day / week / month; prefer local timezone grains when both UTC and local exist)
+- Channel / platform / traffic source
+- Segment / demographic / cohort dimensions relevant to the question
+- Core product or entity attributes named in the question
 
-Skip nested event dumps (`open_disease_card_events.*`, long questionnaire paths) unless the question targets them.
+Skip nested event dumps and deep struct paths unless the question targets them.
 
 ## Multi-insight composition (“compose N queries”)
 
 When the user asks for several insights on one table/explore:
 
 1. Disambiguate explore once; reuse the same `exploreId` and metric shortlist.
-2. Pick **diverse** cuts (don’t repeat the same grain five times), e.g.:
-   - Trend: time grain + volume + completion rate (+ median duration if available)
-   - Funnel: platform × start / keyword / complete counts + rate
-   - Quality: NPS (or promoters/detractors) × platform × age
-   - Outcome: visit intention / diagnosis-accuracy style rates × demographics
-   - Acquisition: `utm_source` / ad flag × completion + NPS / visit rate
+2. Pick **diverse** cuts from available metrics/dims (don’t repeat the same grain N times)—e.g. trend, breakdown by a categorical dim, quality/rate metrics, outcome metrics, acquisition/source—only when those fields exist.
 3. Compile each with `ldt__compile_query`; verify SELECT columns; present **insight title + metric/dimension fieldIds + compiled SQL** (or errors). Do not paste full dimension/explore payloads.
-4. Metrics that join other tables (e.g. diagnosis accuracy) may produce large CTE SQL — still OK; mention the join briefly.
+4. Metrics that join other tables may produce large CTE SQL — still OK; mention the join briefly.
 
 ## Field IDs and empty SELECT
 
-Prefer `fieldId` from `ldt__list_dimensions` (e.g. `…__medico_session_summary_session_start_time_jst_week`).
+Prefer `fieldId` from `ldt__list_dimensions` / `{exploreId}_{metricName}`.
 
 Short names alone are unsafe:
 
 1. Upstream may “succeed” with an **empty `SELECT`** — this server returns **`isError`**. Fix to `fieldId`s and re-compile once.
 2. Or hard-error on unknown field id.
+
+Compiled SQL may include **extra related metrics** the semantic layer pulls in — verify columns against the goal; unexpected helpers can be OK if the requested fields are present.
 
 ## Field lineage
 
@@ -115,17 +121,17 @@ Short names alone are unsafe:
 
 ## Answer shape
 
-Shortlists only: explore `name` / `label` / `schemaName` / why chosen; metric/dimension names + `fieldId`; compiled SQL or compile errors. Never paste full `get_explore`, full dimension arrays, or full lineage JSON.
+Shortlists only: explore `name` / `label` / `schemaName` / why chosen; metric/dimension names + `fieldId`; compiled SQL or compile errors. Never paste full `get_explore`, full dimension arrays, full `get_metric`, or full lineage JSON.
 
 ## metricQuery skeleton
 
 ```json
 {
-  "exploreName": "<exploreId>",
-  "dimensions": ["<table>_<name>"],
-  "metrics": ["<table>_<name>"],
+  "exploreName": "{exploreId}",
+  "dimensions": ["{exploreId}_{dim}"],
+  "metrics": ["{exploreId}_{metric}"],
   "filters": {},
-  "sorts": [{ "fieldId": "<table>_<name>", "descending": false }],
+  "sorts": [{ "fieldId": "{exploreId}_{dim}", "descending": false }],
   "limit": 50,
   "tableCalculations": []
 }
@@ -135,8 +141,8 @@ Shortlists only: explore `name` / `label` / `schemaName` / why chosen; metric/di
 
 ## Recommended sequence
 
-1. Scope: `ldt__get_project` (or list → pick)
-2. Discover: search explores → disambiguate → base-table dimensions (shortlist) + metrics (keyword catalog **or** `get_explore` metrics map)
+1. Scope: `ldt__get_project` with the user-given project UUID (do not switch from an org-wide list)
+2. Discover: search explores → disambiguate → base-table dimensions (shortlist) + explore-local metrics (`get_explore` metrics map; catalog keyword optional)
 3. `ldt__compile_query` with `fieldId`s (repeat for multi-insight)
 4. Verify SELECT columns; stop
 

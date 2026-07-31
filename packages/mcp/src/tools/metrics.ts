@@ -17,7 +17,7 @@ export function registerListMetrics(server: McpServer, contextProvider: McpConte
     {
       title: 'List metrics',
       description:
-        'List metrics in the project catalog. Search with metric keywords (e.g. nps), not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
+        'List metrics in the project catalog. Search with goal keywords from the question, not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
       inputSchema: {
         projectUuid: projectUuidField(),
         search: z.string().optional().describe('Metric keyword search (not warehouse/table label)'),
