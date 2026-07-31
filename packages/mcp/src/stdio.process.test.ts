@@ -95,7 +95,6 @@ describe('stdio process smoke', () => {
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
         // Avoid inheriting real credentials or network-affecting settings.
-        LIGHTDASH_TOOLS_DRY_RUN: undefined,
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],

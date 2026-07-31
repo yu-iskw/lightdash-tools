@@ -1,5 +1,5 @@
 /**
- * Agent-safe surface policy helpers (ADR-0037).
+ * Agent-safe surface policy helpers (ADR-0004).
  */
 
 import { listOperations } from './registry';

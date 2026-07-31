@@ -10,14 +10,9 @@ import {
   summarizeExplores,
 } from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
-import {
-  READ_ONLY_CAPABILITY,
-  jsonToolResult,
-  registerToolSafe,
-  wrapToolAnnotated,
-} from './shared.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerListExplores(server: McpServer, contextProvider: McpContextProvider): void {
@@ -33,11 +28,10 @@ export function registerListExplores(server: McpServer, contextProvider: McpCont
         search: z.string().optional().describe('Filter by name, label, tag, database, or schema'),
         limit: z.number().int().positive().optional().describe('Max explores to return'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -67,11 +61,10 @@ export function registerGetExplore(server: McpServer, contextProvider: McpContex
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
           const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
@@ -100,11 +93,10 @@ export function registerListDimensions(
           .optional()
           .describe('When true (default), only dimensions on the explore base table'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -143,11 +135,10 @@ export function registerGetFieldLineage(
           .string()
           .describe('Field id `{table}_{name}` or short field name (see semantic-layer playbook)'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

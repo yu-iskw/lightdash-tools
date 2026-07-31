@@ -21,7 +21,10 @@ describe('argument-validation', () => {
           'fingerprint',
           'mcpServerUuid',
           'messageUuid',
+          'project',
           'projectUuid',
+          'projectUuids',
+          'projects',
           'promptUuid',
           'runUuid',
           'savedQueryUuid',
@@ -142,6 +145,16 @@ describe('argument-validation', () => {
           slug: 'my-chart',
         }),
       ).not.toThrow();
+    });
+
+    it('validates projectUuids / projects array entries as UUIDs', () => {
+      expect(() => validateResourceIdsInObject({ projectUuids: [VALID_UUID] })).not.toThrow();
+      expect(() => validateResourceIdsInObject({ projectUuids: [VALID_UUID, 'bad-uuid'] })).toThrow(
+        'Invalid UUID format',
+      );
+      expect(() => validateResourceIdsInObject({ projects: ['bad-uuid'] })).toThrow(
+        'Invalid UUID format',
+      );
     });
 
     it('validates nested resource id keys', () => {

@@ -120,7 +120,7 @@ For custom endpoints use `client.getHttpClientV1()` and call `get`, `post`, `put
 
 - Commander.js: <https://www.npmjs.com/package/commander> <!-- markdown-link-check-disable-line -->
 
-This package depends on `@lightdash-tools/common` only (one-way: client → common). Types and API models are consumed from common; see [ADR 0004](../../docs/adr/0004-shared-api-models-in-common-package.md) for the architecture.
+This package depends on `@lightdash-tools/common` only (one-way: client → common). Types and API models are consumed from common; see [ADR 0004](../../docs/adr/0003-shared-types-and-api-version-namespaces.md) for the architecture.
 
 ## Type Imports
 

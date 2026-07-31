@@ -33,7 +33,7 @@ Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents h
 
 ### Agent-safe surface
 
-MCP and CLI expose the same agent-safe operations. Irrecoverable actions (e.g. deleting org members) are **not** CLI commands — use `@lightdash-tools/client` for those. Reversible destructive commands (e.g. `groups delete`) remain available and respect `--safety-mode` and `--dry-run`. See [ADR-0037](../../docs/adr/0037-agent-safe-mcp-cli-surface.md) and [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md).
+CLI exposes the agent-safe operation tier (with `--safety-mode` / `--dry-run` / project allowlist). MCP ships a narrower persona surface (semantic-layer discovery/compile) without those process knobs — see [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md). Irrecoverable actions (e.g. deleting org members) are **not** CLI or MCP tools — use `@lightdash-tools/client`. See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md).
 
 Example:
 

@@ -5,14 +5,9 @@
 import { z } from 'zod';
 
 import { projectUuidField } from './schema-fields.js';
-import {
-  READ_ONLY_CAPABILITY,
-  jsonToolResult,
-  registerToolSafe,
-  wrapToolAnnotated,
-} from './shared.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerListMetrics(server: McpServer, contextProvider: McpContextProvider): void {
@@ -22,18 +17,17 @@ export function registerListMetrics(server: McpServer, contextProvider: McpConte
     {
       title: 'List metrics',
       description:
-        'List metrics in the project catalog. Search with metric keywords (e.g. nps), not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
+        'List metrics in the project catalog. Search with goal keywords from the question, not warehouse table names (those often return zero). Filter results where tableName equals the explore id.',
       inputSchema: {
         projectUuid: projectUuidField(),
         search: z.string().optional().describe('Metric keyword search (not warehouse/table label)'),
         page: z.number().int().positive().optional().describe('Page number (1-based)'),
         pageSize: z.number().int().positive().optional().describe('Page size'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,
@@ -64,11 +58,10 @@ export function registerGetMetric(server: McpServer, contextProvider: McpContext
         tableName: z.string().describe('Full explore id (same as tableName on catalog rows)'),
         metricName: z.string().describe('Metric name'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

@@ -12,7 +12,10 @@ import {
 
 /** Object keys whose string values are treated as resource identifiers. */
 export const RESOURCE_ID_KEYS = new Set([
+  'project',
   'projectUuid',
+  'projectUuids',
+  'projects',
   'agentUuid',
   'threadUuid',
   'messageUuid',
@@ -147,9 +150,10 @@ function validateResourceIdValues(key: string, value: unknown): void {
   }
   if (Array.isArray(value)) {
     for (const item of value) {
-      if (typeof item === 'string') {
-        validateResourceIdValue(key, item);
+      if (typeof item !== 'string') {
+        throw new Error(`Argument '${key}' must be a string or string array`);
       }
+      validateResourceIdValue(key, item);
     }
   }
 }

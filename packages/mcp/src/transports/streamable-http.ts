@@ -11,40 +11,49 @@ import {
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
 import {
+  createOAuthBroker,
+  isOAuthBrokerPath,
+  type OAuthBroker,
+} from '../auth/oauth-broker/routes.js';
+import {
   createOAuthBearerProvider,
   BearerContextProvider,
-} from '../auth/bearer-context-provider.js';
-import { EnvContextProvider } from '../auth/env-context-provider.js';
+} from '../auth/providers/bearer-context-provider.js';
+import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
   writeOAuthAuthFailure,
-} from '../auth/lightdash-oauth-middleware.js';
+} from '../auth/resource-server/lightdash-oauth-middleware.js';
 import {
   buildOAuthProtectedResourceMetadata,
   getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
-} from '../auth/oauth-protected-resource.js';
-import { authenticateSharedKey, checkOrigin } from '../auth/shared-key-middleware.js';
+} from '../auth/resource-server/oauth-protected-resource.js';
+import { authenticateSharedKey } from '../auth/resource-server/shared-key-middleware.js';
+import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import { hashToken } from '../auth/token-hash.js';
-import { buildWwwAuthenticateHeader } from '../auth/www-authenticate.js';
 import {
+  getOAuthCallbackUrl,
   loadMcpHttpConfig,
   requiresLightdashApiKey,
   emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath } from '../config/runtime.js';
+import {
+  extractPinnedProjectFromRequest,
+  runWithProjectPinAsync,
+} from '../governance/project-pin.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
-import { extractPinnedProjectFromRequest, runWithProjectPinAsync } from '../project-pin.js';
-import { createLightdashMcpServer } from '../server.js';
+import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
-import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
+import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const ERROR_SESSION_NOT_FOUND = 'Session not found';
@@ -71,11 +80,33 @@ function resolveListenHost(host: string): string {
   return host === '0.0.0.0' ? '127.0.0.1' : host;
 }
 
+function resolvePublicUrl(
+  publicUrl: string | undefined,
+  listenHost: string,
+  listenPort: number,
+): string {
+  if (!publicUrl) {
+    return `http://${listenHost}:${listenPort}`;
+  }
+
+  try {
+    const url = new URL(publicUrl);
+    if (url.port === '0') {
+      url.port = String(listenPort);
+      return url.origin;
+    }
+  } catch {
+    // Fall through to the configured value when URL parsing fails.
+  }
+
+  return publicUrl;
+}
+
 function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpConfig {
   const listenHost = resolveListenHost(config.host);
   return {
     ...config,
-    publicUrl: config.publicUrl ?? `http://${listenHost}:${listenPort}`,
+    publicUrl: resolvePublicUrl(config.publicUrl, listenHost, listenPort),
   };
 }
 
@@ -161,17 +192,18 @@ function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig):
   }
 }
 
-function handleMetadata(path: string, res: ServerResponse, config: McpHttpConfig): boolean {
-  const rootMetadataPath = '/.well-known/oauth-protected-resource';
-  const pathMetadataUrl = getProtectedResourceMetadataPathUrl(config);
-  const pathSpecificMetadataPath = new URL(pathMetadataUrl).pathname;
-
-  if (path !== rootMetadataPath && path !== pathSpecificMetadataPath) {
+function isProtectedResourceMetadataPath(path: string, config: McpHttpConfig): boolean {
+  // Cheap reject for the common persona MCP path before URL/pathname work.
+  if (!path.startsWith('/.well-known/oauth-protected-resource')) {
     return false;
   }
+  const rootMetadataPath = '/.well-known/oauth-protected-resource';
+  const pathSpecificMetadataPath = new URL(getProtectedResourceMetadataPathUrl(config)).pathname;
+  return path === rootMetadataPath || path === pathSpecificMetadataPath;
+}
 
+function writeProtectedResourceMetadata(res: ServerResponse, config: McpHttpConfig): void {
   sendJson(res, 200, buildOAuthProtectedResourceMetadata(config));
-  return true;
 }
 
 async function ensureEndpointAuth(
@@ -241,7 +273,6 @@ function writeSessionContextMismatch(
 function getOAuthAuditContext(req: IncomingMessage): {
   tokenHash?: string;
   subject?: string;
-  scopes?: string[];
 } {
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.ok) {
@@ -251,7 +282,6 @@ function getOAuthAuditContext(req: IncomingMessage): {
   return {
     tokenHash: hashToken(oauth.accessToken),
     subject: oauth.user.userUuid,
-    scopes: oauth.scopes,
   };
 }
 
@@ -287,7 +317,7 @@ function verifySessionAuth(
   if (entry.auth.tokenHash !== nextTokenHash) {
     entry.auth.tokenHash = nextTokenHash;
     if (entry.contextProvider instanceof BearerContextProvider) {
-      entry.contextProvider.updateAccessToken(oauth.accessToken, oauth.scopes);
+      entry.contextProvider.updateAccessToken(oauth.accessToken);
     }
   }
 
@@ -324,7 +354,6 @@ async function handleExistingSessionPost(
     {
       tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
       subject: auditAuth.subject ?? entry.auth.subject,
-      scopes: auditAuth.scopes,
     },
     () => entry.transport.handleRequest(req, res, body),
   );
@@ -356,7 +385,6 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
     const contextProvider = createOAuthBearerProvider(config, {
       accessToken: oauth.accessToken,
       subject: oauth.user.userUuid,
-      scopes: oauth.scopes,
     });
 
     const transport = createSessionTransport(
@@ -374,7 +402,6 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
       {
         tokenHash: contextProvider.getTokenHash(),
         subject: oauth.user.userUuid,
-        scopes: oauth.scopes,
       },
       () => transport.handleRequest(req, res, body),
     );
@@ -392,16 +419,12 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
   await transport.handleRequest(req, res, body);
 }
 
-function requiresProtectedEndpointAuth(config: McpHttpConfig): boolean {
-  return (
-    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
-    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
-  );
-}
-
 async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined): Promise<void> {
   const { req, res, config } = ctx;
-  if (requiresProtectedEndpointAuth(config)) {
+  if (
+    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+  ) {
     if (!(await ensureEndpointAuth(req, res, config))) {
       drainRequestBody(req);
       return;
@@ -464,7 +487,6 @@ async function handleMcpGetOrDelete(
     {
       tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
       subject: auditAuth.subject ?? entry.auth.subject,
-      scopes: auditAuth.scopes,
     },
     () => entry.transport.handleRequest(req, res),
   );
@@ -500,8 +522,10 @@ export async function createStreamableHttpServer(
   }, inputConfig.sessionCleanupMs);
   cleanupTimer.unref();
 
+  let oauthBroker: OAuthBroker | undefined;
+
   const server = createServer((req, res) => {
-    handleHttpRequest(req, res, httpConfig, sessionStore).catch((err) => {
+    handleHttpRequest(req, res, httpConfig, sessionStore, oauthBroker).catch((err) => {
       console.error('MCP HTTP handler error:', err);
       if (!res.headersSent) {
         sendJson(res, 500, { error: 'Internal Server Error' });
@@ -514,7 +538,10 @@ export async function createStreamableHttpServer(
   const address = server.address();
   const port = typeof address === 'object' && address !== null ? address.port : inputConfig.port;
   httpConfig = resolveHttpConfig(inputConfig, port);
-  const baseUrl = httpConfig.publicUrl!;
+  const baseUrl = httpConfig.publicUrl ?? `http://${resolveListenHost(httpConfig.host)}:${port}`;
+  if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    oauthBroker = createOAuthBroker(httpConfig);
+  }
 
   return {
     port,
@@ -542,10 +569,8 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
         .join(', ');
       console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
       if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-        const metadataConfig = httpConfig.publicUrl
-          ? httpConfig
-          : { ...httpConfig, publicUrl: baseUrl };
-        console.error(`OAuth metadata: ${getProtectedResourceMetadataUrl(metadataConfig)}`);
+        console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
+        console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);
       }
     })
     .catch((err: unknown) => {
@@ -554,26 +579,80 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     });
 }
 
-function handleCorsPreflight(
+function requestOrigin(req: IncomingMessage): string | undefined {
+  return typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+}
+
+/**
+ * Applies CORS reflect headers without blocking.
+ * When `reflectAnyOrigin` is true (OAuth AS / PRM), always echo Origin and ignore
+ * `ALLOWED_ORIGINS` so Cursor loopback (`http://localhost:8787`) can read token JSON
+ * even if persona MCP routes use a browser allowlist.
+ */
+function applyOptionalCorsHeaders(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+  reflectAnyOrigin = false,
+): void {
+  const allowed = reflectAnyOrigin ? [] : config.allowedOrigins;
+  applyResponseHeaders(res, buildCorsHeaders(requestOrigin(req), allowed, reflectAnyOrigin));
+}
+
+/**
+ * Validates Origin and applies CORS headers for persona MCP routes.
+ * Short-circuits OPTIONS preflight with 204; returns true when the request is fully handled.
+ */
+function applyOriginGuardAndCors(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
 ): boolean {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  if (!checkOrigin(origin, config.allowedOrigins, config.dangerouslyAllowAnyOrigin)) {
+  const origin = requestOrigin(req);
+  if (!checkOrigin(origin, config.allowedOrigins)) {
     sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
     return true;
   }
 
-  const corsHeaders = buildCorsHeaders(
-    origin,
-    config.allowedOrigins,
-    config.dangerouslyAllowAnyOrigin,
-  );
+  const corsHeaders = buildCorsHeaders(origin, config.allowedOrigins);
   applyResponseHeaders(res, corsHeaders);
 
   if (req.method === 'OPTIONS') {
     res.writeHead(204, corsHeaders).end();
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Health, OAuth broker, and PRM discovery — no Origin allowlist gate.
+ * Returns true when the request was fully handled.
+ */
+async function handlePublicHttpPaths(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+  path: string,
+  oauthBroker: OAuthBroker | undefined,
+): Promise<boolean> {
+  if (path === '/health/live' || path === '/health/ready') {
+    applyOptionalCorsHeaders(req, res, config);
+    handleHealth(path, res, config);
+    return true;
+  }
+
+  if (oauthBroker !== undefined && isOAuthBrokerPath(path)) {
+    applyOptionalCorsHeaders(req, res, config, true);
+    return oauthBroker.handle(req, res, path);
+  }
+
+  if (
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH &&
+    isProtectedResourceMetadataPath(path, config)
+  ) {
+    applyOptionalCorsHeaders(req, res, config, true);
+    writeProtectedResourceMetadata(res, config);
     return true;
   }
 
@@ -585,19 +664,16 @@ async function handleHttpRequest(
   res: ServerResponse,
   config: McpHttpConfig,
   sessionStore: SessionStore,
+  oauthBroker: OAuthBroker | undefined,
 ): Promise<void> {
-  const path = (req.url ?? '').split('?')[0];
+  const path = (req.url ?? '').split('?')[0] ?? '';
 
-  if (handleCorsPreflight(req, res, config)) {
+  if (await handlePublicHttpPaths(req, res, config, path, oauthBroker)) {
     return;
   }
 
-  if (path === '/health/live' || path === '/health/ready') {
-    handleHealth(path, res, config);
-    return;
-  }
-
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {
+  // Persona MCP routes: Origin allowlist is enforced (CSRF / browser blast-radius).
+  if (applyOriginGuardAndCors(req, res, config)) {
     return;
   }
 

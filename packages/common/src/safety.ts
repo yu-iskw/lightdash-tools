@@ -209,7 +209,7 @@ export function extractProjectUuids(args: unknown): string[] {
   } else if (typeof args === 'object') {
     // MCP or single options object
     const a = args as Record<string, unknown>;
-    const keys = ['project', 'projectUuid', 'projectUuids'];
+    const keys = ['projects', 'project', 'projectUuid', 'projectUuids'];
     for (const key of keys) {
       const val = a[key];
       if (typeof val === 'string') {

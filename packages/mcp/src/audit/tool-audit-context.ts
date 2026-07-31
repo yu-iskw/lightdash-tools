@@ -3,7 +3,6 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 export type ToolAuditAuthContext = {
   tokenHash?: string;
   subject?: string;
-  scopes?: string[];
 };
 
 const storage = new AsyncLocalStorage<ToolAuditAuthContext>();

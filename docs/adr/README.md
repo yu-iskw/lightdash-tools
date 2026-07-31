@@ -1,0 +1,46 @@
+# Architecture Decision Records
+
+Slim thematic set of binding architecture decisions for this monorepo.
+
+Format follows [Michael Nygard's ADRs](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) (Context / Decision / Status / Consequences). Manage with [adr-tools](https://github.com/npryce/adr-tools) under `docs/adr`.
+
+## Keep criteria
+
+Include an ADR only if **all** are true:
+
+1. Architecturally significant (structure, interfaces, safety, package boundaries).
+2. Still **binding** in current code (or explicitly CLI-only / MCP-only).
+3. Non-obvious trade-off a future maintainer would ask "why?"
+4. One decision (not a feature changelog, skill note, or phase implementation log).
+
+Feature "support X API" notes, superseded-only history, and process/skill records are **not** ADRs.
+
+## Table of contents
+
+1. [Record architecture decisions](0001-record-architecture-decisions.md)
+2. [Monorepo packages: client, common, CLI, MCP](0002-monorepo-packages-client-common-cli-mcp.md)
+3. [Shared types and API version namespaces](0003-shared-types-and-api-version-namespaces.md)
+4. [Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
+5. [CLI safety stack](0005-cli-safety-stack.md)
+6. [MCP personas, shared registry, fixed paths](0006-mcp-personas-shared-registry-fixed-paths.md)
+7. [MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
+8. [MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md)
+9. [Cross-cutting conventions](0009-cross-cutting-conventions.md)
+
+## Old → new mapping
+
+|                                                Old | Maps to                  |
+| -------------------------------------------------: | ------------------------ |
+|                                               0001 | 0001                     |
+|                                               0002 | 0002                     |
+|                         0003–0004, 0006–0009, 0028 | 0003                     |
+|                                         0005, 0012 | 0002                     |
+| 0010, 0011, 0014, 0016, 0019–0024, 0026–0027, 0030 | Not an ADR               |
+|                                               0013 | 0006, 0007               |
+|                             0015, 0018, 0033, 0042 | 0006                     |
+|                                   0017, 0040, 0041 | 0007                     |
+|                                         0025, 0037 | 0004                     |
+|                                   0029, 0031, 0032 | 0005 (CLI); MCP → 0008   |
+|                                               0034 | 0008 (also CLI via 0005) |
+|                                         0035, 0036 | 0009                     |
+|                                               0043 | 0008                     |

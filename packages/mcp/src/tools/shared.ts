@@ -2,43 +2,27 @@
  * Shared types and helpers for MCP tool registration.
  *
  * Guardrail layers applied by registerToolSafe (outer → inner):
- *   0. Static safety filter — skips registration when the tool exceeds LIGHTDASH_TOOLS_SAFETY_MODE.
  *   1. Audit log wrapper    — captures timing and outcome for every call.
- *   2. Project allowlist      — rejects calls targeting disallowed project UUIDs at runtime.
- *   3. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
- *   4. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   5. Dry-run or safety-mode — simulates writes, or rejects calls above the dynamic safety level.
- *   6. Raw handler            — the actual tool implementation.
+ *   2. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
+ *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   4. Raw handler            — the actual tool implementation.
+ *
+ * Capability surface is the persona toolIds allowlist (ADR-0006), not process safety mode.
  */
 
 import {
-  isAllowed,
-  areAllProjectsAllowed,
   extractProjectUuids,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
-  validateResourceId,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
-import {
-  isReadOnlyMcpScope,
-  RequiredMcpScope,
-  type McpToolCapability,
-} from '../auth/mcp-tool-capability.js';
-import { hasToolScope, requiredScopeForTool } from '../auth/token-scopes.js';
-import {
-  getStaticSafetyMode,
-  getSafetyMode,
-  getAllowedProjectUuids,
-  isDryRunMode,
-} from '../config/runtime.js';
-import { toMcpErrorMessage } from '../errors.js';
-import { getPinnedProjectUuid } from '../project-pin.js';
+import { getPinnedProjectUuid } from '../governance/project-pin.js';
+import { toMcpErrorMessage } from '../server/errors.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
@@ -107,14 +91,7 @@ export type ToolOptions = {
 };
 
 // Re-export presets used by tools and tests
-export { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
-
-export {
-  RequiredMcpScope,
-  READ_ONLY_CAPABILITY,
-  WRITE_IDEMPOTENT_CAPABILITY,
-  type McpToolCapability,
-} from '../auth/mcp-tool-capability.js';
+export { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 /** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
 const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
@@ -131,8 +108,8 @@ function buildAuditFields(
   projectUuids: string[],
   status: 'blocked' | 'error' | 'success',
   start: number,
+  auth: ReturnType<typeof getToolAuditAuth>,
 ): Parameters<typeof logAuditEntry>[0] {
-  const auth = getToolAuditAuth();
   return {
     timestamp: new Date().toISOString(),
     sessionId: getSessionId(),
@@ -145,8 +122,8 @@ function buildAuditFields(
   };
 }
 
-/** Internal marker attached to responses produced by a guardrail (safety-mode block,
- * dry-run simulation, or project-allowlist denial). The audit wrapper reads this flag
+/** Internal marker attached to responses produced by a guardrail (project-pin denial
+ * or input-validation failure). The audit wrapper reads this flag
  * to set status = 'blocked', then strips it before returning to the MCP client.
  */
 type BlockedContent = TextContent & { readonly _lightdashBlocked: true };
@@ -167,37 +144,10 @@ export function blockedToolContent(message: string): BlockedContent {
   };
 }
 
-function runValidation(validate: () => void, label: string): BlockedContent | undefined {
-  try {
-    validate();
-    return undefined;
-  } catch (err) {
-    return blockedToolContent(
-      `Error: Invalid ${label}: ${err instanceof Error ? err.message : String(err)}`,
-    );
-  }
-}
-
-function validateToolArgs(args: unknown): BlockedContent | undefined {
-  for (const uuid of extractProjectUuids(args)) {
-    const error = runValidation(() => validateResourceId(uuid), 'resource ID');
-    if (error) return error;
-  }
-  const record = args as Record<string, unknown>;
-  const slug = record?.slug;
-  if (typeof slug === 'string') {
-    const error = runValidation(() => validateResourceId(slug), 'slug');
-    if (error) return error;
-  }
-  return runValidation(() => validateResourceIdsInObject(args), 'resource ID');
-}
-
 /**
- * Registers a tool with prefix and annotations, applying all guardrail layers.
+ * Registers a tool with prefix and annotations, applying pin / validation / audit guardrails.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
  * Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
- *
- * CLI flag --allowed-projects always takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
  */
 export function registerToolSafe(
   server: unknown,
@@ -208,51 +158,18 @@ export function registerToolSafe(
   const name = TOOL_PREFIX + shortName;
   const annotations = mergeAnnotations(options.annotations);
 
-  // ── Static Filtering ──────────────────────────────────────────────────────
-  // Skip registration entirely if the tool exceeds the static safety mode.
-  const staticMode = getStaticSafetyMode();
-  if (staticMode && !isAllowed(staticMode, annotations)) {
-    return;
-  }
-
-  // ── Safety-mode wrapper ───────────────────────────────────────────────────
-  // Tool is registered but calls are rejected at runtime when the dynamic mode
-  // does not permit the operation.
-  const mode = getSafetyMode();
-  const isToolAllowed = isAllowed(mode, annotations);
-  const isReadOnly = !!annotations.readOnlyHint;
-
   let finalHandler: ToolHandler = handler;
-  let finalDescription = options.description;
-
-  if (!isToolAllowed) {
-    finalDescription = `[DISABLED in ${mode} mode] ${options.description}`;
-    finalHandler = async (): Promise<BlockedContent> =>
-      blockedToolContent(
-        `Error: Tool '${name}' is disabled in ${mode} mode. To enable it, change LIGHTDASH_TOOLS_SAFETY_MODE.`,
-      );
-  } else if (isDryRunMode() && !isReadOnly) {
-    // ── Dry-run wrapper ─────────────────────────────────────────────────────
-    // Write operations are simulated; no API calls are made.
-    finalDescription = `[DRY-RUN] ${options.description}`;
-    finalHandler = async (args): Promise<BlockedContent> => ({
-      content: [
-        {
-          type: 'text',
-          text: `[DRY-RUN] Tool '${name}' would be called with: ${JSON.stringify(args, null, 2)}. No changes were made.`,
-        },
-      ],
-      _lightdashBlocked: true,
-    });
-  }
 
   // ── Input validation wrapper ─────────────────────────────────────────────
-  // Validate resource IDs (projectUuid, slug, etc.) before handler.
+  // Validate resource IDs (projectUuid, projectUuids, slug, etc.) before handler.
   const validatedInner = finalHandler;
   finalHandler = async (args, extra): Promise<TextContent> => {
-    const validationError = validateToolArgs(args);
-    if (validationError) {
-      return validationError;
+    try {
+      validateResourceIdsInObject(args);
+    } catch (err) {
+      return blockedToolContent(
+        `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
     return validatedInner(args, extra);
   };
@@ -274,33 +191,14 @@ export function registerToolSafe(
     return pinInner(args, extra);
   };
 
-  // ── Project allowlist wrapper ─────────────────────────────────────────────
-  // Reject calls targeting project UUIDs not in the configured allowlist.
-  // Covers both singular (projectUuid) and plural (projectUuids[]) arg shapes.
-  // CLI --allowed-projects takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
-  const allowedProjects = getAllowedProjectUuids();
-  if (allowedProjects.length > 0) {
-    const innerHandler = finalHandler;
-    finalHandler = async (args, extra): Promise<TextContent> => {
-      const projectUuids = extractProjectUuids(args);
-      const deniedUuids = projectUuids.filter(
-        (uuid) => !areAllProjectsAllowed(allowedProjects, [uuid]),
-      );
-      if (deniedUuids.length > 0) {
-        return blockedToolContent(
-          `Error: Project(s) [${deniedUuids.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
-        );
-      }
-      return innerHandler(args, extra);
-    };
-  }
-
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
   const auditedInner = finalHandler;
   finalHandler = async (args, extra): Promise<TextContent> => {
     const start = Date.now();
     const projectUuids = extractProjectUuids(args);
+    // Snapshot before await — wrapTool ALS may end when the handler returns.
+    const auth = getToolAuditAuth();
     let status: 'blocked' | 'error' | 'success' = 'success';
     let result: TextContent;
 
@@ -313,11 +211,11 @@ export function registerToolSafe(
       }
     } catch (err) {
       status = 'error';
-      logAuditEntry(buildAuditFields(name, projectUuids, status, start));
+      logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
       throw err;
     }
 
-    logAuditEntry(buildAuditFields(name, projectUuids, status, start));
+    logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
 
     // Strip the internal marker before returning to the MCP client.
     const enriched = enrichStructuredContent(result);
@@ -329,7 +227,6 @@ export function registerToolSafe(
 
   const mergedOptions: ToolOptions = {
     ...options,
-    description: finalDescription,
     title: options.title ?? options.annotations?.title,
     annotations,
   };
@@ -339,25 +236,15 @@ export function registerToolSafe(
 export function wrapTool<T>(
   contextProvider: McpContextProvider,
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
-  options?: { requiredMcpScope?: RequiredMcpScope },
 ): ToolHandler {
-  const requiredMcpScope = options?.requiredMcpScope ?? RequiredMcpScope.READ;
-  const readOnly = isReadOnlyMcpScope(requiredMcpScope);
   return async (args: unknown, extra?: unknown) => {
     try {
       const context = await contextProvider.getContext(extra);
       const auth = context.auth;
 
       return await runWithToolAuditAuthAsync(
-        { tokenHash: auth?.tokenHash, subject: auth?.subject, scopes: auth?.scopes },
+        { tokenHash: auth?.tokenHash, subject: auth?.subject },
         async () => {
-          if (auth.scopes !== undefined && !hasToolScope(auth.scopes, readOnly)) {
-            const required = requiredScopeForTool(readOnly);
-            return blockedToolContent(
-              `Error: insufficient_scope: tool requires OAuth scope '${required}'.`,
-            );
-          }
-
           const handler = fn(context.lightdashClient);
           return await handler(args as T);
         },
@@ -367,13 +254,4 @@ export function wrapTool<T>(
       return { content: [{ type: 'text', text }], isError: true };
     }
   };
-}
-
-/** Wraps a tool handler with request context and explicit OAuth scope classification. */
-export function wrapToolAnnotated<T>(
-  contextProvider: McpContextProvider,
-  capability: McpToolCapability,
-  fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
-): ToolHandler {
-  return wrapTool(contextProvider, fn, { requiredMcpScope: capability.requiredMcpScope });
 }

@@ -6,14 +6,9 @@ import { z } from 'zod';
 
 import { extractCompiledSql, isEmptySelectSql } from './explore-helpers.js';
 import { exploreIdField, projectUuidField } from './schema-fields.js';
-import {
-  READ_ONLY_CAPABILITY,
-  jsonToolResult,
-  registerToolSafe,
-  wrapToolAnnotated,
-} from './shared.js';
+import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from './shared.js';
 
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function registerCompileQuery(server: McpServer, contextProvider: McpContextProvider): void {
@@ -31,11 +26,10 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
           .record(z.string(), z.unknown())
           .describe('Metric query object (dimensions, metrics, filters, etc.)'),
       },
-      annotations: READ_ONLY_CAPABILITY.annotations,
+      annotations: READ_ONLY_DEFAULT,
     },
-    wrapToolAnnotated(
+    wrapTool(
       contextProvider,
-      READ_ONLY_CAPABILITY,
       (c) =>
         async ({
           projectUuid,

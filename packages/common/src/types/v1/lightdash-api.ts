@@ -316,10 +316,10 @@ export namespace LightdashApi {
     export type ApiContentResponse = components['schemas']['ApiContentResponse'];
   }
 
-  /** Types for Lightdash API v1 endpoints (ADR-0008). */
+  /** Types for Lightdash API v1 endpoints (ADR-0003). */
   export import V1 = V1Namespace;
 
-  /** Types for Lightdash API v2 endpoints (ADR-0008). */
+  /** Types for Lightdash API v2 endpoints (ADR-0003). */
   export import V2 = V2Namespace;
 }
 

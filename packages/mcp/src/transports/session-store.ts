@@ -1,6 +1,6 @@
 import type { McpAuthMode } from '../auth/auth-mode.js';
 import type { PersonaId } from '../personas/types.js';
-import type { McpContextProvider } from '../request-context.js';
+import type { McpContextProvider } from '../server/request-context.js';
 import type { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
 import type { McpServer } from '@modelcontextprotocol/server';
 

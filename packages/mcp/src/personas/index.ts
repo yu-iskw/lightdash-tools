@@ -4,12 +4,12 @@
 
 import { normalizeMcpPath } from '../config/normalize-url.js';
 
-import { semanticLayerPersona } from './semantic-layer/index.js';
+import { semanticLayerPersona } from './semantic-layer/v1/index.js';
 
 import type { PersonaDefinition, PersonaId } from './types.js';
 
 export type { PersonaDefinition, PersonaId } from './types.js';
-export { SEMANTIC_LAYER_PERSONA_PATH } from './semantic-layer/index.js';
+export { SEMANTIC_LAYER_PERSONA_PATH } from './semantic-layer/v1/index.js';
 
 /** Sole shipped persona until more are added under personas/. */
 export const DEFAULT_PERSONA_ID: PersonaId = 'semantic-layer';

@@ -197,7 +197,7 @@ export default [
       'max-nested-callbacks': 'off',
     },
   },
-  // Common package types: namespaces used by design (ADR-0008, LightdashApi)
+  // Common package types: namespaces used by design (ADR-0003, LightdashApi)
   {
     files: ['packages/common/src/types/**/*.ts'],
     rules: {
@@ -210,7 +210,7 @@ export default [
     files: ['packages/common/src/types/v1/index.ts', 'packages/common/src/types/v2/index.ts'],
     rules: { '@typescript-eslint/no-unused-vars': 'off' },
   },
-  // Enforce no deprecated API calls in CLI and MCP (ADR-0036)
+  // Enforce no deprecated API calls in CLI and MCP (ADR-0009)
   {
     files: ['packages/cli/src/**/*.ts', 'packages/mcp/src/**/*.ts'],
     rules: {
@@ -243,7 +243,7 @@ export default [
       'security/detect-object-injection': 'off',
     },
   },
-  // Guardrail helpers use dynamic key lookup by design (ADR-0034).
+  // Guardrail helpers use dynamic key lookup by design (ADR-0008).
   {
     files: [
       'packages/common/src/safety.ts',
