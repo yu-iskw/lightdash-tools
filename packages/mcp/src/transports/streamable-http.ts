@@ -42,7 +42,12 @@ import { createLightdashMcpServer } from '../server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
-import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
+import {
+  applyResponseHeaders,
+  buildCorsHeaders,
+  buildOAuthPublicCorsHeaders,
+  sendJson,
+} from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
@@ -581,6 +586,12 @@ function applyOptionalCorsHeaders(
   applyResponseHeaders(res, buildCorsHeaders(origin, config.allowedOrigins));
 }
 
+/** CORS for OAuth AS / discovery: reflect any Origin so loopback clients can read token JSON. */
+function applyOAuthPublicCorsHeaders(req: IncomingMessage, res: ServerResponse): void {
+  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+  applyResponseHeaders(res, buildOAuthPublicCorsHeaders(origin));
+}
+
 /**
  * Validates Origin and applies CORS headers for persona MCP routes.
  * Short-circuits OPTIONS preflight with 204; returns true when the request is fully handled.
@@ -624,12 +635,12 @@ async function handleHttpRequest(
   }
 
   if (oauthBroker) {
-    applyOptionalCorsHeaders(req, res, config);
+    applyOAuthPublicCorsHeaders(req, res);
     if (await oauthBroker.handle(req, res, path)) {
       return;
     }
   } else if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    applyOptionalCorsHeaders(req, res, config);
+    applyOAuthPublicCorsHeaders(req, res);
   }
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {

@@ -344,32 +344,41 @@ function validateTokenGrant(
     };
   }
 
-  const issued = store.takeCode(code);
-  if (!issued) {
+  // Validate before consume so a bad verifier / redirect does not burn a one-time code.
+  const candidate = store.getCode(code);
+  if (!candidate) {
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'Invalid or expired code' },
     };
   }
 
-  if (issued.redirectUri !== redirectUri) {
+  if (candidate.redirectUri !== redirectUri) {
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'redirect_uri mismatch' },
     };
   }
 
-  if (issued.clientId !== clientId) {
+  if (candidate.clientId !== clientId) {
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'client_id mismatch' },
     };
   }
 
-  if (!verifyPkce(codeVerifier, issued.codeChallenge, issued.codeChallengeMethod)) {
+  if (!verifyPkce(codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'PKCE verification failed' },
+    };
+  }
+
+  const issued = store.takeCode(code);
+  if (!issued) {
+    return {
+      status: 400,
+      body: { error: 'invalid_grant', error_description: 'Invalid or expired code' },
     };
   }
 
@@ -438,7 +447,7 @@ function handleAsMetadata(res: ServerResponse, config: McpHttpConfig): void {
   sendJson(res, 200, buildBrokerAuthorizationServerMetadata(config));
 }
 
-const BROKER_PATHS = new Set([
+const BROKER_PATHS: ReadonlySet<string> = new Set([
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
   OAUTH_CALLBACK_PATH,

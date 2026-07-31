@@ -60,7 +60,7 @@ MCP endpoint: `POST/GET/DELETE /semantic-layer/v1/mcp`.
 | Shared-key HTTP gateway    | + `LIGHTDASH_TOOLS_MCP_SHARED_KEY`        |
 | Local unauthenticated HTTP | `NODE_ENV=development` (not `production`) |
 
-Compose local profile uses `NODE_ENV=development` + PAT from `.env` (see `docker-compose.dev.yml`).
+Compose local profile uses `NODE_ENV=development` + credentials from `.env` (see `docker-compose.dev.yml`). For hosted OAuth against Cursor, expose port `3100` with Cloudflare Tunnel and set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` to the `*.trycloudflare.com` URL — see [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md). Do not use free ngrok for that path.
 
 ## Client config (Claude Code / Cursor)
 

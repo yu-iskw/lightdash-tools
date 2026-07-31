@@ -22,6 +22,19 @@ export function checkOrigin(
   return dangerouslyAllowAnyOrigin;
 }
 
+const CORS_ALLOW_HEADERS =
+  'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project';
+
+function corsReflectHeaders(origin: string): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': CORS_ALLOW_HEADERS,
+    'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
+    Vary: 'Origin',
+  };
+}
+
 export function buildCorsHeaders(
   origin: string | undefined,
   allowedOrigins: string[],
@@ -34,14 +47,17 @@ export function buildCorsHeaders(
     return {};
   }
 
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers':
-      'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project',
-    'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
-    Vary: 'Origin',
-  };
+  return corsReflectHeaders(origin);
+}
+
+/**
+ * CORS for public OAuth AS / discovery routes.
+ * Loopback browser clients (e.g. Cursor http://localhost:8787) must read token JSON cross-origin;
+ * empty MCP ALLOWED_ORIGINS must not strip ACAO on these routes.
+ */
+export function buildOAuthPublicCorsHeaders(origin: string | undefined): Record<string, string> {
+  if (!origin) return {};
+  return corsReflectHeaders(origin);
 }
 
 export function applyResponseHeaders(res: ServerResponse, headers: Record<string, string>): void {

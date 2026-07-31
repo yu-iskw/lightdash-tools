@@ -77,6 +77,9 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-07-31]: Local hosted-OAuth smoke uses Cloudflare Tunnel (`cloudflared` → `:3100`, `PUBLIC_URL` in `.env` as `*.trycloudflare.com`), not free ngrok. Free ngrok interstitial breaks Cursor post-callback Mozilla PRM/AS GETs (`You are about…`); process still warns on `*.ngrok-free.app`.
+- [2026-07-31]: ngrok Free + Cursor OAuth: authorize/callback can succeed, then post-callback Mozilla GET to well-known hits interstitial (`You are about…`) so token exchange never runs. Use Cloudflare Tunnel (or paid non-interstitial edge); CORS/PKCE fixes are necessary but insufficient on free ngrok.
+- [2026-07-31]: OAuth broker must reflect CORS on public AS/discovery routes independently of MCP `ALLOWED_ORIGINS`; Cursor completes authorize/callback then token-exchanges from `http://localhost:8787`. Also validate redirect/PKCE before `takeCode`.
 - [2026-07-31]: Removed `LIGHTDASH_TOOLS_MCP_INSECURE_DEV`. Local unauthenticated HTTP is gated only by `NODE_ENV !== 'production'` (Compose sets `development`). Obsolete var is rejected at startup like `DANGEROUSLY_*`.
 - [2026-07-31]: `list_dimensions` must filter with `explore.baseTable`, not exploreId — when they differ, `{ baseTable: exploreId }` drops all base-table dims. HTTP `X-Lightdash-Project` pin lives in `project-pin.ts` ALS → `governance.pinnedProjectUuid`; `registerToolSafe` blocks mismatched `projectUuid`s and pinned `list_projects` returns `[getProject(pin)]`.
 - [2026-07-30]: MCP `src` tidy: deleted package-level `prompts/`/`resources/`/`completion/`/`tasks/`/`tools/ai-agents/`/`utils/`; runtime config is `config/runtime.ts`; audit helpers live under `audit/`. Persona owns prompts/resources.

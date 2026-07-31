@@ -92,7 +92,29 @@ describe('oauth broker helpers', () => {
     expect(pending2).toBeDefined();
     const issued = store.issueCode(pending2!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
+    expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
     expect(store.takeCode(issued!.code)?.accessToken).toBe('atok');
     expect(store.takeCode(issued!.code)).toBeUndefined();
+  });
+
+  it('keeps issued code after failed PKCE peek so a later redeem can succeed', () => {
+    const store = new OAuthBrokerStore();
+    const verifier = 'test-verifier-value-1234567890';
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
+    const pending = store.createPending({
+      clientId: 'mcp-public-client',
+      redirectUri: 'http://localhost:8787/callback',
+      codeChallenge: challenge,
+      codeChallengeMethod: 'S256',
+    });
+    expect(pending).toBeDefined();
+    const issued = store.issueCode(pending!, { accessToken: 'atok' });
+    expect(issued).toBeDefined();
+
+    expect(verifyPkce('wrong-verifier', issued!.codeChallenge, 'S256')).toBe(false);
+    expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
+    expect(verifyPkce(verifier, issued!.codeChallenge, 'S256')).toBe(true);
+    expect(store.takeCode(issued!.code)?.accessToken).toBe('atok');
+    expect(store.getCode(issued!.code)).toBeUndefined();
   });
 });

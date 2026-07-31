@@ -118,6 +118,12 @@ export class OAuthBrokerStore {
     return issued;
   }
 
+  /** Peek at an issued code without consuming it (for pre-consume validation). */
+  getCode(code: string): IssuedAuthorizationCode | undefined {
+    this.cleanup();
+    return this.codes.get(code);
+  }
+
   takeCode(code: string): IssuedAuthorizationCode | undefined {
     this.cleanup();
     const issued = this.codes.get(code);

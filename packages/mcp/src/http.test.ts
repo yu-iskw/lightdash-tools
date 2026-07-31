@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { checkOrigin, timingSafeEqualString } from './auth/shared-key-middleware.js';
 import { parseJsonBody, readBody } from './transports/http-body.js';
 import { isInitializeMessage } from './transports/http-request-utils.js';
-import { buildCorsHeaders } from './transports/http-response.js';
+import { buildCorsHeaders, buildOAuthPublicCorsHeaders } from './transports/http-response.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -91,6 +91,18 @@ describe('HTTP transport helpers', () => {
         'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });
+    });
+
+    it('reflects Origin on OAuth public routes even when MCP allowlist is empty', () => {
+      expect(buildOAuthPublicCorsHeaders('http://localhost:8787')).toEqual({
+        'Access-Control-Allow-Origin': 'http://localhost:8787',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers':
+          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project',
+        'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
+        Vary: 'Origin',
+      });
+      expect(buildOAuthPublicCorsHeaders(undefined)).toEqual({});
     });
   });
 

@@ -212,6 +212,16 @@ describe('loadMcpHttpConfig', () => {
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('/oauth/callback'));
   });
 
+  it('emitMcpHttpSecurityWarnings warns when PUBLIC_URL is ngrok Free', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://abc.ngrok-free.app';
+    const config = loadMcpHttpConfig();
+    emitMcpHttpSecurityWarnings(config);
+
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('ngrok Free'));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('You are about to visit'));
+  });
+
   it('reads config from an explicit env object', () => {
     const env = {
       LIGHTDASH_URL: 'https://app.lightdash.cloud',
