@@ -17,7 +17,7 @@ Broad admin surfaces (charts, dashboards, users, AI agents, …) are **not** reg
 | Audit logging helpers                                   | `src/audit/`                                         |
 | Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`  |
 
-Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/`). There is no package-level `src/prompts/` or `src/resources/`.
+Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 
 ## Replaces `@lightdash-tools/semantic-layer-mcp`
 

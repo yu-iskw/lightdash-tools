@@ -5,8 +5,8 @@
 import { registerSemanticLayerPrompts } from './prompts.js';
 import { registerPlaybookResource } from './resources/playbook.js';
 
-import type { ToolId } from '../../tools/registry.js';
-import type { PersonaDefinition } from '../types.js';
+import type { ToolId } from '../../../tools/registry.js';
+import type { PersonaDefinition } from '../../types.js';
 
 export const SEMANTIC_LAYER_PERSONA_PATH = '/semantic-layer/v1/mcp' as const;
 
