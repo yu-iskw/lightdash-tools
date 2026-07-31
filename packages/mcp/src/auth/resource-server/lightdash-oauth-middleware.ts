@@ -28,25 +28,58 @@ export interface OAuthAuthFailure {
 
 export type OAuthAuthResult = OAuthAuthFailure | OAuthAuthSuccess;
 
+/** Builds the standard missing-Bearer challenge for a persona MCP path. */
+export function buildBearerRequiredFailure(
+  config: McpHttpConfig,
+  mcpPath: string,
+): OAuthAuthFailure {
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
+  const scope = config.requiredScopes.join(' ');
+  return {
+    ok: false,
+    status: 401,
+    body: {
+      error: 'invalid_request',
+      error_description: 'Bearer access token required',
+    },
+    wwwAuthenticate: buildWwwAuthenticateHeader({ resourceMetadataUrl, scope }),
+  };
+}
+
+/** Builds an invalid_token challenge (e.g. session subject/org mismatch). */
+export function buildInvalidTokenFailure(
+  config: McpHttpConfig,
+  mcpPath: string,
+  errorDescription: string,
+): OAuthAuthFailure {
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
+  return {
+    ok: false,
+    status: 401,
+    body: {
+      error: 'invalid_token',
+      error_description: errorDescription,
+    },
+    wwwAuthenticate: buildWwwAuthenticateHeader({
+      resourceMetadataUrl,
+      scope: config.requiredScopes.join(' '),
+      error: 'invalid_token',
+      errorDescription,
+    }),
+  };
+}
+
 export async function authenticateLightdashOAuth(
   req: IncomingMessage,
   config: McpHttpConfig,
-  mcpPath: string = config.mcpPath,
+  mcpPath: string,
 ): Promise<OAuthAuthResult> {
   const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
   const scope = config.requiredScopes.join(' ');
   const token = extractBearerToken(req);
 
   if (!token) {
-    return {
-      ok: false,
-      status: 401,
-      body: {
-        error: 'invalid_request',
-        error_description: 'Bearer access token required',
-      },
-      wwwAuthenticate: buildWwwAuthenticateHeader({ resourceMetadataUrl, scope }),
-    };
+    return buildBearerRequiredFailure(config, mcpPath);
   }
 
   try {

@@ -2,17 +2,19 @@
  * Content, validation, and user-activity primitive tools.
  */
 
+import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
 import { z } from 'zod';
 
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
 import { registerOrgAuditTool } from '../lib/register-org-audit.js';
-import { projectUuidField } from '../lib/schema-fields.js';
+import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { LightdashApi } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 /** Allowlist dashboard metadata; omit filters and tile payloads by default. */
@@ -50,7 +52,7 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
         parentSpaceUuid: z.string().optional(),
         contentTypes: z.array(z.enum(['chart', 'dashboard', 'space'])).optional(),
         search: z.string().optional(),
-        sortBy: z.enum(['name', 'space_name', 'last_updated_at', 'views']).optional(),
+        sortBy: z.enum(CONTENT_SORT_BY_COLUMNS).optional(),
         sortDirection: z.enum(['asc', 'desc']).optional(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().optional(),
@@ -65,7 +67,7 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
           parentSpaceUuid?: string;
           contentTypes?: Array<'chart' | 'dashboard' | 'space'>;
           search?: string;
-          sortBy?: 'last_updated_at' | 'name' | 'space_name' | 'views';
+          sortBy?: LightdashApi.Content.ContentSortByColumns;
           sortDirection?: 'asc' | 'desc';
           page?: number;
           pageSize?: number;
@@ -131,7 +133,7 @@ export function registerGetDashboardMeta(
       description: 'Get dashboard metadata without executing queries or exposing filter values',
       inputSchema: {
         projectUuid: projectUuidField(),
-        dashboardUuid: z.string().describe('Dashboard UUID or slug'),
+        dashboardUuid: uuidOrSlugField('Dashboard UUID or slug'),
         includeTiles: z.boolean().optional(),
       },
     },

@@ -203,6 +203,9 @@ describe('argument-validation', () => {
       expect(() => validateResourceIdsInObject({ dashboardUuid: 'bad?' })).toThrow(
         'Slug must contain only alphanumeric characters',
       );
+      expect(() => validateResourceIdsInObject({ dashboardUuid: '..' })).toThrow(
+        'Slug must not contain path traversal segments',
+      );
     });
 
     it('validates fingerprint and toolCallId with fingerprint rules', () => {

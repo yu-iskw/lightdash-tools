@@ -145,6 +145,14 @@ describe('input-validation', () => {
       );
     });
 
+    it('rejects path traversal segments', () => {
+      expect(() => validateSlug('.')).toThrow('Slug must not contain path traversal segments');
+      expect(() => validateSlug('..')).toThrow('Slug must not contain path traversal segments');
+      expect(() => validateSlug('foo..bar')).toThrow(
+        'Slug must not contain path traversal segments',
+      );
+    });
+
     it('throws on control characters', () => {
       expect(() => validateSlug('slug\u0001')).toThrow('Input contains invalid control characters');
     });
@@ -168,6 +176,15 @@ describe('input-validation', () => {
     it('rejects invalid slug characters', () => {
       expect(() => validateUuidOrSlug('bad?')).toThrow(
         'Slug must contain only alphanumeric characters',
+      );
+    });
+
+    it('rejects path traversal slugs', () => {
+      expect(() => validateUuidOrSlug('.')).toThrow(
+        'Slug must not contain path traversal segments',
+      );
+      expect(() => validateUuidOrSlug('..')).toThrow(
+        'Slug must not contain path traversal segments',
       );
     });
 

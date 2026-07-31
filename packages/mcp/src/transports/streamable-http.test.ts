@@ -13,6 +13,8 @@ import {
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
 import { makeTestMcpHttpConfig } from '../config/test-mcp-http-config.js';
+import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../personas/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PERSONA_PATH } from '../personas/semantic-layer/v1/index.js';
 
 import { buildCorsHeaders, checkOrigin } from './http-response.js';
 import { createStreamableHttpServer, startStreamableHttpServer } from './streamable-http.js';
@@ -87,17 +89,20 @@ describe('streamable HTTP security policy', () => {
 
 describe('streamable HTTP OAuth metadata', () => {
   it('builds protected resource metadata with MCP host as authorization_servers', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig);
+    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, SEMANTIC_LAYER_PERSONA_PATH);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
-    expect(metadata.resource).toBe('https://mcp.example.com/semantic-layer/v1/mcp');
+    expect(metadata.resource).toBe(`https://mcp.example.com${SEMANTIC_LAYER_PERSONA_PATH}`);
     expect(getAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
       'https://mcp.example.com/.well-known/oauth-authorization-server',
     );
   });
 
   it('builds organization-audit protected resource metadata', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, '/organization-audit/v1/mcp');
-    expect(metadata.resource).toBe('https://mcp.example.com/organization-audit/v1/mcp');
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      ORGANIZATION_AUDIT_PERSONA_PATH,
+    );
+    expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`);
   });
 
   it('builds WWW-Authenticate challenges with resource_metadata for OAuth clients', () => {

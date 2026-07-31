@@ -22,15 +22,16 @@ import {
 import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
+  buildBearerRequiredFailure,
+  buildInvalidTokenFailure,
   writeOAuthAuthFailure,
 } from '../auth/resource-server/lightdash-oauth-middleware.js';
 import {
   buildOAuthProtectedResourceMetadata,
-  getProtectedResourceMetadataPathUrl,
   getProtectedResourceMetadataUrl,
+  resolveProtectedResourceMcpPath,
 } from '../auth/resource-server/oauth-protected-resource.js';
 import { authenticateSharedKey } from '../auth/resource-server/shared-key-middleware.js';
-import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
 import { hashToken } from '../auth/token-hash.js';
 import {
   getOAuthCallbackUrl,
@@ -57,7 +58,6 @@ import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const ERROR_SESSION_NOT_FOUND = 'Session not found';
-const OAUTH_PROTECTED_RESOURCE_ROOT = '/.well-known/oauth-protected-resource';
 
 type OAuthRequest = IncomingMessage & {
   lightdashOAuth?: Awaited<ReturnType<typeof authenticateLightdashOAuth>> & { ok: true };
@@ -194,32 +194,9 @@ function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig):
 }
 
 /**
- * Resolves the persona MCP path for a PRM well-known request.
- * Root PRM maps to the default persona (`config.mcpPath`); path-specific PRM
- * is served only for shipped persona paths.
+ * Auth helpers for persona MCP routes. PRM path resolution lives in
+ * `oauth-protected-resource.ts` (single owner for well-known PRM grammar).
  */
-function resolveProtectedResourceMcpPath(path: string, config: McpHttpConfig): string | undefined {
-  if (!path.startsWith(OAUTH_PROTECTED_RESOURCE_ROOT)) {
-    return undefined;
-  }
-  if (path === OAUTH_PROTECTED_RESOURCE_ROOT) {
-    return config.mcpPath;
-  }
-  const prefix = `${OAUTH_PROTECTED_RESOURCE_ROOT}/`;
-  if (!path.startsWith(prefix)) {
-    return undefined;
-  }
-  const resourcePath = `/${path.slice(prefix.length)}`;
-  return getPersonaByPath(resourcePath)?.path;
-}
-
-function writeProtectedResourceMetadata(
-  res: ServerResponse,
-  config: McpHttpConfig,
-  mcpPath: string,
-): void {
-  sendJson(res, 200, buildOAuthProtectedResourceMetadata(config, mcpPath));
-}
 
 async function ensureEndpointAuth(
   req: IncomingMessage,
@@ -250,47 +227,6 @@ async function ensureEndpointAuth(
   return true;
 }
 
-function writeBearerTokenRequiredFailure(
-  res: ServerResponse,
-  config: McpHttpConfig,
-  mcpPath: string,
-): void {
-  writeOAuthAuthFailure(res, {
-    ok: false,
-    status: 401,
-    body: {
-      error: 'invalid_request',
-      error_description: 'Bearer access token required',
-    },
-    wwwAuthenticate: buildWwwAuthenticateHeader({
-      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config, mcpPath),
-      scope: config.requiredScopes.join(' '),
-    }),
-  });
-}
-
-function writeSessionContextMismatch(
-  res: ServerResponse,
-  config: McpHttpConfig,
-  mcpPath: string,
-  errorDescription: string,
-): void {
-  writeOAuthAuthFailure(res, {
-    ok: false,
-    status: 401,
-    body: {
-      error: 'invalid_token',
-      error_description: errorDescription,
-    },
-    wwwAuthenticate: buildWwwAuthenticateHeader({
-      resourceMetadataUrl: getProtectedResourceMetadataPathUrl(config, mcpPath),
-      scope: config.requiredScopes.join(' '),
-      error: 'invalid_token',
-      errorDescription,
-    }),
-  });
-}
-
 function getOAuthAuditContext(req: IncomingMessage): {
   tokenHash?: string;
   subject?: string;
@@ -319,19 +255,25 @@ function verifySessionAuth(
 
   const oauth = (req as OAuthRequest).lightdashOAuth;
   if (!oauth?.accessToken) {
-    writeBearerTokenRequiredFailure(res, config, mcpPath);
+    writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, mcpPath));
     return false;
   }
 
   if (entry.auth.subject && entry.auth.subject !== oauth.user.userUuid) {
-    writeSessionContextMismatch(res, config, mcpPath, 'Session subject mismatch');
+    writeOAuthAuthFailure(
+      res,
+      buildInvalidTokenFailure(config, mcpPath, 'Session subject mismatch'),
+    );
     return false;
   }
 
   const previousOrg = entry.auth.organizationUuid ?? null;
   const nextOrg = oauth.user.organizationUuid ?? null;
   if (previousOrg !== nextOrg) {
-    writeSessionContextMismatch(res, config, mcpPath, 'Session organization mismatch');
+    writeOAuthAuthFailure(
+      res,
+      buildInvalidTokenFailure(config, mcpPath, 'Session organization mismatch'),
+    );
     return false;
   }
 
@@ -399,8 +341,9 @@ async function handleInitializePost(ctx: SessionRequestContext, body: unknown): 
   }
 
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    // ensureEndpointAuth already ran; oauth must be present for this auth mode.
     if (!oauth?.ok) {
-      writeBearerTokenRequiredFailure(res, config, persona.path);
+      writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, persona.path));
       return;
     }
 
@@ -675,7 +618,7 @@ async function handlePublicHttpPaths(
       : undefined;
   if (prmMcpPath !== undefined) {
     applyOptionalCorsHeaders(req, res, config, true);
-    writeProtectedResourceMetadata(res, config, prmMcpPath);
+    sendJson(res, 200, buildOAuthProtectedResourceMetadata(config, prmMcpPath));
     return true;
   }
 

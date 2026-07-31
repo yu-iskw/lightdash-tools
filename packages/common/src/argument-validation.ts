@@ -46,7 +46,7 @@ const UUID_OR_SLUG_KEYS = new Set(['dashboardUuid', 'chartUuid']);
 export type ArgumentSource = 'body' | 'option' | 'positional';
 
 export type ArgumentSemanticType =
-  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid';
+  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid-or-slug' | 'uuid';
 
 /** Per-argument validation metadata supplied by CLI/MCP command definitions. */
 export interface ArgumentDescriptor {
@@ -109,6 +109,10 @@ function validateNumberArgument(value: unknown, name: string): void {
   }
 }
 
+function validateUuidOrSlugArgument(value: unknown, name: string): void {
+  validateUuidOrSlug(requireString(value, name, 'UUID or slug'));
+}
+
 function validateBySemanticType(
   value: unknown,
   semanticType: ArgumentSemanticType,
@@ -135,6 +139,9 @@ function validateBySemanticType(
       break;
     case 'uuid':
       validateUuidArgument(value, name);
+      break;
+    case 'uuid-or-slug':
+      validateUuidOrSlugArgument(value, name);
       break;
     default: {
       const exhaustive: never = semanticType;
