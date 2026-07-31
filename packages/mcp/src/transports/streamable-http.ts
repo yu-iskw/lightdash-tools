@@ -19,7 +19,11 @@ import {
   authenticateLightdashOAuth,
   writeOAuthAuthFailure,
 } from '../auth/lightdash-oauth-middleware.js';
-import { createOAuthBroker, type OAuthBroker } from '../auth/oauth-broker/routes.js';
+import {
+  createOAuthBroker,
+  isOAuthBrokerPath,
+  type OAuthBroker,
+} from '../auth/oauth-broker/routes.js';
 import {
   buildOAuthProtectedResourceMetadata,
   getProtectedResourceMetadataPathUrl,
@@ -42,12 +46,7 @@ import { createLightdashMcpServer } from '../server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
-import {
-  applyResponseHeaders,
-  buildCorsHeaders,
-  buildOAuthPublicCorsHeaders,
-  sendJson,
-} from './http-response.js';
+import { applyResponseHeaders, buildCorsHeaders, sendJson } from './http-response.js';
 import { SessionStore, type SessionEntry } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
@@ -190,17 +189,18 @@ function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig):
   }
 }
 
-function handleMetadata(path: string, res: ServerResponse, config: McpHttpConfig): boolean {
-  const rootMetadataPath = '/.well-known/oauth-protected-resource';
-  const pathMetadataUrl = getProtectedResourceMetadataPathUrl(config);
-  const pathSpecificMetadataPath = new URL(pathMetadataUrl).pathname;
-
-  if (path !== rootMetadataPath && path !== pathSpecificMetadataPath) {
+function isProtectedResourceMetadataPath(path: string, config: McpHttpConfig): boolean {
+  // Cheap reject for the common persona MCP path before URL/pathname work.
+  if (!path.startsWith('/.well-known/oauth-protected-resource')) {
     return false;
   }
+  const rootMetadataPath = '/.well-known/oauth-protected-resource';
+  const pathSpecificMetadataPath = new URL(getProtectedResourceMetadataPathUrl(config)).pathname;
+  return path === rootMetadataPath || path === pathSpecificMetadataPath;
+}
 
+function writeProtectedResourceMetadata(res: ServerResponse, config: McpHttpConfig): void {
   sendJson(res, 200, buildOAuthProtectedResourceMetadata(config));
-  return true;
 }
 
 async function ensureEndpointAuth(
@@ -576,20 +576,24 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
     });
 }
 
-/** Applies CORS reflect headers when the Origin is allowlisted (never blocks). */
+function requestOrigin(req: IncomingMessage): string | undefined {
+  return typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+}
+
+/**
+ * Applies CORS reflect headers without blocking.
+ * When `reflectAnyOrigin` is true (OAuth AS / PRM), always echo Origin and ignore
+ * `ALLOWED_ORIGINS` so Cursor loopback (`http://localhost:8787`) can read token JSON
+ * even if persona MCP routes use a browser allowlist.
+ */
 function applyOptionalCorsHeaders(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
+  reflectAnyOrigin = false,
 ): void {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  applyResponseHeaders(res, buildCorsHeaders(origin, config.allowedOrigins));
-}
-
-/** CORS for OAuth AS / discovery: reflect any Origin so loopback clients can read token JSON. */
-function applyOAuthPublicCorsHeaders(req: IncomingMessage, res: ServerResponse): void {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
-  applyResponseHeaders(res, buildOAuthPublicCorsHeaders(origin));
+  const allowed = reflectAnyOrigin ? [] : config.allowedOrigins;
+  applyResponseHeaders(res, buildCorsHeaders(requestOrigin(req), allowed, reflectAnyOrigin));
 }
 
 /**
@@ -601,7 +605,7 @@ function applyOriginGuardAndCors(
   res: ServerResponse,
   config: McpHttpConfig,
 ): boolean {
-  const origin = typeof req.headers.origin === 'string' ? req.headers.origin : undefined;
+  const origin = requestOrigin(req);
   if (!checkOrigin(origin, config.allowedOrigins)) {
     sendJson(res, 403, { error: 'Forbidden: origin not allowed' });
     return true;
@@ -618,6 +622,40 @@ function applyOriginGuardAndCors(
   return false;
 }
 
+/**
+ * Health, OAuth broker, and PRM discovery — no Origin allowlist gate.
+ * Returns true when the request was fully handled.
+ */
+async function handlePublicHttpPaths(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+  path: string,
+  oauthBroker: OAuthBroker | undefined,
+): Promise<boolean> {
+  if (path === '/health/live' || path === '/health/ready') {
+    applyOptionalCorsHeaders(req, res, config);
+    handleHealth(path, res, config);
+    return true;
+  }
+
+  if (oauthBroker !== undefined && isOAuthBrokerPath(path)) {
+    applyOptionalCorsHeaders(req, res, config, true);
+    return oauthBroker.handle(req, res, path);
+  }
+
+  if (
+    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH &&
+    isProtectedResourceMetadataPath(path, config)
+  ) {
+    applyOptionalCorsHeaders(req, res, config, true);
+    writeProtectedResourceMetadata(res, config);
+    return true;
+  }
+
+  return false;
+}
+
 async function handleHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
@@ -627,23 +665,7 @@ async function handleHttpRequest(
 ): Promise<void> {
   const path = (req.url ?? '').split('?')[0] ?? '';
 
-  // Public discovery / health / OAuth broker: do not Origin-block (empty allowlist must not 403).
-  if (path === '/health/live' || path === '/health/ready') {
-    applyOptionalCorsHeaders(req, res, config);
-    handleHealth(path, res, config);
-    return;
-  }
-
-  if (oauthBroker) {
-    applyOAuthPublicCorsHeaders(req, res);
-    if (await oauthBroker.handle(req, res, path)) {
-      return;
-    }
-  } else if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    applyOAuthPublicCorsHeaders(req, res);
-  }
-
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH && handleMetadata(path, res, config)) {
+  if (await handlePublicHttpPaths(req, res, config, path, oauthBroker)) {
     return;
   }
 

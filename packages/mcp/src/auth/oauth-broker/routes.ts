@@ -374,15 +374,8 @@ function validateTokenGrant(
     };
   }
 
-  const issued = store.takeCode(code);
-  if (!issued) {
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'Invalid or expired code' },
-    };
-  }
-
-  return { issued };
+  store.deleteCode(code);
+  return { issued: candidate };
 }
 
 async function handleToken(
@@ -455,13 +448,18 @@ const BROKER_PATHS: ReadonlySet<string> = new Set([
   OAUTH_REGISTER_PATH,
 ]);
 
+/** True for co-located OAuth AS / broker paths (CORS may reflect any Origin). */
+export function isOAuthBrokerPath(path: string): boolean {
+  return BROKER_PATHS.has(path);
+}
+
 /** Creates the OAuth broker request handler for co-located AS façade routes. */
 export function createOAuthBroker(config: McpHttpConfig): OAuthBroker {
   const store = new OAuthBrokerStore();
 
   return {
     async handle(req, res, path): Promise<boolean> {
-      if (!BROKER_PATHS.has(path)) {
+      if (!isOAuthBrokerPath(path)) {
         return false;
       }
 

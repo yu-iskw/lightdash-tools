@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { checkOrigin, timingSafeEqualString } from './auth/shared-key-middleware.js';
 import { parseJsonBody, readBody } from './transports/http-body.js';
 import { isInitializeMessage } from './transports/http-request-utils.js';
-import { buildCorsHeaders, buildOAuthPublicCorsHeaders } from './transports/http-response.js';
+import { buildCorsHeaders } from './transports/http-response.js';
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -82,19 +82,8 @@ describe('HTTP transport helpers', () => {
       expect(buildCorsHeaders('https://browser.example.com', [], false)).toEqual({});
     });
 
-    it('echoes CORS headers when dangerouslyAllowAnyOrigin is true', () => {
-      expect(buildCorsHeaders('https://browser.example.com', [], true)).toEqual({
-        'Access-Control-Allow-Origin': 'https://browser.example.com',
-        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers':
-          'Content-Type, Accept, Authorization, Mcp-Session-Id, MCP-Protocol-Version, X-API-Key, X-Lightdash-Project',
-        'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
-        Vary: 'Origin',
-      });
-    });
-
-    it('reflects Origin on OAuth public routes even when MCP allowlist is empty', () => {
-      expect(buildOAuthPublicCorsHeaders('http://localhost:8787')).toEqual({
+    it('echoes CORS headers when dangerouslyAllowAnyOrigin is true (OAuth/discovery paths)', () => {
+      expect(buildCorsHeaders('http://localhost:8787', [], true)).toEqual({
         'Access-Control-Allow-Origin': 'http://localhost:8787',
         'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
         'Access-Control-Allow-Headers':
@@ -102,7 +91,11 @@ describe('HTTP transport helpers', () => {
         'Access-Control-Expose-Headers': 'Mcp-Session-Id, WWW-Authenticate',
         Vary: 'Origin',
       });
-      expect(buildOAuthPublicCorsHeaders(undefined)).toEqual({});
+      expect(buildCorsHeaders(undefined, [], true)).toEqual({});
+      // Non-empty allowlist wins over the flag — OAuth paths must pass `[]` explicitly.
+      expect(buildCorsHeaders('http://localhost:8787', ['https://app.example.com'], true)).toEqual(
+        {},
+      );
     });
   });
 

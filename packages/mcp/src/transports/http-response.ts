@@ -50,16 +50,6 @@ export function buildCorsHeaders(
   return corsReflectHeaders(origin);
 }
 
-/**
- * CORS for public OAuth AS / discovery routes.
- * Loopback browser clients (e.g. Cursor http://localhost:8787) must read token JSON cross-origin;
- * empty MCP ALLOWED_ORIGINS must not strip ACAO on these routes.
- */
-export function buildOAuthPublicCorsHeaders(origin: string | undefined): Record<string, string> {
-  if (!origin) return {};
-  return corsReflectHeaders(origin);
-}
-
 export function applyResponseHeaders(res: ServerResponse, headers: Record<string, string>): void {
   for (const [key, value] of Object.entries(headers)) {
     res.setHeader(key, value);

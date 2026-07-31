@@ -93,8 +93,10 @@ describe('oauth broker helpers', () => {
     const issued = store.issueCode(pending2!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
     expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
-    expect(store.takeCode(issued!.code)?.accessToken).toBe('atok');
-    expect(store.takeCode(issued!.code)).toBeUndefined();
+    store.deleteCode(issued!.code);
+    expect(store.getCode(issued!.code)).toBeUndefined();
+    store.deleteCode(issued!.code);
+    expect(store.getCode(issued!.code)).toBeUndefined();
   });
 
   it('keeps issued code after failed PKCE peek so a later redeem can succeed', () => {
@@ -114,7 +116,7 @@ describe('oauth broker helpers', () => {
     expect(verifyPkce('wrong-verifier', issued!.codeChallenge, 'S256')).toBe(false);
     expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
     expect(verifyPkce(verifier, issued!.codeChallenge, 'S256')).toBe(true);
-    expect(store.takeCode(issued!.code)?.accessToken).toBe('atok');
+    store.deleteCode(issued!.code);
     expect(store.getCode(issued!.code)).toBeUndefined();
   });
 });

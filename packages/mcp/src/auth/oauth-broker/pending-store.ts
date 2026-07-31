@@ -124,12 +124,9 @@ export class OAuthBrokerStore {
     return this.codes.get(code);
   }
 
-  takeCode(code: string): IssuedAuthorizationCode | undefined {
-    this.cleanup();
-    const issued = this.codes.get(code);
-    if (!issued) return undefined;
+  /** Drop a previously peeked code after successful validation. */
+  deleteCode(code: string): void {
     this.codes.delete(code);
-    return issued;
   }
 
   private cleanup(): void {

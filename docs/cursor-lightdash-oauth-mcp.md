@@ -50,35 +50,29 @@ Replace the host with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Path is persona-own
 
 ## Local smoke (Cloudflare Tunnel)
 
-Use Cloudflare quick tunnel so Cursor’s post-callback Mozilla GETs to PRM/AS metadata are not blocked by free-ngrok interstitials.
+Use Cloudflare quick tunnel so Cursor’s post-callback Mozilla GETs to PRM/AS metadata are not blocked by free-ngrok interstitials. Set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` before (or immediately when) starting OAuth-mode MCP — startup fails without it.
 
-1. Start MCP on port 3100:
-
-   ```bash
-   docker compose -f docker-compose.dev.yml --profile semantic-layer up --build -d
-   ```
-
-2. Expose it:
+1. Ensure Compose publishes MCP on host port 3100 (`docker-compose.dev.yml`), then start a quick tunnel:
 
    ```bash
    cloudflared tunnel --url http://127.0.0.1:3100
    ```
 
-3. Copy the printed `https://*.trycloudflare.com` URL into gitignored `.env` as `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, and into `.cursor/mcp.json` as the MCP `url` host (`…/semantic-layer/v1/mcp`).
+2. Copy the printed `https://*.trycloudflare.com` URL into gitignored `.env` as `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, and into `.cursor/mcp.json` as the MCP `url` host (`…/semantic-layer/v1/mcp`).
 
-4. Recreate the container so it picks up `.env`:
+3. Start (or recreate) MCP so it picks up `.env`:
 
    ```bash
-   docker compose -f docker-compose.dev.yml --profile semantic-layer up -d --force-recreate
+   docker compose -f docker-compose.dev.yml --profile semantic-layer up --build -d
    ```
 
-5. Register in Lightdash:
+4. Register in Lightdash:
 
    ```text
    {PUBLIC_URL}/oauth/callback
    ```
 
-6. Reconnect the MCP server in Cursor (quit/reopen after `mcp.json` changes if needed).
+5. Reconnect the MCP server in Cursor (quit/reopen after `mcp.json` changes if needed).
 
 Quick tunnels are ephemeral — when the hostname changes, update `.env`, recreate Compose, and update the Lightdash redirect URI.
 

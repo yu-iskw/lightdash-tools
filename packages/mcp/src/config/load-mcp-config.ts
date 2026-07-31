@@ -313,24 +313,17 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
   emitNgrokFreeInterstitialWarning(config.publicUrl);
 }
 
-/** Free ngrok serves ERR_NGROK_6024 for browser-UA GETs; Cursor's post-callback OAuth rediscovery uses Mozilla UA. */
+/** Free ngrok serves ERR_NGROK_6024 for browser-UA GETs; Cursor's post-callback rediscovery uses Mozilla UA. */
 function emitNgrokFreeInterstitialWarning(publicUrl: string | undefined): void {
   if (!publicUrl) return;
-  let host: string;
-  try {
-    host = new URL(publicUrl).hostname.toLowerCase();
-  } catch {
-    return;
-  }
+  const host = new URL(publicUrl).hostname.toLowerCase();
   if (!host.endsWith('.ngrok-free.app') && !host.endsWith('.ngrok-free.dev')) {
     return;
   }
   console.warn(
-    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} is an ngrok Free host (${host}). ` +
-      'Cursor OAuth re-fetches PRM/AS metadata after the loopback callback with a browser User-Agent; ' +
-      'ngrok Free returns interstitial text ("You are about to visit…") which Cursor parses as JSON and fails. ' +
-      'POST /oauth/token may never appear in the tunnel. Upgrade ngrok (any paid plan removes the interstitial), ' +
-      'or point Cursor at a non-interstitial base URL while keeping a public HTTPS callback for Lightdash.',
+    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} is ngrok Free (${host}). ` +
+      'Cursor re-fetches OAuth metadata with a browser UA and gets interstitial HTML instead of JSON. ' +
+      'Use Cloudflare Tunnel (or paid ngrok) for local public HTTPS.',
   );
 }
 
@@ -341,7 +334,7 @@ function emitCorsSecurityWarnings(config: McpHttpConfig): void {
 
   console.warn(
     `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — persona MCP routes do not reflect browser Origins. ` +
-      'OAuth broker/discovery routes still reflect Origin via buildOAuthPublicCorsHeaders.',
+      'OAuth broker/discovery routes still reflect Origin.',
   );
 }
 

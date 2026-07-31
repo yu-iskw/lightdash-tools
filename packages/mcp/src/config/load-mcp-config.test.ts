@@ -219,7 +219,7 @@ describe('loadMcpHttpConfig', () => {
     emitMcpHttpSecurityWarnings(config);
 
     expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('ngrok Free'));
-    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('You are about to visit'));
+    expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Cloudflare Tunnel'));
   });
 
   it('reads config from an explicit env object', () => {
