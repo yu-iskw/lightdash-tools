@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
+import { CREDENTIALS_OMITTED_WARNING } from '../lib/redaction.js';
 
-import { registerListProjects } from './projects.js';
+import { registerGetProject, registerListProjects } from './projects.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 
@@ -28,11 +29,16 @@ describe('registerListProjects', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns only the pinned project when X-Lightdash-Project ALS is set', async () => {
-    const pinnedProject = { projectUuid: PINNED, name: 'Pinned' };
-    const listProjects = vi
-      .fn()
-      .mockResolvedValue([pinnedProject, { projectUuid: OTHER, name: 'Other' }]);
+  it('returns only the pinned project summary when X-Lightdash-Project ALS is set', async () => {
+    const pinnedProject = {
+      projectUuid: PINNED,
+      name: 'Pinned',
+      type: 'DEFAULT',
+      warehouseConnection: { type: 'bigquery', password: 'secret' },
+      dbtConnection: { type: 'github', personal_access_token: 'ghp_x' },
+      schedulerFailureContactOverride: 'ops@example.com',
+    };
+    const listProjects = vi.fn();
     const getProject = vi.fn().mockResolvedValue(pinnedProject);
 
     const mockServer = { registerTool: vi.fn() };
@@ -42,16 +48,30 @@ describe('registerListProjects', () => {
     await runWithProjectPinAsync(PINNED, async () => {
       const result = await handler({});
       expect(result.isError).toBeUndefined();
-      expect(JSON.parse(result.content[0].text)).toEqual([pinnedProject]);
+      const body = JSON.parse(result.content[0].text) as {
+        data: Array<Record<string, unknown>>;
+        warnings: unknown[];
+      };
+      expect(body.data).toEqual([
+        {
+          projectUuid: PINNED,
+          name: 'Pinned',
+          type: 'DEFAULT',
+          warehouseType: 'bigquery',
+        },
+      ]);
+      expect(body.warnings).toEqual([CREDENTIALS_OMITTED_WARNING]);
+      expect(JSON.stringify(body)).not.toContain('secret');
+      expect(JSON.stringify(body)).not.toContain('ghp_x');
       expect(getProject).toHaveBeenCalledWith(PINNED);
       expect(listProjects).not.toHaveBeenCalled();
     });
   });
 
-  it('lists all projects when no pin is set', async () => {
+  it('lists project summaries when no pin is set', async () => {
     const all = [
-      { projectUuid: PINNED, name: 'A' },
-      { projectUuid: OTHER, name: 'B' },
+      { projectUuid: PINNED, name: 'A', type: 'DEFAULT', warehouseType: 'snowflake' },
+      { projectUuid: OTHER, name: 'B', type: 'DEFAULT', warehouseType: 'bigquery' },
     ];
     const listProjects = vi.fn().mockResolvedValue(all);
     const getProject = vi.fn();
@@ -62,8 +82,63 @@ describe('registerListProjects', () => {
 
     const result = await handler({});
     expect(result.isError).toBeUndefined();
-    expect(JSON.parse(result.content[0].text)).toEqual(all);
+    const body = JSON.parse(result.content[0].text) as {
+      data: Array<Record<string, unknown>>;
+      warnings: unknown[];
+    };
+    expect(body.data).toEqual([
+      {
+        projectUuid: PINNED,
+        name: 'A',
+        type: 'DEFAULT',
+        warehouseType: 'snowflake',
+      },
+      {
+        projectUuid: OTHER,
+        name: 'B',
+        type: 'DEFAULT',
+        warehouseType: 'bigquery',
+      },
+    ]);
+    expect(body.warnings).toEqual([CREDENTIALS_OMITTED_WARNING]);
     expect(listProjects).toHaveBeenCalled();
     expect(getProject).not.toHaveBeenCalled();
+  });
+});
+
+describe('registerGetProject', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('returns metadata summary without connection secrets', async () => {
+    const getProject = vi.fn().mockResolvedValue({
+      projectUuid: PINNED,
+      name: 'Pinned',
+      type: 'DEFAULT',
+      organizationUuid: 'org-1',
+      warehouseConnection: { type: 'postgres', password: 'db-pass' },
+      dbtConnection: { type: 'github', personal_access_token: 'token' },
+      schedulerFailureContactOverride: 'alert@example.com',
+    });
+    const listProjects = vi.fn();
+
+    const mockServer = { registerTool: vi.fn() };
+    registerGetProject(mockServer as never, mockContext(listProjects, getProject));
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+    const result = await handler({ projectUuid: PINNED });
+    const body = JSON.parse(result.content[0].text) as {
+      data: Record<string, unknown>;
+      warnings: unknown[];
+    };
+    expect(body.data.projectUuid).toBe(PINNED);
+    expect(body.data.name).toBe('Pinned');
+    expect(body.data.warehouseType).toBe('postgres');
+    expect(body.warnings).toEqual([CREDENTIALS_OMITTED_WARNING]);
+    expect(body.data).not.toHaveProperty('warehouseConnection');
+    expect(body.data).not.toHaveProperty('dbtConnection');
+    expect(JSON.stringify(body)).not.toContain('db-pass');
+    expect(JSON.stringify(body)).not.toContain('token');
   });
 });

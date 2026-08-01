@@ -27,6 +27,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 8. [MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md)
 9. [Cross-cutting conventions](0009-cross-cutting-conventions.md)
 10. [MCP organization-audit persona read-only boundary](0010-mcp-organization-audit-persona-read-only-boundary.md)
+11. [MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
 ## Old → new mapping
 

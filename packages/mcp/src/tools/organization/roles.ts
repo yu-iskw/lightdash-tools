@@ -11,8 +11,13 @@ import {
   visibilityFailureReason,
 } from '../lib/api-errors.js';
 import { emptyCoverage } from '../lib/contracts.js';
+import { emailRedactionWarnings, toProjectMemberAccessSummary } from '../lib/redaction.js';
 import { registerOrgAuditTool } from '../lib/register-org-audit.js';
-import { projectUuidField } from '../lib/schema-fields.js';
+import {
+  allowedEmailDomainsField,
+  includeEmailField,
+  projectUuidField,
+} from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import { resolveSessionOrganization } from './binding.js';
@@ -248,41 +253,56 @@ export function registerListProjectDirectAccess(
     {
       title: 'List project direct access',
       description:
-        'List explicitly granted project users only (not complete effective access; org-wide access omitted)',
+        'List explicitly granted project users only (not complete effective access; org-wide access omitted). Emails redacted by default.',
       inputSchema: {
         projectUuid: projectUuidField(),
+        includeEmail: includeEmailField(),
+        allowedEmailDomains: allowedEmailDomainsField(),
       },
     },
-    wrapTool(contextProvider, (c) => async (args: { projectUuid: string }) => {
-      const session = await resolveSessionOrganization(c);
-      const data = await c.v1.projectAccess.listProjectAccess(args.projectUuid);
-      return jsonToolResult({
-        data,
-        accessSemantics: 'direct_only',
-        effectiveAccessComplete: false,
-        pagination: { returned: data.length, complete: true },
-        coverage: {
-          ...emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
-          projectUuids: [args.projectUuid],
-          apiResolutions: [
-            {
-              capability: 'project_direct_access',
-              selectedVersion: 'v1',
-              method: 'GET',
-              pathTemplate: '/api/v1/projects/{projectUuid}/access',
-              reason: 'v2_incomplete',
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async (args: {
+          projectUuid: string;
+          includeEmail?: boolean;
+          allowedEmailDomains?: string[];
+        }) => {
+          const session = await resolveSessionOrganization(c);
+          const includeEmail = args.includeEmail === true;
+          const raw = await c.v1.projectAccess.listProjectAccess(args.projectUuid);
+          const data = raw.map((m) =>
+            toProjectMemberAccessSummary(m, includeEmail, args.allowedEmailDomains),
+          );
+          return jsonToolResult({
+            data,
+            accessSemantics: 'direct_only',
+            effectiveAccessComplete: false,
+            pagination: { returned: data.length, complete: true },
+            coverage: {
+              ...emptyCoverage(session.organizationUuid, getPinnedProjectUuid()),
+              projectUuids: [args.projectUuid],
+              apiResolutions: [
+                {
+                  capability: 'project_direct_access',
+                  selectedVersion: 'v1',
+                  method: 'GET',
+                  pathTemplate: '/api/v1/projects/{projectUuid}/access',
+                  reason: 'v2_incomplete',
+                },
+              ],
+              complete: false,
             },
-          ],
-          complete: false,
+            warnings: [
+              {
+                code: 'INCOMPLETE_EFFECTIVE_ACCESS',
+                message:
+                  'This endpoint lists explicit grants only; other users may have access via organization membership',
+              },
+              ...emailRedactionWarnings(includeEmail),
+            ],
+          });
         },
-        warnings: [
-          {
-            code: 'INCOMPLETE_EFFECTIVE_ACCESS',
-            message:
-              'This endpoint lists explicit grants only; other users may have access via organization membership',
-          },
-        ],
-      });
-    }),
+    ),
   );
 }

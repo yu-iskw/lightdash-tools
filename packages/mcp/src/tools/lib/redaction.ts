@@ -1,11 +1,97 @@
 /**
- * Redaction helpers for organization-audit tools.
+ * Redaction helpers for MCP tool response sensitivity (ADR-0011).
  */
 
 export type RedactedEmail = {
   email: string;
   domain: string;
   isExternalDomain: boolean;
+};
+
+/** MCP allowlisted project metadata — never includes connection secrets (not OpenAPI ProjectSummary). */
+export type McpProjectSummary = {
+  projectUuid: string;
+  name: string;
+  type?: string;
+  organizationUuid?: string;
+  upstreamProjectUuid?: string | null;
+  createdByUserUuid?: string | null;
+  createdAt?: string;
+  warehouseType?: string;
+  provisioningSource?: string | null;
+};
+
+/** Allowlisted project direct-access row with optional email redaction. */
+export type ProjectMemberAccessSummary = {
+  userUuid: string;
+  projectUuid: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  roleUuid?: string;
+  email: RedactedEmail | string | undefined;
+};
+
+export const CREDENTIALS_OMITTED_WARNING = {
+  code: 'REDACTED' as const,
+  message:
+    'Connection credentials and contact overrides omitted; not available via MCP (use client/CLI)',
+};
+
+export const EMAIL_REDACTED_WARNING = {
+  code: 'REDACTED' as const,
+  message: 'Email addresses redacted; pass includeEmail=true to reveal',
+};
+
+export const SCHEDULER_DESTINATIONS_REDACTED_WARNING = {
+  code: 'REDACTED' as const,
+  message: 'Scheduler destinations redacted by default',
+};
+
+/** Warnings when emails are masked (empty when includeEmail is true). */
+export function emailRedactionWarnings(includeEmail: boolean): Array<{
+  code: 'REDACTED';
+  message: string;
+}> {
+  return includeEmail ? [] : [EMAIL_REDACTED_WARNING];
+}
+
+/** Warnings when scheduler destinations are masked. */
+export function destinationRedactionWarnings(revealDestinations: boolean): Array<{
+  code: 'REDACTED';
+  message: string;
+}> {
+  return revealDestinations ? [] : [SCHEDULER_DESTINATIONS_REDACTED_WARNING];
+}
+
+/** Allowlisted org-member row with optional email redaction. */
+export type OrgMemberSummary = {
+  userUuid: string;
+  organizationUuid?: string;
+  firstName: string;
+  lastName: string;
+  email: RedactedEmail | string | undefined;
+  isActive?: boolean;
+  isInviteExpired?: boolean;
+  role?: string;
+  roleUuid?: string;
+};
+
+/** Allowlisted group row; members only when present on the API payload. */
+export type GroupSummary = {
+  uuid: string;
+  name: string;
+  organizationUuid?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  createdByUserUuid?: string | null;
+  memberUuids?: string[];
+  members?: Array<{
+    userUuid: string;
+    firstName: string;
+    lastName: string;
+    email: RedactedEmail | string | undefined;
+  }>;
 };
 
 export type RedactedDestination = {
@@ -221,4 +307,132 @@ function sanitizeLatestRun(latestRun: unknown): Record<string, unknown> | undefi
     resourceUuid: run.resourceUuid,
     format: run.format,
   };
+}
+
+function readString(record: Record<string, unknown>, key: string): string | undefined {
+  // eslint-disable-next-line security/detect-object-injection -- fixed allowlist keys at call sites
+  const value = record[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function readStringOrNull(record: Record<string, unknown>, key: string): string | null | undefined {
+  // eslint-disable-next-line security/detect-object-injection -- fixed allowlist keys at call sites
+  const value = record[key];
+  if (value === null) return null;
+  return typeof value === 'string' ? value : undefined;
+}
+
+function asEntityRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+function warehouseTypeFrom(record: Record<string, unknown>): string | undefined {
+  const direct = readString(record, 'warehouseType');
+  if (direct !== undefined) return direct;
+  return readString(asEntityRecord(record.warehouseConnection), 'type');
+}
+
+/**
+ * Shape project / organization-project payloads to metadata only.
+ * Never returns warehouseConnection, dbtConnection, or schedulerFailureContactOverride.
+ */
+export function toProjectSummary(project: unknown): McpProjectSummary {
+  const record = asEntityRecord(project);
+  const type = readString(record, 'type');
+  const organizationUuid = readString(record, 'organizationUuid');
+  const upstreamProjectUuid = readStringOrNull(record, 'upstreamProjectUuid');
+  const createdByUserUuid = readStringOrNull(record, 'createdByUserUuid');
+  const createdAt = readString(record, 'createdAt');
+  const warehouseType = warehouseTypeFrom(record);
+  const provisioningSource = readStringOrNull(record, 'provisioningSource');
+
+  return {
+    projectUuid: readString(record, 'projectUuid') ?? '',
+    name: readString(record, 'name') ?? '',
+    ...(type !== undefined ? { type } : {}),
+    ...(organizationUuid !== undefined ? { organizationUuid } : {}),
+    ...(upstreamProjectUuid !== undefined ? { upstreamProjectUuid } : {}),
+    ...(createdByUserUuid !== undefined ? { createdByUserUuid } : {}),
+    ...(createdAt !== undefined ? { createdAt } : {}),
+    ...(warehouseType !== undefined ? { warehouseType } : {}),
+    ...(provisioningSource !== undefined ? { provisioningSource } : {}),
+  };
+}
+
+/** Map a project member profile with default email redaction. */
+export function toProjectMemberAccessSummary(
+  member: unknown,
+  includeEmail: boolean,
+  allowedEmailDomains?: string[],
+): ProjectMemberAccessSummary {
+  const record = asEntityRecord(member);
+  const roleUuid = readString(record, 'roleUuid');
+  return {
+    userUuid: readString(record, 'userUuid') ?? '',
+    projectUuid: readString(record, 'projectUuid') ?? '',
+    firstName: readString(record, 'firstName') ?? '',
+    lastName: readString(record, 'lastName') ?? '',
+    role: readString(record, 'role') ?? '',
+    email: maybeRedactEmail(readString(record, 'email'), includeEmail, allowedEmailDomains),
+    ...(roleUuid !== undefined ? { roleUuid } : {}),
+  };
+}
+
+/** Map an organization member with default email redaction. */
+export function toOrgMemberSummary(
+  member: unknown,
+  includeEmail: boolean,
+  allowedEmailDomains?: string[],
+): OrgMemberSummary {
+  const record = asEntityRecord(member);
+  return {
+    userUuid: readString(record, 'userUuid') ?? '',
+    organizationUuid: readString(record, 'organizationUuid'),
+    firstName: readString(record, 'firstName') ?? '',
+    lastName: readString(record, 'lastName') ?? '',
+    email: maybeRedactEmail(readString(record, 'email'), includeEmail, allowedEmailDomains),
+    isActive: typeof record.isActive === 'boolean' ? record.isActive : undefined,
+    isInviteExpired:
+      typeof record.isInviteExpired === 'boolean' ? record.isInviteExpired : undefined,
+    role: readString(record, 'role'),
+    roleUuid: readString(record, 'roleUuid'),
+  };
+}
+
+/** Allowlist group metadata; redact member emails when members are present. */
+export function toGroupSummary(
+  group: unknown,
+  includeEmail: boolean,
+  allowedEmailDomains?: string[],
+): GroupSummary {
+  const record = asEntityRecord(group);
+  const summary: GroupSummary = {
+    uuid: readString(record, 'uuid') ?? '',
+    name: readString(record, 'name') ?? '',
+    organizationUuid: readString(record, 'organizationUuid'),
+    createdAt: readString(record, 'createdAt'),
+    updatedAt: readString(record, 'updatedAt'),
+    createdByUserUuid: readStringOrNull(record, 'createdByUserUuid'),
+  };
+
+  if (Array.isArray(record.memberUuids)) {
+    summary.memberUuids = record.memberUuids.filter((u): u is string => typeof u === 'string');
+  }
+
+  if (Array.isArray(record.members)) {
+    summary.members = record.members.map((m) => {
+      const member = asEntityRecord(m);
+      return {
+        userUuid: readString(member, 'userUuid') ?? '',
+        firstName: readString(member, 'firstName') ?? '',
+        lastName: readString(member, 'lastName') ?? '',
+        email: maybeRedactEmail(readString(member, 'email'), includeEmail, allowedEmailDomains),
+      };
+    });
+  }
+
+  return summary;
 }
