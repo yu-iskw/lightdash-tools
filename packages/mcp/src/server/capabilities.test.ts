@@ -42,7 +42,9 @@ describe('registerCapabilities', () => {
   it('registers persona tool allowlist and prompts/resources', () => {
     const persona = getDefaultPersona();
     registerCapabilities(server, mockContextProvider, { persona });
-    expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds);
+    expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds, {
+      personaId: persona.id,
+    });
     expect(registerPromptSpy).toHaveBeenCalled();
     expect(registerResourceSpy).toHaveBeenCalled();
   });

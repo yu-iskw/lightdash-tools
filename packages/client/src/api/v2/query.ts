@@ -13,7 +13,19 @@ import type {
   ExecuteAsyncMetricQueryResults,
   ExecuteAsyncDashboardChartResults,
   ExecuteAsyncSqlQueryResults,
+  components,
 } from '@lightdash-tools/common';
+
+export type AsyncQueryResults = components['schemas']['ApiGetAsyncQueryResults'];
+export type ExecuteAsyncSqlChartRequestParams =
+  components['schemas']['ExecuteAsyncSqlChartRequestParams'];
+export type ExecuteAsyncDashboardSqlChartRequestParams =
+  components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams'];
+
+export type GetAsyncQueryResultsParams = {
+  page?: number;
+  pageSize?: number;
+};
 
 export class QueryClientV2 extends BaseApiClient {
   /** Run a metric query (v2 endpoint). */
@@ -65,6 +77,47 @@ export class QueryClientV2 extends BaseApiClient {
     return this.http.post<ExecuteAsyncMetricQueryResults>(
       `/projects/${projectUuid}/query/underlying-data`,
       body,
+    );
+  }
+
+  /** Run a saved SQL chart query (v2). Present for completeness; MCP content-reader keeps SQL off by default. */
+  async runSqlChartQuery(
+    projectUuid: string,
+    body: ExecuteAsyncSqlChartRequestParams,
+  ): Promise<ExecuteAsyncSqlQueryResults> {
+    return this.http.post<ExecuteAsyncSqlQueryResults>(
+      `/projects/${projectUuid}/query/sql-chart`,
+      body,
+    );
+  }
+
+  /** Run a dashboard SQL chart query (v2). Present for completeness; MCP content-reader keeps SQL off by default. */
+  async runDashboardSqlChartQuery(
+    projectUuid: string,
+    body: ExecuteAsyncDashboardSqlChartRequestParams,
+  ): Promise<ExecuteAsyncSqlQueryResults> {
+    return this.http.post<ExecuteAsyncSqlQueryResults>(
+      `/projects/${projectUuid}/query/dashboard-sql-chart`,
+      body,
+    );
+  }
+
+  /** Poll paginated async query results. */
+  async getAsyncQueryResults(
+    projectUuid: string,
+    queryUuid: string,
+    params?: GetAsyncQueryResultsParams,
+  ): Promise<AsyncQueryResults> {
+    return this.http.get<AsyncQueryResults>(
+      `/projects/${projectUuid}/query/${encodeURIComponent(queryUuid)}`,
+      { params },
+    );
+  }
+
+  /** Cancel a running async query. */
+  async cancelAsyncQuery(projectUuid: string, queryUuid: string): Promise<void> {
+    await this.http.post<unknown>(
+      `/projects/${projectUuid}/query/${encodeURIComponent(queryUuid)}/cancel`,
     );
   }
 }

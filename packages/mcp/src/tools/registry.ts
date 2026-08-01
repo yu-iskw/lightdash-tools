@@ -3,6 +3,7 @@
  * Wire names are always `lightdash_` + id via registerToolSafe.
  */
 
+import { registerExplainContent } from './composition/explain-content.js';
 import {
   registerGetOrgMember,
   registerGetOrgProfile,
@@ -23,8 +24,20 @@ import {
   registerListContent,
   registerListValidationResults,
 } from './project/content.js';
+import {
+  registerGetProjectParameters,
+  registerListProjectParameters,
+} from './project/parameters.js';
 import { registerGetProject, registerListProjects } from './project/projects.js';
+import {
+  registerGetChart,
+  registerGetDashboard,
+  registerSearchContent,
+} from './project/reader-content.js';
+import { registerRunChart, registerRunDashboardTile } from './project/reader-execution.js';
 import { registerGetScheduler, registerListProjectSchedulers } from './project/schedulers.js';
+import { registerGetSpace, registerListSpaces } from './project/spaces.js';
+import { registerCancelQuery, registerGetQueryResult } from './query/lifecycle.js';
 import {
   registerGetExplore,
   registerGetFieldLineage,
@@ -39,7 +52,11 @@ import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ToolRegistration = {
-  register: (server: McpServer, contextProvider: McpContextProvider) => void;
+  register: (
+    server: McpServer,
+    contextProvider: McpContextProvider,
+    options?: { personaId?: string },
+  ) => void;
 };
 
 export const toolRegistry = {
@@ -73,6 +90,20 @@ export const toolRegistry = {
   get_project_user_activity: { register: registerGetProjectUserActivity },
   list_project_schedulers: { register: registerListProjectSchedulers },
   get_scheduler: { register: registerGetScheduler },
+
+  // content-reader
+  search_content: { register: registerSearchContent },
+  list_spaces: { register: registerListSpaces },
+  get_space: { register: registerGetSpace },
+  get_dashboard: { register: registerGetDashboard },
+  get_chart: { register: registerGetChart },
+  list_project_parameters: { register: registerListProjectParameters },
+  get_project_parameters: { register: registerGetProjectParameters },
+  explain_content: { register: registerExplainContent },
+  run_chart: { register: registerRunChart },
+  run_dashboard_tile: { register: registerRunDashboardTile },
+  get_query_result: { register: registerGetQueryResult },
+  cancel_query: { register: registerCancelQuery },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;
@@ -82,6 +113,7 @@ export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,
   ids: readonly ToolId[],
+  options?: { personaId?: string },
 ): void {
   for (const id of ids) {
     // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
@@ -89,6 +121,6 @@ export function registerToolsByIds(
     if (!entry) {
       throw new Error(`Unknown MCP tool id: ${String(id)}`);
     }
-    entry.register(server, contextProvider);
+    entry.register(server, contextProvider, options);
   }
 }

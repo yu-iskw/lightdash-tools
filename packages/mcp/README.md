@@ -1,6 +1,6 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile) and `organization-audit` (read-only org governance). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md) and [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md).
+MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), and `content-reader` (saved-content discovery + bounded execution). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), and [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md).
 
 Mutation/admin write surfaces are **not** registered on MCP — use `@lightdash-tools/client` or the CLI.
 
@@ -87,7 +87,7 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, audit log, token cache TTL |
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp` or `/organization-audit/v1/mcp`.
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, or `/content-reader/v1/mcp`.
 
 ### HTTP shared-key / local (secondary)
 
@@ -111,6 +111,7 @@ npx @lightdash-tools/mcp
 # or explicit personas:
 npx @lightdash-tools/mcp semantic-layer
 npx @lightdash-tools/mcp organization-audit
+npx @lightdash-tools/mcp content-reader
 ```
 
 Or if installed globally:
@@ -118,6 +119,7 @@ Or if installed globally:
 ```bash
 lightdash-mcp
 lightdash-mcp organization-audit
+lightdash-mcp content-reader
 ```
 
 Logging goes to stderr only; stdout is JSON-RPC. Bare `lightdash-mcp` defaults to `semantic-layer`.
@@ -143,6 +145,7 @@ The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT
 
 - `POST/GET/DELETE /semantic-layer/v1/mcp`
 - `POST/GET/DELETE /organization-audit/v1/mcp`
+- `POST/GET/DELETE /content-reader/v1/mcp`
 
 Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
@@ -175,6 +178,17 @@ Read-only organization inventory, access, content health, usage signals, and sch
 
 Prompts and playbook: `lightdash://playbooks/organization-audit` (host orchestrates multi-step audits via primitives). No mutation, warehouse queries, or user-activity CSV download.
 
+### `content-reader` persona
+
+Project-scoped saved-content consumption ([ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md)). MCP server display name is `lightdash-mcp-content` (60-char client limit). Endpoint inventory: [docs/content-reader-endpoint-inventory.md](../../docs/content-reader-endpoint-inventory.md).
+
+- **Scope / discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`
+- **Metadata**: `get_dashboard`, `get_chart`, `list_project_parameters`, `get_project_parameters`, `explain_content`
+- **Execution**: `run_chart`, `run_dashboard_tile` (semantic saved content only; SQL charts disabled by default)
+- **Lifecycle**: `get_query_result`, `cancel_query` (session-owned ledger)
+
+Project resolution: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid`. Prompts and playbook: `lightdash://playbooks/content-reader`.
+
 ### CLI Binary
 
 If installed globally, you can use the `lightdash-mcp` binary:
@@ -186,7 +200,7 @@ lightdash-mcp --help
 ### CLI Options
 
 - `--http` — Run as HTTP server instead of Stdio.
-- `stdio` / `semantic-layer` / `organization-audit` / `serve-http` — Explicit transport/persona subcommands.
+- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `serve-http` — Explicit transport/persona subcommands.
 
 ## Safety (persona-first)
 
@@ -194,9 +208,9 @@ MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-sha
 
 | Concern      | Mechanism                                                                                          |
 | :----------- | :------------------------------------------------------------------------------------------------- |
-| Which tools  | Persona `toolIds` in code (`semantic-layer` or `organization-audit`)                               |
+| Which tools  | Persona `toolIds` in code (`semantic-layer`, `organization-audit`, or `content-reader`)            |
 | Who          | Auth mode + Lightdash API RBAC                                                                     |
-| Where (HTTP) | Optional `X-Lightdash-Project` pin                                                                 |
+| Where (HTTP) | Optional `X-Lightdash-Project` pin; content-reader also uses `LIGHTDASH_TOOLS_PROJECT_UUID`        |
 | Hardening    | Input validation on known ID fields + optional `LIGHTDASH_TOOLS_AUDIT_LOG` + org-audit GET asserts |
 
 Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.

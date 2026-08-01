@@ -1,0 +1,52 @@
+/**
+ * Shared error/warning helpers for content-reader query and metadata tools.
+ */
+
+import { ProjectScopeError } from '../../governance/project-scope.js';
+import { jsonToolResult, withLightdashBlockedMarker } from '../shared.js';
+
+import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
+import type { TextContent } from '../shared.js';
+
+/** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
+const BLOCKED_POLICY_CODES = new Set([
+  'PROJECT_SCOPE_MISMATCH',
+  'PROJECT_SCOPE_REQUIRED',
+  'CONTENT_NOT_EXECUTABLE',
+  'CONTENT_NOT_FOUND',
+  'INVALID_FILTER_OVERRIDE',
+  'INVALID_PARAMETER_OVERRIDE',
+  'QUERY_NOT_OWNED',
+  'QUERY_EXPIRED',
+  'QUERY_BUDGET_EXCEEDED',
+  'RATE_LIMITED',
+  'ROW_LIMIT_EXCEEDED',
+]);
+
+export function codedErrorResult(code: string, message: string): TextContent {
+  const body = { error: { code, message } };
+  const result: TextContent = {
+    ...jsonToolResult(body),
+    isError: true,
+  };
+  if (BLOCKED_POLICY_CODES.has(code)) {
+    return withLightdashBlockedMarker(result);
+  }
+  return result;
+}
+
+/** Map ProjectScopeError to a tool error result; rethrow anything else. */
+export function projectScopeErrorResult(err: unknown): TextContent {
+  if (err instanceof ProjectScopeError) {
+    return codedErrorResult(err.code, err.message);
+  }
+  throw err;
+}
+
+export function warningFromNormalizedMessage(message: string): ContentReaderWarning {
+  const known: ContentReaderWarningCode[] = ['QUERY_TIMEOUT', 'QUERY_RUNNING', 'TRUNCATED'];
+  const code = known.includes(message as ContentReaderWarningCode)
+    ? (message as ContentReaderWarningCode)
+    : ('PARTIAL_RESULT' as const);
+  return { code, message };
+}
