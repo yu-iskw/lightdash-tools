@@ -1,3 +1,0 @@
-kind: refactor
-body: Rename MCP tool wire prefix from `ldt__` to `lightdash_` (breaking for clients that hardcode tool names).
-time: 2026-07-31T15:28:23.602004+09:00

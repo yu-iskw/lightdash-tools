@@ -1,3 +1,0 @@
-kind: refactor
-body: Reorganize MCP tools into organization/project/space/semantic scope folders with lib/ helpers; remove composed lightdash_audit_* tools.
-time: 2026-07-31T16:52:20.716471+09:00

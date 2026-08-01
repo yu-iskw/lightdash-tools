@@ -1,3 +1,0 @@
-kind: refactor
-body: Restructure @lightdash-tools/mcp around a shared tool registry and semantic-layer persona at /semantic-layer/v1/mcp (ldt__* tools); deprecate @lightdash-tools/semantic-layer-mcp
-time: 2026-07-30T20:50:14.428875+09:00

@@ -1,3 +1,0 @@
-kind: refactor
-body: MCP HTTP config rejects unused LIGHTDASH_TOOLS_MCP_PATH and unenforceable oauth scope env vars; docs list mode matrices and persona path /semantic-layer/v1/mcp
-time: 2026-07-30T20:58:00+09:00

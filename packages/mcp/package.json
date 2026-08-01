@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/mcp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "MCP server for Lightdash semantic-layer discovery/compile and organization-audit (read-only).",
   "keywords": [],
   "license": "Apache-2.0",

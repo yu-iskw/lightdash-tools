@@ -1,3 +1,0 @@
-kind: refactor
-body: Remove orphaned pre-persona MCP modules (package-level prompts/resources/completion/tasks/ai-agents tools) and fold runtime config + audit helpers under config/ and audit/
-time: 2026-07-30T22:07:41.446161+09:00

@@ -23,7 +23,7 @@ program
   .description(
     'MCP server for Lightdash (semantic-layer discovery and organization-audit). Default stdio persona is semantic-layer.',
   )
-  .version('0.6.0');
+  .version('0.7.0');
 
 program
   .command('stdio')

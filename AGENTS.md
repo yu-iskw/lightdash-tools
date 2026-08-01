@@ -153,6 +153,8 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - **pnpm v11 config location:** `overrides` and other pnpm settings live in `pnpm-workspace.yaml`, not `package.json#pnpm`. The repo pins `packageManager` to `pnpm@11.5.3`.
 - **Build before ESLint:** Workspace packages resolve via `dist/` entrypoints. `verify:pr` and `verify:quick` run `pnpm build` first so `import-x/no-unresolved` does not false-negative.
 - ADR and Changie are initialized (`docs/adr`, `.changie.yaml`); use the `manage-adr` and `manage-changelog` skills when `adr-tools` and `changie` are available.
+- **Changie kind templates use `{{.Kind}}`, not `{{.Label}}`:** Per-kind `format: '### {{.Label}}'` fails at batch time (often silently → version file is header-only). Use global `kindFormat: '### {{.Kind}}'` + `changeFormat: '* {{.Body}}'`. Fragments must be `.yaml` with kind **keys** (`feat`/`fix`/…), not Keep-a-Changelog labels (`Added`/`Changed`). Dry-run `changie batch <ver> --dry-run` and confirm bodies before `--force`/merge. Version files use empty `versionExt` (e.g. `.changes/0.7.0.`).
+- **`pnpm -r version` needs a clean git tree:** If the working tree is dirty, root `pnpm version X --no-git-tag-version` may succeed while recursive bumps fail with `ERR_PNPM_UNCLEAN_WORKING_TREE`. Set each `packages/*/package.json` `"version"` directly (or stash first), then `pnpm install`.
 - **Trunk unavailable (restricted network):** If `curl https://get.trunk.io` returns 403, use these direct fallbacks instead of Trunk commands:
   - Lint: `pnpm lint:eslint`
   - Format: `pnpm format:eslint` (ESLint auto-fix) and `pnpm format:prettier` (Prettier)
