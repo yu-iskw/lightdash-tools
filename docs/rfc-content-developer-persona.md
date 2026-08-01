@@ -75,7 +75,7 @@ Tool ids are unprefixed catalog names (`create_chart`). Registration applies `li
 
 ## Tool surface
 
-See [content-developer-endpoint-inventory.md](../content-developer-endpoint-inventory.md) and ADR-0014.
+See [content-developer-endpoint-inventory.md](content-developer-endpoint-inventory.md) and ADR-0014.
 
 ## Non-Goals (v1)
 
