@@ -1,3 +1,76 @@
 # Changelog
 
-## [0.6.0] - 2026-03-09## [0.5.0] - 2026-03-06## [0.4.0] - 2026-02-27## [0.3.2] - 2026-02-27## [0.3.1] - 2026-02-27## [0.2.6] - 2026-02-13## [0.2.5] - 2026-02-13## [0.2.4] - 2026-02-13## [0.2.3] - 2026-02-13## [0.2.2] - 2026-02-13## [0.2.0] - 2026-02-13## [0.1.2] - 2026-02-13 ## [0.1.0] - 2026-02-12## [v0.1.0] - 2026-02-11
+## [0.7.0] - 2026-08-01
+
+### Features
+
+- Add semantic-layer HTTP authMode=none with PAT for local Compose profile docker-compose.dev.yml.
+- Add read-only organization-audit MCP persona at /organization-audit/v1/mcp with 18 inventory/access/content/scheduler primitives (playbook-orchestrated; no composed audit_* tools).
+- Host MCP OAuth with server-held Lightdash client credentials and a shared /oauth/callback broker; infer auth from credentials and keep PAT secondary
+- Add @lightdash-tools/semantic-layer-mcp with three semantic-layer prompts and a static playbook resource (lightdash://playbooks/semantic-layer)
+- Allow optional project pin via X-Lightdash-Project (HTTP) or LIGHTDASH_TOOLS_PINNED_PROJECT / --pin-project (stdio) on semantic-layer-mcp
+- Register compile/discovery MCP tools on @lightdash-tools/semantic-layer-mcp (projects, explores, metrics, compile_query) with thin registerTool helpers
+- Add stdio Docker image for semantic-layer-mcp (Cursor envFile + docker run -i)
+- Migrate @lightdash-tools/mcp to MCP TypeScript SDK v2 (@modelcontextprotocol/server and @modelcontextprotocol/node at 2.0.0) while preserving legacy-era stdio and stateful Streamable HTTP behavior
+- Add OAuth-backed Streamable HTTP mode with per-user Lightdash bearer auth, protected-resource metadata, and session token binding
+
+### Bug Fixes
+
+- Slim list_dimensions, type explore helpers, collapse prompts onto playbook, keep explore errors/warnings, and resolve lineage fieldIds in the client.
+- Flag empty-SELECT compile_query results as errors; default list_dimensions to base-table only.
+- Filter list_dimensions by explore.baseTable and restore HTTP X-Lightdash-Project pin on @lightdash-tools/mcp
+- OAuth broker: bind DCR redirects, forward Proxy-Authorization, omit unsupported refresh tokens
+- Improve semantic-layer-mcp playbook/prompts and slim list_explores summaries with search/limit plus fieldId on list_dimensions for compile_query
+
+### Documentation
+
+- Clarify semantic-layer MCP playbook/prompts: always-search, explore disambiguation, catalog vs explore metrics, lineage id retry, shortlist-only answers.
+- Document silent empty-SELECT compiles, base-table dimensions, and get_metric tableName=explore id in semantic-layer MCP playbook/prompts.
+- Clarify semantic-layer playbook/prompts for catalog vs explore-local metrics, dimension shortlists, and multi-insight composition
+- Generalize semantic-layer MCP playbook and prompts: portable tool invariants only, no org/warehouse-specific tokens.
+- Clarify portable semantic-layer playbook rules: project vs warehouse scope, prefer explore-local metrics, compile may add related metrics.
+- Fix broken links to deleted docs/compatibility/mcp-clients.md in MCP README and RFC-0041.
+
+### Refactors
+
+- Restructure @lightdash-tools/mcp around a shared tool registry and semantic-layer persona at /semantic-layer/v1/mcp (ldt__* tools); deprecate @lightdash-tools/semantic-layer-mcp
+- MCP HTTP config rejects unused LIGHTDASH_TOOLS_MCP_PATH and unenforceable oauth scope env vars; docs list mode matrices and persona path /semantic-layer/v1/mcp
+- Remove @lightdash-tools/semantic-layer-mcp; use @lightdash-tools/mcp at /semantic-layer/v1/mcp
+- Remove orphaned pre-persona MCP modules (package-level prompts/resources/completion/tasks/ai-agents tools) and fold runtime config + audit helpers under config/ and audit/
+- Reorganize MCP src namespaces: auth providers/resource-server seams, server/ and governance/ modules
+- Rename MCP tool wire prefix from `ldt__` to `lightdash_` (breaking for clients that hardcode tool names).
+- Reorganize MCP tools into organization/project/space/semantic scope folders with lib/ helpers; remove composed lightdash_audit_* tools.
+- Remove unused LIGHTDASH_TOOLS_PINNED_PROJECT / ALLOWED_PROJECTS and CLI flags from semantic-layer-mcp; keep HTTP X-Lightdash-Project pin only
+- Slim semantic-layer-mcp governance (package-is-allowlist, optional project fence) and add Streamable HTTP lightdash-oauth for remote hosts; OAuth client secrets stay on the MCP client
+
+### Chores
+
+- Remove LIGHTDASH_TOOLS_MCP_INSECURE_DEV; gate local unauthenticated MCP HTTP on NODE_ENV=development only
+
+## [0.6.0] - 2026-03-09
+
+## [0.5.0] - 2026-03-06
+
+## [0.4.0] - 2026-02-27
+
+## [0.3.2] - 2026-02-27
+
+## [0.3.1] - 2026-02-27
+
+## [0.2.6] - 2026-02-13
+
+## [0.2.5] - 2026-02-13
+
+## [0.2.4] - 2026-02-13
+
+## [0.2.3] - 2026-02-13
+
+## [0.2.2] - 2026-02-13
+
+## [0.2.0] - 2026-02-13
+
+## [0.1.2] - 2026-02-13
+
+## [0.1.0] - 2026-02-12
+
+## [v0.1.0] - 2026-02-11

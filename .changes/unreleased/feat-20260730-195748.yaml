@@ -1,3 +1,0 @@
-kind: feat
-body: Add semantic-layer HTTP authMode=none with PAT for local Compose profile docker-compose.dev.yml.
-time: 2026-07-30T19:57:48.460761+09:00

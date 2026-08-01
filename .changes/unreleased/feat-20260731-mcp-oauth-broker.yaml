@@ -1,3 +1,0 @@
-kind: feat
-body: Host MCP OAuth with server-held Lightdash client credentials and a shared /oauth/callback broker; infer auth from credentials and keep PAT secondary
-time: 2026-07-31T08:45:00Z
