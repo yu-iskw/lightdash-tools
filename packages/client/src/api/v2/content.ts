@@ -11,7 +11,7 @@ export interface SearchContentParams {
   projectUuids?: string[];
   spaceUuids?: string[];
   parentSpaceUuid?: string;
-  contentTypes?: ('chart' | 'dashboard' | 'space')[];
+  contentTypes?: ('chart' | 'dashboard' | 'data_app' | 'space')[];
   pageSize?: number;
   page?: number;
   search?: string;

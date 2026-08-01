@@ -19,6 +19,10 @@ import {
 } from '@lightdash-tools/common';
 
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
+import {
+  resolveMcpClientSessionId,
+  runWithMcpClientSessionAsync,
+} from '../governance/mcp-client-session.js';
 import { getPinnedProjectUuid } from '../governance/project-pin.js';
 import { toMcpErrorMessage } from '../server/errors.js';
 
@@ -145,6 +149,14 @@ export function blockedToolContent(message: string): BlockedContent {
 }
 
 /**
+ * Attach `_lightdashBlocked` so audit status is `blocked` (stripped before MCP client).
+ * Prefer for policy denials that already have JSON content + structuredContent.
+ */
+export function withLightdashBlockedMarker<T extends TextContent>(result: T): BlockedContent & T {
+  return { ...result, _lightdashBlocked: true };
+}
+
+/**
  * Registers a tool with prefix and annotations, applying pin / validation / audit guardrails.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
  * Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
@@ -238,17 +250,20 @@ export function wrapTool<T>(
   fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
 ): ToolHandler {
   return async (args: unknown, extra?: unknown) => {
+    const sessionId = resolveMcpClientSessionId(extra);
     try {
-      const context = await contextProvider.getContext(extra);
-      const auth = context.auth;
+      return await runWithMcpClientSessionAsync(sessionId, async () => {
+        const context = await contextProvider.getContext(extra);
+        const auth = context.auth;
 
-      return await runWithToolAuditAuthAsync(
-        { tokenHash: auth?.tokenHash, subject: auth?.subject },
-        async () => {
-          const handler = fn(context.lightdashClient);
-          return await handler(args as T);
-        },
-      );
+        return await runWithToolAuditAuthAsync(
+          { tokenHash: auth?.tokenHash, subject: auth?.subject },
+          async () => {
+            const handler = fn(context.lightdashClient);
+            return await handler(args as T);
+          },
+        );
+      });
     } catch (err) {
       const text = toMcpErrorMessage(err);
       return { content: [{ type: 'text', text }], isError: true };

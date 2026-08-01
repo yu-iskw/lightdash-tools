@@ -8,6 +8,8 @@ Accepted
 
 Related to [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
+Amended by [12. MCP content-reader persona saved-content execution boundary](0012-mcp-content-reader-persona-saved-content-execution-boundary.md)
+
 ## Context
 
 Process-level `LIGHTDASH_TOOLS_SAFETY_MODE`, dry-run, and project allowlist were designed for a broad MCP catalog. Personas ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)) fix the tool set in code; the shipped `semantic-layer` persona is read-only discovery/compile. Those process knobs became no-ops or overlapped HTTP project pinning, and suggested more protection than they provided. Opaque OAuth tokens cannot be authorized via local JWT scope checks ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)).
@@ -20,7 +22,10 @@ MCP security layers:
 
 1. **Capability** — persona `toolIds` in code. No MCP env or flag filters which tools register.
 2. **Who** — auth mode + Lightdash API RBAC (PAT / shared-key / experimental identity OAuth).
-3. **Where (HTTP)** — optional `X-Lightdash-Project` pin (ALS → `governance.pinnedProjectUuid`). Mismatched tool `projectUuid` args are blocked; pinned `list_projects` returns the pinned project only. Stdio has no process project allowlist; reach equals PAT RBAC.
+3. **Where (project scope)** — resolved per persona:
+   - **HTTP pin (all personas):** optional `X-Lightdash-Project` → ALS → `governance.pinnedProjectUuid`. Mismatched tool `projectUuid` args are blocked; pinned `list_projects` returns the pinned project only. Pin always wins when set.
+   - **`content-reader` configured default:** when HTTP pin is unset, `LIGHTDASH_TOOLS_PROJECT_UUID` supplies the project. Tool `projectUuid` is used only when both pin and env are unset; it cannot override pin or env. If still unset → `PROJECT_SCOPE_REQUIRED`.
+   - **Other personas (stdio):** no process project allowlist; reach equals PAT RBAC unless HTTP pin is used.
 4. **Hardening** — validate known identifier fields only (`project`, `projectUuid`, `projectUuids`, `projects`, `slug`); optional audit via `LIGHTDASH_TOOLS_AUDIT_LOG`. Call `initAuditLog()` at process start.
 
 **Removed from MCP** (no compatibility): `LIGHTDASH_TOOLS_SAFETY_MODE`, `--safety-mode`, `LIGHTDASH_TOOLS_DRY_RUN`, `--dry-run`, `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`, `--projects`, and JWT-based tool scope gating in tool wrappers.

@@ -4,10 +4,12 @@ const program = new Command();
 
 const PERSONA_SEMANTIC_LAYER = 'semantic-layer' as const;
 const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
+const PERSONA_CONTENT_READER = 'content-reader' as const;
 
-function runStdio(
-  personaId?: typeof PERSONA_ORGANIZATION_AUDIT | typeof PERSONA_SEMANTIC_LAYER,
-): void {
+type StdioPersonaId =
+  typeof PERSONA_CONTENT_READER | typeof PERSONA_ORGANIZATION_AUDIT | typeof PERSONA_SEMANTIC_LAYER;
+
+function runStdio(personaId?: StdioPersonaId): void {
   if (personaId) {
     process.env.LIGHTDASH_TOOLS_MCP_STDIO_PERSONA = personaId;
   }
@@ -21,7 +23,7 @@ function runHttp(): void {
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer discovery and organization-audit). Default stdio persona is semantic-layer.',
+    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader). Default stdio persona is semantic-layer.',
   )
   .version('0.7.0');
 
@@ -44,6 +46,15 @@ program
   .description('Run organization-audit persona on stdio (read-only org governance)')
   .action(() => {
     runStdio(PERSONA_ORGANIZATION_AUDIT);
+  });
+
+program
+  .command(PERSONA_CONTENT_READER)
+  .description(
+    'Run content-reader persona on stdio (saved-content discovery and bounded execution)',
+  )
+  .action(() => {
+    runStdio(PERSONA_CONTENT_READER);
   });
 
 program

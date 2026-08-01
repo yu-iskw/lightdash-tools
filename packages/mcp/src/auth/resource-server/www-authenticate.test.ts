@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
+import { CONTENT_READER_PERSONA_PATH } from '../../personas/content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../../personas/organization-audit/v1/index.js';
 import { SEMANTIC_LAYER_PERSONA_PATH } from '../../personas/semantic-layer/v1/index.js';
 
@@ -47,6 +48,12 @@ describe('buildOAuthProtectedResourceMetadata', () => {
       ORGANIZATION_AUDIT_PERSONA_PATH,
     );
     expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`);
+    expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
+  });
+
+  it('builds persona-specific resource metadata for content-reader', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, CONTENT_READER_PERSONA_PATH);
+    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PERSONA_PATH}`);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
   });
 });

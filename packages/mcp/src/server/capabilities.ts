@@ -24,7 +24,7 @@ export function registerCapabilities(
   options?: RegisterCapabilitiesOptions,
 ): void {
   const persona = options?.persona ?? getDefaultPersona();
-  registerToolsByIds(server, contextProvider, persona.toolIds);
+  registerToolsByIds(server, contextProvider, persona.toolIds, { personaId: persona.id });
   persona.registerPrompts(server);
   persona.registerResources(server);
 }

@@ -18,9 +18,11 @@ import { SpacesClient } from './api/v1/spaces';
 import { TagsClient } from './api/v1/tags';
 import { UsersClient } from './api/v1/users';
 import { ValidationClient } from './api/v1/validation';
+import { ChartsClientV2 } from './api/v2/charts';
 import { ContentClient } from './api/v2/content';
 import { DashboardsClientV2 } from './api/v2/dashboards';
 import { OrganizationRolesClient } from './api/v2/organization-roles';
+import { ParametersClientV2 } from './api/v2/parameters';
 import { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments';
 import { QueryClientV2 } from './api/v2/query';
 import { ValidationClientV2 } from './api/v2/validation';
@@ -82,6 +84,8 @@ export class V2ApiClients {
   readonly content: ContentClient;
   readonly validation: ValidationClientV2;
   readonly dashboards: DashboardsClientV2;
+  readonly charts: ChartsClientV2;
+  readonly parameters: ParametersClientV2;
 
   constructor(http: HttpClient) {
     this.query = new QueryClientV2(http);
@@ -90,6 +94,8 @@ export class V2ApiClients {
     this.content = new ContentClient(http);
     this.validation = new ValidationClientV2(http);
     this.dashboards = new DashboardsClientV2(http);
+    this.charts = new ChartsClientV2(http);
+    this.parameters = new ParametersClientV2(http);
   }
 }
 

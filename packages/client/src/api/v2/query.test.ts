@@ -80,4 +80,22 @@ describe('QueryClientV2', () => {
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/query/underlying-data', body);
     expect(result).toEqual(results);
   });
+
+  it('getAsyncQueryResults should call GET /projects/{projectUuid}/query/{queryUuid}', async () => {
+    const client = new QueryClientV2(mockHttp);
+    const results = { queryUuid: 'q1', status: 'ready', rows: [] };
+    vi.mocked(mockHttp.get).mockResolvedValue(results);
+    const result = await client.getAsyncQueryResults('p1', 'q1', { page: 1, pageSize: 100 });
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/query/q1', {
+      params: { page: 1, pageSize: 100 },
+    });
+    expect(result).toEqual(results);
+  });
+
+  it('cancelAsyncQuery should call POST /projects/{projectUuid}/query/{queryUuid}/cancel', async () => {
+    const client = new QueryClientV2(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue(undefined);
+    await client.cancelAsyncQuery('p1', 'q1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/query/q1/cancel');
+  });
 });

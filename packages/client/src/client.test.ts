@@ -42,6 +42,8 @@ describe('LightdashClient', () => {
       const client = new LightdashClient(config);
       expect(client.v2).toBeDefined();
       expect(client.v2.query).toBeDefined();
+      expect(client.v2.charts).toBeDefined();
+      expect(client.v2.parameters).toBeDefined();
     });
 
     it('v2.query.runMetricQuery should be a function', () => {

@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { registerToolsByIds } from '../tools/registry.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
+import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 
 import {
+  CONTENT_READER_PERSONA_PATH,
   DEFAULT_PERSONA_ID,
   getDefaultPersona,
   getPersona,
@@ -19,20 +21,30 @@ import {
 } from './index.js';
 
 describe('personas', () => {
-  it('ships semantic-layer and organization-audit with fixed paths', () => {
-    expect(Object.keys(PERSONAS).sort()).toEqual(['organization-audit', 'semantic-layer']);
+  it('ships semantic-layer, organization-audit, and content-reader with fixed paths', () => {
+    expect(Object.keys(PERSONAS).sort()).toEqual([
+      'content-reader',
+      'organization-audit',
+      'semantic-layer',
+    ]);
     expect(DEFAULT_PERSONA_ID).toBe('semantic-layer');
     expect(listPersonaPaths().sort()).toEqual(
-      [ORGANIZATION_AUDIT_PERSONA_PATH, SEMANTIC_LAYER_PERSONA_PATH].sort(),
+      [
+        CONTENT_READER_PERSONA_PATH,
+        ORGANIZATION_AUDIT_PERSONA_PATH,
+        SEMANTIC_LAYER_PERSONA_PATH,
+      ].sort(),
     );
     expect(getPersonaByPath(SEMANTIC_LAYER_PERSONA_PATH)?.id).toBe('semantic-layer');
     expect(getPersonaByPath(ORGANIZATION_AUDIT_PERSONA_PATH)?.id).toBe('organization-audit');
+    expect(getPersonaByPath(CONTENT_READER_PERSONA_PATH)?.id).toBe('content-reader');
     expect(getPersonaByPath('/mcp')).toBeUndefined();
   });
 
   it('normalizes trailing slashes when resolving path', () => {
     expect(getPersonaByPath(`${SEMANTIC_LAYER_PERSONA_PATH}/`)?.id).toBe('semantic-layer');
     expect(getPersonaByPath(`${ORGANIZATION_AUDIT_PERSONA_PATH}/`)?.id).toBe('organization-audit');
+    expect(getPersonaByPath(`${CONTENT_READER_PERSONA_PATH}/`)?.id).toBe('content-reader');
   });
 
   it('semantic-layer allowlists exactly nine tools', () => {
@@ -48,18 +60,27 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-org-audit');
   });
 
+  it('content-reader allowlists 13 tools and server name', () => {
+    const persona = getPersona('content-reader');
+    expect(persona.toolIds).toHaveLength(13);
+    expect(persona.toolIds).toEqual([...CONTENT_READER_TOOL_IDS]);
+    expect(getPersonaServerName(persona)).toBe('lightdash-mcp-content');
+  });
+
   it('keeps combined server+tool wire names under 60 characters', () => {
-    const persona = getPersona('organization-audit');
-    const serverName = getPersonaServerName(persona);
-    for (const id of persona.toolIds) {
-      const combined = serverName.length + (TOOL_PREFIX + id).length;
-      expect(combined, `${serverName}+${TOOL_PREFIX}${id}`).toBeLessThanOrEqual(60);
+    for (const persona of Object.values(PERSONAS)) {
+      const serverName = getPersonaServerName(persona);
+      for (const id of persona.toolIds) {
+        const combined = serverName.length + (TOOL_PREFIX + id).length;
+        expect(combined, `${serverName}+${TOOL_PREFIX}${id}`).toBeLessThanOrEqual(60);
+      }
     }
   });
 
   it('parsePersonaId validates known ids only', () => {
     expect(parsePersonaId('semantic-layer')).toBe('semantic-layer');
     expect(parsePersonaId('organization-audit')).toBe('organization-audit');
+    expect(parsePersonaId('content-reader')).toBe('content-reader');
     expect(parsePersonaId('nope')).toBeUndefined();
   });
 

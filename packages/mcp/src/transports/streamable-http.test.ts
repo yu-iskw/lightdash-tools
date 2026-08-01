@@ -13,6 +13,7 @@ import {
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
 import { makeTestMcpHttpConfig } from '../config/test-mcp-http-config.js';
+import { CONTENT_READER_PERSONA_PATH } from '../personas/content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../personas/organization-audit/v1/index.js';
 import { SEMANTIC_LAYER_PERSONA_PATH } from '../personas/semantic-layer/v1/index.js';
 
@@ -103,6 +104,11 @@ describe('streamable HTTP OAuth metadata', () => {
       ORGANIZATION_AUDIT_PERSONA_PATH,
     );
     expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`);
+  });
+
+  it('builds content-reader protected resource metadata', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, CONTENT_READER_PERSONA_PATH);
+    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PERSONA_PATH}`);
   });
 
   it('builds WWW-Authenticate challenges with resource_metadata for OAuth clients', () => {

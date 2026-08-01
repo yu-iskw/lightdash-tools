@@ -23,7 +23,7 @@ function resolveStdioPersona(): PersonaDefinition {
   const id = parsePersonaId(raw);
   if (!id) {
     throw new Error(
-      `Invalid LIGHTDASH_TOOLS_MCP_STDIO_PERSONA='${raw}'. Expected semantic-layer or organization-audit.`,
+      `Invalid LIGHTDASH_TOOLS_MCP_STDIO_PERSONA='${raw}'. Expected semantic-layer, organization-audit, or content-reader.`,
     );
   }
   return getPersona(id);

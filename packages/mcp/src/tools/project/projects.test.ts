@@ -109,9 +109,10 @@ describe('registerListProjects', () => {
 describe('registerGetProject', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    delete process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
   });
 
-  it('returns metadata summary without connection secrets', async () => {
+  it('returns metadata summary without connection secrets (pin-aware / semantic-layer)', async () => {
     const getProject = vi.fn().mockResolvedValue({
       projectUuid: PINNED,
       name: 'Pinned',
@@ -135,10 +136,53 @@ describe('registerGetProject', () => {
     expect(body.data.projectUuid).toBe(PINNED);
     expect(body.data.name).toBe('Pinned');
     expect(body.data.warehouseType).toBe('postgres');
+    expect(body.data).not.toHaveProperty('readerCapabilities');
     expect(body.warnings).toEqual([CREDENTIALS_OMITTED_WARNING]);
     expect(body.data).not.toHaveProperty('warehouseConnection');
     expect(body.data).not.toHaveProperty('dbtConnection');
     expect(JSON.stringify(body)).not.toContain('db-pass');
     expect(JSON.stringify(body)).not.toContain('token');
+  });
+
+  it('does not use LIGHTDASH_TOOLS_PROJECT_UUID on the non-reader path', async () => {
+    process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
+    const getProject = vi.fn();
+    const mockServer = { registerTool: vi.fn() };
+    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    const [, options, handler] = mockServer.registerTool.mock.calls[0];
+    expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
+
+    const result = await handler({});
+    expect(result.isError).toBe(true);
+    expect(getProject).not.toHaveBeenCalled();
+  });
+
+  it('includes readerCapabilities for content-reader persona', async () => {
+    process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
+    const getProject = vi.fn().mockResolvedValue({
+      projectUuid: PINNED,
+      name: 'Reader',
+      type: 'DEFAULT',
+    });
+    const mockServer = { registerTool: vi.fn() };
+    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject), {
+      personaId: 'content-reader',
+    });
+    const [, options, handler] = mockServer.registerTool.mock.calls[0];
+    expect(options.description).toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
+
+    const result = await handler({});
+    const body = JSON.parse(result.content[0].text) as {
+      data: Record<string, unknown>;
+      context: Record<string, unknown>;
+    };
+    expect(body.data.readerCapabilities).toEqual({
+      canDiscoverContent: true,
+      canExecuteSavedCharts: true,
+      canExecuteSqlCharts: false,
+      canExecuteDashboardTiles: true,
+    });
+    expect(body.context.projectUuid).toBe(PINNED);
+    expect(getProject).toHaveBeenCalledWith(PINNED);
   });
 });
