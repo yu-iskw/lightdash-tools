@@ -211,6 +211,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - `getUserAgentPreferences` returns `null` when the API responds with `ApiSuccessEmpty` (user has no saved preferences).
 - The openapi-drift CI workflow uses `scripts/generate-cli-docs.mjs` to regenerate CLI documentation.
 - With `commit.gpgsign=true`, non-interactive agent shells block on GPG pinentry after Trunk pre-commit passes; the hang is signing, not the hook.
+- **Rebase + GPG:** `git rebase --continue` may still invoke `git commit -S` (from `rebase-merge/gpg_sign_opt` or `commit.gpgsign`) and hang on pinentry even with `-c commit.gpgsign=false`. Finish with `git commit --no-gpg-sign --no-edit -F "$(git rev-parse --git-path rebase-merge)/message"`, then `git rebase --continue`.
 - Operation registry generator requires non-empty `mcp.toolName` and `cli.commandPath` only for `agentExposure: 'agent'`; `client-only` ops document banned MCP names but omit CLI paths.
 - Per ADR-0004, irrecoverable ops such as `delete_member` stay off MCP and CLI; use `@lightdash-tools/client` directly for `users.members.delete`.
 - **Slim ADRs:** Binding decisions live in nine thematic records under [`docs/adr`](docs/adr); see the old→new mapping in [`docs/adr/README.md`](docs/adr/README.md).

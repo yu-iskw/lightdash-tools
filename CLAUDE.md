@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-01]: Content-reader Codex P2 fixes: hold query budget (`budgetHeld`) until terminal status/cancel/TTL; pre-classify SQL charts via `search_content` `source` before `getSavedChart`; `list_project_parameters` sets envelope `complete`/`truncated` via `isPageComplete`. Rebase `--continue` can still hang on GPG (`commit -S`) — finish with `git commit --no-gpg-sign -F rebase-merge/message` then continue.
 - [2026-08-01]: Content-reader ledger/budget must not use process-lifetime `getSessionId()` on multi-client HTTP — `wrapTool` sets ALS from MCP `extra.sessionId` (`getMcpClientSessionId()`); stdio uses `process:…`. Shared `get_project` is persona-gated: only `content-reader` gets `LIGHTDASH_TOOLS_PROJECT_UUID` / `readerCapabilities`; semantic-layer stays pin-aware. Policy denials use `isError` + `_lightdashBlocked` for audit `blocked`.
 - [2026-08-01]: Content-reader envelope `coverage.complete` should only be true when normalized query status is `complete` and not truncated. Using `!truncated` alone mislabels running/failed/cancelled responses as complete.
 - [2026-08-01]: Content-reader persona (ADR-0012) uses server name `lightdash-mcp-content` (not `…-content-reader`) so `lightdash_list_project_parameters` stays ≤60 combined chars. SQL chart execution is off by default; project scope uses `LIGHTDASH_TOOLS_PROJECT_UUID` under HTTP pin.
