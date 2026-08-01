@@ -1,6 +1,6 @@
 # RFC: Project-Level `content-developer` MCP Persona (amended)
 
-**Status:** Accepted (see [ADR-0014](../adr/0014-mcp-content-developer-persona-mutation-boundary.md))
+**Status:** Accepted (see [ADR-0014](adr/0014-mcp-content-developer-persona-mutation-boundary.md))
 **Repository:** `yu-iskw/lightdash-tools`
 **Package:** `@lightdash-tools/mcp`
 **Persona ID:** `content-developer`
@@ -46,7 +46,7 @@ flowchart TB
     Catalog[operations/content-developer.ts] --> Registry
 ```
 
-Catalog SSOT: [ADR-0013](../adr/0013-operation-catalog-as-sole-agent-surface-ssot.md).
+Catalog SSOT: [ADR-0013](adr/0013-operation-catalog-as-sole-agent-surface-ssot.md).
 
 ## Authoring model (hybrid)
 
