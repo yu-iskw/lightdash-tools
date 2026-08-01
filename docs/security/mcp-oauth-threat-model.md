@@ -51,6 +51,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 ### Logging and observability
 
 - [ ] Configure log redaction for `Authorization` and `Proxy-Authorization` headers.
+- [ ] Tool-output PII redaction in MCP responses ([ADR-0011](../adr/0011-mcp-tool-response-sensitivity-classes.md)) is separate from log/token redaction above — handlers mask emails and omit connection secrets before results reach the agent transcript.
 - [ ] Verify audit log entries contain `tokenHash` and `subject` (not raw tokens) for OAuth sessions.
 - [ ] Avoid capturing full HTTP request dumps in production.
 

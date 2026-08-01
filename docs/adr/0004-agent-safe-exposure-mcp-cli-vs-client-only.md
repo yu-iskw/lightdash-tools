@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 Accepted
 
+Related to [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
+
 ## Context
 
 MCP and CLI are automation surfaces for AI agents and scripts. Exposing the full `@lightdash-tools/client` API—including irrecoverable deletes—is unsafe even with runtime safety modes: a misconfigured agent can still discover and call banned operations.
