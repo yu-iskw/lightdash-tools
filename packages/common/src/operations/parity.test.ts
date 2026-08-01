@@ -1,20 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { listBannedMcpToolNames } from './agent-safe';
-import { listOperations } from './registry';
+import { listBannedMcpToolNames, listOperations } from './registry';
 
 describe('agent-safe surface parity', () => {
-  it('requires MCP tool name and CLI path for exposed agent operations', () => {
-    const exposedAgentOps = listOperations().filter(
-      (operation) =>
-        operation.agentExposure === 'agent' && operation.mcp.taskSupport.exposed === true,
-    );
+  it('requires MCP tool name or CLI path for agent operations', () => {
+    const agentOps = listOperations().filter((operation) => operation.agentExposure === 'agent');
 
-    expect(exposedAgentOps.length).toBeGreaterThan(0);
+    expect(agentOps.length).toBeGreaterThan(0);
 
-    for (const operation of exposedAgentOps) {
-      expect(operation.mcp.toolName.trim().length).toBeGreaterThan(0);
-      expect(operation.cli.commandPath.trim().length).toBeGreaterThan(0);
+    for (const operation of agentOps) {
+      const hasMcp = operation.mcp !== undefined && operation.mcp.toolName.trim().length > 0;
+      const hasCli = operation.cli !== undefined && operation.cli.commandPath.trim().length > 0;
+      expect(hasMcp || hasCli).toBe(true);
     }
   });
 
@@ -26,9 +23,10 @@ describe('agent-safe surface parity', () => {
       if (operation.agentExposure !== 'client-only') {
         continue;
       }
-      expect(operation.mcp.taskSupport.exposed).toBe(false);
-      if (operation.mcp.toolName.trim().length > 0) {
-        expect(banned).toContain(operation.mcp.toolName);
+      expect(operation.mcp).toBeUndefined();
+      expect(operation.cli).toBeUndefined();
+      if (operation.bannedMcpToolName) {
+        expect(banned).toContain(operation.bannedMcpToolName);
       }
     }
   });

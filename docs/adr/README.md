@@ -29,6 +29,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 10. [MCP organization-audit persona read-only boundary](0010-mcp-organization-audit-persona-read-only-boundary.md)
 11. [MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 12. [MCP content-reader persona saved-content execution boundary](0012-mcp-content-reader-persona-saved-content-execution-boundary.md)
+13. [Operation catalog as sole agent-surface SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md)
 
 ## Old → new mapping
 

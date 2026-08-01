@@ -2,7 +2,7 @@
  * Content-reader safety policy and registration helper (ADR-0012).
  */
 
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, READ_ONLY_TRANSIENT } from '@lightdash-tools/common';
 
 import { registerToolSafe } from '../tools/shared.js';
 
@@ -19,12 +19,7 @@ export type ReaderOperationSafety = {
 };
 
 /** Computational read-only (warehouse run) but not idempotent — run/cancel/poll. */
-export const SAVED_EXECUTION_ANNOTATIONS: ToolAnnotations = {
-  readOnlyHint: true,
-  idempotentHint: false,
-  destructiveHint: false,
-  openWorldHint: false,
-};
+export const SAVED_EXECUTION_ANNOTATIONS: ToolAnnotations = READ_ONLY_TRANSIENT;
 
 export const METADATA_SAFETY: ReaderOperationSafety = {
   mutability: 'none',

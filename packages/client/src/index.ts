@@ -60,6 +60,13 @@ export {
   ENV_LIGHTDASH_PROXY_AUTHORIZATION,
 } from './utils/env';
 export { HttpClient } from './http/http-client';
+export {
+  isApiSuccessEnvelope,
+  unwrapApiSuccessResults,
+  type ApiEnvelope,
+  type ApiErrorEnvelope,
+  type ApiSuccessEnvelope,
+} from './http/unwrap-api-success';
 export { RateLimiter } from './http/rate-limiter';
 export { SecretString } from './utils/secret-string';
 export type { ApiResponseOk, ApiResponseError, ApiResponseBody, ApiError } from './types/api';

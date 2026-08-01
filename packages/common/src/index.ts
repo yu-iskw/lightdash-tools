@@ -11,13 +11,13 @@ export * from './safety';
 // Export input validation
 export * from './input-validation';
 
-// Export argument / descriptor validation (RFC Phase 0)
+// Export argument / descriptor validation
 export * from './argument-validation';
 
-// Export shared typed operation registry (RFC Section 7)
+// Export shared typed operation catalog (ADR-0013)
 export * from './operations';
 
-// Export AgentOps bundle and gate types (RFC Phase 2)
+// Export AgentOps bundle and gate types
 export * from './agentops/types';
 export * from './agentops/snapshots';
 export * from './agentops/formatters';
@@ -29,9 +29,5 @@ export {
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';
 
-// Export Lightdash API models
-export * from './types/lightdash-api';
-export { CONTENT_SORT_BY_COLUMNS } from './types/v2/content';
-
-// Export raw OpenAPI types for direct use (e.g., by client package)
-export type { paths, components, operations } from './types/generated/openapi-types';
+// Curated Lightdash API types + generated OpenAPI shapes (single public path)
+export * from './types';

@@ -49,6 +49,17 @@ export const READ_ONLY_DEFAULT: ToolAnnotations = {
 };
 
 /**
+ * Preset: read-only but non-idempotent (transient warehouse execution).
+ * Used by content-reader saved-chart/tile runs (ADR-0012).
+ */
+export const READ_ONLY_TRANSIENT: ToolAnnotations = {
+  readOnlyHint: true,
+  openWorldHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+};
+
+/**
  * Legacy preset: write, non-destructive, idempotent (e.g. upsert by slug).
  * Prefer {@link WRITE_NONDESTRUCTIVE} for new tools; idempotent behavior is not implied by safety mode.
  */

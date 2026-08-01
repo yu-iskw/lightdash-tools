@@ -1,7 +1,10 @@
 /**
  * Shared MCP tool registry: short id → register(server, ctx).
  * Wire names are always `lightdash_` + id via registerToolSafe.
+ * Persona allowlists must resolve through the operation catalog (ADR-0013).
  */
+
+import { getOperationByMcpToolName, listBannedMcpToolNames } from '@lightdash-tools/common';
 
 import { registerExplainContent } from './composition/explain-content.js';
 import {
@@ -108,7 +111,9 @@ export const toolRegistry = {
 
 export type ToolId = keyof typeof toolRegistry;
 
-/** Register a subset of tools by id (persona allowlist). */
+const BANNED_MCP_TOOL_IDS = new Set(listBannedMcpToolNames());
+
+/** Register a subset of tools by id (persona allowlist). Requires catalog parity (ADR-0013). */
 export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,
@@ -116,11 +121,14 @@ export function registerToolsByIds(
   options?: { personaId?: string },
 ): void {
   for (const id of ids) {
-    // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
-    const entry = toolRegistry[id];
-    if (!entry) {
-      throw new Error(`Unknown MCP tool id: ${String(id)}`);
+    if (BANNED_MCP_TOOL_IDS.has(id)) {
+      throw new Error(`MCP tool id '${id}' is banned (client-only / irrecoverable)`);
     }
-    entry.register(server, contextProvider, options);
+    const catalogOp = getOperationByMcpToolName(id);
+    if (catalogOp?.mcp?.taskSupport.exposed !== true) {
+      throw new Error(`MCP tool id '${id}' is not an exposed operation in the catalog (ADR-0013)`);
+    }
+    // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
+    toolRegistry[id].register(server, contextProvider, options);
   }
 }

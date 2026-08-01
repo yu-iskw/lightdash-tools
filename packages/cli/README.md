@@ -168,8 +168,8 @@ lightdash-ai ai-agents threads --page 1 --page-size 10
 lightdash-ai schema list
 
 # Get schema for a resource (path, method, params)
-lightdash-ai schema get charts.list
-lightdash-ai schema get ai-agents.settings.update
+lightdash-ai schema get cli.charts.list
+lightdash-ai schema get ai-agents.admin.settings.update
 ```
 
 ### Global Options

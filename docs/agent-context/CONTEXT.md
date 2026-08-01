@@ -28,7 +28,7 @@ Safety modes gate **reversible** destructive ops at runtime. They do **not** rep
 ## Schema Introspection
 
 - Run `lightdash-ai schema list` to see available resources.
-- Run `lightdash-ai schema get <resource>` (e.g. `charts.list`, `ai-agents.settings.get`) for machine-readable path, method, and params.
+- Run `lightdash-ai schema get <resource>` (e.g. `cli.charts.list`, `ai-agents.admin.settings.get`) for machine-readable path, method, and params.
 
 ## Input Validation
 
