@@ -14,7 +14,11 @@ import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import { QueryLedgerError, getOwnedQueryLedgerEntry } from './query-ledger.js';
-import { codedErrorResult, warningFromNormalizedMessage } from './reader-tool-helpers.js';
+import {
+  codedErrorResult,
+  isCoverageComplete,
+  warningFromNormalizedMessage,
+} from './reader-tool-helpers.js';
 import { normalizeAsyncQueryResult } from './result-normalizer.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
@@ -83,7 +87,7 @@ export function registerGetQueryResult(
               contentReaderEnvelope(normalized, {
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
-                complete: !normalized.truncated,
+                complete: isCoverageComplete(normalized),
                 truncated: normalized.truncated,
                 warnings: normalized.warnings.map(warningFromNormalizedMessage),
               }),

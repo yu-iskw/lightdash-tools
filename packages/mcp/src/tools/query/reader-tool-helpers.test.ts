@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
 
-import { codedErrorResult, projectScopeErrorResult } from './reader-tool-helpers.js';
+import {
+  codedErrorResult,
+  isCoverageComplete,
+  projectScopeErrorResult,
+} from './reader-tool-helpers.js';
 
 describe('codedErrorResult', () => {
   it('returns isError with JSON error body', () => {
@@ -40,5 +44,15 @@ describe('projectScopeErrorResult', () => {
     );
     expect(result.isError).toBe(true);
     expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
+  });
+});
+
+describe('isCoverageComplete', () => {
+  it('returns true only for non-truncated complete results', () => {
+    expect(isCoverageComplete({ status: 'complete', truncated: false })).toBe(true);
+    expect(isCoverageComplete({ status: 'complete', truncated: true })).toBe(false);
+    expect(isCoverageComplete({ status: 'running', truncated: false })).toBe(false);
+    expect(isCoverageComplete({ status: 'failed', truncated: false })).toBe(false);
+    expect(isCoverageComplete({ status: 'cancelled', truncated: false })).toBe(false);
   });
 });

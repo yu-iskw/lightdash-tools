@@ -12,7 +12,7 @@ import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
 import { FilterOverrideError, applyFilterValueOverrides } from '../query/filter-overrides.js';
-import { codedErrorResult } from '../query/reader-tool-helpers.js';
+import { codedErrorResult, isCoverageComplete } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import { detectChartType } from './reader-content.js';
@@ -123,7 +123,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                 {
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
-                  complete: !bounded.normalized.truncated,
+                  complete: isCoverageComplete(bounded.normalized),
                   truncated: bounded.normalized.truncated,
                   warnings: bounded.warnings,
                 },
@@ -290,7 +290,7 @@ export function registerRunDashboardTile(
                 {
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
-                  complete: !bounded.normalized.truncated,
+                  complete: isCoverageComplete(bounded.normalized),
                   truncated: bounded.normalized.truncated,
                   warnings: [
                     ...filterWarnings.map((message) => ({

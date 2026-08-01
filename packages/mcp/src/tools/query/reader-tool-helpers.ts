@@ -5,6 +5,7 @@
 import { ProjectScopeError } from '../../governance/project-scope.js';
 import { jsonToolResult, withLightdashBlockedMarker } from '../shared.js';
 
+import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
 import type { TextContent } from '../shared.js';
 
@@ -49,4 +50,10 @@ export function warningFromNormalizedMessage(message: string): ContentReaderWarn
     ? (message as ContentReaderWarningCode)
     : ('PARTIAL_RESULT' as const);
   return { code, message };
+}
+
+export function isCoverageComplete(
+  result: Pick<NormalizedQueryResult, 'status' | 'truncated'>,
+): boolean {
+  return result.status === 'complete' && !result.truncated;
 }
