@@ -185,6 +185,40 @@ export function resolveCompareVersionIds(
 export type MoveContentType = 'chart' | 'dashboard' | 'data_app' | 'space';
 export type MoveChartSource = 'dbt_explore' | 'sql';
 
+/** Throws when `contentTypes`/`chartSources` (when provided) don't line up 1:1 with `itemUuids`. */
+export function assertMoveContentLengths(
+  itemUuids: readonly string[],
+  contentTypes?: readonly MoveContentType[],
+  chartSources?: readonly MoveChartSource[],
+): void {
+  if (contentTypes && contentTypes.length !== itemUuids.length) {
+    throw new Error('itemUuids and contentTypes must have the same length');
+  }
+  if (chartSources && chartSources.length !== itemUuids.length) {
+    throw new Error('itemUuids and chartSources must have the same length');
+  }
+}
+
+/**
+ * Build the canonical proposal object hashed by the preview ledger for a content move.
+ * Both `preview_space_changes` (content-move branch) and `move_content` must hash the
+ * same shape — including `contentTypes`/`chartSources` — so an apply cannot silently
+ * change item types or chart sources versus what was previewed and validated.
+ */
+export function buildMoveContentProposal(input: {
+  itemUuids: readonly string[];
+  targetSpaceUuid: string | null;
+  contentTypes?: readonly MoveContentType[];
+  chartSources?: readonly MoveChartSource[];
+}): Record<string, unknown> {
+  return {
+    itemUuids: input.itemUuids,
+    targetSpaceUuid: input.targetSpaceUuid,
+    contentTypes: input.contentTypes ?? null,
+    chartSources: input.chartSources ?? null,
+  };
+}
+
 /** Build a single `ItemPayload`-shaped entry for the content bulk-move API. */
 export function buildMoveContentItem(
   uuid: string,

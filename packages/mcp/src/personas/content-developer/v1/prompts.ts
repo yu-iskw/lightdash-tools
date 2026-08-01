@@ -40,9 +40,12 @@ function userMessages(text: string) {
   };
 }
 
-const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> validate -> apply. Call the matching lightdash_preview_* tool first,
-record the previewId, validate with lightdash_validate_chart / lightdash_validate_dashboard when fields changed,
-then apply with the write tool using that previewId. Never call a write tool without a fresh, validated previewId.`;
+const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> validate/confirm -> apply. Call the matching lightdash_preview_* tool first,
+record the previewId. For updates to an existing chart/dashboard, validate with lightdash_validate_chart /
+lightdash_validate_dashboard using that resource's UUID. For creates, duplicates, tile ops, space edits, or
+content moves (no existing uuid to validate against), call lightdash_confirm_preview with the same previewId and
+the exact resourceKind/resourceKey the preview was created with. Then apply with the write tool using that
+previewId. Never call a write tool without a fresh, validated previewId bound to that exact resource.`;
 
 export function registerContentDeveloperPrompts(server: McpServer): void {
   server.registerPrompt(
@@ -67,8 +70,10 @@ ${PREVIEW_VALIDATE_APPLY}
 
 Discover candidate charts first with lightdash_search_content / lightdash_get_chart.
 Target space: ${spaceUuid ?? '(resolve or ask)'}. Chart hints: ${chartReferences ?? '(none provided)'}.
-Preview with lightdash_preview_dashboard_changes, validate, then apply with lightdash_create_dashboard and
-lightdash_add_dashboard_tile for each tile. Report the dashboard UUID/slug and tiles added.`),
+Preview with lightdash_preview_dashboard_changes (resourceKey 'new'), confirm with lightdash_confirm_preview
+(resourceKind 'dashboard', resourceKey 'new'), then apply with lightdash_create_dashboard. For each tile, preview
+the resulting tile array with lightdash_preview_dashboard_changes, confirm_preview, then apply with
+lightdash_add_dashboard_tile. Report the dashboard UUID/slug and tiles added.`),
   );
 
   server.registerPrompt(
@@ -142,8 +147,11 @@ ${PREVIEW_VALIDATE_APPLY}
 
 Explore hint: ${exploreHint ?? '(resolve from goal)'}.
 Only semantic (as-code) charts are supported; SQL chart authoring is banned.
-Preview with lightdash_preview_chart_changes, validate with lightdash_validate_chart,
-then apply with lightdash_create_chart or lightdash_update_chart. Report the chart UUID/slug.`),
+Preview with lightdash_preview_chart_changes. ${
+        chartUuidOrSlug
+          ? 'Validate with lightdash_validate_chart (this chart UUID) since it updates an existing chart, then apply with lightdash_update_chart.'
+          : "Confirm with lightdash_confirm_preview (resourceKind 'chart', resourceKey matching the preview's slug) since it creates a new chart, then apply with lightdash_create_chart."
+      } Report the chart UUID/slug.`),
   );
 
   server.registerPrompt(
@@ -167,8 +175,9 @@ ${PREVIEW_VALIDATE_APPLY}
 
 Space hints: ${spaceReferences ?? '(discover with lightdash_list_spaces)'}.
 Inspect current structure with lightdash_list_spaces / lightdash_get_space.
-Preview with lightdash_preview_space_changes, then apply with lightdash_create_space / lightdash_update_space,
-and move content between spaces with lightdash_move_content. Report the resulting space tree and moved items.`),
+Preview with lightdash_preview_space_changes, confirm with lightdash_confirm_preview (resourceKind 'space' or
+'content-move', matching resourceKey), then apply with lightdash_create_space / lightdash_update_space, and move
+content between spaces with lightdash_move_content. Report the resulting space tree and moved items.`),
   );
 
   server.registerPrompt(

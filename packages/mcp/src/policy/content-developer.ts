@@ -7,8 +7,7 @@
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
-import { ProjectScopeError } from '../governance/project-scope.js';
-import { codedErrorResult } from '../tools/query/reader-tool-helpers.js';
+import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
 import { registerToolSafe } from '../tools/shared.js';
 
 import { PreviewLedgerError } from './preview-ledger.js';
@@ -115,11 +114,8 @@ export function registerContentDeveloperTool(
 
 /** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */
 export function developerErrorResult(err: unknown): TextContent {
-  if (err instanceof ProjectScopeError) {
-    return codedErrorResult(err.code, err.message);
-  }
   if (err instanceof PreviewLedgerError) {
     return codedErrorResult(err.code, err.message);
   }
-  throw err;
+  return projectScopeErrorResult(err);
 }

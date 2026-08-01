@@ -117,7 +117,7 @@ describe('preview-ledger', () => {
   });
 
   describe('markPreviewValidated', () => {
-    it('transitions a draft preview to validated', () => {
+    it('transitions a draft preview to validated when the expected resource matches', () => {
       const entry = addPreviewLedgerEntry({
         sessionId: 's1',
         projectUuid: 'p1',
@@ -125,8 +125,47 @@ describe('preview-ledger', () => {
         resourceKey: 'dash-1',
         proposed: { name: 'Dash' },
       });
-      const validated = markPreviewValidated(entry.previewId, 's1', 'p1');
+      const validated = markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'dashboard',
+        resourceKey: 'dash-1',
+      });
       expect(validated.status).toBe('validated');
+    });
+
+    it('rejects a mismatched resourceKind (bound validation)', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'dashboard',
+        resourceKey: 'dash-1',
+        proposed: { name: 'Dash' },
+      });
+      expectPreviewErrorCode(
+        () =>
+          markPreviewValidated(entry.previewId, 's1', 'p1', {
+            resourceKind: 'chart',
+            resourceKey: 'dash-1',
+          }),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('rejects a mismatched resourceKey (bound validation)', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-1',
+        proposed: { name: 'Chart' },
+      });
+      expectPreviewErrorCode(
+        () =>
+          markPreviewValidated(entry.previewId, 's1', 'p1', {
+            resourceKind: 'chart',
+            resourceKey: 'chart-2',
+          }),
+        'PREVIEW_STALE',
+      );
     });
   });
 
@@ -139,7 +178,10 @@ describe('preview-ledger', () => {
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      markPreviewValidated(entry.previewId, 's1', 'p1');
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
 
       const consumed = consumeValidatedPreview({
         previewId: entry.previewId,
@@ -196,7 +238,10 @@ describe('preview-ledger', () => {
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      markPreviewValidated(entry.previewId, 's1', 'p1');
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
       expectPreviewErrorCode(
         () =>
           consumeValidatedPreview({
@@ -219,7 +264,10 @@ describe('preview-ledger', () => {
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      markPreviewValidated(entry.previewId, 's1', 'p1');
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
       expectPreviewErrorCode(
         () =>
           consumeValidatedPreview({
@@ -242,7 +290,10 @@ describe('preview-ledger', () => {
         resourceKey: 'new',
         proposed: { name: 'Space' },
       });
-      markPreviewValidated(entry.previewId, 's1', 'p1');
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'space',
+        resourceKey: 'new',
+      });
       expectPreviewErrorCode(
         () =>
           consumeValidatedPreview({

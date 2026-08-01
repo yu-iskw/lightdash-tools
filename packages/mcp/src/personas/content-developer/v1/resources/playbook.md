@@ -10,6 +10,8 @@ URI: `lightdash://playbooks/content-developer`
 - Do not perform organization administration.
 - Do not apply a write tool without a validated, unexpired, session-owned `previewId` from the matching `preview_*` tool.
 - Do not reuse a `previewId` after it has been consumed by `apply` (single-use) or after the underlying resource has drifted (`PREVIEW_STALE`).
+- Updates to an existing chart/dashboard must be validated with `validate_chart` / `validate_dashboard` (upstream validator) — never with `confirm_preview`.
+- Creates, duplicates, tile ops, space, and content-move previews (no existing uuid to validate against) must be validated with `confirm_preview`, passing the exact `resourceKind`/`resourceKey` the preview was created with — never a different resource's preview.
 - Do not reveal secrets, warehouse credentials, or hidden SQL.
 
 ## Tools
@@ -27,6 +29,7 @@ Use only these `lightdash_*` tools:
 - `preview_space_changes`
 - `validate_chart`
 - `validate_dashboard`
+- `confirm_preview`
 - `compare_chart_versions`
 - `compare_dashboard_versions`
 - `create_chart`
@@ -62,11 +65,12 @@ Every mutation is gated by a preview:
 2. Record the returned `previewId` and its diff summary and expiry.
 3. Never skip this step, even for "small" edits.
 
-## Phase 3 — Validate
+## Phase 3 — Validate or confirm
 
-1. Call `validate_chart` / `validate_dashboard` against the previewed target when fields, dimensions, or metrics changed.
-2. Resolve validation errors before applying.
-3. Use `compare_chart_versions` / `compare_dashboard_versions` when investigating regressions from a prior version.
+1. Updating an existing chart/dashboard: call `validate_chart` / `validate_dashboard` with the same `previewId`, passing the chart/dashboard UUID the preview targeted. The preview is marked validated only when it matches that exact resource.
+2. Creating, duplicating, moving tiles/content, or editing spaces (no existing uuid to validate against): call `confirm_preview` with the same `previewId` plus the `resourceKind`/`resourceKey` the preview was created with. A mismatched kind/key is rejected (`PREVIEW_STALE`).
+3. Resolve validation errors before applying.
+4. Use `compare_chart_versions` / `compare_dashboard_versions` (project-scoped) when investigating regressions from a prior version.
 
 ## Phase 4 — Apply
 

@@ -24,6 +24,7 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'preview_space_changes',
   'validate_chart',
   'validate_dashboard',
+  'confirm_preview',
   'compare_chart_versions',
   'compare_dashboard_versions',
   'create_chart',

@@ -7,6 +7,7 @@ export type ClientMethodRef = string;
 
 const CLIENT_CHARTS_UPSERT_AS_CODE = 'v1.charts.upsertChartAsCode';
 const CLIENT_DASHBOARDS_V2_UPDATE = 'v2.dashboards.updateDashboard';
+const CLIENT_CONTENT_SEARCH = 'v2.content.searchContent';
 
 /**
  * Hard coverage map: every catalog operation id must appear here.
@@ -67,7 +68,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'org-audit.space.access.list': 'composed:v1.spaces.listSpacesInProject+v1.spaces.getSpace',
   'org-audit.access.resolve':
     'composed:v2.organizationRoles.listRoleAssignments+v2.projectRoleAssignments.listAssignments',
-  'org-audit.content.list': 'v2.content.searchContent',
+  'org-audit.content.list': CLIENT_CONTENT_SEARCH,
   'org-audit.dashboards.meta.get': 'v2.dashboards.getDashboard',
   'org-audit.validation.list': 'v2.validation.listValidationResults',
   'org-audit.analytics.user-activity.get': 'v1.analytics.getUserActivity',
@@ -75,7 +76,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'org-audit.schedulers.get': 'v1.schedulers.getScheduler',
 
   // content-reader
-  'content-reader.content.search': 'v2.content.searchContent',
+  'content-reader.content.search': CLIENT_CONTENT_SEARCH,
   'content-reader.spaces.list': 'v1.spaces.listSpacesInProject',
   'content-reader.spaces.get': 'v1.spaces.getSpace',
   'content-reader.dashboards.get': 'v2.dashboards.getDashboard',
@@ -94,10 +95,11 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-developer.preview.space': 'composed:v1.spaces.getSpace',
   'content-developer.charts.validate': 'v1.validation.validateChart',
   'content-developer.dashboards.validate': 'v1.validation.validateDashboard',
+  'content-developer.preview.confirm': CLIENT_CONTENT_SEARCH,
   'content-developer.charts.compare-versions':
-    'composed:v1.charts.getChartHistory+v1.charts.getChartVersion',
+    'composed:v2.charts.getSavedChart+v1.charts.getChartHistory+v1.charts.getChartVersion',
   'content-developer.dashboards.compare-versions':
-    'composed:v1.dashboards.getDashboardHistory+v1.dashboards.getDashboardVersion',
+    'composed:v2.dashboards.getDashboard+v1.dashboards.getDashboardHistory+v1.dashboards.getDashboardVersion',
   'content-developer.charts.create': CLIENT_CHARTS_UPSERT_AS_CODE,
   'content-developer.charts.update': CLIENT_CHARTS_UPSERT_AS_CODE,
   'content-developer.charts.duplicate':

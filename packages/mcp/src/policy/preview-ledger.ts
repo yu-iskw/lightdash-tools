@@ -8,6 +8,8 @@
 
 import { createHash, randomUUID } from 'node:crypto';
 
+import { stableStringify } from '../tools/project/developer-helpers.js';
+
 export type PreviewResourceKind = 'chart' | 'content-move' | 'dashboard' | 'space';
 export type PreviewStatus = 'draft' | 'validated';
 
@@ -45,27 +47,6 @@ export class PreviewLedgerError extends Error {
 export const DEFAULT_PREVIEW_TTL_MS = 10 * 60_000;
 
 const ledger = new Map<string, PreviewLedgerEntry>();
-
-function sortKeysDeep(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(sortKeysDeep);
-  }
-  if (value !== null && typeof value === 'object') {
-    const record = value as Record<string, unknown>;
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(record).sort()) {
-      // eslint-disable-next-line security/detect-object-injection -- key comes from Object.keys of the same record
-      sorted[key] = sortKeysDeep(record[key]);
-    }
-    return sorted;
-  }
-  return value;
-}
-
-/** Stable JSON stringify (sorted object keys) so structurally-equal payloads hash identically. */
-function stableStringify(value: unknown): string {
-  return JSON.stringify(sortKeysDeep(value));
-}
 
 /** sha256 hex digest of the stable JSON form of `value`. */
 export function hashPreviewContent(value: unknown): string {
@@ -133,13 +114,24 @@ export function getOwnedPreview(input: {
   return entry;
 }
 
-/** Mark a draft preview validated after a successful validate_* call. */
+/**
+ * Mark a draft preview validated after a successful validate_* (or confirm_preview) call.
+ * `expected` binds validation to the resource it was actually run against — a caller cannot
+ * validate/confirm preview A and have it silently unlock a write against a different resource.
+ */
 export function markPreviewValidated(
   previewId: string,
   sessionId: string,
   projectUuid: string,
+  expected: { resourceKind: PreviewResourceKind; resourceKey: string },
 ): PreviewLedgerEntry {
   const entry = getOwnedPreview({ previewId, sessionId, projectUuid });
+  if (entry.resourceKind !== expected.resourceKind || entry.resourceKey !== expected.resourceKey) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' was created for '${entry.resourceKind}:${entry.resourceKey}', not the requested '${expected.resourceKind}:${expected.resourceKey}'`,
+    );
+  }
   const validated: PreviewLedgerEntry = { ...entry, status: 'validated' };
   ledger.set(previewId, validated);
   return validated;

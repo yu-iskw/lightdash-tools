@@ -132,7 +132,7 @@ const op_validate_dashboard = defineOperation({
 
 const op_compare_chart_versions = defineOperation({
   id: 'content-developer.charts.compare-versions',
-  summary: 'Compare two chart version-history entries',
+  summary: 'Compare two chart version-history entries within the resolved project scope',
   http: { method: 'GET', path: `${API_V1}/saved/{chartUuid}/history` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
@@ -142,6 +142,11 @@ const op_compare_chart_versions = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   workflow: [
+    {
+      method: 'GET',
+      path: `${API_V2}/projects/{projectUuid}/saved/{chartUuid}`,
+      summary: 'Verify the chart belongs to the resolved project scope',
+    },
     { method: 'GET', path: `${API_V1}/saved/{chartUuid}/history`, summary: 'List chart versions' },
     {
       method: 'GET',
@@ -154,7 +159,7 @@ const op_compare_chart_versions = defineOperation({
 
 const op_compare_dashboard_versions = defineOperation({
   id: 'content-developer.dashboards.compare-versions',
-  summary: 'Compare two dashboard version-history entries',
+  summary: 'Compare two dashboard version-history entries within the resolved project scope',
   http: { method: 'GET', path: `${API_V1}/dashboards/{dashboardUuidOrSlug}/history` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
@@ -166,6 +171,11 @@ const op_compare_dashboard_versions = defineOperation({
   workflow: [
     {
       method: 'GET',
+      path: `${API_V2}/projects/{projectUuid}/dashboards/{dashboardUuidOrSlug}`,
+      summary: 'Verify the dashboard belongs to the resolved project scope',
+    },
+    {
+      method: 'GET',
       path: `${API_V1}/dashboards/{dashboardUuidOrSlug}/history`,
       summary: 'List dashboard versions',
     },
@@ -175,6 +185,21 @@ const op_compare_dashboard_versions = defineOperation({
       summary: 'Fetch each compared version',
     },
   ],
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_confirm_preview = defineOperation({
+  id: 'content-developer.preview.confirm',
+  summary:
+    'Confirm a bound preview for create/duplicate/tile/space/content-move flows that have no upstream validate API',
+  http: { method: 'GET', path: `${API_V2}/content` },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'confirm_preview',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
@@ -448,6 +473,7 @@ export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [
   op_preview_space_changes,
   op_validate_chart,
   op_validate_dashboard,
+  op_confirm_preview,
   op_compare_chart_versions,
   op_compare_dashboard_versions,
   op_create_chart,

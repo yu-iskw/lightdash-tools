@@ -6,8 +6,10 @@ import {
   applyTileMove,
   applyTileRemove,
   applyTileResize,
+  assertMoveContentLengths,
   buildDashboardUpdateBody,
   buildMoveContentItem,
+  buildMoveContentProposal,
   resolveCompareVersionIds,
   shallowDiff,
   stableStringify,
@@ -198,5 +200,58 @@ describe('buildMoveContentItem', () => {
     });
     expect(buildMoveContentItem('s1', 'space')).toEqual({ contentType: 'space', uuid: 's1' });
     expect(buildMoveContentItem('a1', 'data_app')).toEqual({ contentType: 'data_app', uuid: 'a1' });
+  });
+});
+
+describe('assertMoveContentLengths', () => {
+  it('accepts matching lengths', () => {
+    expect(() =>
+      assertMoveContentLengths(['a', 'b'], ['chart', 'dashboard'], ['dbt_explore', 'sql']),
+    ).not.toThrow();
+  });
+
+  it('accepts omitted contentTypes/chartSources', () => {
+    expect(() => assertMoveContentLengths(['a', 'b'])).not.toThrow();
+  });
+
+  it('throws when contentTypes length mismatches itemUuids', () => {
+    expect(() => assertMoveContentLengths(['a', 'b'], ['chart'])).toThrow(
+      /contentTypes must have the same length/,
+    );
+  });
+
+  it('throws when chartSources length mismatches itemUuids', () => {
+    expect(() => assertMoveContentLengths(['a', 'b'], ['chart', 'chart'], ['dbt_explore'])).toThrow(
+      /chartSources must have the same length/,
+    );
+  });
+});
+
+describe('buildMoveContentProposal', () => {
+  it('normalizes omitted contentTypes/chartSources to null', () => {
+    expect(buildMoveContentProposal({ itemUuids: ['a'], targetSpaceUuid: 's1' })).toEqual({
+      itemUuids: ['a'],
+      targetSpaceUuid: 's1',
+      contentTypes: null,
+      chartSources: null,
+    });
+  });
+
+  it('includes provided contentTypes/chartSources so drift changes the hash', () => {
+    const withTypes = buildMoveContentProposal({
+      itemUuids: ['a'],
+      targetSpaceUuid: 's1',
+      contentTypes: ['chart'],
+      chartSources: ['sql'],
+    });
+    expect(withTypes).toEqual({
+      itemUuids: ['a'],
+      targetSpaceUuid: 's1',
+      contentTypes: ['chart'],
+      chartSources: ['sql'],
+    });
+    expect(stableStringify(withTypes)).not.toBe(
+      stableStringify(buildMoveContentProposal({ itemUuids: ['a'], targetSpaceUuid: 's1' })),
+    );
   });
 });
