@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-01]: npm publish is OIDC-only via Trusted Publishers: `publish.yml` uses GitHub Environment `release`, `id-token: write`, and no `NPM_TOKEN`. Workspace packages need `repository.url` = `git+https://github.com/yu-iskw/lightdash-tools.git` (plus `directory`). Trusted Publisher Environment name on npmjs.com must be `release` to match the job.
 - [2026-08-01]: Changie batch was writing header-only version files because `.changie.yaml` used `format: '### {{.Label}}'` (invalid; use `kindFormat`/`changeFormat` with `{{.Kind}}`). Also convert leftover `.md` fragments with `Added`/`Changed` to `.yaml` kind keys before batch; `pnpm -r version` fails on unclean trees so bump workspace `package.json` versions directly.
 - [2026-07-31]: `packages/mcp/src/stdio.process.test.ts` can fail in full-suite runs if the child process inherits `LIGHTDASH_TOOLS_MCP_STDIO_PERSONA` from ambient env/test state. Pin `LIGHTDASH_TOOLS_MCP_STDIO_PERSONA=semantic-layer` in spawned env and include stderr in early-exit errors for deterministic diagnostics.
 - [2026-08-01]: MCP tool response sensitivity classes (ADR-0011): emails masked unless `includeEmail === true`; scheduler destinations redacted unless `revealDestinations === true`; `warehouseConnection`/`dbtConnection`/PATs never on MCP. No `withSensitive` — class-specific flags only. Handler-level redaction in `tools/lib/redaction.ts`, not `registerToolSafe` middleware.

@@ -3,6 +3,11 @@
   "version": "0.7.0",
   "description": "CLI for Lightdash AI.",
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yu-iskw/lightdash-tools.git",
+    "directory": "packages/cli"
+  },
   "license": "Apache-2.0",
   "author": "",
   "main": "dist/index.js",
@@ -21,5 +26,8 @@
   },
   "devDependencies": {
     "@types/node": "^25.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

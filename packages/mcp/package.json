@@ -3,6 +3,11 @@
   "version": "0.7.0",
   "description": "MCP server for Lightdash semantic-layer discovery/compile and organization-audit (read-only).",
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yu-iskw/lightdash-tools.git",
+    "directory": "packages/mcp"
+  },
   "license": "Apache-2.0",
   "author": "",
   "main": "dist/index.js",
@@ -31,5 +36,8 @@
   "devDependencies": {
     "@modelcontextprotocol/client": "2.0.0",
     "@types/node": "^25.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

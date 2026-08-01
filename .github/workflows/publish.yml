@@ -28,23 +28,10 @@ permissions:
   id-token: write
 
 jobs:
-  check-token:
-    name: Check if the NPM_TOKEN is set
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check if the NPM_TOKEN is set
-        env:
-          NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}'
-        run: |
-          if [ -z "${NODE_AUTH_TOKEN}" ]; then
-            echo "NPM_TOKEN is not set"
-            exit 1
-          fi
   publish:
-    needs:
-      - check-token
     name: Publish to npm
     runs-on: ubuntu-latest
+    environment: release
     permissions:
       contents: read
       id-token: write
@@ -63,6 +50,7 @@ jobs:
           node-version-file: .node-version
           registry-url: https://registry.npmjs.org
           scope: '@lightdash-tools'
+          package-manager-cache: false
       - name: Setup pnpm
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - name: Install dependencies
@@ -75,7 +63,5 @@ jobs:
         run: |
           pnpm test
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: '${{ secrets.NPM_TOKEN }}'
         run: |
           pnpm -r publish --no-git-checks --access public
