@@ -7,25 +7,14 @@ import { type ApiErrorPayload, LightdashApiError } from '../errors';
 import { withRetry } from '../utils/retry';
 
 import { type RateLimiter } from './rate-limiter';
+import { isApiSuccessEnvelope, type ApiEnvelope } from './unwrap-api-success';
 
 import type { ResolvedLightdashClientConfig } from '../config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
 /** Lightdash API success response shape. */
-export interface ApiSuccessBody<T = unknown> {
-  status: 'ok';
-  results: T;
-}
-
-/** Lightdash API error response shape (body). */
-export interface ApiErrorBody {
-  status: 'error';
-  error: ApiErrorPayload['error'];
-}
-
-function assertSuccess<T>(data: ApiErrorBody | ApiSuccessBody<T>): data is ApiSuccessBody<T> {
-  return data.status === 'ok';
-}
+export type { ApiSuccessEnvelope as ApiSuccessBody } from './unwrap-api-success';
+export type { ApiErrorEnvelope as ApiErrorBody } from './unwrap-api-success';
 
 /**
  * HTTP client that wraps Axios with rate limiting and retry.
@@ -39,7 +28,7 @@ export class HttpClient {
 
   private async request<T>(method: Method, url: string, config?: AxiosRequestConfig): Promise<T> {
     const doRequest = () =>
-      this.axiosInstance.request<ApiErrorBody | ApiSuccessBody<T>>({
+      this.axiosInstance.request<ApiEnvelope<T>>({
         ...config,
         method,
         url,
@@ -48,10 +37,10 @@ export class HttpClient {
     const response = await this.rateLimiter.schedule(() => withRetry(doRequest, this.config.retry));
 
     const data = response.data;
-    if (!assertSuccess(data)) {
+    if (!isApiSuccessEnvelope(data)) {
       throw new LightdashApiError(
         data.error.statusCode,
-        data.error,
+        data.error as ApiErrorPayload['error'],
         response.config,
         response as AxiosResponse<ApiErrorPayload>,
       );

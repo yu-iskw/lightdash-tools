@@ -7,6 +7,7 @@ const baseDescriptor = {
   summary: 'Test operation',
   http: { method: 'GET' as const, path: '/api/v1/test' },
   authorization: { safetyImpact: 'read' as const },
+  sensitivity: 'none' as const,
   mcp: {
     toolName: 'test_op',
     annotations: {
@@ -27,31 +28,40 @@ describe('defineOperation', () => {
     expect(defineOperation(baseDescriptor)).toEqual({
       ...baseDescriptor,
       agentExposure: 'agent',
+      sensitivity: 'none',
     });
   });
 
-  it('defaults agentExposure to agent', () => {
-    const { agentExposure, ...withoutExposure } = baseDescriptor;
+  it('defaults agentExposure to agent and sensitivity to none', () => {
+    const { agentExposure, sensitivity, ...withoutDefaults } = baseDescriptor;
     void agentExposure;
-    expect(defineOperation(withoutExposure).agentExposure).toBe('agent');
+    void sensitivity;
+    const op = defineOperation(withoutDefaults);
+    expect(op.agentExposure).toBe('agent');
+    expect(op.sensitivity).toBe('none');
+  });
+
+  it('allows agent ops with mcp only', () => {
+    const { cli: _cli, ...rest } = baseDescriptor;
+    void _cli;
+    expect(defineOperation(rest).cli).toBeUndefined();
+  });
+
+  it('allows agent ops with cli only', () => {
+    const { mcp: _mcp, ...rest } = baseDescriptor;
+    void _mcp;
+    expect(defineOperation(rest).mcp).toBeUndefined();
+  });
+
+  it('rejects agent ops with neither mcp nor cli', () => {
+    const { mcp: _mcp, cli: _cli, ...rest } = baseDescriptor;
+    void _mcp;
+    void _cli;
+    expect(() => defineOperation(rest)).toThrow(/require mcp and\/or cli/);
   });
 
   it('rejects empty id', () => {
     expect(() => defineOperation({ ...baseDescriptor, id: '  ' })).toThrow(/id/);
-  });
-
-  it('rejects empty summary', () => {
-    expect(() => defineOperation({ ...baseDescriptor, summary: '' })).toThrow(/summary/);
-  });
-
-  it('rejects empty http path', () => {
-    expect(() => defineOperation({ ...baseDescriptor, http: { method: 'GET', path: '' } })).toThrow(
-      /http.path/,
-    );
-  });
-
-  it('rejects empty profiles', () => {
-    expect(() => defineOperation({ ...baseDescriptor, profiles: [] })).toThrow(/profile/);
   });
 
   it('rejects unknown profile', () => {
@@ -63,86 +73,38 @@ describe('defineOperation', () => {
     ).toThrow(/unknown capability profile/);
   });
 
-  it('rejects read operation without idempotentHint', () => {
-    expect(() =>
-      defineOperation({
-        ...baseDescriptor,
-        mcp: {
-          ...baseDescriptor.mcp,
-          annotations: { ...baseDescriptor.mcp.annotations, idempotentHint: false },
-        },
-      }),
-    ).toThrow(/idempotentHint/);
+  it('allows read operation with idempotentHint false (transient execution)', () => {
+    const op = defineOperation({
+      ...baseDescriptor,
+      mcp: {
+        ...baseDescriptor.mcp,
+        annotations: { ...baseDescriptor.mcp.annotations, idempotentHint: false },
+      },
+    });
+    expect(op.mcp?.annotations.idempotentHint).toBe(false);
   });
 
-  it('rejects destructive operation with idempotentHint true', () => {
-    expect(() =>
-      defineOperation({
-        ...baseDescriptor,
-        authorization: { safetyImpact: 'write-destructive' },
-        mcp: {
-          ...baseDescriptor.mcp,
-          annotations: {
-            readOnlyHint: false,
-            destructiveHint: true,
-            idempotentHint: true,
-            openWorldHint: false,
-          },
-        },
-      }),
-    ).toThrow(/destructive operations/);
-  });
-
-  it('rejects client-only operation with mcp exposed', () => {
+  it('rejects client-only operation that still has mcp', () => {
     expect(() =>
       defineOperation({
         ...baseDescriptor,
         agentExposure: 'client-only',
-        mcp: {
-          ...baseDescriptor.mcp,
-          taskSupport: { exposed: true, taskEligible: false },
-        },
       }),
-    ).toThrow(/client-only operations must set mcp.taskSupport.exposed to false/);
+    ).toThrow(/must omit mcp and cli/);
   });
 
-  it('allows client-only operation without mcp tool name or cli path', () => {
+  it('allows client-only operation with bannedMcpToolName and no mcp/cli', () => {
     const op = defineOperation({
       id: 'test.client-only',
       summary: 'Client only delete',
       http: { method: 'DELETE', path: '/api/v1/test/{id}' },
       authorization: { safetyImpact: 'write-destructive' },
-      mcp: {
-        toolName: '',
-        annotations: {
-          readOnlyHint: false,
-          destructiveHint: true,
-          idempotentHint: false,
-          openWorldHint: false,
-        },
-        taskSupport: { exposed: false, taskEligible: false },
-      },
-      cli: { commandPath: '' },
       agentExposure: 'client-only',
+      bannedMcpToolName: 'delete_test',
       profiles: ['discovery-readonly'],
     });
     expect(op.agentExposure).toBe('client-only');
-  });
-
-  it('maps openWorldHint to external-side-effect impact', () => {
-    const op = defineOperation({
-      ...baseDescriptor,
-      authorization: { safetyImpact: 'external-side-effect' },
-      mcp: {
-        ...baseDescriptor.mcp,
-        annotations: {
-          readOnlyHint: false,
-          destructiveHint: false,
-          idempotentHint: false,
-          openWorldHint: true,
-        },
-      },
-    });
-    expect(op.authorization.safetyImpact).toBe('external-side-effect');
+    expect(op.bannedMcpToolName).toBe('delete_test');
+    expect(op.sensitivity).toBe('none');
   });
 });

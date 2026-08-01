@@ -61,6 +61,9 @@ jobs:
       - name: Regenerate operation registry
         run: pnpm --filter @lightdash-tools/common generate:operation-registry
 
+      - name: Check catalog client coverage
+        run: pnpm --filter @lightdash-tools/common check:client-coverage
+
       - name: Regenerate CLI docs
         run: node scripts/generate-cli-docs.mjs
 
