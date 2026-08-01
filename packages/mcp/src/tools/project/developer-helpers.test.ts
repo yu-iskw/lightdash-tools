@@ -10,6 +10,7 @@ import {
   buildDashboardUpdateBody,
   buildMoveContentItem,
   buildMoveContentProposal,
+  buildMoveContentResourceKey,
   resolveCompareVersionIds,
   shallowDiff,
   stableStringify,
@@ -223,6 +224,12 @@ describe('assertMoveContentLengths', () => {
     expect(() => assertMoveContentLengths(['a', 'b'], ['chart', 'chart'], ['dbt_explore'])).toThrow(
       /chartSources must have the same length/,
     );
+  });
+});
+
+describe('buildMoveContentResourceKey', () => {
+  it('sorts UUIDs so preview and apply share one key', () => {
+    expect(buildMoveContentResourceKey(['b', 'a', 'c'])).toBe('a,b,c');
   });
 });
 

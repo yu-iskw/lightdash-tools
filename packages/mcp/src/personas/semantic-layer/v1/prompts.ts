@@ -17,17 +17,12 @@ import {
   SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
-import type { SemanticLayerPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const { userMessages: embedUserMessages } = createPromptPlaybookEmbedder({
+const userMessages = createPromptPlaybookEmbedder({
   core: SEMANTIC_LAYER_CORE_PLAYBOOK,
   topics: SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
 });
-
-function userMessages(text: string, topic: SemanticLayerPlaybookTopic) {
-  return embedUserMessages(text, topic);
-}
 
 export function registerSemanticLayerPrompts(server: McpServer): void {
   server.registerPrompt(

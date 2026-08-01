@@ -25,6 +25,7 @@ import {
 import {
   assertMoveContentLengths,
   buildMoveContentProposal,
+  buildMoveContentResourceKey,
   shallowDiff,
 } from './developer-helpers.js';
 
@@ -187,7 +188,7 @@ export function registerPreviewContentMove(
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
-      const resourceKey = [...args.itemUuids].sort().join(',');
+      const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
         itemUuids: args.itemUuids,
         targetSpaceUuid: args.targetSpaceUuid,
@@ -208,7 +209,7 @@ export function registerPreviewContentMove(
           contentHash: entry.contentHash,
           resourceKey,
           expiresAt: entry.expiresAt,
-          diff: shallowDiff({}, proposed),
+          proposed,
         },
         context: developerContext(scope),
       });

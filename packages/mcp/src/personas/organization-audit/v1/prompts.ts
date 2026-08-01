@@ -13,17 +13,12 @@ import {
   ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
-import type { OrganizationAuditPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const { userMessages: embedUserMessages } = createPromptPlaybookEmbedder({
+const userMessages = createPromptPlaybookEmbedder({
   core: ORGANIZATION_AUDIT_CORE_PLAYBOOK,
   topics: ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
 });
-
-function userMessages(text: string, topic?: OrganizationAuditPlaybookTopic) {
-  return embedUserMessages(text, topic);
-}
 
 export function registerOrganizationAuditPrompts(server: McpServer): void {
   server.registerPrompt(

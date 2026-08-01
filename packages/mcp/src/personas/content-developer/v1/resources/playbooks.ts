@@ -20,9 +20,6 @@ Do not treat a standalone chart create/update as a finished publish unit; attach
 Do not apply a write tool without a validated, unexpired, session-owned previewId from the matching preview_* tool.
 Do not reuse a previewId after it has been consumed by apply (single-use) or after the underlying resource has drifted (PREVIEW_STALE).
 Do not reveal secrets, warehouse credentials, or hidden SQL.`,
-  indexTitle: 'Content-developer playbooks',
-  indexDescription: 'Index of content-developer workflow playbooks (core + topics)',
-  coreTitle: 'Content-developer core playbook',
   coreDescription: 'Hard bans, tools, project scope, and preview gate',
   topics: [
     {

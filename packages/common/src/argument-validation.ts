@@ -45,6 +45,8 @@ export const RESOURCE_ID_KEYS = new Set([
   'organizationUuid',
   'chartUuid',
   'chartUuidOrSlug',
+  'sourceChartUuidOrSlug',
+  'contentUuidOrSlug',
   'tileUuid',
   'newSlug',
 ]);
@@ -55,6 +57,8 @@ const UUID_OR_SLUG_KEYS = new Set([
   'dashboardUuidOrSlug',
   'chartUuid',
   'chartUuidOrSlug',
+  'sourceChartUuidOrSlug',
+  'contentUuidOrSlug',
 ]);
 
 export type ArgumentSource = 'body' | 'option' | 'positional';

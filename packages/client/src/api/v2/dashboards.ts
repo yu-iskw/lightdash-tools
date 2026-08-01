@@ -1,5 +1,5 @@
 /**
- * Dashboards API client (v2). Metadata reads only (no query execution).
+ * Dashboards API client (v2). Metadata reads, updates, and soft-delete (no query execution).
  */
 
 import { BaseApiClient } from '../base-client';
@@ -28,6 +28,13 @@ export class DashboardsClientV2 extends BaseApiClient {
     return this.http.patch<Dashboard>(
       `/projects/${projectUuid}/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}`,
       body,
+    );
+  }
+
+  /** Soft-delete a dashboard by UUID or slug within a project. */
+  async deleteDashboard(projectUuid: string, dashboardUuidOrSlug: string): Promise<void> {
+    await this.http.delete(
+      `/projects/${projectUuid}/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}`,
     );
   }
 }

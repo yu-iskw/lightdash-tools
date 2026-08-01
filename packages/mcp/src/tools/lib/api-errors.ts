@@ -9,6 +9,11 @@ export function isForbiddenOrNotFound(err: unknown): boolean {
   return err instanceof LightdashApiError && (err.statusCode === 403 || err.statusCode === 404);
 }
 
+/** Not-found only — used for idempotent soft-delete retries (ADR-0015). */
+export function isNotFoundError(err: unknown): boolean {
+  return err instanceof LightdashApiError && err.statusCode === 404;
+}
+
 /** Map 403/404 to AuditCoverage inaccessible reason. */
 export function visibilityFailureReason(err: unknown): 'forbidden' | 'not_found' {
   return err instanceof LightdashApiError && err.statusCode === 404 ? 'not_found' : 'forbidden';

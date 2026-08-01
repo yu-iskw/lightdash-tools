@@ -26,7 +26,7 @@ const markdownCache = new Map<string, string>();
  * Load a playbook markdown file from a directory adjacent to the compiled module.
  * `moduleDir` should be `__dirname` of the persona's `resources/` folder.
  */
-export function loadPlaybookMarkdown(moduleDir: string, relativePath: string): string {
+function loadPlaybookMarkdown(moduleDir: string, relativePath: string): string {
   const key = `${moduleDir}::${relativePath}`;
   const cached = markdownCache.get(key);
   if (cached !== undefined) {
@@ -38,7 +38,7 @@ export function loadPlaybookMarkdown(moduleDir: string, relativePath: string): s
   return text;
 }
 
-export function registerMarkdownPlaybooks(
+function registerMarkdownPlaybooks(
   server: McpServer,
   specs: readonly PlaybookResourceSpec[],
 ): void {
@@ -91,47 +91,35 @@ type PromptUserMessage = {
  * Build prompt message helpers that embed core, and optionally one topic playbook,
  * after the user text message. When `topicId` is omitted, only core is embedded.
  */
-export function createPromptPlaybookEmbedder(options: {
+export function createPromptPlaybookEmbedder<TopicId extends string>(options: {
   core: EmbeddedPlaybook;
-  topics: Readonly<Record<string, EmbeddedPlaybook>>;
-}): {
-  userMessages: (
-    text: string,
-    topicId?: string,
-  ) => {
-    messages: PromptUserMessage[];
-  };
-} {
+  topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
+}): (text: string, topicId?: TopicId) => { messages: PromptUserMessage[] } {
   const { core, topics } = options;
-  return {
-    userMessages(text: string, topicId?: string) {
-      const messages: PromptUserMessage[] = [
-        {
-          role: 'user' as const,
-          content: { type: 'text' as const, text },
-        },
-        {
-          role: 'user' as const,
-          content: embedResource(core),
-        },
-      ];
-      if (topicId === undefined) {
-        return { messages };
-      }
-      // eslint-disable-next-line security/detect-object-injection -- topicId from persona PROMPT_TOPICS constants
-      const topic = topics[topicId];
-      if (!topic) {
-        throw new Error(`Unknown playbook topic '${topicId}'`);
-      }
-      // Safety: skip embedding the same URI twice if a topic aliases core.
-      if (topic.uri !== core.uri) {
-        messages.push({
-          role: 'user' as const,
-          content: embedResource(topic),
-        });
-      }
+  return (text: string, topicId?: TopicId) => {
+    const messages: PromptUserMessage[] = [
+      {
+        role: 'user' as const,
+        content: { type: 'text' as const, text },
+      },
+      {
+        role: 'user' as const,
+        content: embedResource(core),
+      },
+    ];
+    if (topicId === undefined) {
       return { messages };
-    },
+    }
+    // eslint-disable-next-line security/detect-object-injection -- topicId from persona PROMPT_TOPICS constants
+    const topic = topics[topicId];
+    if (!topic) {
+      throw new Error(`Unknown playbook topic '${topicId}'`);
+    }
+    messages.push({
+      role: 'user' as const,
+      content: embedResource(topic),
+    });
+    return { messages };
   };
 }
 
@@ -154,11 +142,13 @@ export type DefinePersonaPlaybooksOptions<TopicId extends string> = {
   coreDescription?: string;
 };
 
+/** Title-case the first segment only: `content-developer` → `Content-developer`. */
 function titleCasePersona(personaId: string): string {
-  return personaId
-    .split('-')
-    .map((part) => (part.length === 0 ? part : part[0].toUpperCase() + part.slice(1)))
-    .join('-');
+  const [first = '', ...rest] = personaId.split('-');
+  if (first.length === 0) {
+    return personaId;
+  }
+  return [first[0].toUpperCase() + first.slice(1), ...rest].join('-');
 }
 
 /**
@@ -170,8 +160,6 @@ export function definePersonaPlaybooks<TopicId extends string>(
 ): {
   URIs: { index: string; core: string; topics: Readonly<Record<TopicId, string>> };
   HARD_BANS: string;
-  getIndexPlaybookMarkdown: () => string;
-  getCorePlaybookMarkdown: () => string;
   getAllPlaybookMarkdown: () => string;
   CORE_PLAYBOOK: EmbeddedPlaybook;
   TOPIC_PLAYBOOKS: Readonly<Record<TopicId, EmbeddedPlaybook>>;
@@ -207,14 +195,12 @@ export function definePersonaPlaybooks<TopicId extends string>(
     topicMarkdownGetters.push(getMarkdown);
     topicPlaybooks[topic.id] = {
       uri,
-      mimeType: PLAYBOOK_MIME,
       getMarkdown,
     };
   }
 
   const CORE_PLAYBOOK: EmbeddedPlaybook = {
     uri: coreUri,
-    mimeType: PLAYBOOK_MIME,
     getMarkdown: getCorePlaybookMarkdown,
   };
 
@@ -254,8 +240,6 @@ export function definePersonaPlaybooks<TopicId extends string>(
   return {
     URIs: { index: indexUri, core: coreUri, topics: topicUris },
     HARD_BANS: hardBans,
-    getIndexPlaybookMarkdown,
-    getCorePlaybookMarkdown,
     getAllPlaybookMarkdown,
     CORE_PLAYBOOK,
     TOPIC_PLAYBOOKS: topicPlaybooks,

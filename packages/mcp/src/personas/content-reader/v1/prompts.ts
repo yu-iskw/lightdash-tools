@@ -16,16 +16,12 @@ import {
 import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const { userMessages: embedUserMessages } = createPromptPlaybookEmbedder({
+const userMessages = createPromptPlaybookEmbedder({
   core: CONTENT_READER_CORE_PLAYBOOK,
   topics: CONTENT_READER_TOPIC_PLAYBOOKS,
 });
 
 const TOPIC_EXPLAIN_RUN = 'explain-run' as const satisfies ContentReaderPlaybookTopic;
-
-function userMessages(text: string, topic: ContentReaderPlaybookTopic) {
-  return embedUserMessages(text, topic);
-}
 
 export function registerContentReaderPrompts(server: McpServer): void {
   server.registerPrompt(

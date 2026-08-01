@@ -14,9 +14,6 @@ const playbooks = definePersonaPlaybooks<SemanticLayerPlaybookTopic>({
   /** Shared hard-ban text for prompts (keep in sync with playbooks/core.md Hard bans section). */
   hardBans:
     'Do not run metric/SQL/chart queries, use SQL runner, trigger validation jobs, mutate content, or call AI/identity tools. Those are not available on this server.',
-  indexTitle: 'Semantic-layer playbooks',
-  indexDescription: 'Index of semantic-layer workflow playbooks (core + topics)',
-  coreTitle: 'Semantic-layer core playbook',
   coreDescription: 'Hard bans, allowed tools, project scope, and stop criteria',
   topics: [
     {

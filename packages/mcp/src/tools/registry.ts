@@ -27,6 +27,8 @@ import {
   registerListContent,
   registerListValidationResults,
 } from './project/content.js';
+import { registerDeleteChart } from './project/delete-chart.js';
+import { registerDeleteDashboard } from './project/delete-dashboard.js';
 import {
   registerAddDashboardTile,
   registerCompareChartVersions,
@@ -129,7 +131,7 @@ export const toolRegistry = {
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },
 
-  // content-developer (ADR-0014) — catalog/persona scaffold; handlers are stubs (see developer-content.ts)
+  // content-developer (ADR-0014)
   preview_chart_changes: { register: registerPreviewChartChanges },
   preview_dashboard_changes: { register: registerPreviewDashboardChanges },
   preview_content_move: { register: registerPreviewContentMove },
@@ -149,6 +151,10 @@ export const toolRegistry = {
   remove_dashboard_tile: { register: registerRemoveDashboardTile },
   resize_dashboard_tile: { register: registerResizeDashboardTile },
   move_content: { register: registerMoveContent },
+
+  // content-governance (ADR-0015)
+  delete_chart: { register: registerDeleteChart },
+  delete_dashboard: { register: registerDeleteDashboard },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

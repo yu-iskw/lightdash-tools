@@ -1,8 +1,8 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), and `content-developer` (project-scoped authoring with a hard preview gate). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), and [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md).
+MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), `content-developer` (project-scoped authoring with a hard preview gate), and `content-governance` (elicitation-gated soft-delete). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md), and [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md).
 
-Irrecoverable admin deletes and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is available on the `content-developer` persona only (preview → validate → apply).
+Irrecoverable admin deletes, permanent content purge, and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is on `content-developer` only (preview → validate → apply). Soft-delete of charts/dashboards is on `content-governance` only (form elicitation required).
 
 **Response sensitivity** ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)): `list_projects` / `get_project` return project metadata only (warehouse/dbt connection secrets are never exposed). Organization-audit tools mask emails by default (`includeEmail=true` to reveal) and redact scheduler destinations by default (`revealDestinations=true` to reveal). There is no global `withSensitive` flag.
 
@@ -12,6 +12,7 @@ Irrecoverable admin deletes and broad org mutations stay off MCP — use `@light
 | :------------------------------------------------------ | :--------------------------------------------------- |
 | Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)         |
 | Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                 |
+| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                   |
 | HTTP transport / sessions                               | `src/transports/`                                    |
 | HTTP auth                                               | `src/auth/`                                          |
 | Runtime client + guardrail env                          | `src/config/runtime.ts`                              |
@@ -87,7 +88,14 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, audit log, token cache TTL |
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, or `/content-developer/v1/mcp`.
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, `/content-developer/v1/mcp`, or `/content-governance/v1/mcp`.
+
+### Content-governance (destructive soft-delete)
+
+| Required (production)                   | Notes                                                                  |
+| :-------------------------------------- | :--------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for AEAD `requestState` binding (fail closed if unset) |
+| Client form elicitation                 | Missing capability → `ELICITATION_REQUIRED`; no DELETE                 |
 
 ### HTTP shared-key / local (secondary)
 
@@ -113,6 +121,7 @@ npx @lightdash-tools/mcp semantic-layer
 npx @lightdash-tools/mcp organization-audit
 npx @lightdash-tools/mcp content-reader
 npx @lightdash-tools/mcp content-developer
+npx @lightdash-tools/mcp content-governance
 ```
 
 Or if installed globally:
@@ -122,6 +131,7 @@ lightdash-mcp
 lightdash-mcp organization-audit
 lightdash-mcp content-reader
 lightdash-mcp content-developer
+lightdash-mcp content-governance
 ```
 
 Logging goes to stderr only; stdout is JSON-RPC. Bare `lightdash-mcp` defaults to `semantic-layer`.
@@ -149,6 +159,7 @@ The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT
 - `POST/GET/DELETE /organization-audit/v1/mcp`
 - `POST/GET/DELETE /content-reader/v1/mcp`
 - `POST/GET/DELETE /content-developer/v1/mcp`
+- `POST/GET/DELETE /content-governance/v1/mcp`
 
 Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
@@ -205,6 +216,16 @@ Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-dev
 
 Hard gate: every SAFE_WRITE requires a validated, session-owned `previewId` whose `contentHash` matches the apply payload. No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
 
+### `content-governance` persona
+
+Project-scoped soft-delete with form elicitation ([ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)). MCP server display name is `lightdash-mcp-gov` (60-char client limit). Endpoint inventory: [docs/content-governance-endpoint-inventory.md](../../docs/content-governance-endpoint-inventory.md). Client matrix: [docs/content-governance-client-compatibility.md](../../docs/content-governance-client-compatibility.md).
+
+- **Soft-delete**: `delete_chart`, `delete_dashboard` (restorable; permanent purge is client-only)
+- **Confirmation**: MCP form elicitation (`decision` + typed `confirmationText`) + AEAD `requestState`; fail closed without form capability
+- **Not included**: bulk delete, space delete, permanent purge, authoring, warehouse queries
+
+Prompts and playbooks: `lightdash://playbooks/content-governance` (core + charts + dashboards topics).
+
 ### CLI Binary
 
 If installed globally, you can use the `lightdash-mcp` binary:
@@ -216,24 +237,24 @@ lightdash-mcp --help
 ### CLI Options
 
 - `--http` — Run as HTTP server instead of Stdio.
-- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `content-developer` / `serve-http` — Explicit transport/persona subcommands.
+- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `content-developer` / `content-governance` / `serve-http` — Explicit transport/persona subcommands.
 
 ## Safety (persona-first)
 
 MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md)):
 
-| Concern      | Mechanism                                                                                                           |
-| :----------- | :------------------------------------------------------------------------------------------------------------------ |
-| Which tools  | Persona `toolIds` in code (`semantic-layer`, `organization-audit`, `content-reader`, or `content-developer`)        |
-| Who          | Auth mode + Lightdash API RBAC                                                                                      |
-| Where (HTTP) | Optional `X-Lightdash-Project` pin; content-reader/content-developer also use `LIGHTDASH_TOOLS_PROJECT_UUID`        |
-| Hardening    | Input validation on known ID fields + optional `LIGHTDASH_TOOLS_AUDIT_LOG` + org-audit GET asserts + preview ledger |
+| Concern      | Mechanism                                                                                                          |
+| :----------- | :----------------------------------------------------------------------------------------------------------------- |
+| Which tools  | Persona `toolIds` in code (including `content-governance` soft-delete)                                             |
+| Who          | Auth mode + Lightdash API RBAC                                                                                     |
+| Where (HTTP) | Optional `X-Lightdash-Project` pin; content-reader/content-developer also use `LIGHTDASH_TOOLS_PROJECT_UUID`       |
+| Hardening    | Input validation + audit log + org-audit GET asserts + preview ledger + elicitation/`requestState` for soft-delete |
 
 Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.
 
 ### Agent-safe surface
 
-See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md). Irrecoverable admin deletes stay on `@lightdash-tools/client` / CLI. Content authoring is limited to the `content-developer` persona with a hard preview gate ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)).
+See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md). Irrecoverable admin deletes and permanent content purge stay on `@lightdash-tools/client` / CLI. Content authoring is limited to `content-developer` ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)). Soft-delete is limited to `content-governance` with form elicitation ([ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)).
 
 ### Input validation
 

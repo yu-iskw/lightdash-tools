@@ -3,34 +3,18 @@
  * (ADR-0014). No I/O; safe to unit test without mocks.
  */
 
+import { stableStringify } from '../lib/stable-stringify.js';
+
 export type ShallowDiff = {
   added: string[];
   removed: string[];
   changed: string[];
 };
 
+export { stableStringify };
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function sortKeysDeep(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(sortKeysDeep);
-  }
-  if (isRecord(value)) {
-    const sorted: Record<string, unknown> = {};
-    for (const key of Object.keys(value).sort()) {
-      // eslint-disable-next-line security/detect-object-injection -- key comes from Object.keys of the same record
-      sorted[key] = sortKeysDeep(value[key]);
-    }
-    return sorted;
-  }
-  return value;
-}
-
-/** Stable JSON stringify (sorted object keys); structurally-equal values serialize identically. */
-export function stableStringify(value: unknown): string {
-  return JSON.stringify(sortKeysDeep(value));
 }
 
 /** Top-level key diff between two objects (added/removed/changed keys). */
@@ -197,6 +181,11 @@ export function assertMoveContentLengths(
   if (chartSources && chartSources.length !== itemUuids.length) {
     throw new Error('itemUuids and chartSources must have the same length');
   }
+}
+
+/** Stable preview/apply `resourceKey` for a content-move (sorted UUIDs, comma-joined). */
+export function buildMoveContentResourceKey(itemUuids: readonly string[]): string {
+  return [...itemUuids].sort().join(',');
 }
 
 /**

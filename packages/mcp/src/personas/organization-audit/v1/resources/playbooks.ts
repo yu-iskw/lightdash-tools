@@ -13,9 +13,6 @@ const playbooks = definePersonaPlaybooks<OrganizationAuditPlaybookTopic>({
   moduleDir: __dirname,
   hardBans:
     'Do not mutate users/groups/roles/content/schedulers, execute warehouse or chart queries, download user-activity CSV, reveal secrets, or claim compliance certification. Those capabilities are not available on this server.',
-  indexTitle: 'Organization-audit playbooks',
-  indexDescription: 'Index of organization-audit workflow playbooks (core + topics)',
-  coreTitle: 'Organization-audit core playbook',
   coreDescription: 'Hard bans, tool catalog, scope, and report rules',
   topics: [
     {

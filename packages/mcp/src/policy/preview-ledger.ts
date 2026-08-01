@@ -6,11 +6,12 @@
  * consumes the preview (single-use); a drifted payload is rejected as `PREVIEW_STALE`.
  */
 
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 
-import { stableStringify } from '../tools/project/developer-helpers.js';
+import { hashStableValue } from '../tools/lib/stable-stringify.js';
 
-export type PreviewResourceKind = 'chart' | 'content-move' | 'dashboard';
+export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
+export type PreviewResourceKind = (typeof PREVIEW_RESOURCE_KINDS)[number];
 export type PreviewStatus = 'draft' | 'validated';
 
 export type PreviewLedgerEntry = {
@@ -50,7 +51,7 @@ const ledger = new Map<string, PreviewLedgerEntry>();
 
 /** sha256 hex digest of the stable JSON form of `value`. */
 export function hashPreviewContent(value: unknown): string {
-  return createHash('sha256').update(stableStringify(value)).digest('hex');
+  return hashStableValue(value);
 }
 
 function pruneExpiredLedgerEntries(now = Date.now()): void {

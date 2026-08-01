@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js'; // personas/lib from v1/
+import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
 import {
   CONTENT_DEVELOPER_CORE_PLAYBOOK,
@@ -13,17 +13,12 @@ import {
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
-import type { ContentDeveloperPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const { userMessages: embedUserMessages } = createPromptPlaybookEmbedder({
+const userMessages = createPromptPlaybookEmbedder({
   core: CONTENT_DEVELOPER_CORE_PLAYBOOK,
   topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 });
-
-function userMessages(text: string, topic: ContentDeveloperPlaybookTopic) {
-  return embedUserMessages(text, topic);
-}
 
 const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> validate/confirm -> apply. Call the matching lightdash_preview_* tool first,
 record the previewId. For updates to an existing chart/dashboard, validate with lightdash_validate_chart /

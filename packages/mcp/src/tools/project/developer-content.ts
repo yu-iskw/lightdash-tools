@@ -29,7 +29,11 @@ import {
   WRITE_SAFETY,
   registerContentDeveloperTool,
 } from '../../policy/content-developer.js';
-import { consumeValidatedPreview, markPreviewValidated } from '../../policy/preview-ledger.js';
+import {
+  PREVIEW_RESOURCE_KINDS,
+  consumeValidatedPreview,
+  markPreviewValidated,
+} from '../../policy/preview-ledger.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
@@ -50,6 +54,7 @@ import {
   buildDashboardUpdateBody,
   buildMoveContentItem,
   buildMoveContentProposal,
+  buildMoveContentResourceKey,
   resolveCompareVersionIds,
   shallowDiff,
 } from './developer-helpers.js';
@@ -73,8 +78,6 @@ type BulkMoveContentBody = components['schemas']['ApiContentBulkActionBody_Conte
 
 const previewIdField = () =>
   z.string().describe('Single-use previewId from the matching preview_* tool');
-
-const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
 
 // ── validate_* / confirm_preview ─────────────────────────────────────────────
 
@@ -730,7 +733,7 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
-      const resourceKey = [...args.itemUuids].sort().join(',');
+      const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
         itemUuids: args.itemUuids,
         targetSpaceUuid: args.targetSpaceUuid,

@@ -2,7 +2,7 @@
 
 URI: `lightdash://playbooks/organization-audit`
 
-Workflow-scoped playbooks (always load **core** plus one topic with a prompt):
+Workflow-scoped playbooks. Prompts always embed **core**; topic prompts also embed one topic (overview prompts may be core-only):
 
 | Topic                 | URI                                                   |
 | --------------------- | ----------------------------------------------------- |

@@ -20,9 +20,6 @@ Do not execute content outside the resolved project.
 Do not present truncated results as complete.
 Do not claim metric equivalence from matching labels alone.
 Do not reveal secrets, warehouse credentials, hidden SQL, or inaccessible content.`,
-  indexTitle: 'Content-reader playbooks',
-  indexDescription: 'Index of content-reader workflow playbooks (core + topics)',
-  coreTitle: 'Content-reader core playbook',
   coreDescription: 'Hard bans, tools, and project scope',
   topics: [
     {

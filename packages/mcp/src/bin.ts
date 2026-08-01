@@ -6,9 +6,11 @@ const PERSONA_SEMANTIC_LAYER = 'semantic-layer' as const;
 const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
 const PERSONA_CONTENT_READER = 'content-reader' as const;
 const PERSONA_CONTENT_DEVELOPER = 'content-developer' as const;
+const PERSONA_CONTENT_GOVERNANCE = 'content-governance' as const;
 
 type StdioPersonaId =
   | typeof PERSONA_CONTENT_DEVELOPER
+  | typeof PERSONA_CONTENT_GOVERNANCE
   | typeof PERSONA_CONTENT_READER
   | typeof PERSONA_ORGANIZATION_AUDIT
   | typeof PERSONA_SEMANTIC_LAYER;
@@ -27,7 +29,7 @@ function runHttp(): void {
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer). Default stdio persona is semantic-layer.',
+    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer, content-governance). Default stdio persona is semantic-layer.',
   )
   .version('0.7.0');
 
@@ -68,6 +70,15 @@ program
   )
   .action(() => {
     runStdio(PERSONA_CONTENT_DEVELOPER);
+  });
+
+program
+  .command(PERSONA_CONTENT_GOVERNANCE)
+  .description(
+    'Run content-governance persona on stdio (elicitation-gated soft-delete of charts and dashboards)',
+  )
+  .action(() => {
+    runStdio(PERSONA_CONTENT_GOVERNANCE);
   });
 
 program

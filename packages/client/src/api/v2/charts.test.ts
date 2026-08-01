@@ -36,4 +36,18 @@ describe('ChartsClientV2', () => {
     await client.getSavedChart('p1', 'my/chart');
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/saved/my%2Fchart');
   });
+
+  it('deleteSavedChart calls DELETE /projects/{projectUuid}/saved/{id}', async () => {
+    const client = new ChartsClientV2(mockHttp);
+    vi.mocked(mockHttp.delete).mockResolvedValue(undefined);
+    await client.deleteSavedChart('p1', 'c1');
+    expect(mockHttp.delete).toHaveBeenCalledWith('/projects/p1/saved/c1');
+  });
+
+  it('deleteSavedChart encodes slug path segments', async () => {
+    const client = new ChartsClientV2(mockHttp);
+    vi.mocked(mockHttp.delete).mockResolvedValue(undefined);
+    await client.deleteSavedChart('p1', 'my/chart');
+    expect(mockHttp.delete).toHaveBeenCalledWith('/projects/p1/saved/my%2Fchart');
+  });
 });
