@@ -27,7 +27,6 @@ function clientHasMethod(root, methodPath) {
     if (current == null || typeof current !== 'object') {
       return false;
     }
-    // eslint-disable-next-line security/detect-object-injection -- path segments from catalog map
     current = current[part];
   }
   return typeof current === 'function';
