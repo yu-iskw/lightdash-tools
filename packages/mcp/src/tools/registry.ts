@@ -28,6 +28,28 @@ import {
   registerListValidationResults,
 } from './project/content.js';
 import {
+  registerAddDashboardTile,
+  registerCompareChartVersions,
+  registerCompareDashboardVersions,
+  registerCreateChart,
+  registerCreateDashboard,
+  registerCreateSpace,
+  registerDuplicateChart,
+  registerDuplicateDashboard,
+  registerMoveContent,
+  registerMoveDashboardTile,
+  registerPreviewChartChanges,
+  registerPreviewDashboardChanges,
+  registerPreviewSpaceChanges,
+  registerRemoveDashboardTile,
+  registerResizeDashboardTile,
+  registerUpdateChart,
+  registerUpdateDashboard,
+  registerUpdateSpace,
+  registerValidateChart,
+  registerValidateDashboard,
+} from './project/developer-content.js';
+import {
   registerGetProjectParameters,
   registerListProjectParameters,
 } from './project/parameters.js';
@@ -107,6 +129,28 @@ export const toolRegistry = {
   run_dashboard_tile: { register: registerRunDashboardTile },
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },
+
+  // content-developer (ADR-0014) — catalog/persona scaffold; handlers are stubs (see developer-content.ts)
+  preview_chart_changes: { register: registerPreviewChartChanges },
+  preview_dashboard_changes: { register: registerPreviewDashboardChanges },
+  preview_space_changes: { register: registerPreviewSpaceChanges },
+  validate_chart: { register: registerValidateChart },
+  validate_dashboard: { register: registerValidateDashboard },
+  compare_chart_versions: { register: registerCompareChartVersions },
+  compare_dashboard_versions: { register: registerCompareDashboardVersions },
+  create_chart: { register: registerCreateChart },
+  update_chart: { register: registerUpdateChart },
+  duplicate_chart: { register: registerDuplicateChart },
+  create_dashboard: { register: registerCreateDashboard },
+  update_dashboard: { register: registerUpdateDashboard },
+  duplicate_dashboard: { register: registerDuplicateDashboard },
+  add_dashboard_tile: { register: registerAddDashboardTile },
+  move_dashboard_tile: { register: registerMoveDashboardTile },
+  remove_dashboard_tile: { register: registerRemoveDashboardTile },
+  resize_dashboard_tile: { register: registerResizeDashboardTile },
+  create_space: { register: registerCreateSpace },
+  update_space: { register: registerUpdateSpace },
+  move_content: { register: registerMoveContent },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

@@ -29,4 +29,29 @@ describe('DashboardsClientV2', () => {
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/dashboards/d1');
     expect(result).toEqual(mockResponse);
   });
+
+  it('getDashboard encodes slug in path', async () => {
+    const client = new DashboardsClientV2(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({});
+    await client.getDashboard('p1', 'dash/slug');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/dashboards/dash%2Fslug');
+  });
+
+  it('updateDashboard calls PATCH /projects/{projectUuid}/dashboards/{id} with body', async () => {
+    const client = new DashboardsClientV2(mockHttp);
+    const body = { name: 'Renamed' } as Parameters<DashboardsClientV2['updateDashboard']>[2];
+    const updated = { uuid: 'd1', name: 'Renamed' };
+    vi.mocked(mockHttp.patch).mockResolvedValue(updated);
+    const result = await client.updateDashboard('p1', 'd1', body);
+    expect(mockHttp.patch).toHaveBeenCalledWith('/projects/p1/dashboards/d1', body);
+    expect(result).toEqual(updated);
+  });
+
+  it('updateDashboard encodes slug in path', async () => {
+    const client = new DashboardsClientV2(mockHttp);
+    const body = { name: 'Renamed' } as Parameters<DashboardsClientV2['updateDashboard']>[2];
+    vi.mocked(mockHttp.patch).mockResolvedValue({});
+    await client.updateDashboard('p1', 'dash/slug', body);
+    expect(mockHttp.patch).toHaveBeenCalledWith('/projects/p1/dashboards/dash%2Fslug', body);
+  });
 });

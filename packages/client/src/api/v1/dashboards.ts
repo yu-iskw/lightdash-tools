@@ -9,6 +9,7 @@ import type {
   DashboardAsCodeListResults,
   DashboardAsCodeUpsertResults,
   UpsertDashboardAsCodeBody,
+  components,
 } from '@lightdash-tools/common';
 
 export interface GetDashboardsAsCodeOptions {
@@ -16,6 +17,27 @@ export interface GetDashboardsAsCodeOptions {
   offset?: number;
   languageMap?: boolean;
 }
+
+/** Request body for POST projects/{projectUuid}/dashboards (create dashboard, or duplicate via query param). */
+export type CreateDashboardBody =
+  components['schemas']['CreateDashboard'] | components['schemas']['DuplicateDashboardParams'];
+
+/** Options for createDashboard. */
+export interface CreateDashboardOptions {
+  /** UUID of an existing dashboard to duplicate from. When set, body should be DuplicateDashboardParams. */
+  duplicateFrom?: string;
+}
+
+/** Result of POST projects/{projectUuid}/dashboards (create dashboard). */
+export type CreateDashboardResult = components['schemas']['ApiCreateDashboardResponse']['results'];
+
+/** Results of GET dashboards/{dashboardUuidOrSlug}/history (dashboard version history). */
+export type DashboardHistoryResults =
+  components['schemas']['ApiGetDashboardHistoryResponse']['results'];
+
+/** Results of GET dashboards/{dashboardUuidOrSlug}/version/{versionUuid} (a single dashboard version). */
+export type DashboardVersionResults =
+  components['schemas']['ApiGetDashboardVersionResponse']['results'];
 
 export class DashboardsClient extends BaseApiClient {
   /** List dashboards in a project. */
@@ -49,6 +71,36 @@ export class DashboardsClient extends BaseApiClient {
     return this.http.post<DashboardAsCodeUpsertResults>(
       `/projects/${projectUuid}/code/dashboards/${encodeURIComponent(slug)}`,
       body,
+    );
+  }
+
+  /** Create a new dashboard in a project, or duplicate an existing one via `duplicateFrom`. */
+  async createDashboard(
+    projectUuid: string,
+    body: CreateDashboardBody,
+    options?: CreateDashboardOptions,
+  ): Promise<CreateDashboardResult> {
+    return this.http.post<CreateDashboardResult>(
+      `/projects/${projectUuid}/dashboards`,
+      body,
+      options?.duplicateFrom ? { params: { duplicateFrom: options.duplicateFrom } } : undefined,
+    );
+  }
+
+  /** Get dashboard version history from the last 30 days. */
+  async getDashboardHistory(dashboardUuidOrSlug: string): Promise<DashboardHistoryResults> {
+    return this.http.get<DashboardHistoryResults>(
+      `/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}/history`,
+    );
+  }
+
+  /** Get a single dashboard version by UUID. */
+  async getDashboardVersion(
+    dashboardUuidOrSlug: string,
+    versionUuid: string,
+  ): Promise<DashboardVersionResults> {
+    return this.http.get<DashboardVersionResults>(
+      `/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}/version/${versionUuid}`,
     );
   }
 }

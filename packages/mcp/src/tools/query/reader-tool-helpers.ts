@@ -1,5 +1,6 @@
 /**
- * Shared error/warning helpers for content-reader query and metadata tools.
+ * Shared error/warning helpers for content-reader and content-developer (ADR-0014)
+ * query and metadata tools.
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
@@ -22,6 +23,12 @@ const BLOCKED_POLICY_CODES = new Set([
   'QUERY_BUDGET_EXCEEDED',
   'RATE_LIMITED',
   'ROW_LIMIT_EXCEEDED',
+  // content-developer preview ledger (ADR-0014)
+  'PREVIEW_REQUIRED',
+  'PREVIEW_STALE',
+  'PREVIEW_EXPIRED',
+  'PREVIEW_NOT_VALIDATED',
+  'PREVIEW_NOT_OWNED',
 ]);
 
 export function codedErrorResult(code: string, message: string): TextContent {

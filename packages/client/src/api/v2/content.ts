@@ -4,7 +4,7 @@
 
 import { BaseApiClient } from '../base-client';
 
-import type { LightdashApi } from '@lightdash-tools/common';
+import type { components, LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for searching content. */
 export interface SearchContentParams {
@@ -19,6 +19,13 @@ export interface SearchContentParams {
   sortDirection?: 'asc' | 'desc';
 }
 
+/** Body for moving a single content item (chart, dashboard, or space) to another space. */
+export type MoveContentBody = components['schemas']['ApiContentActionBody_ContentActionMove_'];
+
+/** Body for moving multiple content items (charts, dashboards, spaces) to another space. */
+export type BulkMoveContentBody =
+  components['schemas']['ApiContentBulkActionBody_ContentActionMove_'];
+
 export class ContentClient extends BaseApiClient {
   /** Search project content (charts, dashboards, spaces). */
   async searchContent(
@@ -27,5 +34,15 @@ export class ContentClient extends BaseApiClient {
     return this.http.get<LightdashApi.Content.ApiContentResponse>('/content', {
       params,
     });
+  }
+
+  /** Move a single content item (chart, dashboard, or space) to another space. */
+  async moveContent(projectUuid: string, body: MoveContentBody): Promise<void> {
+    await this.http.post(`/content/${projectUuid}/move`, body);
+  }
+
+  /** Move multiple content items (charts, dashboards, spaces) to another space in one call. */
+  async bulkMoveContent(projectUuid: string, body: BulkMoveContentBody): Promise<void> {
+    await this.http.post(`/content/bulk-action/${projectUuid}/move`, body);
   }
 }

@@ -3,10 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { registerToolsByIds } from '../tools/registry.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
+import { CONTENT_DEVELOPER_TOOL_IDS } from './content-developer/v1/index.js';
 import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 
 import {
+  CONTENT_DEVELOPER_PERSONA_PATH,
   CONTENT_READER_PERSONA_PATH,
   DEFAULT_PERSONA_ID,
   getDefaultPersona,
@@ -21,8 +23,9 @@ import {
 } from './index.js';
 
 describe('personas', () => {
-  it('ships semantic-layer, organization-audit, and content-reader with fixed paths', () => {
+  it('ships semantic-layer, organization-audit, content-reader, and content-developer with fixed paths', () => {
     expect(Object.keys(PERSONAS).sort()).toEqual([
+      'content-developer',
       'content-reader',
       'organization-audit',
       'semantic-layer',
@@ -30,6 +33,7 @@ describe('personas', () => {
     expect(DEFAULT_PERSONA_ID).toBe('semantic-layer');
     expect(listPersonaPaths().sort()).toEqual(
       [
+        CONTENT_DEVELOPER_PERSONA_PATH,
         CONTENT_READER_PERSONA_PATH,
         ORGANIZATION_AUDIT_PERSONA_PATH,
         SEMANTIC_LAYER_PERSONA_PATH,
@@ -38,6 +42,7 @@ describe('personas', () => {
     expect(getPersonaByPath(SEMANTIC_LAYER_PERSONA_PATH)?.id).toBe('semantic-layer');
     expect(getPersonaByPath(ORGANIZATION_AUDIT_PERSONA_PATH)?.id).toBe('organization-audit');
     expect(getPersonaByPath(CONTENT_READER_PERSONA_PATH)?.id).toBe('content-reader');
+    expect(getPersonaByPath(CONTENT_DEVELOPER_PERSONA_PATH)?.id).toBe('content-developer');
     expect(getPersonaByPath('/mcp')).toBeUndefined();
   });
 
@@ -45,6 +50,7 @@ describe('personas', () => {
     expect(getPersonaByPath(`${SEMANTIC_LAYER_PERSONA_PATH}/`)?.id).toBe('semantic-layer');
     expect(getPersonaByPath(`${ORGANIZATION_AUDIT_PERSONA_PATH}/`)?.id).toBe('organization-audit');
     expect(getPersonaByPath(`${CONTENT_READER_PERSONA_PATH}/`)?.id).toBe('content-reader');
+    expect(getPersonaByPath(`${CONTENT_DEVELOPER_PERSONA_PATH}/`)?.id).toBe('content-developer');
   });
 
   it('semantic-layer allowlists exactly nine tools', () => {
@@ -67,6 +73,13 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-content');
   });
 
+  it('content-developer allowlists 26 tools and short server name', () => {
+    const persona = getPersona('content-developer');
+    expect(persona.toolIds).toHaveLength(26);
+    expect(persona.toolIds).toEqual([...CONTENT_DEVELOPER_TOOL_IDS]);
+    expect(getPersonaServerName(persona)).toBe('lightdash-mcp-cdev');
+  });
+
   it('keeps combined server+tool wire names under 60 characters', () => {
     for (const persona of Object.values(PERSONAS)) {
       const serverName = getPersonaServerName(persona);
@@ -81,6 +94,7 @@ describe('personas', () => {
     expect(parsePersonaId('semantic-layer')).toBe('semantic-layer');
     expect(parsePersonaId('organization-audit')).toBe('organization-audit');
     expect(parsePersonaId('content-reader')).toBe('content-reader');
+    expect(parsePersonaId('content-developer')).toBe('content-developer');
     expect(parsePersonaId('nope')).toBeUndefined();
   });
 

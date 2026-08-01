@@ -4,7 +4,7 @@
 
 import { BaseApiClient } from '../base-client';
 
-import type { LightdashApi } from '@lightdash-tools/common';
+import type { components, LightdashApi } from '@lightdash-tools/common';
 
 /** Query params for getting validation results. */
 export interface GetValidationResultsParams {
@@ -42,6 +42,26 @@ export class ValidationClient extends BaseApiClient {
     return this.http.post<LightdashApi.Validation.ApiJobScheduledResponse>(
       `/projects/${projectUuid}/validate`,
       body,
+    );
+  }
+
+  /** Validate a single chart's fields against its underlying explore/table. */
+  async validateChart(
+    projectUuid: string,
+    chartUuid: string,
+  ): Promise<components['schemas']['ApiChartValidationResponse']> {
+    return this.http.post<components['schemas']['ApiChartValidationResponse']>(
+      `/projects/${projectUuid}/validate/chart/${chartUuid}`,
+    );
+  }
+
+  /** Validate a single dashboard's fields against its underlying explores/tables. */
+  async validateDashboard(
+    projectUuid: string,
+    dashboardUuid: string,
+  ): Promise<components['schemas']['ApiDashboardValidationResponse']> {
+    return this.http.post<components['schemas']['ApiDashboardValidationResponse']>(
+      `/projects/${projectUuid}/validate/dashboard/${dashboardUuid}`,
     );
   }
 }

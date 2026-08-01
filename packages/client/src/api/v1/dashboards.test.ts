@@ -80,4 +80,53 @@ describe('DashboardsClient', () => {
     await client.upsertDashboardAsCode('p1', 'dash/slug', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/code/dashboards/dash%2Fslug', body);
   });
+
+  it('createDashboard should call POST /projects/{projectUuid}/dashboards with body and no params by default', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const body = { name: 'New Dashboard', tiles: [], tabs: [] } as Parameters<
+      DashboardsClient['createDashboard']
+    >[1];
+    const created = { uuid: 'd1', name: 'New Dashboard', projectUuid: 'p1' };
+    vi.mocked(mockHttp.post).mockResolvedValue(created);
+    const result = await client.createDashboard('p1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/dashboards', body, undefined);
+    expect(result).toEqual(created);
+  });
+
+  it('createDashboard should call POST with duplicateFrom query param when provided', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const body = { dashboardDesc: 'Copy', dashboardName: 'Copy of Dashboard' } as Parameters<
+      DashboardsClient['createDashboard']
+    >[1];
+    vi.mocked(mockHttp.post).mockResolvedValue({});
+    await client.createDashboard('p1', body, { duplicateFrom: 'd0' });
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/dashboards', body, {
+      params: { duplicateFrom: 'd0' },
+    });
+  });
+
+  it('getDashboardHistory should call GET /dashboards/{dashboardUuidOrSlug}/history', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const history = { dashboardUuid: 'd1', history: [] };
+    vi.mocked(mockHttp.get).mockResolvedValue(history);
+    const result = await client.getDashboardHistory('d1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/d1/history');
+    expect(result).toEqual(history);
+  });
+
+  it('getDashboardHistory should encode slug in path', async () => {
+    const client = new DashboardsClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({});
+    await client.getDashboardHistory('dash/slug');
+    expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/dash%2Fslug/history');
+  });
+
+  it('getDashboardVersion should call GET /dashboards/{dashboardUuidOrSlug}/version/{versionUuid}', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const version = { dashboardUuid: 'd1', versionUuid: 'v1' };
+    vi.mocked(mockHttp.get).mockResolvedValue(version);
+    const result = await client.getDashboardVersion('d1', 'v1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/d1/version/v1');
+    expect(result).toEqual(version);
+  });
 });

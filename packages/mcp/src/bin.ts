@@ -5,9 +5,13 @@ const program = new Command();
 const PERSONA_SEMANTIC_LAYER = 'semantic-layer' as const;
 const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
 const PERSONA_CONTENT_READER = 'content-reader' as const;
+const PERSONA_CONTENT_DEVELOPER = 'content-developer' as const;
 
 type StdioPersonaId =
-  typeof PERSONA_CONTENT_READER | typeof PERSONA_ORGANIZATION_AUDIT | typeof PERSONA_SEMANTIC_LAYER;
+  | typeof PERSONA_CONTENT_DEVELOPER
+  | typeof PERSONA_CONTENT_READER
+  | typeof PERSONA_ORGANIZATION_AUDIT
+  | typeof PERSONA_SEMANTIC_LAYER;
 
 function runStdio(personaId?: StdioPersonaId): void {
   if (personaId) {
@@ -23,7 +27,7 @@ function runHttp(): void {
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader). Default stdio persona is semantic-layer.',
+    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer). Default stdio persona is semantic-layer.',
   )
   .version('0.7.0');
 
@@ -55,6 +59,15 @@ program
   )
   .action(() => {
     runStdio(PERSONA_CONTENT_READER);
+  });
+
+program
+  .command(PERSONA_CONTENT_DEVELOPER)
+  .description(
+    'Run content-developer persona on stdio (chart/dashboard/space authoring behind preview -> validate -> apply)',
+  )
+  .action(() => {
+    runStdio(PERSONA_CONTENT_DEVELOPER);
   });
 
 program

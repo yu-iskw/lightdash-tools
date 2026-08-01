@@ -8,6 +8,7 @@ import { defineOperation } from './types';
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
 const PROFILE_CONTENT_READER: CapabilityProfile = 'content-reader';
+const PROFILE_CONTENT_DEVELOPER: CapabilityProfile = 'content-developer';
 
 const op_search_content = defineOperation({
   id: 'content-reader.content.search',
@@ -21,7 +22,7 @@ const op_search_content = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'content search' },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_list_spaces = defineOperation({
@@ -36,7 +37,7 @@ const op_list_spaces = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects spaces list' },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_space = defineOperation({
@@ -51,7 +52,7 @@ const op_get_space = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects spaces get' },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_dashboard = defineOperation({
@@ -65,7 +66,7 @@ const op_get_dashboard = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_chart = defineOperation({
@@ -79,7 +80,7 @@ const op_get_chart = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_list_project_parameters = defineOperation({

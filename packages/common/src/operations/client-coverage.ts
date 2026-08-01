@@ -5,6 +5,9 @@
 
 export type ClientMethodRef = string;
 
+const CLIENT_CHARTS_UPSERT_AS_CODE = 'v1.charts.upsertChartAsCode';
+const CLIENT_DASHBOARDS_V2_UPDATE = 'v2.dashboards.updateDashboard';
+
 /**
  * Hard coverage map: every catalog operation id must appear here.
  * Values are `v1.*` / `v2.*` client method paths, or `composed:…` for multi-call tools.
@@ -84,6 +87,31 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-reader.dashboards.run-tile': 'v2.query.runDashboardChartQuery',
   'content-reader.query.result.get': 'v2.query.getAsyncQueryResults',
   'content-reader.query.cancel': 'v2.query.cancelAsyncQuery',
+
+  // content-developer
+  'content-developer.preview.chart': 'composed:v2.charts.getSavedChart',
+  'content-developer.preview.dashboard': 'composed:v2.dashboards.getDashboard',
+  'content-developer.preview.space': 'composed:v1.spaces.getSpace',
+  'content-developer.charts.validate': 'v1.validation.validateChart',
+  'content-developer.dashboards.validate': 'v1.validation.validateDashboard',
+  'content-developer.charts.compare-versions':
+    'composed:v1.charts.getChartHistory+v1.charts.getChartVersion',
+  'content-developer.dashboards.compare-versions':
+    'composed:v1.dashboards.getDashboardHistory+v1.dashboards.getDashboardVersion',
+  'content-developer.charts.create': CLIENT_CHARTS_UPSERT_AS_CODE,
+  'content-developer.charts.update': CLIENT_CHARTS_UPSERT_AS_CODE,
+  'content-developer.charts.duplicate':
+    'composed:v1.charts.getChartsAsCode+v1.charts.upsertChartAsCode',
+  'content-developer.dashboards.create': 'v1.dashboards.createDashboard',
+  'content-developer.dashboards.update': CLIENT_DASHBOARDS_V2_UPDATE,
+  'content-developer.dashboards.duplicate': 'v1.dashboards.createDashboard',
+  'content-developer.dashboards.tiles.add': CLIENT_DASHBOARDS_V2_UPDATE,
+  'content-developer.dashboards.tiles.move': CLIENT_DASHBOARDS_V2_UPDATE,
+  'content-developer.dashboards.tiles.remove': CLIENT_DASHBOARDS_V2_UPDATE,
+  'content-developer.dashboards.tiles.resize': CLIENT_DASHBOARDS_V2_UPDATE,
+  'content-developer.spaces.create': 'v1.spaces.createSpace',
+  'content-developer.spaces.update': 'v1.spaces.updateSpace',
+  'content-developer.content.move': 'v2.content.bulkMoveContent',
 
   // cli content
   'cli.charts.list': 'v1.charts.getChartsAsCode',

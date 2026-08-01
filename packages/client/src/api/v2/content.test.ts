@@ -27,4 +27,26 @@ describe('ContentClient', () => {
     });
     expect(result).toEqual(mockResponse);
   });
+
+  it('moveContent should call POST /content/{projectUuid}/move with body', async () => {
+    const client = new ContentClient(mockHttp);
+    const body = {
+      action: { type: 'move' as const, targetSpaceUuid: 's2' },
+      item: { source: 'dbt_explore' as const, contentType: 'chart' as const, uuid: 'c1' },
+    } as Parameters<ContentClient['moveContent']>[1];
+    vi.mocked(mockHttp.post).mockResolvedValue({ status: 'ok' });
+    await client.moveContent('p1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/content/p1/move', body);
+  });
+
+  it('bulkMoveContent should call POST /content/bulk-action/{projectUuid}/move with body', async () => {
+    const client = new ContentClient(mockHttp);
+    const body = {
+      action: { type: 'move' as const, targetSpaceUuid: 's2' },
+      content: [{ source: 'dbt_explore' as const, contentType: 'chart' as const, uuid: 'c1' }],
+    } as Parameters<ContentClient['bulkMoveContent']>[1];
+    vi.mocked(mockHttp.post).mockResolvedValue({ status: 'ok' });
+    await client.bulkMoveContent('p1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/content/bulk-action/p1/move', body);
+  });
 });

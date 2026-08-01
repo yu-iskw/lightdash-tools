@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { AI_AGENT_OPERATIONS } from './ai-agents';
 import { CLI_CONTENT_OPERATIONS } from './cli-content';
+import { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { getOperation, getOperationsByProfile, listOperations } from './registry';
@@ -80,6 +81,7 @@ describe('operation registry', () => {
         SEMANTIC_LAYER_OPERATIONS.length +
         ORGANIZATION_AUDIT_OPERATIONS.length +
         CONTENT_READER_OPERATIONS.length +
+        CONTENT_DEVELOPER_OPERATIONS.length +
         CLI_CONTENT_OPERATIONS.length,
     );
   });
