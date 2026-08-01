@@ -12,10 +12,6 @@ import { isApiSuccessEnvelope, type ApiEnvelope } from './unwrap-api-success';
 import type { ResolvedLightdashClientConfig } from '../config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
-/** Lightdash API success response shape. */
-export type { ApiSuccessEnvelope as ApiSuccessBody } from './unwrap-api-success';
-export type { ApiErrorEnvelope as ApiErrorBody } from './unwrap-api-success';
-
 /**
  * HTTP client that wraps Axios with rate limiting and retry.
  */
