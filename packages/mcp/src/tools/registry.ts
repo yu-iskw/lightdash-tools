@@ -34,19 +34,17 @@ import {
   registerConfirmPreview,
   registerCreateChart,
   registerCreateDashboard,
-  registerCreateSpace,
   registerDuplicateChart,
   registerDuplicateDashboard,
   registerMoveContent,
   registerMoveDashboardTile,
   registerPreviewChartChanges,
+  registerPreviewContentMove,
   registerPreviewDashboardChanges,
-  registerPreviewSpaceChanges,
   registerRemoveDashboardTile,
   registerResizeDashboardTile,
   registerUpdateChart,
   registerUpdateDashboard,
-  registerUpdateSpace,
   registerValidateChart,
   registerValidateDashboard,
 } from './project/developer-content.js';
@@ -134,7 +132,7 @@ export const toolRegistry = {
   // content-developer (ADR-0014) — catalog/persona scaffold; handlers are stubs (see developer-content.ts)
   preview_chart_changes: { register: registerPreviewChartChanges },
   preview_dashboard_changes: { register: registerPreviewDashboardChanges },
-  preview_space_changes: { register: registerPreviewSpaceChanges },
+  preview_content_move: { register: registerPreviewContentMove },
   validate_chart: { register: registerValidateChart },
   validate_dashboard: { register: registerValidateDashboard },
   confirm_preview: { register: registerConfirmPreview },
@@ -150,8 +148,6 @@ export const toolRegistry = {
   move_dashboard_tile: { register: registerMoveDashboardTile },
   remove_dashboard_tile: { register: registerRemoveDashboardTile },
   resize_dashboard_tile: { register: registerResizeDashboardTile },
-  create_space: { register: registerCreateSpace },
-  update_space: { register: registerUpdateSpace },
   move_content: { register: registerMoveContent },
 } as const satisfies Record<string, ToolRegistration>;
 

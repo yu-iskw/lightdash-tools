@@ -1,10 +1,11 @@
 /**
- * Content-developer persona: project-scoped chart/dashboard/space authoring (ADR-0014).
- * Hybrid authoring surface behind a hard preview -> validate -> apply gate; no SQL, no delete.
+ * Content-developer persona: project-scoped chart/dashboard authoring (ADR-0014).
+ * Hybrid authoring behind a hard preview -> validate -> apply gate; no SQL, no delete,
+ * no space create/update (spaces are Terraform / out-of-band).
  */
 
 import { registerContentDeveloperPrompts } from './prompts.js';
-import { registerContentDeveloperPlaybook } from './resources/playbook.js';
+import { registerContentDeveloperPlaybook } from './resources/playbooks.js';
 
 import type { ToolId } from '../../../tools/registry.js';
 import type { PersonaDefinition } from '../../types.js';
@@ -21,7 +22,7 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'get_chart',
   'preview_chart_changes',
   'preview_dashboard_changes',
-  'preview_space_changes',
+  'preview_content_move',
   'validate_chart',
   'validate_dashboard',
   'confirm_preview',
@@ -37,8 +38,6 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'move_dashboard_tile',
   'remove_dashboard_tile',
   'resize_dashboard_tile',
-  'create_space',
-  'update_space',
   'move_content',
 ] as const satisfies readonly ToolId[];
 

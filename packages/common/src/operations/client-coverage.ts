@@ -92,7 +92,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   // content-developer
   'content-developer.preview.chart': 'composed:v2.charts.getSavedChart',
   'content-developer.preview.dashboard': 'composed:v2.dashboards.getDashboard',
-  'content-developer.preview.space': 'composed:v1.spaces.getSpace',
+  'content-developer.preview.content-move': CLIENT_CONTENT_SEARCH,
   'content-developer.charts.validate': 'v1.validation.validateChart',
   'content-developer.dashboards.validate': 'v1.validation.validateDashboard',
   'content-developer.preview.confirm': CLIENT_CONTENT_SEARCH,

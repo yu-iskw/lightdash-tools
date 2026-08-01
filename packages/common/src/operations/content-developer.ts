@@ -1,7 +1,8 @@
 /**
  * Content-developer operations in the shared operation catalog (ADR-0014).
  * Hybrid authoring surface: chart as-code upsert, dashboard REST create/update,
- * MCP-composed tile layout, space create/update, and bulk content move.
+ * MCP-composed tile layout, and bulk content move into existing spaces.
+ * Space create/update are client-only (spaces managed out-of-band, e.g. Terraform).
  * Preview -> validate -> apply is enforced by the persona policy layer, not here.
  */
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE } from '../safety';
@@ -73,26 +74,22 @@ const op_preview_dashboard_changes = defineOperation({
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
-const op_preview_space_changes = defineOperation({
-  id: 'content-developer.preview.space',
-  summary: 'Preview unsaved space edits by diffing against the current saved definition',
-  http: { method: 'GET', path: `${API_V1}/projects/{projectUuid}/spaces/{spaceUuid}` },
+const op_preview_content_move = defineOperation({
+  id: 'content-developer.preview.content-move',
+  summary:
+    'Preview a bulk content move into an existing space (MCP ledger only; issues a single-use previewId)',
+  http: { method: 'GET', path: `${API_V2}/content` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   mcp: {
-    toolName: 'preview_space_changes',
+    toolName: 'preview_content_move',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   workflow: [
     {
       method: 'GET',
-      path: `${API_V1}/projects/{projectUuid}/spaces/{spaceUuid}`,
-      summary: 'Read the current space definition',
-    },
-    {
-      method: 'GET',
-      path: `${API_V1}/projects/{projectUuid}/spaces/{spaceUuid}`,
+      path: `${API_V2}/content`,
       summary: PREVIEW_DIFF_SUMMARY,
     },
   ],
@@ -191,7 +188,7 @@ const op_compare_dashboard_versions = defineOperation({
 const op_confirm_preview = defineOperation({
   id: 'content-developer.preview.confirm',
   summary:
-    'Confirm a bound preview for create/duplicate/tile/space/content-move flows that have no upstream validate API',
+    'Confirm a bound preview for create/duplicate/tile/content-move flows that have no upstream validate API',
   http: { method: 'GET', path: `${API_V2}/content` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
@@ -427,35 +424,31 @@ const op_resize_dashboard_tile = defineOperation({
 
 const op_create_space = defineOperation({
   id: 'content-developer.spaces.create',
-  summary: 'Create a space in a project',
+  summary:
+    'Create a space in a project (client-only; spaces are managed out-of-band, e.g. Terraform)',
   http: { method: 'POST', path: `${API_V1}/projects/{projectUuid}/spaces` },
   authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
   sensitivity: 'none',
-  mcp: {
-    toolName: 'create_space',
-    annotations: WRITE_NONDESTRUCTIVE,
-    taskSupport: { exposed: true, taskEligible: false },
-  },
+  agentExposure: 'client-only',
+  bannedMcpToolName: 'create_space',
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_update_space = defineOperation({
   id: 'content-developer.spaces.update',
-  summary: 'Update a space in a project',
+  summary:
+    'Update a space in a project (client-only; spaces are managed out-of-band, e.g. Terraform)',
   http: { method: 'PATCH', path: `${API_V1}/projects/{projectUuid}/spaces/{spaceUuid}` },
   authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
   sensitivity: 'none',
-  mcp: {
-    toolName: 'update_space',
-    annotations: WRITE_NONDESTRUCTIVE,
-    taskSupport: { exposed: true, taskEligible: false },
-  },
+  agentExposure: 'client-only',
+  bannedMcpToolName: 'update_space',
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_move_content = defineOperation({
   id: 'content-developer.content.move',
-  summary: 'Move one or more charts, dashboards, or spaces to another space in one call',
+  summary: 'Move one or more charts or dashboards to another space in one call',
   http: { method: 'POST', path: `${API_V2}/content/bulk-action/{projectUuid}/move` },
   authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
   sensitivity: 'none',
@@ -470,7 +463,7 @@ const op_move_content = defineOperation({
 export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [
   op_preview_chart_changes,
   op_preview_dashboard_changes,
-  op_preview_space_changes,
+  op_preview_content_move,
   op_validate_chart,
   op_validate_dashboard,
   op_confirm_preview,

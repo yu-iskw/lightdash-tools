@@ -35,15 +35,27 @@ export const RESOURCE_ID_KEYS = new Set([
   'spaceUuid',
   'spaceUuids',
   'parentSpaceUuid',
+  'targetSpaceUuid',
+  'itemUuids',
   'roleUuid',
   'dashboardUuid',
+  'dashboardUuidOrSlug',
+  'sourceDashboardUuid',
   'schedulerUuid',
   'organizationUuid',
   'chartUuid',
+  'chartUuidOrSlug',
+  'tileUuid',
+  'newSlug',
 ]);
 
 /** Keys that accept OpenAPI UuidOrSlug (UUID or slug), not UUID-only. */
-const UUID_OR_SLUG_KEYS = new Set(['dashboardUuid', 'chartUuid']);
+const UUID_OR_SLUG_KEYS = new Set([
+  'dashboardUuid',
+  'dashboardUuidOrSlug',
+  'chartUuid',
+  'chartUuidOrSlug',
+]);
 
 export type ArgumentSource = 'body' | 'option' | 'positional';
 
@@ -153,7 +165,7 @@ function validateBySemanticType(
 }
 
 function validateResourceIdValue(key: string, value: string): void {
-  if (key === 'slug') {
+  if (key === 'slug' || key === 'newSlug') {
     validateSlug(value);
     return;
   }

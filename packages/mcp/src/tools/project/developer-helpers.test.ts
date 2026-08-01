@@ -193,12 +193,11 @@ describe('buildMoveContentItem', () => {
     });
   });
 
-  it('builds dashboard/space/data_app items without a source field', () => {
+  it('builds dashboard/data_app items without a source field', () => {
     expect(buildMoveContentItem('d1', 'dashboard')).toEqual({
       contentType: 'dashboard',
       uuid: 'd1',
     });
-    expect(buildMoveContentItem('s1', 'space')).toEqual({ contentType: 'space', uuid: 's1' });
     expect(buildMoveContentItem('a1', 'data_app')).toEqual({ contentType: 'data_app', uuid: 'a1' });
   });
 });
@@ -210,8 +209,8 @@ describe('assertMoveContentLengths', () => {
     ).not.toThrow();
   });
 
-  it('accepts omitted contentTypes/chartSources', () => {
-    expect(() => assertMoveContentLengths(['a', 'b'])).not.toThrow();
+  it('accepts omitted chartSources', () => {
+    expect(() => assertMoveContentLengths(['a', 'b'], ['chart', 'dashboard'])).not.toThrow();
   });
 
   it('throws when contentTypes length mismatches itemUuids', () => {
@@ -228,30 +227,42 @@ describe('assertMoveContentLengths', () => {
 });
 
 describe('buildMoveContentProposal', () => {
-  it('normalizes omitted contentTypes/chartSources to null', () => {
-    expect(buildMoveContentProposal({ itemUuids: ['a'], targetSpaceUuid: 's1' })).toEqual({
+  it('requires contentTypes and normalizes omitted chartSources to null', () => {
+    expect(
+      buildMoveContentProposal({
+        itemUuids: ['a'],
+        targetSpaceUuid: 's1',
+        contentTypes: ['chart'],
+      }),
+    ).toEqual({
       itemUuids: ['a'],
       targetSpaceUuid: 's1',
-      contentTypes: null,
+      contentTypes: ['chart'],
       chartSources: null,
     });
   });
 
-  it('includes provided contentTypes/chartSources so drift changes the hash', () => {
-    const withTypes = buildMoveContentProposal({
+  it('includes chartSources so drift changes the hash', () => {
+    const withSources = buildMoveContentProposal({
       itemUuids: ['a'],
       targetSpaceUuid: 's1',
       contentTypes: ['chart'],
       chartSources: ['sql'],
     });
-    expect(withTypes).toEqual({
+    expect(withSources).toEqual({
       itemUuids: ['a'],
       targetSpaceUuid: 's1',
       contentTypes: ['chart'],
       chartSources: ['sql'],
     });
-    expect(stableStringify(withTypes)).not.toBe(
-      stableStringify(buildMoveContentProposal({ itemUuids: ['a'], targetSpaceUuid: 's1' })),
+    expect(stableStringify(withSources)).not.toBe(
+      stableStringify(
+        buildMoveContentProposal({
+          itemUuids: ['a'],
+          targetSpaceUuid: 's1',
+          contentTypes: ['chart'],
+        }),
+      ),
     );
   });
 });

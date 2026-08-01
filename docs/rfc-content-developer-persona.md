@@ -91,11 +91,17 @@ packages/mcp/src/personas/content-developer/v1/
 ├── index.ts
 ├── prompts.ts
 └── resources/
-    ├── playbook.ts
-    └── playbook.md
+    ├── playbooks.ts
+    └── playbooks/
+        ├── index.md
+        ├── core.md
+        ├── dashboards.md
+        └── content-move.md
 packages/common/src/operations/content-developer.ts
 packages/mcp/src/policy/{content-developer,preview-ledger}.ts
 ```
+
+Spaces are not created/updated on this persona (Terraform / out-of-band). Dashboard-first SOP: charts as tiles; UI dashboard promote as the release unit.
 
 ## Acceptance Criteria
 

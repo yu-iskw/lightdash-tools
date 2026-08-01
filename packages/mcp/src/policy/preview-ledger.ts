@@ -10,7 +10,7 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import { stableStringify } from '../tools/project/developer-helpers.js';
 
-export type PreviewResourceKind = 'chart' | 'content-move' | 'dashboard' | 'space';
+export type PreviewResourceKind = 'chart' | 'content-move' | 'dashboard';
 export type PreviewStatus = 'draft' | 'validated';
 
 export type PreviewLedgerEntry = {

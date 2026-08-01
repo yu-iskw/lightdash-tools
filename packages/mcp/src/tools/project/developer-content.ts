@@ -6,7 +6,7 @@
  *  - validate_* runs the upstream validator against an existing chart/dashboard uuid and
  *    marks the preview validated only when it was bound to that exact resource.
  *  - confirm_preview marks a preview validated for flows with no upstream validate API
- *    (create, duplicate, tile ops, space, content-move); it never calls a Lightdash API.
+ *    (create, duplicate, tile ops, content-move); it never calls a Lightdash API.
  *  - The write tools consume the validated preview (contentHash must match exactly)
  *    before calling the underlying create/update/upsert API.
  *
@@ -14,9 +14,8 @@
  * (`resourceKind`/`resourceKey`), so a validated/confirmed preview for one resource can
  * never unlock a write against a different one.
  *
- * `preview_space_changes` doubles as the preview tool for `move_content` (pass
- * `itemUuids` + `targetSpaceUuid` instead of `spaceUuid` + `changes`) since there is
- * no dedicated content-move preview endpoint in the catalog.
+ * `preview_content_move` is the preview tool for `move_content` (itemUuids +
+ * targetSpaceUuid + required contentTypes).
  */
 
 import { WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE } from '@lightdash-tools/common';
@@ -58,18 +57,13 @@ import {
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { PreviewResourceKind } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
-import type {
-  components,
-  CreateSpace,
-  UpdateSpace,
-  UpsertChartAsCodeBody,
-} from '@lightdash-tools/common';
+import type { components, UpsertChartAsCodeBody } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export {
   registerPreviewChartChanges,
+  registerPreviewContentMove,
   registerPreviewDashboardChanges,
-  registerPreviewSpaceChanges,
 } from './developer-content-preview.js';
 
 type CreateDashboardBody =
@@ -80,7 +74,7 @@ type BulkMoveContentBody = components['schemas']['ApiContentBulkActionBody_Conte
 const previewIdField = () =>
   z.string().describe('Single-use previewId from the matching preview_* tool');
 
-const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard', 'space'] as const;
+const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
 
 // ── validate_* / confirm_preview ─────────────────────────────────────────────
 
@@ -181,7 +175,7 @@ export function registerConfirmPreview(
     {
       title: 'Confirm preview',
       description:
-        'Confirm a previewed create/duplicate/tile/space/content-move payload (no upstream validate API); resourceKind/resourceKey must match the preview exactly',
+        'Confirm a previewed create/duplicate/tile/content-move payload (no upstream validate API); resourceKind/resourceKey must match the preview exactly',
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -696,89 +690,6 @@ export function registerResizeDashboardTile(
   );
 }
 
-// ── space writes ─────────────────────────────────────────────────────────────
-
-export function registerCreateSpace(server: McpServer, contextProvider: McpContextProvider): void {
-  registerContentDeveloperTool(
-    server,
-    'create_space',
-    {
-      title: 'Create space',
-      description: 'Create a space in a project after preview',
-      safety: WRITE_SAFETY,
-      annotations: WRITE_NONDESTRUCTIVE,
-      inputSchema: {
-        projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
-        space: z.record(z.string(), z.unknown()),
-      },
-    },
-    wrapDeveloperHandler<{
-      projectUuid?: string;
-      previewId: string;
-      space: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
-      const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
-      consumeValidatedPreview({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'space',
-        resourceKey: 'new',
-        proposed: args.space,
-      });
-      const result = await c.v1.spaces.createSpace(
-        scope.projectUuid,
-        args.space as unknown as CreateSpace,
-      );
-      return jsonToolResult({ data: result, context: developerContext(scope) });
-    }),
-  );
-}
-
-export function registerUpdateSpace(server: McpServer, contextProvider: McpContextProvider): void {
-  registerContentDeveloperTool(
-    server,
-    'update_space',
-    {
-      title: 'Update space',
-      description: 'Update a space in a project after preview',
-      safety: WRITE_SAFETY,
-      annotations: WRITE_NONDESTRUCTIVE,
-      inputSchema: {
-        projectUuid: projectUuidField().optional(),
-        spaceUuid: z.string(),
-        previewId: previewIdField(),
-        space: z.record(z.string(), z.unknown()),
-      },
-    },
-    wrapDeveloperHandler<{
-      projectUuid?: string;
-      spaceUuid: string;
-      previewId: string;
-      space: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
-      const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
-      consumeValidatedPreview({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'space',
-        resourceKey: args.spaceUuid,
-        proposed: args.space,
-      });
-      const result = await c.v1.spaces.updateSpace(
-        scope.projectUuid,
-        args.spaceUuid,
-        args.space as unknown as UpdateSpace,
-      );
-      return jsonToolResult({ data: result, context: developerContext(scope) });
-    }),
-  );
-}
-
 // ── content move ─────────────────────────────────────────────────────────────
 
 export function registerMoveContent(server: McpServer, contextProvider: McpContextProvider): void {
@@ -788,7 +699,7 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
     {
       title: 'Move content',
       description:
-        'Move one or more charts, dashboards, or spaces to another space (preview via preview_space_changes)',
+        'Move charts/dashboards into an existing space (preview via preview_content_move)',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {

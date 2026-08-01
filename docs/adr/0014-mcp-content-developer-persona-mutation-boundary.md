@@ -12,7 +12,7 @@ Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-harde
 
 ## Context
 
-Agents need to create and improve project-scoped analytical content (charts, dashboards, spaces) without gaining warehouse SQL execution, org administration, or irrecoverable deletes. The `content-reader` persona ([ADR-0012](0012-mcp-content-reader-persona-saved-content-execution-boundary.md)) explicitly forbids all content mutations. CLI already has chart as-code upsert, but MCP had no authoring surface.
+Agents need to create and improve project-scoped analytical content (charts and dashboards; place into existing spaces) without gaining warehouse SQL execution, org administration, space provisioning, or irrecoverable deletes. The `content-reader` persona ([ADR-0012](0012-mcp-content-reader-persona-saved-content-execution-boundary.md)) explicitly forbids all content mutations. CLI already has chart as-code upsert, but MCP had no authoring surface.
 
 Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-code upsert exists); dashboards have create / v2 PATCH / `duplicateFrom`; tiles have no per-tile REST routes; preview-of-unsaved-edits has no upstream API; validate and version history endpoints exist but were not wrapped in `@lightdash-tools/client`.
 
@@ -21,17 +21,17 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
 1. Ship a **`content-developer`** persona at fixed path `/content-developer/v1/mcp` with MCP server display name **`lightdash-mcp-cdev`** (shortened for ~60-character client limits). Stdio: `lightdash-mcp content-developer`.
 2. **Project scope** matches content-reader precedence: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`. Tool args cannot override pin/env.
 3. **Hybrid authoring:**
-   - Charts: as-code upsert (`POST …/code/charts/{slug}`); `duplicate_chart` is MCP composition (read as-code + upsert new slug).
+   - Charts: as-code upsert (`POST …/code/charts/{slug}`); `duplicate_chart` is MCP composition (read as-code + upsert new slug). Soft SOP: author charts only as dashboard tile prerequisites (dashboard is the UI [promotion](https://docs.lightdash.com/guides/how-to-promote-content) unit).
    - Dashboards: native REST create / v2 PATCH update / create with `duplicateFrom`.
    - Layout: MCP composition over full dashboard tile array via v2 PATCH.
-   - Spaces: create/update + bulk content move when client methods exist.
-4. **Hard preview gate:** every SAFE_WRITE tool requires a session-owned, validated, unexpired `previewId` from `preview_*`. Apply consumes the preview (single-use). Patch drift → `PREVIEW_STALE`. Budget/session keys use MCP transport `sessionId` (stdio → `process:…`), same ALS pattern as content-reader query ledger.
+   - Spaces: **read-only** `list_spaces` / `get_space` on MCP; bulk `move_content` into existing spaces. Space create/update are **client-only** (managed out-of-band, e.g. Terraform).
+4. **Hard preview gate:** every SAFE_WRITE tool requires a session-owned, validated, unexpired `previewId` from `preview_*`. Updates to existing charts/dashboards mark validated via `validate_*` bound to `resourceKind`/`resourceKey`; creates/tiles/moves use `confirm_preview` with the same binding. Apply consumes the preview (single-use). Patch drift → `PREVIEW_STALE`. Budget/session keys use MCP transport `sessionId` (stdio → `process:…`), same ALS pattern as content-reader query ledger.
 5. **Safety dimensions** (registration + handler):
    - `mutability`: `none` | `preview` | `write-nondestructive`
    - `queryCapability`: `none` (no warehouse execution on this persona)
    - `resultCapability`: `metadata` | `diff`
 6. **Annotations:** discovery/preview/validate/compare → `READ_ONLY_*`; chart as-code writes → `WRITE_IDEMPOTENT`; other writes → `WRITE_NONDESTRUCTIVE`. No `WRITE_DESTRUCTIVE` in v1.
-7. **Excluded from MCP v1:** arbitrary SQL / metric-query execution, SQL chart authoring, hard delete, rollback, promote, org admin. A future `content-governance` persona is out of scope.
+7. **Excluded from MCP v1:** arbitrary SQL / metric-query execution, SQL chart authoring, hard delete, rollback, promote, org admin, space create/update. A future `content-governance` persona is out of scope.
 8. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-developer`; shared discovery tools dual-profile with `content-reader` where appropriate. Endpoint map: [content-developer-endpoint-inventory.md](../content-developer-endpoint-inventory.md).
 
 ```mermaid

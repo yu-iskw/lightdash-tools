@@ -5,39 +5,24 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches semantic-layer prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  getPlaybookMarkdown,
-  ORGANIZATION_AUDIT_HARD_BANS,
-  ORGANIZATION_AUDIT_PLAYBOOK_MIME,
-  ORGANIZATION_AUDIT_PLAYBOOK_URI,
-} from './resources/playbook.js';
+import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
+import {
+  ORGANIZATION_AUDIT_CORE_PLAYBOOK,
+  ORGANIZATION_AUDIT_HARD_BANS,
+  ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
+} from './resources/playbooks.js';
+
+import type { OrganizationAuditPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function playbookEmbeddedResource() {
-  return {
-    type: 'resource' as const,
-    resource: {
-      uri: ORGANIZATION_AUDIT_PLAYBOOK_URI,
-      mimeType: ORGANIZATION_AUDIT_PLAYBOOK_MIME,
-      text: getPlaybookMarkdown(),
-    },
-  };
-}
+const { userMessages: embedUserMessages } = createPromptPlaybookEmbedder({
+  core: ORGANIZATION_AUDIT_CORE_PLAYBOOK,
+  topics: ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
+});
 
-function userMessages(text: string) {
-  return {
-    messages: [
-      {
-        role: 'user' as const,
-        content: { type: 'text' as const, text },
-      },
-      {
-        role: 'user' as const,
-        content: playbookEmbeddedResource(),
-      },
-    ],
-  };
+function userMessages(text: string, topic?: OrganizationAuditPlaybookTopic) {
+  return embedUserMessages(text, topic);
 }
 
 export function registerOrganizationAuditPrompts(server: McpServer): void {
@@ -55,7 +40,8 @@ export function registerOrganizationAuditPrompts(server: McpServer): void {
       },
     },
     ({ projectUuids, allowedEmailDomains }) =>
-      userMessages(`Perform an evidence-backed, read-only audit of the current Lightdash organization.
+      userMessages(
+        `Perform an evidence-backed, read-only audit of the current Lightdash organization.
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
@@ -71,7 +57,8 @@ Procedure (primitives only — there are no lightdash_audit_* tools):
 3. Paginate list tools only while pagination.complete is false, and stop after an agreed page/project budget.
 4. Synthesize findings yourself from returned evidence; distinguish facts, inferred risks, assumptions, inaccessible areas, and truncation.
 5. Cite every finding with lightdash_* tool names and resource UUIDs.
-6. Do not claim formal compliance certification.`),
+6. Do not claim formal compliance certification.`,
+      ),
   );
 
   server.registerPrompt(
@@ -82,13 +69,16 @@ Procedure (primitives only — there are no lightdash_audit_* tools):
       argsSchema: {},
     },
     () =>
-      userMessages(`Review Lightdash identity and access governance.
+      userMessages(
+        `Review Lightdash identity and access governance.
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
 Use lightdash_list_org_members, lightdash_list_org_role_assignments, lightdash_list_project_roles, lightdash_list_project_direct_access, lightdash_list_space_access, and lightdash_resolve_effective_access.
 Do not treat lightdash_list_project_direct_access as complete effective access.
-State assumptions and coverage gaps.`),
+State assumptions and coverage gaps.`,
+        'access',
+      ),
   );
 
   server.registerPrompt(
@@ -99,13 +89,16 @@ State assumptions and coverage gaps.`),
       argsSchema: {},
     },
     () =>
-      userMessages(`Inventory charts, dashboards, and spaces; evaluate validation, ownership, and usage.
+      userMessages(
+        `Inventory charts, dashboards, and spaces; evaluate validation, ownership, and usage.
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
 Use lightdash_list_content, lightdash_list_validation_results, and lightdash_get_project_user_activity (plus lightdash_get_dashboard_meta when needed).
 Join results in the conversation — do not assume a server-side audit tool.
-Do not recommend deletion solely because content is unused.`),
+Do not recommend deletion solely because content is unused.`,
+        'content',
+      ),
   );
 
   server.registerPrompt(
@@ -118,13 +111,16 @@ Do not recommend deletion solely because content is unused.`),
       },
     },
     ({ allowedEmailDomains }) =>
-      userMessages(`Inspect scheduled deliveries without creating, editing, executing, enabling, disabling, or deleting schedules.
+      userMessages(
+        `Inspect scheduled deliveries without creating, editing, executing, enabling, disabling, or deleting schedules.
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
 Allowed email domains: ${allowedEmailDomains ?? '(none provided)'}.
 Use lightdash_list_project_schedulers and lightdash_get_scheduler.
-Redact destinations by default. External destinations are review signals, not automatic violations.`),
+Redact destinations by default. External destinations are review signals, not automatic violations.`,
+        'deliveries',
+      ),
   );
 
   server.registerPrompt(
@@ -137,13 +133,15 @@ Redact destinations by default. External destinations are review signals, not au
       },
     },
     ({ findingSummary }) =>
-      userMessages(`Investigate this organization-audit finding with minimum additional metadata:
+      userMessages(
+        `Investigate this organization-audit finding with minimum additional metadata:
 
 ${findingSummary}
 
 ${ORGANIZATION_AUDIT_HARD_BANS}
 
-Use only primitive list/get tools. Report supporting evidence, contradictory evidence, remaining uncertainty, and whether severity/confidence changed.`),
+Use only primitive list/get tools. Report supporting evidence, contradictory evidence, remaining uncertainty, and whether severity/confidence changed.`,
+      ),
   );
 }
 

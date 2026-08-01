@@ -197,11 +197,11 @@ Project resolution: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` →
 Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)). MCP server display name is `lightdash-mcp-cdev` (60-char client limit). Endpoint inventory: [docs/content-developer-endpoint-inventory.md](../../docs/content-developer-endpoint-inventory.md).
 
 - **Discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`, `get_dashboard`, `get_chart`
-- **Preview / validate / diff**: `preview_chart_changes`, `preview_dashboard_changes`, `preview_space_changes`, `validate_chart`, `validate_dashboard`, `compare_chart_versions`, `compare_dashboard_versions`
+- **Preview / validate / diff**: `preview_chart_changes`, `preview_dashboard_changes`, `preview_content_move`, `validate_chart`, `validate_dashboard`, `compare_chart_versions`, `compare_dashboard_versions`
 - **Charts (as-code)**: `create_chart`, `update_chart`, `duplicate_chart`
 - **Dashboards (REST)**: `create_dashboard`, `update_dashboard`, `duplicate_dashboard`
 - **Layout**: `add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`
-- **Spaces**: `create_space`, `update_space`, `move_content`
+- **Spaces**: `list_spaces`, `get_space`, `move_content` (no create/update space; use `preview_content_move` before apply)
 
 Hard gate: every SAFE_WRITE requires a validated, session-owned `previewId` whose `contentHash` matches the apply payload. No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
 

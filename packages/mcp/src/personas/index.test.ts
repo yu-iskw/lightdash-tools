@@ -73,10 +73,12 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-content');
   });
 
-  it('content-developer allowlists 27 tools and short server name', () => {
+  it('content-developer allowlists 25 tools and short server name', () => {
     const persona = getPersona('content-developer');
-    expect(persona.toolIds).toHaveLength(27);
+    expect(persona.toolIds).toHaveLength(25);
     expect(persona.toolIds).toEqual([...CONTENT_DEVELOPER_TOOL_IDS]);
+    expect(persona.toolIds).not.toContain('create_space');
+    expect(persona.toolIds).not.toContain('update_space');
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-cdev');
   });
 

@@ -1,8 +1,9 @@
 /**
  * Content-developer preview_* tools (ADR-0014).
  *
- * Issues a single-use previewId via the session-scoped preview ledger. `preview_space_changes`
- * also serves as the preview for `move_content` (pass `itemUuids` + `targetSpaceUuid`).
+ * Issues a single-use previewId via the session-scoped preview ledger.
+ * `preview_content_move` previews bulk moves (`itemUuids` + `targetSpaceUuid` +
+ * required `contentTypes`); space create/update is out of band (not on this persona).
  */
 
 import { z } from 'zod';
@@ -140,32 +141,31 @@ export function registerPreviewDashboardChanges(
   );
 }
 
-export function registerPreviewSpaceChanges(
+export function registerPreviewContentMove(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
   registerContentDeveloperTool(
     server,
-    'preview_space_changes',
+    'preview_content_move',
     {
-      title: 'Preview space changes',
+      title: 'Preview content move',
       description:
-        'Preview unsaved space edits (or a bulk content move via itemUuids + targetSpaceUuid); issues a single-use previewId',
+        'Preview a bulk content move into an existing space (itemUuids + targetSpaceUuid + contentTypes); space create/update is not supported',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        spaceUuid: z.string().optional(),
-        changes: z.record(z.string(), z.unknown()).optional().describe('Proposed space fields'),
         itemUuids: z
           .array(z.string())
-          .optional()
-          .describe(
-            'Provide with targetSpaceUuid to preview a bulk content move (consumed by move_content) instead of a space edit',
-          ),
-        targetSpaceUuid: z.string().nullable().optional(),
+          .min(1)
+          .describe('Content UUIDs to move (consumed by move_content)'),
+        targetSpaceUuid: z
+          .string()
+          .nullable()
+          .describe('Existing target space UUID (null = project root if supported)'),
         contentTypes: z
           .array(z.enum(MOVE_CONTENT_TYPES))
-          .optional()
+          .min(1)
           .describe(
             'Content type per itemUuids entry; must match move_content exactly or the preview is stale',
           ),
@@ -179,56 +179,27 @@ export function registerPreviewSpaceChanges(
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      spaceUuid?: string;
-      changes?: Record<string, unknown>;
-      itemUuids?: string[];
-      targetSpaceUuid?: string | null;
-      contentTypes?: MoveContentType[];
+      itemUuids: string[];
+      targetSpaceUuid: string | null;
+      contentTypes: MoveContentType[];
       chartSources?: MoveChartSource[];
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, (_c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-
-      if (args.itemUuids && args.itemUuids.length > 0) {
-        assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
-        const resourceKey = [...args.itemUuids].sort().join(',');
-        const proposed = buildMoveContentProposal({
-          itemUuids: args.itemUuids,
-          targetSpaceUuid: args.targetSpaceUuid ?? null,
-          contentTypes: args.contentTypes,
-          chartSources: args.chartSources,
-        });
-        const entry = addPreviewLedgerEntry({
-          sessionId,
-          projectUuid: scope.projectUuid,
-          resourceKind: 'content-move',
-          resourceKey,
-          proposed,
-        });
-        return jsonToolResult({
-          data: {
-            previewId: entry.previewId,
-            status: entry.status,
-            contentHash: entry.contentHash,
-            resourceKey,
-            expiresAt: entry.expiresAt,
-            diff: shallowDiff({}, proposed),
-          },
-          context: developerContext(scope),
-        });
-      }
-
-      const current = args.spaceUuid
-        ? asRecord(await c.v1.spaces.getSpace(scope.projectUuid, args.spaceUuid))
-        : null;
-      const resourceKey = args.spaceUuid ?? 'new';
-      const changes = args.changes ?? {};
+      assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
+      const resourceKey = [...args.itemUuids].sort().join(',');
+      const proposed = buildMoveContentProposal({
+        itemUuids: args.itemUuids,
+        targetSpaceUuid: args.targetSpaceUuid,
+        contentTypes: args.contentTypes,
+        chartSources: args.chartSources,
+      });
       const entry = addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
-        resourceKind: 'space',
+        resourceKind: 'content-move',
         resourceKey,
-        proposed: changes,
+        proposed,
       });
       return jsonToolResult({
         data: {
@@ -237,8 +208,7 @@ export function registerPreviewSpaceChanges(
           contentHash: entry.contentHash,
           resourceKey,
           expiresAt: entry.expiresAt,
-          diff: shallowDiff(current, changes),
-          current,
+          diff: shallowDiff({}, proposed),
         },
         context: developerContext(scope),
       });

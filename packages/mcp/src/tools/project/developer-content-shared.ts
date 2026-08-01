@@ -10,7 +10,7 @@ import type { McpContextProvider } from '../../server/request-context.js';
 import type { TextContent, ToolHandler } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 
-export const MOVE_CONTENT_TYPES = ['chart', 'dashboard', 'space', 'data_app'] as const;
+export const MOVE_CONTENT_TYPES = ['chart', 'dashboard', 'data_app'] as const;
 export const MOVE_CHART_SOURCES = ['dbt_explore', 'sql'] as const;
 
 export function developerContext(scope: ResolvedProjectScope): {

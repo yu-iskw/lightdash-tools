@@ -182,16 +182,16 @@ export function resolveCompareVersionIds(
   return [latest.versionUuid, previous.versionUuid];
 }
 
-export type MoveContentType = 'chart' | 'dashboard' | 'data_app' | 'space';
+export type MoveContentType = 'chart' | 'dashboard' | 'data_app';
 export type MoveChartSource = 'dbt_explore' | 'sql';
 
-/** Throws when `contentTypes`/`chartSources` (when provided) don't line up 1:1 with `itemUuids`. */
+/** Throws when `contentTypes` (required) or `chartSources` (when provided) don't line up 1:1 with `itemUuids`. */
 export function assertMoveContentLengths(
   itemUuids: readonly string[],
-  contentTypes?: readonly MoveContentType[],
+  contentTypes: readonly MoveContentType[],
   chartSources?: readonly MoveChartSource[],
 ): void {
-  if (contentTypes && contentTypes.length !== itemUuids.length) {
+  if (contentTypes.length !== itemUuids.length) {
     throw new Error('itemUuids and contentTypes must have the same length');
   }
   if (chartSources && chartSources.length !== itemUuids.length) {
@@ -201,20 +201,20 @@ export function assertMoveContentLengths(
 
 /**
  * Build the canonical proposal object hashed by the preview ledger for a content move.
- * Both `preview_space_changes` (content-move branch) and `move_content` must hash the
- * same shape — including `contentTypes`/`chartSources` — so an apply cannot silently
- * change item types or chart sources versus what was previewed and validated.
+ * Both `preview_content_move` and `move_content` must hash the same shape — including
+ * required `contentTypes` and optional `chartSources` — so an apply cannot silently change
+ * item types or chart sources versus what was previewed and validated.
  */
 export function buildMoveContentProposal(input: {
   itemUuids: readonly string[];
   targetSpaceUuid: string | null;
-  contentTypes?: readonly MoveContentType[];
+  contentTypes: readonly MoveContentType[];
   chartSources?: readonly MoveChartSource[];
 }): Record<string, unknown> {
   return {
     itemUuids: input.itemUuids,
     targetSpaceUuid: input.targetSpaceUuid,
-    contentTypes: input.contentTypes ?? null,
+    contentTypes: input.contentTypes,
     chartSources: input.chartSources ?? null,
   };
 }
@@ -230,8 +230,6 @@ export function buildMoveContentItem(
       return { contentType: 'chart', uuid, source: chartSource ?? 'dbt_explore' };
     case 'dashboard':
       return { contentType: 'dashboard', uuid };
-    case 'space':
-      return { contentType: 'space', uuid };
     case 'data_app':
       return { contentType: 'data_app', uuid };
     default: {

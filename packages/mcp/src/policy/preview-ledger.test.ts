@@ -286,13 +286,13 @@ describe('preview-ledger', () => {
       const entry = addPreviewLedgerEntry({
         sessionId: 's1',
         projectUuid: 'p1',
-        resourceKind: 'space',
-        resourceKey: 'new',
-        proposed: { name: 'Space' },
+        resourceKind: 'content-move',
+        resourceKey: 'a,b',
+        proposed: { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' },
       });
       markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'space',
-        resourceKey: 'new',
+        resourceKind: 'content-move',
+        resourceKey: 'a,b',
       });
       expectPreviewErrorCode(
         () =>
@@ -300,9 +300,9 @@ describe('preview-ledger', () => {
             previewId: entry.previewId,
             sessionId: 's2',
             projectUuid: 'p1',
-            resourceKind: 'space',
-            resourceKey: 'new',
-            proposed: { name: 'Space' },
+            resourceKind: 'content-move',
+            resourceKey: 'a,b',
+            proposed: { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' },
           }),
         'PREVIEW_NOT_OWNED',
       );

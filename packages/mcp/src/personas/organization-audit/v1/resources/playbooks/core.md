@@ -1,4 +1,6 @@
-# Organization-audit playbook
+# Organization-audit core
+
+URI: `lightdash://playbooks/organization-audit/core`
 
 Read-only evidence collection for Lightdash organization administrators. Findings are review signals synthesized by the host from primitive tool results — not compliance certifications. There are no composed `audit_*` MCP tools; chain bounded `lightdash_*` reads instead.
 
@@ -23,30 +25,12 @@ Content / health: `list_content`, `get_dashboard_meta`, `list_validation_results
 
 Delivery: `list_project_schedulers`, `get_scheduler`
 
-## Phases
-
-### Phase 0 — Scope
+## Phase 0 — Scope
 
 1. Call `lightdash_get_org_profile`.
 2. Record organization UUID, project pin (`X-Lightdash-Project`), thresholds, and `auditVisibility`.
 3. Downgrade organization-wide claims when visibility is `partial`.
 
-### Phase 1 — Identity
+## Phase 5 — Report
 
-Call `list_org_members` (paginate while `pagination.complete` is false, or stop after a small page budget). Optionally `list_org_groups`, `list_org_role_assignments`, `list_custom_roles`, `get_org_member` for spot checks.
-
-### Phase 2 — Projects and access
-
-Call `list_org_projects`, then for a capped set of projects: `list_project_roles`, `list_project_direct_access`, `list_space_access`, and `resolve_effective_access`. Treat `list_project_direct_access` as direct grants only; emails are masked by default — pass `includeEmail=true` only when required. Pass `allowedEmailDomains` when classifying external direct-access principals. Honor incomplete flags and truncation warnings.
-
-### Phase 3 — Content and health
-
-Per project (capped): `list_content` (use `sortBy`/`sortDirection`/`page` intentionally), `list_validation_results`, `get_project_user_activity`. Use `get_dashboard_meta` only when needed. Host joins validation, views, and ownership into findings — do not invent a server-side crawler.
-
-### Phase 4 — Deliveries
-
-Per project (capped): `list_project_schedulers` (destinations redacted by default; pass `revealDestinations` only when required). Use `get_scheduler` with `projectUuid` + `schedulerUuid` for one schedule. Pass `allowedEmailDomains` when reviewing external email destinations.
-
-### Phase 5 — Report
-
-Synthesize findings from tool evidence in the conversation. Always include coverage gaps, assumptions, truncation, and resource UUIDs. Never claim the inventory was exhaustive when `pagination.complete` is false.
+Synthesize findings from tool evidence in the conversation. Always include coverage gaps, assumptions, truncation, and resource UUIDs. Never claim the inventory was exhaustive when `pagination.complete` is false. Distinguish facts, inferred risks, assumptions, inaccessible areas, and truncation. Cite every finding with `lightdash_*` tool names and resource UUIDs. Do not claim formal compliance certification.
