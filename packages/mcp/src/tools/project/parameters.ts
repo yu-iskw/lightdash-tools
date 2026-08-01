@@ -8,6 +8,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
+import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
@@ -50,10 +51,24 @@ export function registerListProjectParameters(
               pageSize: args.pageSize ?? 25,
             });
             const { data, pagination } = asPaginated<Record<string, unknown>>(result);
+            const complete = isPageComplete(
+              data.length,
+              pagination?.totalResults,
+              pagination?.totalPageCount,
+              args.page ?? pagination?.page,
+            );
             return jsonToolResult(
               contentReaderEnvelope(
-                { parameters: data, pagination },
-                { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
+                {
+                  parameters: data,
+                  pagination: { returned: data.length, ...pagination, complete },
+                },
+                {
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                  complete,
+                  truncated: !complete,
+                },
               ),
             );
           } catch (err) {

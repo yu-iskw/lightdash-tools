@@ -13,7 +13,11 @@ import { clampWaitMs } from '../../policy/result-limits.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import { QueryLedgerError, getOwnedQueryLedgerEntry } from './query-ledger.js';
+import {
+  QueryLedgerError,
+  getOwnedQueryLedgerEntry,
+  releaseOwnedQueryBudget,
+} from './query-ledger.js';
 import {
   codedErrorResult,
   isCoverageComplete,
@@ -22,8 +26,13 @@ import {
 import { normalizeAsyncQueryResult } from './result-normalizer.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
+import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
+  return status === 'complete' || status === 'failed' || status === 'cancelled';
+}
 
 export function registerGetQueryResult(
   server: McpServer,
@@ -58,7 +67,7 @@ export function registerGetQueryResult(
             const scope = resolveProjectScope({ projectUuid: args.projectUuid });
             const sessionId = getMcpClientSessionId();
             const userUuid = getToolAuditAuth()?.subject;
-            getOwnedQueryLedgerEntry({
+            const ledgerEntry = getOwnedQueryLedgerEntry({
               projectUuid: scope.projectUuid,
               queryUuid: args.queryUuid,
               sessionId,
@@ -82,6 +91,10 @@ export function registerGetQueryResult(
                     }),
                     { maxRows: pageSize },
                   );
+
+            if (isTerminalStatus(normalized.status)) {
+              releaseOwnedQueryBudget(ledgerEntry);
+            }
 
             return jsonToolResult(
               contentReaderEnvelope(normalized, {
@@ -121,13 +134,14 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
         const scope = resolveProjectScope({ projectUuid: args.projectUuid });
         const sessionId = getMcpClientSessionId();
         const userUuid = getToolAuditAuth()?.subject;
-        getOwnedQueryLedgerEntry({
+        const ledgerEntry = getOwnedQueryLedgerEntry({
           projectUuid: scope.projectUuid,
           queryUuid: args.queryUuid,
           sessionId,
           userUuid,
         });
         await c.v2.query.cancelAsyncQuery(scope.projectUuid, args.queryUuid);
+        releaseOwnedQueryBudget(ledgerEntry);
         return jsonToolResult(
           contentReaderEnvelope(
             { queryUuid: args.queryUuid, cancelled: true },

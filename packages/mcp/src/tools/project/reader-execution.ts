@@ -11,6 +11,7 @@ import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
+import { classifyChartSource } from '../query/chart-source.js';
 import { FilterOverrideError, applyFilterValueOverrides } from '../query/filter-overrides.js';
 import { codedErrorResult, isCoverageComplete } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
@@ -76,6 +77,13 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
               );
             }
             const limit = clampRowLimit(args.limit);
+            const preClass = await classifyChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
+            if (preClass === 'sql') {
+              return codedErrorResult(
+                'CONTENT_NOT_EXECUTABLE',
+                'Saved SQL chart execution is disabled by default on content-reader',
+              );
+            }
             const chart = asRecord(
               await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),
             );

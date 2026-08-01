@@ -10,7 +10,8 @@ import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { detectChartType } from '../project/reader-content.js';
-import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
+import { classifyChartSource } from '../query/chart-source.js';
+import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -33,7 +34,7 @@ export function registerExplainContent(
         contentUuidOrSlug: uuidOrSlugField('Content UUID or slug'),
       },
     },
-    /* eslint-disable sonarjs/cognitive-complexity -- explain branches */
+    /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- explain branches */
     wrapTool(
       contextProvider,
       (c) =>
@@ -45,6 +46,17 @@ export function registerExplainContent(
           try {
             const scope = resolveProjectScope({ projectUuid: args.projectUuid });
             if (args.contentType === 'chart') {
+              const preClass = await classifyChartSource(
+                c,
+                scope.projectUuid,
+                args.contentUuidOrSlug,
+              );
+              if (preClass === 'sql') {
+                return codedErrorResult(
+                  'CONTENT_NOT_EXECUTABLE',
+                  'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+                );
+              }
               const chart = asRecord(
                 await c.v2.charts.getSavedChart(scope.projectUuid, args.contentUuidOrSlug),
               );
@@ -126,6 +138,6 @@ export function registerExplainContent(
           }
         },
     ),
-    /* eslint-enable sonarjs/cognitive-complexity */
+    /* eslint-enable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
   );
 }

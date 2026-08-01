@@ -11,7 +11,8 @@ import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
-import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
+import { classifyChartSource } from '../query/chart-source.js';
+import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -251,6 +252,13 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
         }) => {
           try {
             const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+            const preClass = await classifyChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
+            if (preClass === 'sql') {
+              return codedErrorResult(
+                'CONTENT_NOT_EXECUTABLE',
+                'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+              );
+            }
             const chart = asRecord(
               await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),
             );

@@ -7,7 +7,7 @@ import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { acquireQueryBudget, clampWaitMs, releaseQueryBudget } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
 
-import { addQueryLedgerEntry } from './query-ledger.js';
+import { addQueryLedgerEntry, releaseOwnedQueryBudget } from './query-ledger.js';
 import { codedErrorResult, warningFromNormalizedMessage } from './reader-tool-helpers.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
@@ -44,9 +44,15 @@ export type RunBoundedSavedQueryFail = {
 
 export type RunBoundedSavedQueryResult = RunBoundedSavedQueryFail | RunBoundedSavedQueryOk;
 
+function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
+  return status === 'complete' || status === 'failed' || status === 'cancelled';
+}
+
 /**
  * Acquire budget, execute, ledger, wait/normalize, and map envelope warnings.
  * Chart/tile validation stays in the tool handlers.
+ * Concurrency budget is released only when the query reaches a terminal status;
+ * still-running queries keep the slot until get_query_result / cancel_query.
  */
 export async function runBoundedSavedQuery(
   args: RunBoundedSavedQueryArgs,
@@ -54,25 +60,29 @@ export async function runBoundedSavedQuery(
   const sessionId = getMcpClientSessionId();
   const userUuid = getToolAuditAuth()?.subject;
   acquireQueryBudget(sessionId, userUuid);
+  let ledgered = false;
   try {
     const exec = await args.execute();
     const execRecord = asRecord(exec);
     const queryUuid = String(execRecord.queryUuid ?? '');
     if (!queryUuid) {
+      releaseQueryBudget(sessionId, userUuid);
       return {
         ok: false,
         result: codedErrorResult('QUERY_FAILED', 'Lightdash did not return a queryUuid'),
       };
     }
 
-    addQueryLedgerEntry({
+    const ledgerEntry = addQueryLedgerEntry({
       queryUuid,
       sessionId,
       userUuid,
       projectUuid: args.projectUuid,
       sourceType: args.sourceType,
       sourceUuid: args.sourceUuid,
+      budgetHeld: true,
     });
+    ledgered = true;
 
     const waitMs = clampWaitMs(args.timeoutMs);
     const shouldWait = args.waitForResults !== false;
@@ -89,13 +99,20 @@ export async function runBoundedSavedQuery(
           warnings: ['QUERY_RUNNING'],
         };
 
+    if (isTerminalStatus(normalized.status)) {
+      releaseOwnedQueryBudget(ledgerEntry);
+    }
+
     return {
       ok: true,
       queryUuid,
       normalized,
       warnings: normalized.warnings.map(warningFromNormalizedMessage),
     };
-  } finally {
-    releaseQueryBudget(sessionId, userUuid);
+  } catch (err) {
+    if (!ledgered) {
+      releaseQueryBudget(sessionId, userUuid);
+    }
+    throw err;
   }
 }
