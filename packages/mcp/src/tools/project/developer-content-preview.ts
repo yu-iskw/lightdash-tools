@@ -80,25 +80,26 @@ async function previewDuplicateChart(input: {
       'chartUuidOrSlug must equal changes.sourceChartUuidOrSlug for duplicate preview',
     );
   }
-  // Source load and target-slug occupancy check are independent; run concurrently.
-  const [sourceSettled, targetBaseline] = await Promise.all([
-    input.getSavedChart(sourceId).then(
-      (value) => ({ ok: true as const, value }),
-      (err: unknown) => ({ ok: false as const, err }),
-    ),
+  // Concurrent lookups; prefer source errors so a target failure cannot mask CONTENT_NOT_FOUND.
+  const [sourceSettled, targetSettled] = await Promise.allSettled([
+    input.getSavedChart(sourceId),
     fetchChartBaselineOptional({
       chartUuidOrSlug: String(proposed.newSlug),
       getSavedChart: input.getSavedChart,
       isNotFound: isNotFoundError,
     }),
   ]);
-  if (!sourceSettled.ok) {
-    if (isNotFoundError(sourceSettled.err)) {
+  if (sourceSettled.status === 'rejected') {
+    if (isNotFoundError(sourceSettled.reason)) {
       return codedErrorResult('CONTENT_NOT_FOUND', `Chart '${sourceId}' was not found`);
     }
-    throw sourceSettled.err;
+    throw sourceSettled.reason;
+  }
+  if (targetSettled.status === 'rejected') {
+    throw targetSettled.reason;
   }
   const current = sourceSettled.value;
+  const targetBaseline = targetSettled.value;
   if (targetBaseline) {
     return codedErrorResult(
       'CHART_SLUG_EXISTS',

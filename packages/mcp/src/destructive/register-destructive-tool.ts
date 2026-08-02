@@ -259,12 +259,10 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
   let executeExtra: Record<string, unknown> | void;
   try {
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
-  } catch (err) {
-    // Do not echo upstream/API exception text to MCP clients (may leak internals).
+  } catch {
+    // Do not echo upstream/API exception text to MCP clients or unbounded stderr.
     process.stderr.write(
-      `[lightdash-mcp] ${labels.operation} failed for ${spec.resourceType} ${scopedArgs.resourceId}: ${
-        err instanceof Error ? err.message : String(err)
-      }\n`,
+      `[lightdash-mcp] ${labels.operation} failed for ${spec.resourceType} ${scopedArgs.resourceId} (${labels.failureCode})\n`,
     );
     return withAuditStatus(
       jsonToolResult({
