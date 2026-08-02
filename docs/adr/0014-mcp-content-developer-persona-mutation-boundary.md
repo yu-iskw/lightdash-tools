@@ -31,7 +31,7 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
    - `queryCapability`: `none` (no warehouse execution on this persona)
    - `resultCapability`: `metadata` | `diff`
 6. **Annotations:** discovery/preview/validate/compare → `READ_ONLY_*`; chart as-code writes → `WRITE_IDEMPOTENT`; other writes → `WRITE_NONDESTRUCTIVE`. No `WRITE_DESTRUCTIVE` in v1.
-7. **Excluded from MCP v1:** arbitrary SQL / metric-query execution, SQL chart authoring, hard delete, soft delete, rollback, promote, org admin, space create/update. A future `content-governance` persona (soft-delete) is out of scope for this ADR.
+7. **Excluded from MCP v1:** arbitrary SQL / metric-query execution, SQL chart authoring, hard/soft delete, rollback, promote, org admin, space create/update. Soft-delete lives on the `content-governance` persona ([ADR-0015](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)).
 8. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-developer`; shared discovery tools dual-profile with `content-reader` where appropriate. Endpoint map: [content-developer-endpoint-inventory.md](../content-developer-endpoint-inventory.md).
 
 ```mermaid

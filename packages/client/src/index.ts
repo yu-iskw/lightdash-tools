@@ -21,13 +21,21 @@ export { SchedulersClient } from './api/v1/schedulers';
 export { TagsClient } from './api/v1/tags';
 export { AnalyticsClient } from './api/v1/analytics';
 export { ContentClient } from './api/v2/content';
+export { ChartsClientV2 } from './api/v2/charts';
 export { DashboardsClientV2 } from './api/v2/dashboards';
 export type { ListMembersParams, ListAllMembersParams } from './api/v1/users';
 export type { GetValidationResultsParams, ValidateProjectBody } from './api/v1/validation';
 export type { ListValidationResultsParams } from './api/v2/validation';
 export type { ListMetricsParams } from './api/v1/metrics';
 export type { ListSchedulersParams } from './api/v1/schedulers';
-export type { SearchContentParams } from './api/v2/content';
+export type {
+  BulkMoveContentBody,
+  MoveContentBody,
+  PermanentlyDeleteContentBody,
+  SearchContentParams,
+} from './api/v2/content';
+export type { SavedChart } from './api/v2/charts';
+export type { Dashboard, UpdateDashboardBody } from './api/v2/dashboards';
 export type {
   ListGroupsParams,
   ListAllGroupsParams,
