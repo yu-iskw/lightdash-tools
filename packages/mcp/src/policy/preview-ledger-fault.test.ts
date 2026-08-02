@@ -10,6 +10,7 @@ import {
   claimPreviewForApply,
   classifyMutationFailure,
   getOwnedPreview,
+  hashPreviewContent,
   markPreviewApplied,
   markPreviewValidated,
   releaseOrReconcilePreview,
