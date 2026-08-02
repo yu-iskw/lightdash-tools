@@ -80,6 +80,7 @@ const DELETE_GATE_LABELS: ElicitationGateLabels = {
   successStatus: 'deleted',
   successAudit: 'deletion_succeeded',
   failureCode: 'DELETION_FAILED',
+  failureMessage: 'Soft-delete failed. Retry after reviewing the resource, or check server logs.',
   failureAudit: 'deletion_failed',
   bindingMismatchMessage: 'Confirmation binding does not match this delete request.',
   acceptMismatchMessage: 'Confirmation was not accepted, or the typed resource name did not match.',
@@ -94,6 +95,8 @@ export const PROMOTE_GATE_LABELS: ElicitationGateLabels = {
   successStatus: 'promoted',
   successAudit: 'promotion_succeeded',
   failureCode: 'PROMOTION_FAILED',
+  failureMessage:
+    'Dashboard promote failed. Retry after reviewing promoteDiff, or check server logs.',
   failureAudit: 'promotion_failed',
   bindingMismatchMessage: 'Confirmation binding does not match this promote request.',
   acceptMismatchMessage:
@@ -112,7 +115,7 @@ async function readBoundRequestState(
   };
   const raw =
     typeof mcpReq.requestState === 'function' ? mcpReq.requestState() : mcpReq.requestState;
-  // AEAD token (preferred): verify via codec.
+  // HMAC-signed opaque token (not encrypted): verify via codec.
   if (typeof raw === 'string') {
     return verifyDestructiveRequestState(raw, serverContext);
   }
@@ -257,12 +260,18 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
   try {
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
   } catch (err) {
+    // Do not echo upstream/API exception text to MCP clients (may leak internals).
+    process.stderr.write(
+      `[lightdash-mcp] ${labels.operation} failed for ${spec.resourceType} ${scopedArgs.resourceId}: ${
+        err instanceof Error ? err.message : String(err)
+      }\n`,
+    );
     return withAuditStatus(
       jsonToolResult({
         status: 'error',
         [flag]: false,
         code: labels.failureCode,
-        message: err instanceof Error ? err.message : String(err),
+        message: labels.failureMessage,
         operation: labels.operation,
         resourceType: spec.resourceType,
         resourceId: scopedArgs.resourceId,

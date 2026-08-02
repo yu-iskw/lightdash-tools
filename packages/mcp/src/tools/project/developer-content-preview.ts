@@ -80,20 +80,25 @@ async function previewDuplicateChart(input: {
       'chartUuidOrSlug must equal changes.sourceChartUuidOrSlug for duplicate preview',
     );
   }
-  let current: Record<string, unknown>;
-  try {
-    current = await input.getSavedChart(sourceId);
-  } catch (err) {
-    if (isNotFoundError(err)) {
+  // Source load and target-slug occupancy check are independent; run concurrently.
+  const [sourceSettled, targetBaseline] = await Promise.all([
+    input.getSavedChart(sourceId).then(
+      (value) => ({ ok: true as const, value }),
+      (err: unknown) => ({ ok: false as const, err }),
+    ),
+    fetchChartBaselineOptional({
+      chartUuidOrSlug: String(proposed.newSlug),
+      getSavedChart: input.getSavedChart,
+      isNotFound: isNotFoundError,
+    }),
+  ]);
+  if (!sourceSettled.ok) {
+    if (isNotFoundError(sourceSettled.err)) {
       return codedErrorResult('CONTENT_NOT_FOUND', `Chart '${sourceId}' was not found`);
     }
-    throw err;
+    throw sourceSettled.err;
   }
-  const targetBaseline = await fetchChartBaselineOptional({
-    chartUuidOrSlug: String(proposed.newSlug),
-    getSavedChart: input.getSavedChart,
-    isNotFound: isNotFoundError,
-  });
+  const current = sourceSettled.value;
   if (targetBaseline) {
     return codedErrorResult(
       'CHART_SLUG_EXISTS',

@@ -5,7 +5,7 @@
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 import { summarizePromotionChanges } from '../../destructive/content-promote.js';
-import { ProjectScopeError, resolveProjectScope } from '../../governance/project-scope.js';
+import { resolveProjectScope } from '../../governance/project-scope.js';
 import { isNotFoundError } from '../lib/api-errors.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
@@ -55,16 +55,13 @@ export function registerGetDashboardPromoteDiff(
               promoteDiff,
             });
           } catch (err) {
-            if (err instanceof ProjectScopeError) {
-              return projectScopeErrorResult(err);
-            }
             if (isNotFoundError(err)) {
               return codedErrorResult(
                 'CONTENT_NOT_FOUND',
                 `dashboard '${dashboardUuidOrSlug}' was not found`,
               );
             }
-            throw err;
+            return projectScopeErrorResult(err);
           }
         },
     ),

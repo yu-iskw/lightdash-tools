@@ -93,10 +93,10 @@ Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL onl
 
 ### Content-governance (destructive soft-delete)
 
-| Required (production)                   | Notes                                                                  |
-| :-------------------------------------- | :--------------------------------------------------------------------- |
-| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for AEAD `requestState` binding (fail closed if unset) |
-| Client form elicitation                 | Missing capability → `ELICITATION_REQUIRED`; no DELETE                 |
+| Required (non-test)                     | Notes                                                                                       |
+| :-------------------------------------- | :------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC-signed opaque `requestState` (not encrypted; fail closed if unset) |
+| Client form elicitation                 | Missing capability → `ELICITATION_REQUIRED`; no DELETE / promote                            |
 
 ### HTTP shared-key / local (secondary)
 
@@ -241,8 +241,9 @@ Hard gate (25 tools): every SAFE_WRITE requires preview → `confirm_preview` �
 Project-scoped soft-delete with form elicitation ([ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)). MCP server display name is `lightdash-mcp-gov` (60-char client limit). Endpoint inventory: [docs/content-governance-endpoint-inventory.md](../../docs/content-governance-endpoint-inventory.md). Client matrix: [docs/content-governance-client-compatibility.md](../../docs/content-governance-client-compatibility.md).
 
 - **Soft-delete**: `delete_chart`, `delete_dashboard` (restorable; permanent purge is client-only)
-- **Confirmation**: MCP form elicitation (`decision` + typed `confirmationText`) + AEAD `requestState`; fail closed without form capability
-- **Not included**: bulk delete, space delete, permanent purge, authoring, warehouse queries
+- **Promote**: `get_dashboard_promote_diff`, elicitation-gated `promote_dashboard` (upstream via Data Ops config)
+- **Confirmation**: MCP form elicitation (`decision` + typed `confirmationText`) + HMAC-signed opaque `requestState` (do not put secrets in the token payload); fail closed without form capability
+- **Not included**: bulk delete, space delete, permanent purge, chart/SQL promote, authoring, warehouse queries
 
 Prompts and playbooks: `lightdash://playbooks/content-governance` (core + charts + dashboards topics).
 

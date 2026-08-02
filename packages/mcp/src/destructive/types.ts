@@ -68,6 +68,8 @@ export type ElicitationGateLabels = {
   successStatus: string;
   successAudit: AuditStatus;
   failureCode: string;
+  /** Stable client-facing message (never echo upstream exception text). */
+  failureMessage: string;
   failureAudit: AuditStatus;
   bindingMismatchMessage: string;
   acceptMismatchMessage: string;

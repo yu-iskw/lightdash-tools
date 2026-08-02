@@ -105,28 +105,27 @@ export function buildPromoteConfirmationMessage(target: ConfirmationTarget): str
   return lines.join('\n');
 }
 
+function isAcceptedConfirmForm<TDecision extends string>(
+  content: { decision: TDecision; confirmationText: string } | undefined,
+  acceptDecision: TDecision,
+  expectedName: string,
+): boolean {
+  if (!content || content.decision !== acceptDecision) {
+    return false;
+  }
+  return normalizeResourceName(content.confirmationText) === normalizeResourceName(expectedName);
+}
+
 export function isAcceptedDeleteForm(
   content: DeleteConfirmFormContent | undefined,
   expectedName: string,
 ): content is DeleteConfirmFormContent {
-  if (!content) {
-    return false;
-  }
-  if (content.decision !== 'confirm_delete') {
-    return false;
-  }
-  return normalizeResourceName(content.confirmationText) === normalizeResourceName(expectedName);
+  return isAcceptedConfirmForm(content, 'confirm_delete', expectedName);
 }
 
 export function isAcceptedPromoteForm(
   content: PromoteConfirmFormContent | undefined,
   expectedName: string,
 ): content is PromoteConfirmFormContent {
-  if (!content) {
-    return false;
-  }
-  if (content.decision !== 'confirm_promote') {
-    return false;
-  }
-  return normalizeResourceName(content.confirmationText) === normalizeResourceName(expectedName);
+  return isAcceptedConfirmForm(content, 'confirm_promote', expectedName);
 }

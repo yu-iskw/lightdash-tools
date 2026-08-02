@@ -5,6 +5,8 @@
 
 import { z } from 'zod';
 
+import { isRecord } from '../../lib/stable-stringify.js';
+
 import { formatZodIssues } from './parse-helpers.js';
 
 import type { PayloadParseResult } from './parse-helpers.js';
@@ -25,21 +27,15 @@ export const dashboardDuplicateChangesSchema = z
 
 /** True when `changes` looks like a chart-duplicate proposal (not chart-as-code upsert). */
 export function isChartDuplicateChanges(input: unknown): boolean {
-  return (
-    typeof input === 'object' &&
-    input !== null &&
-    !Array.isArray(input) &&
-    'sourceChartUuidOrSlug' in input &&
-    'newSlug' in input
-  );
+  return isRecord(input) && 'sourceChartUuidOrSlug' in input && 'newSlug' in input;
 }
 
 /** True when `changes` is only an optional newName (duplicate dashboard proposal). */
 export function isDashboardDuplicateChanges(input: unknown): boolean {
-  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+  if (!isRecord(input)) {
     return false;
   }
-  return Object.keys(input as Record<string, unknown>).every((key) => key === 'newName');
+  return Object.keys(input).every((key) => key === 'newName');
 }
 
 /** Normalize so undefined optional fields are omitted (stable hash with apply). */
