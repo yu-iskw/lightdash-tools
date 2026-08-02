@@ -3,7 +3,7 @@
  */
 
 import { registerContentReaderPrompts } from './prompts.js';
-import { registerContentReaderPlaybook } from './resources/playbook.js';
+import { registerContentReaderPlaybook } from './resources/playbooks.js';
 
 import type { ToolId } from '../../../tools/registry.js';
 import type { PersonaDefinition } from '../../types.js';

@@ -27,11 +27,36 @@ import {
   registerListContent,
   registerListValidationResults,
 } from './project/content.js';
+import { registerDeleteChart } from './project/delete-chart.js';
+import { registerDeleteDashboard } from './project/delete-dashboard.js';
+import {
+  registerAddDashboardTile,
+  registerCompareChartVersions,
+  registerCompareDashboardVersions,
+  registerConfirmPreview,
+  registerCreateChart,
+  registerCreateDashboard,
+  registerDuplicateChart,
+  registerDuplicateDashboard,
+  registerMoveContent,
+  registerMoveDashboardTile,
+  registerPreviewChartChanges,
+  registerPreviewContentMove,
+  registerPreviewDashboardChanges,
+  registerRemoveDashboardTile,
+  registerResizeDashboardTile,
+  registerUpdateChart,
+  registerUpdateDashboard,
+  registerValidateChart,
+  registerValidateDashboard,
+} from './project/developer-content.js';
+import { registerGetDashboardPromoteDiff } from './project/get-dashboard-promote-diff.js';
 import {
   registerGetProjectParameters,
   registerListProjectParameters,
 } from './project/parameters.js';
 import { registerGetProject, registerListProjects } from './project/projects.js';
+import { registerPromoteDashboard } from './project/promote-dashboard.js';
 import {
   registerGetChart,
   registerGetDashboard,
@@ -107,6 +132,33 @@ export const toolRegistry = {
   run_dashboard_tile: { register: registerRunDashboardTile },
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },
+
+  // content-developer (ADR-0014)
+  preview_chart_changes: { register: registerPreviewChartChanges },
+  preview_dashboard_changes: { register: registerPreviewDashboardChanges },
+  preview_content_move: { register: registerPreviewContentMove },
+  validate_chart: { register: registerValidateChart },
+  validate_dashboard: { register: registerValidateDashboard },
+  confirm_preview: { register: registerConfirmPreview },
+  compare_chart_versions: { register: registerCompareChartVersions },
+  compare_dashboard_versions: { register: registerCompareDashboardVersions },
+  create_chart: { register: registerCreateChart },
+  update_chart: { register: registerUpdateChart },
+  duplicate_chart: { register: registerDuplicateChart },
+  create_dashboard: { register: registerCreateDashboard },
+  update_dashboard: { register: registerUpdateDashboard },
+  duplicate_dashboard: { register: registerDuplicateDashboard },
+  add_dashboard_tile: { register: registerAddDashboardTile },
+  move_dashboard_tile: { register: registerMoveDashboardTile },
+  remove_dashboard_tile: { register: registerRemoveDashboardTile },
+  resize_dashboard_tile: { register: registerResizeDashboardTile },
+  move_content: { register: registerMoveContent },
+
+  // content-governance (ADR-0015 / ADR-0017)
+  delete_chart: { register: registerDeleteChart },
+  delete_dashboard: { register: registerDeleteDashboard },
+  get_dashboard_promote_diff: { register: registerGetDashboardPromoteDiff },
+  promote_dashboard: { register: registerPromoteDashboard },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

@@ -102,4 +102,22 @@ describe('ChartsClient', () => {
     await client.upsertChartAsCode('p1', 'chart/slug', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/code/charts/chart%2Fslug', body);
   });
+
+  it('getChartHistory should call GET /saved/{chartUuid}/history', async () => {
+    const client = new ChartsClient(mockHttp);
+    const history = { chartUuid: 'c1', history: [] };
+    vi.mocked(mockHttp.get).mockResolvedValue(history);
+    const result = await client.getChartHistory('c1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/saved/c1/history');
+    expect(result).toEqual(history);
+  });
+
+  it('getChartVersion should call GET /saved/{chartUuid}/version/{versionUuid}', async () => {
+    const client = new ChartsClient(mockHttp);
+    const version = { chartUuid: 'c1', versionUuid: 'v1' };
+    vi.mocked(mockHttp.get).mockResolvedValue(version);
+    const result = await client.getChartVersion('c1', 'v1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/saved/c1/version/v1');
+    expect(result).toEqual(version);
+  });
 });

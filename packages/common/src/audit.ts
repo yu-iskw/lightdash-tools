@@ -13,7 +13,18 @@
 import { randomUUID } from 'node:crypto';
 import { createWriteStream, type WriteStream } from 'node:fs';
 
-export type AuditStatus = 'blocked' | 'error' | 'success';
+export type AuditStatus =
+  | 'blocked'
+  | 'confirmation_cancelled'
+  | 'confirmation_declined'
+  | 'confirmation_requested'
+  | 'deletion_failed'
+  | 'deletion_succeeded'
+  | 'error'
+  | 'promotion_failed'
+  | 'promotion_succeeded'
+  | 'resource_changed'
+  | 'success';
 
 export type AuditLogEntry = {
   timestamp: string;

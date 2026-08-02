@@ -38,6 +38,10 @@ function clientHasMethod(root, methodPath) {
  * @returns {string[]} unresolved segments
  */
 function unresolvedMethodRefs(client, methodRef) {
+  // MCP-local ledger / policy tools with no LightdashClient call.
+  if (methodRef.startsWith('ledger:')) {
+    return [];
+  }
   if (methodRef.startsWith('composed:')) {
     const parts = methodRef.slice('composed:'.length).split('+');
     return parts.filter((part) => !clientHasMethod(client, part));

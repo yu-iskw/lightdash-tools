@@ -29,6 +29,14 @@ const READER_CAPABILITIES = {
   canExecuteDashboardTiles: true,
 };
 
+const DEVELOPER_CAPABILITIES = {
+  canDiscoverContent: true,
+  canMutateContent: true,
+  canExecuteSavedCharts: false,
+  canExecuteSqlCharts: false,
+  canExecuteDashboardTiles: false,
+};
+
 export function registerListProjects(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
     server,
@@ -59,15 +67,30 @@ export function registerGetProject(
   options?: RegisterToolOptions,
 ): void {
   if (options?.personaId === 'content-reader') {
-    registerContentReaderGetProject(server, contextProvider);
+    registerScopedGetProject(server, contextProvider, 'readerCapabilities', READER_CAPABILITIES);
+    return;
+  }
+  if (options?.personaId === 'content-developer') {
+    registerScopedGetProject(
+      server,
+      contextProvider,
+      'developerCapabilities',
+      DEVELOPER_CAPABILITIES,
+    );
     return;
   }
   registerPinAwareGetProject(server, contextProvider);
 }
 
-function registerContentReaderGetProject(
+/**
+ * Project-scope-aware get_project shared by content-reader and content-developer (ADR-0012, ADR-0014).
+ * Precedence: X-Lightdash-Project -> LIGHTDASH_TOOLS_PROJECT_UUID -> tool projectUuid -> PROJECT_SCOPE_REQUIRED.
+ */
+function registerScopedGetProject(
   server: McpServer,
   contextProvider: McpContextProvider,
+  capabilitiesKey: 'developerCapabilities' | 'readerCapabilities',
+  capabilities: Record<string, boolean>,
 ): void {
   registerToolSafe(
     server,
@@ -87,7 +110,7 @@ function registerContentReaderGetProject(
           data: {
             ...toProjectSummary(project),
             pinned: scope.projectPinned,
-            readerCapabilities: READER_CAPABILITIES,
+            [capabilitiesKey]: capabilities,
           },
           context: {
             projectUuid: scope.projectUuid,

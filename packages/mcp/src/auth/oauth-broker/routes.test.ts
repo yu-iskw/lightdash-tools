@@ -11,7 +11,7 @@ import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
-import { OAuthBrokerStore } from './pending-store.js';
+import { InMemoryOAuthBrokerStore } from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 import { createOAuthBroker } from './routes.js';
 
@@ -132,67 +132,79 @@ describe('oauth broker helpers', () => {
     expect(verifyPkce(undefined, challenge, 'S256')).toBe(false);
   });
 
-  it('issues and consumes one-time broker codes without refresh tokens', () => {
-    const store = new OAuthBrokerStore();
-    const pending = store.createPending({
+  it('issues and consumes one-time broker codes without refresh tokens', async () => {
+    const store = new InMemoryOAuthBrokerStore();
+    const pending = await store.createPending({
       clientId: 'client-a',
       redirectUri: 'http://127.0.0.1:9999/callback',
       codeChallenge: 'challenge',
       codeChallengeMethod: 'S256',
     });
     expect(pending).toBeDefined();
-    expect(store.takePending(pending!.brokerState)?.clientId).toBe('client-a');
-    expect(store.takePending(pending!.brokerState)).toBeUndefined();
+    expect((await store.takePending(pending!.brokerState))?.clientId).toBe('client-a');
+    expect(await store.takePending(pending!.brokerState)).toBeUndefined();
 
-    const pending2 = store.createPending({
+    const pending2 = await store.createPending({
       clientId: 'client-a',
       redirectUri: 'http://127.0.0.1:9999/callback',
       codeChallenge: 'challenge',
       codeChallengeMethod: 'S256',
     });
     expect(pending2).toBeDefined();
-    const issued = store.issueCode(pending2!, { accessToken: 'atok' });
+    const issued = await store.issueCode(pending2!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
-    expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
-    expect(store.getCode(issued!.code)).not.toHaveProperty('refreshToken');
-    store.deleteCode(issued!.code);
-    expect(store.getCode(issued!.code)).toBeUndefined();
+    expect(issued).not.toHaveProperty('refreshToken');
+    const taken = await store.takeCode(issued!.code);
+    expect(taken?.accessToken).toBe('atok');
+    expect(await store.takeCode(issued!.code)).toBeUndefined();
   });
 
-  it('registers clients and binds exact redirect URIs', () => {
-    const store = new OAuthBrokerStore();
-    const registered = store.registerClient(['http://127.0.0.1:8787/callback']);
+  it('registers clients and binds exact redirect URIs', async () => {
+    const store = new InMemoryOAuthBrokerStore();
+    const registered = await store.registerClient(['http://127.0.0.1:8787/callback']);
     expect(registered).toBeDefined();
     expect(
-      store.isRedirectAllowedForClient(registered!.clientId, 'http://127.0.0.1:8787/callback'),
+      await store.isRedirectAllowedForClient(
+        registered!.clientId,
+        'http://127.0.0.1:8787/callback',
+      ),
     ).toBe(true);
     expect(
-      store.isRedirectAllowedForClient(registered!.clientId, 'https://attacker.example/callback'),
+      await store.isRedirectAllowedForClient(
+        registered!.clientId,
+        'https://attacker.example/callback',
+      ),
     ).toBe(false);
-    expect(store.isRedirectAllowedForClient('unknown', 'http://127.0.0.1:8787/callback')).toBe(
-      false,
-    );
+    expect(
+      await store.isRedirectAllowedForClient('unknown', 'http://127.0.0.1:8787/callback'),
+    ).toBe(false);
   });
 
-  it('keeps issued code after failed PKCE peek so a later redeem can succeed', () => {
-    const store = new OAuthBrokerStore();
+  it('restores issued code after failed PKCE so a later redeem can succeed', async () => {
+    const store = new InMemoryOAuthBrokerStore();
     const verifier = 'test-verifier-value-1234567890';
     const challenge = createHash('sha256').update(verifier).digest('base64url');
-    const pending = store.createPending({
+    const pending = await store.createPending({
       clientId: 'client-a',
       redirectUri: 'http://localhost:8787/callback',
       codeChallenge: challenge,
       codeChallengeMethod: 'S256',
     });
     expect(pending).toBeDefined();
-    const issued = store.issueCode(pending!, { accessToken: 'atok' });
+    const issued = await store.issueCode(pending!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
 
-    expect(verifyPkce('wrong-verifier', issued!.codeChallenge, 'S256')).toBe(false);
-    expect(store.getCode(issued!.code)?.accessToken).toBe('atok');
-    expect(verifyPkce(verifier, issued!.codeChallenge, 'S256')).toBe(true);
-    store.deleteCode(issued!.code);
-    expect(store.getCode(issued!.code)).toBeUndefined();
+    // Simulate validateTokenGrant: take → failed PKCE → restore.
+    const taken = await store.takeCode(issued!.code);
+    expect(taken).toBeDefined();
+    expect(verifyPkce('wrong-verifier', taken!.codeChallenge, 'S256')).toBe(false);
+    await store.restoreCode(taken!);
+    expect((await store.getCode(issued!.code))?.accessToken).toBe('atok');
+
+    const redeemed = await store.takeCode(issued!.code);
+    expect(redeemed?.accessToken).toBe('atok');
+    expect(verifyPkce(verifier, redeemed!.codeChallenge, 'S256')).toBe(true);
+    expect(await store.takeCode(issued!.code)).toBeUndefined();
   });
 
   it('forwards Proxy-Authorization on Lightdash token exchange when configured', async () => {

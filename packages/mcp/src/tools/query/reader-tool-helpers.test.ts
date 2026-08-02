@@ -29,6 +29,7 @@ describe('codedErrorResult', () => {
       'QUERY_NOT_OWNED',
       'QUERY_BUDGET_EXCEEDED',
       'ROW_LIMIT_EXCEEDED',
+      'CHART_SLUG_EXISTS',
     ]) {
       const result = codedErrorResult(code, 'denied');
       expect(result.isError).toBe(true);

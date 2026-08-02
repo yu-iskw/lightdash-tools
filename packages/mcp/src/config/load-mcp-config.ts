@@ -10,6 +10,7 @@ import {
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
 import { getDefaultPersona, listPersonaPaths } from '../personas/index.js';
+import { emitEphemeralStoreHttpWarning, resolveEphemeralStoreConfig } from '../store/config.js';
 
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
@@ -347,6 +348,7 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
 
   emitLightdashOAuthSecurityWarnings(config);
   emitCorsSecurityWarnings(config);
+  emitEphemeralStoreHttpWarning(resolveEphemeralStoreConfig());
 }
 
 function readScopeList(env: NodeJS.ProcessEnv, primary: string, fallback: string[]): string[] {
@@ -417,6 +419,9 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   }
 
   assertObsoleteEnvRejected(env);
+
+  // Fail closed early when STORE=redis without REDIS_URL (ADR-0016).
+  resolveEphemeralStoreConfig(env);
 
   const { oauthClientId, oauthClientSecretRaw, publicUrlRaw, sharedKeyRaw, authMode } =
     readHttpAuthInputs(env);

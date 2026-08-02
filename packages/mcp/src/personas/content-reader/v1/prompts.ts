@@ -5,40 +5,23 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches organization-audit prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  CONTENT_READER_HARD_BANS,
-  CONTENT_READER_PLAYBOOK_MIME,
-  CONTENT_READER_PLAYBOOK_URI,
-  getPlaybookMarkdown,
-} from './resources/playbook.js';
+import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
+import {
+  CONTENT_READER_CORE_PLAYBOOK,
+  CONTENT_READER_HARD_BANS,
+  CONTENT_READER_TOPIC_PLAYBOOKS,
+} from './resources/playbooks.js';
+
+import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function playbookEmbeddedResource() {
-  return {
-    type: 'resource' as const,
-    resource: {
-      uri: CONTENT_READER_PLAYBOOK_URI,
-      mimeType: CONTENT_READER_PLAYBOOK_MIME,
-      text: getPlaybookMarkdown(),
-    },
-  };
-}
+const userMessages = createPromptPlaybookEmbedder({
+  core: CONTENT_READER_CORE_PLAYBOOK,
+  topics: CONTENT_READER_TOPIC_PLAYBOOKS,
+});
 
-function userMessages(text: string) {
-  return {
-    messages: [
-      {
-        role: 'user' as const,
-        content: { type: 'text' as const, text },
-      },
-      {
-        role: 'user' as const,
-        content: playbookEmbeddedResource(),
-      },
-    ],
-  };
-}
+const TOPIC_EXPLAIN_RUN = 'explain-run' as const satisfies ContentReaderPlaybookTopic;
 
 export function registerContentReaderPrompts(server: McpServer): void {
   server.registerPrompt(
@@ -54,7 +37,8 @@ export function registerContentReaderPrompts(server: McpServer): void {
       },
     },
     ({ question, contentTypes, verifiedOnly, spaceUuid }) =>
-      userMessages(`Find the most relevant Lightdash content in the current project for:
+      userMessages(
+        `Find the most relevant Lightdash content in the current project for:
 
 ${question}
 
@@ -66,7 +50,9 @@ Verified only: ${verifiedOnly ?? false}. Space filter: ${spaceUuid ?? '(none)'}.
 
 Do not execute content unless values or analysis are requested.
 
-Return at most five candidates with name/type, UUID, space path, verification, relevance, and warnings.`),
+Return at most five candidates with name/type, UUID, space path, verification, relevance, and warnings.`,
+        'discover',
+      ),
   );
 
   server.registerPrompt(
@@ -80,14 +66,17 @@ Return at most five candidates with name/type, UUID, space path, verification, r
       },
     },
     ({ chartUuidOrSlug, includeLatestValues }) =>
-      userMessages(`Explain the saved chart ${chartUuidOrSlug}.
+      userMessages(
+        `Explain the saved chart ${chartUuidOrSlug}.
 
 ${CONTENT_READER_HARD_BANS}
 
 Retrieve chart metadata with lightdash_get_chart / lightdash_explain_content.
 Distinguish explicit metadata from inferred business meaning.
 When includeLatestValues is ${includeLatestValues ?? false}, run lightdash_run_chart with cache and bounded limits.
-Cite chart UUID and query UUID. Do not construct a new query or retrieve underlying data.`),
+Cite chart UUID and query UUID. Do not construct a new query or retrieve underlying data.`,
+        TOPIC_EXPLAIN_RUN,
+      ),
   );
 
   server.registerPrompt(
@@ -103,7 +92,8 @@ Cite chart UUID and query UUID. Do not construct a new query or retrieve underly
       },
     },
     ({ dashboardUuidOrSlug, executeTiles, maximumTiles, focus }) =>
-      userMessages(`Summarize dashboard ${dashboardUuidOrSlug}.
+      userMessages(
+        `Summarize dashboard ${dashboardUuidOrSlug}.
 
 ${CONTENT_READER_HARD_BANS}
 
@@ -111,7 +101,9 @@ Describe purpose, tabs, filters, parameters, verification, and tile structure vi
 Select tiles relevant to: ${focus ?? '(general summary)'}.
 When execution is requested (${executeTiles ?? false}), execute no more than ${maximumTiles ?? 5} tiles with lightdash_run_dashboard_tile,
 preserve dashboard context, use cache, and use bounded limits.
-Report values, trends, failures, content UUIDs, and query UUIDs. Do not claim unexecuted tiles support a conclusion.`),
+Report values, trends, failures, content UUIDs, and query UUIDs. Do not claim unexecuted tiles support a conclusion.`,
+        TOPIC_EXPLAIN_RUN,
+      ),
   );
 
   server.registerPrompt(
@@ -126,7 +118,8 @@ Report values, trends, failures, content UUIDs, and query UUIDs. Do not claim un
       },
     },
     ({ question, verifiedOnly, maximumExecutions }) =>
-      userMessages(`Answer this question using existing Lightdash content:
+      userMessages(
+        `Answer this question using existing Lightdash content:
 
 ${question}
 
@@ -135,7 +128,9 @@ ${CONTENT_READER_HARD_BANS}
 Search for relevant content, inspect metadata, prefer verified=${verifiedOnly ?? false} when set,
 and execute only the smallest number of saved charts or tiles required, up to ${maximumExecutions ?? 3}.
 Use saved filters and parameters except for validated value overrides.
-State the answer, content used, filter/parameter context, result timestamp, cache state, truncation, and limitations.`),
+State the answer, content used, filter/parameter context, result timestamp, cache state, truncation, and limitations.`,
+        TOPIC_EXPLAIN_RUN,
+      ),
   );
 
   server.registerPrompt(
@@ -149,7 +144,8 @@ State the answer, content used, filter/parameter context, result timestamp, cach
       },
     },
     ({ contentReferences, comparisonQuestion }) =>
-      userMessages(`Compare these Lightdash content items:
+      userMessages(
+        `Compare these Lightdash content items:
 
 ${contentReferences}
 
@@ -160,7 +156,9 @@ ${CONTENT_READER_HARD_BANS}
 
 Retrieve metadata first. Compare definitions, dimensions, filters, time grains, parameters, verification, and update state before values.
 Execute only when structurally comparable or when differences are the subject of analysis.
-Do not assume matching labels mean matching definitions.`),
+Do not assume matching labels mean matching definitions.`,
+        'compare',
+      ),
   );
 
   server.registerPrompt(
@@ -175,7 +173,8 @@ Do not assume matching labels mean matching definitions.`),
       },
     },
     ({ firstContent, secondContent, observedDifference }) =>
-      userMessages(`Investigate why these Lightdash resources differ:
+      userMessages(
+        `Investigate why these Lightdash resources differ:
 
 First: ${firstContent}
 Second: ${secondContent}
@@ -184,7 +183,9 @@ Difference: ${observedDifference}
 ${CONTENT_READER_HARD_BANS}
 
 Check metrics, fields, filters, dashboard context, date ranges, time grains, parameters, sorts, limits, pivots, table calculations, verification, cache timestamps, and semantic-versus-SQL behavior.
-Execute only when needed with equivalent valid context. Separate confirmed, plausible, ruled-out, and unresolved causes.`),
+Execute only when needed with equivalent valid context. Separate confirmed, plausible, ruled-out, and unresolved causes.`,
+        'compare',
+      ),
   );
 }
 

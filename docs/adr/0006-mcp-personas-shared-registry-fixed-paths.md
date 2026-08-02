@@ -15,7 +15,7 @@ Second and third personas are required without expanding semantic-layer capabili
 ## Decision
 
 1. Keep one package: `@lightdash-tools/mcp` (binary `lightdash-mcp`). No per-persona npm packages.
-2. Shared tools live in `packages/mcp/src/tools/` (`ToolId` registry + registration by ids). Personas under `packages/mcp/src/personas/<id>/` own `toolIds`, prompts, resources/playbooks, and a **fixed** HTTP `path`.
+2. Shared tools live in `packages/mcp/src/tools/` (`ToolId` registry + registration by ids). Personas under `packages/mcp/src/personas/<id>/` own `toolIds`, prompts, resources/playbooks, and a **fixed** HTTP `path`. Playbooks are **workflow-scoped**: each persona registers an index URI `lightdash://playbooks/<persona-id>`, a shared `…/core` resource (hard bans, tools, gates), and one or more topic URIs `…/<topic>`. Prompts embed **core + exactly one topic** (not a single monolith).
 3. Ship personas with code-defined allowlists and fixed paths:
    - `semantic-layer` → `/semantic-layer/v1/mcp` (default)
    - `organization-audit` → `/organization-audit/v1/mcp`

@@ -9,6 +9,7 @@ import type {
   ChartAsCodeListResults,
   ChartAsCodeUpsertResults,
   UpsertChartAsCodeBody,
+  components,
 } from '@lightdash-tools/common';
 
 export interface GetChartsAsCodeOptions {
@@ -16,6 +17,12 @@ export interface GetChartsAsCodeOptions {
   offset?: number;
   languageMap?: boolean;
 }
+
+/** Results of GET saved/{chartUuid}/history (chart version history). */
+export type ChartHistoryResults = components['schemas']['ApiGetChartHistoryResponse']['results'];
+
+/** Results of GET saved/{chartUuid}/version/{versionUuid} (a single chart version). */
+export type ChartVersionResults = components['schemas']['ApiGetChartVersionResponse']['results'];
 
 export class ChartsClient extends BaseApiClient {
   /**
@@ -51,5 +58,15 @@ export class ChartsClient extends BaseApiClient {
       `/projects/${projectUuid}/code/charts/${encodeURIComponent(slug)}`,
       body,
     );
+  }
+
+  /** Get chart version history from the last 30 days. */
+  async getChartHistory(chartUuid: string): Promise<ChartHistoryResults> {
+    return this.http.get<ChartHistoryResults>(`/saved/${chartUuid}/history`);
+  }
+
+  /** Get a single chart version by UUID. */
+  async getChartVersion(chartUuid: string, versionUuid: string): Promise<ChartVersionResults> {
+    return this.http.get<ChartVersionResults>(`/saved/${chartUuid}/version/${versionUuid}`);
   }
 }

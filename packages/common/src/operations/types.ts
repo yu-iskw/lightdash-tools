@@ -17,6 +17,8 @@ export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
  * Capability profiles group operations for selective exposure (CLI profiles, MCP subsets).
  */
 export type CapabilityProfile =
+  | 'content-developer'
+  | 'content-governance'
   | 'content-reader'
   | 'conversations'
   | 'core-lifecycle'
@@ -105,6 +107,8 @@ export type OperationDefinitionInput = Omit<
 };
 
 const VALID_PROFILES = new Set<CapabilityProfile>([
+  'content-developer',
+  'content-governance',
   'content-reader',
   'conversations',
   'core-lifecycle',

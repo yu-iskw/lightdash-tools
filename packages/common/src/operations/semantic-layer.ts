@@ -38,7 +38,7 @@ const getProject = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects get' },
-  profiles: [PROFILE_SEMANTIC, 'content-reader'],
+  profiles: [PROFILE_SEMANTIC, 'content-reader', 'content-developer'],
 });
 
 const listExplores = defineOperation({

@@ -192,6 +192,8 @@ export default [
       ...vitestPlugin.configs.recommended.rules,
       // Tests often repeat string literals and use conditional expects; keep signal without noise.
       'vitest/no-conditional-expect': 'off',
+      // Custom assertion helpers (e.g. expectPreviewErrorCode) wrap `expect` in a try/catch.
+      'vitest/expect-expect': ['error', { assertFunctionNames: ['expect', 'expect*'] }],
       'sonarjs/no-duplicate-string': 'off',
       'max-lines-per-function': ['error', { max: 700 }],
       'max-nested-callbacks': 'off',

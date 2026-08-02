@@ -47,11 +47,14 @@ import {
 } from '../governance/project-pin.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
+import { resolveEphemeralStoreConfig } from '../store/config.js';
+import { createOAuthBrokerStore } from '../store/create-oauth-broker-store.js';
+import { createSessionStore } from '../store/create-session-store.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { isInitializeMessage } from './http-request-utils.js';
 import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from './http-response.js';
-import { SessionStore, type SessionEntry } from './session-store.js';
+import { type SessionEntry, type SessionStore } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from '../server/request-context.js';
@@ -473,11 +476,12 @@ export async function createStreamableHttpServer(
 
   initAuditLog(getAuditLogPath());
 
-  const sessionStore = new SessionStore(
-    inputConfig.sessionTtlMs,
-    inputConfig.maxSessions,
-    inputConfig.maxSessionsPerSubject,
-  );
+  const ephemeralStoreConfig = resolveEphemeralStoreConfig();
+  const sessionStore = createSessionStore(ephemeralStoreConfig, {
+    sessionTtlMs: inputConfig.sessionTtlMs,
+    maxSessions: inputConfig.maxSessions,
+    maxSessionsPerSubject: inputConfig.maxSessionsPerSubject,
+  });
   let httpConfig = inputConfig;
 
   const cleanupTimer = setInterval(() => {
@@ -505,7 +509,7 @@ export async function createStreamableHttpServer(
   httpConfig = resolveHttpConfig(inputConfig, port);
   const baseUrl = httpConfig.publicUrl ?? `http://${resolveListenHost(httpConfig.host)}:${port}`;
   if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    oauthBroker = createOAuthBroker(httpConfig);
+    oauthBroker = createOAuthBroker(httpConfig, createOAuthBrokerStore(ephemeralStoreConfig));
   }
 
   return {

@@ -6,44 +6,23 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
 import { exploreIdField } from '../../../tools/semantic/schema-fields.js';
+import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
 import {
-  getPlaybookMarkdown,
+  SEMANTIC_LAYER_COMPOSE_COMPILE_URI,
+  SEMANTIC_LAYER_CORE_PLAYBOOK,
+  SEMANTIC_LAYER_CORE_URI,
+  SEMANTIC_LAYER_EXPLORE_URI,
   SEMANTIC_LAYER_HARD_BANS,
-  SEMANTIC_LAYER_PLAYBOOK_MIME,
-  SEMANTIC_LAYER_PLAYBOOK_URI,
-} from './resources/playbook.js';
+  SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
+} from './resources/playbooks.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function playbookEmbeddedResource() {
-  return {
-    type: 'resource' as const,
-    resource: {
-      uri: SEMANTIC_LAYER_PLAYBOOK_URI,
-      mimeType: SEMANTIC_LAYER_PLAYBOOK_MIME,
-      text: getPlaybookMarkdown(),
-    },
-  };
-}
-
-function userMessages(text: string) {
-  return {
-    messages: [
-      {
-        role: 'user' as const,
-        content: {
-          type: 'text' as const,
-          text,
-        },
-      },
-      {
-        role: 'user' as const,
-        content: playbookEmbeddedResource(),
-      },
-    ],
-  };
-}
+const userMessages = createPromptPlaybookEmbedder({
+  core: SEMANTIC_LAYER_CORE_PLAYBOOK,
+  topics: SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
+});
 
 export function registerSemanticLayerPrompts(server: McpServer): void {
   server.registerPrompt(
@@ -69,8 +48,9 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           '2) Always lightdash_list_explores with search+limit; disambiguate per playbook (schemaName, label or name __{table}, skip empty schema when dataset known).',
           '3) Shortlist base-table dimensions by role; once explore is known prefer get_explore → tables[baseTable].metrics only (catalog keyword optional, still filter tableName === explore id).',
           'Deliverable: shortlist name/label/schemaName/fieldId (+ why). Do not dump full explore/dimension/metric/lineage payloads.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}). Use only lightdash_* tools.`,
+          `Follow the embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_EXPLORE_URI}). Use only lightdash_* tools.`,
         ].join('\n'),
+        'explore',
       );
     },
   );
@@ -101,8 +81,9 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           '3) If the user asked for N insights, reuse one explore and compile N diverse cuts from available fields.',
           '4) Compile with fieldIds only; on empty SELECT or unknown field id, fix fieldIds and re-compile once. Extra related metrics in SQL can be OK. Stop after a good compile.',
           'Deliverable: insight title(s) + fieldIds + compiled SQL (or errors). Never paste full explore/dimension/metric/lineage payloads.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
+          `Follow the embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_COMPOSE_COMPILE_URI}).`,
         ].join('\n'),
+        'compose-compile',
       );
     },
   );
@@ -132,8 +113,9 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
           '- Wrong explore → re-disambiguate per playbook (schemaName; label or name __{table}).',
           '- Metric not found / catalog empty → get_explore tables[baseTable].metrics; tableName must be the full explore id; compile as {exploreId}_{metricName}.',
           'Deliverable: successful compile (SQL with expected columns) or a clear blocker. Stop after a good compile.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
+          `Follow the embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_COMPOSE_COMPILE_URI}).`,
         ].join('\n'),
+        'compose-compile',
       );
     },
   );

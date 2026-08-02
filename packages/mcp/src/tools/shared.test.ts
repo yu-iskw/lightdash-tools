@@ -75,7 +75,8 @@ describe('registerToolSafe', () => {
 
     const result = await wrapped({});
     expect(result.isError).toBeUndefined();
-    expect(result.content[0].text).toBe('success');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect((result.content as Array<{ type: string; text: string }>)[0]?.text).toBe('success');
   });
 
   it('should reject invalid projectUuid before calling handler', async () => {
@@ -273,6 +274,7 @@ describe('registerToolSafe', () => {
     const result = await wrapped({});
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toBe('boom');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect((result.content as Array<{ type: string; text: string }>)[0]?.text).toBe('boom');
   });
 });

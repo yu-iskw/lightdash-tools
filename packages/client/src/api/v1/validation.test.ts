@@ -36,4 +36,22 @@ describe('ValidationClient', () => {
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/validate', undefined);
     expect(result).toEqual(mockResponse);
   });
+
+  it('validateChart should call POST /projects/{projectUuid}/validate/chart/{chartUuid}', async () => {
+    const client = new ValidationClient(mockHttp);
+    const mockResponse = { errors: [] };
+    vi.mocked(mockHttp.post).mockResolvedValue(mockResponse);
+    const result = await client.validateChart('p1', 'c1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/validate/chart/c1');
+    expect(result).toEqual(mockResponse);
+  });
+
+  it('validateDashboard should call POST /projects/{projectUuid}/validate/dashboard/{dashboardUuid}', async () => {
+    const client = new ValidationClient(mockHttp);
+    const mockResponse = { errors: [] };
+    vi.mocked(mockHttp.post).mockResolvedValue(mockResponse);
+    const result = await client.validateDashboard('p1', 'd1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/validate/dashboard/d1');
+    expect(result).toEqual(mockResponse);
+  });
 });
