@@ -15,9 +15,11 @@ import {
   markPreviewValidated,
   releaseOrReconcilePreview,
   resetPreviewLedgerForTests,
+  withClaimedPreviewApply,
 } from './preview-ledger.js';
 
 import type { ApiErrorPayload } from '@lightdash-tools/client';
+import type { PreviewLedgerEntry, PreviewStatus, PreviewStore } from './preview-ledger.js';
 
 function apiError(statusCode: number): LightdashApiError {
   const payload: ApiErrorPayload['error'] = {
@@ -544,6 +546,72 @@ describe('preview-ledger state machine and faults', () => {
           }),
         'PREVIEW_STALE',
       );
+    });
+
+    it('withClaimedPreviewApply does not release/reconcile when markApplied fails after success', async () => {
+      class FaultyDeleteStore implements PreviewStore {
+        private readonly inner = new InMemoryPreviewStore();
+
+        get(previewId: string): Promise<PreviewLedgerEntry | undefined> {
+          return this.inner.get(previewId);
+        }
+
+        put(entry: PreviewLedgerEntry): Promise<void> {
+          return this.inner.put(entry);
+        }
+
+        compareAndSwap(
+          previewId: string,
+          expectedStatus: PreviewStatus,
+          next: PreviewLedgerEntry,
+        ): Promise<boolean> {
+          return this.inner.compareAndSwap(previewId, expectedStatus, next);
+        }
+
+        compareAndDelete(_previewId: string, _expectedStatus: PreviewStatus): Promise<boolean> {
+          return Promise.reject(new Error('compareAndDelete failed'));
+        }
+
+        delete(previewId: string): Promise<void> {
+          return this.inner.delete(previewId);
+        }
+      }
+
+      setPreviewStoreForTests(new FaultyDeleteStore());
+
+      const proposed = { name: 'ApplyOk' };
+      const entry = await addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+        proposed,
+      });
+      await markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
+
+      const result = await withClaimedPreviewApply(
+        {
+          previewId: entry.previewId,
+          sessionId: 's1',
+          projectUuid: 'p1',
+          resourceKind: 'chart',
+          resourceKey: 'my-slug',
+          proposed,
+        },
+        async () => ({ mutated: true }),
+      );
+      expect(result).toEqual({ mutated: true });
+
+      // Entry must remain applying (not released to validated, not reconciliation_required).
+      const after = await getOwnedPreview({
+        previewId: entry.previewId,
+        sessionId: 's1',
+        projectUuid: 'p1',
+      });
+      expect(after.status).toBe('applying');
     });
 
     it('shared InMemoryPreviewStore: preview/claim from facade A is visible to B', async () => {

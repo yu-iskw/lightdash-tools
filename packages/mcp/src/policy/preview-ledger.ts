@@ -362,21 +362,32 @@ export async function releaseOrReconcilePreview(previewId: string, err: unknown)
 }
 
 /**
- * Claim → run mutation → mark applied; on failure release/reconcile and rethrow.
+ * Claim → run mutation → mark applied; on mutation failure release/reconcile and rethrow.
+ * After a successful mutation, never release/reconcile if mark-applied fails (would invite
+ * double-apply); log and return the mutation result instead.
  */
 export async function withClaimedPreviewApply<T>(
   claimInput: ClaimPreviewForApplyInput,
   fn: (entry: PreviewLedgerEntry) => Promise<T>,
 ): Promise<T> {
   const entry = await claimPreviewForApply(claimInput);
+  let result: T;
   try {
-    const result = await fn(entry);
-    await markPreviewApplied(entry.previewId);
-    return result;
+    result = await fn(entry);
   } catch (err) {
     await releaseOrReconcilePreview(entry.previewId, err);
     throw err;
   }
+  try {
+    await markPreviewApplied(entry.previewId);
+  } catch (err) {
+    // Mutation already succeeded — never release/reconcile (would invite double-apply).
+    console.error(
+      `[preview-ledger] markPreviewApplied failed after successful mutation (previewId=${entry.previewId})`,
+      err,
+    );
+  }
+  return result;
 }
 
 /** Test helper: reset to a fresh in-memory store. */

@@ -143,6 +143,27 @@ export class RedisOAuthBrokerStore implements OAuthBrokerStore {
     return issued;
   }
 
+  async takeCode(code: string): Promise<IssuedAuthorizationCode | undefined> {
+    const redis = await this.resolveRedis();
+    // Atomic consume (Redis 6.2+ GETDEL) — same pattern as takePending.
+    const raw = await redis.getDel(codeKey(code));
+    if (raw == null) {
+      return undefined;
+    }
+    return JSON.parse(raw) as IssuedAuthorizationCode;
+  }
+
+  async restoreCode(issued: IssuedAuthorizationCode): Promise<void> {
+    const remaining = this.codeTtlMs - (Date.now() - issued.createdAt);
+    if (remaining <= 0) {
+      return;
+    }
+    const redis = await this.resolveRedis();
+    await redis.set(codeKey(issued.code), JSON.stringify(issued), {
+      PX: Math.max(1, remaining),
+    });
+  }
+
   async getCode(code: string): Promise<IssuedAuthorizationCode | undefined> {
     const redis = await this.resolveRedis();
     const raw = await redis.get(codeKey(code));

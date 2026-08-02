@@ -394,8 +394,9 @@ async function validateTokenGrant(
     };
   }
 
-  // Validate before consume so a bad verifier / redirect does not burn a one-time code.
-  const candidate = await store.getCode(code);
+  // Atomic take first (multi-instance safe). Restore on validation failure so a
+  // bad verifier / redirect does not permanently burn a one-time code.
+  const candidate = await store.takeCode(code);
   if (!candidate) {
     return {
       status: 400,
@@ -404,6 +405,7 @@ async function validateTokenGrant(
   }
 
   if (candidate.redirectUri !== redirectUri) {
+    await store.restoreCode(candidate);
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'redirect_uri mismatch' },
@@ -411,6 +413,7 @@ async function validateTokenGrant(
   }
 
   if (candidate.clientId !== clientId) {
+    await store.restoreCode(candidate);
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'client_id mismatch' },
@@ -418,13 +421,13 @@ async function validateTokenGrant(
   }
 
   if (!verifyPkce(codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
+    await store.restoreCode(candidate);
     return {
       status: 400,
       body: { error: 'invalid_grant', error_description: 'PKCE verification failed' },
     };
   }
 
-  await store.deleteCode(code);
   return { issued: candidate };
 }
 

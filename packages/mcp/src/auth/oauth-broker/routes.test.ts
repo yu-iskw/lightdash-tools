@@ -153,10 +153,10 @@ describe('oauth broker helpers', () => {
     expect(pending2).toBeDefined();
     const issued = await store.issueCode(pending2!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
-    expect((await store.getCode(issued!.code))?.accessToken).toBe('atok');
-    expect(await store.getCode(issued!.code)).not.toHaveProperty('refreshToken');
-    await store.deleteCode(issued!.code);
-    expect(await store.getCode(issued!.code)).toBeUndefined();
+    expect(issued).not.toHaveProperty('refreshToken');
+    const taken = await store.takeCode(issued!.code);
+    expect(taken?.accessToken).toBe('atok');
+    expect(await store.takeCode(issued!.code)).toBeUndefined();
   });
 
   it('registers clients and binds exact redirect URIs', async () => {
@@ -180,7 +180,7 @@ describe('oauth broker helpers', () => {
     ).toBe(false);
   });
 
-  it('keeps issued code after failed PKCE peek so a later redeem can succeed', async () => {
+  it('restores issued code after failed PKCE so a later redeem can succeed', async () => {
     const store = new InMemoryOAuthBrokerStore();
     const verifier = 'test-verifier-value-1234567890';
     const challenge = createHash('sha256').update(verifier).digest('base64url');
@@ -194,11 +194,17 @@ describe('oauth broker helpers', () => {
     const issued = await store.issueCode(pending!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
 
-    expect(verifyPkce('wrong-verifier', issued!.codeChallenge, 'S256')).toBe(false);
+    // Simulate validateTokenGrant: take → failed PKCE → restore.
+    const taken = await store.takeCode(issued!.code);
+    expect(taken).toBeDefined();
+    expect(verifyPkce('wrong-verifier', taken!.codeChallenge, 'S256')).toBe(false);
+    await store.restoreCode(taken!);
     expect((await store.getCode(issued!.code))?.accessToken).toBe('atok');
-    expect(verifyPkce(verifier, issued!.codeChallenge, 'S256')).toBe(true);
-    await store.deleteCode(issued!.code);
-    expect(await store.getCode(issued!.code)).toBeUndefined();
+
+    const redeemed = await store.takeCode(issued!.code);
+    expect(redeemed?.accessToken).toBe('atok');
+    expect(verifyPkce(verifier, redeemed!.codeChallenge, 'S256')).toBe(true);
+    expect(await store.takeCode(issued!.code)).toBeUndefined();
   });
 
   it('forwards Proxy-Authorization on Lightdash token exchange when configured', async () => {
