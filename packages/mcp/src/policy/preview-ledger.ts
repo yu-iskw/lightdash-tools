@@ -180,10 +180,32 @@ export function markPreviewValidated(
   return validated;
 }
 
-function resourceAppearedAfterCreatePreview(currentBaseline: PreviewBaseline | undefined): boolean {
-  const uuid = currentBaseline?.uuid;
-  const updatedAt = currentBaseline?.updatedAt;
-  return (uuid != null && uuid !== '') || (updatedAt != null && updatedAt !== '');
+function hasNonEmpty(value: string | undefined): boolean {
+  return value != null && value !== '';
+}
+
+/** Update drift or create-target appearance → PREVIEW_STALE. */
+function assertBaselineStillValid(
+  previewId: string,
+  entry: PreviewLedgerEntry,
+  currentBaseline: PreviewBaseline | undefined,
+): void {
+  const previewedUpdatedAt = entry.baseline?.updatedAt;
+  if (hasNonEmpty(previewedUpdatedAt) && currentBaseline?.updatedAt !== previewedUpdatedAt) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' baseline changed (resource was updated after preview); re-run preview -> validate`,
+    );
+  }
+  if (
+    entry.baseline == null &&
+    (hasNonEmpty(currentBaseline?.uuid) || hasNonEmpty(currentBaseline?.updatedAt))
+  ) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' targeted a non-existent resource that now exists; re-run preview -> confirm`,
+    );
+  }
 }
 
 /**
@@ -226,24 +248,7 @@ export function consumeValidatedPreview(input: {
       `Preview '${input.previewId}' content hash does not match the applied payload; re-run preview -> validate`,
     );
   }
-  if (
-    entry.baseline?.updatedAt != null &&
-    entry.baseline.updatedAt !== '' &&
-    (input.currentBaseline?.updatedAt == null ||
-      input.currentBaseline.updatedAt !== entry.baseline.updatedAt)
-  ) {
-    throw new PreviewLedgerError(
-      'PREVIEW_STALE',
-      `Preview '${input.previewId}' baseline changed (resource was updated after preview); re-run preview -> validate`,
-    );
-  }
-  // Create/absent baseline: reject if the target resource appeared after preview.
-  if (entry.baseline == null && resourceAppearedAfterCreatePreview(input.currentBaseline)) {
-    throw new PreviewLedgerError(
-      'PREVIEW_STALE',
-      `Preview '${input.previewId}' targeted a non-existent resource that now exists; re-run preview -> confirm`,
-    );
-  }
+  assertBaselineStillValid(input.previewId, entry, input.currentBaseline);
   ledger.delete(input.previewId);
   return entry;
 }

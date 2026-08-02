@@ -1,9 +1,11 @@
 /**
  * Pure helpers for content-developer diffing and dashboard tile-array composition
- * (ADR-0014). No I/O; safe to unit test without mocks.
+ * (ADR-0014). No I/O except optional injected getters; safe to unit test without mocks.
  */
 
 import { stableStringify } from '../lib/stable-stringify.js';
+
+import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 
 export type ShallowDiff = {
   added: string[];
@@ -232,6 +234,22 @@ export type ChartPreviewCurrentResult =
   | { kind: 'error'; code: 'CHART_SLUG_EXISTS'; message: string }
   | { kind: 'ok'; current: Record<string, unknown> | null };
 
+/** Extract preview/apply baseline fields from a saved resource record. */
+export function baselineFromResource(
+  resource: Record<string, unknown> | null,
+): PreviewBaseline | undefined {
+  if (!resource) {
+    return undefined;
+  }
+  const updatedAt = typeof resource.updatedAt === 'string' ? resource.updatedAt : undefined;
+  const uuid = typeof resource.uuid === 'string' ? resource.uuid : undefined;
+  const slug = typeof resource.slug === 'string' ? resource.slug : undefined;
+  if (updatedAt == null && uuid == null && slug == null) {
+    return undefined;
+  }
+  return { updatedAt, uuid, slug };
+}
+
 /**
  * Resolve the saved chart for a preview: update path uses chartUuidOrSlug;
  * create path (slug only) rejects when that slug already exists.
@@ -261,6 +279,25 @@ export async function resolveChartPreviewCurrent(input: {
   } catch (err) {
     if (input.isNotFound(err)) {
       return { kind: 'ok', current: null };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Apply-time optional chart baseline: 404 → undefined (create still free);
+ * found → baseline for PREVIEW_STALE race / update drift checks.
+ */
+export async function fetchChartBaselineOptional(input: {
+  chartUuidOrSlug: string;
+  getSavedChart: (chartUuidOrSlug: string) => Promise<Record<string, unknown>>;
+  isNotFound: (err: unknown) => boolean;
+}): Promise<PreviewBaseline | undefined> {
+  try {
+    return baselineFromResource(await input.getSavedChart(input.chartUuidOrSlug));
+  } catch (err) {
+    if (input.isNotFound(err)) {
+      return undefined;
     }
     throw err;
   }

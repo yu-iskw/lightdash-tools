@@ -26,6 +26,7 @@ import {
 } from './developer-content-shared.js';
 import {
   assertMoveContentLengths,
+  baselineFromResource,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
   resolveChartPreviewCurrent,
@@ -33,24 +34,8 @@ import {
 } from './developer-helpers.js';
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
-import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-function baselineFromResource(
-  resource: Record<string, unknown> | null,
-): PreviewBaseline | undefined {
-  if (!resource) {
-    return undefined;
-  }
-  const updatedAt = typeof resource.updatedAt === 'string' ? resource.updatedAt : undefined;
-  const uuid = typeof resource.uuid === 'string' ? resource.uuid : undefined;
-  const slug = typeof resource.slug === 'string' ? resource.slug : undefined;
-  if (updatedAt == null && uuid == null && slug == null) {
-    return undefined;
-  }
-  return { updatedAt, uuid, slug };
-}
 
 export function registerPreviewChartChanges(
   server: McpServer,

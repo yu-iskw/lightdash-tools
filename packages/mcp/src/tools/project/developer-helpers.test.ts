@@ -7,10 +7,12 @@ import {
   applyTileRemove,
   applyTileResize,
   assertMoveContentLengths,
+  baselineFromResource,
   buildDashboardUpdateBody,
   buildMoveContentItem,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
+  fetchChartBaselineOptional,
   resolveChartPreviewCurrent,
   resolveCompareVersionIds,
   shallowDiff,
@@ -314,5 +316,46 @@ describe('resolveChartPreviewCurrent', () => {
       expect(result.code).toBe('CHART_SLUG_EXISTS');
       expect(result.message).toContain('taken');
     }
+  });
+});
+
+describe('baselineFromResource', () => {
+  it('returns undefined for null or empty identity fields', () => {
+    expect(baselineFromResource(null)).toBeUndefined();
+    expect(baselineFromResource({ name: 'x' })).toBeUndefined();
+  });
+
+  it('extracts string uuid/slug/updatedAt', () => {
+    expect(
+      baselineFromResource({
+        uuid: 'u1',
+        slug: 's1',
+        updatedAt: '2026-08-01T00:00:00.000Z',
+      }),
+    ).toEqual({ uuid: 'u1', slug: 's1', updatedAt: '2026-08-01T00:00:00.000Z' });
+  });
+});
+
+describe('fetchChartBaselineOptional', () => {
+  const notFound = Object.assign(new Error('missing'), { statusCode: 404 });
+
+  it('returns baseline when the chart exists', async () => {
+    const baseline = await fetchChartBaselineOptional({
+      chartUuidOrSlug: 'c1',
+      getSavedChart: async () => ({ uuid: 'c1', slug: 'rev', updatedAt: 't1' }),
+      isNotFound: () => false,
+    });
+    expect(baseline).toEqual({ uuid: 'c1', slug: 'rev', updatedAt: 't1' });
+  });
+
+  it('returns undefined on not-found', async () => {
+    const baseline = await fetchChartBaselineOptional({
+      chartUuidOrSlug: 'missing',
+      getSavedChart: async () => {
+        throw notFound;
+      },
+      isNotFound: (err) => err === notFound,
+    });
+    expect(baseline).toBeUndefined();
   });
 });

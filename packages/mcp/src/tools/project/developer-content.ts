@@ -52,10 +52,12 @@ import {
   applyTileRemove,
   applyTileResize,
   assertMoveContentLengths,
+  baselineFromResource,
   buildDashboardUpdateBody,
   buildMoveContentItem,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
+  fetchChartBaselineOptional,
   resolveCompareVersionIds,
   shallowDiff,
 } from './developer-helpers.js';
@@ -74,6 +76,7 @@ export {
 
 type CreateDashboardBody =
   components['schemas']['CreateDashboard'] | components['schemas']['DuplicateDashboardParams'];
+type DuplicateDashboardBody = components['schemas']['DuplicateDashboardParams'];
 type UpdateDashboardBody = components['schemas']['UpdateDashboard'];
 type BulkMoveContentBody = components['schemas']['ApiContentBulkActionBody_ContentActionMove_'];
 
@@ -307,20 +310,12 @@ function registerChartUpsertTool(
       const sessionId = getMcpClientSessionId();
       // Re-read when possible so update baselines fail closed on intervening edits.
       // Creates (unknown slug) skip baseline; missing baseline on an update preview fails closed.
-      let currentBaseline: { updatedAt?: string; uuid?: string; slug?: string } | undefined;
-      try {
-        const current = asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.slug));
-        currentBaseline = {
-          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
-          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
-          slug: typeof current.slug === 'string' ? current.slug : undefined,
-        };
-      } catch (err) {
-        if (!isNotFoundError(err)) {
-          throw err;
-        }
-        currentBaseline = undefined;
-      }
+      const currentBaseline = await fetchChartBaselineOptional({
+        chartUuidOrSlug: args.slug,
+        getSavedChart: async (id) =>
+          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
+        isNotFound: isNotFoundError,
+      });
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -391,21 +386,12 @@ export function registerDuplicateChart(
         newSlug: args.newSlug,
         newName: args.newName,
       };
-      // Create-like target: fail closed if newSlug appeared between preview and apply.
-      let currentBaseline: { updatedAt?: string; uuid?: string; slug?: string } | undefined;
-      try {
-        const current = asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.newSlug));
-        currentBaseline = {
-          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
-          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
-          slug: typeof current.slug === 'string' ? current.slug : undefined,
-        };
-      } catch (err) {
-        if (!isNotFoundError(err)) {
-          throw err;
-        }
-        currentBaseline = undefined;
-      }
+      const currentBaseline = await fetchChartBaselineOptional({
+        chartUuidOrSlug: args.newSlug,
+        getSavedChart: async (id) =>
+          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
+        isNotFound: isNotFoundError,
+      });
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -517,11 +503,7 @@ export function registerUpdateDashboard(
         resourceKind: 'dashboard',
         resourceKey: args.dashboardUuidOrSlug,
         proposed: args.dashboard,
-        currentBaseline: {
-          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
-          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
-          slug: typeof current.slug === 'string' ? current.slug : undefined,
-        },
+        currentBaseline: baselineFromResource(current),
       });
       const result = await c.v2.dashboards.updateDashboard(
         scope.projectUuid,
@@ -572,17 +554,12 @@ export function registerDuplicateDashboard(
         resourceKind: 'dashboard',
         resourceKey: args.sourceDashboardUuid,
         proposed,
-        currentBaseline: {
-          updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : undefined,
-          uuid: typeof source.uuid === 'string' ? source.uuid : undefined,
-          slug: typeof source.slug === 'string' ? source.slug : undefined,
-        },
+        currentBaseline: baselineFromResource(source),
       });
-      // DuplicateDashboardParams only allows dashboardName / dashboardDesc (no spaceUuid).
-      const body = {
+      const body: DuplicateDashboardBody = {
         dashboardName: args.newName ?? 'Copy',
         dashboardDesc: '',
-      } as CreateDashboardBody;
+      };
       const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
         duplicateFrom: args.sourceDashboardUuid,
       });
@@ -646,11 +623,7 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
         resourceKind: 'dashboard',
         resourceKey: args.dashboardUuidOrSlug,
         proposed,
-        currentBaseline: {
-          updatedAt: typeof dashboard.updatedAt === 'string' ? dashboard.updatedAt : undefined,
-          uuid: typeof dashboard.uuid === 'string' ? dashboard.uuid : undefined,
-          slug: typeof dashboard.slug === 'string' ? dashboard.slug : undefined,
-        },
+        currentBaseline: baselineFromResource(dashboard),
       });
       const body = buildDashboardUpdateBody(dashboard, proposed);
       const updated = await c.v2.dashboards.updateDashboard(
