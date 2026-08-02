@@ -406,5 +406,55 @@ describe('preview-ledger', () => {
         'PREVIEW_STALE',
       );
     });
+
+    it('rejects create previews when a resource appears before apply', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'new-slug',
+        proposed: { name: 'Foo' },
+      });
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'new-slug',
+      });
+      expectPreviewErrorCode(
+        () =>
+          consumeValidatedPreview({
+            previewId: entry.previewId,
+            sessionId: 's1',
+            projectUuid: 'p1',
+            resourceKind: 'chart',
+            resourceKey: 'new-slug',
+            proposed: { name: 'Foo' },
+            currentBaseline: { uuid: 'appeared-after-preview', slug: 'new-slug' },
+          }),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('allows create previews when the target is still absent at apply', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'new-slug',
+        proposed: { name: 'Foo' },
+      });
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'new-slug',
+      });
+      const consumed = consumeValidatedPreview({
+        previewId: entry.previewId,
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'new-slug',
+        proposed: { name: 'Foo' },
+      });
+      expect(consumed.resourceKey).toBe('new-slug');
+    });
   });
 });

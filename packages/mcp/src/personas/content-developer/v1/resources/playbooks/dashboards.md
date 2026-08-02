@@ -29,9 +29,10 @@ Semantic (as-code) charts only. When a new or updated chart is required for a da
 
 ## Duplicate dashboard
 
-1. `preview_dashboard_changes` with `dashboardUuidOrSlug` = source UUID and `changes` = `{ newName?, spaceUuid? }` (must match apply args).
+1. `preview_dashboard_changes` with `dashboardUuidOrSlug` = source UUID and `changes` = `{ newName? }` (must match apply args).
 2. `confirm_preview` with `resourceKind: 'dashboard'` and `resourceKey` = source UUID.
-3. `duplicate_dashboard` with the same source UUID / proposed fields (apply re-reads source baseline).
+3. `duplicate_dashboard` with the same source UUID / proposed fields (apply re-reads source baseline; duplicate stays in the source space).
+4. To relocate: `preview_content_move` → `confirm_preview` → `move_content` into an existing space.
 
 ## Improve / refactor dashboard
 

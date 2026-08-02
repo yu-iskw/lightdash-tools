@@ -180,10 +180,17 @@ export function markPreviewValidated(
   return validated;
 }
 
+function resourceAppearedAfterCreatePreview(currentBaseline: PreviewBaseline | undefined): boolean {
+  const uuid = currentBaseline?.uuid;
+  const updatedAt = currentBaseline?.updatedAt;
+  return (uuid != null && uuid !== '') || (updatedAt != null && updatedAt !== '');
+}
+
 /**
  * Consume a validated preview whose kind/key/contentHash match the payload being applied.
  * When the preview captured a baseline `updatedAt`, pass `currentBaseline` from a fresh
- * read so intervening edits fail closed as `PREVIEW_STALE`.
+ * read so intervening edits fail closed as `PREVIEW_STALE`. Create previews store no
+ * baseline; if `currentBaseline` shows a resource appeared before apply, reject as stale.
  * Deletes the entry on success (single-use); throws PreviewLedgerError otherwise.
  */
 export function consumeValidatedPreview(input: {
@@ -193,7 +200,7 @@ export function consumeValidatedPreview(input: {
   resourceKind: PreviewResourceKind;
   resourceKey: string;
   proposed: unknown;
-  /** Fresh resource snapshot for baseline stale detection (update flows). */
+  /** Fresh resource snapshot for baseline stale detection (update and create races). */
   currentBaseline?: PreviewBaseline;
 }): PreviewLedgerEntry {
   const entry = getOwnedPreview({
@@ -228,6 +235,13 @@ export function consumeValidatedPreview(input: {
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
       `Preview '${input.previewId}' baseline changed (resource was updated after preview); re-run preview -> validate`,
+    );
+  }
+  // Create/absent baseline: reject if the target resource appeared after preview.
+  if (entry.baseline == null && resourceAppearedAfterCreatePreview(input.currentBaseline)) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${input.previewId}' targeted a non-existent resource that now exists; re-run preview -> confirm`,
     );
   }
   ledger.delete(input.previewId);

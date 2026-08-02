@@ -391,6 +391,21 @@ export function registerDuplicateChart(
         newSlug: args.newSlug,
         newName: args.newName,
       };
+      // Create-like target: fail closed if newSlug appeared between preview and apply.
+      let currentBaseline: { updatedAt?: string; uuid?: string; slug?: string } | undefined;
+      try {
+        const current = asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.newSlug));
+        currentBaseline = {
+          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
+          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
+          slug: typeof current.slug === 'string' ? current.slug : undefined,
+        };
+      } catch (err) {
+        if (!isNotFoundError(err)) {
+          throw err;
+        }
+        currentBaseline = undefined;
+      }
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -398,6 +413,7 @@ export function registerDuplicateChart(
         resourceKind: 'chart',
         resourceKey: args.newSlug,
         proposed,
+        currentBaseline,
       });
       const list = await c.v1.charts.getChartsAsCode(scope.projectUuid, {
         ids: [args.sourceChartUuidOrSlug],
@@ -526,14 +542,14 @@ export function registerDuplicateDashboard(
     'duplicate_dashboard',
     {
       title: 'Duplicate dashboard',
-      description: 'Duplicate a dashboard via duplicateFrom after preview',
+      description:
+        'Duplicate a dashboard via duplicateFrom after preview (stays in source space; relocate with move_content)',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         sourceDashboardUuid: z.string(),
         newName: z.string().optional(),
-        spaceUuid: z.string().optional(),
         previewId: previewIdField(),
       },
     },
@@ -541,12 +557,11 @@ export function registerDuplicateDashboard(
       projectUuid?: string;
       sourceDashboardUuid: string;
       newName?: string;
-      spaceUuid?: string;
       previewId: string;
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const proposed = { newName: args.newName, spaceUuid: args.spaceUuid };
+      const proposed = { newName: args.newName };
       const source = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
       );
@@ -563,11 +578,11 @@ export function registerDuplicateDashboard(
           slug: typeof source.slug === 'string' ? source.slug : undefined,
         },
       });
-      const body: CreateDashboardBody = {
+      // DuplicateDashboardParams only allows dashboardName / dashboardDesc (no spaceUuid).
+      const body = {
         dashboardName: args.newName ?? 'Copy',
         dashboardDesc: '',
-        ...(args.spaceUuid ? { spaceUuid: args.spaceUuid } : {}),
-      } as unknown as CreateDashboardBody;
+      } as CreateDashboardBody;
       const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
         duplicateFrom: args.sourceDashboardUuid,
       });
