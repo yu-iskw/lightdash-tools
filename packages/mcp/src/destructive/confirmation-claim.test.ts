@@ -24,23 +24,23 @@ describe('confirmation-claim', () => {
     resetConfirmationClaimsForTests();
   });
 
-  it('allows the first claim and rejects a concurrent replay', () => {
+  it('allows the first claim and rejects a concurrent replay', async () => {
     const key = confirmationClaimKey(state);
-    expect(claimConfirmationKey(key)).toBe(true);
-    expect(claimConfirmationKey(key)).toBe(false);
+    expect(await claimConfirmationKey(key)).toBe(true);
+    expect(await claimConfirmationKey(key)).toBe(false);
   });
 
-  it('releases a claim so a failed apply can retry', () => {
+  it('releases a claim so a confirmed no-write failure can retry', async () => {
     const key = confirmationClaimKey(state);
-    expect(claimConfirmationKey(key)).toBe(true);
-    releaseConfirmationKey(key);
-    expect(claimConfirmationKey(key)).toBe(true);
+    expect(await claimConfirmationKey(key)).toBe(true);
+    await releaseConfirmationKey(key);
+    expect(await claimConfirmationKey(key)).toBe(true);
   });
 
-  it('treats distinct precondition digests as distinct claims', () => {
+  it('treats distinct precondition digests as distinct claims', async () => {
     const keyA = confirmationClaimKey(state);
     const keyB = confirmationClaimKey({ ...state, preconditionDigest: 'digest-b' });
-    expect(claimConfirmationKey(keyA)).toBe(true);
-    expect(claimConfirmationKey(keyB)).toBe(true);
+    expect(await claimConfirmationKey(keyA)).toBe(true);
+    expect(await claimConfirmationKey(keyB)).toBe(true);
   });
 });

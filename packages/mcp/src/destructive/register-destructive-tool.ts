@@ -6,6 +6,7 @@ import { WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 import { acceptedContent, inputRequired, inputResponse } from '@modelcontextprotocol/server';
 
 import { ProjectScopeError, resolveProjectScope } from '../governance/project-scope.js';
+import { classifyMutationFailure } from '../policy/preview-ledger.js';
 import { isNotFoundError } from '../tools/lib/api-errors.js';
 import { projectUuidField } from '../tools/lib/schema-fields.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
@@ -263,7 +264,7 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
 
   // Promote is non-idempotent: consume confirmation before execute to block concurrent replay.
   const claimKey = labels.operation === 'promote' ? confirmationClaimKey(boundState) : undefined;
-  if (claimKey !== undefined && !claimConfirmationKey(claimKey)) {
+  if (claimKey !== undefined && !(await claimConfirmationKey(claimKey))) {
     return withAuditStatus(
       withLightdashBlockedMarker(
         jsonToolResult({
@@ -281,9 +282,10 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
   let executeExtra: Record<string, unknown> | void;
   try {
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
-  } catch {
-    if (claimKey !== undefined) {
-      releaseConfirmationKey(claimKey);
+  } catch (err) {
+    // Release only when the write definitely did not land; keep claim on ambiguous failures.
+    if (claimKey !== undefined && classifyMutationFailure(err) === 'release') {
+      await releaseConfirmationKey(claimKey);
     }
     // Do not echo upstream/API exception text to MCP clients or unbounded stderr.
     process.stderr.write(
