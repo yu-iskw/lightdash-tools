@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { registerPromoteDashboard } from '../tools/project/promote-dashboard.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
+import { resetConfirmationClaimsForTests } from './confirmation-claim.js';
 import {
   getDestructiveRequestStateCodec,
   resetDestructiveRequestStateCodecForTests,
@@ -160,6 +161,7 @@ describe('destructive MRTR contract (promote_dashboard)', () => {
 
   beforeEach(() => {
     resetDestructiveRequestStateCodecForTests();
+    resetConfirmationClaimsForTests();
     process.env.NODE_ENV = 'test';
   });
 
@@ -169,6 +171,7 @@ describe('destructive MRTR contract (promote_dashboard)', () => {
     mcpClient = undefined;
     server = undefined;
     resetDestructiveRequestStateCodecForTests();
+    resetConfirmationClaimsForTests();
   });
 
   it('handler returns InputRequiredResult before elicitation is fulfilled', async () => {

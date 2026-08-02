@@ -19,6 +19,11 @@ import {
 
 import { supportsFormElicitation } from './capability.js';
 import {
+  claimConfirmationKey,
+  confirmationClaimKey,
+  releaseConfirmationKey,
+} from './confirmation-claim.js';
+import {
   buildDeleteConfirmationMessage,
   DELETE_CONFIRM_FORM_SCHEMA,
   isAcceptedDeleteForm,
@@ -256,10 +261,30 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
     );
   }
 
+  // Promote is non-idempotent: consume confirmation before execute to block concurrent replay.
+  const claimKey = labels.operation === 'promote' ? confirmationClaimKey(boundState) : undefined;
+  if (claimKey !== undefined && !claimConfirmationKey(claimKey)) {
+    return withAuditStatus(
+      withLightdashBlockedMarker(
+        jsonToolResult({
+          status: 'blocked',
+          code: 'CONFIRMATION_REPLAY',
+          message:
+            'This promote confirmation was already used. Re-run promote_dashboard for a fresh confirmation.',
+          [flag]: false,
+        }),
+      ),
+      'blocked',
+    );
+  }
+
   let executeExtra: Record<string, unknown> | void;
   try {
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
   } catch {
+    if (claimKey !== undefined) {
+      releaseConfirmationKey(claimKey);
+    }
     // Do not echo upstream/API exception text to MCP clients or unbounded stderr.
     process.stderr.write(
       `[lightdash-mcp] ${labels.operation} failed for ${spec.resourceType} ${scopedArgs.resourceId} (${labels.failureCode})\n`,
