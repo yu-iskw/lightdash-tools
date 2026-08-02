@@ -26,21 +26,41 @@ describe('confirmation-claim', () => {
 
   it('allows the first claim and rejects a concurrent replay', async () => {
     const key = confirmationClaimKey(state);
-    expect(await claimConfirmationKey(key)).toBe(true);
-    expect(await claimConfirmationKey(key)).toBe(false);
+    expect(await claimConfirmationKey(key)).toEqual(
+      expect.objectContaining({ key, token: expect.any(String) }),
+    );
+    expect(await claimConfirmationKey(key)).toBeUndefined();
   });
 
   it('releases a claim so a confirmed no-write failure can retry', async () => {
     const key = confirmationClaimKey(state);
-    expect(await claimConfirmationKey(key)).toBe(true);
-    await releaseConfirmationKey(key);
-    expect(await claimConfirmationKey(key)).toBe(true);
+    const handle = await claimConfirmationKey(key);
+    expect(handle).toBeDefined();
+    await releaseConfirmationKey(handle!);
+    expect(await claimConfirmationKey(key)).toEqual(
+      expect.objectContaining({ key, token: expect.any(String) }),
+    );
+  });
+
+  it('does not release when the handle token no longer owns the claim', async () => {
+    const key = confirmationClaimKey(state);
+    const first = await claimConfirmationKey(key);
+    expect(first).toBeDefined();
+    // Simulate TTL expiry + re-claim by a newer request.
+    resetConfirmationClaimsForTests();
+    const second = await claimConfirmationKey(key);
+    expect(second).toBeDefined();
+    await releaseConfirmationKey(first!);
+    // Newer claim must still block a third acquire.
+    expect(await claimConfirmationKey(key)).toBeUndefined();
+    await releaseConfirmationKey(second!);
+    expect(await claimConfirmationKey(key)).toBeDefined();
   });
 
   it('treats distinct precondition digests as distinct claims', async () => {
     const keyA = confirmationClaimKey(state);
     const keyB = confirmationClaimKey({ ...state, preconditionDigest: 'digest-b' });
-    expect(await claimConfirmationKey(keyA)).toBe(true);
-    expect(await claimConfirmationKey(keyB)).toBe(true);
+    expect(await claimConfirmationKey(keyA)).toBeDefined();
+    expect(await claimConfirmationKey(keyB)).toBeDefined();
   });
 });

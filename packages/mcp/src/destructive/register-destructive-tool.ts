@@ -263,8 +263,11 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
   }
 
   // Promote is non-idempotent: consume confirmation before execute to block concurrent replay.
-  const claimKey = labels.operation === 'promote' ? confirmationClaimKey(boundState) : undefined;
-  if (claimKey !== undefined && !(await claimConfirmationKey(claimKey))) {
+  const claimHandle =
+    labels.operation === 'promote'
+      ? await claimConfirmationKey(confirmationClaimKey(boundState))
+      : undefined;
+  if (labels.operation === 'promote' && claimHandle === undefined) {
     return withAuditStatus(
       withLightdashBlockedMarker(
         jsonToolResult({
@@ -284,8 +287,8 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
   } catch (err) {
     // Release only when the write definitely did not land; keep claim on ambiguous failures.
-    if (claimKey !== undefined && classifyMutationFailure(err) === 'release') {
-      await releaseConfirmationKey(claimKey);
+    if (claimHandle !== undefined && classifyMutationFailure(err) === 'release') {
+      await releaseConfirmationKey(claimHandle);
     }
     // Do not echo upstream/API exception text to MCP clients or unbounded stderr.
     process.stderr.write(

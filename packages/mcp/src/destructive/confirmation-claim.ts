@@ -1,7 +1,10 @@
 /**
  * One-shot claim for non-idempotent elicitation confirmations (e.g. promote).
  * Memory Map by default; Redis SET NX when LIGHTDASH_TOOLS_MCP_STORE=redis (ADR-0016).
+ * Releases are compare-and-delete so a late cleanup cannot erase a newer claimant.
  */
+
+import { randomUUID } from 'node:crypto';
 
 import { resolveEphemeralStoreConfig } from '../store/config.js';
 import { getSharedRedisClient } from '../store/redis-client.js';
@@ -12,11 +15,26 @@ import type { DestructiveRequestState } from './types.js';
 const DEFAULT_TTL_MS = 30 * 60 * 1000;
 const REDIS_KEY_PREFIX = 'lightdash-mcp:confirm-claim:';
 
-const memoryClaims = new Map<string, number>();
+/** Compare-and-delete: only remove if the value still matches our claim token. */
+const REDIS_RELEASE_LUA = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+end
+return 0
+`;
+
+type MemoryClaim = { token: string; expiresAt: number };
+
+const memoryClaims = new Map<string, MemoryClaim>();
+
+export type ConfirmationClaimHandle = {
+  key: string;
+  token: string;
+};
 
 function purgeExpiredMemory(now: number): void {
-  for (const [key, expiresAt] of memoryClaims) {
-    if (expiresAt <= now) {
+  for (const [key, claim] of memoryClaims) {
+    if (claim.expiresAt <= now) {
       memoryClaims.delete(key);
     }
   }
@@ -39,39 +57,46 @@ export function confirmationClaimKey(state: DestructiveRequestState): string {
 }
 
 /**
- * Claim a confirmation key for one apply. Returns false if already claimed
+ * Claim a confirmation key for one apply. Returns undefined if already claimed
  * within TTL (concurrent/replayed accept).
  */
 export async function claimConfirmationKey(
   key: string,
   ttlMs: number = DEFAULT_TTL_MS,
-): Promise<boolean> {
+): Promise<ConfirmationClaimHandle | undefined> {
+  const token = randomUUID();
   const config = resolveEphemeralStoreConfig();
   if (config.backend === 'redis') {
     const redis = await getSharedRedisClient(config);
-    const result = await redis.set(redisClaimKey(key), '1', { NX: true, PX: ttlMs });
-    return result === 'OK';
+    const result = await redis.set(redisClaimKey(key), token, { NX: true, PX: ttlMs });
+    return result === 'OK' ? { key, token } : undefined;
   }
 
   const now = Date.now();
   purgeExpiredMemory(now);
   const existing = memoryClaims.get(key);
-  if (existing !== undefined && existing > now) {
-    return false;
+  if (existing !== undefined && existing.expiresAt > now) {
+    return undefined;
   }
-  memoryClaims.set(key, now + ttlMs);
-  return true;
+  memoryClaims.set(key, { token, expiresAt: now + ttlMs });
+  return { key, token };
 }
 
-/** Release a claim so a confirmed no-write failure can be retried. */
-export async function releaseConfirmationKey(key: string): Promise<void> {
+/** Release only if this handle still owns the claim (compare-and-delete). */
+export async function releaseConfirmationKey(handle: ConfirmationClaimHandle): Promise<void> {
   const config = resolveEphemeralStoreConfig();
   if (config.backend === 'redis') {
     const redis = await getSharedRedisClient(config);
-    await redis.del(redisClaimKey(key));
+    await redis.eval(REDIS_RELEASE_LUA, {
+      keys: [redisClaimKey(handle.key)],
+      arguments: [handle.token],
+    });
     return;
   }
-  memoryClaims.delete(key);
+  const current = memoryClaims.get(handle.key);
+  if (current?.token === handle.token) {
+    memoryClaims.delete(handle.key);
+  }
 }
 
 /** Reset memory claims (tests only). */
