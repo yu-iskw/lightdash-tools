@@ -10,6 +10,8 @@ import type { components, LightdashApi } from '@lightdash-tools/common';
 export interface SearchContentParams {
   projectUuids?: string[];
   spaceUuids?: string[];
+  /** Exact content UUID filter (OpenAPI List content `uuids`). */
+  uuids?: string[];
   parentSpaceUuid?: string;
   contentTypes?: ('chart' | 'dashboard' | 'data_app' | 'space')[];
   pageSize?: number;

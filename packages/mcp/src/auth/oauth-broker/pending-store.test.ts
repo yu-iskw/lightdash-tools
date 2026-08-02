@@ -116,6 +116,12 @@ describe('InMemoryOAuthBrokerStore', () => {
       }),
     ).toBeUndefined();
   });
+
+  it('enforces maxClients', async () => {
+    const store = new InMemoryOAuthBrokerStore({ maxClients: 1 });
+    expect(await store.registerClient(['http://127.0.0.1:1/cb'])).toBeDefined();
+    expect(await store.registerClient(['http://127.0.0.1:1/cb2'])).toBeUndefined();
+  });
 });
 
 describe('createOAuthBrokerStore', () => {

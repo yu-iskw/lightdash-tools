@@ -5,7 +5,7 @@
  * the high-value multi-instance fix for authorize → callback → token.
  *
  * Key prefix: `lightdash-tools:mcp:oauth:`.
- * Soft capacity: Redis relies on key TTLs (no process-local max maps).
+ * DCR clients are capacity-capped via a ZSET index (same contract as in-memory maxClients).
  */
 
 import { randomBytes } from 'node:crypto';
@@ -13,6 +13,7 @@ import { randomBytes } from 'node:crypto';
 import {
   DEFAULT_CLIENT_TTL_MS,
   DEFAULT_CODE_TTL_MS,
+  DEFAULT_MAX_CLIENTS,
   DEFAULT_PENDING_TTL_MS,
   type IssuedAuthorizationCode,
   type OAuthBrokerStore,
@@ -24,12 +25,36 @@ import {
 import type { RedisClientType } from 'redis';
 
 export const OAUTH_REDIS_KEY_PREFIX = 'lightdash-tools:mcp:oauth:';
+export const OAUTH_CLIENTS_INDEX_KEY = `${OAUTH_REDIS_KEY_PREFIX}clients`;
 
 type ClientWire = {
   clientId: string;
   redirectUris: string[];
   createdAt: number;
 };
+
+/**
+ * Atomic DCR register: prune expired index members, enforce maxClients, then
+ * SET client key + ZADD index (score = absolute expiry ms).
+ * Returns 1 on success, 0 when at capacity.
+ */
+export const REGISTER_CLIENT_LUA = `
+local indexKey = KEYS[1]
+local clientKey = KEYS[2]
+local now = tonumber(ARGV[1])
+local maxClients = tonumber(ARGV[2])
+local ttlMs = tonumber(ARGV[3])
+local clientJson = ARGV[4]
+local clientId = ARGV[5]
+local expiresAt = now + ttlMs
+redis.call('ZREMRANGEBYSCORE', indexKey, '-inf', now)
+if redis.call('ZCARD', indexKey) >= maxClients then
+  return 0
+end
+redis.call('SET', clientKey, clientJson, 'PX', ttlMs)
+redis.call('ZADD', indexKey, expiresAt, clientId)
+return 1
+`;
 
 function pendingKey(brokerState: string): string {
   return `${OAUTH_REDIS_KEY_PREFIX}pending:${brokerState}`;
@@ -55,6 +80,7 @@ export class RedisOAuthBrokerStore implements OAuthBrokerStore {
   private readonly pendingTtlMs: number;
   private readonly codeTtlMs: number;
   private readonly clientTtlMs: number;
+  private readonly maxClients: number;
 
   constructor(
     private readonly resolveRedis: () => Promise<RedisClientType>,
@@ -63,6 +89,7 @@ export class RedisOAuthBrokerStore implements OAuthBrokerStore {
     this.pendingTtlMs = options.pendingTtlMs ?? DEFAULT_PENDING_TTL_MS;
     this.codeTtlMs = options.codeTtlMs ?? DEFAULT_CODE_TTL_MS;
     this.clientTtlMs = options.clientTtlMs ?? DEFAULT_CLIENT_TTL_MS;
+    this.maxClients = options.maxClients ?? DEFAULT_MAX_CLIENTS;
   }
 
   async registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined> {
@@ -73,7 +100,19 @@ export class RedisOAuthBrokerStore implements OAuthBrokerStore {
       createdAt: Date.now(),
     };
     const redis = await this.resolveRedis();
-    await redis.set(clientKey(clientId), JSON.stringify(wire), { PX: this.clientTtlMs });
+    const result = await redis.eval(REGISTER_CLIENT_LUA, {
+      keys: [OAUTH_CLIENTS_INDEX_KEY, clientKey(clientId)],
+      arguments: [
+        String(Date.now()),
+        String(this.maxClients),
+        String(this.clientTtlMs),
+        JSON.stringify(wire),
+        clientId,
+      ],
+    });
+    if (result !== 1 && result !== BigInt(1)) {
+      return undefined;
+    }
     return toRegisteredClient(wire);
   }
 

@@ -14,7 +14,7 @@ import type { LightdashClient } from '@lightdash-tools/client';
 export const MOVE_CONTENT_TYPES = ['chart', 'dashboard', 'data_app'] as const;
 export const MOVE_CHART_SOURCES = ['dbt_explore', 'sql'] as const;
 
-/** Resolve a single content summary by exact uuid via search (project-scoped). */
+/** Resolve a single content summary by exact uuid (project-scoped). */
 export async function findContentByUuid(
   client: LightdashClient,
   projectUuid: string,
@@ -22,7 +22,7 @@ export async function findContentByUuid(
 ): Promise<Record<string, unknown> | null> {
   const result = await client.v2.content.searchContent({
     projectUuids: [projectUuid],
-    search: uuid,
+    uuids: [uuid],
     pageSize: 50,
   });
   const { data } = asPaginated<Record<string, unknown>>(result);

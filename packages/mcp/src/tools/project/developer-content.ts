@@ -648,9 +648,10 @@ export function registerDuplicateDashboard(
           currentBaseline: sourceBaseline,
         },
         async () => {
+          const sourceDesc = source.description;
           const body: DuplicateDashboardBody = {
             dashboardName: args.newName ?? 'Copy',
-            dashboardDesc: '',
+            dashboardDesc: typeof sourceDesc === 'string' ? sourceDesc : '',
           };
           const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
             duplicateFrom: args.sourceDashboardUuid,

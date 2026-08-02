@@ -1,13 +1,18 @@
 /**
  * Redis-backed PreviewStore with Lua CAS (ADR-0016).
  *
- * Key prefix: `lightdash-tools:mcp:preview:`. TTL derived from entry.expiresAt.
+ * Key prefix: `lightdash-tools:mcp:preview:`.
+ * Redis key TTL = logical expiresAt + grace so assertOwnedEntry can still
+ * distinguish PREVIEW_EXPIRED from PREVIEW_REQUIRED after logical expiry.
  */
 
 import type { PreviewLedgerEntry, PreviewStatus, PreviewStore } from '../policy/preview-ledger.js';
 import type { RedisClientType } from 'redis';
 
 export const PREVIEW_REDIS_KEY_PREFIX = 'lightdash-tools:mcp:preview:';
+
+/** Keep expired entries briefly so the ledger can return PREVIEW_EXPIRED. */
+export const PREVIEW_REDIS_EXPIRY_GRACE_MS = 5 * 60 * 1000;
 
 /** Atomic CAS: replace value only when current JSON status matches expected. */
 const CAS_LUA = `
@@ -41,12 +46,17 @@ function previewKey(previewId: string): string {
   return `${PREVIEW_REDIS_KEY_PREFIX}${previewId}`;
 }
 
-function ttlMsFromEntry(entry: PreviewLedgerEntry, now = Date.now()): number {
+/** Redis PX from logical expiresAt, including post-expiry grace. Exported for tests. */
+export function redisTtlMsFromEntry(
+  entry: PreviewLedgerEntry,
+  now = Date.now(),
+  graceMs = PREVIEW_REDIS_EXPIRY_GRACE_MS,
+): number {
   const expires = Date.parse(entry.expiresAt);
   if (Number.isNaN(expires)) {
-    return 1;
+    return Math.max(1, graceMs);
   }
-  return Math.max(1, expires - now);
+  return Math.max(1, expires - now + graceMs);
 }
 
 export class RedisPreviewStore implements PreviewStore {
@@ -63,7 +73,7 @@ export class RedisPreviewStore implements PreviewStore {
 
   async put(entry: PreviewLedgerEntry): Promise<void> {
     const client = await this.getClient();
-    const ttlMs = ttlMsFromEntry(entry);
+    const ttlMs = redisTtlMsFromEntry(entry);
     await client.set(previewKey(entry.previewId), JSON.stringify(entry), { PX: ttlMs });
   }
 
@@ -76,7 +86,7 @@ export class RedisPreviewStore implements PreviewStore {
       return false;
     }
     const client = await this.getClient();
-    const ttlMs = ttlMsFromEntry(next);
+    const ttlMs = redisTtlMsFromEntry(next);
     const result = await client.eval(CAS_LUA, {
       keys: [previewKey(previewId)],
       arguments: [expectedStatus, JSON.stringify(next), String(ttlMs)],

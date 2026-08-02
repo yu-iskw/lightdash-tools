@@ -91,6 +91,22 @@ describe('parseDashboardCreateBody / parseDashboardUpdateBody', () => {
     expect(parsed.ok).toBe(false);
   });
 
+  it('rejects pinnedParameters on update (CreateDashboard-only)', () => {
+    const parsed = parseDashboardUpdateBody({
+      name: 'Renamed',
+      pinnedParameters: ['param_a'],
+    });
+    expect(parsed.ok).toBe(false);
+  });
+
+  it('accepts pinnedParameters on create', () => {
+    const parsed = parseDashboardCreateBody({
+      ...validCreate,
+      pinnedParameters: ['param_a'],
+    });
+    expect(parsed.ok).toBe(true);
+  });
+
   it('rejects server-managed keys on create', () => {
     const parsed = parseDashboardCreateBody({ ...validCreate, uuid: 'd1' });
     expect(parsed.ok).toBe(false);

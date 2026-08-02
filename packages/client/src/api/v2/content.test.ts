@@ -28,6 +28,19 @@ describe('ContentClient', () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it('searchContent passes exact uuids filter', async () => {
+    const client = new ContentClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({ status: 'ok', results: [] });
+    await client.searchContent({
+      projectUuids: ['p1'],
+      uuids: ['c1'],
+      pageSize: 50,
+    });
+    expect(mockHttp.get).toHaveBeenCalledWith('/content', {
+      params: { projectUuids: ['p1'], uuids: ['c1'], pageSize: 50 },
+    });
+  });
+
   it('moveContent should call POST /content/{projectUuid}/move with body', async () => {
     const client = new ContentClient(mockHttp);
     const body = {

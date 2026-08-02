@@ -61,7 +61,6 @@ export const dashboardUpdateBodySchema = z
     spaceUuid: z.string().optional(),
     filters: z.unknown().optional(),
     parameters: z.unknown().optional(),
-    pinnedParameters: z.array(z.string()).optional(),
     config: z.unknown().optional(),
     colorPaletteUuid: z.string().nullish(),
     preserveVerification: z.boolean().optional(),
