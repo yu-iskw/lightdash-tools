@@ -20,12 +20,12 @@ const userMessages = createPromptPlaybookEmbedder({
   topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 });
 
-const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> validate/confirm -> apply. Call the matching lightdash_preview_* tool first,
-record the previewId. For updates to an existing chart/dashboard, validate with lightdash_validate_chart /
-lightdash_validate_dashboard using that resource's UUID. For creates, duplicates, tile ops, or
-content moves (no existing uuid to validate against), call lightdash_confirm_preview with the same previewId and
-the exact resourceKind/resourceKey the preview was created with. Then apply with the write tool using that
-previewId. Never call a write tool without a fresh, validated previewId bound to that exact resource.`;
+const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> confirm_preview -> apply. Call the matching lightdash_preview_* tool first,
+record the previewId and resourceKey. Unlock every write (create, update, duplicate, tile ops, content moves)
+with lightdash_confirm_preview using that previewId and the exact resourceKind/resourceKey the preview was
+created with. Then apply with the write tool using that previewId. Never call a write tool without a fresh,
+confirmed previewId bound to that exact resource. lightdash_validate_chart / lightdash_validate_dashboard are
+optional health checks on a saved UUID only — they do not unlock apply.`;
 
 const DASHBOARD_FIRST = `Dashboard-first: the dashboard is the authoring and promotion unit. Create/update charts only as
 tile prerequisites in this workflow; every new chart must be added as a dashboard tile before treating work as done.
@@ -94,9 +94,10 @@ ${DASHBOARD_FIRST}
 
 Inspect current structure with lightdash_get_dashboard first.
 If new charts are needed, author them as tile prerequisites then add tiles — never as a standalone publish.
-Preview with lightdash_preview_dashboard_changes, validate with lightdash_validate_dashboard,
+Preview with lightdash_preview_dashboard_changes, unlock with lightdash_confirm_preview,
 then apply with lightdash_update_dashboard and/or the tile tools (lightdash_add_dashboard_tile,
 lightdash_move_dashboard_tile, lightdash_remove_dashboard_tile, lightdash_resize_dashboard_tile).
+Optionally run lightdash_validate_dashboard afterward as a saved-resource health check.
 Report what changed and any remaining validation warnings.`,
         'dashboards',
       ),
@@ -124,7 +125,7 @@ ${DASHBOARD_FIRST}
 
 Concern: ${concern ?? '(general cleanup)'}.
 Use lightdash_compare_dashboard_versions to understand recent drift before proposing changes.
-Preview with lightdash_preview_dashboard_changes, validate, then apply with lightdash_update_dashboard
+Preview with lightdash_preview_dashboard_changes, confirm_preview, then apply with lightdash_update_dashboard
 and the tile tools as needed. Do not remove tiles unless explicitly requested.`,
         'dashboards',
       ),

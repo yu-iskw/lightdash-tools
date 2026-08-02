@@ -41,7 +41,7 @@ export const PREVIEW_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** validate_* — runs the upstream validator, returns metadata (issues), never persists. */
+/** validate_* — optional saved-resource health check; never unlocks the preview ledger. */
 export const VALIDATE_SAFETY: DeveloperOperationSafety = {
   mutability: 'none',
   queryCapability: 'none',

@@ -12,8 +12,8 @@ URI: `lightdash://playbooks/content-developer/core`
 - Do not treat a standalone chart create/update as a finished publish unit. New charts must be attached as dashboard tiles in the same workflow (dashboard is the promotion unit).
 - Do not apply a write tool without a validated, unexpired, session-owned `previewId` from the matching `preview_*` tool.
 - Do not reuse a `previewId` after it has been consumed by `apply` (single-use) or after the underlying resource has drifted (`PREVIEW_STALE`).
-- Updates to an existing chart/dashboard must be validated with `validate_chart` / `validate_dashboard` (upstream validator) — never with `confirm_preview`.
-- Creates, duplicates, tile ops, and content-move previews (no existing uuid to validate against) must be validated with `confirm_preview`, passing the exact `resourceKind`/`resourceKey` the preview was created with — never a different resource's preview.
+- Every write (create, update, duplicate, tile ops, content-move) must be unlocked with `confirm_preview`, passing the exact `resourceKind`/`resourceKey` the preview was created with — never a different resource's preview.
+- `validate_chart` / `validate_dashboard` are optional health checks on a **saved** UUID only; they do not unlock apply (upstream has no unsaved-payload validator).
 - Do not reveal secrets, warehouse credentials, or hidden SQL.
 
 ## Tools
@@ -53,10 +53,10 @@ Use only these `lightdash_*` tools:
 3. Stop when project scope is unresolved (`PROJECT_SCOPE_REQUIRED`).
 4. Never enumerate organization projects.
 
-## Preview → validate/confirm → apply
+## Preview → confirm → apply
 
-1. Call the matching `preview_*` tool; record `previewId`, diff, expiry.
-2. Existing chart/dashboard: `validate_chart` / `validate_dashboard` with that UUID + `previewId`.
-3. Creates, duplicates, tiles, content moves: `confirm_preview` with exact `resourceKind`/`resourceKey`.
-4. Apply with the write tool and the validated `previewId`. Stale/consumed → `PREVIEW_STALE`; re-preview.
+1. Call the matching `preview_*` tool; record `previewId`, diff, expiry, `resourceKey`.
+2. Unlock with `confirm_preview` using the exact `resourceKind`/`resourceKey` from the preview.
+3. Apply with the write tool and the confirmed `previewId`. Stale/consumed → `PREVIEW_STALE`; re-preview.
+4. Optionally run `validate_chart` / `validate_dashboard` on saved UUIDs as a health check (does not unlock).
 5. Report UUIDs touched and outcomes; do not claim success without a successful apply response.

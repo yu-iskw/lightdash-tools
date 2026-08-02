@@ -12,8 +12,10 @@ import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
 import { addPreviewLedgerEntry, uniqueResourceKeys } from '../../policy/preview-ledger.js';
+import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
+import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
 
 import {
@@ -26,6 +28,7 @@ import {
   assertMoveContentLengths,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
+  resolveChartPreviewCurrent,
   shallowDiff,
 } from './developer-helpers.js';
 
@@ -79,12 +82,20 @@ export function registerPreviewChartChanges(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const current = args.chartUuidOrSlug
-        ? asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug))
-        : null;
+      const resolved = await resolveChartPreviewCurrent({
+        chartUuidOrSlug: args.chartUuidOrSlug,
+        slug: args.slug,
+        getSavedChart: async (id) =>
+          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
+        isNotFound: isNotFoundError,
+      });
+      if (resolved.kind === 'error') {
+        return codedErrorResult(resolved.code, resolved.message);
+      }
+      const current = resolved.current;
       const baseline = baselineFromResource(current);
-      // Canonical identity is UUID when updating an existing chart (validate_chart binds
-      // chartUuid); upsert slug remains an alias so create/update_chart can consume by slug.
+      // Canonical identity is UUID when updating an existing chart; upsert slug remains an
+      // alias so create/update_chart can consume by slug after confirm_preview.
       const upsertSlug =
         args.slug ?? (typeof current?.slug === 'string' ? current.slug : undefined) ?? undefined;
       const resourceKey =
@@ -153,7 +164,7 @@ export function registerPreviewDashboardChanges(
         ? asRecord(await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug))
         : null;
       const baseline = baselineFromResource(current);
-      // UUID is canonical for validate_dashboard; uuid-or-slug remains an apply alias.
+      // UUID is canonical for confirm_preview / apply binding; uuid-or-slug remains an apply alias.
       const resourceKey = baseline?.uuid ?? args.dashboardUuidOrSlug ?? 'new';
       const resourceAliases = uniqueResourceKeys(
         resourceKey,

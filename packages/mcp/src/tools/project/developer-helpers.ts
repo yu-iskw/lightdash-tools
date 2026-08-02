@@ -227,3 +227,41 @@ export function buildMoveContentItem(
     }
   }
 }
+
+export type ChartPreviewCurrentResult =
+  | { kind: 'error'; code: 'CHART_SLUG_EXISTS'; message: string }
+  | { kind: 'ok'; current: Record<string, unknown> | null };
+
+/**
+ * Resolve the saved chart for a preview: update path uses chartUuidOrSlug;
+ * create path (slug only) rejects when that slug already exists.
+ * `getSavedChart` / `isNotFound` are injected so unit tests need no network.
+ */
+export async function resolveChartPreviewCurrent(input: {
+  chartUuidOrSlug?: string;
+  slug?: string;
+  getSavedChart: (chartUuidOrSlug: string) => Promise<Record<string, unknown>>;
+  isNotFound: (err: unknown) => boolean;
+}): Promise<ChartPreviewCurrentResult> {
+  if (input.chartUuidOrSlug) {
+    return { kind: 'ok', current: await input.getSavedChart(input.chartUuidOrSlug) };
+  }
+  if (input.slug == null || input.slug === '') {
+    return { kind: 'ok', current: null };
+  }
+  try {
+    await input.getSavedChart(input.slug);
+    return {
+      kind: 'error',
+      code: 'CHART_SLUG_EXISTS',
+      message:
+        `Chart slug '${input.slug}' already exists; pass chartUuidOrSlug and use the update path ` +
+        '(preview_chart_changes → confirm_preview → update_chart)',
+    };
+  } catch (err) {
+    if (input.isNotFound(err)) {
+      return { kind: 'ok', current: null };
+    }
+    throw err;
+  }
+}

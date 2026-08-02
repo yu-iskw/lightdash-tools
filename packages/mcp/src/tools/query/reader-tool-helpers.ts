@@ -29,6 +29,7 @@ const BLOCKED_POLICY_CODES = new Set([
   'PREVIEW_EXPIRED',
   'PREVIEW_NOT_VALIDATED',
   'PREVIEW_NOT_OWNED',
+  'CHART_SLUG_EXISTS',
 ]);
 
 export function codedErrorResult(code: string, message: string): TextContent {

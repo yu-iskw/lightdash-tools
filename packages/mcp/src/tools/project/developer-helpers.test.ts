@@ -11,6 +11,7 @@ import {
   buildMoveContentItem,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
+  resolveChartPreviewCurrent,
   resolveCompareVersionIds,
   shallowDiff,
   stableStringify,
@@ -271,5 +272,47 @@ describe('buildMoveContentProposal', () => {
         }),
       ),
     );
+  });
+});
+
+describe('resolveChartPreviewCurrent', () => {
+  const notFound = Object.assign(new Error('missing'), { statusCode: 404 });
+
+  it('loads the chart when chartUuidOrSlug is set', async () => {
+    const current = { uuid: 'c1', slug: 'revenue' };
+    const result = await resolveChartPreviewCurrent({
+      chartUuidOrSlug: 'c1',
+      slug: 'ignored',
+      getSavedChart: async (id) => {
+        expect(id).toBe('c1');
+        return current;
+      },
+      isNotFound: () => false,
+    });
+    expect(result).toEqual({ kind: 'ok', current });
+  });
+
+  it('allows create when slug lookup is not found', async () => {
+    const result = await resolveChartPreviewCurrent({
+      slug: 'new-chart',
+      getSavedChart: async () => {
+        throw notFound;
+      },
+      isNotFound: (err) => err === notFound,
+    });
+    expect(result).toEqual({ kind: 'ok', current: null });
+  });
+
+  it('rejects create when slug already exists', async () => {
+    const result = await resolveChartPreviewCurrent({
+      slug: 'taken',
+      getSavedChart: async () => ({ uuid: 'existing', slug: 'taken' }),
+      isNotFound: () => false,
+    });
+    expect(result.kind).toBe('error');
+    if (result.kind === 'error') {
+      expect(result.code).toBe('CHART_SLUG_EXISTS');
+      expect(result.message).toContain('taken');
+    }
   });
 });

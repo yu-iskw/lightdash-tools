@@ -154,7 +154,7 @@ export function getOwnedPreview(input: {
 }
 
 /**
- * Mark a draft preview validated after a successful validate_* (or confirm_preview) call.
+ * Mark a draft preview validated after a successful confirm_preview call.
  * `expected` binds validation to the resource it was actually run against — a caller cannot
  * validate/confirm preview A and have it silently unlock a write against a different resource.
  * Matching accepts `resourceKey` or any stored alias (uuid ↔ slug).

@@ -1,19 +1,18 @@
 /**
  * Content-developer authoring tools (ADR-0014).
  *
- * Hybrid authoring surface behind a hard preview -> validate/confirm -> apply gate:
+ * Hybrid authoring surface behind a hard preview -> confirm -> apply gate:
  *  - preview_* computes an in-memory diff and issues a single-use previewId.
- *  - validate_* runs the upstream validator against an existing chart/dashboard uuid and
- *    marks the preview validated only when it was bound to that resource (uuid or alias)
- *    and the validation result has zero errors.
- *  - confirm_preview marks a preview validated for flows with no upstream validate API
- *    (create, duplicate, tile ops, content-move); it never calls a Lightdash API.
+ *  - confirm_preview marks a preview validated for every write path (create, update,
+ *    duplicate, tile ops, content-move); it never calls a Lightdash API.
+ *  - validate_* is an optional saved-resource health check (upstream validator on a
+ *    persisted uuid only); it does not unlock the preview ledger.
  *  - The write tools consume the validated preview (contentHash must match exactly)
  *    before calling the underlying create/update/upsert API.
  *
- * `markPreviewValidated` binds validation to the resource it was actually run against
- * (`resourceKind`/`resourceKey`), so a validated/confirmed preview for one resource can
- * never unlock a write against a different one.
+ * `markPreviewValidated` (via confirm_preview) binds confirmation to the resource
+ * (`resourceKind`/`resourceKey`), so a confirmed preview for one resource can never
+ * unlock a write against a different one.
  *
  * `preview_content_move` is the preview tool for `move_content` (itemUuids +
  * targetSpaceUuid + required contentTypes).
@@ -92,36 +91,22 @@ export function registerValidateChart(
     'validate_chart',
     {
       title: 'Validate chart',
-      description: "Validate a saved chart's fields against its underlying explore",
+      description:
+        "Optional health check: validate a saved chart's fields against its explore. Does not unlock preview apply — use confirm_preview.",
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         chartUuid: z.string(),
-        previewId: previewIdField()
-          .optional()
-          .describe('Marks the preview validated when it was bound to this chartUuid'),
       },
     },
-    wrapDeveloperHandler<{ projectUuid?: string; chartUuid: string; previewId?: string }>(
+    wrapDeveloperHandler<{ projectUuid?: string; chartUuid: string }>(
       contextProvider,
       (c) => async (args) => {
         const scope = resolveProjectScope({ projectUuid: args.projectUuid });
         const validation = await c.v1.validation.validateChart(scope.projectUuid, args.chartUuid);
         const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
-        let previewStatus: string | undefined;
-        // Only bind a successful, error-free validation to the previewed chart identity.
-        if (args.previewId && errorCount === 0) {
-          const sessionId = getMcpClientSessionId();
-          const entry = markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
-            resourceKind: 'chart',
-            resourceKey: args.chartUuid,
-          });
-          previewStatus = entry.status;
-        } else if (args.previewId) {
-          previewStatus = 'validation_failed';
-        }
         return jsonToolResult({
-          data: { validation, previewStatus, errorCount },
+          data: { validation, errorCount },
           context: developerContext(scope),
         });
       },
@@ -138,17 +123,15 @@ export function registerValidateDashboard(
     'validate_dashboard',
     {
       title: 'Validate dashboard',
-      description: "Validate a saved dashboard's fields against its underlying explores",
+      description:
+        "Optional health check: validate a saved dashboard's fields against its explores. Does not unlock preview apply — use confirm_preview.",
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuid: z.string(),
-        previewId: previewIdField()
-          .optional()
-          .describe('Marks the preview validated when it was bound to this dashboardUuid'),
       },
     },
-    wrapDeveloperHandler<{ projectUuid?: string; dashboardUuid: string; previewId?: string }>(
+    wrapDeveloperHandler<{ projectUuid?: string; dashboardUuid: string }>(
       contextProvider,
       (c) => async (args) => {
         const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -157,19 +140,8 @@ export function registerValidateDashboard(
           args.dashboardUuid,
         );
         const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
-        let previewStatus: string | undefined;
-        if (args.previewId && errorCount === 0) {
-          const sessionId = getMcpClientSessionId();
-          const entry = markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
-            resourceKind: 'dashboard',
-            resourceKey: args.dashboardUuid,
-          });
-          previewStatus = entry.status;
-        } else if (args.previewId) {
-          previewStatus = 'validation_failed';
-        }
         return jsonToolResult({
-          data: { validation, previewStatus, errorCount },
+          data: { validation, errorCount },
           context: developerContext(scope),
         });
       },
@@ -187,7 +159,7 @@ export function registerConfirmPreview(
     {
       title: 'Confirm preview',
       description:
-        'Confirm a previewed create/duplicate/tile/content-move payload (no upstream validate API); resourceKind/resourceKey must match the preview exactly',
+        'Confirm a previewed create/update/duplicate/tile/content-move payload; resourceKind/resourceKey must match the preview exactly. Required unlock before every write tool.',
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -372,7 +344,7 @@ export function registerCreateChart(server: McpServer, contextProvider: McpConte
   registerChartUpsertTool(server, contextProvider, {
     shortName: 'create_chart',
     title: 'Create chart',
-    description: 'Create a chart from code representation after preview/validate',
+    description: 'Create a chart from code representation after preview/confirm',
   });
 }
 
@@ -380,7 +352,7 @@ export function registerUpdateChart(server: McpServer, contextProvider: McpConte
   registerChartUpsertTool(server, contextProvider, {
     shortName: 'update_chart',
     title: 'Update chart',
-    description: 'Update a chart from code representation after preview/validate',
+    description: 'Update a chart from code representation after preview/confirm',
   });
 }
 
@@ -459,7 +431,7 @@ export function registerCreateDashboard(
     'create_dashboard',
     {
       title: 'Create dashboard',
-      description: 'Create a new dashboard after preview/validate',
+      description: 'Create a new dashboard after preview/confirm',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
@@ -501,7 +473,7 @@ export function registerUpdateDashboard(
     'update_dashboard',
     {
       title: 'Update dashboard',
-      description: 'Update a dashboard by UUID or slug after preview/validate',
+      description: 'Update a dashboard by UUID or slug after preview/confirm',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
@@ -575,6 +547,9 @@ export function registerDuplicateDashboard(
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
       const proposed = { newName: args.newName, spaceUuid: args.spaceUuid };
+      const source = asRecord(
+        await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
+      );
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -582,6 +557,11 @@ export function registerDuplicateDashboard(
         resourceKind: 'dashboard',
         resourceKey: args.sourceDashboardUuid,
         proposed,
+        currentBaseline: {
+          updatedAt: typeof source.updatedAt === 'string' ? source.updatedAt : undefined,
+          uuid: typeof source.uuid === 'string' ? source.uuid : undefined,
+          slug: typeof source.slug === 'string' ? source.slug : undefined,
+        },
       });
       const body: CreateDashboardBody = {
         dashboardName: args.newName ?? 'Copy',

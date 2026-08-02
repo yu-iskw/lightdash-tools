@@ -70,8 +70,9 @@ Tool ids are unprefixed catalog names (`create_chart`). Registration applies `li
 ## Hard preview gate
 
 1. `preview_*` → `previewId` (draft) + `contentHash`
-2. `validate_*` with `previewId` → status `validated`
+2. `confirm_preview` with exact `resourceKind`/`resourceKey` → status `validated`
 3. SAFE_WRITE requires matching validated `previewId`; apply consumes it
+4. `validate_*` is optional on a saved UUID only and does not unlock apply
 
 ## Tool surface
 

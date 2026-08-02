@@ -25,7 +25,7 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
    - Dashboards: native REST create / v2 PATCH update / create with `duplicateFrom`.
    - Layout: MCP composition over full dashboard tile array via v2 PATCH.
    - Spaces: **read-only** `list_spaces` / `get_space` on MCP; bulk `move_content` into existing spaces. Space create/update are **client-only** (managed out-of-band, e.g. Terraform).
-4. **Hard preview gate:** every SAFE_WRITE tool requires a session-owned, validated, unexpired `previewId` from `preview_*`. Updates to existing charts/dashboards mark validated via `validate_*` bound to `resourceKind`/`resourceKey`; creates/tiles/moves use `confirm_preview` with the same binding. Apply consumes the preview (single-use). Patch drift → `PREVIEW_STALE`. Budget/session keys use MCP transport `sessionId` (stdio → `process:…`), same ALS pattern as content-reader query ledger.
+4. **Hard preview gate:** every SAFE_WRITE tool requires a session-owned, validated, unexpired `previewId` from `preview_*`. Every write path (create, update, duplicate, tiles, content-move) marks validated via `confirm_preview` bound to `resourceKind`/`resourceKey`. `validate_*` is an optional health check on a **saved** UUID only (upstream has no unsaved-payload validator) and does not unlock the ledger. Apply consumes the preview (single-use). Patch drift → `PREVIEW_STALE`. Budget/session keys use MCP transport `sessionId` (stdio → `process:…`), same ALS pattern as content-reader query ledger.
 5. **Safety dimensions** (registration + handler):
    - `mutability`: `none` | `preview` | `write-nondestructive`
    - `queryCapability`: `none` (no warehouse execution on this persona)
@@ -37,10 +37,11 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
 ```mermaid
 flowchart TD
   preview[preview_star] --> ledger[preview ledger draft]
-  ledger --> validate[validate_star]
-  validate --> validated[status validated]
+  ledger --> confirm[confirm_preview]
+  confirm --> validated[status validated]
   validated --> apply[SAFE_WRITE]
   apply --> consume[consume previewId]
+  validate[validate_star] -.->|"optional saved UUID health check"| apply
 ```
 
 ## Consequences
@@ -48,7 +49,7 @@ flowchart TD
 - Fourth HTTP path and stdio subcommand; OAuth PRM is persona-path-aware automatically via `listPersonaPaths()`.
 - content-reader remains mutation-free; authoring agents must use content-developer.
 - Client gains validate / history / version / dashboard create+update wrappers.
-- Agents must call preview → validate → apply; direct writes are blocked.
+- Agents must call preview → confirm_preview → apply; direct writes are blocked.
 - Combined server+tool wire names stay ≤60 characters via short `serverName`.
 
 ## References
