@@ -4,7 +4,8 @@
 
 import { createHash } from 'node:crypto';
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+/** True for plain objects (not null, not arrays). */
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 

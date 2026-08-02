@@ -3,7 +3,7 @@
  * (ADR-0014). No I/O except optional injected getters; safe to unit test without mocks.
  */
 
-import { hashStableValue, stableStringify } from '../lib/stable-stringify.js';
+import { hashStableValue, isRecord, stableStringify } from '../lib/stable-stringify.js';
 
 import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 
@@ -14,10 +14,6 @@ export type ShallowDiff = {
 };
 
 export { stableStringify };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 /** Top-level key diff between two objects (added/removed/changed keys). */
 export function shallowDiff(before: unknown, after: unknown): ShallowDiff {
@@ -412,17 +408,14 @@ export function matchMoveContentResolved(input: {
 }
 
 /**
- * Ledger baseline for content-move: full sorted manifest plus `updatedAt` fingerprint
- * so `assertBaselineStillValid` detects item/space drift on apply.
+ * Ledger baseline for content-move: `updatedAt` is a fingerprint of the sorted
+ * manifest so `assertBaselineStillValid` detects item/space drift on apply.
  */
 export function baselineFromMoveContentManifest(manifest: MoveContentManifest): PreviewBaseline {
-  const fingerprint = hashStableValue(manifest);
   return {
-    items: manifest.items,
-    targetSpace: manifest.targetSpace,
-    updatedAt: fingerprint,
+    updatedAt: hashStableValue(manifest),
     uuid: buildMoveContentResourceKey(manifest.items.map((item) => item.uuid)),
-  } as PreviewBaseline;
+  };
 }
 
 type ResolveMoveResult =
@@ -435,9 +428,13 @@ async function resolveMoveItems(
   | { kind: 'error'; error: MoveContentResolveError }
   | { kind: 'ok'; items: MoveContentManifestItem[] }
 > {
+  const summaries = await Promise.all(itemUuids.map((uuid) => findContentByUuid(uuid)));
   const resolvedItems: MoveContentManifestItem[] = [];
-  for (const uuid of itemUuids) {
-    const summary = await findContentByUuid(uuid);
+  for (let index = 0; index < itemUuids.length; index += 1) {
+    // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
+    const uuid = itemUuids[index]!;
+    // eslint-disable-next-line security/detect-object-injection -- index bound by Promise.all result
+    const summary = summaries[index];
     if (!summary) {
       return {
         kind: 'error',
@@ -523,7 +520,14 @@ export async function resolveMoveContentManifest(input: {
 }): Promise<ResolveMoveResult> {
   assertMoveContentLengths(input.itemUuids, input.contentTypes, input.chartSources);
 
-  const itemsResult = await resolveMoveItems(input.itemUuids, input.findContentByUuid);
+  const [itemsResult, targetResult] = await Promise.all([
+    resolveMoveItems(input.itemUuids, input.findContentByUuid),
+    resolveMoveTargetSpace({
+      targetSpaceUuid: input.targetSpaceUuid,
+      getSpace: input.getSpace,
+      isNotFound: input.isNotFound,
+    }),
+  ]);
   if (itemsResult.kind === 'error') {
     return itemsResult;
   }
@@ -538,11 +542,6 @@ export async function resolveMoveContentManifest(input: {
     return { kind: 'error', error: mismatch };
   }
 
-  const targetResult = await resolveMoveTargetSpace({
-    targetSpaceUuid: input.targetSpaceUuid,
-    getSpace: input.getSpace,
-    isNotFound: input.isNotFound,
-  });
   if (targetResult.kind === 'error') {
     return targetResult;
   }

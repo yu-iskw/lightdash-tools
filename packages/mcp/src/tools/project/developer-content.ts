@@ -32,13 +32,11 @@ import {
 } from '../../policy/content-developer.js';
 import {
   PREVIEW_RESOURCE_KINDS,
-  claimPreviewForApply,
-  markPreviewApplied,
   markPreviewValidated,
-  releaseOrReconcilePreview,
+  withClaimedPreviewApply,
 } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
-import { asPaginated, asRecord } from '../lib/api-shape.js';
+import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
@@ -47,6 +45,7 @@ import {
   MOVE_CHART_SOURCES,
   MOVE_CONTENT_TYPES,
   developerContext,
+  findContentByUuid,
   wrapDeveloperHandler,
 } from './developer-content-shared.js';
 import {
@@ -80,23 +79,8 @@ import {
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { PreviewResourceKind } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { components, UpsertChartAsCodeBody } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-async function findContentByUuid(
-  client: LightdashClient,
-  projectUuid: string,
-  uuid: string,
-): Promise<Record<string, unknown> | null> {
-  const result = await client.v2.content.searchContent({
-    projectUuids: [projectUuid],
-    search: uuid,
-    pageSize: 50,
-  });
-  const { data } = asPaginated<Record<string, unknown>>(result);
-  return data.find((item) => item.uuid === uuid) ?? null;
-}
 
 export {
   registerPreviewChartChanges,
@@ -351,27 +335,25 @@ function registerChartUpsertTool(
           asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
         isNotFound: isNotFoundError,
       });
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'chart',
-        resourceKey: args.slug,
-        proposed,
-        currentBaseline,
-      });
-      try {
-        const result = await c.v1.charts.upsertChartAsCode(
-          scope.projectUuid,
-          args.slug,
-          proposed as unknown as UpsertChartAsCodeBody,
-        );
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: result, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'chart',
+          resourceKey: args.slug,
+          proposed,
+          currentBaseline,
+        },
+        async () => {
+          const result = await c.v1.charts.upsertChartAsCode(
+            scope.projectUuid,
+            args.slug,
+            proposed as unknown as UpsertChartAsCodeBody,
+          );
+          return jsonToolResult({ data: result, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -464,28 +446,26 @@ export function registerDuplicateChart(
         );
       }
       const resourceKey = sourceBaseline?.uuid ?? args.sourceChartUuidOrSlug;
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'chart',
-        resourceKey,
-        proposed,
-        currentBaseline: sourceBaseline,
-      });
-      try {
-        const body = {
-          ...source,
-          slug: args.newSlug,
-          name: args.newName ?? source.name,
-        } as unknown as UpsertChartAsCodeBody;
-        const result = await c.v1.charts.upsertChartAsCode(scope.projectUuid, args.newSlug, body);
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: result, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'chart',
+          resourceKey,
+          proposed,
+          currentBaseline: sourceBaseline,
+        },
+        async () => {
+          const body = {
+            ...source,
+            slug: args.newSlug,
+            name: args.newName ?? source.name,
+          } as unknown as UpsertChartAsCodeBody;
+          const result = await c.v1.charts.upsertChartAsCode(scope.projectUuid, args.newSlug, body);
+          return jsonToolResult({ data: result, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -522,25 +502,23 @@ export function registerCreateDashboard(
         return codedErrorResult(parsedDashboard.code, parsedDashboard.message);
       }
       const proposed = parsedDashboard.data;
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'dashboard',
-        resourceKey: 'new',
-        proposed,
-      });
-      try {
-        const result = await c.v1.dashboards.createDashboard(
-          scope.projectUuid,
-          proposed as unknown as CreateDashboardBody,
-        );
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: result, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'dashboard',
+          resourceKey: 'new',
+          proposed,
+        },
+        async () => {
+          const result = await c.v1.dashboards.createDashboard(
+            scope.projectUuid,
+            proposed as unknown as CreateDashboardBody,
+          );
+          return jsonToolResult({ data: result, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -580,27 +558,25 @@ export function registerUpdateDashboard(
       const current = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
       );
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'dashboard',
-        resourceKey: args.dashboardUuidOrSlug,
-        proposed,
-        currentBaseline: baselineFromResource(current),
-      });
-      try {
-        const result = await c.v2.dashboards.updateDashboard(
-          scope.projectUuid,
-          args.dashboardUuidOrSlug,
-          proposed as unknown as UpdateDashboardBody,
-        );
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: result, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'dashboard',
+          resourceKey: args.dashboardUuidOrSlug,
+          proposed,
+          currentBaseline: baselineFromResource(current),
+        },
+        async () => {
+          const result = await c.v2.dashboards.updateDashboard(
+            scope.projectUuid,
+            args.dashboardUuidOrSlug,
+            proposed as unknown as UpdateDashboardBody,
+          );
+          return jsonToolResult({ data: result, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -637,29 +613,27 @@ export function registerDuplicateDashboard(
       const source = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
       );
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'dashboard',
-        resourceKey: args.sourceDashboardUuid,
-        proposed,
-        currentBaseline: baselineFromResource(source),
-      });
-      try {
-        const body: DuplicateDashboardBody = {
-          dashboardName: args.newName ?? 'Copy',
-          dashboardDesc: '',
-        };
-        const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
-          duplicateFrom: args.sourceDashboardUuid,
-        });
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: result, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'dashboard',
+          resourceKey: args.sourceDashboardUuid,
+          proposed,
+          currentBaseline: baselineFromResource(source),
+        },
+        async () => {
+          const body: DuplicateDashboardBody = {
+            dashboardName: args.newName ?? 'Copy',
+            dashboardDesc: '',
+          };
+          const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
+            duplicateFrom: args.sourceDashboardUuid,
+          });
+          return jsonToolResult({ data: result, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -712,28 +686,26 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
       const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
       const nextTiles = options.computeNextTiles(currentTiles, args);
       const proposed = { tiles: nextTiles };
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'dashboard',
-        resourceKey: args.dashboardUuidOrSlug,
-        proposed,
-        currentBaseline: baselineFromResource(dashboard),
-      });
-      try {
-        const body = buildDashboardUpdateBody(dashboard, proposed);
-        const updated = await c.v2.dashboards.updateDashboard(
-          scope.projectUuid,
-          args.dashboardUuidOrSlug,
-          body as unknown as UpdateDashboardBody,
-        );
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({ data: updated, context: developerContext(scope) });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'dashboard',
+          resourceKey: args.dashboardUuidOrSlug,
+          proposed,
+          currentBaseline: baselineFromResource(dashboard),
+        },
+        async () => {
+          const body = buildDashboardUpdateBody(dashboard, proposed);
+          const updated = await c.v2.dashboards.updateDashboard(
+            scope.projectUuid,
+            args.dashboardUuidOrSlug,
+            body as unknown as UpdateDashboardBody,
+          );
+          return jsonToolResult({ data: updated, context: developerContext(scope) });
+        },
+      );
     }),
   );
 }
@@ -772,28 +744,26 @@ export function registerAddDashboardTile(
         const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
         const nextTiles = applyTileAdd(currentTiles, parsedTile.data);
         const proposed = { tiles: nextTiles };
-        const entry = await claimPreviewForApply({
-          previewId: args.previewId,
-          sessionId,
-          projectUuid: scope.projectUuid,
-          resourceKind: 'dashboard',
-          resourceKey: args.dashboardUuidOrSlug,
-          proposed,
-          currentBaseline: baselineFromResource(dashboard),
-        });
-        try {
-          const body = buildDashboardUpdateBody(dashboard, proposed);
-          const updated = await c.v2.dashboards.updateDashboard(
-            scope.projectUuid,
-            args.dashboardUuidOrSlug,
-            body as unknown as UpdateDashboardBody,
-          );
-          await markPreviewApplied(entry.previewId);
-          return jsonToolResult({ data: updated, context: developerContext(scope) });
-        } catch (err) {
-          await releaseOrReconcilePreview(entry.previewId, err);
-          throw err;
-        }
+        return withClaimedPreviewApply(
+          {
+            previewId: args.previewId,
+            sessionId,
+            projectUuid: scope.projectUuid,
+            resourceKind: 'dashboard',
+            resourceKey: args.dashboardUuidOrSlug,
+            proposed,
+            currentBaseline: baselineFromResource(dashboard),
+          },
+          async () => {
+            const body = buildDashboardUpdateBody(dashboard, proposed);
+            const updated = await c.v2.dashboards.updateDashboard(
+              scope.projectUuid,
+              args.dashboardUuidOrSlug,
+              body as unknown as UpdateDashboardBody,
+            );
+            return jsonToolResult({ data: updated, context: developerContext(scope) });
+          },
+        );
       },
     ),
   );
@@ -907,33 +877,31 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
         chartSources: args.chartSources,
       });
       const currentBaseline = baselineFromMoveContentManifest(resolved.manifest);
-      const entry = await claimPreviewForApply({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'content-move',
-        resourceKey,
-        proposed,
-        currentBaseline,
-      });
-      try {
-        const content = args.itemUuids.map((uuid, index) =>
-          // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
-          buildMoveContentItem(uuid, args.contentTypes[index], args.chartSources?.[index]),
-        );
-        await c.v2.content.bulkMoveContent(scope.projectUuid, {
-          action: { type: 'move', targetSpaceUuid: args.targetSpaceUuid },
-          content,
-        } as unknown as BulkMoveContentBody);
-        await markPreviewApplied(entry.previewId);
-        return jsonToolResult({
-          data: { moved: args.itemUuids.length, targetSpaceUuid: args.targetSpaceUuid },
-          context: developerContext(scope),
-        });
-      } catch (err) {
-        await releaseOrReconcilePreview(entry.previewId, err);
-        throw err;
-      }
+      return withClaimedPreviewApply(
+        {
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'content-move',
+          resourceKey,
+          proposed,
+          currentBaseline,
+        },
+        async () => {
+          const content = args.itemUuids.map((uuid, index) =>
+            // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
+            buildMoveContentItem(uuid, args.contentTypes[index], args.chartSources?.[index]),
+          );
+          await c.v2.content.bulkMoveContent(scope.projectUuid, {
+            action: { type: 'move', targetSpaceUuid: args.targetSpaceUuid },
+            content,
+          } as unknown as BulkMoveContentBody);
+          return jsonToolResult({
+            data: { moved: args.itemUuids.length, targetSpaceUuid: args.targetSpaceUuid },
+            context: developerContext(scope),
+          });
+        },
+      );
     }),
   );
 }

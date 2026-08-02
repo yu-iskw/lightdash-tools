@@ -13,7 +13,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
 import { addPreviewLedgerEntry, uniqueResourceKeys } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
-import { asPaginated, asRecord } from '../lib/api-shape.js';
+import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
@@ -22,6 +22,7 @@ import {
   MOVE_CHART_SOURCES,
   MOVE_CONTENT_TYPES,
   developerContext,
+  findContentByUuid,
   wrapDeveloperHandler,
 } from './developer-content-shared.js';
 import {
@@ -43,22 +44,7 @@ import {
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-async function findContentByUuid(
-  client: LightdashClient,
-  projectUuid: string,
-  uuid: string,
-): Promise<Record<string, unknown> | null> {
-  const result = await client.v2.content.searchContent({
-    projectUuids: [projectUuid],
-    search: uuid,
-    pageSize: 50,
-  });
-  const { data } = asPaginated<Record<string, unknown>>(result);
-  return data.find((item) => item.uuid === uuid) ?? null;
-}
 
 export function registerPreviewChartChanges(
   server: McpServer,

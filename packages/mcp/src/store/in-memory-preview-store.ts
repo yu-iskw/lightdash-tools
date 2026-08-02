@@ -58,6 +58,17 @@ export class InMemoryPreviewStore implements PreviewStore {
     });
   }
 
+  async compareAndDelete(previewId: string, expectedStatus: PreviewStatus): Promise<boolean> {
+    return this.withLock(() => {
+      const current = this.entries.get(previewId);
+      if (!current || current.status !== expectedStatus) {
+        return false;
+      }
+      this.entries.delete(previewId);
+      return true;
+    });
+  }
+
   async delete(previewId: string): Promise<void> {
     await this.withLock(() => {
       this.entries.delete(previewId);

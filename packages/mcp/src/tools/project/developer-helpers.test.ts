@@ -423,9 +423,15 @@ describe('sortByUuidStable / buildMoveContentManifest', () => {
       ],
       targetSpace: { uuid: 's9', name: 'Dest' },
     });
-    expect(baselineFromMoveContentManifest(base).updatedAt).not.toBe(
-      baselineFromMoveContentManifest(drifted).updatedAt,
-    );
+    const baseBaseline = baselineFromMoveContentManifest(base);
+    const driftedBaseline = baselineFromMoveContentManifest(drifted);
+    expect(baseBaseline.updatedAt).not.toBe(driftedBaseline.updatedAt);
+    expect(baseBaseline).toEqual({
+      updatedAt: expect.any(String),
+      uuid: 'a',
+    });
+    expect(baseBaseline).not.toHaveProperty('items');
+    expect(baseBaseline).not.toHaveProperty('targetSpace');
   });
 });
 

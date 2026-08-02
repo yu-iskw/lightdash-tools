@@ -3,6 +3,7 @@
  */
 
 import { developerErrorResult } from '../../policy/content-developer.js';
+import { asPaginated } from '../lib/api-shape.js';
 import { wrapTool } from '../shared.js';
 
 import type { ResolvedProjectScope } from '../../governance/project-scope.js';
@@ -12,6 +13,21 @@ import type { LightdashClient } from '@lightdash-tools/client';
 
 export const MOVE_CONTENT_TYPES = ['chart', 'dashboard', 'data_app'] as const;
 export const MOVE_CHART_SOURCES = ['dbt_explore', 'sql'] as const;
+
+/** Resolve a single content summary by exact uuid via search (project-scoped). */
+export async function findContentByUuid(
+  client: LightdashClient,
+  projectUuid: string,
+  uuid: string,
+): Promise<Record<string, unknown> | null> {
+  const result = await client.v2.content.searchContent({
+    projectUuids: [projectUuid],
+    search: uuid,
+    pageSize: 50,
+  });
+  const { data } = asPaginated<Record<string, unknown>>(result);
+  return data.find((item) => item.uuid === uuid) ?? null;
+}
 
 export function developerContext(scope: ResolvedProjectScope): {
   persona: 'content-developer';

@@ -78,10 +78,8 @@ describe('preview-ledger state machine and faults', () => {
         resourceKind: 'chart',
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
-        operationKey: 'op-1',
       });
       expect(entry.status).toBe('draft');
-      expect(entry.operationKey).toBe('op-1');
       expect(entry.contentHash).toBe(
         hashPreviewContent({ proposed: { name: 'Foo' }, baseline: null }),
       );

@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   PreviewLedgerError,
   addPreviewLedgerEntry,
-  consumeValidatedPreview,
+  claimPreviewForApply,
   hashPreviewContent,
+  markPreviewApplied,
   markPreviewValidated,
   resetPreviewLedgerForTests,
 } from './preview-ledger.js';
@@ -20,6 +21,14 @@ async function expectPreviewErrorCode(
     expect(err).toBeInstanceOf(PreviewLedgerError);
     expect((err as PreviewLedgerError).code).toBe(code);
   }
+}
+
+async function claimAndApply(
+  input: Parameters<typeof claimPreviewForApply>[0],
+): Promise<Awaited<ReturnType<typeof claimPreviewForApply>>> {
+  const claimed = await claimPreviewForApply(input);
+  await markPreviewApplied(claimed.previewId);
+  return claimed;
 }
 
 describe('preview-ledger', () => {
@@ -47,7 +56,7 @@ describe('preview-ledger', () => {
     });
   });
 
-  describe('consumeValidatedPreview (claim+apply wrapper)', () => {
+  describe('claimPreviewForApply + markPreviewApplied', () => {
     it('consumes a validated preview when kind/key/hash match', async () => {
       const entry = await addPreviewLedgerEntry({
         sessionId: 's1',
@@ -61,7 +70,7 @@ describe('preview-ledger', () => {
         resourceKey: 'my-slug',
       });
 
-      const consumed = await consumeValidatedPreview({
+      const claimed = await claimAndApply({
         previewId: entry.previewId,
         sessionId: 's1',
         projectUuid: 'p1',
@@ -69,12 +78,12 @@ describe('preview-ledger', () => {
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      expect(consumed.previewId).toBe(entry.previewId);
-      expect(consumed.status).toBe('applied');
+      expect(claimed.previewId).toBe(entry.previewId);
+      expect(claimed.status).toBe('applying');
 
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -96,7 +105,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -122,7 +131,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -148,7 +157,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -174,7 +183,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's2',
             projectUuid: 'p1',
@@ -199,7 +208,7 @@ describe('preview-ledger', () => {
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
       });
-      const consumed = await consumeValidatedPreview({
+      const claimed = await claimAndApply({
         previewId: entry.previewId,
         sessionId: 's1',
         projectUuid: 'p1',
@@ -207,7 +216,7 @@ describe('preview-ledger', () => {
         resourceKey: 'revenue-kpi',
         proposed: { name: 'Foo' },
       });
-      expect(consumed.resourceKey).toBe('chart-uuid-1');
+      expect(claimed.resourceKey).toBe('chart-uuid-1');
     });
 
     it('rejects when baseline updatedAt drifted at apply time', async () => {
@@ -226,7 +235,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -254,7 +263,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -280,7 +289,7 @@ describe('preview-ledger', () => {
       });
       await expectPreviewErrorCode(
         () =>
-          consumeValidatedPreview({
+          claimAndApply({
             previewId: entry.previewId,
             sessionId: 's1',
             projectUuid: 'p1',
@@ -305,7 +314,7 @@ describe('preview-ledger', () => {
         resourceKind: 'chart',
         resourceKey: 'new-slug',
       });
-      const consumed = await consumeValidatedPreview({
+      const claimed = await claimAndApply({
         previewId: entry.previewId,
         sessionId: 's1',
         projectUuid: 'p1',
@@ -313,7 +322,7 @@ describe('preview-ledger', () => {
         resourceKey: 'new-slug',
         proposed: { name: 'Foo' },
       });
-      expect(consumed.resourceKey).toBe('new-slug');
+      expect(claimed.resourceKey).toBe('new-slug');
     });
   });
 });

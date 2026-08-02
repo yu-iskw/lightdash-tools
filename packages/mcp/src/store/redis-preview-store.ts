@@ -23,6 +23,20 @@ redis.call('SET', KEYS[1], ARGV[2], 'PX', ARGV[3])
 return 1
 `;
 
+/** Atomic delete when current JSON status matches expected. */
+const CAS_DELETE_LUA = `
+local current = redis.call('GET', KEYS[1])
+if not current then
+  return 0
+end
+local decoded = cjson.decode(current)
+if decoded['status'] ~= ARGV[1] then
+  return 0
+end
+redis.call('DEL', KEYS[1])
+return 1
+`;
+
 function previewKey(previewId: string): string {
   return `${PREVIEW_REDIS_KEY_PREFIX}${previewId}`;
 }
@@ -66,6 +80,15 @@ export class RedisPreviewStore implements PreviewStore {
     const result = await client.eval(CAS_LUA, {
       keys: [previewKey(previewId)],
       arguments: [expectedStatus, JSON.stringify(next), String(ttlMs)],
+    });
+    return result === 1 || result === BigInt(1);
+  }
+
+  async compareAndDelete(previewId: string, expectedStatus: PreviewStatus): Promise<boolean> {
+    const client = await this.getClient();
+    const result = await client.eval(CAS_DELETE_LUA, {
+      keys: [previewKey(previewId)],
+      arguments: [expectedStatus],
     });
     return result === 1 || result === BigInt(1);
   }

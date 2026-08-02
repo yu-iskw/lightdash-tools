@@ -38,17 +38,13 @@ export class RedisSessionIndex {
     });
   }
 
-  async touch(sessionId: string, lastAccessAt: number): Promise<void> {
+  /**
+   * Extend TTL when the index key exists. Does not rewrite JSON (local SessionStore
+   * owns lastAccessAt for process-local expiry); missing keys are a no-op.
+   */
+  async touch(sessionId: string, _lastAccessAt?: number): Promise<void> {
     const client = await this.getClient();
-    const raw = await client.get(sessionKey(sessionId));
-    if (raw == null) {
-      return;
-    }
-    const record = JSON.parse(raw) as SessionIndexRecord;
-    record.lastAccessAt = lastAccessAt;
-    await client.set(sessionKey(sessionId), JSON.stringify(record), {
-      PX: this.sessionTtlMs,
-    });
+    await client.pExpire(sessionKey(sessionId), this.sessionTtlMs);
   }
 
   async delete(sessionId: string): Promise<void> {

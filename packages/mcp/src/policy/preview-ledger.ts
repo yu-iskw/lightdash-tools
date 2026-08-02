@@ -18,8 +18,7 @@ import { hashStableValue } from '../tools/lib/stable-stringify.js';
 
 export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
 export type PreviewResourceKind = (typeof PREVIEW_RESOURCE_KINDS)[number];
-export type PreviewStatus =
-  'applied' | 'applying' | 'draft' | 'reconciliation_required' | 'validated';
+export type PreviewStatus = 'applying' | 'draft' | 'reconciliation_required' | 'validated';
 
 /** Snapshot identity captured when the preview was issued (for update stale detection). */
 export type PreviewBaseline = {
@@ -45,10 +44,6 @@ export type PreviewLedgerEntry = {
   status: PreviewStatus;
   proposed: unknown;
   baseline?: PreviewBaseline;
-  /**
-   * Optional idempotency key for create/duplicate (hash of project + slug + proposed).
-   */
-  operationKey?: string;
   createdAt: string;
   expiresAt: string;
 };
@@ -63,6 +58,8 @@ export interface PreviewStore {
     expectedStatus: PreviewStatus,
     next: PreviewLedgerEntry,
   ): Promise<boolean>;
+  /** Atomic delete when current status matches; returns false on mismatch / missing */
+  compareAndDelete(previewId: string, expectedStatus: PreviewStatus): Promise<boolean>;
   delete(previewId: string): Promise<void>;
 }
 
@@ -178,8 +175,6 @@ export async function addPreviewLedgerEntry(input: {
   proposed: unknown;
   baseline?: PreviewBaseline;
   ttlMs?: number;
-  /** Optional create/duplicate idempotency key (caller-supplied or pre-hashed). */
-  operationKey?: string;
 }): Promise<PreviewLedgerEntry> {
   const now = Date.now();
   const ttl = input.ttlMs ?? DEFAULT_PREVIEW_TTL_MS;
@@ -195,7 +190,6 @@ export async function addPreviewLedgerEntry(input: {
     status: 'draft',
     proposed: input.proposed,
     baseline: input.baseline,
-    operationKey: input.operationKey,
     createdAt: new Date(now).toISOString(),
     expiresAt: new Date(now + ttl).toISOString(),
   };
@@ -308,11 +302,7 @@ function assertClaimBindings(
   assertBaselineStillValid(input.previewId, entry, input.currentBaseline);
 }
 
-/**
- * Claim a validated preview for apply (`validated` → `applying` via CAS).
- * Same kind/key/hash/baseline checks as the former consume path, but does not delete.
- */
-export async function claimPreviewForApply(input: {
+export type ClaimPreviewForApplyInput = {
   previewId: string;
   sessionId: string;
   projectUuid: string;
@@ -321,7 +311,15 @@ export async function claimPreviewForApply(input: {
   proposed: unknown;
   /** Fresh resource snapshot for baseline stale detection (update and create races). */
   currentBaseline?: PreviewBaseline;
-}): Promise<PreviewLedgerEntry> {
+};
+
+/**
+ * Claim a validated preview for apply (`validated` → `applying` via CAS).
+ * Same kind/key/hash/baseline checks as the former consume path, but does not delete.
+ */
+export async function claimPreviewForApply(
+  input: ClaimPreviewForApplyInput,
+): Promise<PreviewLedgerEntry> {
   const entry = await assertOwnedEntry({
     previewId: input.previewId,
     sessionId: input.sessionId,
@@ -339,17 +337,9 @@ export async function claimPreviewForApply(input: {
   return applying;
 }
 
-/** Mark applying → applied, then delete the entry (single-use completion). */
+/** Delete a claimed preview when still `applying` (single-use completion). */
 export async function markPreviewApplied(previewId: string): Promise<void> {
-  const entry = await store().get(previewId);
-  if (!entry) {
-    return;
-  }
-  const applied: PreviewLedgerEntry = { ...entry, status: 'applied' };
-  const swapped = await store().compareAndSwap(previewId, 'applying', applied);
-  if (swapped) {
-    await store().delete(previewId);
-  }
+  await store().compareAndDelete(previewId, 'applying');
 }
 
 /**
@@ -372,21 +362,21 @@ export async function releaseOrReconcilePreview(previewId: string, err: unknown)
 }
 
 /**
- * Thin wrapper: claim + mark applied (for tests / legacy callers).
- * Prefer claimPreviewForApply + markPreviewApplied around real I/O.
+ * Claim → run mutation → mark applied; on failure release/reconcile and rethrow.
  */
-export async function consumeValidatedPreview(input: {
-  previewId: string;
-  sessionId: string;
-  projectUuid: string;
-  resourceKind: PreviewResourceKind;
-  resourceKey: string;
-  proposed: unknown;
-  currentBaseline?: PreviewBaseline;
-}): Promise<PreviewLedgerEntry> {
-  const claimed = await claimPreviewForApply(input);
-  await markPreviewApplied(claimed.previewId);
-  return { ...claimed, status: 'applied' };
+export async function withClaimedPreviewApply<T>(
+  claimInput: ClaimPreviewForApplyInput,
+  fn: (entry: PreviewLedgerEntry) => Promise<T>,
+): Promise<T> {
+  const entry = await claimPreviewForApply(claimInput);
+  try {
+    const result = await fn(entry);
+    await markPreviewApplied(entry.previewId);
+    return result;
+  } catch (err) {
+    await releaseOrReconcilePreview(entry.previewId, err);
+    throw err;
+  }
 }
 
 /** Test helper: reset to a fresh in-memory store. */
