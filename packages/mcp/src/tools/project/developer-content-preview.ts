@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
-import { addPreviewLedgerEntry } from '../../policy/preview-ledger.js';
+import { addPreviewLedgerEntry, uniqueResourceKeys } from '../../policy/preview-ledger.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { jsonToolResult } from '../shared.js';
@@ -30,8 +30,24 @@ import {
 } from './developer-helpers.js';
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
+import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+function baselineFromResource(
+  resource: Record<string, unknown> | null,
+): PreviewBaseline | undefined {
+  if (!resource) {
+    return undefined;
+  }
+  const updatedAt = typeof resource.updatedAt === 'string' ? resource.updatedAt : undefined;
+  const uuid = typeof resource.uuid === 'string' ? resource.uuid : undefined;
+  const slug = typeof resource.slug === 'string' ? resource.slug : undefined;
+  if (updatedAt == null && uuid == null && slug == null) {
+    return undefined;
+  }
+  return { updatedAt, uuid, slug };
+}
 
 export function registerPreviewChartChanges(
   server: McpServer,
@@ -66,13 +82,29 @@ export function registerPreviewChartChanges(
       const current = args.chartUuidOrSlug
         ? asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug))
         : null;
-      const resourceKey = args.slug ?? args.chartUuidOrSlug ?? 'new';
+      const baseline = baselineFromResource(current);
+      // Canonical identity is UUID when updating an existing chart (validate_chart binds
+      // chartUuid); upsert slug remains an alias so create/update_chart can consume by slug.
+      const upsertSlug =
+        args.slug ?? (typeof current?.slug === 'string' ? current.slug : undefined) ?? undefined;
+      const resourceKey =
+        baseline?.uuid ?? upsertSlug ?? args.chartUuidOrSlug ?? args.slug ?? 'new';
+      const resourceAliases = uniqueResourceKeys(
+        resourceKey,
+        baseline?.uuid,
+        baseline?.slug,
+        upsertSlug,
+        args.chartUuidOrSlug,
+        args.slug,
+      );
       const entry = addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'chart',
         resourceKey,
+        resourceAliases,
         proposed: args.changes,
+        baseline,
       });
       return jsonToolResult({
         data: {
@@ -80,6 +112,8 @@ export function registerPreviewChartChanges(
           status: entry.status,
           contentHash: entry.contentHash,
           resourceKey,
+          resourceAliases,
+          upsertSlug: upsertSlug ?? null,
           expiresAt: entry.expiresAt,
           diff: shallowDiff(current, args.changes),
           current,
@@ -118,13 +152,23 @@ export function registerPreviewDashboardChanges(
       const current = args.dashboardUuidOrSlug
         ? asRecord(await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug))
         : null;
-      const resourceKey = args.dashboardUuidOrSlug ?? 'new';
+      const baseline = baselineFromResource(current);
+      // UUID is canonical for validate_dashboard; uuid-or-slug remains an apply alias.
+      const resourceKey = baseline?.uuid ?? args.dashboardUuidOrSlug ?? 'new';
+      const resourceAliases = uniqueResourceKeys(
+        resourceKey,
+        baseline?.uuid,
+        baseline?.slug,
+        args.dashboardUuidOrSlug,
+      );
       const entry = addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'dashboard',
         resourceKey,
+        resourceAliases,
         proposed: args.changes,
+        baseline,
       });
       return jsonToolResult({
         data: {
@@ -132,6 +176,7 @@ export function registerPreviewDashboardChanges(
           status: entry.status,
           contentHash: entry.contentHash,
           resourceKey,
+          resourceAliases,
           expiresAt: entry.expiresAt,
           diff: shallowDiff(current, args.changes),
           current,

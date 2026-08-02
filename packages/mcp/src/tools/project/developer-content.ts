@@ -4,7 +4,8 @@
  * Hybrid authoring surface behind a hard preview -> validate/confirm -> apply gate:
  *  - preview_* computes an in-memory diff and issues a single-use previewId.
  *  - validate_* runs the upstream validator against an existing chart/dashboard uuid and
- *    marks the preview validated only when it was bound to that exact resource.
+ *    marks the preview validated only when it was bound to that resource (uuid or alias)
+ *    and the validation result has zero errors.
  *  - confirm_preview marks a preview validated for flows with no upstream validate API
  *    (create, duplicate, tile ops, content-move); it never calls a Lightdash API.
  *  - The write tools consume the validated preview (contentHash must match exactly)
@@ -34,6 +35,7 @@ import {
   consumeValidatedPreview,
   markPreviewValidated,
 } from '../../policy/preview-ledger.js';
+import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
@@ -105,17 +107,21 @@ export function registerValidateChart(
       (c) => async (args) => {
         const scope = resolveProjectScope({ projectUuid: args.projectUuid });
         const validation = await c.v1.validation.validateChart(scope.projectUuid, args.chartUuid);
+        const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
         let previewStatus: string | undefined;
-        if (args.previewId) {
+        // Only bind a successful, error-free validation to the previewed chart identity.
+        if (args.previewId && errorCount === 0) {
           const sessionId = getMcpClientSessionId();
           const entry = markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
             resourceKind: 'chart',
             resourceKey: args.chartUuid,
           });
           previewStatus = entry.status;
+        } else if (args.previewId) {
+          previewStatus = 'validation_failed';
         }
         return jsonToolResult({
-          data: { validation, previewStatus },
+          data: { validation, previewStatus, errorCount },
           context: developerContext(scope),
         });
       },
@@ -150,17 +156,20 @@ export function registerValidateDashboard(
           scope.projectUuid,
           args.dashboardUuid,
         );
+        const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
         let previewStatus: string | undefined;
-        if (args.previewId) {
+        if (args.previewId && errorCount === 0) {
           const sessionId = getMcpClientSessionId();
           const entry = markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
             resourceKind: 'dashboard',
             resourceKey: args.dashboardUuid,
           });
           previewStatus = entry.status;
+        } else if (args.previewId) {
+          previewStatus = 'validation_failed';
         }
         return jsonToolResult({
-          data: { validation, previewStatus },
+          data: { validation, previewStatus, errorCount },
           context: developerContext(scope),
         });
       },
@@ -324,6 +333,22 @@ function registerChartUpsertTool(
     wrapDeveloperHandler<ChartUpsertArgs>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      // Re-read when possible so update baselines fail closed on intervening edits.
+      // Creates (unknown slug) skip baseline; missing baseline on an update preview fails closed.
+      let currentBaseline: { updatedAt?: string; uuid?: string; slug?: string } | undefined;
+      try {
+        const current = asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.slug));
+        currentBaseline = {
+          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
+          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
+          slug: typeof current.slug === 'string' ? current.slug : undefined,
+        };
+      } catch (err) {
+        if (!isNotFoundError(err)) {
+          throw err;
+        }
+        currentBaseline = undefined;
+      }
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -331,6 +356,7 @@ function registerChartUpsertTool(
         resourceKind: 'chart',
         resourceKey: args.slug,
         proposed: args.chart,
+        currentBaseline,
       });
       const result = await c.v1.charts.upsertChartAsCode(
         scope.projectUuid,
@@ -493,6 +519,9 @@ export function registerUpdateDashboard(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      const current = asRecord(
+        await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
+      );
       consumeValidatedPreview({
         previewId: args.previewId,
         sessionId,
@@ -500,6 +529,11 @@ export function registerUpdateDashboard(
         resourceKind: 'dashboard',
         resourceKey: args.dashboardUuidOrSlug,
         proposed: args.dashboard,
+        currentBaseline: {
+          updatedAt: typeof current.updatedAt === 'string' ? current.updatedAt : undefined,
+          uuid: typeof current.uuid === 'string' ? current.uuid : undefined,
+          slug: typeof current.slug === 'string' ? current.slug : undefined,
+        },
       });
       const result = await c.v2.dashboards.updateDashboard(
         scope.projectUuid,
@@ -617,6 +651,11 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
         resourceKind: 'dashboard',
         resourceKey: args.dashboardUuidOrSlug,
         proposed,
+        currentBaseline: {
+          updatedAt: typeof dashboard.updatedAt === 'string' ? dashboard.updatedAt : undefined,
+          uuid: typeof dashboard.uuid === 'string' ? dashboard.uuid : undefined,
+          slug: typeof dashboard.slug === 'string' ? dashboard.slug : undefined,
+        },
       });
       const body = buildDashboardUpdateBody(dashboard, proposed);
       const updated = await c.v2.dashboards.updateDashboard(

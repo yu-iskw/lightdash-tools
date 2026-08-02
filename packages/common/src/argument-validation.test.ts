@@ -51,6 +51,8 @@ describe('argument-validation', () => {
           'toolCallId',
           'userUuid',
           'versionUuid',
+          'versionUuidA',
+          'versionUuidB',
         ].sort(),
       );
     });

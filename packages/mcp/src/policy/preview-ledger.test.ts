@@ -55,7 +55,10 @@ describe('preview-ledger', () => {
         proposed: { name: 'Foo' },
       });
       expect(entry.status).toBe('draft');
-      expect(entry.contentHash).toBe(hashPreviewContent({ name: 'Foo' }));
+      expect(entry.contentHash).toBe(
+        hashPreviewContent({ proposed: { name: 'Foo' }, baseline: null }),
+      );
+      expect(entry.resourceAliases).toEqual(['my-slug']);
 
       const owned = getOwnedPreview({
         previewId: entry.previewId,
@@ -166,6 +169,22 @@ describe('preview-ledger', () => {
           }),
         'PREVIEW_STALE',
       );
+    });
+
+    it('accepts an alias resourceKey (uuid ↔ slug)', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+        resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
+        proposed: { name: 'Chart' },
+      });
+      const validated = markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'revenue-kpi',
+      });
+      expect(validated.status).toBe('validated');
     });
   });
 
@@ -305,6 +324,86 @@ describe('preview-ledger', () => {
             proposed: { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' },
           }),
         'PREVIEW_NOT_OWNED',
+      );
+    });
+
+    it('consumes by alias resourceKey when uuid was stored as primary', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+        resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
+        proposed: { name: 'Foo' },
+      });
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+      });
+      const consumed = consumeValidatedPreview({
+        previewId: entry.previewId,
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'revenue-kpi',
+        proposed: { name: 'Foo' },
+      });
+      expect(consumed.resourceKey).toBe('chart-uuid-1');
+    });
+
+    it('rejects when baseline updatedAt drifted at apply time', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+        resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
+        proposed: { name: 'Foo' },
+        baseline: { updatedAt: '2026-08-01T00:00:00.000Z', uuid: 'chart-uuid-1' },
+      });
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+      });
+      expectPreviewErrorCode(
+        () =>
+          consumeValidatedPreview({
+            previewId: entry.previewId,
+            sessionId: 's1',
+            projectUuid: 'p1',
+            resourceKind: 'chart',
+            resourceKey: 'revenue-kpi',
+            proposed: { name: 'Foo' },
+            currentBaseline: { updatedAt: '2026-08-02T00:00:00.000Z', uuid: 'chart-uuid-1' },
+          }),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('rejects when baseline was captured but currentBaseline is missing at apply', () => {
+      const entry = addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+        proposed: { name: 'Foo' },
+        baseline: { updatedAt: '2026-08-01T00:00:00.000Z' },
+      });
+      markPreviewValidated(entry.previewId, 's1', 'p1', {
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+      });
+      expectPreviewErrorCode(
+        () =>
+          consumeValidatedPreview({
+            previewId: entry.previewId,
+            sessionId: 's1',
+            projectUuid: 'p1',
+            resourceKind: 'chart',
+            resourceKey: 'chart-uuid-1',
+            proposed: { name: 'Foo' },
+          }),
+        'PREVIEW_STALE',
       );
     });
   });

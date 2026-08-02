@@ -49,8 +49,8 @@ export class ValidationClient extends BaseApiClient {
   async validateChart(
     projectUuid: string,
     chartUuid: string,
-  ): Promise<components['schemas']['ApiChartValidationResponse']> {
-    return this.http.post<components['schemas']['ApiChartValidationResponse']>(
+  ): Promise<components['schemas']['ApiChartValidationResponse']['results']> {
+    return this.http.post<components['schemas']['ApiChartValidationResponse']['results']>(
       `/projects/${projectUuid}/validate/chart/${chartUuid}`,
     );
   }
@@ -59,8 +59,8 @@ export class ValidationClient extends BaseApiClient {
   async validateDashboard(
     projectUuid: string,
     dashboardUuid: string,
-  ): Promise<components['schemas']['ApiDashboardValidationResponse']> {
-    return this.http.post<components['schemas']['ApiDashboardValidationResponse']>(
+  ): Promise<components['schemas']['ApiDashboardValidationResponse']['results']> {
+    return this.http.post<components['schemas']['ApiDashboardValidationResponse']['results']>(
       `/projects/${projectUuid}/validate/dashboard/${dashboardUuid}`,
     );
   }

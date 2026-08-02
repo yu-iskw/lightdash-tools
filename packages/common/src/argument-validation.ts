@@ -25,6 +25,8 @@ export const RESOURCE_ID_KEYS = new Set([
   'runUuid',
   'artifactUuid',
   'versionUuid',
+  'versionUuidA',
+  'versionUuidB',
   'mcpServerUuid',
   'toolCallId',
   'fingerprint',
