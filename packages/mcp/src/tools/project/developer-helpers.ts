@@ -149,13 +149,21 @@ export type VersionSummary = { versionUuid: string; createdAt: string };
 /**
  * Resolve two version UUIDs to compare: explicit args when both are given, otherwise
  * the two most recent entries in the version history (descending by `createdAt`).
+ * Providing only one of versionUuidA/versionUuidB is rejected.
  */
 export function resolveCompareVersionIds(
   history: readonly VersionSummary[],
   versionUuidA?: string,
   versionUuidB?: string,
 ): [string, string] {
-  if (versionUuidA && versionUuidB) {
+  const hasA = versionUuidA != null && versionUuidA !== '';
+  const hasB = versionUuidB != null && versionUuidB !== '';
+  if (hasA !== hasB) {
+    throw new Error(
+      'versionUuidA and versionUuidB must both be provided when specifying explicit versions',
+    );
+  }
+  if (hasA && hasB && versionUuidA && versionUuidB) {
     return [versionUuidA, versionUuidB];
   }
   const sorted = [...history].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));

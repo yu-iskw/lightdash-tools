@@ -361,7 +361,7 @@ export function registerDuplicateChart(
     {
       title: 'Duplicate chart',
       description:
-        'Duplicate a chart by reading its as-code representation and upserting a new slug',
+        'Duplicate a chart after a source-bound preview (preview_chart_changes on the source); newSlug must be free',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
@@ -386,21 +386,21 @@ export function registerDuplicateChart(
         newSlug: args.newSlug,
         newName: args.newName,
       };
-      const currentBaseline = await fetchChartBaselineOptional({
-        chartUuidOrSlug: args.newSlug,
-        getSavedChart: async (id) =>
-          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
-        isNotFound: isNotFoundError,
-      });
-      consumeValidatedPreview({
-        previewId: args.previewId,
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'chart',
-        resourceKey: args.newSlug,
-        proposed,
-        currentBaseline,
-      });
+      const getSaved = async (id: string) =>
+        asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id));
+      let sourceRecord: Record<string, unknown>;
+      try {
+        sourceRecord = await getSaved(args.sourceChartUuidOrSlug);
+      } catch (err) {
+        if (isNotFoundError(err)) {
+          return codedErrorResult(
+            'CONTENT_NOT_FOUND',
+            `Chart '${args.sourceChartUuidOrSlug}' was not found`,
+          );
+        }
+        throw err;
+      }
+      const sourceBaseline = baselineFromResource(sourceRecord);
       const list = await c.v1.charts.getChartsAsCode(scope.projectUuid, {
         ids: [args.sourceChartUuidOrSlug],
       });
@@ -411,6 +411,27 @@ export function registerDuplicateChart(
           `Chart '${args.sourceChartUuidOrSlug}' was not found`,
         );
       }
+      const targetBaseline = await fetchChartBaselineOptional({
+        chartUuidOrSlug: args.newSlug,
+        getSavedChart: getSaved,
+        isNotFound: isNotFoundError,
+      });
+      if (targetBaseline) {
+        return codedErrorResult(
+          'CHART_SLUG_EXISTS',
+          `Chart slug '${args.newSlug}' already exists; choose a free newSlug or update the existing chart`,
+        );
+      }
+      const resourceKey = sourceBaseline?.uuid ?? args.sourceChartUuidOrSlug;
+      consumeValidatedPreview({
+        previewId: args.previewId,
+        sessionId,
+        projectUuid: scope.projectUuid,
+        resourceKind: 'chart',
+        resourceKey,
+        proposed,
+        currentBaseline: sourceBaseline,
+      });
       const body = {
         ...source,
         slug: args.newSlug,

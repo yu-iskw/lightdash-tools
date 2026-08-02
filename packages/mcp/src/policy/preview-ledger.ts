@@ -194,7 +194,7 @@ function assertBaselineStillValid(
   if (hasNonEmpty(previewedUpdatedAt) && currentBaseline?.updatedAt !== previewedUpdatedAt) {
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
-      `Preview '${previewId}' baseline changed (resource was updated after preview); re-run preview -> validate`,
+      `Preview '${previewId}' baseline changed (resource was updated after preview); re-run preview -> confirm`,
     );
   }
   if (
@@ -245,7 +245,7 @@ export function consumeValidatedPreview(input: {
   if (hashPreviewBinding(input.proposed, entry.baseline) !== entry.contentHash) {
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
-      `Preview '${input.previewId}' content hash does not match the applied payload; re-run preview -> validate`,
+      `Preview '${input.previewId}' content hash does not match the applied payload; re-run preview -> confirm`,
     );
   }
   assertBaselineStillValid(input.previewId, entry, input.currentBaseline);

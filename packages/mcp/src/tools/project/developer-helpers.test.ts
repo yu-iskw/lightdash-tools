@@ -169,8 +169,13 @@ describe('resolveCompareVersionIds', () => {
     expect(resolveCompareVersionIds(history)).toEqual(['v2', 'v3']);
   });
 
-  it('falls back to the two most recent entries when only one id is provided', () => {
-    expect(resolveCompareVersionIds(history, 'v1')).toEqual(['v2', 'v3']);
+  it('rejects when only one explicit version id is provided', () => {
+    expect(() => resolveCompareVersionIds(history, 'v1')).toThrow(
+      /versionUuidA and versionUuidB must both be provided/,
+    );
+    expect(() => resolveCompareVersionIds(history, undefined, 'v3')).toThrow(
+      /versionUuidA and versionUuidB must both be provided/,
+    );
   });
 
   it('throws when fewer than two history entries exist', () => {

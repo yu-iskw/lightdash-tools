@@ -18,7 +18,14 @@ Semantic (as-code) charts only. When a new or updated chart is required for a da
 2. Immediately attach the chart as a tile: `preview_dashboard_changes` with the resulting tiles → `confirm_preview` → `add_dashboard_tile` / `update_dashboard`.
 3. Do not stop after chart UUID alone — the workflow is incomplete until the chart is on a dashboard.
 
-`duplicate_chart` / `compare_chart_versions` are allowed when improving an existing tiled chart; still finish on the dashboard.
+`compare_chart_versions` is allowed when improving an existing tiled chart; still finish on the dashboard.
+
+## Duplicate chart
+
+1. `preview_chart_changes` with `chartUuidOrSlug` = source and `changes` = `{ sourceChartUuidOrSlug, newSlug, newName? }` (must match apply args).
+2. `confirm_preview` with `resourceKind: 'chart'` and `resourceKey` = source UUID from the preview.
+3. `duplicate_chart` with the same source / `newSlug` / `newName` (`newSlug` must be free — `CHART_SLUG_EXISTS` otherwise; apply re-reads source baseline).
+4. Attach the new chart as a dashboard tile before treating work as done.
 
 ## Create dashboard
 
