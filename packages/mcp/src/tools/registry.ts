@@ -27,8 +27,6 @@ import {
   registerListContent,
   registerListValidationResults,
 } from './project/content.js';
-import { registerDeleteChart } from './project/delete-chart.js';
-import { registerDeleteDashboard } from './project/delete-dashboard.js';
 import {
   registerAddDashboardTile,
   registerCompareChartVersions,
@@ -151,10 +149,6 @@ export const toolRegistry = {
   remove_dashboard_tile: { register: registerRemoveDashboardTile },
   resize_dashboard_tile: { register: registerResizeDashboardTile },
   move_content: { register: registerMoveContent },
-
-  // content-governance (ADR-0015)
-  delete_chart: { register: registerDeleteChart },
-  delete_dashboard: { register: registerDeleteDashboard },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

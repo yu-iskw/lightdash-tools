@@ -49,14 +49,4 @@ describe('ContentClient', () => {
     await client.bulkMoveContent('p1', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/content/bulk-action/p1/move', body);
   });
-
-  it('permanentlyDeleteContent should call DELETE /content/{projectUuid}/permanent with body', async () => {
-    const client = new ContentClient(mockHttp);
-    const body = {
-      item: { contentType: 'chart' as const, uuid: 'c1', source: 'dbt_explore' as const },
-    } as Parameters<ContentClient['permanentlyDeleteContent']>[1];
-    vi.mocked(mockHttp.delete).mockResolvedValue({ status: 'ok' });
-    await client.permanentlyDeleteContent('p1', body);
-    expect(mockHttp.delete).toHaveBeenCalledWith('/content/p1/permanent', { data: body });
-  });
 });

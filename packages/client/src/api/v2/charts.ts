@@ -1,5 +1,5 @@
 /**
- * Charts API client (v2). Metadata reads and soft-delete (no query execution).
+ * Charts API client (v2). Metadata reads only (no query execution).
  */
 
 import { BaseApiClient } from '../base-client';
@@ -14,10 +14,5 @@ export class ChartsClientV2 extends BaseApiClient {
     return this.http.get<SavedChart>(
       `/projects/${projectUuid}/saved/${encodeURIComponent(chartUuidOrSlug)}`,
     );
-  }
-
-  /** Soft-delete a saved chart by UUID or slug within a project. */
-  async deleteSavedChart(projectUuid: string, chartUuidOrSlug: string): Promise<void> {
-    await this.http.delete(`/projects/${projectUuid}/saved/${encodeURIComponent(chartUuidOrSlug)}`);
   }
 }

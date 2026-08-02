@@ -26,9 +26,6 @@ export type MoveContentBody = components['schemas']['ApiContentActionBody_Conten
 export type BulkMoveContentBody =
   components['schemas']['ApiContentBulkActionBody_ContentActionMove_'];
 
-/** Body for permanently deleting soft-deleted content (irrecoverable). */
-export type PermanentlyDeleteContentBody = components['schemas']['ApiPermanentlyDeleteContentBody'];
-
 export class ContentClient extends BaseApiClient {
   /** Search project content (charts, dashboards, spaces). */
   async searchContent(
@@ -47,16 +44,5 @@ export class ContentClient extends BaseApiClient {
   /** Move multiple content items (charts, dashboards, spaces) to another space in one call. */
   async bulkMoveContent(projectUuid: string, body: BulkMoveContentBody): Promise<void> {
     await this.http.post(`/content/bulk-action/${projectUuid}/move`, body);
-  }
-
-  /**
-   * Permanently delete soft-deleted content (irrecoverable).
-   * Not exposed on MCP — use typed client only (ADR-0015).
-   */
-  async permanentlyDeleteContent(
-    projectUuid: string,
-    body: PermanentlyDeleteContentBody,
-  ): Promise<void> {
-    await this.http.delete(`/content/${projectUuid}/permanent`, { data: body });
   }
 }

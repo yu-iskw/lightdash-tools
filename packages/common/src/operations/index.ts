@@ -18,7 +18,6 @@ export { IRRECOVERABLE_TOOL_DENYLIST } from './agent-safe';
 export { AI_AGENT_OPERATIONS } from './ai-agents';
 export { CLI_CONTENT_OPERATIONS } from './cli-content';
 export { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
-export { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 export { CONTENT_READER_OPERATIONS } from './content-reader';
 export { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 export { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';

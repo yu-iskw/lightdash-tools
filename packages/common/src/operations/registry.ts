@@ -5,7 +5,6 @@
 import { AI_AGENT_OPERATIONS } from './ai-agents';
 import { CLI_CONTENT_OPERATIONS } from './cli-content';
 import { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
-import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
@@ -22,7 +21,6 @@ const ALL_OPERATIONS: readonly OperationDescriptor[] = [
   ...ORGANIZATION_AUDIT_OPERATIONS,
   ...CONTENT_READER_OPERATIONS,
   ...CONTENT_DEVELOPER_OPERATIONS,
-  ...CONTENT_GOVERNANCE_OPERATIONS,
   ...CLI_CONTENT_OPERATIONS,
 ];
 

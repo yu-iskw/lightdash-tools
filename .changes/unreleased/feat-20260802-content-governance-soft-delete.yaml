@@ -1,3 +1,0 @@
-kind: feat
-body: Add content-governance MCP persona with elicitation-gated soft-delete for charts and dashboards (ADR-0015).
-time: 2026-08-02T08:00:00+09:00

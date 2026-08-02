@@ -4,13 +4,11 @@ import { registerToolsByIds } from '../tools/registry.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
 import { CONTENT_DEVELOPER_TOOL_IDS } from './content-developer/v1/index.js';
-import { CONTENT_GOVERNANCE_TOOL_IDS } from './content-governance/v1/index.js';
 import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 
 import {
   CONTENT_DEVELOPER_PERSONA_PATH,
-  CONTENT_GOVERNANCE_PERSONA_PATH,
   CONTENT_READER_PERSONA_PATH,
   DEFAULT_PERSONA_ID,
   getDefaultPersona,
@@ -25,10 +23,9 @@ import {
 } from './index.js';
 
 describe('personas', () => {
-  it('ships five personas with fixed paths', () => {
+  it('ships four personas with fixed paths', () => {
     expect(Object.keys(PERSONAS).sort()).toEqual([
       'content-developer',
-      'content-governance',
       'content-reader',
       'organization-audit',
       'semantic-layer',
@@ -37,7 +34,6 @@ describe('personas', () => {
     expect(listPersonaPaths().sort()).toEqual(
       [
         CONTENT_DEVELOPER_PERSONA_PATH,
-        CONTENT_GOVERNANCE_PERSONA_PATH,
         CONTENT_READER_PERSONA_PATH,
         ORGANIZATION_AUDIT_PERSONA_PATH,
         SEMANTIC_LAYER_PERSONA_PATH,
@@ -47,7 +43,6 @@ describe('personas', () => {
     expect(getPersonaByPath(ORGANIZATION_AUDIT_PERSONA_PATH)?.id).toBe('organization-audit');
     expect(getPersonaByPath(CONTENT_READER_PERSONA_PATH)?.id).toBe('content-reader');
     expect(getPersonaByPath(CONTENT_DEVELOPER_PERSONA_PATH)?.id).toBe('content-developer');
-    expect(getPersonaByPath(CONTENT_GOVERNANCE_PERSONA_PATH)?.id).toBe('content-governance');
     expect(getPersonaByPath('/mcp')).toBeUndefined();
   });
 
@@ -56,7 +51,6 @@ describe('personas', () => {
     expect(getPersonaByPath(`${ORGANIZATION_AUDIT_PERSONA_PATH}/`)?.id).toBe('organization-audit');
     expect(getPersonaByPath(`${CONTENT_READER_PERSONA_PATH}/`)?.id).toBe('content-reader');
     expect(getPersonaByPath(`${CONTENT_DEVELOPER_PERSONA_PATH}/`)?.id).toBe('content-developer');
-    expect(getPersonaByPath(`${CONTENT_GOVERNANCE_PERSONA_PATH}/`)?.id).toBe('content-governance');
   });
 
   it('semantic-layer allowlists exactly nine tools', () => {
@@ -88,14 +82,6 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-cdev');
   });
 
-  it('content-governance allowlists 2 soft-delete tools and short server name', () => {
-    const persona = getPersona('content-governance');
-    expect(persona.toolIds).toHaveLength(2);
-    expect(persona.toolIds).toEqual([...CONTENT_GOVERNANCE_TOOL_IDS]);
-    expect(persona.toolIds).toEqual(['delete_chart', 'delete_dashboard']);
-    expect(getPersonaServerName(persona)).toBe('lightdash-mcp-gov');
-  });
-
   it('keeps combined server+tool wire names under 60 characters', () => {
     for (const persona of Object.values(PERSONAS)) {
       const serverName = getPersonaServerName(persona);
@@ -111,7 +97,7 @@ describe('personas', () => {
     expect(parsePersonaId('organization-audit')).toBe('organization-audit');
     expect(parsePersonaId('content-reader')).toBe('content-reader');
     expect(parsePersonaId('content-developer')).toBe('content-developer');
-    expect(parsePersonaId('content-governance')).toBe('content-governance');
+    expect(parsePersonaId('content-governance')).toBeUndefined();
     expect(parsePersonaId('nope')).toBeUndefined();
   });
 

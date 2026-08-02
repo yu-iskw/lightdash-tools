@@ -9,7 +9,7 @@ export function isForbiddenOrNotFound(err: unknown): boolean {
   return err instanceof LightdashApiError && (err.statusCode === 403 || err.statusCode === 404);
 }
 
-/** Not-found only — used for idempotent soft-delete retries (ADR-0015). */
+/** Not-found only — used for optional baseline reads and create slug races. */
 export function isNotFoundError(err: unknown): boolean {
   return err instanceof LightdashApiError && err.statusCode === 404;
 }

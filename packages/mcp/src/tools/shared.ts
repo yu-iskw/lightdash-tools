@@ -17,7 +17,6 @@ import {
   getSessionId,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
-import { isInputRequiredResult } from '@modelcontextprotocol/server';
 
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import {
@@ -29,8 +28,7 @@ import { toMcpErrorMessage } from '../server/errors.js';
 
 import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
-import type { AuditStatus, ToolAnnotations } from '@lightdash-tools/common';
-import type { InputRequiredResult, ServerContext } from '@modelcontextprotocol/server';
+import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { z } from 'zod';
 
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
@@ -41,9 +39,6 @@ export type TextContent = {
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };
-
-/** Handler return type: normal tool content or MCP 2026-07-28 MRTR InputRequiredResult. */
-export type ToolResult = InputRequiredResult | TextContent;
 
 /** MCP requires structuredContent to be a record; wrap arrays and primitives. */
 function toStructuredContent(data: unknown): Record<string, unknown> {
@@ -87,7 +82,7 @@ function enrichStructuredContent(result: TextContent): TextContent {
 }
 
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
-export type ToolHandler = (args: unknown, extra?: unknown) => Promise<ToolResult>;
+export type ToolHandler = (args: unknown, extra?: unknown) => Promise<TextContent>;
 
 /** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT or WRITE_IDEMPOTENT) for visibility. */
 export type ToolOptions = {
@@ -115,7 +110,7 @@ function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
 function buildAuditFields(
   name: string,
   projectUuids: string[],
-  status: AuditStatus,
+  status: 'blocked' | 'error' | 'success',
   start: number,
   auth: ReturnType<typeof getToolAuditAuth>,
 ): Parameters<typeof logAuditEntry>[0] {
@@ -137,33 +132,11 @@ function buildAuditFields(
  */
 type BlockedContent = TextContent & { readonly _lightdashBlocked: true };
 
-type AuditedContent = TextContent & {
-  readonly _lightdashBlocked?: true;
-  readonly _lightdashAuditStatus?: AuditStatus;
-};
-
 function isGuardrailBlocked(result: TextContent): result is BlockedContent {
   return (
     '_lightdashBlocked' in result &&
     (result as Record<string, unknown>)['_lightdashBlocked'] === true
   );
-}
-
-function resolveAuditStatus(result: ToolResult): AuditStatus {
-  if (isInputRequiredResult(result)) {
-    return 'confirmation_requested';
-  }
-  const audited = result as AuditedContent;
-  if (typeof audited._lightdashAuditStatus === 'string') {
-    return audited._lightdashAuditStatus;
-  }
-  if (isGuardrailBlocked(result)) {
-    return 'blocked';
-  }
-  if (result.isError) {
-    return 'error';
-  }
-  return 'success';
 }
 
 /** Guardrail-blocked tool result; audit wrapper strips `_lightdashBlocked`. */
@@ -183,19 +156,10 @@ export function withLightdashBlockedMarker<T extends TextContent>(result: T): Bl
   return { ...result, _lightdashBlocked: true };
 }
 
-/** Attach a specific audit status (stripped before MCP client). */
-export function withAuditStatus<T extends TextContent>(
-  result: T,
-  status: AuditStatus,
-): AuditedContent & T {
-  return { ...result, _lightdashAuditStatus: status };
-}
-
 /**
  * Registers a tool with prefix and annotations, applying pin / validation / audit guardrails.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
  * Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
- * Handlers may return TextContent or InputRequiredResult (MRTR elicitation).
  */
 export function registerToolSafe(
   server: unknown,
@@ -211,7 +175,7 @@ export function registerToolSafe(
   // ── Input validation wrapper ─────────────────────────────────────────────
   // Validate resource IDs (projectUuid, projectUuids, slug, etc.) before handler.
   const validatedInner = finalHandler;
-  finalHandler = async (args, extra): Promise<ToolResult> => {
+  finalHandler = async (args, extra): Promise<TextContent> => {
     try {
       validateResourceIdsInObject(args);
     } catch (err) {
@@ -225,7 +189,7 @@ export function registerToolSafe(
   // ── HTTP project pin wrapper ──────────────────────────────────────────────
   // When X-Lightdash-Project is set (ALS), reject tools that target another project.
   const pinInner = finalHandler;
-  finalHandler = async (args, extra): Promise<ToolResult> => {
+  finalHandler = async (args, extra): Promise<TextContent> => {
     const pinned = getPinnedProjectUuid();
     if (pinned) {
       const projectUuids = extractProjectUuids(args);
@@ -242,17 +206,21 @@ export function registerToolSafe(
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
   const auditedInner = finalHandler;
-  finalHandler = async (args, extra): Promise<ToolResult> => {
+  finalHandler = async (args, extra): Promise<TextContent> => {
     const start = Date.now();
     const projectUuids = extractProjectUuids(args);
     // Snapshot before await — wrapTool ALS may end when the handler returns.
     const auth = getToolAuditAuth();
-    let status: AuditStatus = 'success';
-    let result: ToolResult;
+    let status: 'blocked' | 'error' | 'success' = 'success';
+    let result: TextContent;
 
     try {
       result = await auditedInner(args, extra);
-      status = resolveAuditStatus(result);
+      if (isGuardrailBlocked(result)) {
+        status = 'blocked';
+      } else if (result.isError) {
+        status = 'error';
+      }
     } catch (err) {
       status = 'error';
       logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
@@ -261,12 +229,7 @@ export function registerToolSafe(
 
     logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
 
-    // Pass InputRequiredResult through unchanged (MRTR).
-    if (isInputRequiredResult(result)) {
-      return result;
-    }
-
-    // Strip internal markers before returning to the MCP client.
+    // Strip the internal marker before returning to the MCP client.
     const enriched = enrichStructuredContent(result);
     const { content, isError, structuredContent } = enriched;
     return structuredContent !== undefined
@@ -282,24 +245,9 @@ export function registerToolSafe(
   (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, finalHandler);
 }
 
-export type ToolExecutionContext = {
-  lightdashClient: LightdashClient;
-  /** SDK ServerContext when the transport provides it (second registerTool arg). */
-  serverContext: ServerContext | undefined;
-  sessionId: string;
-};
-
-function asServerContext(extra: unknown): ServerContext | undefined {
-  if (extra !== null && typeof extra === 'object' && 'mcpReq' in extra) {
-    return extra as ServerContext;
-  }
-  return undefined;
-}
-
-/** Like wrapTool, but passes ServerContext / session / auth for elicitation-capable tools. */
-export function wrapToolContextual<T>(
+export function wrapTool<T>(
   contextProvider: McpContextProvider,
-  fn: (ctx: ToolExecutionContext) => (args: T) => Promise<ToolResult>,
+  fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
 ): ToolHandler {
   return async (args: unknown, extra?: unknown) => {
     const sessionId = resolveMcpClientSessionId(extra);
@@ -311,12 +259,7 @@ export function wrapToolContextual<T>(
         return await runWithToolAuditAuthAsync(
           { tokenHash: auth?.tokenHash, subject: auth?.subject },
           async () => {
-            const execution: ToolExecutionContext = {
-              lightdashClient: context.lightdashClient,
-              serverContext: asServerContext(extra),
-              sessionId,
-            };
-            const handler = fn(execution);
+            const handler = fn(context.lightdashClient);
             return await handler(args as T);
           },
         );
@@ -326,14 +269,4 @@ export function wrapToolContextual<T>(
       return { content: [{ type: 'text', text }], isError: true };
     }
   };
-}
-
-export function wrapTool<T>(
-  contextProvider: McpContextProvider,
-  fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
-): ToolHandler {
-  return wrapToolContextual<T>(contextProvider, (ctx) => {
-    const inner = fn(ctx.lightdashClient);
-    return async (args) => inner(args);
-  });
 }

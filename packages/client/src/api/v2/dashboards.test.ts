@@ -54,18 +54,4 @@ describe('DashboardsClientV2', () => {
     await client.updateDashboard('p1', 'dash/slug', body);
     expect(mockHttp.patch).toHaveBeenCalledWith('/projects/p1/dashboards/dash%2Fslug', body);
   });
-
-  it('deleteDashboard calls DELETE /projects/{projectUuid}/dashboards/{id}', async () => {
-    const client = new DashboardsClientV2(mockHttp);
-    vi.mocked(mockHttp.delete).mockResolvedValue(undefined);
-    await client.deleteDashboard('p1', 'd1');
-    expect(mockHttp.delete).toHaveBeenCalledWith('/projects/p1/dashboards/d1');
-  });
-
-  it('deleteDashboard encodes slug in path', async () => {
-    const client = new DashboardsClientV2(mockHttp);
-    vi.mocked(mockHttp.delete).mockResolvedValue(undefined);
-    await client.deleteDashboard('p1', 'dash/slug');
-    expect(mockHttp.delete).toHaveBeenCalledWith('/projects/p1/dashboards/dash%2Fslug');
-  });
 });
