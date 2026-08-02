@@ -1,0 +1,159 @@
+/**
+ * Redis-backed OAuthBrokerStore (ADR-0016).
+ *
+ * Fully serializable pending state, authorization codes, and DCR clients —
+ * the high-value multi-instance fix for authorize → callback → token.
+ *
+ * Key prefix: `lightdash-tools:mcp:oauth:`.
+ * Soft capacity: Redis relies on key TTLs (no process-local max maps).
+ */
+
+import { randomBytes } from 'node:crypto';
+
+import {
+  DEFAULT_CLIENT_TTL_MS,
+  DEFAULT_CODE_TTL_MS,
+  DEFAULT_PENDING_TTL_MS,
+  type IssuedAuthorizationCode,
+  type OAuthBrokerStore,
+  type OAuthBrokerStoreOptions,
+  type PendingAuthorization,
+  type RegisteredClient,
+} from '../auth/oauth-broker/pending-store.js';
+
+import type { RedisClientType } from 'redis';
+
+export const OAUTH_REDIS_KEY_PREFIX = 'lightdash-tools:mcp:oauth:';
+
+type ClientWire = {
+  clientId: string;
+  redirectUris: string[];
+  createdAt: number;
+};
+
+function pendingKey(brokerState: string): string {
+  return `${OAUTH_REDIS_KEY_PREFIX}pending:${brokerState}`;
+}
+
+function codeKey(code: string): string {
+  return `${OAUTH_REDIS_KEY_PREFIX}code:${code}`;
+}
+
+function clientKey(clientId: string): string {
+  return `${OAUTH_REDIS_KEY_PREFIX}client:${clientId}`;
+}
+
+function toRegisteredClient(wire: ClientWire): RegisteredClient {
+  return {
+    clientId: wire.clientId,
+    redirectUris: new Set(wire.redirectUris),
+    createdAt: wire.createdAt,
+  };
+}
+
+export class RedisOAuthBrokerStore implements OAuthBrokerStore {
+  private readonly pendingTtlMs: number;
+  private readonly codeTtlMs: number;
+  private readonly clientTtlMs: number;
+
+  constructor(
+    private readonly resolveRedis: () => Promise<RedisClientType>,
+    options: OAuthBrokerStoreOptions = {},
+  ) {
+    this.pendingTtlMs = options.pendingTtlMs ?? DEFAULT_PENDING_TTL_MS;
+    this.codeTtlMs = options.codeTtlMs ?? DEFAULT_CODE_TTL_MS;
+    this.clientTtlMs = options.clientTtlMs ?? DEFAULT_CLIENT_TTL_MS;
+  }
+
+  async registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined> {
+    const clientId = randomBytes(16).toString('base64url');
+    const wire: ClientWire = {
+      clientId,
+      redirectUris: [...redirectUris],
+      createdAt: Date.now(),
+    };
+    const redis = await this.resolveRedis();
+    await redis.set(clientKey(clientId), JSON.stringify(wire), { PX: this.clientTtlMs });
+    return toRegisteredClient(wire);
+  }
+
+  async getClient(clientId: string): Promise<RegisteredClient | undefined> {
+    const redis = await this.resolveRedis();
+    const raw = await redis.get(clientKey(clientId));
+    if (raw == null) {
+      return undefined;
+    }
+    return toRegisteredClient(JSON.parse(raw) as ClientWire);
+  }
+
+  async isRedirectAllowedForClient(clientId: string, redirectUri: string): Promise<boolean> {
+    const registered = await this.getClient(clientId);
+    return registered !== undefined && registered.redirectUris.has(redirectUri);
+  }
+
+  async createPending(
+    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt'>,
+  ): Promise<PendingAuthorization | undefined> {
+    const pending: PendingAuthorization = {
+      ...input,
+      brokerState: randomBytes(24).toString('base64url'),
+      createdAt: Date.now(),
+    };
+    const redis = await this.resolveRedis();
+    await redis.set(pendingKey(pending.brokerState), JSON.stringify(pending), {
+      PX: this.pendingTtlMs,
+    });
+    return pending;
+  }
+
+  async takePending(brokerState: string): Promise<PendingAuthorization | undefined> {
+    const redis = await this.resolveRedis();
+    const key = pendingKey(brokerState);
+    // Atomic consume (Redis 6.2+ GETDEL).
+    const raw = await redis.getDel(key);
+    if (raw == null) {
+      return undefined;
+    }
+    return JSON.parse(raw) as PendingAuthorization;
+  }
+
+  async issueCode(
+    pending: PendingAuthorization,
+    tokens: {
+      accessToken: string;
+      expiresIn?: number;
+      tokenType?: string;
+      scope?: string;
+    },
+  ): Promise<IssuedAuthorizationCode | undefined> {
+    const issued: IssuedAuthorizationCode = {
+      code: randomBytes(32).toString('base64url'),
+      clientId: pending.clientId,
+      redirectUri: pending.redirectUri,
+      codeChallenge: pending.codeChallenge,
+      codeChallengeMethod: pending.codeChallengeMethod,
+      accessToken: tokens.accessToken,
+      expiresIn: tokens.expiresIn,
+      tokenType: tokens.tokenType ?? 'Bearer',
+      scope: tokens.scope ?? pending.scope,
+      createdAt: Date.now(),
+    };
+    const redis = await this.resolveRedis();
+    await redis.set(codeKey(issued.code), JSON.stringify(issued), { PX: this.codeTtlMs });
+    return issued;
+  }
+
+  async getCode(code: string): Promise<IssuedAuthorizationCode | undefined> {
+    const redis = await this.resolveRedis();
+    const raw = await redis.get(codeKey(code));
+    if (raw == null) {
+      return undefined;
+    }
+    return JSON.parse(raw) as IssuedAuthorizationCode;
+  }
+
+  async deleteCode(code: string): Promise<void> {
+    const redis = await this.resolveRedis();
+    await redis.del(codeKey(code));
+  }
+}

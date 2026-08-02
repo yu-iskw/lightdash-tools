@@ -1,0 +1,3 @@
+kind: feat
+body: Add pluggable MCP ephemeral store (memory/redis) and preview claim/apply/release state machine (ADR-0016).
+time: 2026-08-02T12:49:33.893257+09:00

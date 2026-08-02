@@ -7,15 +7,22 @@ import {
   applyTileRemove,
   applyTileResize,
   assertMoveContentLengths,
+  baselineFromMoveContentManifest,
   baselineFromResource,
   buildDashboardUpdateBody,
   buildMoveContentItem,
+  buildMoveContentManifest,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
   fetchChartBaselineOptional,
+  matchMoveContentResolved,
+  moveContentItemFromSummary,
+  moveContentTargetSpaceFromRecord,
   resolveChartPreviewCurrent,
   resolveCompareVersionIds,
+  resolveMoveContentManifest,
   shallowDiff,
+  sortByUuidStable,
   stableStringify,
 } from './developer-helpers.js';
 
@@ -362,5 +369,220 @@ describe('fetchChartBaselineOptional', () => {
       isNotFound: (err) => err === notFound,
     });
     expect(baseline).toBeUndefined();
+  });
+});
+
+describe('sortByUuidStable / buildMoveContentManifest', () => {
+  it('sorts items by uuid for a hash-stable manifest', () => {
+    const manifest = buildMoveContentManifest({
+      items: [
+        {
+          uuid: 'b',
+          contentType: 'dashboard',
+          spaceUuid: 's1',
+          updatedAt: 't2',
+          source: null,
+        },
+        {
+          uuid: 'a',
+          contentType: 'chart',
+          spaceUuid: 's0',
+          updatedAt: 't1',
+          source: 'sql',
+        },
+      ],
+      targetSpace: { uuid: 's9', name: 'Dest' },
+    });
+    expect(manifest.items.map((item) => item.uuid)).toEqual(['a', 'b']);
+    expect(sortByUuidStable([{ uuid: 'z' }, { uuid: 'm' }]).map((i) => i.uuid)).toEqual(['m', 'z']);
+    expect(manifest.targetSpace).toEqual({ uuid: 's9', name: 'Dest' });
+  });
+
+  it('changes fingerprint when space or updatedAt drifts', () => {
+    const base = buildMoveContentManifest({
+      items: [
+        {
+          uuid: 'a',
+          contentType: 'chart',
+          spaceUuid: 's0',
+          updatedAt: 't1',
+          source: 'dbt_explore',
+        },
+      ],
+      targetSpace: { uuid: 's9', name: 'Dest' },
+    });
+    const drifted = buildMoveContentManifest({
+      items: [
+        {
+          uuid: 'a',
+          contentType: 'chart',
+          spaceUuid: 's1',
+          updatedAt: 't1',
+          source: 'dbt_explore',
+        },
+      ],
+      targetSpace: { uuid: 's9', name: 'Dest' },
+    });
+    expect(baselineFromMoveContentManifest(base).updatedAt).not.toBe(
+      baselineFromMoveContentManifest(drifted).updatedAt,
+    );
+  });
+});
+
+describe('moveContentItemFromSummary / moveContentTargetSpaceFromRecord', () => {
+  it('extracts chart identity, space, source, and lastUpdatedAt', () => {
+    expect(
+      moveContentItemFromSummary({
+        uuid: 'c1',
+        contentType: 'chart',
+        source: 'sql',
+        lastUpdatedAt: '2026-08-01T00:00:00.000Z',
+        space: { uuid: 's1', name: 'Analytics' },
+      }),
+    ).toEqual({
+      uuid: 'c1',
+      contentType: 'chart',
+      spaceUuid: 's1',
+      updatedAt: '2026-08-01T00:00:00.000Z',
+      source: 'sql',
+    });
+  });
+
+  it('rejects unsupported content types', () => {
+    expect(moveContentItemFromSummary({ uuid: 's1', contentType: 'space' })).toBeNull();
+  });
+
+  it('normalizes null target space and named spaces', () => {
+    expect(moveContentTargetSpaceFromRecord(null, null)).toEqual({ uuid: null, name: null });
+    expect(moveContentTargetSpaceFromRecord('s9', { uuid: 's9', name: 'Dest' })).toEqual({
+      uuid: 's9',
+      name: 'Dest',
+    });
+  });
+});
+
+describe('matchMoveContentResolved', () => {
+  const resolved = [
+    {
+      uuid: 'a',
+      contentType: 'chart' as const,
+      spaceUuid: 's0',
+      updatedAt: 't1',
+      source: 'sql' as const,
+    },
+    {
+      uuid: 'b',
+      contentType: 'dashboard' as const,
+      spaceUuid: 's0',
+      updatedAt: 't2',
+      source: null,
+    },
+  ];
+
+  it('accepts matching types and chart sources', () => {
+    expect(
+      matchMoveContentResolved({
+        itemUuids: ['a', 'b'],
+        contentTypes: ['chart', 'dashboard'],
+        chartSources: ['sql', 'dbt_explore'],
+        resolvedItems: resolved,
+      }),
+    ).toBeNull();
+  });
+
+  it('rejects type mismatches', () => {
+    const err = matchMoveContentResolved({
+      itemUuids: ['a'],
+      contentTypes: ['dashboard'],
+      resolvedItems: resolved,
+    });
+    expect(err?.code).toBe('INVALID_ARGUMENT');
+    expect(err?.message).toContain('chart');
+  });
+
+  it('rejects chart source mismatches', () => {
+    const err = matchMoveContentResolved({
+      itemUuids: ['a'],
+      contentTypes: ['chart'],
+      chartSources: ['dbt_explore'],
+      resolvedItems: resolved,
+    });
+    expect(err?.code).toBe('INVALID_ARGUMENT');
+    expect(err?.message).toContain('sql');
+  });
+});
+
+describe('resolveMoveContentManifest', () => {
+  const notFound = Object.assign(new Error('missing'), { statusCode: 404 });
+
+  it('builds a sorted manifest from injected lookups', async () => {
+    const result = await resolveMoveContentManifest({
+      itemUuids: ['b', 'a'],
+      contentTypes: ['dashboard', 'chart'],
+      chartSources: ['dbt_explore', 'sql'],
+      targetSpaceUuid: 's9',
+      findContentByUuid: async (uuid) => {
+        if (uuid === 'a') {
+          return {
+            uuid: 'a',
+            contentType: 'chart',
+            source: 'sql',
+            lastUpdatedAt: 't1',
+            space: { uuid: 's0' },
+          };
+        }
+        if (uuid === 'b') {
+          return {
+            uuid: 'b',
+            contentType: 'dashboard',
+            lastUpdatedAt: 't2',
+            space: { uuid: 's0' },
+          };
+        }
+        return null;
+      },
+      getSpace: async (spaceUuid) => ({ uuid: spaceUuid, name: 'Dest' }),
+      isNotFound: () => false,
+    });
+    expect(result.kind).toBe('ok');
+    if (result.kind === 'ok') {
+      expect(result.manifest.items.map((item) => item.uuid)).toEqual(['a', 'b']);
+      expect(result.manifest.targetSpace).toEqual({ uuid: 's9', name: 'Dest' });
+    }
+  });
+
+  it('returns CONTENT_NOT_FOUND for missing items or target space', async () => {
+    const missingItem = await resolveMoveContentManifest({
+      itemUuids: ['missing'],
+      contentTypes: ['chart'],
+      targetSpaceUuid: null,
+      findContentByUuid: async () => null,
+      getSpace: async () => ({ uuid: 's9' }),
+      isNotFound: () => false,
+    });
+    expect(missingItem).toEqual({
+      kind: 'error',
+      error: { code: 'CONTENT_NOT_FOUND', message: "Content 'missing' was not found" },
+    });
+
+    const missingSpace = await resolveMoveContentManifest({
+      itemUuids: ['a'],
+      contentTypes: ['chart'],
+      targetSpaceUuid: 'gone',
+      findContentByUuid: async () => ({
+        uuid: 'a',
+        contentType: 'chart',
+        source: 'dbt_explore',
+        space: { uuid: 's0' },
+      }),
+      getSpace: async () => {
+        throw notFound;
+      },
+      isNotFound: (err) => err === notFound,
+    });
+    expect(missingSpace.kind).toBe('error');
+    if (missingSpace.kind === 'error') {
+      expect(missingSpace.error.code).toBe('CONTENT_NOT_FOUND');
+    }
   });
 });

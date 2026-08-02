@@ -11,7 +11,8 @@ URI: `lightdash://playbooks/content-developer/core`
 - Do not create or update spaces — spaces are managed outside this agent (e.g. Terraform). Use existing spaces only.
 - Do not treat a standalone chart create/update as a finished publish unit. New charts must be attached as dashboard tiles in the same workflow (dashboard is the promotion unit).
 - Do not apply a write tool without a validated, unexpired, session-owned `previewId` from the matching `preview_*` tool.
-- Do not reuse a `previewId` after it has been consumed by `apply` (single-use) or after the underlying resource has drifted (`PREVIEW_STALE`).
+- Do not reuse a `previewId` after a successful apply (single-use: claim → mutate → mark applied) or after the underlying resource has drifted (`PREVIEW_STALE`).
+- If apply fails with `PREVIEW_RECONCILIATION_REQUIRED`, inspect the resource and re-run preview → confirm (do not assume the write succeeded or failed).
 - Every write (create, update, duplicate, tile ops, content-move) must be unlocked with `confirm_preview`, passing the exact `resourceKind`/`resourceKey` the preview was created with — never a different resource's preview.
 - `validate_chart` / `validate_dashboard` are optional health checks on a **saved** UUID only; they do not unlock apply (upstream has no unsaved-payload validator).
 - Do not reveal secrets, warehouse credentials, or hidden SQL.
@@ -57,6 +58,6 @@ Use only these `lightdash_*` tools:
 
 1. Call the matching `preview_*` tool; record `previewId`, diff, expiry, `resourceKey`.
 2. Unlock with `confirm_preview` using the exact `resourceKind`/`resourceKey` from the preview.
-3. Apply with the write tool and the confirmed `previewId`. Stale/consumed → `PREVIEW_STALE`; re-preview.
+3. Apply with the write tool and the confirmed `previewId` (server claims the preview, mutates, then marks applied). Stale baseline/payload → `PREVIEW_STALE` (re-preview); uncertain mutation failure → `PREVIEW_RECONCILIATION_REQUIRED` (inspect + re-preview). Known client errors may release the preview so a retry with the same `previewId` can claim again.
 4. Optionally run `validate_chart` / `validate_dashboard` on saved UUIDs as a health check (does not unlock).
 5. Report UUIDs touched and outcomes; do not claim success without a successful apply response.

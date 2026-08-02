@@ -1,0 +1,77 @@
+/**
+ * Redis-backed PreviewStore with Lua CAS (ADR-0016).
+ *
+ * Key prefix: `lightdash-tools:mcp:preview:`. TTL derived from entry.expiresAt.
+ */
+
+import type { PreviewLedgerEntry, PreviewStatus, PreviewStore } from '../policy/preview-ledger.js';
+import type { RedisClientType } from 'redis';
+
+export const PREVIEW_REDIS_KEY_PREFIX = 'lightdash-tools:mcp:preview:';
+
+/** Atomic CAS: replace value only when current JSON status matches expected. */
+const CAS_LUA = `
+local current = redis.call('GET', KEYS[1])
+if not current then
+  return 0
+end
+local decoded = cjson.decode(current)
+if decoded['status'] ~= ARGV[1] then
+  return 0
+end
+redis.call('SET', KEYS[1], ARGV[2], 'PX', ARGV[3])
+return 1
+`;
+
+function previewKey(previewId: string): string {
+  return `${PREVIEW_REDIS_KEY_PREFIX}${previewId}`;
+}
+
+function ttlMsFromEntry(entry: PreviewLedgerEntry, now = Date.now()): number {
+  const expires = Date.parse(entry.expiresAt);
+  if (Number.isNaN(expires)) {
+    return 1;
+  }
+  return Math.max(1, expires - now);
+}
+
+export class RedisPreviewStore implements PreviewStore {
+  constructor(private readonly getClient: () => Promise<RedisClientType>) {}
+
+  async get(previewId: string): Promise<PreviewLedgerEntry | undefined> {
+    const client = await this.getClient();
+    const raw = await client.get(previewKey(previewId));
+    if (raw == null) {
+      return undefined;
+    }
+    return JSON.parse(raw) as PreviewLedgerEntry;
+  }
+
+  async put(entry: PreviewLedgerEntry): Promise<void> {
+    const client = await this.getClient();
+    const ttlMs = ttlMsFromEntry(entry);
+    await client.set(previewKey(entry.previewId), JSON.stringify(entry), { PX: ttlMs });
+  }
+
+  async compareAndSwap(
+    previewId: string,
+    expectedStatus: PreviewStatus,
+    next: PreviewLedgerEntry,
+  ): Promise<boolean> {
+    if (next.previewId !== previewId) {
+      return false;
+    }
+    const client = await this.getClient();
+    const ttlMs = ttlMsFromEntry(next);
+    const result = await client.eval(CAS_LUA, {
+      keys: [previewKey(previewId)],
+      arguments: [expectedStatus, JSON.stringify(next), String(ttlMs)],
+    });
+    return result === 1 || result === BigInt(1);
+  }
+
+  async delete(previewId: string): Promise<void> {
+    const client = await this.getClient();
+    await client.del(previewKey(previewId));
+  }
+}

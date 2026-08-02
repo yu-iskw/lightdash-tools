@@ -29,7 +29,7 @@ SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. F
 - Hosted operators configure four primary vars and register one callback in Lightdash; clients use URL-only MCP config.
 - Auth extensions (client-credentials, enterprise-managed) are out of scope for this product path.
 - Confused-deputy / audience binding remain partially upstream-limited until Lightdash issues resource-bound tokens.
-- In-memory broker pending-auth and MCP sessions require single-instance or sticky routing until an external store exists.
+- In-memory broker pending-auth and MCP sessions require single-instance or sticky routing unless operators opt into the pluggable ephemeral store ([ADR-0016](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)).
 
 ## References
 

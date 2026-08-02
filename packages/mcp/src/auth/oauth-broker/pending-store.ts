@@ -1,3 +1,11 @@
+/**
+ * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0016).
+ *
+ * All values are JSON-serializable (redirect URI sets become string arrays on Redis).
+ * Backends: in-memory (default) or Redis via `createOAuthBrokerStore` — full multi-instance
+ * handoff for authorize → callback → token when STORE=redis.
+ */
+
 import { randomBytes } from 'node:crypto';
 
 export interface PendingAuthorization {
@@ -35,17 +43,51 @@ export interface RegisteredClient {
 }
 
 /** Pending authorize→callback state TTL. */
-const DEFAULT_PENDING_TTL_MS = 10 * 60 * 1000;
+export const DEFAULT_PENDING_TTL_MS = 10 * 60 * 1000;
 /** Issued broker authorization code TTL (RFC 6749 recommends ≤10m; keep short). */
-const DEFAULT_CODE_TTL_MS = 60 * 1000;
+export const DEFAULT_CODE_TTL_MS = 60 * 1000;
 /** Registered DCR clients TTL (long enough for interactive OAuth). */
-const DEFAULT_CLIENT_TTL_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_MAX_PENDING = 10_000;
-const DEFAULT_MAX_CODES = 10_000;
-const DEFAULT_MAX_CLIENTS = 10_000;
+export const DEFAULT_CLIENT_TTL_MS = 24 * 60 * 60 * 1000;
+export const DEFAULT_MAX_PENDING = 10_000;
+export const DEFAULT_MAX_CODES = 10_000;
+export const DEFAULT_MAX_CLIENTS = 10_000;
+
+export type OAuthBrokerStoreOptions = {
+  pendingTtlMs?: number;
+  codeTtlMs?: number;
+  clientTtlMs?: number;
+  maxPending?: number;
+  maxCodes?: number;
+  maxClients?: number;
+};
+
+/**
+ * Pluggable OAuth broker ephemeral store (ADR-0016).
+ * All methods are async so Redis and memory share one call-site shape.
+ */
+export interface OAuthBrokerStore {
+  registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined>;
+  getClient(clientId: string): Promise<RegisteredClient | undefined>;
+  isRedirectAllowedForClient(clientId: string, redirectUri: string): Promise<boolean>;
+  createPending(
+    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt'>,
+  ): Promise<PendingAuthorization | undefined>;
+  takePending(brokerState: string): Promise<PendingAuthorization | undefined>;
+  issueCode(
+    pending: PendingAuthorization,
+    tokens: {
+      accessToken: string;
+      expiresIn?: number;
+      tokenType?: string;
+      scope?: string;
+    },
+  ): Promise<IssuedAuthorizationCode | undefined>;
+  getCode(code: string): Promise<IssuedAuthorizationCode | undefined>;
+  deleteCode(code: string): Promise<void>;
+}
 
 /** In-memory pending OAuth broker state (single-instance / sticky routing). */
-export class OAuthBrokerStore {
+export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
   private readonly pendingByBrokerState = new Map<string, PendingAuthorization>();
   private readonly codes = new Map<string, IssuedAuthorizationCode>();
   private readonly clients = new Map<string, RegisteredClient>();
@@ -56,16 +98,7 @@ export class OAuthBrokerStore {
   private readonly maxCodes: number;
   private readonly maxClients: number;
 
-  constructor(
-    options: {
-      pendingTtlMs?: number;
-      codeTtlMs?: number;
-      clientTtlMs?: number;
-      maxPending?: number;
-      maxCodes?: number;
-      maxClients?: number;
-    } = {},
-  ) {
+  constructor(options: OAuthBrokerStoreOptions = {}) {
     this.pendingTtlMs = options.pendingTtlMs ?? DEFAULT_PENDING_TTL_MS;
     this.codeTtlMs = options.codeTtlMs ?? DEFAULT_CODE_TTL_MS;
     this.clientTtlMs = options.clientTtlMs ?? DEFAULT_CLIENT_TTL_MS;
@@ -78,7 +111,7 @@ export class OAuthBrokerStore {
    * Registers a public MCP client with exact redirect URIs, or returns undefined
    * when the in-memory client cap is reached (after TTL cleanup).
    */
-  registerClient(redirectUris: readonly string[]): RegisteredClient | undefined {
+  async registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined> {
     this.cleanup();
     if (this.clients.size >= this.maxClients) {
       return undefined;
@@ -92,14 +125,14 @@ export class OAuthBrokerStore {
     return client;
   }
 
-  getClient(clientId: string): RegisteredClient | undefined {
+  async getClient(clientId: string): Promise<RegisteredClient | undefined> {
     this.cleanup();
     return this.clients.get(clientId);
   }
 
   /** True when clientId is registered and redirectUri is an exact registered URI. */
-  isRedirectAllowedForClient(clientId: string, redirectUri: string): boolean {
-    const client = this.getClient(clientId);
+  async isRedirectAllowedForClient(clientId: string, redirectUri: string): Promise<boolean> {
+    const client = await this.getClient(clientId);
     return client !== undefined && client.redirectUris.has(redirectUri);
   }
 
@@ -107,9 +140,9 @@ export class OAuthBrokerStore {
    * Creates pending state, or returns undefined when the in-memory cap is reached
    * (after TTL cleanup).
    */
-  createPending(
+  async createPending(
     input: Omit<PendingAuthorization, 'brokerState' | 'createdAt'>,
-  ): PendingAuthorization | undefined {
+  ): Promise<PendingAuthorization | undefined> {
     this.cleanup();
     if (this.pendingByBrokerState.size >= this.maxPending) {
       return undefined;
@@ -123,7 +156,7 @@ export class OAuthBrokerStore {
     return pending;
   }
 
-  takePending(brokerState: string): PendingAuthorization | undefined {
+  async takePending(brokerState: string): Promise<PendingAuthorization | undefined> {
     this.cleanup();
     const pending = this.pendingByBrokerState.get(brokerState);
     if (!pending) return undefined;
@@ -131,7 +164,7 @@ export class OAuthBrokerStore {
     return pending;
   }
 
-  issueCode(
+  async issueCode(
     pending: PendingAuthorization,
     tokens: {
       accessToken: string;
@@ -139,7 +172,7 @@ export class OAuthBrokerStore {
       tokenType?: string;
       scope?: string;
     },
-  ): IssuedAuthorizationCode | undefined {
+  ): Promise<IssuedAuthorizationCode | undefined> {
     this.cleanup();
     if (this.codes.size >= this.maxCodes) {
       return undefined;
@@ -161,13 +194,13 @@ export class OAuthBrokerStore {
   }
 
   /** Peek at an issued code without consuming it (for pre-consume validation). */
-  getCode(code: string): IssuedAuthorizationCode | undefined {
+  async getCode(code: string): Promise<IssuedAuthorizationCode | undefined> {
     this.cleanup();
     return this.codes.get(code);
   }
 
   /** Drop a previously peeked code after successful validation. */
-  deleteCode(code: string): void {
+  async deleteCode(code: string): Promise<void> {
     this.codes.delete(code);
   }
 

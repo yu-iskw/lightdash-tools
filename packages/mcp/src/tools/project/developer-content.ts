@@ -7,8 +7,9 @@
  *    duplicate, tile ops, content-move); it never calls a Lightdash API.
  *  - validate_* is an optional saved-resource health check (upstream validator on a
  *    persisted uuid only); it does not unlock the preview ledger.
- *  - The write tools consume the validated preview (contentHash must match exactly)
- *    before calling the underlying create/update/upsert API.
+ *  - The write tools claim the validated preview (contentHash must match exactly),
+ *    call the underlying create/update/upsert API, then mark applied or
+ *    release/reconcile on failure (ADR-0016).
  *
  * `markPreviewValidated` (via confirm_preview) binds confirmation to the resource
  * (`resourceKind`/`resourceKey`), so a confirmed preview for one resource can never
@@ -31,11 +32,13 @@ import {
 } from '../../policy/content-developer.js';
 import {
   PREVIEW_RESOURCE_KINDS,
-  consumeValidatedPreview,
+  claimPreviewForApply,
+  markPreviewApplied,
   markPreviewValidated,
+  releaseOrReconcilePreview,
 } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
-import { asRecord } from '../lib/api-shape.js';
+import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
@@ -52,6 +55,7 @@ import {
   applyTileRemove,
   applyTileResize,
   assertMoveContentLengths,
+  baselineFromMoveContentManifest,
   baselineFromResource,
   buildDashboardUpdateBody,
   buildMoveContentItem,
@@ -59,14 +63,40 @@ import {
   buildMoveContentResourceKey,
   fetchChartBaselineOptional,
   resolveCompareVersionIds,
+  resolveMoveContentManifest,
   shallowDiff,
 } from './developer-helpers.js';
+import {
+  chartUpsertBodySchema,
+  dashboardCreateBodySchema,
+  dashboardTileSchema,
+  dashboardUpdateBodySchema,
+  parseChartUpsertBody,
+  parseDashboardCreateBody,
+  parseDashboardTile,
+  parseDashboardUpdateBody,
+} from './schemas/index.js';
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { PreviewResourceKind } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type { components, UpsertChartAsCodeBody } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+async function findContentByUuid(
+  client: LightdashClient,
+  projectUuid: string,
+  uuid: string,
+): Promise<Record<string, unknown> | null> {
+  const result = await client.v2.content.searchContent({
+    projectUuids: [projectUuid],
+    search: uuid,
+    pageSize: 50,
+  });
+  const { data } = asPaginated<Record<string, unknown>>(result);
+  return data.find((item) => item.uuid === uuid) ?? null;
+}
 
 export {
   registerPreviewChartChanges,
@@ -179,7 +209,7 @@ export function registerConfirmPreview(
     }>(contextProvider, () => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const entry = markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
+      const entry = await markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
         resourceKind: args.resourceKind,
         resourceKey: args.resourceKey,
       });
@@ -302,12 +332,17 @@ function registerChartUpsertTool(
         projectUuid: projectUuidField().optional(),
         slug: z.string(),
         previewId: previewIdField(),
-        chart: z.record(z.string(), z.unknown()),
+        chart: chartUpsertBodySchema,
       },
     },
     wrapDeveloperHandler<ChartUpsertArgs>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      const parsedChart = parseChartUpsertBody(args.chart);
+      if (!parsedChart.ok) {
+        return codedErrorResult(parsedChart.code, parsedChart.message);
+      }
+      const proposed = parsedChart.data;
       // Re-read when possible so update baselines fail closed on intervening edits.
       // Creates (unknown slug) skip baseline; missing baseline on an update preview fails closed.
       const currentBaseline = await fetchChartBaselineOptional({
@@ -316,21 +351,27 @@ function registerChartUpsertTool(
           asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
         isNotFound: isNotFoundError,
       });
-      consumeValidatedPreview({
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'chart',
         resourceKey: args.slug,
-        proposed: args.chart,
+        proposed,
         currentBaseline,
       });
-      const result = await c.v1.charts.upsertChartAsCode(
-        scope.projectUuid,
-        args.slug,
-        args.chart as unknown as UpsertChartAsCodeBody,
-      );
-      return jsonToolResult({ data: result, context: developerContext(scope) });
+      try {
+        const result = await c.v1.charts.upsertChartAsCode(
+          scope.projectUuid,
+          args.slug,
+          proposed as unknown as UpsertChartAsCodeBody,
+        );
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: result, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -423,7 +464,7 @@ export function registerDuplicateChart(
         );
       }
       const resourceKey = sourceBaseline?.uuid ?? args.sourceChartUuidOrSlug;
-      consumeValidatedPreview({
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
@@ -432,13 +473,19 @@ export function registerDuplicateChart(
         proposed,
         currentBaseline: sourceBaseline,
       });
-      const body = {
-        ...source,
-        slug: args.newSlug,
-        name: args.newName ?? source.name,
-      } as unknown as UpsertChartAsCodeBody;
-      const result = await c.v1.charts.upsertChartAsCode(scope.projectUuid, args.newSlug, body);
-      return jsonToolResult({ data: result, context: developerContext(scope) });
+      try {
+        const body = {
+          ...source,
+          slug: args.newSlug,
+          name: args.newName ?? source.name,
+        } as unknown as UpsertChartAsCodeBody;
+        const result = await c.v1.charts.upsertChartAsCode(scope.projectUuid, args.newSlug, body);
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: result, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -460,7 +507,7 @@ export function registerCreateDashboard(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         previewId: previewIdField(),
-        dashboard: z.record(z.string(), z.unknown()),
+        dashboard: dashboardCreateBodySchema,
       },
     },
     wrapDeveloperHandler<{
@@ -470,19 +517,30 @@ export function registerCreateDashboard(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      consumeValidatedPreview({
+      const parsedDashboard = parseDashboardCreateBody(args.dashboard);
+      if (!parsedDashboard.ok) {
+        return codedErrorResult(parsedDashboard.code, parsedDashboard.message);
+      }
+      const proposed = parsedDashboard.data;
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'dashboard',
         resourceKey: 'new',
-        proposed: args.dashboard,
+        proposed,
       });
-      const result = await c.v1.dashboards.createDashboard(
-        scope.projectUuid,
-        args.dashboard as unknown as CreateDashboardBody,
-      );
-      return jsonToolResult({ data: result, context: developerContext(scope) });
+      try {
+        const result = await c.v1.dashboards.createDashboard(
+          scope.projectUuid,
+          proposed as unknown as CreateDashboardBody,
+        );
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: result, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -503,7 +561,7 @@ export function registerUpdateDashboard(
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug'),
         previewId: previewIdField(),
-        dashboard: z.record(z.string(), z.unknown()),
+        dashboard: dashboardUpdateBodySchema,
       },
     },
     wrapDeveloperHandler<{
@@ -514,24 +572,35 @@ export function registerUpdateDashboard(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      const parsedDashboard = parseDashboardUpdateBody(args.dashboard);
+      if (!parsedDashboard.ok) {
+        return codedErrorResult(parsedDashboard.code, parsedDashboard.message);
+      }
+      const proposed = parsedDashboard.data;
       const current = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
       );
-      consumeValidatedPreview({
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'dashboard',
         resourceKey: args.dashboardUuidOrSlug,
-        proposed: args.dashboard,
+        proposed,
         currentBaseline: baselineFromResource(current),
       });
-      const result = await c.v2.dashboards.updateDashboard(
-        scope.projectUuid,
-        args.dashboardUuidOrSlug,
-        args.dashboard as unknown as UpdateDashboardBody,
-      );
-      return jsonToolResult({ data: result, context: developerContext(scope) });
+      try {
+        const result = await c.v2.dashboards.updateDashboard(
+          scope.projectUuid,
+          args.dashboardUuidOrSlug,
+          proposed as unknown as UpdateDashboardBody,
+        );
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: result, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -568,7 +637,7 @@ export function registerDuplicateDashboard(
       const source = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
       );
-      consumeValidatedPreview({
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
@@ -577,14 +646,20 @@ export function registerDuplicateDashboard(
         proposed,
         currentBaseline: baselineFromResource(source),
       });
-      const body: DuplicateDashboardBody = {
-        dashboardName: args.newName ?? 'Copy',
-        dashboardDesc: '',
-      };
-      const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
-        duplicateFrom: args.sourceDashboardUuid,
-      });
-      return jsonToolResult({ data: result, context: developerContext(scope) });
+      try {
+        const body: DuplicateDashboardBody = {
+          dashboardName: args.newName ?? 'Copy',
+          dashboardDesc: '',
+        };
+        const result = await c.v1.dashboards.createDashboard(scope.projectUuid, body, {
+          duplicateFrom: args.sourceDashboardUuid,
+        });
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: result, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -637,7 +712,7 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
       const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
       const nextTiles = options.computeNextTiles(currentTiles, args);
       const proposed = { tiles: nextTiles };
-      consumeValidatedPreview({
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
@@ -646,13 +721,19 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
         proposed,
         currentBaseline: baselineFromResource(dashboard),
       });
-      const body = buildDashboardUpdateBody(dashboard, proposed);
-      const updated = await c.v2.dashboards.updateDashboard(
-        scope.projectUuid,
-        args.dashboardUuidOrSlug,
-        body as unknown as UpdateDashboardBody,
-      );
-      return jsonToolResult({ data: updated, context: developerContext(scope) });
+      try {
+        const body = buildDashboardUpdateBody(dashboard, proposed);
+        const updated = await c.v2.dashboards.updateDashboard(
+          scope.projectUuid,
+          args.dashboardUuidOrSlug,
+          body as unknown as UpdateDashboardBody,
+        );
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({ data: updated, context: developerContext(scope) });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }
@@ -661,16 +742,60 @@ export function registerAddDashboardTile(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  registerTileMutationTool<TileMutationArgs & { tile: Record<string, unknown> }>(
+  registerContentDeveloperTool(
     server,
-    contextProvider,
+    'add_dashboard_tile',
     {
-      shortName: 'add_dashboard_tile',
       title: 'Add dashboard tile',
       description: 'Add a tile to a dashboard by composing the full tile array',
-      extraSchema: { tile: z.record(z.string(), z.unknown()) },
-      computeNextTiles: (tiles, args) => applyTileAdd(tiles, args.tile),
+      safety: WRITE_SAFETY,
+      annotations: WRITE_NONDESTRUCTIVE,
+      inputSchema: {
+        projectUuid: projectUuidField().optional(),
+        dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug'),
+        previewId: previewIdField(),
+        tile: dashboardTileSchema,
+      },
     },
+    wrapDeveloperHandler<TileMutationArgs & { tile: Record<string, unknown> }>(
+      contextProvider,
+      (c) => async (args) => {
+        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+        const sessionId = getMcpClientSessionId();
+        const parsedTile = parseDashboardTile(args.tile);
+        if (!parsedTile.ok) {
+          return codedErrorResult(parsedTile.code, parsedTile.message);
+        }
+        const dashboard = asRecord(
+          await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
+        );
+        const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
+        const nextTiles = applyTileAdd(currentTiles, parsedTile.data);
+        const proposed = { tiles: nextTiles };
+        const entry = await claimPreviewForApply({
+          previewId: args.previewId,
+          sessionId,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'dashboard',
+          resourceKey: args.dashboardUuidOrSlug,
+          proposed,
+          currentBaseline: baselineFromResource(dashboard),
+        });
+        try {
+          const body = buildDashboardUpdateBody(dashboard, proposed);
+          const updated = await c.v2.dashboards.updateDashboard(
+            scope.projectUuid,
+            args.dashboardUuidOrSlug,
+            body as unknown as UpdateDashboardBody,
+          );
+          await markPreviewApplied(entry.previewId);
+          return jsonToolResult({ data: updated, context: developerContext(scope) });
+        } catch (err) {
+          await releaseOrReconcilePreview(entry.previewId, err);
+          throw err;
+        }
+      },
+    ),
   );
 }
 
@@ -761,6 +886,19 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
+      const resolved = await resolveMoveContentManifest({
+        itemUuids: args.itemUuids,
+        contentTypes: args.contentTypes,
+        chartSources: args.chartSources,
+        targetSpaceUuid: args.targetSpaceUuid,
+        findContentByUuid: (uuid) => findContentByUuid(c, scope.projectUuid, uuid),
+        getSpace: async (spaceUuid) =>
+          asRecord(await c.v1.spaces.getSpace(scope.projectUuid, spaceUuid)),
+        isNotFound: isNotFoundError,
+      });
+      if (resolved.kind === 'error') {
+        return codedErrorResult(resolved.error.code, resolved.error.message);
+      }
       const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
         itemUuids: args.itemUuids,
@@ -768,26 +906,34 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
         contentTypes: args.contentTypes,
         chartSources: args.chartSources,
       });
-      consumeValidatedPreview({
+      const currentBaseline = baselineFromMoveContentManifest(resolved.manifest);
+      const entry = await claimPreviewForApply({
         previewId: args.previewId,
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'content-move',
         resourceKey,
         proposed,
+        currentBaseline,
       });
-      const content = args.itemUuids.map((uuid, index) =>
-        // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
-        buildMoveContentItem(uuid, args.contentTypes[index], args.chartSources?.[index]),
-      );
-      await c.v2.content.bulkMoveContent(scope.projectUuid, {
-        action: { type: 'move', targetSpaceUuid: args.targetSpaceUuid },
-        content,
-      } as unknown as BulkMoveContentBody);
-      return jsonToolResult({
-        data: { moved: args.itemUuids.length, targetSpaceUuid: args.targetSpaceUuid },
-        context: developerContext(scope),
-      });
+      try {
+        const content = args.itemUuids.map((uuid, index) =>
+          // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
+          buildMoveContentItem(uuid, args.contentTypes[index], args.chartSources?.[index]),
+        );
+        await c.v2.content.bulkMoveContent(scope.projectUuid, {
+          action: { type: 'move', targetSpaceUuid: args.targetSpaceUuid },
+          content,
+        } as unknown as BulkMoveContentBody);
+        await markPreviewApplied(entry.previewId);
+        return jsonToolResult({
+          data: { moved: args.itemUuids.length, targetSpaceUuid: args.targetSpaceUuid },
+          context: developerContext(scope),
+        });
+      } catch (err) {
+        await releaseOrReconcilePreview(entry.previewId, err);
+        throw err;
+      }
     }),
   );
 }

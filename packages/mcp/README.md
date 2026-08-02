@@ -2,22 +2,23 @@
 
 MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), and `content-developer` (project-scoped authoring with a hard preview gate). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), and [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md).
 
-Irrecoverable admin deletes and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is available on the `content-developer` persona only (preview → validate → apply).
+Irrecoverable admin deletes and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is available on the `content-developer` persona only (preview → confirm_preview → apply; 25 tools).
 
 **Response sensitivity** ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)): `list_projects` / `get_project` return project metadata only (warehouse/dbt connection secrets are never exposed). Organization-audit tools mask emails by default (`includeEmail=true` to reveal) and redact scheduler destinations by default (`revealDestinations=true` to reveal). There is no global `withSensitive` flag.
 
 ## Directory map
 
-| Edit…                                                   | Path                                                 |
-| :------------------------------------------------------ | :--------------------------------------------------- |
-| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)         |
-| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                 |
-| HTTP transport / sessions                               | `src/transports/`                                    |
-| HTTP auth                                               | `src/auth/`                                          |
-| Runtime client + guardrail env                          | `src/config/runtime.ts`                              |
-| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts` |
-| Audit logging helpers                                   | `src/audit/`                                         |
-| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`  |
+| Edit…                                                   | Path                                                                                                                |
+| :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------ |
+| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                        |
+| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                                                                                |
+| HTTP transport / sessions                               | `src/transports/`                                                                                                   |
+| HTTP auth                                               | `src/auth/`                                                                                                         |
+| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                             |
+| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                |
+| Ephemeral store (memory/redis)                          | `src/store/` ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)) |
+| Audit logging helpers                                   | `src/audit/`                                                                                                        |
+| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                 |
 
 Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 
@@ -61,11 +62,11 @@ npm install -g @lightdash-tools/mcp
 
 Auth is **inferred** from credentials ([ADR-0007](../../docs/adr/0007-mcp-http-transport-auth-modes-sdk-v2.md)). The MCP host holds the Lightdash OAuth app client id/secret and brokers login; Claude Code / Cursor use URL-only config. Protocol reference: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 
-| What works                                                      | Gap                                                                      |
-| :-------------------------------------------------------------- | :----------------------------------------------------------------------- |
-| Server-held confidential client + `{PUBLIC_URL}/oauth/callback` | Full RFC 8707 audience binding on opaque Lightdash tokens                |
-| PRM + broker AS metadata; per-user Bearer to Lightdash          | MCP-local scope enforcement for opaque tokens                            |
-| Session binding to `userUuid` / `organizationUuid`              | Horizontal scale without sticky sessions (in-memory broker/MCP sessions) |
+| What works                                                      | Gap                                                                                                                                                                                                                       |
+| :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Server-held confidential client + `{PUBLIC_URL}/oauth/callback` | Full RFC 8707 audience binding on opaque Lightdash tokens                                                                                                                                                                 |
+| PRM + broker AS metadata; per-user Bearer to Lightdash          | MCP-local scope enforcement for opaque tokens                                                                                                                                                                             |
+| Session binding to `userUuid` / `organizationUuid`              | Multi-instance scale: default in-memory needs sticky routing; opt into Redis via `LIGHTDASH_TOOLS_MCP_STORE=redis` ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)) |
 
 Authorization: Lightdash RBAC + persona tool surface ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
@@ -97,6 +98,25 @@ Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL onl
 | Local none | `NODE_ENV=development` (not `production`)              |
 
 Obsolete `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, and `INSECURE_DEV` vars are **rejected**. Endpoint path is persona-owned (`LIGHTDASH_TOOLS_MCP_PATH` rejected).
+
+### Ephemeral store (HTTP sessions / preview / OAuth)
+
+Start with **memory** (default). Add **Redis** when scaling beyond a single HTTP instance ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)).
+
+| Env                             | Default  | Notes                                     |
+| :------------------------------ | :------- | :---------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_STORE`     | `memory` | `memory` \| `redis`                       |
+| `LIGHTDASH_TOOLS_MCP_REDIS_URL` | —        | Required when `STORE=redis` (fail closed) |
+
+What Redis shares vs what stays local:
+
+| Concern                             | memory        | redis                                                                                               |
+| :---------------------------------- | :------------ | :-------------------------------------------------------------------------------------------------- |
+| Content-developer preview ledger    | process-local | shared                                                                                              |
+| OAuth pending / codes / DCR clients | process-local | shared (full multi-instance OAuth)                                                                  |
+| Streamable HTTP session transports  | process-local | process-local + Redis session _index_; sticky or single instance still required for live transports |
+
+Stdio and tests use memory. Production may use memory on a single instance (HTTP logs a multi-instance/restart warning).
 
 See also: [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md), [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md), [threat model](../../docs/security/mcp-oauth-threat-model.md).
 
@@ -197,13 +217,13 @@ Project resolution: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` →
 Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)). MCP server display name is `lightdash-mcp-cdev` (60-char client limit). Endpoint inventory: [docs/content-developer-endpoint-inventory.md](../../docs/content-developer-endpoint-inventory.md).
 
 - **Discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`, `get_dashboard`, `get_chart`
-- **Preview / validate / diff**: `preview_chart_changes`, `preview_dashboard_changes`, `preview_content_move`, `validate_chart`, `validate_dashboard`, `compare_chart_versions`, `compare_dashboard_versions`
+- **Preview / confirm / validate / diff**: `preview_chart_changes`, `preview_dashboard_changes`, `preview_content_move`, `confirm_preview`, `validate_chart`, `validate_dashboard`, `compare_chart_versions`, `compare_dashboard_versions`
 - **Charts (as-code)**: `create_chart`, `update_chart`, `duplicate_chart`
 - **Dashboards (REST)**: `create_dashboard`, `update_dashboard`, `duplicate_dashboard`
 - **Layout**: `add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`
 - **Spaces**: `list_spaces`, `get_space`, `move_content` (no create/update space; use `preview_content_move` before apply)
 
-Hard gate: every SAFE_WRITE requires a validated, session-owned `previewId` whose `contentHash` matches the apply payload. No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
+Hard gate (25 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply. Apply is claim → mutate → mark applied (not delete-before-I/O); `contentHash` must match the apply payload. Ephemeral preview ledger defaults to `LIGHTDASH_TOOLS_MCP_STORE=memory`; use `redis` for multi-instance HTTP ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)). No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
 
 ### CLI Binary
 

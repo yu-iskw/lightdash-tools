@@ -3,7 +3,7 @@
  * (ADR-0014). No I/O except optional injected getters; safe to unit test without mocks.
  */
 
-import { stableStringify } from '../lib/stable-stringify.js';
+import { hashStableValue, stableStringify } from '../lib/stable-stringify.js';
 
 import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 
@@ -236,6 +236,324 @@ export function buildMoveContentItem(
       throw new Error(`Unsupported content type: ${String(exhaustive)}`);
     }
   }
+}
+
+/** One resolved content row for a content-move hard baseline (ADR-0014 Phase 4). */
+export type MoveContentManifestItem = {
+  uuid: string;
+  contentType: MoveContentType;
+  spaceUuid: string | null;
+  /** `lastUpdatedAt` / `updatedAt` when the API provides one. */
+  updatedAt: string | null;
+  /** Chart source when `contentType === 'chart'`; otherwise null. */
+  source: MoveChartSource | null;
+};
+
+export type MoveContentManifestTargetSpace = {
+  uuid: string | null;
+  name: string | null;
+};
+
+/** Hash-stable content-move baseline: items sorted by UUID + resolved target space. */
+export type MoveContentManifest = {
+  items: MoveContentManifestItem[];
+  targetSpace: MoveContentManifestTargetSpace;
+};
+
+export type MoveContentResolveError = {
+  code: 'CONTENT_NOT_FOUND' | 'INVALID_ARGUMENT' | 'PREVIEW_STALE';
+  message: string;
+};
+
+const MOVE_CONTENT_TYPE_SET = new Set<string>(['chart', 'dashboard', 'data_app']);
+const MOVE_CHART_SOURCE_SET = new Set<string>(['dbt_explore', 'sql']);
+
+/** Sort records by `uuid` for hash-stable manifests (localeCompare, ascending). */
+export function sortByUuidStable<T extends { uuid: string }>(items: readonly T[]): T[] {
+  return [...items].sort((a, b) => a.uuid.localeCompare(b.uuid));
+}
+
+/**
+ * Build the canonical move-content baseline manifest (sorted by item UUID).
+ * Preview and apply must produce identical shapes for the same server facts.
+ */
+export function buildMoveContentManifest(input: {
+  items: readonly MoveContentManifestItem[];
+  targetSpace: MoveContentManifestTargetSpace;
+}): MoveContentManifest {
+  return {
+    items: sortByUuidStable(input.items),
+    targetSpace: {
+      uuid: input.targetSpace.uuid,
+      name: input.targetSpace.name,
+    },
+  };
+}
+
+function optionalStringField(
+  record: Record<string, unknown> | undefined,
+  key: string,
+): string | undefined {
+  if (!record) {
+    return undefined;
+  }
+  // eslint-disable-next-line security/detect-object-injection -- key is a fixed field name from callers
+  const value = record[key];
+  return typeof value === 'string' ? value : undefined;
+}
+
+function chartSourceFromSummary(item: Record<string, unknown>): MoveChartSource {
+  const rawSource = optionalStringField(item, 'source');
+  if (rawSource != null && MOVE_CHART_SOURCE_SET.has(rawSource)) {
+    return rawSource as MoveChartSource;
+  }
+  return 'dbt_explore';
+}
+
+/**
+ * Extract a manifest item from a content-search / SummaryContent-shaped record.
+ * Returns null when uuid/contentType are missing or unsupported for bulk move.
+ */
+export function moveContentItemFromSummary(
+  item: Record<string, unknown>,
+): MoveContentManifestItem | null {
+  const uuid = optionalStringField(item, 'uuid');
+  const contentType = optionalStringField(item, 'contentType');
+  if (uuid == null || contentType == null || !MOVE_CONTENT_TYPE_SET.has(contentType)) {
+    return null;
+  }
+  const space = isRecord(item.space) ? item.space : undefined;
+  const spaceUuid =
+    optionalStringField(space, 'uuid') ?? optionalStringField(item, 'spaceUuid') ?? null;
+  const updatedAt =
+    optionalStringField(item, 'lastUpdatedAt') ?? optionalStringField(item, 'updatedAt') ?? null;
+  return {
+    uuid,
+    contentType: contentType as MoveContentType,
+    spaceUuid,
+    updatedAt,
+    source: contentType === 'chart' ? chartSourceFromSummary(item) : null,
+  };
+}
+
+/** Normalize target-space identity for the move-content baseline. */
+export function moveContentTargetSpaceFromRecord(
+  targetSpaceUuid: string | null,
+  space: Record<string, unknown> | null,
+): MoveContentManifestTargetSpace {
+  if (targetSpaceUuid == null) {
+    return { uuid: null, name: null };
+  }
+  return {
+    uuid: optionalStringField(space ?? undefined, 'uuid') ?? targetSpaceUuid,
+    name: optionalStringField(space ?? undefined, 'name') ?? null,
+  };
+}
+
+function matchChartSourceAtIndex(
+  uuid: string,
+  index: number,
+  resolved: MoveContentManifestItem,
+  chartSources: readonly MoveChartSource[] | undefined,
+): MoveContentResolveError | null {
+  // eslint-disable-next-line security/detect-object-injection -- index bound by caller itemUuids.length
+  const expectedSource = chartSources?.[index] ?? 'dbt_explore';
+  const actualSource = resolved.source ?? 'dbt_explore';
+  if (actualSource === expectedSource) {
+    return null;
+  }
+  return {
+    code: 'INVALID_ARGUMENT',
+    message:
+      `Chart '${uuid}' has source '${actualSource}' but chartSources[${String(index)}] ` +
+      `is '${expectedSource}'`,
+  };
+}
+
+/**
+ * Reject caller contentTypes/chartSources that disagree with resolved server facts.
+ * Length checks should already have run via `assertMoveContentLengths`.
+ */
+export function matchMoveContentResolved(input: {
+  itemUuids: readonly string[];
+  contentTypes: readonly MoveContentType[];
+  chartSources?: readonly MoveChartSource[];
+  resolvedItems: readonly MoveContentManifestItem[];
+}): MoveContentResolveError | null {
+  const byUuid = new Map(input.resolvedItems.map((item) => [item.uuid, item]));
+  for (let index = 0; index < input.itemUuids.length; index += 1) {
+    // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
+    const uuid = input.itemUuids[index];
+    // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
+    const expectedType = input.contentTypes[index];
+    const resolved = byUuid.get(uuid);
+    if (!resolved) {
+      return {
+        code: 'CONTENT_NOT_FOUND',
+        message: `Content '${uuid}' was not found while building the move baseline`,
+      };
+    }
+    if (resolved.contentType !== expectedType) {
+      return {
+        code: 'INVALID_ARGUMENT',
+        message:
+          `Content '${uuid}' is type '${resolved.contentType}' but contentTypes[${String(index)}] ` +
+          `is '${expectedType}'`,
+      };
+    }
+    if (expectedType === 'chart') {
+      const sourceErr = matchChartSourceAtIndex(uuid, index, resolved, input.chartSources);
+      if (sourceErr) {
+        return sourceErr;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Ledger baseline for content-move: full sorted manifest plus `updatedAt` fingerprint
+ * so `assertBaselineStillValid` detects item/space drift on apply.
+ */
+export function baselineFromMoveContentManifest(manifest: MoveContentManifest): PreviewBaseline {
+  const fingerprint = hashStableValue(manifest);
+  return {
+    items: manifest.items,
+    targetSpace: manifest.targetSpace,
+    updatedAt: fingerprint,
+    uuid: buildMoveContentResourceKey(manifest.items.map((item) => item.uuid)),
+  } as PreviewBaseline;
+}
+
+type ResolveMoveResult =
+  { kind: 'error'; error: MoveContentResolveError } | { kind: 'ok'; manifest: MoveContentManifest };
+
+async function resolveMoveItems(
+  itemUuids: readonly string[],
+  findContentByUuid: (uuid: string) => Promise<Record<string, unknown> | null>,
+): Promise<
+  | { kind: 'error'; error: MoveContentResolveError }
+  | { kind: 'ok'; items: MoveContentManifestItem[] }
+> {
+  const resolvedItems: MoveContentManifestItem[] = [];
+  for (const uuid of itemUuids) {
+    const summary = await findContentByUuid(uuid);
+    if (!summary) {
+      return {
+        kind: 'error',
+        error: { code: 'CONTENT_NOT_FOUND', message: `Content '${uuid}' was not found` },
+      };
+    }
+    const item = moveContentItemFromSummary(summary);
+    if (!item) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'INVALID_ARGUMENT',
+          message: `Content '${uuid}' is not a movable chart/dashboard/data_app`,
+        },
+      };
+    }
+    if (item.uuid !== uuid) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'PREVIEW_STALE',
+          message: `Content lookup for '${uuid}' resolved to a different uuid '${item.uuid}'`,
+        },
+      };
+    }
+    resolvedItems.push(item);
+  }
+  return { kind: 'ok', items: resolvedItems };
+}
+
+async function resolveMoveTargetSpace(input: {
+  targetSpaceUuid: string | null;
+  getSpace: (spaceUuid: string) => Promise<Record<string, unknown>>;
+  isNotFound: (err: unknown) => boolean;
+}): Promise<
+  | { kind: 'error'; error: MoveContentResolveError }
+  | { kind: 'ok'; targetSpace: MoveContentManifestTargetSpace }
+> {
+  if (input.targetSpaceUuid == null) {
+    return { kind: 'ok', targetSpace: { uuid: null, name: null } };
+  }
+  try {
+    const space = await input.getSpace(input.targetSpaceUuid);
+    const targetSpace = moveContentTargetSpaceFromRecord(input.targetSpaceUuid, space);
+    if (targetSpace.uuid !== input.targetSpaceUuid) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'PREVIEW_STALE',
+          message:
+            `Target space '${input.targetSpaceUuid}' resolved to a different uuid ` +
+            `'${targetSpace.uuid ?? 'null'}'`,
+        },
+      };
+    }
+    return { kind: 'ok', targetSpace };
+  } catch (err) {
+    if (input.isNotFound(err)) {
+      return {
+        kind: 'error',
+        error: {
+          code: 'CONTENT_NOT_FOUND',
+          message: `Target space '${input.targetSpaceUuid}' was not found`,
+        },
+      };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Resolve content + target-space facts into a hard move baseline.
+ * `findContentByUuid` / `getSpace` are injected so unit tests need no network.
+ */
+export async function resolveMoveContentManifest(input: {
+  itemUuids: readonly string[];
+  contentTypes: readonly MoveContentType[];
+  chartSources?: readonly MoveChartSource[];
+  targetSpaceUuid: string | null;
+  findContentByUuid: (uuid: string) => Promise<Record<string, unknown> | null>;
+  getSpace: (spaceUuid: string) => Promise<Record<string, unknown>>;
+  isNotFound: (err: unknown) => boolean;
+}): Promise<ResolveMoveResult> {
+  assertMoveContentLengths(input.itemUuids, input.contentTypes, input.chartSources);
+
+  const itemsResult = await resolveMoveItems(input.itemUuids, input.findContentByUuid);
+  if (itemsResult.kind === 'error') {
+    return itemsResult;
+  }
+
+  const mismatch = matchMoveContentResolved({
+    itemUuids: input.itemUuids,
+    contentTypes: input.contentTypes,
+    chartSources: input.chartSources,
+    resolvedItems: itemsResult.items,
+  });
+  if (mismatch) {
+    return { kind: 'error', error: mismatch };
+  }
+
+  const targetResult = await resolveMoveTargetSpace({
+    targetSpaceUuid: input.targetSpaceUuid,
+    getSpace: input.getSpace,
+    isNotFound: input.isNotFound,
+  });
+  if (targetResult.kind === 'error') {
+    return targetResult;
+  }
+
+  return {
+    kind: 'ok',
+    manifest: buildMoveContentManifest({
+      items: itemsResult.items,
+      targetSpace: targetResult.targetSpace,
+    }),
+  };
 }
 
 export type ChartPreviewCurrentResult =

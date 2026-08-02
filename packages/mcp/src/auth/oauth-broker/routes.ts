@@ -6,6 +6,7 @@ import {
   OAUTH_TOKEN_PATH,
 } from '../../config/env.js';
 import { isLocalHttpOrigin } from '../../config/normalize-url.js';
+import { createOAuthBrokerStore } from '../../store/create-oauth-broker-store.js';
 import { parseJsonBody, readBody } from '../../transports/http-body.js';
 import { sendJson } from '../../transports/http-response.js';
 
@@ -14,10 +15,9 @@ import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
-import { OAuthBrokerStore } from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 
-import type { IssuedAuthorizationCode } from './pending-store.js';
+import type { IssuedAuthorizationCode, OAuthBrokerStore } from './pending-store.js';
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -120,10 +120,10 @@ function isAllowedClientRedirectUri(redirectUri: string): boolean {
 
 type AuthorizeParseFail = { ok: false; status: number; body: Record<string, string> };
 
-function parseRegisteredClientRedirect(
+async function parseRegisteredClientRedirect(
   query: URLSearchParams,
   store: OAuthBrokerStore,
-): AuthorizeParseFail | { ok: true; clientId: string; redirectUri: string } {
+): Promise<AuthorizeParseFail | { ok: true; clientId: string; redirectUri: string }> {
   const clientId = query.get('client_id');
   if (!clientId) {
     return {
@@ -136,7 +136,7 @@ function parseRegisteredClientRedirect(
     };
   }
 
-  if (!store.getClient(clientId)) {
+  if (!(await store.getClient(clientId))) {
     return {
       ok: false,
       status: 400,
@@ -160,7 +160,7 @@ function parseRegisteredClientRedirect(
     };
   }
 
-  if (!store.isRedirectAllowedForClient(clientId, redirectUri)) {
+  if (!(await store.isRedirectAllowedForClient(clientId, redirectUri))) {
     return {
       ok: false,
       status: 400,
@@ -174,10 +174,10 @@ function parseRegisteredClientRedirect(
   return { ok: true, clientId, redirectUri };
 }
 
-function parseAuthorizeRequest(
+async function parseAuthorizeRequest(
   query: URLSearchParams,
   store: OAuthBrokerStore,
-):
+): Promise<
   | AuthorizeParseFail
   | {
       ok: true;
@@ -189,7 +189,8 @@ function parseAuthorizeRequest(
         resource?: string;
         scope?: string;
       };
-    } {
+    }
+> {
   const responseType = query.get('response_type');
   if (responseType !== 'code') {
     return {
@@ -202,7 +203,7 @@ function parseAuthorizeRequest(
     };
   }
 
-  const registered = parseRegisteredClientRedirect(query, store);
+  const registered = await parseRegisteredClientRedirect(query, store);
   if (!registered.ok) {
     return registered;
   }
@@ -233,25 +234,25 @@ function parseAuthorizeRequest(
   };
 }
 
-function handleAuthorize(
+async function handleAuthorize(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
   store: OAuthBrokerStore,
-): void {
+): Promise<void> {
   if (req.method !== 'GET') {
     res.writeHead(405, { Allow: 'GET' }).end();
     return;
   }
 
-  const parsed = parseAuthorizeRequest(readQuery(req), store);
+  const parsed = await parseAuthorizeRequest(readQuery(req), store);
   if (!parsed.ok) {
     sendJson(res, parsed.status, parsed.body);
     return;
   }
 
   const { clientId, redirectUri, clientState, codeChallenge, resource, scope } = parsed.value;
-  const pending = store.createPending({
+  const pending = await store.createPending({
     clientId,
     redirectUri,
     clientState,
@@ -306,7 +307,7 @@ async function handleCallback(
     return;
   }
 
-  const pending = store.takePending(brokerState);
+  const pending = await store.takePending(brokerState);
   if (!pending) {
     sendJson(res, 400, { error: 'invalid_request', error_description: 'Unknown or expired state' });
     return;
@@ -331,7 +332,7 @@ async function handleCallback(
   try {
     const tokens = await exchangeLightdashAuthorizationCode(config, code);
     // Do not persist/return refresh_token: broker only supports authorization_code.
-    const issued = store.issueCode(pending, {
+    const issued = await store.issueCode(pending, {
       accessToken: tokens.access_token,
       expiresIn: tokens.expires_in,
       tokenType: tokens.token_type,
@@ -363,10 +364,10 @@ type TokenGrantError = {
   body: { error: string; error_description: string };
 };
 
-function validateTokenGrant(
+async function validateTokenGrant(
   params: URLSearchParams,
   store: OAuthBrokerStore,
-): TokenGrantError | { issued: IssuedAuthorizationCode } {
+): Promise<TokenGrantError | { issued: IssuedAuthorizationCode }> {
   const grantType = params.get('grant_type');
   if (grantType !== 'authorization_code') {
     return {
@@ -394,7 +395,7 @@ function validateTokenGrant(
   }
 
   // Validate before consume so a bad verifier / redirect does not burn a one-time code.
-  const candidate = store.getCode(code);
+  const candidate = await store.getCode(code);
   if (!candidate) {
     return {
       status: 400,
@@ -423,7 +424,7 @@ function validateTokenGrant(
     };
   }
 
-  store.deleteCode(code);
+  await store.deleteCode(code);
   return { issued: candidate };
 }
 
@@ -441,7 +442,7 @@ async function handleToken(
   const params = await readFormOrJson(req, res, config.maxBodyBytes);
   if (!params) return;
 
-  const grant = validateTokenGrant(params, store);
+  const grant = await validateTokenGrant(params, store);
   if ('status' in grant) {
     sendJson(res, grant.status, grant.body);
     return;
@@ -492,7 +493,7 @@ async function handleRegister(
     }
   }
 
-  const registered = store.registerClient(redirectUris);
+  const registered = await store.registerClient(redirectUris);
   if (!registered) {
     sendJson(res, 503, { ...AS_BUSY });
     return;
@@ -526,10 +527,14 @@ export function isOAuthBrokerPath(path: string): boolean {
   return BROKER_PATHS.has(path);
 }
 
-/** Creates the OAuth broker request handler for co-located AS façade routes. */
-export function createOAuthBroker(config: McpHttpConfig): OAuthBroker {
-  const store = new OAuthBrokerStore();
-
+/**
+ * Creates the OAuth broker request handler for co-located AS façade routes.
+ * Uses the shared ephemeral store backend (memory default; Redis when configured).
+ */
+export function createOAuthBroker(
+  config: McpHttpConfig,
+  store: OAuthBrokerStore = createOAuthBrokerStore(),
+): OAuthBroker {
   return {
     async handle(req, res, path): Promise<boolean> {
       if (!isOAuthBrokerPath(path)) {
@@ -547,7 +552,7 @@ export function createOAuthBroker(config: McpHttpConfig): OAuthBroker {
       }
 
       if (path === OAUTH_AUTHORIZE_PATH) {
-        handleAuthorize(req, res, config, store);
+        await handleAuthorize(req, res, config, store);
         return true;
       }
 

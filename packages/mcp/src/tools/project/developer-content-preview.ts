@@ -13,7 +13,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
 import { addPreviewLedgerEntry, uniqueResourceKeys } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
-import { asRecord } from '../lib/api-shape.js';
+import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
@@ -26,16 +26,39 @@ import {
 } from './developer-content-shared.js';
 import {
   assertMoveContentLengths,
+  baselineFromMoveContentManifest,
   baselineFromResource,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
   resolveChartPreviewCurrent,
+  resolveMoveContentManifest,
   shallowDiff,
 } from './developer-helpers.js';
+import {
+  chartUpsertBodySchema,
+  dashboardChangesBodySchema,
+  parseChartUpsertBody,
+  parseDashboardChangesBody,
+} from './schemas/index.js';
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+async function findContentByUuid(
+  client: LightdashClient,
+  projectUuid: string,
+  uuid: string,
+): Promise<Record<string, unknown> | null> {
+  const result = await client.v2.content.searchContent({
+    projectUuids: [projectUuid],
+    search: uuid,
+    pageSize: 50,
+  });
+  const { data } = asPaginated<Record<string, unknown>>(result);
+  return data.find((item) => item.uuid === uuid) ?? null;
+}
 
 export function registerPreviewChartChanges(
   server: McpServer,
@@ -56,7 +79,7 @@ export function registerPreviewChartChanges(
           .string()
           .optional()
           .describe('Target slug when creating a new chart (defaults resourceKey)'),
-        changes: z.record(z.string(), z.unknown()).describe('Proposed chart-as-code payload'),
+        changes: chartUpsertBodySchema.describe('Proposed chart-as-code payload'),
       },
     },
     wrapDeveloperHandler<{
@@ -67,6 +90,11 @@ export function registerPreviewChartChanges(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      const parsedChanges = parseChartUpsertBody(args.changes);
+      if (!parsedChanges.ok) {
+        return codedErrorResult(parsedChanges.code, parsedChanges.message);
+      }
+      const proposed = parsedChanges.data;
       const resolved = await resolveChartPreviewCurrent({
         chartUuidOrSlug: args.chartUuidOrSlug,
         slug: args.slug,
@@ -93,13 +121,13 @@ export function registerPreviewChartChanges(
         args.chartUuidOrSlug,
         args.slug,
       );
-      const entry = addPreviewLedgerEntry({
+      const entry = await addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'chart',
         resourceKey,
         resourceAliases,
-        proposed: args.changes,
+        proposed,
         baseline,
       });
       return jsonToolResult({
@@ -111,7 +139,7 @@ export function registerPreviewChartChanges(
           resourceAliases,
           upsertSlug: upsertSlug ?? null,
           expiresAt: entry.expiresAt,
-          diff: shallowDiff(current, args.changes),
+          diff: shallowDiff(current, proposed),
           current,
         },
         context: developerContext(scope),
@@ -135,7 +163,7 @@ export function registerPreviewDashboardChanges(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug').optional(),
-        changes: z.record(z.string(), z.unknown()).describe('Proposed dashboard fields'),
+        changes: dashboardChangesBodySchema.describe('Proposed dashboard fields'),
       },
     },
     wrapDeveloperHandler<{
@@ -145,6 +173,11 @@ export function registerPreviewDashboardChanges(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
+      const parsedChanges = parseDashboardChangesBody(args.changes);
+      if (!parsedChanges.ok) {
+        return codedErrorResult(parsedChanges.code, parsedChanges.message);
+      }
+      const proposed = parsedChanges.data;
       const current = args.dashboardUuidOrSlug
         ? asRecord(await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug))
         : null;
@@ -157,13 +190,13 @@ export function registerPreviewDashboardChanges(
         baseline?.slug,
         args.dashboardUuidOrSlug,
       );
-      const entry = addPreviewLedgerEntry({
+      const entry = await addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'dashboard',
         resourceKey,
         resourceAliases,
-        proposed: args.changes,
+        proposed,
         baseline,
       });
       return jsonToolResult({
@@ -174,7 +207,7 @@ export function registerPreviewDashboardChanges(
           resourceKey,
           resourceAliases,
           expiresAt: entry.expiresAt,
-          diff: shallowDiff(current, args.changes),
+          diff: shallowDiff(current, proposed),
           current,
         },
         context: developerContext(scope),
@@ -225,10 +258,23 @@ export function registerPreviewContentMove(
       targetSpaceUuid: string | null;
       contentTypes: MoveContentType[];
       chartSources?: MoveChartSource[];
-    }>(contextProvider, (_c) => async (args) => {
+    }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
+      const resolved = await resolveMoveContentManifest({
+        itemUuids: args.itemUuids,
+        contentTypes: args.contentTypes,
+        chartSources: args.chartSources,
+        targetSpaceUuid: args.targetSpaceUuid,
+        findContentByUuid: (uuid) => findContentByUuid(c, scope.projectUuid, uuid),
+        getSpace: async (spaceUuid) =>
+          asRecord(await c.v1.spaces.getSpace(scope.projectUuid, spaceUuid)),
+        isNotFound: isNotFoundError,
+      });
+      if (resolved.kind === 'error') {
+        return codedErrorResult(resolved.error.code, resolved.error.message);
+      }
       const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
         itemUuids: args.itemUuids,
@@ -236,12 +282,14 @@ export function registerPreviewContentMove(
         contentTypes: args.contentTypes,
         chartSources: args.chartSources,
       });
-      const entry = addPreviewLedgerEntry({
+      const baseline = baselineFromMoveContentManifest(resolved.manifest);
+      const entry = await addPreviewLedgerEntry({
         sessionId,
         projectUuid: scope.projectUuid,
         resourceKind: 'content-move',
         resourceKey,
         proposed,
+        baseline,
       });
       return jsonToolResult({
         data: {
@@ -251,6 +299,7 @@ export function registerPreviewContentMove(
           resourceKey,
           expiresAt: entry.expiresAt,
           proposed,
+          baseline: resolved.manifest,
         },
         context: developerContext(scope),
       });
