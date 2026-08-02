@@ -66,7 +66,10 @@ function fixedDiff(tracker: PromoteTracker) {
   };
 }
 
-function createFakeClient(tracker: PromoteTracker): LightdashClient {
+function createFakeClient(
+  tracker: PromoteTracker,
+  options: { promoteError?: Error } = {},
+): LightdashClient {
   const dashboard = fixedDashboard();
   return {
     v2: {
@@ -85,6 +88,9 @@ function createFakeClient(tracker: PromoteTracker): LightdashClient {
         },
         promoteDashboard: async () => {
           tracker.promoteCount += 1;
+          if (options.promoteError) {
+            throw options.promoteError;
+          }
           return {
             ...dashboard,
             projectUuid: '99999999-9999-4999-8999-999999999999',
@@ -109,6 +115,7 @@ function parseStructured(result: CallToolResult): Record<string, unknown> {
 async function connectPair(options: {
   tracker: PromoteTracker;
   capabilities?: ClientCapabilities;
+  promoteError?: Error;
 }): Promise<{
   server: McpServer;
   mcpClient: Client;
@@ -125,7 +132,9 @@ async function connectPair(options: {
 
   const contextProvider: McpContextProvider = {
     getContext: async () => ({
-      lightdashClient: createFakeClient(options.tracker),
+      lightdashClient: createFakeClient(options.tracker, {
+        promoteError: options.promoteError,
+      }),
       auth: { mode: 'env' as const },
     }),
   };
@@ -313,6 +322,43 @@ describe('destructive MRTR contract (promote_dashboard)', () => {
         projectUuid: '99999999-9999-4999-8999-999999999999',
       }),
     );
+  });
+
+  it('returns a generic error when promote execution fails', async () => {
+    const tracker: PromoteTracker = {
+      getCount: 0,
+      diffCount: 0,
+      promoteCount: 0,
+      diffMutations: 0,
+    };
+    const pair = await connectPair({
+      tracker,
+      capabilities: { elicitation: { form: {} } },
+      promoteError: new Error('secret upstream detail'),
+    });
+    server = pair.server;
+    mcpClient = pair.mcpClient;
+
+    mcpClient.setRequestHandler('elicitation/create', async (): Promise<ElicitResult> => ({
+      action: 'accept',
+      content: {
+        decision: 'confirm_promote',
+        confirmationText: DASHBOARD_NAME,
+      },
+    }));
+
+    const result = await mcpClient.callTool({
+      name: `${TOOL_PREFIX}promote_dashboard`,
+      arguments: { projectUuid: PROJECT_UUID, dashboardUuidOrSlug: DASHBOARD_UUID },
+    });
+
+    expect(tracker.promoteCount).toBe(1);
+    const body = parseStructured(result);
+    expect(body.code).toBe('PROMOTION_FAILED');
+    expect(body.message).toBe(
+      'Dashboard promote failed. Retry after reviewing promoteDiff, or check server logs.',
+    );
+    expect(String(body.message)).not.toContain('secret');
   });
 
   it('accept with drifted promoteDiff returns RESOURCE_CHANGED', async () => {

@@ -33,6 +33,7 @@ import {
   buildMoveContentResourceKey,
   fetchChartBaselineOptional,
   resolveChartPreviewCurrent,
+  resolveConcurrentLookups,
   resolveMoveContentManifest,
   shallowDiff,
 } from './developer-helpers.js';
@@ -89,17 +90,14 @@ async function previewDuplicateChart(input: {
       isNotFound: isNotFoundError,
     }),
   ]);
-  if (sourceSettled.status === 'rejected') {
-    if (isNotFoundError(sourceSettled.reason)) {
-      return codedErrorResult('CONTENT_NOT_FOUND', `Chart '${sourceId}' was not found`);
-    }
-    throw sourceSettled.reason;
+  const lookups = resolveConcurrentLookups(sourceSettled, targetSettled, isNotFoundError);
+  if (lookups.kind === 'source_not_found') {
+    return codedErrorResult('CONTENT_NOT_FOUND', `Chart '${sourceId}' was not found`);
   }
-  if (targetSettled.status === 'rejected') {
-    throw targetSettled.reason;
+  if (lookups.kind === 'throw') {
+    throw lookups.error;
   }
-  const current = sourceSettled.value;
-  const targetBaseline = targetSettled.value;
+  const { source: current, target: targetBaseline } = lookups;
   if (targetBaseline) {
     return codedErrorResult(
       'CHART_SLUG_EXISTS',

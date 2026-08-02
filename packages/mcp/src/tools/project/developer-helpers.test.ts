@@ -20,6 +20,7 @@ import {
   moveContentTargetSpaceFromRecord,
   resolveChartPreviewCurrent,
   resolveCompareVersionIds,
+  resolveConcurrentLookups,
   resolveMoveContentManifest,
   shallowDiff,
   sortByUuidStable,
@@ -369,6 +370,45 @@ describe('fetchChartBaselineOptional', () => {
       isNotFound: (err) => err === notFound,
     });
     expect(baseline).toBeUndefined();
+  });
+});
+
+describe('resolveConcurrentLookups', () => {
+  const sourceNotFound = Object.assign(new Error('source missing'), { statusCode: 404 });
+  const targetFailure = new Error('target unavailable');
+
+  it('gives source not-found precedence over a target rejection', () => {
+    const result = resolveConcurrentLookups(
+      { status: 'rejected', reason: sourceNotFound },
+      { status: 'rejected', reason: targetFailure },
+      (err) => err === sourceNotFound,
+    );
+
+    expect(result).toEqual({ kind: 'source_not_found' });
+  });
+
+  it('returns both values when source and target resolve', () => {
+    const source = { uuid: 'source' };
+    const target = { uuid: 'target' };
+
+    expect(
+      resolveConcurrentLookups(
+        { status: 'fulfilled', value: source },
+        { status: 'fulfilled', value: target },
+        () => false,
+      ),
+    ).toEqual({ kind: 'ok', source, target });
+  });
+
+  it('returns a non-not-found source rejection to throw', () => {
+    const sourceFailure = new Error('source unavailable');
+    const result = resolveConcurrentLookups(
+      { status: 'rejected', reason: sourceFailure },
+      { status: 'fulfilled', value: { uuid: 'target' } },
+      () => false,
+    );
+
+    expect(result).toEqual({ kind: 'throw', error: sourceFailure });
   });
 });
 

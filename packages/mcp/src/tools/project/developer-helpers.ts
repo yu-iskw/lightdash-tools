@@ -559,6 +559,32 @@ export type ChartPreviewCurrentResult =
   | { kind: 'error'; code: 'CHART_SLUG_EXISTS'; message: string }
   | { kind: 'ok'; current: Record<string, unknown> | null };
 
+export type ConcurrentLookupOutcome<TSource, TTarget> =
+  | { kind: 'ok'; source: TSource; target: TTarget }
+  | { kind: 'source_not_found' }
+  | { kind: 'throw'; error: unknown };
+
+/**
+ * Resolve concurrent source/target lookups while preserving source-not-found precedence.
+ * Callers can map `source_not_found` to their resource-specific response.
+ */
+export function resolveConcurrentLookups<TSource, TTarget>(
+  sourceSettled: PromiseSettledResult<TSource>,
+  targetSettled: PromiseSettledResult<TTarget>,
+  isNotFound: (err: unknown) => boolean,
+): ConcurrentLookupOutcome<TSource, TTarget> {
+  if (sourceSettled.status === 'rejected') {
+    if (isNotFound(sourceSettled.reason)) {
+      return { kind: 'source_not_found' };
+    }
+    return { kind: 'throw', error: sourceSettled.reason };
+  }
+  if (targetSettled.status === 'rejected') {
+    return { kind: 'throw', error: targetSettled.reason };
+  }
+  return { kind: 'ok', source: sourceSettled.value, target: targetSettled.value };
+}
+
 /** Extract preview/apply baseline fields from a saved resource record. */
 export function baselineFromResource(
   resource: Record<string, unknown> | null,
