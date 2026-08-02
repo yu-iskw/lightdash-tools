@@ -8,6 +8,8 @@ Accepted
 
 Related to [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
+Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
+
 ## Context
 
 MCP and CLI are automation surfaces for AI agents and scripts. Exposing the full `@lightdash-tools/client` API—including irrecoverable deletes—is unsafe even with runtime safety modes: a misconfigured agent can still discover and call banned operations.
@@ -25,14 +27,15 @@ Operations in `packages/common/src/operations/` carry `agentExposure`:
 
 Exposure classes:
 
-| Class                        | Rule                                                                                                                                          | Example                                          |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Irrecoverable                | Never on MCP/CLI (`client-only`)                                                                                                              | `delete_member`, permanent content purge         |
-| Reversible destructive       | Expose with `WRITE_DESTRUCTIVE` + surface guardrails                                                                                          | `delete_group`, revoke space access              |
-| Soft-delete (content)        | MCP only via elicitation-required confirmation ([ADR-0015](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)) | `delete_chart`, `delete_dashboard` (soft-delete) |
-| Read / non-destructive write | Expose on the agent tier                                                                                                                      | list/create group                                |
+| Class                        | Rule                                                                                                                                                      | Example                                                          |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Irrecoverable                | Never on MCP/CLI (`client-only`)                                                                                                                          | `delete_member`, permanent content purge                         |
+| Reversible destructive       | Expose with `WRITE_DESTRUCTIVE` + surface guardrails                                                                                                      | `delete_group`, revoke space access                              |
+| Soft-delete (content)        | MCP only via elicitation-required confirmation ([ADR-0015](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md))             | `delete_chart`, `delete_dashboard` (soft-delete)                 |
+| Cross-project promote        | MCP only via elicitation-required confirmation ([ADR-0017](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)); dashboard-first in v1 | `promote_dashboard` (upstream overwrite of nested charts/spaces) |
+| Read / non-destructive write | Expose on the agent tier                                                                                                                                  | list/create group                                                |
 
-Runtime safety modes and `destructiveHint` gate **reversible** destructive ops. They are not a substitute for banning irrecoverable ops from the surface. Content soft-delete additionally requires MCP form elicitation (not a boolean tool argument).
+Runtime safety modes and `destructiveHint` gate **reversible** destructive ops. They are not a substitute for banning irrecoverable ops from the surface. Content soft-delete and dashboard promote additionally require MCP form elicitation (not a boolean tool argument).
 
 The shipped MCP persona is a narrower compile/discovery set ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)); broad admin ops stay on client/CLI.
 

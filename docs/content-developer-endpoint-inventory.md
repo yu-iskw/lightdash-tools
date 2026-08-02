@@ -29,4 +29,4 @@ Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/l
 
 **Hard gate:** SAFE_WRITE tools require session-owned validated `previewId` matching `contentHash`; apply consumes the id.
 
-**SOP:** Dashboard-first authoring — new charts are tile prerequisites; prefer UI [dashboard promote](https://docs.lightdash.com/guides/how-to-promote-content) as the release unit.
+**SOP:** Dashboard-first authoring — new charts are tile prerequisites; release via content-governance [dashboard promote](https://docs.lightdash.com/guides/how-to-promote-content) (form elicitation; [ADR-0017](adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).

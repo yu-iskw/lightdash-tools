@@ -50,11 +50,13 @@ import {
   registerValidateChart,
   registerValidateDashboard,
 } from './project/developer-content.js';
+import { registerGetDashboardPromoteDiff } from './project/get-dashboard-promote-diff.js';
 import {
   registerGetProjectParameters,
   registerListProjectParameters,
 } from './project/parameters.js';
 import { registerGetProject, registerListProjects } from './project/projects.js';
+import { registerPromoteDashboard } from './project/promote-dashboard.js';
 import {
   registerGetChart,
   registerGetDashboard,
@@ -152,9 +154,11 @@ export const toolRegistry = {
   resize_dashboard_tile: { register: registerResizeDashboardTile },
   move_content: { register: registerMoveContent },
 
-  // content-governance (ADR-0015)
+  // content-governance (ADR-0015 / ADR-0017)
   delete_chart: { register: registerDeleteChart },
   delete_dashboard: { register: registerDeleteDashboard },
+  get_dashboard_promote_diff: { register: registerGetDashboardPromoteDiff },
+  promote_dashboard: { register: registerPromoteDashboard },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

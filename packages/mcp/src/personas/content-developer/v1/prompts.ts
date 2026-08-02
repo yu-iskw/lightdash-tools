@@ -30,7 +30,7 @@ optional health checks on a saved UUID only — they do not unlock apply.`;
 const DASHBOARD_FIRST = `Dashboard-first: the dashboard is the authoring and promotion unit. Create/update charts only as
 tile prerequisites in this workflow; every new chart must be added as a dashboard tile before treating work as done.
 Do not create or update spaces (Terraform / out-of-band) — place content in an existing spaceUuid from list_spaces/get_space.
-Promote via UI dashboard promote only (not MCP).`;
+Promote via the content-governance persona (form elicitation), not this persona.`;
 
 export function registerContentDeveloperPrompts(server: McpServer): void {
   server.registerPrompt(
@@ -185,7 +185,7 @@ Every new/updated chart must appear on a dashboard tile — reject orphan chart-
 Do not report success while validation errors remain outstanding.
 Summarize validation results, remaining warnings, dashboard and chart UUIDs/slugs touched.
 This persona cannot promote, publish permissions, or perform org-level release actions;
-operators should use UI dashboard promote when promoting across projects.`,
+operators should use content-governance (lightdash_promote_dashboard) when promoting across projects.`,
         'dashboards',
       ),
   );

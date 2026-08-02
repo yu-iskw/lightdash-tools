@@ -37,6 +37,11 @@ export type {
 export type { SavedChart } from './api/v2/charts';
 export type { Dashboard, UpdateDashboardBody } from './api/v2/dashboards';
 export type {
+  DashboardPromoteDiffResults,
+  DashboardPromoteOptions,
+  PromoteDashboardResult,
+} from './api/v1/dashboards';
+export type {
   ListGroupsParams,
   ListAllGroupsParams,
   GetGroupParams,

@@ -33,6 +33,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 14. [MCP content-developer persona mutation boundary](0014-mcp-content-developer-persona-mutation-boundary.md)
 15. [MCP content-governance persona elicitation-required soft-delete boundary](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)
 16. [MCP pluggable ephemeral store for HTTP preview sessions and OAuth](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
+17. [MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
 
 ## Old → new mapping
 

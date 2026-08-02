@@ -7,6 +7,12 @@ import {
   parseDashboardCreateBody,
   parseDashboardUpdateBody,
 } from './dashboard.js';
+import {
+  isDashboardDuplicateChanges,
+  normalizeDuplicateChartProposed,
+  parseChartDuplicateChanges,
+  parseDashboardDuplicateChanges,
+} from './duplicate.js';
 
 const validChart = {
   name: 'Revenue',
@@ -96,6 +102,96 @@ describe('parseDashboardCreateBody / parseDashboardUpdateBody', () => {
   it('parseDashboardChangesBody accepts create or update shapes', () => {
     expect(parseDashboardChangesBody(validCreate).ok).toBe(true);
     expect(parseDashboardChangesBody({ description: 'only desc' }).ok).toBe(true);
+  });
+
+  it('parseDashboardChangesBody treats { name } as update, not duplicate', () => {
+    const parsed = parseDashboardChangesBody({ name: 'x' });
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.data).toEqual({ name: 'x' });
+    }
+    expect(isDashboardDuplicateChanges({ name: 'x' })).toBe(false);
+  });
+
+  it('parseDashboardChangesBody accepts empty and newName-only duplicate shapes', () => {
+    const empty = parseDashboardChangesBody({});
+    expect(empty.ok).toBe(true);
+    if (empty.ok) {
+      expect(empty.data).toEqual({});
+    }
+    const withName = parseDashboardChangesBody({ newName: 'Copy' });
+    expect(withName.ok).toBe(true);
+    if (withName.ok) {
+      expect(withName.data).toEqual({ newName: 'Copy' });
+    }
+  });
+});
+
+describe('parseChartDuplicateChanges / normalizeDuplicateChartProposed', () => {
+  it('accepts source + newSlug and omits undefined newName', () => {
+    const parsed = parseChartDuplicateChanges({
+      sourceChartUuidOrSlug: 'source-chart',
+      newSlug: 'copy-slug',
+    });
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.data).toEqual({
+        sourceChartUuidOrSlug: 'source-chart',
+        newSlug: 'copy-slug',
+      });
+      expect(Object.prototype.hasOwnProperty.call(parsed.data, 'newName')).toBe(false);
+    }
+
+    expect(
+      normalizeDuplicateChartProposed({
+        sourceChartUuidOrSlug: 'source-chart',
+        newSlug: 'copy-slug',
+      }),
+    ).toEqual({
+      sourceChartUuidOrSlug: 'source-chart',
+      newSlug: 'copy-slug',
+    });
+  });
+
+  it('includes newName when provided', () => {
+    const parsed = parseChartDuplicateChanges({
+      sourceChartUuidOrSlug: 'source-chart',
+      newSlug: 'copy-slug',
+      newName: 'Copy of Revenue',
+    });
+    expect(parsed.ok).toBe(true);
+    if (parsed.ok) {
+      expect(parsed.data).toEqual({
+        sourceChartUuidOrSlug: 'source-chart',
+        newSlug: 'copy-slug',
+        newName: 'Copy of Revenue',
+      });
+    }
+  });
+
+  it('rejects missing required duplicate fields', () => {
+    expect(parseChartDuplicateChanges({ newSlug: 'copy' }).ok).toBe(false);
+    expect(parseChartDuplicateChanges({ sourceChartUuidOrSlug: 'src' }).ok).toBe(false);
+  });
+});
+
+describe('parseDashboardDuplicateChanges', () => {
+  it('accepts {} and { newName }', () => {
+    const empty = parseDashboardDuplicateChanges({});
+    expect(empty.ok).toBe(true);
+    if (empty.ok) {
+      expect(empty.data).toEqual({});
+    }
+
+    const named = parseDashboardDuplicateChanges({ newName: 'Copy' });
+    expect(named.ok).toBe(true);
+    if (named.ok) {
+      expect(named.data).toEqual({ newName: 'Copy' });
+    }
+  });
+
+  it('rejects unknown keys', () => {
+    expect(parseDashboardDuplicateChanges({ newName: 'Copy', extra: true }).ok).toBe(false);
   });
 });
 

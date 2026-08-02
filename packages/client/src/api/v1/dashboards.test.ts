@@ -129,4 +129,40 @@ describe('DashboardsClient', () => {
     expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/d1/version/v1');
     expect(result).toEqual(version);
   });
+
+  it('getDashboardPromoteDiff should call GET /dashboards/{id}/promoteDiff', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const diff = { charts: [], dashboards: [], spaces: [] };
+    vi.mocked(mockHttp.get).mockResolvedValue(diff);
+    const result = await client.getDashboardPromoteDiff('d1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/d1/promoteDiff', undefined);
+    expect(result).toEqual(diff);
+  });
+
+  it('getDashboardPromoteDiff should pass projectUuid query and encode slug', async () => {
+    const client = new DashboardsClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({ charts: [], dashboards: [], spaces: [] });
+    await client.getDashboardPromoteDiff('dash/slug', { projectUuid: 'p1' });
+    expect(mockHttp.get).toHaveBeenCalledWith('/dashboards/dash%2Fslug/promoteDiff', {
+      params: { projectUuid: 'p1' },
+    });
+  });
+
+  it('promoteDashboard should call POST /dashboards/{id}/promote', async () => {
+    const client = new DashboardsClient(mockHttp);
+    const promoted = { uuid: 'd1', name: 'Board', projectUuid: 'upstream' };
+    vi.mocked(mockHttp.post).mockResolvedValue(promoted);
+    const result = await client.promoteDashboard('d1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/dashboards/d1/promote', undefined, undefined);
+    expect(result).toEqual(promoted);
+  });
+
+  it('promoteDashboard should pass projectUuid query and encode slug', async () => {
+    const client = new DashboardsClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue({});
+    await client.promoteDashboard('dash/slug', { projectUuid: 'p1' });
+    expect(mockHttp.post).toHaveBeenCalledWith('/dashboards/dash%2Fslug/promote', undefined, {
+      params: { projectUuid: 'p1' },
+    });
+  });
 });

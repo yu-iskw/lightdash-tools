@@ -39,6 +39,17 @@ export type DashboardHistoryResults =
 export type DashboardVersionResults =
   components['schemas']['ApiGetDashboardVersionResponse']['results'];
 
+/** Results of GET dashboards/{dashboardUuidOrSlug}/promoteDiff. */
+export type DashboardPromoteDiffResults = components['schemas']['PromotionChanges'];
+
+/** Results of POST dashboards/{dashboardUuidOrSlug}/promote. */
+export type PromoteDashboardResult = components['schemas']['DashboardDAO'];
+
+/** Optional query for promote / promoteDiff when a slug exists in multiple projects. */
+export interface DashboardPromoteOptions {
+  projectUuid?: string;
+}
+
 export class DashboardsClient extends BaseApiClient {
   /** List dashboards in a project. */
   async listDashboards(projectUuid: string): Promise<DashboardBasicDetailsWithTileTypes[]> {
@@ -101,6 +112,29 @@ export class DashboardsClient extends BaseApiClient {
   ): Promise<DashboardVersionResults> {
     return this.http.get<DashboardVersionResults>(
       `/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}/version/${versionUuid}`,
+    );
+  }
+
+  /** Get promotion diff for a dashboard against its configured upstream project. */
+  async getDashboardPromoteDiff(
+    dashboardUuidOrSlug: string,
+    options?: DashboardPromoteOptions,
+  ): Promise<DashboardPromoteDiffResults> {
+    return this.http.get<DashboardPromoteDiffResults>(
+      `/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}/promoteDiff`,
+      options?.projectUuid ? { params: { projectUuid: options.projectUuid } } : undefined,
+    );
+  }
+
+  /** Promote a dashboard (and nested charts) to its configured upstream project. */
+  async promoteDashboard(
+    dashboardUuidOrSlug: string,
+    options?: DashboardPromoteOptions,
+  ): Promise<PromoteDashboardResult> {
+    return this.http.post<PromoteDashboardResult>(
+      `/dashboards/${encodeURIComponent(dashboardUuidOrSlug)}/promote`,
+      undefined,
+      options?.projectUuid ? { params: { projectUuid: options.projectUuid } } : undefined,
     );
   }
 }

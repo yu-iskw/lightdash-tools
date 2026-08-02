@@ -18,8 +18,8 @@ import {
   withClaimedPreviewApply,
 } from './preview-ledger.js';
 
-import type { ApiErrorPayload } from '@lightdash-tools/client';
 import type { PreviewLedgerEntry, PreviewStatus, PreviewStore } from './preview-ledger.js';
+import type { ApiErrorPayload } from '@lightdash-tools/client';
 
 function apiError(statusCode: number): LightdashApiError {
   const payload: ApiErrorPayload['error'] = {

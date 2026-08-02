@@ -10,6 +10,8 @@ Amends [4. Agent-safe exposure](0004-agent-safe-exposure-mcp-cli-vs-client-only.
 
 Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md)
 
+Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
+
 ## Context
 
 Agents sometimes need to remove project-scoped charts and dashboards. Boolean tool arguments (`confirmed: true`) and chat “please confirm” are not trustworthy: the model can supply them without a human. Content-developer ([ADR-0014](0014-mcp-content-developer-persona-mutation-boundary.md)) deliberately excludes hard delete and forbids destructive mutability.
@@ -21,23 +23,23 @@ MCP 2026-07-28 multi-round-trip requests (MRTR) let a tool return `InputRequired
 ## Decision
 
 1. Ship a **`content-governance`** persona at fixed path `/content-governance/v1/mcp` with MCP server display name **`lightdash-mcp-gov`**. Stdio: `lightdash-mcp content-governance`.
-2. **Soft-delete only** on MCP: `delete_chart` and `delete_dashboard` via the v2 project saved-chart / dashboard DELETE endpoints. Permanent purge, space delete, and org-level deletes remain **client-only / never-expose**.
-3. **Elicitation-required confirmation:** every destructive tool uses a shared `registerDestructiveToolSafe` framework that:
+2. **Soft-delete on MCP:** `delete_chart` and `delete_dashboard` via the v2 project saved-chart / dashboard DELETE endpoints. Permanent purge, space delete, and org-level deletes remain **client-only / never-expose**. Dashboard promote is also on this persona ([ADR-0017](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)); it is not limited to soft-delete alone.
+3. **Elicitation-required confirmation:** every destructive/release write uses a shared elicitation-gated mutation framework that:
    - fails closed when the client lacks form elicitation capability;
-   - returns `inputRequired({ inputRequests: { confirm: inputRequired.elicit(...) }, requestState })` (not deprecated `elicitInput`);
-   - binds approval to resource identity + precondition digest in AEAD `requestState` (`LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY`);
-   - requires `action === accept`, `decision === confirm_delete`, and typed resource name match;
-   - revalidates the target immediately before DELETE;
-   - returns a structured deletion receipt (or declined/cancelled/blocked outcomes).
-4. **Do not** expose deletes on semantic-layer, organization-audit, content-reader, or content-developer.
-5. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-governance`; annotations `WRITE_DESTRUCTIVE` with `destructiveHint: true`.
+   - returns `inputRequired({ inputRequests: { …: inputRequired.elicit(...) }, requestState })` (not deprecated `elicitInput`);
+   - binds approval to resource identity + precondition digest in signed `requestState` (`LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY`);
+   - requires `action === accept`, an operation-specific `decision` enum, and typed resource name match;
+   - revalidates the target immediately before the mutating API call;
+   - returns a structured receipt (or declined/cancelled/blocked outcomes).
+4. **Do not** expose soft-delete or promote on semantic-layer, organization-audit, content-reader, or content-developer.
+5. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-governance`; annotations `WRITE_DESTRUCTIVE` with `destructiveHint: true` for mutating tools.
 6. No bulk delete in v1 (one tool call → one resource → one elicitation → one API call).
 
 ## Consequences
 
 - Fifth HTTP persona path; OAuth PRM stays persona-path-aware via `listPersonaPaths()`.
-- Content-developer remains authoring-only; governance agents opt into soft-delete.
-- Clients without form elicitation cannot delete via MCP (safe refusal, not a weaker confirmation path).
+- Content-developer remains authoring-only; governance agents opt into soft-delete and (per ADR-0017) dashboard promote.
+- Clients without form elicitation cannot delete or promote via MCP (safe refusal, not a weaker confirmation path).
 - Requires widening `registerToolSafe` to pass through `InputRequiredResult` and threading `ServerContext` into destructive handlers.
 - Soft-delete is classified as reversible destructive under ADR-0004 when gated by elicitation; permanent purge stays irrecoverable / client-only.
 

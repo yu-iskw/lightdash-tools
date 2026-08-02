@@ -1,6 +1,6 @@
 /**
- * Content-governance persona: elicitation-gated soft-delete (ADR-0015).
- * Soft-delete charts/dashboards only; permanent purge and space delete stay off MCP.
+ * Content-governance persona: elicitation-gated soft-delete and dashboard promote
+ * (ADR-0015 / ADR-0017). Permanent purge and chart/SQL promote stay off MCP.
  */
 
 import { registerContentGovernancePrompts } from './prompts.js';
@@ -15,6 +15,8 @@ export const CONTENT_GOVERNANCE_PERSONA_PATH = '/content-governance/v1/mcp' as c
 export const CONTENT_GOVERNANCE_TOOL_IDS = [
   'delete_chart',
   'delete_dashboard',
+  'get_dashboard_promote_diff',
+  'promote_dashboard',
 ] as const satisfies readonly ToolId[];
 
 export const contentGovernancePersona: PersonaDefinition = {

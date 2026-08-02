@@ -5,6 +5,11 @@
 
 import { z } from 'zod';
 
+import {
+  dashboardDuplicateChangesSchema,
+  isDashboardDuplicateChanges,
+  parseDashboardDuplicateChanges,
+} from './duplicate.js';
 import { formatZodIssues, rejectForbiddenKeys } from './parse-helpers.js';
 
 import type { PayloadParseResult } from './parse-helpers.js';
@@ -67,12 +72,13 @@ export const dashboardUpdateBodySchema = z
   });
 
 /**
- * Preview `changes` accept create-shaped or update-shaped payloads.
- * Create requires name+tiles+tabs; otherwise treat as update allowlist.
+ * Preview `changes` accept create, update, or duplicate (`{ newName? }`) payloads.
+ * Create requires name+tiles+tabs; update is a non-empty allowlist; duplicate is newName-only.
  */
 export const dashboardChangesBodySchema = z.union([
   dashboardCreateBodySchema,
   dashboardUpdateBodySchema,
+  dashboardDuplicateChangesSchema,
 ]);
 
 function parseWithSchema(
@@ -110,5 +116,8 @@ export function parseDashboardUpdateBody(
 export function parseDashboardChangesBody(
   input: unknown,
 ): PayloadParseResult<Record<string, unknown>> {
+  if (isDashboardDuplicateChanges(input)) {
+    return parseDashboardDuplicateChanges(input);
+  }
   return parseWithSchema(input, dashboardChangesBodySchema, 'dashboard changes body');
 }

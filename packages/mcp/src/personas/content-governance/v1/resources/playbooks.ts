@@ -13,9 +13,10 @@ const playbooks = definePersonaPlaybooks<ContentGovernancePlaybookTopic>({
   moduleDir: __dirname,
   hardBans: `Do not permanently purge soft-deleted content.
 Do not delete spaces or perform bulk delete.
-Do not soft-delete without form elicitation (never invent confirmed: true or chat-only approval).
-Do not expose deletes on other personas or bypass the elicitation gate.
-Do not restore, author, promote, or execute warehouse queries from this persona.
+Do not soft-delete or promote without form elicitation (never invent confirmed: true or chat-only approval).
+Do not expose deletes/promote on other personas or bypass the elicitation gate.
+Do not promote charts or SQL charts via MCP (dashboard-first only).
+Do not restore, author, or execute warehouse queries from this persona.
 Do not reveal secrets, warehouse credentials, or hidden SQL.`,
   coreDescription: 'Hard bans, elicitation SOP, tools, and project scope',
   topics: [
@@ -28,7 +29,7 @@ Do not reveal secrets, warehouse credentials, or hidden SQL.`,
     {
       id: 'dashboards',
       title: 'Content-governance dashboards playbook',
-      description: 'Soft-delete a dashboard with form elicitation',
+      description: 'Soft-delete or promote a dashboard with form elicitation',
       file: 'dashboards.md',
     },
   ],

@@ -1,18 +1,20 @@
 /**
- * Content-governance operations (ADR-0015).
- * Soft-delete charts/dashboards via elicitation-required MCP tools.
- * Permanent purge stays client-only.
+ * Content-governance operations (ADR-0015 / ADR-0017).
+ * Soft-delete charts/dashboards and dashboard promote via elicitation-required MCP tools.
+ * Permanent purge stays client-only. Chart/SQL-chart promote stay off MCP in v1.
  */
 
-import { WRITE_DESTRUCTIVE } from '../safety';
+import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from '../safety';
 
 import { defineOperation } from './types';
 
 import type { CapabilityProfile, OperationDescriptor, SafetyImpact } from './types';
 
+const IMPACT_READ: SafetyImpact = 'read';
 const IMPACT_WRITE_DESTRUCTIVE: SafetyImpact = 'write-destructive';
 const PROFILE_CONTENT_GOVERNANCE: CapabilityProfile = 'content-governance';
 
+const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
 
 const op_delete_chart = defineOperation({
@@ -53,6 +55,40 @@ const op_delete_dashboard = defineOperation({
   profiles: [PROFILE_CONTENT_GOVERNANCE],
 });
 
+const op_get_dashboard_promote_diff = defineOperation({
+  id: 'content-governance.dashboards.promote-diff',
+  summary: 'Get promotion diff for a dashboard against its configured upstream project (read-only)',
+  http: {
+    method: 'GET',
+    path: `${API_V1}/dashboards/{dashboardUuidOrSlug}/promoteDiff`,
+  },
+  authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_dashboard_promote_diff',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_GOVERNANCE],
+});
+
+const op_promote_dashboard = defineOperation({
+  id: 'content-governance.dashboards.promote',
+  summary: 'Promote a dashboard to its configured upstream project (MCP requires form elicitation)',
+  http: {
+    method: 'POST',
+    path: `${API_V1}/dashboards/{dashboardUuidOrSlug}/promote`,
+  },
+  authorization: { safetyImpact: IMPACT_WRITE_DESTRUCTIVE },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'promote_dashboard',
+    annotations: WRITE_DESTRUCTIVE,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_GOVERNANCE],
+});
+
 const op_permanent_purge = defineOperation({
   id: 'content-governance.content.permanent-delete',
   summary:
@@ -68,5 +104,7 @@ const op_permanent_purge = defineOperation({
 export const CONTENT_GOVERNANCE_OPERATIONS: readonly OperationDescriptor[] = [
   op_delete_chart,
   op_delete_dashboard,
+  op_get_dashboard_promote_diff,
+  op_promote_dashboard,
   op_permanent_purge,
 ];

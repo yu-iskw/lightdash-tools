@@ -6,7 +6,7 @@ URI: `lightdash://playbooks/content-developer/core`
 
 - Do not execute arbitrary metric queries, raw SQL, or underlying-data queries.
 - Do not author or upsert SQL charts.
-- Do not hard-delete, rollback, or promote content (promotion is UI-only; prefer **dashboard** promote so charts travel with the board — see [How to promote content](https://docs.lightdash.com/guides/how-to-promote-content)).
+- Do not hard-delete, rollback, or promote content on this persona. For dashboard promote with form elicitation, use the **content-governance** persona (`lightdash-mcp content-governance` / `/content-governance/v1/mcp`) — see [How to promote content](https://docs.lightdash.com/guides/how-to-promote-content).
 - Do not perform organization administration.
 - Do not create or update spaces — spaces are managed outside this agent (e.g. Terraform). Use existing spaces only.
 - Do not treat a standalone chart create/update as a finished publish unit. New charts must be attached as dashboard tiles in the same workflow (dashboard is the promotion unit).

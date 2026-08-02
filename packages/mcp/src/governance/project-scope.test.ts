@@ -81,4 +81,41 @@ describe('project-scope', () => {
       expect((err as ProjectScopeError).code).toBe('PROJECT_SCOPE_REQUIRED');
     }
   });
+
+  describe('allowConfiguredEnv: false', () => {
+    it('ignores LIGHTDASH_TOOLS_PROJECT_UUID and uses argument', () => {
+      process.env[ENV_PROJECT_UUID] = CFG;
+      expect(resolveProjectScope({ projectUuid: ARG }, { allowConfiguredEnv: false })).toEqual({
+        projectUuid: ARG,
+        source: 'argument',
+        projectPinned: false,
+      });
+    });
+
+    it('still prefers HTTP pin over argument', async () => {
+      process.env[ENV_PROJECT_UUID] = CFG;
+      await runWithProjectPinAsync(PIN, async () => {
+        expect(resolveProjectScope({ projectUuid: PIN }, { allowConfiguredEnv: false })).toEqual({
+          projectUuid: PIN,
+          source: 'pin',
+          projectPinned: true,
+        });
+      });
+    });
+
+    it('throws PROJECT_SCOPE_REQUIRED without mentioning env when pin and arg missing', () => {
+      process.env[ENV_PROJECT_UUID] = CFG;
+      expect(() => resolveProjectScope(undefined, { allowConfiguredEnv: false })).toThrow(
+        ProjectScopeError,
+      );
+      try {
+        resolveProjectScope(undefined, { allowConfiguredEnv: false });
+      } catch (err) {
+        expect(err).toBeInstanceOf(ProjectScopeError);
+        expect((err as ProjectScopeError).code).toBe('PROJECT_SCOPE_REQUIRED');
+        expect((err as ProjectScopeError).message).not.toContain(ENV_PROJECT_UUID);
+        expect((err as ProjectScopeError).message).toMatch(/X-Lightdash-Project|projectUuid/);
+      }
+    });
+  });
 });

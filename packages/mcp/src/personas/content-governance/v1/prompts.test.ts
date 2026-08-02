@@ -19,18 +19,20 @@ describe('content-governance prompts/playbook', () => {
     expect(CONTENT_GOVERNANCE_HARD_BANS.toLowerCase()).toContain('permanently purge');
   });
 
-  it('documents elicitation SOP and soft-delete bans', () => {
+  it('documents elicitation SOP, soft-delete, and promote bans', () => {
     const md = getAllPlaybookMarkdown().toLowerCase();
     expect(md).toContain('elicitation_required');
     expect(md).toContain('resource_changed');
     expect(md).toContain('confirm_delete');
+    expect(md).toContain('confirm_promote');
     expect(md).toContain('confirmationtext');
     expect(md).toContain('soft-delete');
+    expect(md).toContain('promote_dashboard');
     expect(md).toContain('permanently purge');
     expect(md).not.toMatch(/`permanent_delete/);
   });
 
-  it('registers delete_chart and delete_dashboard prompts only', async () => {
+  it('registers delete and promote prompts', async () => {
     const { registerContentGovernancePrompts } = await import('./prompts.js');
     const names: string[] = [];
     const server = {
@@ -39,6 +41,6 @@ describe('content-governance prompts/playbook', () => {
       },
     };
     registerContentGovernancePrompts(server as never);
-    expect(names.sort()).toEqual(['delete_chart', 'delete_dashboard']);
+    expect(names.sort()).toEqual(['delete_chart', 'delete_dashboard', 'promote_dashboard']);
   });
 });

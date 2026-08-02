@@ -70,6 +70,8 @@ import {
   dashboardCreateBodySchema,
   dashboardTileSchema,
   dashboardUpdateBodySchema,
+  normalizeDuplicateChartProposed,
+  normalizeDuplicateDashboardProposed,
   parseChartUpsertBody,
   parseDashboardCreateBody,
   parseDashboardTile,
@@ -109,7 +111,7 @@ export function registerValidateChart(
     {
       title: 'Validate chart',
       description:
-        "Optional health check: validate a saved chart's fields against its explore. Does not unlock preview apply — use confirm_preview.",
+        'Optional health check on a saved chart UUID only (upstream has no unsaved-payload validator). Does not unlock preview apply — use confirm_preview.',
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -141,7 +143,7 @@ export function registerValidateDashboard(
     {
       title: 'Validate dashboard',
       description:
-        "Optional health check: validate a saved dashboard's fields against its explores. Does not unlock preview apply — use confirm_preview.",
+        'Optional health check on a saved dashboard UUID only (upstream has no unsaved-payload validator). Does not unlock preview apply — use confirm_preview.',
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -404,11 +406,11 @@ export function registerDuplicateChart(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const proposed = {
+      const proposed = normalizeDuplicateChartProposed({
         sourceChartUuidOrSlug: args.sourceChartUuidOrSlug,
         newSlug: args.newSlug,
         newName: args.newName,
-      };
+      });
       const getSaved = async (id: string) =>
         asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id));
       let sourceRecord: Record<string, unknown>;
@@ -423,7 +425,7 @@ export function registerDuplicateChart(
         }
         throw err;
       }
-      const sourceBaseline = baselineFromResource(sourceRecord);
+      const sourceBaselineBefore = baselineFromResource(sourceRecord);
       const list = await c.v1.charts.getChartsAsCode(scope.projectUuid, {
         ids: [args.sourceChartUuidOrSlug],
       });
@@ -432,6 +434,26 @@ export function registerDuplicateChart(
         return codedErrorResult(
           'CONTENT_NOT_FOUND',
           `Chart '${args.sourceChartUuidOrSlug}' was not found`,
+        );
+      }
+      // Re-read after as-code so a mid-read source edit cannot slip past the preview baseline.
+      let sourceRecordAfter: Record<string, unknown>;
+      try {
+        sourceRecordAfter = await getSaved(args.sourceChartUuidOrSlug);
+      } catch (err) {
+        if (isNotFoundError(err)) {
+          return codedErrorResult(
+            'CONTENT_NOT_FOUND',
+            `Chart '${args.sourceChartUuidOrSlug}' was not found`,
+          );
+        }
+        throw err;
+      }
+      const sourceBaseline = baselineFromResource(sourceRecordAfter);
+      if (sourceBaselineBefore?.updatedAt !== sourceBaseline?.updatedAt) {
+        return codedErrorResult(
+          'PREVIEW_STALE',
+          `Source chart '${args.sourceChartUuidOrSlug}' changed while reading as-code; re-run preview -> confirm`,
         );
       }
       const targetBaseline = await fetchChartBaselineOptional({
@@ -609,19 +631,21 @@ export function registerDuplicateDashboard(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const proposed = { newName: args.newName };
+      const proposed = normalizeDuplicateDashboardProposed({ newName: args.newName });
       const source = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
       );
+      const sourceBaseline = baselineFromResource(source);
+      const resourceKey = sourceBaseline?.uuid ?? args.sourceDashboardUuid;
       return withClaimedPreviewApply(
         {
           previewId: args.previewId,
           sessionId,
           projectUuid: scope.projectUuid,
           resourceKind: 'dashboard',
-          resourceKey: args.sourceDashboardUuid,
+          resourceKey,
           proposed,
-          currentBaseline: baselineFromResource(source),
+          currentBaseline: sourceBaseline,
         },
         async () => {
           const body: DuplicateDashboardBody = {

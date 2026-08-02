@@ -31,20 +31,171 @@ import {
   baselineFromResource,
   buildMoveContentProposal,
   buildMoveContentResourceKey,
+  fetchChartBaselineOptional,
   resolveChartPreviewCurrent,
   resolveMoveContentManifest,
   shallowDiff,
 } from './developer-helpers.js';
 import {
+  chartDuplicateChangesSchema,
   chartUpsertBodySchema,
   dashboardChangesBodySchema,
+  isChartDuplicateChanges,
+  isDashboardDuplicateChanges,
+  parseChartDuplicateChanges,
   parseChartUpsertBody,
   parseDashboardChangesBody,
 } from './schemas/index.js';
 
 import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
+import type { ResolvedProjectScope } from '../../governance/project-scope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { TextContent } from '../shared.js';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+type GetSavedChart = (id: string) => Promise<Record<string, unknown>>;
+
+async function previewDuplicateChart(input: {
+  changes: Record<string, unknown>;
+  chartUuidOrSlug?: string;
+  getSavedChart: GetSavedChart;
+  sessionId: string;
+  scope: ResolvedProjectScope;
+}): Promise<TextContent> {
+  const parsedDuplicate = parseChartDuplicateChanges(input.changes);
+  if (!parsedDuplicate.ok) {
+    return codedErrorResult(parsedDuplicate.code, parsedDuplicate.message);
+  }
+  const proposed = parsedDuplicate.data;
+  const sourceId = input.chartUuidOrSlug;
+  if (!sourceId) {
+    return codedErrorResult(
+      'INVALID_ARGUMENT',
+      'chartUuidOrSlug is required for duplicate chart preview',
+    );
+  }
+  if (sourceId !== proposed.sourceChartUuidOrSlug) {
+    return codedErrorResult(
+      'INVALID_ARGUMENT',
+      'chartUuidOrSlug must equal changes.sourceChartUuidOrSlug for duplicate preview',
+    );
+  }
+  let current: Record<string, unknown>;
+  try {
+    current = await input.getSavedChart(sourceId);
+  } catch (err) {
+    if (isNotFoundError(err)) {
+      return codedErrorResult('CONTENT_NOT_FOUND', `Chart '${sourceId}' was not found`);
+    }
+    throw err;
+  }
+  const targetBaseline = await fetchChartBaselineOptional({
+    chartUuidOrSlug: String(proposed.newSlug),
+    getSavedChart: input.getSavedChart,
+    isNotFound: isNotFoundError,
+  });
+  if (targetBaseline) {
+    return codedErrorResult(
+      'CHART_SLUG_EXISTS',
+      `Chart slug '${String(proposed.newSlug)}' already exists; choose a free newSlug or update the existing chart`,
+    );
+  }
+  const baseline = baselineFromResource(current);
+  const resourceKey = baseline?.uuid ?? sourceId;
+  const resourceAliases = uniqueResourceKeys(
+    resourceKey,
+    baseline?.uuid,
+    baseline?.slug,
+    sourceId,
+    String(proposed.sourceChartUuidOrSlug),
+  );
+  const entry = await addPreviewLedgerEntry({
+    sessionId: input.sessionId,
+    projectUuid: input.scope.projectUuid,
+    resourceKind: 'chart',
+    resourceKey,
+    resourceAliases,
+    proposed,
+    baseline,
+  });
+  return jsonToolResult({
+    data: {
+      previewId: entry.previewId,
+      status: entry.status,
+      contentHash: entry.contentHash,
+      resourceKey,
+      resourceAliases,
+      operation: 'duplicate',
+      expiresAt: entry.expiresAt,
+      diff: shallowDiff(current, proposed),
+      current,
+    },
+    context: developerContext(input.scope),
+  });
+}
+
+async function previewUpsertChart(input: {
+  changes: Record<string, unknown>;
+  chartUuidOrSlug?: string;
+  slug?: string;
+  getSavedChart: GetSavedChart;
+  sessionId: string;
+  scope: ResolvedProjectScope;
+}): Promise<TextContent> {
+  const parsedChanges = parseChartUpsertBody(input.changes);
+  if (!parsedChanges.ok) {
+    return codedErrorResult(parsedChanges.code, parsedChanges.message);
+  }
+  const proposed = parsedChanges.data;
+  const resolved = await resolveChartPreviewCurrent({
+    chartUuidOrSlug: input.chartUuidOrSlug,
+    slug: input.slug,
+    getSavedChart: input.getSavedChart,
+    isNotFound: isNotFoundError,
+  });
+  if (resolved.kind === 'error') {
+    return codedErrorResult(resolved.code, resolved.message);
+  }
+  const current = resolved.current;
+  const baseline = baselineFromResource(current);
+  // Canonical identity is UUID when updating an existing chart; upsert slug remains an
+  // alias so create/update_chart can consume by slug after confirm_preview.
+  const upsertSlug =
+    input.slug ?? (typeof current?.slug === 'string' ? current.slug : undefined) ?? undefined;
+  const resourceKey = baseline?.uuid ?? upsertSlug ?? input.chartUuidOrSlug ?? input.slug ?? 'new';
+  const resourceAliases = uniqueResourceKeys(
+    resourceKey,
+    baseline?.uuid,
+    baseline?.slug,
+    upsertSlug,
+    input.chartUuidOrSlug,
+    input.slug,
+  );
+  const entry = await addPreviewLedgerEntry({
+    sessionId: input.sessionId,
+    projectUuid: input.scope.projectUuid,
+    resourceKind: 'chart',
+    resourceKey,
+    resourceAliases,
+    proposed,
+    baseline,
+  });
+  return jsonToolResult({
+    data: {
+      previewId: entry.previewId,
+      status: entry.status,
+      contentHash: entry.contentHash,
+      resourceKey,
+      resourceAliases,
+      operation: 'upsert',
+      upsertSlug: upsertSlug ?? null,
+      expiresAt: entry.expiresAt,
+      diff: shallowDiff(current, proposed),
+      current,
+    },
+    context: developerContext(input.scope),
+  });
+}
 
 export function registerPreviewChartChanges(
   server: McpServer,
@@ -56,7 +207,7 @@ export function registerPreviewChartChanges(
     {
       title: 'Preview chart changes',
       description:
-        'Preview unsaved chart edits by diffing against the current saved definition; issues a single-use previewId',
+        'Preview chart-as-code upsert or duplicate ({ sourceChartUuidOrSlug, newSlug, newName? }); issues a single-use previewId',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -65,7 +216,9 @@ export function registerPreviewChartChanges(
           .string()
           .optional()
           .describe('Target slug when creating a new chart (defaults resourceKey)'),
-        changes: chartUpsertBodySchema.describe('Proposed chart-as-code payload'),
+        changes: z
+          .union([chartDuplicateChangesSchema, chartUpsertBodySchema])
+          .describe('Chart-as-code upsert body, or duplicate proposal matching duplicate_chart'),
       },
     },
     wrapDeveloperHandler<{
@@ -76,59 +229,21 @@ export function registerPreviewChartChanges(
     }>(contextProvider, (c) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       const sessionId = getMcpClientSessionId();
-      const parsedChanges = parseChartUpsertBody(args.changes);
-      if (!parsedChanges.ok) {
-        return codedErrorResult(parsedChanges.code, parsedChanges.message);
+      const getSavedChart: GetSavedChart = async (id) =>
+        asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id));
+      const shared = { getSavedChart, sessionId, scope };
+      if (isChartDuplicateChanges(args.changes)) {
+        return previewDuplicateChart({
+          ...shared,
+          changes: args.changes,
+          chartUuidOrSlug: args.chartUuidOrSlug,
+        });
       }
-      const proposed = parsedChanges.data;
-      const resolved = await resolveChartPreviewCurrent({
+      return previewUpsertChart({
+        ...shared,
+        changes: args.changes,
         chartUuidOrSlug: args.chartUuidOrSlug,
         slug: args.slug,
-        getSavedChart: async (id) =>
-          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
-        isNotFound: isNotFoundError,
-      });
-      if (resolved.kind === 'error') {
-        return codedErrorResult(resolved.code, resolved.message);
-      }
-      const current = resolved.current;
-      const baseline = baselineFromResource(current);
-      // Canonical identity is UUID when updating an existing chart; upsert slug remains an
-      // alias so create/update_chart can consume by slug after confirm_preview.
-      const upsertSlug =
-        args.slug ?? (typeof current?.slug === 'string' ? current.slug : undefined) ?? undefined;
-      const resourceKey =
-        baseline?.uuid ?? upsertSlug ?? args.chartUuidOrSlug ?? args.slug ?? 'new';
-      const resourceAliases = uniqueResourceKeys(
-        resourceKey,
-        baseline?.uuid,
-        baseline?.slug,
-        upsertSlug,
-        args.chartUuidOrSlug,
-        args.slug,
-      );
-      const entry = await addPreviewLedgerEntry({
-        sessionId,
-        projectUuid: scope.projectUuid,
-        resourceKind: 'chart',
-        resourceKey,
-        resourceAliases,
-        proposed,
-        baseline,
-      });
-      return jsonToolResult({
-        data: {
-          previewId: entry.previewId,
-          status: entry.status,
-          contentHash: entry.contentHash,
-          resourceKey,
-          resourceAliases,
-          upsertSlug: upsertSlug ?? null,
-          expiresAt: entry.expiresAt,
-          diff: shallowDiff(current, proposed),
-          current,
-        },
-        context: developerContext(scope),
       });
     }),
   );
@@ -144,12 +259,14 @@ export function registerPreviewDashboardChanges(
     {
       title: 'Preview dashboard changes',
       description:
-        'Preview unsaved dashboard edits by diffing against the current saved definition; issues a single-use previewId',
+        'Preview dashboard create/update or duplicate ({ newName? }); issues a single-use previewId',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug').optional(),
-        changes: dashboardChangesBodySchema.describe('Proposed dashboard fields'),
+        changes: dashboardChangesBodySchema.describe(
+          'Dashboard create/update fields, or duplicate proposal { newName? } matching duplicate_dashboard',
+        ),
       },
     },
     wrapDeveloperHandler<{
@@ -164,6 +281,13 @@ export function registerPreviewDashboardChanges(
         return codedErrorResult(parsedChanges.code, parsedChanges.message);
       }
       const proposed = parsedChanges.data;
+      const isDuplicate = isDashboardDuplicateChanges(args.changes);
+      if (isDuplicate && !args.dashboardUuidOrSlug) {
+        return codedErrorResult(
+          'INVALID_ARGUMENT',
+          'dashboardUuidOrSlug is required for duplicate dashboard preview',
+        );
+      }
       const current = args.dashboardUuidOrSlug
         ? asRecord(await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug))
         : null;
@@ -192,6 +316,7 @@ export function registerPreviewDashboardChanges(
           contentHash: entry.contentHash,
           resourceKey,
           resourceAliases,
+          operation: isDuplicate ? 'duplicate' : current ? 'update' : 'create',
           expiresAt: entry.expiresAt,
           diff: shallowDiff(current, proposed),
           current,

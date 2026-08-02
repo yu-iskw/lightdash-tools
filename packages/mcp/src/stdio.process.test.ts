@@ -279,10 +279,12 @@ describe('stdio process smoke', () => {
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
-    expect(listResult.tools!).toHaveLength(2);
+    expect(listResult.tools!).toHaveLength(4);
     expect(listResult.tools!.map((t) => t.name).sort()).toEqual([
       'lightdash_delete_chart',
       'lightdash_delete_dashboard',
+      'lightdash_get_dashboard_promote_diff',
+      'lightdash_promote_dashboard',
     ]);
 
     killChild(child);

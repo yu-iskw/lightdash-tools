@@ -1,5 +1,5 @@
 /**
- * Central wrapper for elicitation-gated destructive MCP tools (ADR-0015).
+ * Central wrapper for elicitation-gated mutation MCP tools (ADR-0015 / ADR-0017).
  */
 
 import { WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
@@ -22,6 +22,7 @@ import {
   buildDeleteConfirmationMessage,
   DELETE_CONFIRM_FORM_SCHEMA,
   isAcceptedDeleteForm,
+  type ConfirmFormSchema,
   type DeleteConfirmFormContent,
 } from './confirmation.js';
 import { mintDestructiveRequestState, verifyDestructiveRequestState } from './request-state.js';
@@ -29,6 +30,7 @@ import {
   CONFIRM_INPUT_KEY,
   type DestructiveOperationSpec,
   type DestructiveRequestState,
+  type ElicitationGateLabels,
 } from './types.js';
 
 import type { McpContextProvider } from '../server/request-context.js';
@@ -52,6 +54,56 @@ export type RegisterDestructiveDeleteOptions = {
   resourceIdArgName: 'chartUuidOrSlug' | 'dashboardUuidOrSlug';
 };
 
+export type ElicitationFormConfig<TForm extends { confirmationText: string }> = {
+  inputKey: string;
+  formSchema: ConfirmFormSchema;
+  buildMessage: (
+    target: ReturnType<DestructiveOperationSpec<ScopedDestructiveArgs, unknown>['summarizeTarget']>,
+  ) => string;
+  isAcceptedForm: (content: TForm | undefined, expectedName: string) => content is TForm;
+};
+
+export type RegisterElicitationGatedOptions = RegisterDestructiveDeleteOptions & {
+  /** When true, soft-delete-style retries are marked idempotent. */
+  idempotentHint?: boolean;
+};
+
+type ElicitationGateBundle<TSnapshot, TForm extends { confirmationText: string }> = {
+  options: RegisterElicitationGatedOptions;
+  spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>;
+  form: ElicitationFormConfig<TForm>;
+  labels: ElicitationGateLabels;
+};
+
+const DELETE_GATE_LABELS: ElicitationGateLabels = {
+  operation: 'delete',
+  successStatus: 'deleted',
+  successAudit: 'deletion_succeeded',
+  failureCode: 'DELETION_FAILED',
+  failureAudit: 'deletion_failed',
+  bindingMismatchMessage: 'Confirmation binding does not match this delete request.',
+  acceptMismatchMessage: 'Confirmation was not accepted, or the typed resource name did not match.',
+  resourceChangedMessage:
+    'The resource changed after confirmation was requested. Review it and confirm again.',
+  elicitationRequiredMessage:
+    'This destructive operation requires an MCP client that supports form elicitation.',
+};
+
+export const PROMOTE_GATE_LABELS: ElicitationGateLabels = {
+  operation: 'promote',
+  successStatus: 'promoted',
+  successAudit: 'promotion_succeeded',
+  failureCode: 'PROMOTION_FAILED',
+  failureAudit: 'promotion_failed',
+  bindingMismatchMessage: 'Confirmation binding does not match this promote request.',
+  acceptMismatchMessage:
+    'Confirmation was not accepted, or the typed dashboard name did not match.',
+  resourceChangedMessage:
+    'The dashboard or promotion diff changed after confirmation was requested. Review it and confirm again.',
+  elicitationRequiredMessage:
+    'Dashboard promote requires an MCP client that supports form elicitation.',
+};
+
 async function readBoundRequestState(
   serverContext: ServerContext,
 ): Promise<DestructiveRequestState | undefined> {
@@ -71,39 +123,45 @@ async function readBoundRequestState(
   return undefined;
 }
 
-function confirmationInvalidResult(message: string): ToolResult {
+function confirmationInvalidResult(message: string, mutatedFlag: string): ToolResult {
   return withLightdashBlockedMarker(
     jsonToolResult({
       status: 'blocked',
       code: 'CONFIRMATION_INVALID',
       message,
-      deleted: false,
+      [mutatedFlag]: false,
     }),
   );
 }
 
-function elicitationRequiredResult(message: string): ToolResult {
+function elicitationRequiredResult(message: string, mutatedFlag: string): ToolResult {
   return withLightdashBlockedMarker(
     jsonToolResult({
       status: 'blocked',
       code: 'ELICITATION_REQUIRED',
       message,
-      deleted: false,
+      [mutatedFlag]: false,
     }),
   );
+}
+
+function mutatedFlagFor(operation: ElicitationGateLabels['operation']): string {
+  return operation === 'delete' ? 'deleted' : 'promoted';
 }
 
 function declinedOrCancelledResult<TSnapshot>(
   action: 'cancelled' | 'declined',
   auditStatus: 'confirmation_cancelled' | 'confirmation_declined',
+  labels: ElicitationGateLabels,
   spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
   scopedArgs: ScopedDestructiveArgs,
 ): ToolResult {
+  const flag = mutatedFlagFor(labels.operation);
   return withAuditStatus(
     jsonToolResult({
       status: action,
-      deleted: false,
-      operation: 'delete',
+      [flag]: false,
+      operation: labels.operation,
       resourceType: spec.resourceType,
       resourceId: scopedArgs.resourceId,
       projectUuid: scopedArgs.projectUuid,
@@ -154,22 +212,23 @@ async function resolveTargetOrNotFound<TSnapshot>(
   }
 }
 
-async function applyAcceptedDelete<TSnapshot>(input: {
+async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText: string }>(input: {
   spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>;
   scopedArgs: ScopedDestructiveArgs;
   boundState: DestructiveRequestState;
-  accepted: DeleteConfirmFormContent;
+  accepted: TForm;
   ctx: ToolExecutionContext;
+  form: ElicitationFormConfig<TForm>;
+  labels: ElicitationGateLabels;
 }): Promise<ToolResult> {
-  const { spec, scopedArgs, boundState, accepted, ctx } = input;
+  const { spec, scopedArgs, boundState, accepted, ctx, form, labels } = input;
+  const flag = mutatedFlagFor(labels.operation);
   if (!bindingMatches(boundState, spec, scopedArgs, ctx.sessionId)) {
-    return confirmationInvalidResult('Confirmation binding does not match this delete request.');
+    return confirmationInvalidResult(labels.bindingMismatchMessage, flag);
   }
 
-  if (!isAcceptedDeleteForm(accepted, boundState.resourceName)) {
-    return confirmationInvalidResult(
-      'Confirmation was not accepted, or the typed resource name did not match.',
-    );
+  if (!form.isAcceptedForm(accepted, boundState.resourceName)) {
+    return confirmationInvalidResult(labels.acceptMismatchMessage, flag);
   }
 
   const resolved = await resolveTargetOrNotFound(spec, scopedArgs, ctx);
@@ -186,87 +245,105 @@ async function applyAcceptedDelete<TSnapshot>(input: {
         jsonToolResult({
           status: 'blocked',
           code: 'RESOURCE_CHANGED',
-          message:
-            'The resource changed after confirmation was requested. Review it and confirm again.',
-          deleted: false,
+          message: labels.resourceChangedMessage,
+          [flag]: false,
         }),
       ),
       'resource_changed',
     );
   }
 
+  let executeExtra: Record<string, unknown> | void;
   try {
-    await spec.execute(scopedArgs, snapshot, ctx);
+    executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
   } catch (err) {
     return withAuditStatus(
       jsonToolResult({
         status: 'error',
-        deleted: false,
-        code: 'DELETION_FAILED',
+        [flag]: false,
+        code: labels.failureCode,
         message: err instanceof Error ? err.message : String(err),
-        operation: 'delete',
+        operation: labels.operation,
         resourceType: spec.resourceType,
         resourceId: scopedArgs.resourceId,
         projectUuid: scopedArgs.projectUuid,
       }),
-      'deletion_failed',
+      labels.failureAudit,
     );
   }
 
   const target = spec.summarizeTarget(snapshot);
+  const completedAt = new Date().toISOString();
   return withAuditStatus(
     jsonToolResult({
-      status: 'deleted',
-      operation: 'delete',
+      status: labels.successStatus,
+      operation: labels.operation,
       resourceType: target.resourceType,
       resourceId: target.resourceId,
       resourceName: target.resourceName,
       projectUuid: target.projectUuid,
-      deletedAt: new Date().toISOString(),
       confirmation: { mode: 'form', action: 'accept' },
+      ...(labels.operation === 'delete'
+        ? { deletedAt: completedAt }
+        : { promoted: true, promotedAt: completedAt }),
+      ...(executeExtra ?? {}),
     }),
-    'deletion_succeeded',
+    labels.successAudit,
   );
 }
 
 function requireFormElicitation(
   server: McpServer,
   serverContext: ServerContext | undefined,
+  labels: ElicitationGateLabels,
 ): ToolResult | undefined {
   // 2026: per-request envelope; 2025: initialize-declared caps via Server.
   // eslint-disable-next-line @typescript-eslint/no-deprecated -- 2025-era fallback; envelope preferred in capability.ts
   const initializeCaps = server.server.getClientCapabilities() as ClientCapabilities | undefined;
   if (!supportsFormElicitation(serverContext, initializeCaps)) {
     return elicitationRequiredResult(
-      'This destructive operation requires an MCP client that supports form elicitation.',
+      labels.elicitationRequiredMessage,
+      mutatedFlagFor(labels.operation),
     );
   }
   if (!serverContext) {
-    return elicitationRequiredResult('Missing MCP ServerContext required for elicitation.');
+    return elicitationRequiredResult(
+      'Missing MCP ServerContext required for elicitation.',
+      mutatedFlagFor(labels.operation),
+    );
   }
   return undefined;
 }
 
 function declineOrCancelIfPresent<TSnapshot>(
   serverContext: ServerContext,
+  inputKey: string,
+  labels: ElicitationGateLabels,
   spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
   scopedArgs: ScopedDestructiveArgs,
 ): ToolResult | undefined {
-  const responseView = inputResponse(serverContext.mcpReq.inputResponses, CONFIRM_INPUT_KEY);
+  const responseView = inputResponse(serverContext.mcpReq.inputResponses, inputKey);
   if (responseView.kind === 'elicit' && responseView.action === 'decline') {
-    return declinedOrCancelledResult('declined', 'confirmation_declined', spec, scopedArgs);
+    return declinedOrCancelledResult('declined', 'confirmation_declined', labels, spec, scopedArgs);
   }
   if (responseView.kind === 'elicit' && responseView.action === 'cancel') {
-    return declinedOrCancelledResult('cancelled', 'confirmation_cancelled', spec, scopedArgs);
+    return declinedOrCancelledResult(
+      'cancelled',
+      'confirmation_cancelled',
+      labels,
+      spec,
+      scopedArgs,
+    );
   }
   return undefined;
 }
 
-async function requestDeleteConfirmation<TSnapshot>(
+async function requestConfirmation<TSnapshot, TForm extends { confirmationText: string }>(
   spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
   scopedArgs: ScopedDestructiveArgs,
   ctx: ToolExecutionContext,
   serverContext: ServerContext,
+  form: ElicitationFormConfig<TForm>,
 ): Promise<ToolResult> {
   const resolved = await resolveTargetOrNotFound(spec, scopedArgs, ctx);
   if (!resolved.ok) {
@@ -291,29 +368,32 @@ async function requestDeleteConfirmation<TSnapshot>(
   return inputRequired({
     requestState: stateToken,
     inputRequests: {
-      [CONFIRM_INPUT_KEY]: inputRequired.elicit({
+      [form.inputKey]: inputRequired.elicit({
         mode: 'form',
-        message: buildDeleteConfirmationMessage(target),
-        requestedSchema: DELETE_CONFIRM_FORM_SCHEMA,
+        message: form.buildMessage(target),
+        requestedSchema: form.formSchema,
       }),
     },
   });
 }
 
-async function handleDestructiveDelete<TSnapshot>(
+async function handleElicitationGatedMutation<
+  TSnapshot,
+  TForm extends { confirmationText: string },
+>(
   server: McpServer,
-  options: RegisterDestructiveDeleteOptions,
-  spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
   ctx: ToolExecutionContext,
   rawArgs: unknown,
+  gate: ElicitationGateBundle<TSnapshot, TForm>,
 ): Promise<ToolResult> {
+  const { options, spec, form, labels } = gate;
   const argsRecord = rawArgs as Record<string, unknown>;
   const resourceId = argsRecord[options.resourceIdArgName];
   if (typeof resourceId !== 'string' || resourceId.length === 0) {
     return codedErrorResult('INVALID_ARGUMENT', `${options.resourceIdArgName} is required`);
   }
 
-  const elicitationError = requireFormElicitation(server, ctx.serverContext);
+  const elicitationError = requireFormElicitation(server, ctx.serverContext, labels);
   if (elicitationError) {
     return elicitationError;
   }
@@ -321,41 +401,56 @@ async function handleDestructiveDelete<TSnapshot>(
 
   let scopedArgs: ScopedDestructiveArgs;
   try {
-    const scope = resolveProjectScope({
-      projectUuid: typeof argsRecord.projectUuid === 'string' ? argsRecord.projectUuid : undefined,
-    });
+    const scope = resolveProjectScope(
+      {
+        projectUuid:
+          typeof argsRecord.projectUuid === 'string' ? argsRecord.projectUuid : undefined,
+      },
+      { allowConfiguredEnv: false },
+    );
     scopedArgs = { projectUuid: scope.projectUuid, resourceId };
   } catch (err) {
     return projectScopeErrorResult(err);
   }
 
-  const declineOrCancel = declineOrCancelIfPresent(serverContext, spec, scopedArgs);
+  const declineOrCancel = declineOrCancelIfPresent(
+    serverContext,
+    form.inputKey,
+    labels,
+    spec,
+    scopedArgs,
+  );
   if (declineOrCancel) {
     return declineOrCancel;
   }
 
-  const accepted = acceptedContent<DeleteConfirmFormContent>(
-    serverContext.mcpReq.inputResponses,
-    CONFIRM_INPUT_KEY,
-  );
+  const accepted = acceptedContent<TForm>(serverContext.mcpReq.inputResponses, form.inputKey);
   const boundState = await readBoundRequestState(serverContext);
   if (accepted && boundState) {
-    return applyAcceptedDelete({ spec, scopedArgs, boundState, accepted, ctx });
+    return applyAcceptedMutation({
+      spec,
+      scopedArgs,
+      boundState,
+      accepted,
+      ctx,
+      form,
+      labels,
+    });
   }
 
-  return requestDeleteConfirmation(spec, scopedArgs, ctx, serverContext);
+  return requestConfirmation(spec, scopedArgs, ctx, serverContext, form);
 }
 
 /**
- * Register a soft-delete tool that requires form elicitation before calling Lightdash DELETE.
+ * Register a mutation tool that requires form elicitation before calling Lightdash.
  */
-export function registerDestructiveDeleteTool<TSnapshot>(
+export function registerElicitationGatedTool<TSnapshot, TForm extends { confirmationText: string }>(
   server: McpServer,
   shortName: string,
-  options: RegisterDestructiveDeleteOptions,
   contextProvider: McpContextProvider,
-  spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
+  gate: ElicitationGateBundle<TSnapshot, TForm>,
 ): void {
+  const { options } = gate;
   const inputSchema: ToolOptions['inputSchema'] = {
     projectUuid: projectUuidField().optional(),
     [options.resourceIdArgName]: options.resourceIdField,
@@ -369,14 +464,41 @@ export function registerDestructiveDeleteTool<TSnapshot>(
       description: options.description,
       annotations: {
         ...(options.annotations ?? WRITE_DESTRUCTIVE),
-        // Soft-delete retries for the same bound identity are safe when already deleted.
-        idempotentHint: true,
+        ...(options.idempotentHint === true ? { idempotentHint: true } : {}),
       },
       inputSchema,
     },
     wrapToolContextual(
       contextProvider,
-      (ctx) => async (rawArgs) => handleDestructiveDelete(server, options, spec, ctx, rawArgs),
+      (ctx) => async (rawArgs) => handleElicitationGatedMutation(server, ctx, rawArgs, gate),
     ),
+  );
+}
+
+/**
+ * Register a soft-delete tool that requires form elicitation before calling Lightdash DELETE.
+ */
+export function registerDestructiveDeleteTool<TSnapshot>(
+  server: McpServer,
+  shortName: string,
+  options: RegisterDestructiveDeleteOptions,
+  contextProvider: McpContextProvider,
+  spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
+): void {
+  registerElicitationGatedTool<TSnapshot, DeleteConfirmFormContent>(
+    server,
+    shortName,
+    contextProvider,
+    {
+      options: { ...options, idempotentHint: true },
+      spec,
+      form: {
+        inputKey: CONFIRM_INPUT_KEY,
+        formSchema: DELETE_CONFIRM_FORM_SCHEMA,
+        buildMessage: buildDeleteConfirmationMessage,
+        isAcceptedForm: isAcceptedDeleteForm,
+      },
+      labels: DELETE_GATE_LABELS,
+    },
   );
 }

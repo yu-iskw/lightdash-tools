@@ -12,3 +12,11 @@ export {
   parseDashboardCreateBody,
   parseDashboardUpdateBody,
 } from './dashboard.js';
+export {
+  chartDuplicateChangesSchema,
+  isChartDuplicateChanges,
+  isDashboardDuplicateChanges,
+  normalizeDuplicateChartProposed,
+  normalizeDuplicateDashboardProposed,
+  parseChartDuplicateChanges,
+} from './duplicate.js';

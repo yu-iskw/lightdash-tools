@@ -118,9 +118,11 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-developer.spaces.update': 'v1.spaces.updateSpace',
   'content-developer.content.move': 'v2.content.bulkMoveContent',
 
-  // content-governance (ADR-0015)
+  // content-governance (ADR-0015 / ADR-0017)
   'content-governance.charts.delete': 'v2.charts.deleteSavedChart',
   'content-governance.dashboards.delete': 'v2.dashboards.deleteDashboard',
+  'content-governance.dashboards.promote-diff': 'v1.dashboards.getDashboardPromoteDiff',
+  'content-governance.dashboards.promote': 'v1.dashboards.promoteDashboard',
   'content-governance.content.permanent-delete': 'v2.content.permanentlyDeleteContent',
 
   // cli content

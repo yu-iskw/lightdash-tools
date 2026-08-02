@@ -2,7 +2,7 @@
 
 URI: `lightdash://playbooks/content-developer/dashboards`
 
-Dashboard is the **authoring and promotion unit**. Humans promote via UI **dashboard** promote (copies the board and its charts). Do not leave orphan charts as the done state.
+Dashboard is the **authoring and promotion unit**. Promote via the **content-governance** persona (`lightdash_promote_dashboard` with form elicitation; copies the board and its charts). Do not leave orphan charts as the done state.
 
 ## Discover
 
@@ -52,4 +52,4 @@ Semantic (as-code) charts only. When a new or updated chart is required for a da
 
 - Every new/updated chart in the session is referenced by a dashboard tile.
 - Report dashboard UUID/slug, tiles, and chart UUIDs; resolve outstanding saved-resource validation warnings when using `validate_*`.
-- Do not promote via MCP; tell operators to use UI dashboard promote when ready.
+- Do not promote from this persona; tell operators to use content-governance `lightdash_promote_dashboard` when ready.

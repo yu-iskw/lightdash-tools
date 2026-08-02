@@ -88,11 +88,16 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-cdev');
   });
 
-  it('content-governance allowlists 2 soft-delete tools and short server name', () => {
+  it('content-governance allowlists soft-delete + promote tools and short server name', () => {
     const persona = getPersona('content-governance');
-    expect(persona.toolIds).toHaveLength(2);
+    expect(persona.toolIds).toHaveLength(4);
     expect(persona.toolIds).toEqual([...CONTENT_GOVERNANCE_TOOL_IDS]);
-    expect(persona.toolIds).toEqual(['delete_chart', 'delete_dashboard']);
+    expect(persona.toolIds).toEqual([
+      'delete_chart',
+      'delete_dashboard',
+      'get_dashboard_promote_diff',
+      'promote_dashboard',
+    ]);
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-gov');
   });
 

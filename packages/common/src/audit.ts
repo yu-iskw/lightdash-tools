@@ -21,6 +21,8 @@ export type AuditStatus =
   | 'deletion_failed'
   | 'deletion_succeeded'
   | 'error'
+  | 'promotion_failed'
+  | 'promotion_succeeded'
   | 'resource_changed'
   | 'success';
 

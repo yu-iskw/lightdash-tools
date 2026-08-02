@@ -6,7 +6,7 @@ Soft-delete a single saved chart after human form elicitation. Soft-delete hides
 
 ## Soft-delete workflow
 
-1. Resolve project scope (pin / `LIGHTDASH_TOOLS_PROJECT_UUID` / `projectUuid`).
+1. Resolve project scope (`X-Lightdash-Project` pin or `projectUuid`).
 2. Call `lightdash_delete_chart` with `chartUuidOrSlug` (UUID or slug).
 3. If the response is blocked with `ELICITATION_REQUIRED`, stop — the client cannot approve deletes via MCP.
 4. When the tool returns an elicitation form, the human must complete:
