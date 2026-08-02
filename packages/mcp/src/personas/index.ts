@@ -5,6 +5,7 @@
 import { normalizeMcpPath } from '../config/normalize-url.js';
 
 import { contentDeveloperPersona } from './content-developer/v1/index.js';
+import { contentGovernancePersona } from './content-governance/v1/index.js';
 import { contentReaderPersona } from './content-reader/v1/index.js';
 import { organizationAuditPersona } from './organization-audit/v1/index.js';
 import { semanticLayerPersona } from './semantic-layer/v1/index.js';
@@ -16,6 +17,7 @@ export { SEMANTIC_LAYER_PERSONA_PATH } from './semantic-layer/v1/index.js';
 export { ORGANIZATION_AUDIT_PERSONA_PATH } from './organization-audit/v1/index.js';
 export { CONTENT_READER_PERSONA_PATH } from './content-reader/v1/index.js';
 export { CONTENT_DEVELOPER_PERSONA_PATH } from './content-developer/v1/index.js';
+export { CONTENT_GOVERNANCE_PERSONA_PATH } from './content-governance/v1/index.js';
 
 /** Default stdio persona (backward compatible). */
 export const DEFAULT_PERSONA_ID: PersonaId = 'semantic-layer';
@@ -25,6 +27,7 @@ export const PERSONAS: Record<PersonaId, PersonaDefinition> = {
   'organization-audit': organizationAuditPersona,
   'content-reader': contentReaderPersona,
   'content-developer': contentDeveloperPersona,
+  'content-governance': contentGovernancePersona,
 };
 
 const PERSONAS_BY_PATH = new Map<string, PersonaDefinition>(
@@ -59,7 +62,8 @@ export function parsePersonaId(value: string): PersonaId | undefined {
     value === 'semantic-layer' ||
     value === 'organization-audit' ||
     value === 'content-reader' ||
-    value === 'content-developer'
+    value === 'content-developer' ||
+    value === 'content-governance'
   ) {
     return value;
   }

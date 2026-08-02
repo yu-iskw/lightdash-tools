@@ -6,7 +6,11 @@ import type { ToolId } from '../tools/registry.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type PersonaId =
-  'content-developer' | 'content-reader' | 'organization-audit' | 'semantic-layer';
+  | 'content-developer'
+  | 'content-governance'
+  | 'content-reader'
+  | 'organization-audit'
+  | 'semantic-layer';
 
 export type PersonaDefinition = {
   id: PersonaId;

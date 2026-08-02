@@ -1,7 +1,7 @@
 {
   "name": "@lightdash-tools/mcp",
   "version": "0.7.0",
-  "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, and content-developer personas.",
+  "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, content-developer, and content-governance personas.",
   "keywords": [],
   "repository": {
     "type": "git",
@@ -19,7 +19,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "rm -rf dist && tsc && for p in semantic-layer organization-audit content-reader content-developer; do mkdir -p dist/personas/$p/v1/resources/playbooks && cp -R src/personas/$p/v1/resources/playbooks/. dist/personas/$p/v1/resources/playbooks/; done",
+    "build": "rm -rf dist && tsc && for p in semantic-layer organization-audit content-reader content-developer content-governance; do mkdir -p dist/personas/$p/v1/resources/playbooks && cp -R src/personas/$p/v1/resources/playbooks/. dist/personas/$p/v1/resources/playbooks/; done",
     "start": "node dist/index.js",
     "start:http": "node dist/http.js",
     "test": "pnpm --dir ../.. exec vitest run packages/mcp/src"

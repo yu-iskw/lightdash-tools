@@ -31,7 +31,8 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 12. [MCP content-reader persona saved-content execution boundary](0012-mcp-content-reader-persona-saved-content-execution-boundary.md)
 13. [Operation catalog as sole agent-surface SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md)
 14. [MCP content-developer persona mutation boundary](0014-mcp-content-developer-persona-mutation-boundary.md)
-15. [MCP pluggable ephemeral store for HTTP preview sessions and OAuth](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
+15. [MCP content-governance persona elicitation-required soft-delete boundary](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)
+16. [MCP pluggable ephemeral store for HTTP preview sessions and OAuth](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
 
 ## Old → new mapping
 
