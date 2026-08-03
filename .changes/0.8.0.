@@ -1,0 +1,8 @@
+## [0.8.0] - 2026-08-02
+### Features
+* Add content-reader MCP persona for project-scoped saved-content reads and bounded semantic chart execution (ADR-0012).
+* Add content-governance MCP persona with elicitation-gated soft-delete for charts and dashboards (ADR-0015).
+* Add elicitation-gated dashboard promote (and read-only promoteDiff) on the content-governance MCP persona.
+* Add pluggable MCP ephemeral store (memory/redis) and preview claim/apply/release state machine (ADR-0016).
+### Bug Fixes
+* Redact MCP emails on direct access and omit project connection secrets by default (ADR-0011).
