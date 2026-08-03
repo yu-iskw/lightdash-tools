@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ChartsClient } from './charts';
+import { BinarySizeLimitError } from '../../errors.js';
+
+import { ChartsClient } from './charts.js';
 
 import type { HttpClient } from '../../http/http-client';
 
@@ -14,6 +16,7 @@ describe('ChartsClient', () => {
       put: vi.fn(),
       patch: vi.fn(),
       delete: vi.fn(),
+      getBytes: vi.fn(),
     } as unknown as HttpClient;
   });
 
@@ -119,5 +122,44 @@ describe('ChartsClient', () => {
     const result = await client.getChartVersion('c1', 'v1');
     expect(mockHttp.get).toHaveBeenCalledWith('/saved/c1/version/v1');
     expect(result).toEqual(version);
+  });
+
+  it('exportChartImage should POST /saved/{chartUuid}/export and return URL', async () => {
+    const client = new ChartsClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue('https://cdn.example/chart.png');
+    const result = await client.exportChartImage('c1', 'p1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/saved/c1/export', undefined, {
+      params: { projectUuid: 'p1' },
+      timeout: 120_000,
+    });
+    expect(result).toBe('https://cdn.example/chart.png');
+  });
+
+  it('exportChartImagePng should export then download bytes', async () => {
+    const client = new ChartsClient(mockHttp);
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    vi.mocked(mockHttp.post).mockResolvedValue('https://cdn.example/chart.png');
+    vi.mocked(mockHttp.getBytes).mockResolvedValue({ bytes: png, mimeType: 'image/png' });
+    const result = await client.exportChartImagePng('c1');
+    expect(mockHttp.getBytes).toHaveBeenCalledWith('https://cdn.example/chart.png', {
+      maxBytes: 8 * 1024 * 1024,
+      timeout: 120_000,
+    });
+    expect(result).toEqual({
+      imageUrl: 'https://cdn.example/chart.png',
+      bytes: png,
+      mimeType: 'image/png',
+    });
+  });
+
+  it('exportChartImagePng maps BinarySizeLimitError to ChartImageSizeError', async () => {
+    const client = new ChartsClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue('https://cdn.example/chart.png');
+    vi.mocked(mockHttp.getBytes).mockRejectedValue(new BinarySizeLimitError(8 * 1024 * 1024));
+
+    await expect(client.exportChartImagePng('c1')).rejects.toMatchObject({
+      code: 'IMAGE_TOO_LARGE',
+      maxBytes: 8 * 1024 * 1024,
+    });
   });
 });

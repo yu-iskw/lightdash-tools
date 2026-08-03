@@ -4,12 +4,13 @@
 
 import { developerErrorResult } from '../../policy/content-developer.js';
 import { asPaginated } from '../lib/api-shape.js';
-import { wrapTool } from '../shared.js';
+import { wrapToolContextual } from '../shared.js';
 
 import type { ResolvedProjectScope } from '../../governance/project-scope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { TextContent, ToolHandler } from '../shared.js';
+import type { TextContent, ToolExecutionContext, ToolHandler } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
+import type { ServerContext } from '@modelcontextprotocol/server';
 
 export const MOVE_CONTENT_TYPES = ['chart', 'dashboard', 'data_app'] as const;
 export const MOVE_CHART_SOURCES = ['dbt_explore', 'sql'] as const;
@@ -41,13 +42,23 @@ export function developerContext(scope: ResolvedProjectScope): {
   };
 }
 
-/** Wraps `wrapTool` with the standard try/catch -> `developerErrorResult` mapping shared by every tool below. */
+export type DeveloperHandlerContext = {
+  client: LightdashClient;
+  serverContext: ServerContext | undefined;
+  subject: string;
+};
+
+/** Wraps wrapToolContextual with developer error mapping + subject for signed preview tokens. */
 export function wrapDeveloperHandler<T>(
   contextProvider: McpContextProvider,
-  fn: (client: LightdashClient) => (args: T) => Promise<TextContent>,
+  fn: (ctx: DeveloperHandlerContext) => (args: T) => Promise<TextContent>,
 ): ToolHandler {
-  return wrapTool<T>(contextProvider, (client) => {
-    const handler = fn(client);
+  return wrapToolContextual<T>(contextProvider, (exec: ToolExecutionContext) => {
+    const handler = fn({
+      client: exec.lightdashClient,
+      serverContext: exec.serverContext,
+      subject: exec.subject,
+    });
     return async (args: T): Promise<TextContent> => {
       try {
         return await handler(args);

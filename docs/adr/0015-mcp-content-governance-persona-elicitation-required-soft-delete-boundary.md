@@ -12,6 +12,8 @@ Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-harde
 
 Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
 
+Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+
 ## Context
 
 Agents sometimes need to remove project-scoped charts and dashboards. Boolean tool arguments (`confirmed: true`) and chat “please confirm” are not trustworthy: the model can supply them without a human. Content-developer ([ADR-0014](0014-mcp-content-developer-persona-mutation-boundary.md)) deliberately excludes hard delete and forbids destructive mutability.
@@ -31,6 +33,7 @@ MCP 2026-07-28 multi-round-trip requests (MRTR) let a tool return `InputRequired
    - requires `action === accept`, an operation-specific `decision` enum, and typed resource name match;
    - revalidates the target immediately before the mutating API call;
    - returns a structured receipt (or declined/cancelled/blocked outcomes).
+   - Does **not** use a server-side one-shot confirmation claim store ([ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)); TTL + principal binding + precondition re-fetch bound replay.
 4. **Do not** expose soft-delete or promote on semantic-layer, organization-audit, content-reader, or content-developer.
 5. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-governance`; annotations `WRITE_DESTRUCTIVE` with `destructiveHint: true` for mutating tools.
 6. No bulk delete in v1 (one tool call → one resource → one elicitation → one API call).

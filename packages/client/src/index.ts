@@ -64,8 +64,19 @@ export type {
 } from './config';
 export { noopLogger, consoleLogger } from './utils/logger';
 export { DEFAULT_RATE_LIMIT, DEFAULT_TIMEOUT, DEFAULT_RETRY } from './config';
-export { LightdashApiError, RateLimitError, NetworkError } from './errors';
+export { LightdashApiError, RateLimitError, NetworkError, ChartImageSizeError } from './errors';
 export type { ApiErrorPayload } from './errors';
+export {
+  CHART_IMAGE_EXPORT_TIMEOUT_MS,
+  CHART_IMAGE_MAX_BYTES,
+  type ChartImagePng,
+} from './api/v1/charts';
+export {
+  DEFAULT_BINARY_MAX_BYTES,
+  isBlockedBinaryHostname,
+  type GetBytesOptions,
+  type GetBytesResult,
+} from './http/http-client';
 export { loadConfigFromEnv, mergeConfig, createBearerConfig } from './utils/env';
 export {
   ENV_LIGHTDASH_API_KEY,

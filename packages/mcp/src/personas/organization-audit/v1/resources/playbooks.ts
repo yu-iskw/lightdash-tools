@@ -12,7 +12,7 @@ const playbooks = definePersonaPlaybooks<OrganizationAuditPlaybookTopic>({
   personaId: 'organization-audit',
   moduleDir: __dirname,
   hardBans:
-    'Do not mutate users/groups/roles/content/schedulers, execute warehouse or chart queries, download user-activity CSV, reveal secrets, or claim compliance certification. Those capabilities are not available on this server.',
+    'Do not mutate users/groups/roles/content/schedulers, execute warehouse or chart queries, download user-activity CSV, reveal secrets, crawl unbounded org inventories, or claim compliance certification. Prefer core budgets (page/project caps). Those capabilities are not available on this server.',
   coreDescription: 'Hard bans, tool catalog, scope, and report rules',
   topics: [
     {

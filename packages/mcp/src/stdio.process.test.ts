@@ -215,9 +215,10 @@ describe('stdio process smoke', () => {
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
-    expect(listResult.tools!).toHaveLength(13);
+    expect(listResult.tools!).toHaveLength(14);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_search_content')).toBe(true);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_run_chart')).toBe(true);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_export_chart_image')).toBe(true);
 
     killChild(child);
     child = undefined;
@@ -347,7 +348,8 @@ describe('stdio process smoke', () => {
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
-    expect(listResult.tools!).toHaveLength(25);
+    expect(listResult.tools!).toHaveLength(26);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_get_chart_as_code')).toBe(true);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_preview_dashboard_changes')).toBe(
       true,
     );

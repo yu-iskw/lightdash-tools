@@ -7,6 +7,7 @@
 export type ClientMethodRef = string;
 
 const CLIENT_CHARTS_UPSERT_AS_CODE = 'v1.charts.upsertChartAsCode';
+const CLIENT_CHARTS_GET_AS_CODE = 'v1.charts.getChartsAsCode';
 const CLIENT_DASHBOARDS_V2_UPDATE = 'v2.dashboards.updateDashboard';
 const CLIENT_CONTENT_SEARCH = 'v2.content.searchContent';
 const LEDGER_PREVIEW = 'ledger:preview';
@@ -92,6 +93,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-reader.parameters.get': 'v2.parameters.getParameters',
   'content-reader.content.explain': 'composed:v2.charts.getSavedChart+v2.dashboards.getDashboard',
   'content-reader.charts.run': 'v2.query.runChartQuery',
+  'content-reader.charts.export-image': 'composed:v1.charts.exportChartImagePng',
   'content-reader.dashboards.run-tile': 'v2.query.runDashboardChartQuery',
   'content-reader.query.result.get': 'v2.query.getAsyncQueryResults',
   'content-reader.query.cancel': 'v2.query.cancelAsyncQuery',
@@ -100,6 +102,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-developer.preview.chart': 'composed:v2.charts.getSavedChart',
   'content-developer.preview.dashboard': 'composed:v2.dashboards.getDashboard',
   'content-developer.preview.content-move': LEDGER_PREVIEW,
+  'content-developer.charts.get-as-code': CLIENT_CHARTS_GET_AS_CODE,
   'content-developer.charts.validate': 'v1.validation.validateChart',
   'content-developer.dashboards.validate': 'v1.validation.validateDashboard',
   'content-developer.preview.confirm': LEDGER_PREVIEW,
@@ -109,8 +112,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
     'composed:v2.dashboards.getDashboard+v1.dashboards.getDashboardHistory+v1.dashboards.getDashboardVersion',
   'content-developer.charts.create': CLIENT_CHARTS_UPSERT_AS_CODE,
   'content-developer.charts.update': CLIENT_CHARTS_UPSERT_AS_CODE,
-  'content-developer.charts.duplicate':
-    'composed:v1.charts.getChartsAsCode+v1.charts.upsertChartAsCode',
+  'content-developer.charts.duplicate': `composed:${CLIENT_CHARTS_GET_AS_CODE}+${CLIENT_CHARTS_UPSERT_AS_CODE}`,
   'content-developer.dashboards.create': 'v1.dashboards.createDashboard',
   'content-developer.dashboards.update': CLIENT_DASHBOARDS_V2_UPDATE,
   'content-developer.dashboards.duplicate': 'v1.dashboards.createDashboard',
@@ -130,9 +132,9 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-governance.content.permanent-delete': 'v2.content.permanentlyDeleteContent',
 
   // cli content
-  'cli.charts.list': 'v1.charts.getChartsAsCode',
-  'cli.charts.code.list': 'v1.charts.getChartsAsCode',
-  'cli.charts.code.upsert': 'v1.charts.upsertChartAsCode',
+  'cli.charts.list': CLIENT_CHARTS_GET_AS_CODE,
+  'cli.charts.code.list': CLIENT_CHARTS_GET_AS_CODE,
+  'cli.charts.code.upsert': CLIENT_CHARTS_UPSERT_AS_CODE,
   'cli.dashboards.list': 'v1.dashboards.listDashboards',
   'cli.projects.validate.run': 'v1.validation.validateProject',
   'cli.projects.validate.results': 'v2.validation.listValidationResults',

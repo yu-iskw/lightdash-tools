@@ -1,55 +1,103 @@
-# Content-developer — dashboards (and charts as tiles)
+# Content-developer — dashboards (and dashboard-owned charts)
 
 URI: `lightdash://playbooks/content-developer/dashboards`
 
-Dashboard is the **authoring and promotion unit**. Promote via the **content-governance** persona (`lightdash_promote_dashboard` with form elicitation; copies the board and its charts). Do not leave orphan charts as the done state.
+**Order matters:** clarify **Objective** if needed, emit a **Design Spec** and get user approval first, then create the **dashboard shell**, then create charts with `dashboardSlug` set to that dashboard, then attach tiles (+ filters with explore↔filter / `tileTargets` via dashboard-design). Official Lightdash as-code: `dashboardSlug` scopes a chart to a dashboard (it will not appear as an independent space chart). Promote via **content-governance**.
+
+```text
+get_project → list_spaces → discover seeds (read-only)
+  → clarify Objective if goal is vague
+  → Design Spec (Objective + tiles with tableName citing insights + filter apply/exclude) → user approve  ← STOP: no writes yet
+  → create_dashboard (empty / markdown shell)  ← record dashboard slug
+  → reuse tiles OR get_chart_as_code → create_chart (dashboardSlug set)
+  → update_dashboard (full tile array)
+  → optional: get_dashboard for tile UUIDs → update_dashboard (filters + tileTargets excludes)
+```
 
 ## Discover
 
-Use `search_content`, `list_spaces`, `get_space`, `get_dashboard`, `get_chart` before creating or changing content. Prefer reusing existing charts when they already fit. Place new dashboards in an **existing** `spaceUuid` from `list_spaces` / `get_space` — never create a space.
+1. `list_spaces` → existing `spaceUuid` (dashboards) / `spaceSlug` (chart as-code).
+2. `search_content` with **short** tokens (`orders`, space slug). Multi-word brand phrases often return empty — use `get_space`. Short tokens can also return noisy org-wide hits — prefer `get_space` inventory for seeds.
+3. Prefer **reuse** of existing charts as tiles when they already fit.
+4. For new charts: find a **working seed** on the same `tableName`; never invent fieldIds.
+5. Dashboard-owned charts (`dashboardSlug` set) **do not** appear as independent space charts in `get_space` / typical search — keep the UUIDs you create, or re-open the dashboard.
 
-## Chart authoring (tile prerequisite only)
+## Create dashboard shell (step 1 — after Design Spec approval)
 
-Semantic (as-code) charts only. When a new or updated chart is required for a dashboard:
+Only after Phase Design approval (see `lightdash://playbooks/content-developer/dashboard-design`). Then:
 
-1. `preview_chart_changes` → `confirm_preview` → `create_chart` / `update_chart`.
-   - Create: pass `slug` only when the slug is free (`CHART_SLUG_EXISTS` otherwise — then pass `chartUuidOrSlug` and use update).
-   - Update: pass `chartUuidOrSlug`; confirm with the preview's UUID `resourceKey` (slug is an alias).
-2. Immediately attach the chart as a tile: `preview_dashboard_changes` with the resulting tiles → `confirm_preview` → `add_dashboard_tile` / `update_dashboard`.
-3. Do not stop after chart UUID alone — the workflow is incomplete until the chart is on a dashboard.
+1. Resolve target **existing** `spaceUuid`.
+2. `preview_dashboard_changes` without `dashboardUuidOrSlug`, `changes: { name, description?, spaceUuid, tabs: [], tiles: [] }` → `resourceKey` is literal **`new`**.
+3. `confirm_preview` (`resourceKind: 'dashboard'`, `resourceKey: 'new'`, **`projectUuid`**).
+4. `create_dashboard` with **`dashboard: { … }`** — same fields as `changes` (nested object; not flat tool args). Empty or markdown-only `tiles`. **Pass `projectUuid`.**
+5. Record returned **`slug`** and **`uuid`** — required as `dashboardSlug` for new charts.
 
-`compare_chart_versions` is allowed when improving an existing tiled chart; still finish on the dashboard.
+## New chart for that dashboard (step 2)
 
-## Duplicate chart
+Semantic as-code only. Prefer clone, not invent.
 
-1. `preview_chart_changes` with `chartUuidOrSlug` = source and `changes` = `{ sourceChartUuidOrSlug, newSlug, newName? }` (must match apply args).
-2. `confirm_preview` with `resourceKind: 'chart'` and `resourceKey` = source UUID from the preview.
-3. `duplicate_chart` with the same source / `newSlug` / `newName` (`newSlug` must be free — `CHART_SLUG_EXISTS` otherwise; apply re-reads source baseline).
-4. Attach the new chart as a dashboard tile before treating work as done.
+### Seed SOP
 
-## Create dashboard
+1. Prefer **reuse** of an existing chart as a tile when it already fits.
+2. Else `search_content` / `get_space` → pick a **rendering** seed on the same `tableName` (same explore).
+3. `get_chart_as_code` (or `duplicate_chart`) → **keep `chartConfig` structure** (layout + series encode); edit only `name`, `slug`, and `metricQuery` fields that exist on the explore; set `dashboardSlug` = dashboard slug from step 1.
+4. Viz type / encode details: `lightdash://playbooks/content-developer/chart-types`.
 
-1. Resolve target **existing** space.
-2. Discover or create charts needed for tiles (rules above).
-3. `preview_dashboard_changes` (resourceKey `new`) → `confirm_preview` → `create_dashboard`.
-4. For each tile: preview the full tile array → `confirm_preview` → `add_dashboard_tile` (or compose via `update_dashboard`).
+Then:
 
-## Duplicate dashboard
+1. Set `spaceSlug`, `skipSpaceCreate: true`, `version`, `tableName`, `dashboardSlug`.
+2. Every dimension in `metricQuery.dimensions` must appear in viz config (cartesian layout / pie groups / sankey source-target / …) — unused dimensions change SQL GROUP BY and can yield “Results may be incorrect”.
+3. `preview_chart_changes` with top-level **`slug`** + `changes` body → `confirm_preview` (`resourceKey` = that slug, **`projectUuid`**) → `create_chart` / `update_chart` (`slug` + `chart: { … }` matching `changes`, **`projectUuid`**).
+4. Capture `charts[0].data.uuid` immediately for tiling.
 
-1. `preview_dashboard_changes` with `dashboardUuidOrSlug` = source UUID and `changes` = `{ newName? }` (must match apply args).
-2. `confirm_preview` with `resourceKind: 'dashboard'` and `resourceKey` = source UUID.
-3. `duplicate_dashboard` with the same source UUID / proposed fields (apply re-reads source baseline; duplicate stays in the source space).
-4. To relocate: `preview_content_move` → `confirm_preview` → `move_content` into an existing space.
+If fieldIds are unknown → stop; use semantic-layer. Do **not** hand-author minimal cartesian configs (series without `encode.xRef`/`yRef`).
 
-## Improve / refactor dashboard
+`dashboardSlug` alone does **not** place the chart on the board — step 3 (tiles) is mandatory.
 
-1. `get_dashboard` (and `compare_dashboard_versions` when reconciling drift).
-2. Preview dashboard/tile changes → `confirm_preview` → `update_dashboard` and/or tile tools (`add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`).
-3. If new charts are needed mid-improve, author them as tile prerequisites (never as standalone publish).
-4. Optionally `validate_dashboard` / `validate_chart` on saved UUIDs after apply (health check only).
+### Multi-viz / “all chart types” boards
+
+Only when the user **explicitly** asks for every chart type (or a large multi-viz board)—not the default:
+
+1. Raise the new-chart budget (default ≤8 is too low).
+2. Cover: bar, horizontal bar, line, area, mixed, scatter, pie, funnel, treemap, sankey, table, big_number, gauge; **skip map** if no lat/lon and say so.
+3. One-line Objective is enough when the user already listed the viz checklist + analysis goal; still map each tile to an insight id (or label demo tiles clearly). Treat that explicit ask as Design Spec approval after you restate the checklist once.
+4. **Batch SOP:** create shell → create all charts (`dashboardSlug` set; **≤2** concurrent preview→confirm→apply chains) → capture each `charts[0].data.uuid` → **one** `update_dashboard` with full tiles + optional empty-value filters. Do not interleave tiling with chart creates.
+5. Cap concurrent writes at **≤2** on hosted tunnels — parallel bursts often return HTTP 502.
+
+### Duplicate chart
+
+1. Preview with `chartUuidOrSlug` = source and `changes` = `{ sourceChartUuidOrSlug, newSlug, newName? }`.
+2. Confirm `resourceKind: 'chart'`, `resourceKey` = **source** UUID (**always pass `projectUuid`**).
+3. `duplicate_chart`, then `update_chart` if needed to set `dashboardSlug` and any metricQuery edits (clone body via `get_chart_as_code` first).
+4. Tile the result onto the dashboard.
+
+## Attach tiles (step 3)
+
+1. Compose the **full** tile array (markdown + `saved_chart` with `x/y/w/h`; grid width max **36**).
+2. Require `properties.savedChartUuid` from the chart create/duplicate result (OpenAPI `CreateDashboardChartTile`). Optional `chartSlug` is metadata only — do not tile with slug alone.
+3. `preview_dashboard_changes` → `confirm_preview` (`resourceKey` = dashboard **UUID**, plus **`projectUuid`**) → `update_dashboard` with nested `dashboard: { name?, tiles, tabs, filters? }` matching preview `changes`.
+
+Avoid N single-tile round-trips when you already know the layout. If preview `diff.removed` includes **`tiles`/`tabs`/`filters`**, re-preview with those arrays included — do not treat that as harmless noise (see core).
+
+Layout, optional markdown, optional filters → `lightdash://playbooks/content-developer/dashboard-design`.
+
+## Improve / refactor / duplicate dashboard
+
+1. `get_dashboard` for structure (layout may be incomplete — rebuild intentionally).
+2. For **material** layout / tile / filter changes (including professionalize / clean up / redesign): emit a Design Spec **delta** per `lightdash://playbooks/content-developer/dashboard-design` (**Improve / professionalize Spec delta** — keep / drop / rename + cull) and await user approval before any `preview_*` / write. Trivial one-shot renames the user already specified may skip the stop.
+3. **Naming when professionalizing:** update tile `properties.title` **and** chart `name` via `update_chart` (strip demo prefixes like `[loop3]`); keep slug unless the user asks to rename.
+4. `compare_dashboard_versions` when reconciling drift.
+5. New charts mid-improve still follow shell-exists → `dashboardSlug` → tiles.
+6. Duplicate dashboard: preview `{ newName? }` → confirm source UUID → `duplicate_dashboard`; relocate with content-move if needed.
 
 ## Done criteria
 
-- Every new/updated chart in the session is referenced by a dashboard tile.
-- Report dashboard UUID/slug, tiles, and chart UUIDs; resolve outstanding saved-resource validation warnings when using `validate_*`.
-- Do not promote from this persona; tell operators to use content-governance `lightdash_promote_dashboard` when ready.
+- Objective clarified when needed; Design Spec approved (or amended) before writes for new boards / material redesigns.
+- Dashboard shell existed **before** new charts were created.
+- Every new chart has `dashboardSlug` set to that dashboard (not space-only orphans).
+- Every new/updated chart is referenced by a dashboard tile that maps to an insight question.
+- Filter↔explore plan from Spec honored (single-explore auto-apply, or foreign tiles excluded / remapped via `tileTargets`).
+- After cull / professionalize: report untiled dashboard-owned chart UUIDs; soft-delete via **content-governance** (not this persona).
+- Report dashboard UUID/slug, tiles, and chart UUIDs/slugs; note execution was unavailable on this persona.
+- Do not promote from here — content-governance when ready.
+- Layout / optional markdown / optional filters quality → `lightdash://playbooks/content-developer/dashboard-design`.

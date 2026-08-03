@@ -62,57 +62,51 @@ function prune(bucket: BudgetBucket, now: number): void {
   bucket.timestamps = bucket.timestamps.filter((t) => now - t < QUERY_BUDGET_WINDOW_MS);
 }
 
-/** Record a new execution against session/user budgets; throws when exceeded. */
+/**
+ * Record a new execution against budgets.
+ * When `userKey` is set (authenticated subject), only user budgets apply — session
+ * ids collapse to one process key under sessionless HTTP (ADR-0019).
+ * Anonymous/stdio callers use the sessionId bucket alone.
+ */
 export function acquireQueryBudget(sessionId: string, userKey?: string): void {
   const now = Date.now();
-  const sessionBucket = sessionBudgets.get(sessionId) ?? { timestamps: [] };
-  prune(sessionBucket, now);
-  if (sessionBucket.timestamps.length >= QUERY_BUDGET_MAX) {
+  const key = userKey ?? sessionId;
+  const label = userKey ? 'User' : 'Session';
+  const maxConcurrent = userKey
+    ? MAX_CONCURRENT_QUERIES_PER_USER
+    : MAX_CONCURRENT_QUERIES_PER_SESSION;
+  const budgets = userKey ? userBudgets : sessionBudgets;
+  const inFlight = userKey ? userInFlight : sessionInFlight;
+
+  const bucket = budgets.get(key) ?? { timestamps: [] };
+  prune(bucket, now);
+  if (bucket.timestamps.length >= QUERY_BUDGET_MAX) {
     throw new ResultLimitError(
       'QUERY_BUDGET_EXCEEDED',
-      `Session query budget exceeded (${QUERY_BUDGET_MAX} / ${QUERY_BUDGET_WINDOW_MS / 60_000} min)`,
+      `${label} query budget exceeded (${QUERY_BUDGET_MAX} / ${QUERY_BUDGET_WINDOW_MS / 60_000} min)`,
     );
   }
-  const sessionFlying = sessionInFlight.get(sessionId) ?? 0;
-  if (sessionFlying >= MAX_CONCURRENT_QUERIES_PER_SESSION) {
+  const flying = inFlight.get(key) ?? 0;
+  if (flying >= maxConcurrent) {
     throw new ResultLimitError(
       'RATE_LIMITED',
-      `Session concurrent query limit (${MAX_CONCURRENT_QUERIES_PER_SESSION}) reached`,
+      `${label} concurrent query limit (${maxConcurrent}) reached`,
     );
   }
-  if (userKey) {
-    const userBucket = userBudgets.get(userKey) ?? { timestamps: [] };
-    prune(userBucket, now);
-    if (userBucket.timestamps.length >= QUERY_BUDGET_MAX) {
-      throw new ResultLimitError(
-        'QUERY_BUDGET_EXCEEDED',
-        `User query budget exceeded (${QUERY_BUDGET_MAX} / ${QUERY_BUDGET_WINDOW_MS / 60_000} min)`,
-      );
-    }
-    const userFlying = userInFlight.get(userKey) ?? 0;
-    if (userFlying >= MAX_CONCURRENT_QUERIES_PER_USER) {
-      throw new ResultLimitError(
-        'RATE_LIMITED',
-        `User concurrent query limit (${MAX_CONCURRENT_QUERIES_PER_USER}) reached`,
-      );
-    }
-    userBucket.timestamps.push(now);
-    userBudgets.set(userKey, userBucket);
-    userInFlight.set(userKey, userFlying + 1);
-  }
-  sessionBucket.timestamps.push(now);
-  sessionBudgets.set(sessionId, sessionBucket);
-  sessionInFlight.set(sessionId, sessionFlying + 1);
+  bucket.timestamps.push(now);
+  budgets.set(key, bucket);
+  inFlight.set(key, flying + 1);
 }
 
 /** Release in-flight concurrency slot after query completes/fails. */
 export function releaseQueryBudget(sessionId: string, userKey?: string): void {
-  const sessionFlying = sessionInFlight.get(sessionId) ?? 0;
-  sessionInFlight.set(sessionId, Math.max(0, sessionFlying - 1));
   if (userKey) {
     const userFlying = userInFlight.get(userKey) ?? 0;
     userInFlight.set(userKey, Math.max(0, userFlying - 1));
+    return;
   }
+  const sessionFlying = sessionInFlight.get(sessionId) ?? 0;
+  sessionInFlight.set(sessionId, Math.max(0, sessionFlying - 1));
 }
 
 /** Test helper — clear budget state. */

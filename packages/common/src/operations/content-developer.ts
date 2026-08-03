@@ -16,7 +16,7 @@ const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
 const WRITE_NONDESTRUCTIVE_IMPACT: SafetyImpact = 'write-nondestructive';
 const PREVIEW_DIFF_SUMMARY =
-  'Compute an in-memory diff and issue a single-use previewId (no upstream preview API)';
+  'Compute an in-memory diff and issue an HMAC-signed previewToken (no upstream preview API)';
 const TILE_READ_SUMMARY = 'Read the current tile array (no per-tile REST route exists)';
 
 const op_preview_chart_changes = defineOperation({
@@ -77,7 +77,7 @@ const op_preview_dashboard_changes = defineOperation({
 const op_preview_content_move = defineOperation({
   id: 'content-developer.preview.content-move',
   summary:
-    'Preview a bulk content move into an existing space (MCP ledger only; issues a single-use previewId)',
+    'Preview a bulk content move into an existing space (issues an HMAC-signed previewToken)',
   http: { method: 'GET', path: `${API_V2}/content` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
@@ -93,6 +93,21 @@ const op_preview_content_move = defineOperation({
       summary: PREVIEW_DIFF_SUMMARY,
     },
   ],
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_get_chart_as_code = defineOperation({
+  id: 'content-developer.charts.get-as-code',
+  summary:
+    'Get a chart in as-code (upsert) shape for cloning chartConfig/metricQuery before dashboard-scoped create',
+  http: { method: 'GET', path: `${API_V1}/projects/{projectUuid}/code/charts` },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_chart_as_code',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
@@ -464,6 +479,7 @@ export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [
   op_preview_chart_changes,
   op_preview_dashboard_changes,
   op_preview_content_move,
+  op_get_chart_as_code,
   op_validate_chart,
   op_validate_dashboard,
   op_confirm_preview,

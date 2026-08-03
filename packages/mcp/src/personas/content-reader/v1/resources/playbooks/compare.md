@@ -2,20 +2,35 @@
 
 URI: `lightdash://playbooks/content-reader/compare`
 
-Focus phases 3–6 on **diffs** between saved content definitions and (optionally) values.
+Compare **definitions before values**. Matching titles/labels ≠ same metric, grain, or population.
 
-## Phase 3 — Inspect both sides
+## Inspect both sides
 
-Retrieve metadata first (`get_chart`, `get_dashboard`, `explain_content`, parameter tools). Compare definitions, dimensions, filters, time grains, parameters, verification, and update state before values.
+1. Resolve each reference (UUID/slug/search) inside the same `projectUuid`.
+2. Fetch metadata (`get_chart` / `get_dashboard` / `explain_content`). Prefer `includeQueryDefinition` for charts.
+3. Diff checklist:
+   - Explore / `tableName`
+   - Metrics & dimensions (`fieldId`s)
+   - Filters (targets, operators, windows — e.g. `inThePast` days)
+   - Time grain / timezone fields
+   - Parameters, sorts, limits, pivots, table calculations
+   - Chart `source` / `chartType` (semantic vs SQL)
+   - Verification, `updatedAt`, space, views
+   - Dashboard context (filters, tile selection) when comparing tiles
 
-## Phase 4 — Decide whether values help
+## When to execute
 
-Execute only when structurally comparable or when differences are the subject of analysis. Do not assume matching labels mean matching definitions.
+Execute **only** if sides are structurally comparable **or** the user asked about value differences. Use equivalent valid context (same overrides if any). Cap at **≤2** executions unless the user expands scope.
 
-## Phase 5 — Execute with equivalent context
+Skip execution when either side is SQL / non-executable — report that as a confirmed blocker.
 
-When needed, run with equivalent valid filters/parameters/context (`run_chart` / `run_dashboard_tile`). Check metrics, fields, filters, dashboard context, date ranges, time grains, parameters, sorts, limits, pivots, table calculations, verification, cache timestamps, and semantic-versus-SQL behavior.
+## Report causes
 
-## Phase 6 — Report causes
+Separate:
 
-Separate confirmed, plausible, ruled-out, and unresolved causes. Cite content UUIDs, query UUIDs, truncation, and caveats.
+- **Confirmed** (from metadata or executed numbers)
+- **Plausible** (hypothesis)
+- **Ruled out**
+- **Unresolved** (missing access, truncation, non-executable)
+
+Cite content UUIDs, query UUIDs, truncation, and caveats. Do not assume label equality.

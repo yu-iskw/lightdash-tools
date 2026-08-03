@@ -78,17 +78,18 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-org-audit');
   });
 
-  it('content-reader allowlists 13 tools and server name', () => {
+  it('content-reader allowlists 14 tools and server name', () => {
     const persona = getPersona('content-reader');
-    expect(persona.toolIds).toHaveLength(13);
+    expect(persona.toolIds).toHaveLength(14);
     expect(persona.toolIds).toEqual([...CONTENT_READER_TOOL_IDS]);
+    expect(persona.toolIds).toContain('export_chart_image');
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-content');
   });
 
-  it('content-developer allowlists 25 tools and short server name', () => {
+  it('content-developer allowlists tools and short server name', () => {
     const persona = getPersona('content-developer');
-    expect(persona.toolIds).toHaveLength(25);
     expect(persona.toolIds).toEqual([...CONTENT_DEVELOPER_TOOL_IDS]);
+    expect(persona.toolIds).toContain('get_chart_as_code');
     expect(persona.toolIds).not.toContain('create_space');
     expect(persona.toolIds).not.toContain('update_space');
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-cdev');

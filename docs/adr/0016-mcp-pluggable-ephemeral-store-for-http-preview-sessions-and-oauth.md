@@ -4,7 +4,7 @@ Date: 2026-08-02
 
 ## Status
 
-Accepted
+Superceded by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
 ## Context
 

@@ -1,9 +1,8 @@
 /**
- * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0016).
+ * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0019).
  *
- * All values are JSON-serializable (redirect URI sets become string arrays on Redis).
- * Backends: in-memory (default) or Redis via `createOAuthBrokerStore` — full multi-instance
- * handoff for authorize → callback → token when STORE=redis.
+ * All values are JSON-serializable. Backend: in-memory only — process-local.
+ * Multi-instance OAuth needs sticky `/oauth/*` or a single replica until signed-state/CIMD.
  */
 
 import { randomBytes } from 'node:crypto';
@@ -62,8 +61,8 @@ export type OAuthBrokerStoreOptions = {
 };
 
 /**
- * Pluggable OAuth broker ephemeral store (ADR-0016).
- * All methods are async so Redis and memory share one call-site shape.
+ * OAuth broker ephemeral store (ADR-0019). In-memory only (process-local).
+ * Async methods keep call sites await-uniform for future backends if needed.
  */
 export interface OAuthBrokerStore {
   registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined>;
@@ -82,7 +81,7 @@ export interface OAuthBrokerStore {
       scope?: string;
     },
   ): Promise<IssuedAuthorizationCode | undefined>;
-  /** Atomic get+delete (multi-instance-safe consume). */
+  /** Atomic get+delete for one-time code consume. */
   takeCode(code: string): Promise<IssuedAuthorizationCode | undefined>;
   /**
    * Re-insert a previously taken code with remaining TTL based on `createdAt`

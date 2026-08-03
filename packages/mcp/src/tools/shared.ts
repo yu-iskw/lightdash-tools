@@ -38,8 +38,16 @@ import type { z } from 'zod';
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'lightdash_';
 
+export type ImageContentBlock = {
+  type: 'image';
+  data: string;
+  mimeType: string;
+};
+
+export type ToolContentBlock = ImageContentBlock | { type: 'text'; text: string };
+
 export type TextContent = {
-  content: Array<{ type: 'text'; text: string }>;
+  content: ToolContentBlock[];
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
 };
@@ -60,6 +68,25 @@ export function jsonToolResult(data: unknown): TextContent {
   return {
     content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
     structuredContent: toStructuredContent(data),
+  };
+}
+
+/**
+ * MCP ImageContent + metadata text. structuredContent holds meta only (no base64).
+ * Spec: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+ */
+export function imageToolResult(args: {
+  meta: Record<string, unknown>;
+  imageBase64: string;
+  mimeType?: string;
+}): TextContent {
+  const mimeType = args.mimeType ?? 'image/png';
+  return {
+    content: [
+      { type: 'text', text: JSON.stringify(args.meta, null, 2) },
+      { type: 'image', data: args.imageBase64, mimeType },
+    ],
+    structuredContent: toStructuredContent(args.meta),
   };
 }
 
@@ -298,6 +325,8 @@ export type ToolExecutionContext = {
   /** SDK ServerContext when the transport provides it (second registerTool arg). */
   serverContext: ServerContext | undefined;
   sessionId: string;
+  /** Authenticated principal for signed handles (ADR-0019); anonymous when unset. */
+  subject: string;
 };
 
 function asServerContext(extra: unknown): ServerContext | undefined {
@@ -326,6 +355,7 @@ export function wrapToolContextual<T>(
               lightdashClient: context.lightdashClient,
               serverContext: asServerContext(extra),
               sessionId,
+              subject: auth?.subject ?? 'anonymous',
             };
             const handler = fn(execution);
             return await handler(args as T);

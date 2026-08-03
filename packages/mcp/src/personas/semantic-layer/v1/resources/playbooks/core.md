@@ -4,36 +4,68 @@ URI: `lightdash://playbooks/semantic-layer/core`
 
 ## Purpose
 
-Discover the Lightdash semantic layer and **compose + compile** metric queries. Stop after a good compile (or clear compile errors). Do **not** run warehouse queries or mutate content.
-
-## Allowed tools (always `lightdash_` prefix)
-
-| Tool                                                | Use for                                                                                                          |
-| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `lightdash_list_projects` / `lightdash_get_project` | Confirm project UUID ↔ name via `{ data, warnings }` metadata (no warehouse/dbt credentials)                     |
-| `lightdash_list_explores`                           | Summaries (`name`, `label`, `tags`, `databaseName`, `schemaName`, `errors?`); **always** pass `search` + `limit` |
-| `lightdash_list_dimensions`                         | Compact `{ name, label, table, type, fieldId }`; **default = `table === explore.baseTable`**                     |
-| `lightdash_list_metrics` / `lightdash_get_metric`   | Catalog search; **always** filter `tableName === exploreId` client-side                                          |
-| `lightdash_compile_query`                           | Compile only — never “run”                                                                                       |
-| `lightdash_get_explore`                             | Use when catalog filter yields **zero** explore-local metrics; extract `tables[baseTable].metrics` only          |
-| `lightdash_get_field_lineage`                       | Optional; summarize, don’t dump                                                                                  |
+Discover the Lightdash semantic layer and **compose + compile** metric queries. Stop after a good compile (or a clear blocker). This server never runs warehouse queries or mutates content.
 
 ## Hard bans
 
-Do **not** attempt or invent: run-query / SQL runner / validation jobs / charts / dashboards / spaces / users / groups / ACL / AI agents / agentops. Those tools are not on this server. Use Lightdash **compile** only (not warehouse execution).
+- Do **not** run / execute metric queries, SQL runner, charts, dashboards, or underlying data.
+- Do **not** invent tools for validation jobs, spaces, users, groups, ACL, AI agents, or agentops — they are not on this server.
+- Do **not** switch away from the user-given **Lightdash project UUID** after seeing `list_projects` (org-wide) or explore tags that mention other warehouses.
+- Do **not** paste full `get_explore`, full dimension arrays, full `get_metric`, or full lineage JSON into the answer.
+- Do **not** invent `fieldId`s or time-grain names — copy them from tool output only.
 
-## Project scope
+## Default budgets (override only if the user expands scope)
 
-1. If the user gave a **project UUID**, use it on every tool. Prefer `lightdash_get_project` to confirm the name.
-2. Without an HTTP project pin, `lightdash_list_projects` may return the **entire org** — do **not** switch to another project from that list.
-3. Lightdash **project UUID** ≠ warehouse cloud project. `list_projects` / `get_project` return metadata only (no `warehouseConnection` / `dbtConnection`). Match inventory project/dataset to explore **`databaseName`** / **`schemaName`** from `list_explores`.
+| Resource                            | Default                                                                  |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| Explore search candidates inspected | **≤10** rows from `list_explores` (`search` + `limit≤15`)                |
+| Explores opened with `get_explore`  | **1** chosen explore (retry only if wrong explore)                       |
+| Dimension shortlist in the answer   | **≤12** fieldIds                                                         |
+| Metrics shortlisted / used          | **≤8** (from `tables[baseTable].metrics`)                                |
+| `list_metrics` catalog pages        | **0** once explore is known; else **≤1** page (`pageSize≤20`) and filter |
+| `get_metric`                        | **0** by default; **≤2** only when SQL/definition is required            |
+| `get_field_lineage`                 | **0** by default; **≤1** and summarize as “N upstream models”            |
+| Compile retries                     | **≤2** after the first attempt (fix fieldIds / explore, then stop)       |
+
+Record when a budget stopped you.
+
+## Allowed tools (`lightdash_` prefix)
+
+| Tool                            | Use for                                                                                       |
+| ------------------------------- | --------------------------------------------------------------------------------------------- |
+| `list_projects` / `get_project` | Confirm UUID ↔ name. Credentials never returned (`REDACTED` warning is normal).               |
+| `list_explores`                 | Summaries only. **Always** pass `search` + `limit`.                                           |
+| `list_dimensions`               | Compact `{ name, label, table, type, fieldId }`. Default = base table only.                   |
+| `get_explore`                   | **Preferred** metric menu: `tables[baseTable].metrics` names/labels only. Ignore join tables. |
+| `list_metrics` / `get_metric`   | Optional catalog / definition dig. Filter `tableName === exploreId`.                          |
+| `compile_query`                 | Compile only — never “run”.                                                                   |
+| `get_field_lineage`             | Optional provenance; summarize, don’t dump.                                                   |
+
+## Project scope (critical)
+
+1. Every tool call uses the **user-given Lightdash `projectUuid`**. Prefer `get_project` once to confirm the name.
+2. Without HTTP pin `X-Lightdash-Project`, `list_projects` may list the **entire org**. Do **not** switch projects because a sibling name looks related.
+3. Lightdash **project UUID** ≠ BigQuery/GCP project. Explores carry `databaseName` / `schemaName` (warehouse). One Lightdash project often embeds explores whose `databaseName` points at another warehouse project — that is normal; stay on the given UUID.
+4. Optional ceiling `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` may already filter `list_projects`; still pass the user’s UUID on tools.
 
 ## Answer shape
 
-Shortlists only: explore `name` / `label` / `schemaName` / why chosen; metric/dimension names + `fieldId`; compiled SQL or compile errors. Never paste full `get_explore`, full dimension arrays, full `get_metric`, or full lineage JSON.
+- Explore: `name` / `label` / `schemaName` / `databaseName` + why chosen.
+- Fields: short names + **full `fieldId`** (+ role: time / channel / segment / metric).
+- Compile: insight title(s) + fieldIds + compiled SQL (or errors). Verify every requested fieldId appears as a SELECT alias.
+- Gaps: budget hits, empty explore search, compile blockers.
 
 ## Stop / deliverables
 
-- **Explore prompt:** shortlist only — do not compile unless asked.
-- **Compose / debug:** compiled SQL or errors; stop after a good compile (re-compile only while debugging).
-- **Multi-insight:** N titled queries with fieldIds + SQL; one explore resolution shared across them.
+| Prompt          | Stop when                                                         |
+| --------------- | ----------------------------------------------------------------- |
+| Explore         | Shortlist delivered; **do not compile** unless asked              |
+| Compose / debug | Good compile (aliases verified) or clear blocker after ≤2 retries |
+| Multi-insight   | N titled compiles on **one** explore; shared discovery            |
+
+## Tool order (default)
+
+1. `get_project` (confirm) → `list_explores` (`search`+`limit`) → disambiguate
+2. `list_dimensions` (base table) → shortlist by role
+3. `get_explore` → extract **only** `tables[baseTable].metrics` (names/labels)
+4. `compile_query` with copied fieldIds → verify SELECT aliases → stop

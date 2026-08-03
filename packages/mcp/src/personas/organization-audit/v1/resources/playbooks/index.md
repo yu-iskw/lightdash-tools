@@ -2,13 +2,13 @@
 
 URI: `lightdash://playbooks/organization-audit`
 
-Workflow-scoped playbooks. Prompts always embed **core**; topic prompts also embed one topic (overview prompts may be core-only):
+Read-only evidence collection for Lightdash organization administrators. The host synthesizes findings from primitive `lightdash_*` tools — there are **no** composed `audit_*` tools and **no** compliance certification.
 
-| Topic                 | URI                                                   |
-| --------------------- | ----------------------------------------------------- |
-| Core (gates & report) | `lightdash://playbooks/organization-audit/core`       |
-| Access governance     | `lightdash://playbooks/organization-audit/access`     |
-| Content and health    | `lightdash://playbooks/organization-audit/content`    |
-| Scheduled deliveries  | `lightdash://playbooks/organization-audit/deliveries` |
+| Topic                        | URI                                                   | When to load                                      |
+| ---------------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| Core (budgets, bans, report) | `lightdash://playbooks/organization-audit/core`       | Always (embedded in every prompt)                 |
+| Access governance            | `lightdash://playbooks/organization-audit/access`     | `review_access_governance` / access chapters      |
+| Content and health           | `lightdash://playbooks/organization-audit/content`    | `review_content_governance` / content chapters    |
+| Scheduled deliveries         | `lightdash://playbooks/organization-audit/deliveries` | `review_scheduled_deliveries` / delivery chapters |
 
-Read-only evidence collection for Lightdash organization administrators. Findings are review signals synthesized by the host from primitive tool results — not compliance certifications. There are no composed `audit_*` MCP tools; chain bounded `lightdash_*` reads instead.
+**Live-org reality check:** organizations often have hundreds of members and many projects. Default to **bounded samples** (see core budgets). Never crawl every member page or every project unless the user explicitly expands scope.

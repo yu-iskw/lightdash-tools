@@ -16,11 +16,11 @@ Do not execute arbitrary metric queries, raw SQL, or underlying-data queries.
 Do not download or bulk-export results.
 Do not execute saved SQL charts (disabled by default on content-reader).
 Do not override filter targets, operators, required-filter behavior, fields, metrics, dimensions, SQL, table calculations, or sorts.
-Do not execute content outside the resolved project.
+Do not execute content outside the resolved project (pass projectUuid or HTTP pin).
 Do not present truncated results as complete.
 Do not claim metric equivalence from matching labels alone.
 Do not reveal secrets, warehouse credentials, hidden SQL, or inaccessible content.`,
-  coreDescription: 'Hard bans, tools, and project scope',
+  coreDescription: 'Hard bans, budgets, tools, project scope, and coverage semantics',
   topics: [
     {
       id: 'discover',

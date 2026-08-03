@@ -8,5 +8,6 @@
 **/.cursor
 **/dist
 **/*.md
-!packages/mcp/src/personas/semantic-layer/v1/resources/playbook.md
-!packages/mcp/src/personas/organization-audit/v1/resources/playbook.md
+# Persona playbooks are loaded from disk at runtime (not inlined by tsc).
+!packages/mcp/src/personas/*/v1/resources/playbooks/
+!packages/mcp/src/personas/*/v1/resources/playbooks/**

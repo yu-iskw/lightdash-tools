@@ -1,7 +1,7 @@
 {
   "name": "@lightdash-tools/mcp",
   "version": "0.8.0",
-  "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, content-developer, and content-governance personas.",
+  "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, content-developer, content-governance, and ai-agent-ops personas.",
   "keywords": [],
   "repository": {
     "type": "git",
@@ -31,7 +31,6 @@
     "@modelcontextprotocol/server": "2.0.0",
     "commander": "^15.0.0",
     "hono": "^4.12.32",
-    "redis": "^6.2.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -53,7 +53,8 @@ export type DestructiveRequestState = {
   resourceId: string;
   projectUuid: string;
   preconditionDigest: string;
-  sessionId: string;
+  /** Authenticated principal (not transport session) — ADR-0019. */
+  subject: string;
   resourceName: string;
 };
 
