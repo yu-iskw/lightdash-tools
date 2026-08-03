@@ -15,7 +15,7 @@ Include an ADR only if **all** are true:
 
 Feature "support X API" notes, superseded-only history, and process/skill records are **not** ADRs.
 
-Vocabulary: living product term is **profile** ([ADR-0021](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)). Older ADR titles may still say "persona"; treat those bodies as historical and follow ADR-0021 for current packaging rules. A repo-wide `grep` for `persona` will still match historical ADR titles/bodies and the obsolete env `LIGHTDASH_TOOLS_MCP_STDIO_PERSONA`; that is expected.
+Vocabulary: living product term is **profile** ([ADR-0021](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)). Older ADR titles may still say "persona"; treat those bodies as historical and follow ADR-0021 for current packaging rules. A repo-wide `grep` for `persona` will still match historical ADR titles/bodies; that is expected. Stdio selection is `LIGHTDASH_TOOLS_MCP_STDIO_PROFILE` or a `lightdash-mcp <profile>` subcommand only — any older persona-named stdio env is ignored (not fail-closed).
 
 ## Table of contents
 

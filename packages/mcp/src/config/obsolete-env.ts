@@ -20,7 +20,6 @@ import {
 } from './env.js';
 
 const OBSOLETE_ENV_VARS = [
-  'LIGHTDASH_TOOLS_MCP_STDIO_PERSONA',
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
@@ -44,12 +43,6 @@ function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
 export function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv = process.env): void {
   for (const name of OBSOLETE_ENV_VARS) {
     if (readEnv(name, env) !== undefined) {
-      if (name === 'LIGHTDASH_TOOLS_MCP_STDIO_PERSONA') {
-        throw new Error(
-          `${name} is removed (ADR-0021). Use LIGHTDASH_TOOLS_MCP_STDIO_PROFILE ` +
-            `(or a lightdash-mcp <profile> stdio subcommand) instead.`,
-        );
-      }
       if (name === ENV_LIGHTDASH_TOOLS_MCP_STORE || name === ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL) {
         throw new Error(
           `${name} is removed (ADR-0019). ` +
