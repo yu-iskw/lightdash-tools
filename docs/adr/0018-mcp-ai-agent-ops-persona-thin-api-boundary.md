@@ -30,7 +30,7 @@ Combined MCP server+tool names must stay under ~60 characters on common clients.
 7. Truth labeling is mandatory in playbooks: readiness API ≠ evaluation run ≠ thread generation. Hosts must not silently substitute modes.
 8. Thread/message and evaluation prompt text are conversation-class; redact message bodies by default on MCP (ADR-0011 patterns).
 9. Stdio: `lightdash-mcp ai-agent-ops`. Catalog profile: `ai-agent-ops` for persona parity tests.
-10. Inventory: [endpoint inventory](../personas/ai-agent-ops/inventory.md); loop: [distributed loop](../personas/ai-agent-ops/loop.md).
+10. Inventory: [endpoint inventory](../profiles/ai-agent-ops/inventory.md); loop: [distributed loop](../profiles/ai-agent-ops/loop.md).
 
 ## Consequences
 

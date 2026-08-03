@@ -15,6 +15,8 @@ Include an ADR only if **all** are true:
 
 Feature "support X API" notes, superseded-only history, and process/skill records are **not** ADRs.
 
+Vocabulary: living product term is **profile** ([ADR-0021](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)). Older ADR titles may still say "persona"; treat those bodies as historical and follow ADR-0021 for current packaging rules.
+
 ## Table of contents
 
 1. [Record architecture decisions](0001-record-architecture-decisions.md)
