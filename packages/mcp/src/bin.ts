@@ -5,20 +5,38 @@ const program = new Command();
 
 const DEFAULT_STDIO_PROFILE: ProfileId = 'semantic-layer';
 
-const PROFILE_STDIO_DESCRIPTIONS: Record<ProfileId, string> = {
-  'semantic-layer': 'Run semantic-layer profile on stdio',
-  'organization-audit': 'Run organization-audit profile on stdio (read-only org governance)',
-  'content-reader':
+const PROFILE_STDIO_DESCRIPTIONS = new Map<ProfileId, string>([
+  ['semantic-layer', 'Run semantic-layer profile on stdio'],
+  ['organization-audit', 'Run organization-audit profile on stdio (read-only org governance)'],
+  [
+    'content-reader',
     'Run content-reader profile on stdio (saved-content discovery and bounded execution)',
-  'content-developer':
+  ],
+  [
+    'content-developer',
     'Run content-developer profile on stdio (chart/dashboard/space authoring behind preview -> validate -> apply)',
-  'content-governance':
+  ],
+  [
+    'content-governance',
     'Run content-governance profile on stdio (elicitation-gated soft-delete of charts and dashboards)',
-  'ai-agent-ops':
+  ],
+  [
+    'ai-agent-ops',
     'Run ai-agent-ops profile on stdio (thin AI-agent APIs and product evaluation runs)',
-  'data-analyst':
+  ],
+  [
+    'data-analyst',
     'Run data-analyst profile on stdio (explore discovery and bounded ad-hoc metric queries)',
-};
+  ],
+]);
+
+function profileStdioDescription(profileId: ProfileId): string {
+  const description = PROFILE_STDIO_DESCRIPTIONS.get(profileId);
+  if (description === undefined) {
+    throw new Error(`Missing stdio description for profile '${profileId}'`);
+  }
+  return description;
+}
 
 function runStdio(profileId?: ProfileId): void {
   if (profileId) {
@@ -48,7 +66,7 @@ program
 for (const profileId of PROFILE_IDS) {
   program
     .command(profileId)
-    .description(PROFILE_STDIO_DESCRIPTIONS[profileId])
+    .description(profileStdioDescription(profileId))
     .action(() => {
       runStdio(profileId);
     });
