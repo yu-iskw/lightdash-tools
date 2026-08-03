@@ -195,7 +195,7 @@ export function buildMoveContentResourceKey(itemUuids: readonly string[]): strin
 }
 
 /**
- * Build the canonical proposal object hashed by the preview ledger for a content move.
+ * Build the canonical proposal object hashed into the previewToken contentHash for a content move.
  * Both `preview_content_move` and `move_content` must hash the same shape — including
  * required `contentTypes` and optional `chartSources` — so an apply cannot silently change
  * item types or chart sources versus what was previewed and validated.

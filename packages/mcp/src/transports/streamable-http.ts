@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
@@ -15,15 +14,10 @@ import {
   isOAuthBrokerPath,
   type OAuthBroker,
 } from '../auth/oauth-broker/routes.js';
-import {
-  createOAuthBearerProvider,
-  BearerContextProvider,
-} from '../auth/providers/bearer-context-provider.js';
+import { createOAuthBearerProvider } from '../auth/providers/bearer-context-provider.js';
 import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
 import {
   authenticateLightdashOAuth,
-  buildBearerRequiredFailure,
-  buildInvalidTokenFailure,
   writeOAuthAuthFailure,
 } from '../auth/resource-server/lightdash-oauth-middleware.js';
 import {
@@ -48,20 +42,12 @@ import {
 } from '../governance/project-pin.js';
 import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
-import { resolveEphemeralStoreConfig } from '../store/config.js';
-import { createOAuthBrokerStore } from '../store/create-oauth-broker-store.js';
-import { createSessionStore } from '../store/create-session-store.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
-import { isInitializeMessage } from './http-request-utils.js';
 import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from './http-response.js';
-import { type SessionEntry, type SessionStore } from './session-store.js';
 
 import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from '../server/request-context.js';
-import type { McpServer } from '@modelcontextprotocol/server';
-
-const ERROR_SESSION_NOT_FOUND = 'Session not found';
 
 type OAuthRequest = IncomingMessage & {
   lightdashOAuth?: Awaited<ReturnType<typeof authenticateLightdashOAuth>> & { ok: true };
@@ -115,70 +101,12 @@ function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpCo
   };
 }
 
-function getSessionId(req: IncomingMessage): string | undefined {
-  const sessionId = req.headers['mcp-session-id'];
-  return typeof sessionId === 'string' ? sessionId : sessionId?.[0];
-}
-
 function createEnvContextProvider(config: McpHttpConfig): McpContextProvider {
   return new EnvContextProvider({
     mode:
       config.authMode === MCP_AUTH_MODE_SHARED_KEY ? MCP_AUTH_MODE_SHARED_KEY : MCP_AUTH_MODE_NONE,
     client: getClient(),
   });
-}
-
-function closeSessionEntry(entry: SessionEntry, sessionId: string, reason: string): void {
-  void Promise.all([entry.transport.close(), entry.server.close()]).catch((err: unknown) => {
-    console.error(`Failed to close MCP session ${sessionId} (${reason}):`, err);
-  });
-}
-
-function createSessionTransport(
-  contextProvider: McpContextProvider,
-  sessionStore: SessionStore,
-  auth: {
-    mode: McpHttpConfig['authMode'];
-    tokenHash?: string;
-    subject?: string;
-    organizationUuid?: string;
-  },
-  persona: PersonaDefinition,
-): NodeStreamableHTTPServerTransport {
-  const holder: { server: McpServer } = {
-    server: createLightdashMcpServer(contextProvider, { persona }),
-  };
-  const transport = new NodeStreamableHTTPServerTransport({
-    sessionIdGenerator: () => randomUUID(),
-    onsessioninitialized: (sessionId) => {
-      sessionStore.set(sessionId, {
-        transport,
-        server: holder.server,
-        lastAccessAt: Date.now(),
-        auth: {
-          mode: auth.mode,
-          tokenHash: auth.tokenHash,
-          subject: auth.subject,
-          organizationUuid: auth.organizationUuid,
-        },
-        contextProvider,
-        personaId: persona.id,
-      });
-    },
-    onsessionclosed: (sessionId) => {
-      const entry = sessionStore.get(sessionId);
-      sessionStore.delete(sessionId);
-      if (entry) {
-        closeSessionEntry(entry, sessionId, 'closed');
-      }
-    },
-  });
-
-  holder.server.connect(transport).catch((err) => {
-    console.error('MCP server connect error:', err);
-  });
-
-  return transport;
 }
 
 function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig): void {
@@ -246,158 +174,45 @@ function getOAuthAuditContext(req: IncomingMessage): {
   };
 }
 
-function verifySessionAuth(
-  req: IncomingMessage,
-  res: ServerResponse,
+/**
+ * Creates a fresh context provider for the current request.
+ * For OAuth, uses the bearer token from this request directly.
+ * For shared-key/none, uses the env-based provider.
+ */
+function createContextProviderForRequest(
   config: McpHttpConfig,
-  mcpPath: string,
-  entry: SessionEntry | undefined,
-): boolean {
-  if (!entry || config.authMode !== MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    return true;
-  }
-
-  const oauth = (req as OAuthRequest).lightdashOAuth;
-  if (!oauth?.accessToken) {
-    writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, mcpPath));
-    return false;
-  }
-
-  if (entry.auth.subject && entry.auth.subject !== oauth.user.userUuid) {
-    writeOAuthAuthFailure(
-      res,
-      buildInvalidTokenFailure(config, mcpPath, 'Session subject mismatch'),
-    );
-    return false;
-  }
-
-  const previousOrg = entry.auth.organizationUuid ?? null;
-  const nextOrg = oauth.user.organizationUuid ?? null;
-  if (previousOrg !== nextOrg) {
-    writeOAuthAuthFailure(
-      res,
-      buildInvalidTokenFailure(config, mcpPath, 'Session organization mismatch'),
-    );
-    return false;
-  }
-
-  const nextTokenHash = hashToken(oauth.accessToken);
-  if (entry.auth.tokenHash !== nextTokenHash) {
-    entry.auth.tokenHash = nextTokenHash;
-    if (entry.contextProvider instanceof BearerContextProvider) {
-      entry.contextProvider.updateAccessToken(oauth.accessToken);
+  req: IncomingMessage,
+): McpContextProvider {
+  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    const oauth = (req as OAuthRequest).lightdashOAuth;
+    if (oauth?.ok) {
+      return createOAuthBearerProvider(config, {
+        accessToken: oauth.accessToken,
+        subject: oauth.user.userUuid,
+      });
     }
+    throw new Error('OAuth auth mode requires authenticated request context');
   }
-
-  return true;
+  return createEnvContextProvider(config);
 }
 
-interface SessionRequestContext {
+interface McpRequestContext {
   req: IncomingMessage;
   res: ServerResponse;
   config: McpHttpConfig;
-  sessionStore: SessionStore;
   persona: PersonaDefinition;
 }
 
-async function handleExistingSessionPost(
-  ctx: SessionRequestContext,
-  sid: string,
-  body: unknown,
-): Promise<void> {
-  const { req, res, config, sessionStore, persona } = ctx;
-  const entry = sessionStore.get(sid);
-  if (!entry) {
-    sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
-    return;
-  }
-  if (entry.personaId !== persona.id) {
-    sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
-    return;
-  }
-  if (!verifySessionAuth(req, res, config, persona.path, entry)) return;
-  sessionStore.touch(sid);
-  const auditAuth = getOAuthAuditContext(req);
-  await runWithToolAuditAuthAsync(
-    {
-      tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
-      subject: auditAuth.subject ?? entry.auth.subject,
-    },
-    () => entry.transport.handleRequest(req, res, body),
-  );
-}
-
-async function handleInitializePost(ctx: SessionRequestContext, body: unknown): Promise<void> {
-  const { req, res, config, sessionStore, persona } = ctx;
-  const oauth =
-    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
-      ? (req as OAuthRequest).lightdashOAuth
-      : undefined;
-  const sessionSubject = oauth?.ok ? oauth.user.userUuid : undefined;
-
-  if (
-    !sessionStore.canAcceptNewSession(sessionSubject, (entry, sessionId) => {
-      closeSessionEntry(entry, sessionId, 'expired');
-    })
-  ) {
-    sendJson(res, 503, { error: 'Service Unavailable: max sessions reached' });
-    return;
-  }
-
-  if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    // ensureEndpointAuth already ran; oauth must be present for this auth mode.
-    if (!oauth?.ok) {
-      writeOAuthAuthFailure(res, buildBearerRequiredFailure(config, persona.path));
-      return;
-    }
-
-    const contextProvider = createOAuthBearerProvider(config, {
-      accessToken: oauth.accessToken,
-      subject: oauth.user.userUuid,
-    });
-
-    const transport = createSessionTransport(
-      contextProvider,
-      sessionStore,
-      {
-        mode: MCP_AUTH_MODE_LIGHTDASH_OAUTH,
-        tokenHash: contextProvider.getTokenHash(),
-        subject: oauth.user.userUuid,
-        organizationUuid: oauth.user.organizationUuid,
-      },
-      persona,
-    );
-    await runWithToolAuditAuthAsync(
-      {
-        tokenHash: contextProvider.getTokenHash(),
-        subject: oauth.user.userUuid,
-      },
-      () => transport.handleRequest(req, res, body),
-    );
-    return;
-  }
-
-  const transport = createSessionTransport(
-    createEnvContextProvider(config),
-    sessionStore,
-    {
-      mode: config.authMode,
-    },
-    persona,
-  );
-  await transport.handleRequest(req, res, body);
-}
-
-async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined): Promise<void> {
+/**
+ * Handles a MCP POST by creating a fresh stateless transport + server per request.
+ * No session affinity — each POST is independent (ADR-0019).
+ */
+async function handleMcpPost(ctx: McpRequestContext): Promise<void> {
   const { req, res, config, persona } = ctx;
-  if (
-    config.authMode === MCP_AUTH_MODE_SHARED_KEY ||
-    config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
-  ) {
-    if (!(await ensureEndpointAuth(req, res, config, persona.path))) {
-      drainRequestBody(req);
-      return;
-    }
+
+  if (!(await ensureEndpointAuth(req, res, config, persona.path))) {
+    drainRequestBody(req);
+    return;
   }
 
   const raw = await readBody(req, res, config.maxBodyBytes);
@@ -413,52 +228,18 @@ async function handleMcpPost(ctx: SessionRequestContext, sid: string | undefined
     }
   }
 
-  if (sid) {
-    await handleExistingSessionPost(ctx, sid, body);
-    return;
+  const contextProvider = createContextProviderForRequest(config, req);
+  const transport = new NodeStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
+  const server = createLightdashMcpServer(contextProvider, { persona });
+
+  try {
+    await server.connect(transport);
+    const auditAuth = getOAuthAuditContext(req);
+    await runWithToolAuditAuthAsync(auditAuth, () => transport.handleRequest(req, res, body));
+  } finally {
+    await transport.close().catch(() => undefined);
+    await server.close().catch(() => undefined);
   }
-
-  if (body !== undefined && isInitializeMessage(body)) {
-    await handleInitializePost(ctx, body);
-    return;
-  }
-
-  sendJson(res, 400, {
-    error: 'Bad Request: Mcp-Session-Id required for non-initialize requests',
-  });
-}
-
-async function handleMcpGetOrDelete(
-  ctx: SessionRequestContext,
-  sid: string | undefined,
-): Promise<void> {
-  const { req, res, config, sessionStore, persona } = ctx;
-  if (!sid) {
-    sendJson(res, 400, { error: 'Bad Request: Mcp-Session-Id required' });
-    return;
-  }
-
-  if (config.authMode !== MCP_AUTH_MODE_NONE) {
-    if (!(await ensureEndpointAuth(req, res, config, persona.path))) return;
-  }
-
-  const entry = sessionStore.get(sid);
-  if (!entry || entry.personaId !== persona.id) {
-    sendJson(res, 404, { error: ERROR_SESSION_NOT_FOUND });
-    return;
-  }
-
-  if (!verifySessionAuth(req, res, config, persona.path, entry)) return;
-
-  sessionStore.touch(sid);
-  const auditAuth = getOAuthAuditContext(req);
-  await runWithToolAuditAuthAsync(
-    {
-      tokenHash: auditAuth.tokenHash ?? entry.auth.tokenHash,
-      subject: auditAuth.subject ?? entry.auth.subject,
-    },
-    () => entry.transport.handleRequest(req, res),
-  );
 }
 
 export interface StreamableHttpServerHandle {
@@ -479,25 +260,12 @@ export async function createStreamableHttpServer(
   validateAvailableProjectsConfig();
   initAuditLog(getAuditLogPath());
 
-  const ephemeralStoreConfig = resolveEphemeralStoreConfig();
-  const sessionStore = createSessionStore(ephemeralStoreConfig, {
-    sessionTtlMs: inputConfig.sessionTtlMs,
-    maxSessions: inputConfig.maxSessions,
-    maxSessionsPerSubject: inputConfig.maxSessionsPerSubject,
-  });
   let httpConfig = inputConfig;
-
-  const cleanupTimer = setInterval(() => {
-    sessionStore.cleanupExpired((entry, sessionId) => {
-      closeSessionEntry(entry, sessionId, 'expired');
-    });
-  }, inputConfig.sessionCleanupMs);
-  cleanupTimer.unref();
 
   let oauthBroker: OAuthBroker | undefined;
 
   const server = createServer((req, res) => {
-    handleHttpRequest(req, res, httpConfig, sessionStore, oauthBroker).catch((err) => {
+    handleHttpRequest(req, res, httpConfig, oauthBroker).catch((err) => {
       console.error('MCP HTTP handler error:', err);
       if (!res.headersSent) {
         sendJson(res, 500, { error: 'Internal Server Error' });
@@ -512,7 +280,7 @@ export async function createStreamableHttpServer(
   httpConfig = resolveHttpConfig(inputConfig, port);
   const baseUrl = httpConfig.publicUrl ?? `http://${resolveListenHost(httpConfig.host)}:${port}`;
   if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-    oauthBroker = createOAuthBroker(httpConfig, createOAuthBrokerStore(ephemeralStoreConfig));
+    oauthBroker = createOAuthBroker(httpConfig);
   }
 
   return {
@@ -521,10 +289,6 @@ export async function createStreamableHttpServer(
     config: httpConfig,
     close: () =>
       new Promise<void>((resolve, reject) => {
-        clearInterval(cleanupTimer);
-        sessionStore.drainAll((entry, sessionId) => {
-          closeSessionEntry(entry, sessionId, 'shutdown');
-        });
         server.close((err) => {
           if (err) reject(err);
           else resolve();
@@ -636,7 +400,6 @@ async function handleHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
   config: McpHttpConfig,
-  sessionStore: SessionStore,
   oauthBroker: OAuthBroker | undefined,
 ): Promise<void> {
   const path = (req.url ?? '').split('?')[0] ?? '';
@@ -656,20 +419,15 @@ async function handleHttpRequest(
     return;
   }
 
-  const sid = getSessionId(req);
+  // Sessionless: only POST is supported on persona MCP paths.
+  if (req.method !== 'POST') {
+    res.writeHead(405, { Allow: 'POST' }).end();
+    return;
+  }
+
   const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
-  await runWithProjectPinAsync(pinnedProjectUuid, async () => {
-    if (req.method === 'POST') {
-      await handleMcpPost({ req, res, config, sessionStore, persona }, sid);
-      return;
-    }
-
-    if (req.method === 'GET' || req.method === 'DELETE') {
-      await handleMcpGetOrDelete({ req, res, config, sessionStore, persona }, sid);
-      return;
-    }
-
-    res.writeHead(405, { Allow: 'GET, POST, DELETE' }).end();
-  });
+  await runWithProjectPinAsync(pinnedProjectUuid, () =>
+    handleMcpPost({ req, res, config, persona }),
+  );
 }

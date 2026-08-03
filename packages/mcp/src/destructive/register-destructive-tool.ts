@@ -6,7 +6,6 @@ import { WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 import { acceptedContent, inputRequired, inputResponse } from '@modelcontextprotocol/server';
 
 import { ProjectScopeError, resolveProjectScope } from '../governance/project-scope.js';
-import { classifyMutationFailure } from '../policy/preview-ledger.js';
 import { isNotFoundError } from '../tools/lib/api-errors.js';
 import { projectUuidField } from '../tools/lib/schema-fields.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
@@ -19,11 +18,6 @@ import {
 } from '../tools/shared.js';
 
 import { supportsFormElicitation } from './capability.js';
-import {
-  claimConfirmationKey,
-  confirmationClaimKey,
-  releaseConfirmationKey,
-} from './confirmation-claim.js';
 import {
   buildDeleteConfirmationMessage,
   DELETE_CONFIRM_FORM_SCHEMA,
@@ -183,14 +177,14 @@ function bindingMatches<TSnapshot>(
   boundState: DestructiveRequestState,
   spec: DestructiveOperationSpec<ScopedDestructiveArgs, TSnapshot>,
   scopedArgs: ScopedDestructiveArgs,
-  sessionId: string,
+  subject: string,
 ): boolean {
   return (
     boundState.operationId === spec.operationId &&
     boundState.resourceType === spec.resourceType &&
     boundState.resourceId === scopedArgs.resourceId &&
     boundState.projectUuid === scopedArgs.projectUuid &&
-    boundState.sessionId === sessionId
+    boundState.subject === subject
   );
 }
 
@@ -232,7 +226,7 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
 }): Promise<ToolResult> {
   const { spec, scopedArgs, boundState, accepted, ctx, form, labels } = input;
   const flag = mutatedFlagFor(labels.operation);
-  if (!bindingMatches(boundState, spec, scopedArgs, ctx.sessionId)) {
+  if (!bindingMatches(boundState, spec, scopedArgs, ctx.subject)) {
     return confirmationInvalidResult(labels.bindingMismatchMessage, flag);
   }
 
@@ -262,34 +256,10 @@ async function applyAcceptedMutation<TSnapshot, TForm extends { confirmationText
     );
   }
 
-  // Promote is non-idempotent: consume confirmation before execute to block concurrent replay.
-  const claimHandle =
-    labels.operation === 'promote'
-      ? await claimConfirmationKey(confirmationClaimKey(boundState))
-      : undefined;
-  if (labels.operation === 'promote' && claimHandle === undefined) {
-    return withAuditStatus(
-      withLightdashBlockedMarker(
-        jsonToolResult({
-          status: 'blocked',
-          code: 'CONFIRMATION_REPLAY',
-          message:
-            'This promote confirmation was already used. Re-run promote_dashboard for a fresh confirmation.',
-          [flag]: false,
-        }),
-      ),
-      'blocked',
-    );
-  }
-
   let executeExtra: Record<string, unknown> | void;
   try {
     executeExtra = await spec.execute(scopedArgs, snapshot, ctx);
-  } catch (err) {
-    // Release only when the write definitely did not land; keep claim on ambiguous failures.
-    if (claimHandle !== undefined && classifyMutationFailure(err) === 'release') {
-      await releaseConfirmationKey(claimHandle);
-    }
+  } catch {
     // Do not echo upstream/API exception text to MCP clients or unbounded stderr.
     process.stderr.write(
       `[lightdash-mcp] ${labels.operation} failed for ${spec.resourceType} ${scopedArgs.resourceId} (${labels.failureCode})\n`,
@@ -396,7 +366,7 @@ async function requestConfirmation<TSnapshot, TForm extends { confirmationText: 
       resourceId: scopedArgs.resourceId,
       projectUuid: scopedArgs.projectUuid,
       preconditionDigest: precondition.digest,
-      sessionId: ctx.sessionId,
+      subject: ctx.subject,
       resourceName: target.resourceName,
     },
     serverContext,

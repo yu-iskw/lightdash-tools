@@ -1,24 +1,23 @@
 /**
- * Session-scoped preview ledger for content-developer (ADR-0014 / ADR-0016).
+ * HMAC-signed preview tokens for content-developer (ADR-0014 / ADR-0019).
  *
- * Hard gate: every SAFE_WRITE tool requires a session-owned, validated, unexpired
- * `previewId` whose `contentHash` matches the exact payload being applied.
- *
- * Apply path: claim (`validated` → `applying` via CAS) → mutate → mark applied or
- * release/reconcile. Never delete-before-I/O as the sole path.
+ * Hard gate: every SAFE_WRITE requires a validated, unexpired `previewToken` whose
+ * `contentHash` matches `{ proposed, baseline }`. Tokens are client-carried (no server
+ * ledger). confirm_preview mints a validated token; apply verifies + re-sends proposed.
  */
 
 import { randomUUID } from 'node:crypto';
 
-import { LightdashApiError, NetworkError, RateLimitError } from '@lightdash-tools/client';
+import { createRequestStateCodec } from '@modelcontextprotocol/server';
 
-import { getPreviewStore, setPreviewStoreForTests } from '../store/create-preview-store.js';
-import { InMemoryPreviewStore } from '../store/in-memory-preview-store.js';
+import { PREVIEW_TOKEN_KEY_PURPOSE, resolveRequestStateKey } from '../auth/request-state-key.js';
 import { hashStableValue } from '../tools/lib/stable-stringify.js';
+
+import type { RequestStateCodec, ServerContext } from '@modelcontextprotocol/server';
 
 export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
 export type PreviewResourceKind = (typeof PREVIEW_RESOURCE_KINDS)[number];
-export type PreviewStatus = 'applying' | 'draft' | 'reconciliation_required' | 'validated';
+export type PreviewStatus = 'draft' | 'validated';
 
 /** Snapshot identity captured when the preview was issued (for update stale detection). */
 export type PreviewBaseline = {
@@ -27,50 +26,24 @@ export type PreviewBaseline = {
   slug?: string;
 };
 
-export type PreviewLedgerEntry = {
+/** Compact claims embedded in the HMAC-signed previewToken (no proposed body). */
+export type PreviewTokenClaims = {
   previewId: string;
-  sessionId: string;
+  subject: string;
   projectUuid: string;
   resourceKind: PreviewResourceKind;
-  /** Primary uuid/slug/'new'/joined item keys identifying the resource being previewed. */
   resourceKey: string;
-  /**
-   * Alternate identifiers accepted for validate/consume matching (e.g. chart UUID and
-   * upsert slug). Always includes `resourceKey`.
-   */
   resourceAliases: readonly string[];
-  /** sha256 of the canonical JSON of `{ proposed, baseline }`. */
   contentHash: string;
   status: PreviewStatus;
-  proposed: unknown;
   baseline?: PreviewBaseline;
   createdAt: string;
   expiresAt: string;
 };
 
-/** Pluggable persistence for preview ledger entries (ADR-0016). */
-export interface PreviewStore {
-  get(previewId: string): Promise<PreviewLedgerEntry | undefined>;
-  put(entry: PreviewLedgerEntry): Promise<void>;
-  /** Atomic status transition; returns false if expected status mismatch / missing */
-  compareAndSwap(
-    previewId: string,
-    expectedStatus: PreviewStatus,
-    next: PreviewLedgerEntry,
-  ): Promise<boolean>;
-  /** Atomic delete when current status matches; returns false on mismatch / missing */
-  compareAndDelete(previewId: string, expectedStatus: PreviewStatus): Promise<boolean>;
-  delete(previewId: string): Promise<void>;
-}
-
 export class PreviewLedgerError extends Error {
   readonly code:
-    | 'PREVIEW_EXPIRED'
-    | 'PREVIEW_NOT_OWNED'
-    | 'PREVIEW_NOT_VALIDATED'
-    | 'PREVIEW_RECONCILIATION_REQUIRED'
-    | 'PREVIEW_REQUIRED'
-    | 'PREVIEW_STALE';
+    'PREVIEW_NOT_OWNED' | 'PREVIEW_NOT_VALIDATED' | 'PREVIEW_REQUIRED' | 'PREVIEW_STALE';
 
   constructor(code: PreviewLedgerError['code'], message: string) {
     super(message);
@@ -81,8 +54,29 @@ export class PreviewLedgerError extends Error {
 
 /** Default preview lifetime; short enough to discourage stale multi-step drift. */
 export const DEFAULT_PREVIEW_TTL_MS = 10 * 60_000;
+const TTL_SECONDS = DEFAULT_PREVIEW_TTL_MS / 1000;
 
-/** sha256 hex digest of the stable JSON form of `value`. */
+/** Minimal ServerContext for unit tests that mint/verify without a live MCP request. */
+export const EMPTY_SERVER_CONTEXT = { mcpReq: {} } as ServerContext;
+
+let codec: RequestStateCodec<PreviewTokenClaims> | undefined;
+
+function getPreviewTokenCodec(): RequestStateCodec<PreviewTokenClaims> {
+  if (!codec) {
+    codec = createRequestStateCodec<PreviewTokenClaims>({
+      key: resolveRequestStateKey(PREVIEW_TOKEN_KEY_PURPOSE),
+      ttlSeconds: TTL_SECONDS,
+    });
+  }
+  return codec;
+}
+
+/** Reset codec (tests only). */
+export function resetPreviewLedgerForTests(): void {
+  codec = undefined;
+}
+
+/** sha256 hex digest of the stable JSON form of `value` (preview binding hash). */
 export function hashPreviewContent(value: unknown): string {
   return hashStableValue(value);
 }
@@ -97,172 +91,35 @@ export function uniqueResourceKeys(...keys: Array<string | null | undefined>): s
   return out;
 }
 
-/**
- * Classify upstream mutation failures for release vs reconcile.
- * HTTP 4xx (except 408/429) prove no successful mutation → release to validated.
- * Timeouts / 5xx / network / rate-limit → reconciliation_required.
- */
-export function classifyMutationFailure(err: unknown): 'reconcile' | 'release' {
-  if (err instanceof RateLimitError) {
-    return 'reconcile';
-  }
-  if (err instanceof NetworkError) {
-    return 'reconcile';
-  }
-  if (err instanceof LightdashApiError) {
-    const status = err.statusCode;
-    if (status === 408 || status === 429) {
-      return 'reconcile';
-    }
-    if (status >= 400 && status < 500) {
-      return 'release';
-    }
-    return 'reconcile';
-  }
-  return 'reconcile';
-}
-
 function hashPreviewBinding(proposed: unknown, baseline: PreviewBaseline | undefined): string {
-  return hashPreviewContent({ proposed, baseline: baseline ?? null });
+  return hashStableValue({ proposed, baseline: baseline ?? null });
 }
 
-function resourceKeyMatches(entry: PreviewLedgerEntry, resourceKey: string): boolean {
-  return entry.resourceKey === resourceKey || entry.resourceAliases.includes(resourceKey);
-}
-
-function store(): PreviewStore {
-  return getPreviewStore();
-}
-
-async function assertOwnedEntry(input: {
-  previewId: string;
-  sessionId: string;
-  projectUuid: string;
-}): Promise<PreviewLedgerEntry> {
-  const entry = await store().get(input.previewId);
-  if (!entry) {
-    throw new PreviewLedgerError(
-      'PREVIEW_REQUIRED',
-      `Preview '${input.previewId}' was not found; call the matching preview_* tool first`,
-    );
-  }
-  if (entry.sessionId !== input.sessionId || entry.projectUuid !== input.projectUuid) {
-    throw new PreviewLedgerError(
-      'PREVIEW_NOT_OWNED',
-      `Preview '${input.previewId}' is not owned by this session/project`,
-    );
-  }
-  if (Date.parse(entry.expiresAt) < Date.now()) {
-    await store().delete(input.previewId);
-    throw new PreviewLedgerError('PREVIEW_EXPIRED', `Preview '${input.previewId}' has expired`);
-  }
-  if (entry.status === 'reconciliation_required') {
-    throw new PreviewLedgerError(
-      'PREVIEW_RECONCILIATION_REQUIRED',
-      `Preview '${input.previewId}' needs reconciliation after an uncertain apply failure; inspect the resource and re-run preview -> confirm`,
-    );
-  }
-  return entry;
-}
-
-export async function addPreviewLedgerEntry(input: {
-  sessionId: string;
-  projectUuid: string;
-  resourceKind: PreviewResourceKind;
-  resourceKey: string;
-  /** Extra aliases (uuid/slug) accepted for validate/consume. */
-  resourceAliases?: readonly string[];
-  proposed: unknown;
-  baseline?: PreviewBaseline;
-  ttlMs?: number;
-}): Promise<PreviewLedgerEntry> {
-  const now = Date.now();
-  const ttl = input.ttlMs ?? DEFAULT_PREVIEW_TTL_MS;
-  const resourceAliases = uniqueResourceKeys(input.resourceKey, ...(input.resourceAliases ?? []));
-  const entry: PreviewLedgerEntry = {
-    previewId: randomUUID(),
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    resourceKind: input.resourceKind,
-    resourceKey: input.resourceKey,
-    resourceAliases,
-    contentHash: hashPreviewBinding(input.proposed, input.baseline),
-    status: 'draft',
-    proposed: input.proposed,
-    baseline: input.baseline,
-    createdAt: new Date(now).toISOString(),
-    expiresAt: new Date(now + ttl).toISOString(),
-  };
-  await store().put(entry);
-  return entry;
-}
-
-/** Look up a preview by id, enforcing session/project ownership and expiry. */
-export async function getOwnedPreview(input: {
-  previewId: string;
-  sessionId: string;
-  projectUuid: string;
-}): Promise<PreviewLedgerEntry> {
-  return assertOwnedEntry(input);
-}
-
-/**
- * Mark a draft preview validated after a successful confirm_preview call.
- * `expected` binds validation to the resource it was actually run against.
- */
-export async function markPreviewValidated(
-  previewId: string,
-  sessionId: string,
-  projectUuid: string,
-  expected: { resourceKind: PreviewResourceKind; resourceKey: string },
-): Promise<PreviewLedgerEntry> {
-  const entry = await assertOwnedEntry({ previewId, sessionId, projectUuid });
-  if (
-    entry.resourceKind !== expected.resourceKind ||
-    !resourceKeyMatches(entry, expected.resourceKey)
-  ) {
-    throw new PreviewLedgerError(
-      'PREVIEW_STALE',
-      `Preview '${previewId}' was created for '${entry.resourceKind}:${entry.resourceKey}', not the requested '${expected.resourceKind}:${expected.resourceKey}'`,
-    );
-  }
-  if (entry.status !== 'draft') {
-    throw new PreviewLedgerError(
-      'PREVIEW_NOT_VALIDATED',
-      `Preview '${previewId}' cannot be confirmed from status '${entry.status}'`,
-    );
-  }
-  const validated: PreviewLedgerEntry = { ...entry, status: 'validated' };
-  const swapped = await store().compareAndSwap(previewId, 'draft', validated);
-  if (!swapped) {
-    throw new PreviewLedgerError(
-      'PREVIEW_NOT_VALIDATED',
-      `Preview '${previewId}' could not be marked validated (status raced)`,
-    );
-  }
-  return validated;
-}
-
-function hasNonEmpty(value: string | undefined): boolean {
-  return value != null && value !== '';
+function resourceKeyMatches(claims: PreviewTokenClaims, resourceKey: string): boolean {
+  return claims.resourceKey === resourceKey || claims.resourceAliases.includes(resourceKey);
 }
 
 /** Update drift or create-target appearance → PREVIEW_STALE. */
 function assertBaselineStillValid(
   previewId: string,
-  entry: PreviewLedgerEntry,
+  claims: PreviewTokenClaims,
   currentBaseline: PreviewBaseline | undefined,
 ): void {
-  const previewedUpdatedAt = entry.baseline?.updatedAt;
-  if (hasNonEmpty(previewedUpdatedAt) && currentBaseline?.updatedAt !== previewedUpdatedAt) {
+  const previewedUpdatedAt = claims.baseline?.updatedAt;
+  if (
+    previewedUpdatedAt != null &&
+    previewedUpdatedAt !== '' &&
+    currentBaseline?.updatedAt !== previewedUpdatedAt
+  ) {
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
       `Preview '${previewId}' baseline changed (resource was updated after preview); re-run preview -> confirm`,
     );
   }
   if (
-    entry.baseline == null &&
-    (hasNonEmpty(currentBaseline?.uuid) || hasNonEmpty(currentBaseline?.updatedAt))
+    claims.baseline == null &&
+    ((currentBaseline?.uuid != null && currentBaseline.uuid !== '') ||
+      (currentBaseline?.updatedAt != null && currentBaseline.updatedAt !== ''))
   ) {
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
@@ -271,126 +128,168 @@ function assertBaselineStillValid(
   }
 }
 
-function assertClaimBindings(
-  entry: PreviewLedgerEntry,
-  input: {
-    previewId: string;
-    resourceKind: PreviewResourceKind;
-    resourceKey: string;
-    proposed: unknown;
-    currentBaseline?: PreviewBaseline;
-  },
-): void {
-  if (entry.status !== 'validated') {
-    throw new PreviewLedgerError(
-      'PREVIEW_NOT_VALIDATED',
-      `Preview '${input.previewId}' has not been validated`,
-    );
-  }
-  if (entry.resourceKind !== input.resourceKind || !resourceKeyMatches(entry, input.resourceKey)) {
-    throw new PreviewLedgerError(
-      'PREVIEW_STALE',
-      `Preview '${input.previewId}' does not match the target resource ('${input.resourceKind}:${input.resourceKey}')`,
-    );
-  }
-  if (hashPreviewBinding(input.proposed, entry.baseline) !== entry.contentHash) {
-    throw new PreviewLedgerError(
-      'PREVIEW_STALE',
-      `Preview '${input.previewId}' content hash does not match the applied payload; re-run preview -> confirm`,
-    );
-  }
-  assertBaselineStillValid(input.previewId, entry, input.currentBaseline);
+function resolveServerContext(serverContext: ServerContext | undefined): ServerContext {
+  return serverContext ?? EMPTY_SERVER_CONTEXT;
 }
 
-export type ClaimPreviewForApplyInput = {
-  previewId: string;
-  sessionId: string;
+function assertResourceBinding(
+  claims: PreviewTokenClaims,
+  expected: { resourceKind: PreviewResourceKind; resourceKey: string },
+): void {
+  if (
+    claims.resourceKind !== expected.resourceKind ||
+    !resourceKeyMatches(claims, expected.resourceKey)
+  ) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${claims.previewId}' was created for '${claims.resourceKind}:${claims.resourceKey}', not the requested '${expected.resourceKind}:${expected.resourceKey}'`,
+    );
+  }
+}
+
+async function mintClaims(
+  claims: PreviewTokenClaims,
+  serverContext: ServerContext | undefined,
+): Promise<string> {
+  return getPreviewTokenCodec().mint(claims, resolveServerContext(serverContext));
+}
+
+async function verifyClaims(
+  previewToken: string,
+  serverContext: ServerContext | undefined,
+): Promise<PreviewTokenClaims> {
+  if (previewToken.length === 0) {
+    throw new PreviewLedgerError(
+      'PREVIEW_REQUIRED',
+      'previewToken is required; call the matching preview_* tool first',
+    );
+  }
+  try {
+    const claims = await getPreviewTokenCodec().verify(
+      previewToken,
+      resolveServerContext(serverContext),
+    );
+    if (Date.parse(claims.expiresAt) < Date.now()) {
+      throw new PreviewLedgerError(
+        'PREVIEW_REQUIRED',
+        'previewToken is invalid or expired; call the matching preview_* tool first',
+      );
+    }
+    return claims;
+  } catch (err) {
+    if (err instanceof PreviewLedgerError) {
+      throw err;
+    }
+    throw new PreviewLedgerError(
+      'PREVIEW_REQUIRED',
+      'previewToken is invalid or expired; call the matching preview_* tool first',
+    );
+  }
+}
+
+function assertSubjectAndProject(
+  claims: PreviewTokenClaims,
+  subject: string,
+  projectUuid: string,
+): void {
+  if (claims.subject !== subject || claims.projectUuid !== projectUuid) {
+    throw new PreviewLedgerError(
+      'PREVIEW_NOT_OWNED',
+      `Preview '${claims.previewId}' is not owned by this subject/project`,
+    );
+  }
+}
+
+/** Mint a draft previewToken (opaque HMAC blob). Does not store proposed on the server. */
+export async function mintDraftPreviewToken(input: {
+  subject: string;
+  projectUuid: string;
+  resourceKind: PreviewResourceKind;
+  resourceKey: string;
+  resourceAliases?: readonly string[];
+  proposed: unknown;
+  baseline?: PreviewBaseline;
+  serverContext?: ServerContext;
+}): Promise<{ previewToken: string; claims: PreviewTokenClaims }> {
+  const now = Date.now();
+  const resourceAliases = uniqueResourceKeys(input.resourceKey, ...(input.resourceAliases ?? []));
+  const claims: PreviewTokenClaims = {
+    previewId: randomUUID(),
+    subject: input.subject,
+    projectUuid: input.projectUuid,
+    resourceKind: input.resourceKind,
+    resourceKey: input.resourceKey,
+    resourceAliases,
+    contentHash: hashPreviewBinding(input.proposed, input.baseline),
+    status: 'draft',
+    baseline: input.baseline,
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + DEFAULT_PREVIEW_TTL_MS).toISOString(),
+  };
+  const previewToken = await mintClaims(claims, input.serverContext);
+  return { previewToken, claims };
+}
+
+/** Confirm a draft token: verify bindings and mint a validated token (no server write). */
+export async function confirmPreviewToken(input: {
+  previewToken: string;
+  subject: string;
+  projectUuid: string;
+  resourceKind: PreviewResourceKind;
+  resourceKey: string;
+  serverContext?: ServerContext;
+}): Promise<{ previewToken: string; claims: PreviewTokenClaims }> {
+  const claims = await verifyClaims(input.previewToken, input.serverContext);
+  assertSubjectAndProject(claims, input.subject, input.projectUuid);
+  assertResourceBinding(claims, input);
+  if (claims.status !== 'draft') {
+    throw new PreviewLedgerError(
+      'PREVIEW_NOT_VALIDATED',
+      `Preview '${claims.previewId}' cannot be confirmed from status '${claims.status}'`,
+    );
+  }
+  const now = Date.now();
+  const validated: PreviewTokenClaims = {
+    ...claims,
+    status: 'validated',
+    createdAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + DEFAULT_PREVIEW_TTL_MS).toISOString(),
+  };
+  const previewToken = await mintClaims(validated, input.serverContext);
+  return { previewToken, claims: validated };
+}
+
+export type ApplyPreviewTokenInput = {
+  previewToken: string;
+  subject: string;
   projectUuid: string;
   resourceKind: PreviewResourceKind;
   resourceKey: string;
   proposed: unknown;
-  /** Fresh resource snapshot for baseline stale detection (update and create races). */
   currentBaseline?: PreviewBaseline;
+  serverContext?: ServerContext;
 };
 
-/**
- * Claim a validated preview for apply (`validated` → `applying` via CAS).
- * Same kind/key/hash/baseline checks as the former consume path, but does not delete.
- */
-export async function claimPreviewForApply(
-  input: ClaimPreviewForApplyInput,
-): Promise<PreviewLedgerEntry> {
-  const entry = await assertOwnedEntry({
-    previewId: input.previewId,
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-  });
-  assertClaimBindings(entry, input);
-  const applying: PreviewLedgerEntry = { ...entry, status: 'applying' };
-  const swapped = await store().compareAndSwap(input.previewId, 'validated', applying);
-  if (!swapped) {
+/** Verify validated token then run mutation (ADR-0019: no server-side claim/release). */
+export async function withValidatedPreviewApply<T>(
+  input: ApplyPreviewTokenInput,
+  fn: (claims: PreviewTokenClaims) => Promise<T>,
+): Promise<T> {
+  const claims = await verifyClaims(input.previewToken, input.serverContext);
+  assertSubjectAndProject(claims, input.subject, input.projectUuid);
+  if (claims.status !== 'validated') {
     throw new PreviewLedgerError(
       'PREVIEW_NOT_VALIDATED',
-      `Preview '${input.previewId}' could not be claimed for apply (already claimed or status raced)`,
+      `Preview '${claims.previewId}' has not been validated`,
     );
   }
-  return applying;
-}
-
-/** Delete a claimed preview when still `applying` (single-use completion). */
-export async function markPreviewApplied(previewId: string): Promise<void> {
-  await store().compareAndDelete(previewId, 'applying');
-}
-
-/**
- * After a failed mutation: known no-write failures return to `validated`;
- * uncertain outcomes move to `reconciliation_required`.
- */
-export async function releaseOrReconcilePreview(previewId: string, err: unknown): Promise<void> {
-  const entry = await store().get(previewId);
-  if (!entry || entry.status !== 'applying') {
-    return;
-  }
-  const action = classifyMutationFailure(err);
-  if (action === 'release') {
-    const released: PreviewLedgerEntry = { ...entry, status: 'validated' };
-    await store().compareAndSwap(previewId, 'applying', released);
-    return;
-  }
-  const reconciling: PreviewLedgerEntry = { ...entry, status: 'reconciliation_required' };
-  await store().compareAndSwap(previewId, 'applying', reconciling);
-}
-
-/**
- * Claim → run mutation → mark applied; on mutation failure release/reconcile and rethrow.
- * After a successful mutation, never release/reconcile if mark-applied fails (would invite
- * double-apply); log and return the mutation result instead.
- */
-export async function withClaimedPreviewApply<T>(
-  claimInput: ClaimPreviewForApplyInput,
-  fn: (entry: PreviewLedgerEntry) => Promise<T>,
-): Promise<T> {
-  const entry = await claimPreviewForApply(claimInput);
-  let result: T;
-  try {
-    result = await fn(entry);
-  } catch (err) {
-    await releaseOrReconcilePreview(entry.previewId, err);
-    throw err;
-  }
-  try {
-    await markPreviewApplied(entry.previewId);
-  } catch (err) {
-    // Mutation already succeeded — never release/reconcile (would invite double-apply).
-    console.error(
-      `[preview-ledger] markPreviewApplied failed after successful mutation (previewId=${entry.previewId})`,
-      err,
+  assertResourceBinding(claims, input);
+  if (hashPreviewBinding(input.proposed, claims.baseline) !== claims.contentHash) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${claims.previewId}' content hash does not match the applied payload; re-run preview -> confirm`,
     );
   }
-  return result;
-}
-
-/** Test helper: reset to a fresh in-memory store. */
-export function resetPreviewLedgerForTests(): void {
-  setPreviewStoreForTests(new InMemoryPreviewStore());
+  assertBaselineStillValid(claims.previewId, claims, input.currentBaseline);
+  return fn(claims);
 }

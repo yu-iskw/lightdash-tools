@@ -6,7 +6,6 @@ import {
   OAUTH_TOKEN_PATH,
 } from '../../config/env.js';
 import { isLocalHttpOrigin } from '../../config/normalize-url.js';
-import { createOAuthBrokerStore } from '../../store/create-oauth-broker-store.js';
 import { parseJsonBody, readBody } from '../../transports/http-body.js';
 import { sendJson } from '../../transports/http-response.js';
 
@@ -15,6 +14,7 @@ import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
+import { InMemoryOAuthBrokerStore } from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 
 import type { IssuedAuthorizationCode, OAuthBrokerStore } from './pending-store.js';
@@ -532,11 +532,11 @@ export function isOAuthBrokerPath(path: string): boolean {
 
 /**
  * Creates the OAuth broker request handler for co-located AS façade routes.
- * Uses the shared ephemeral store backend (memory default; Redis when configured).
+ * Pending state is process-local (InMemoryOAuthBrokerStore); sticky `/oauth/*` for multi-instance.
  */
 export function createOAuthBroker(
   config: McpHttpConfig,
-  store: OAuthBrokerStore = createOAuthBrokerStore(),
+  store: OAuthBrokerStore = new InMemoryOAuthBrokerStore(),
 ): OAuthBroker {
   return {
     async handle(req, res, path): Promise<boolean> {

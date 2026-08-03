@@ -1,9 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/server';
 
 import {
-  assertDestructiveRequestStateKeyConfigured,
-  getDestructiveRequestStateCodec,
-} from '../destructive/request-state.js';
+  assertRequestStateKeyConfigured,
+  DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE,
+  PREVIEW_TOKEN_KEY_PURPOSE,
+} from '../auth/request-state-key.js';
+import { getDestructiveRequestStateCodec } from '../destructive/request-state.js';
 import { getDefaultPersona, getPersonaServerName } from '../personas/index.js';
 
 import { registerCapabilities } from './capabilities.js';
@@ -18,17 +20,19 @@ export function createLightdashMcpServer(
   options?: RegisterCapabilitiesOptions,
 ): McpServer {
   const persona = options?.persona ?? getDefaultPersona();
+  if (persona.id === 'content-governance') {
+    assertRequestStateKeyConfigured(DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE);
+  } else if (persona.id === 'content-developer') {
+    assertRequestStateKeyConfigured(PREVIEW_TOKEN_KEY_PURPOSE);
+  }
   const serverOptions =
     persona.id === 'content-governance'
-      ? (() => {
-          assertDestructiveRequestStateKeyConfigured();
-          return {
-            requestState: {
-              verify: (state: string, ctx: ServerContext) =>
-                getDestructiveRequestStateCodec().verify(state, ctx),
-            },
-          };
-        })()
+      ? {
+          requestState: {
+            verify: (state: string, ctx: ServerContext) =>
+              getDestructiveRequestStateCodec().verify(state, ctx),
+          },
+        }
       : undefined;
   const server = new McpServer(
     {

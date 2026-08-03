@@ -16,7 +16,7 @@ const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
 const WRITE_NONDESTRUCTIVE_IMPACT: SafetyImpact = 'write-nondestructive';
 const PREVIEW_DIFF_SUMMARY =
-  'Compute an in-memory diff and issue a single-use previewId (no upstream preview API)';
+  'Compute an in-memory diff and issue an HMAC-signed previewToken (no upstream preview API)';
 const TILE_READ_SUMMARY = 'Read the current tile array (no per-tile REST route exists)';
 
 const op_preview_chart_changes = defineOperation({
@@ -77,7 +77,7 @@ const op_preview_dashboard_changes = defineOperation({
 const op_preview_content_move = defineOperation({
   id: 'content-developer.preview.content-move',
   summary:
-    'Preview a bulk content move into an existing space (MCP ledger only; issues a single-use previewId)',
+    'Preview a bulk content move into an existing space (issues an HMAC-signed previewToken)',
   http: { method: 'GET', path: `${API_V2}/content` },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',

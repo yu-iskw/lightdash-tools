@@ -21,11 +21,11 @@ const userMessages = createPromptPlaybookEmbedder({
 });
 
 const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> confirm_preview -> apply. Call the matching lightdash_preview_* tool first,
-record the previewId and resourceKey. Unlock every write (create, update, duplicate, tile ops, content moves)
-with lightdash_confirm_preview using that previewId and the exact resourceKind/resourceKey the preview was
-created with. Then apply with the write tool using that previewId. Never call a write tool without a fresh,
-confirmed previewId bound to that exact resource. lightdash_validate_chart / lightdash_validate_dashboard are
-optional health checks on a saved UUID only — they do not unlock apply.`;
+record the previewToken and resourceKey. Unlock every write (create, update, duplicate, tile ops, content moves)
+with lightdash_confirm_preview using that previewToken and the exact resourceKind/resourceKey the preview was
+created with. Then apply with the write tool using the new validated previewToken from confirm (and the same
+proposed payload). Never call a write tool without a fresh, confirmed previewToken bound to that exact resource.
+lightdash_validate_chart / lightdash_validate_dashboard are optional health checks on a saved UUID only — they do not unlock apply.`;
 
 const DASHBOARD_FIRST = `Dashboard-first: the dashboard is the authoring and promotion unit. Create/update charts only as
 tile prerequisites in this workflow; every new chart must be added as a dashboard tile before treating work as done.

@@ -7,10 +7,10 @@ import {
 } from '../../policy/result-limits.js';
 
 import {
-  QueryLedgerError,
   addQueryLedgerEntry,
-  getOwnedQueryLedgerEntry,
-  releaseOwnedQueryBudget,
+  findQueryLedgerEntry,
+  getQueryLedgerEntry,
+  releaseQueryLedgerBudget,
   resetQueryLedgerForTests,
 } from './query-ledger.js';
 
@@ -20,7 +20,7 @@ describe('query-ledger', () => {
     resetQueryBudgetsForTests();
   });
 
-  it('stores and returns owned entries with budgetHeld', () => {
+  it('stores and returns entries with budgetHeld', () => {
     addQueryLedgerEntry({
       queryUuid: 'q1',
       sessionId: 's1',
@@ -28,16 +28,12 @@ describe('query-ledger', () => {
       sourceType: 'chart',
       sourceUuid: 'c1',
     });
-    const entry = getOwnedQueryLedgerEntry({
-      projectUuid: 'p1',
-      queryUuid: 'q1',
-      sessionId: 's1',
-    });
+    const entry = getQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1' });
     expect(entry.sourceUuid).toBe('c1');
     expect(entry.budgetHeld).toBe(true);
   });
 
-  it('rejects other sessions', () => {
+  it('returns entries regardless of requesting session', () => {
     addQueryLedgerEntry({
       queryUuid: 'q1',
       sessionId: 's1',
@@ -45,9 +41,15 @@ describe('query-ledger', () => {
       sourceType: 'chart',
       sourceUuid: 'c1',
     });
-    expect(() =>
-      getOwnedQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1', sessionId: 's2' }),
-    ).toThrow(QueryLedgerError);
+    // Any caller can look up by projectUuid+queryUuid — no ownership check.
+    const entry = getQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1' });
+    expect(entry.sessionId).toBe('s1');
+  });
+
+  it('rejects missing entries as QUERY_NOT_FOUND', () => {
+    expect(() => getQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'missing' })).toThrow(
+      /QUERY_NOT_FOUND|not found/,
+    );
   });
 
   it('rejects expired entries and releases held budget', () => {
@@ -61,9 +63,10 @@ describe('query-ledger', () => {
       ttlMs: -1,
       budgetHeld: true,
     });
-    expect(() =>
-      getOwnedQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1', sessionId: 's1' }),
-    ).toThrow(/QUERY_EXPIRED|expired/);
+    expect(findQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1' })).toBeUndefined();
+    expect(() => getQueryLedgerEntry({ projectUuid: 'p1', queryUuid: 'q1' })).toThrow(
+      /QUERY_NOT_FOUND|not found/,
+    );
     // Slot freed on expiry.
     for (let i = 0; i < MAX_CONCURRENT_QUERIES_PER_SESSION; i += 1) {
       acquireQueryBudget('s1');
@@ -81,8 +84,8 @@ describe('query-ledger', () => {
       sourceUuid: 'c1',
       budgetHeld: true,
     });
-    releaseOwnedQueryBudget(entry);
-    releaseOwnedQueryBudget(entry);
+    releaseQueryLedgerBudget(entry);
+    releaseQueryLedgerBudget(entry);
     expect(entry.budgetHeld).toBe(false);
     for (let i = 0; i < MAX_CONCURRENT_QUERIES_PER_SESSION; i += 1) {
       acquireQueryBudget('s1');

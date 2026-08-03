@@ -155,7 +155,7 @@ const op_run_dashboard_tile = defineOperation({
 
 const op_get_query_result = defineOperation({
   id: 'content-reader.query.result.get',
-  summary: 'Get or poll a session-owned query result',
+  summary: 'Get or poll a query result by queryUuid',
   http: { method: 'GET', path: '/api/v2/projects/{projectUuid}/query/{queryUuid}' },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
@@ -169,7 +169,7 @@ const op_get_query_result = defineOperation({
 
 const op_cancel_query = defineOperation({
   id: 'content-reader.query.cancel',
-  summary: 'Cancel a running session-owned query',
+  summary: 'Cancel a running query by queryUuid',
   http: { method: 'POST', path: '/api/v2/projects/{projectUuid}/query/{queryUuid}/cancel' },
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',

@@ -33,7 +33,7 @@ export const DISCOVERY_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** preview_* — computes a diff and issues a previewId, never persists. */
+/** preview_* — computes a diff and issues a HMAC-signed previewToken (ADR-0019), never persists. */
 export const PREVIEW_SAFETY: DeveloperOperationSafety = {
   mutability: 'preview',
   queryCapability: 'none',
@@ -41,7 +41,7 @@ export const PREVIEW_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** validate_* — optional saved-resource health check; never unlocks the preview ledger. */
+/** validate_* — optional saved-resource health check; never unlocks the preview. */
 export const VALIDATE_SAFETY: DeveloperOperationSafety = {
   mutability: 'none',
   queryCapability: 'none',
@@ -57,7 +57,7 @@ export const COMPARE_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** SAFE_WRITE apply tools gated by a validated previewId. */
+/** SAFE_WRITE apply tools gated by a validated previewToken. */
 export const WRITE_SAFETY: DeveloperOperationSafety = {
   mutability: MUTABILITY_WRITE_NONDESTRUCTIVE,
   queryCapability: 'none',

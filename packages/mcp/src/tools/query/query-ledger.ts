@@ -1,5 +1,6 @@
 /**
- * In-memory query ownership ledger for content-reader (ADR-0012).
+ * In-memory query handle ledger for content-reader (ADR-0012 / ADR-0019).
+ * Keyed by projectUuid+queryUuid; sessionId retained only for per-process budget release.
  */
 
 import { DEFAULT_QUERY_LEDGER_TTL_MS, releaseQueryBudget } from '../../policy/result-limits.js';
@@ -9,7 +10,6 @@ export type ReaderQueryLedgerEntry = {
   sessionId: string;
   userUuid?: string;
   projectUuid: string;
-  persona: 'content-reader';
   sourceType: 'chart' | 'dashboard_tile';
   sourceUuid: string;
   /** True while concurrency budget is held for this in-flight warehouse query. */
@@ -19,7 +19,7 @@ export type ReaderQueryLedgerEntry = {
 };
 
 export class QueryLedgerError extends Error {
-  readonly code: 'QUERY_EXPIRED' | 'QUERY_NOT_OWNED';
+  readonly code: 'QUERY_NOT_FOUND';
 
   constructor(code: QueryLedgerError['code'], message: string) {
     super(message);
@@ -52,7 +52,7 @@ function pruneExpiredLedgerEntries(now = Date.now()): void {
 }
 
 export function addQueryLedgerEntry(
-  entry: Omit<ReaderQueryLedgerEntry, 'budgetHeld' | 'createdAt' | 'expiresAt' | 'persona'> & {
+  entry: Omit<ReaderQueryLedgerEntry, 'budgetHeld' | 'createdAt' | 'expiresAt'> & {
     ttlMs?: number;
     budgetHeld?: boolean;
   },
@@ -65,7 +65,6 @@ export function addQueryLedgerEntry(
     sessionId: entry.sessionId,
     userUuid: entry.userUuid,
     projectUuid: entry.projectUuid,
-    persona: 'content-reader',
     sourceType: entry.sourceType,
     sourceUuid: entry.sourceUuid,
     budgetHeld: entry.budgetHeld ?? true,
@@ -76,44 +75,45 @@ export function addQueryLedgerEntry(
   return full;
 }
 
-export function getOwnedQueryLedgerEntry(input: {
+/** Look up a ledger entry by projectUuid+queryUuid (no session ownership check). */
+export function getQueryLedgerEntry(input: {
   projectUuid: string;
   queryUuid: string;
-  sessionId: string;
-  userUuid?: string;
 }): ReaderQueryLedgerEntry {
+  const entry = findQueryLedgerEntry(input);
+  if (!entry) {
+    throw new QueryLedgerError(
+      'QUERY_NOT_FOUND',
+      `Query '${input.queryUuid}' not found or already expired`,
+    );
+  }
+  return entry;
+}
+
+/**
+ * Best-effort ledger lookup for budget release. Missing/expired entries return undefined
+ * so get/cancel can still use the Lightdash queryUuid handle across replicas (ADR-0019).
+ */
+export function findQueryLedgerEntry(input: {
+  projectUuid: string;
+  queryUuid: string;
+}): ReaderQueryLedgerEntry | undefined {
   const key = entryKey(input.projectUuid, input.queryUuid);
   const entry = ledger.get(key);
   if (!entry) {
-    throw new QueryLedgerError(
-      'QUERY_NOT_OWNED',
-      `Query '${input.queryUuid}' is not owned by this session`,
-    );
-  }
-  if (entry.sessionId !== input.sessionId) {
-    throw new QueryLedgerError(
-      'QUERY_NOT_OWNED',
-      `Query '${input.queryUuid}' belongs to another session`,
-    );
-  }
-  if (entry.userUuid && input.userUuid && entry.userUuid !== input.userUuid) {
-    throw new QueryLedgerError(
-      'QUERY_NOT_OWNED',
-      `Query '${input.queryUuid}' belongs to another user`,
-    );
+    return undefined;
   }
   if (Date.parse(entry.expiresAt) < Date.now()) {
     releaseBudgetIfHeld(entry);
     ledger.delete(key);
-    throw new QueryLedgerError('QUERY_EXPIRED', `Query '${input.queryUuid}' ledger entry expired`);
+    return undefined;
   }
   return entry;
 }
 
 /** Release concurrency budget once when the warehouse query reaches a terminal state or is cancelled. */
-export function releaseOwnedQueryBudget(entry: ReaderQueryLedgerEntry): void {
+export function releaseQueryLedgerBudget(entry: ReaderQueryLedgerEntry): void {
   releaseBudgetIfHeld(entry);
-  ledger.set(entryKey(entry.projectUuid, entry.queryUuid), entry);
 }
 
 /** Test helper. */

@@ -2,18 +2,17 @@
  * Content-developer authoring tools (ADR-0014).
  *
  * Hybrid authoring surface behind a hard preview -> confirm -> apply gate:
- *  - preview_* computes an in-memory diff and issues a single-use previewId.
+ *  - preview_* computes an in-memory diff and issues a HMAC-signed previewToken (ADR-0019).
  *  - confirm_preview marks a preview validated for every write path (create, update,
  *    duplicate, tile ops, content-move); it never calls a Lightdash API.
  *  - validate_* is an optional saved-resource health check (upstream validator on a
- *    persisted uuid only); it does not unlock the preview ledger.
- *  - The write tools claim the validated preview (contentHash must match exactly),
- *    call the underlying create/update/upsert API, then mark applied or
- *    release/reconcile on failure (ADR-0016).
+ *    persisted uuid only); it does not unlock the preview.
+ *  - The write tools verify the validated previewToken (contentHash must match exactly),
+ *    then call the underlying create/update/upsert API.
  *
- * `markPreviewValidated` (via confirm_preview) binds confirmation to the resource
- * (`resourceKind`/`resourceKey`), so a confirmed preview for one resource can never
- * unlock a write against a different one.
+ * `confirm_preview` binds confirmation to the resource (`resourceKind`/`resourceKey`),
+ * so a confirmed previewToken for one resource can never unlock a write against a
+ * different one.
  *
  * `preview_content_move` is the preview tool for `move_content` (itemUuids +
  * targetSpaceUuid + required contentTypes).
@@ -22,7 +21,6 @@
 import { WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE } from '@lightdash-tools/common';
 import { z } from 'zod';
 
-import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import {
   COMPARE_SAFETY,
@@ -32,8 +30,8 @@ import {
 } from '../../policy/content-developer.js';
 import {
   PREVIEW_RESOURCE_KINDS,
-  markPreviewValidated,
-  withClaimedPreviewApply,
+  confirmPreviewToken,
+  withValidatedPreviewApply,
 } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
@@ -96,8 +94,8 @@ type DuplicateDashboardBody = components['schemas']['DuplicateDashboardParams'];
 type UpdateDashboardBody = components['schemas']['UpdateDashboard'];
 type BulkMoveContentBody = components['schemas']['ApiContentBulkActionBody_ContentActionMove_'];
 
-const previewIdField = () =>
-  z.string().describe('Single-use previewId from the matching preview_* tool');
+const previewTokenField = () =>
+  z.string().describe('HMAC-signed previewToken from the matching preview_* tool');
 
 // ── validate_* / confirm_preview ─────────────────────────────────────────────
 
@@ -120,15 +118,16 @@ export function registerValidateChart(
     },
     wrapDeveloperHandler<{ projectUuid?: string; chartUuid: string }>(
       contextProvider,
-      (c) => async (args) => {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const validation = await c.v1.validation.validateChart(scope.projectUuid, args.chartUuid);
-        const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
-        return jsonToolResult({
-          data: { validation, errorCount },
-          context: developerContext(scope),
-        });
-      },
+      ({ client: c }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const validation = await c.v1.validation.validateChart(scope.projectUuid, args.chartUuid);
+          const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
+          return jsonToolResult({
+            data: { validation, errorCount },
+            context: developerContext(scope),
+          });
+        },
     ),
   );
 }
@@ -152,18 +151,19 @@ export function registerValidateDashboard(
     },
     wrapDeveloperHandler<{ projectUuid?: string; dashboardUuid: string }>(
       contextProvider,
-      (c) => async (args) => {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const validation = await c.v1.validation.validateDashboard(
-          scope.projectUuid,
-          args.dashboardUuid,
-        );
-        const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
-        return jsonToolResult({
-          data: { validation, errorCount },
-          context: developerContext(scope),
-        });
-      },
+      ({ client: c }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const validation = await c.v1.validation.validateDashboard(
+            scope.projectUuid,
+            args.dashboardUuid,
+          );
+          const errorCount = Array.isArray(validation.errors) ? validation.errors.length : 0;
+          return jsonToolResult({
+            data: { validation, errorCount },
+            context: developerContext(scope),
+          });
+        },
     ),
   );
 }
@@ -182,25 +182,32 @@ export function registerConfirmPreview(
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         resourceKind: z.enum(PREVIEW_RESOURCE_KINDS),
         resourceKey: z.string(),
       },
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       resourceKind: PreviewResourceKind;
       resourceKey: string;
-    }>(contextProvider, () => async (args) => {
+    }>(contextProvider, ({ subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
-      const entry = await markPreviewValidated(args.previewId, sessionId, scope.projectUuid, {
+      const entry = await confirmPreviewToken({
+        previewToken: args.previewToken,
+        subject,
+        projectUuid: scope.projectUuid,
         resourceKind: args.resourceKind,
         resourceKey: args.resourceKey,
+        serverContext,
       });
       return jsonToolResult({
-        data: { previewId: entry.previewId, status: entry.status },
+        data: {
+          previewToken: entry.previewToken,
+          previewId: entry.claims.previewId,
+          status: entry.claims.status,
+        },
         context: developerContext(scope),
       });
     }),
@@ -233,7 +240,7 @@ export function registerCompareChartVersions(
       chartUuid: string;
       versionUuidA?: string;
       versionUuidB?: string;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuid);
       const { history } = await c.v1.charts.getChartHistory(args.chartUuid);
@@ -274,7 +281,7 @@ export function registerCompareDashboardVersions(
       dashboardUuidOrSlug: string;
       versionUuidA?: string;
       versionUuidB?: string;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
       await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug);
       const { history } = await c.v1.dashboards.getDashboardHistory(args.dashboardUuidOrSlug);
@@ -296,7 +303,7 @@ export function registerCompareDashboardVersions(
 type ChartUpsertArgs = {
   projectUuid?: string;
   slug: string;
-  previewId: string;
+  previewToken: string;
   chart: Record<string, unknown>;
 };
 
@@ -317,46 +324,50 @@ function registerChartUpsertTool(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         slug: z.string(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         chart: chartUpsertBodySchema,
       },
     },
-    wrapDeveloperHandler<ChartUpsertArgs>(contextProvider, (c) => async (args) => {
-      const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
-      const parsedChart = parseChartUpsertBody(args.chart);
-      if (!parsedChart.ok) {
-        return codedErrorResult(parsedChart.code, parsedChart.message);
-      }
-      const proposed = parsedChart.data;
-      // Re-read when possible so update baselines fail closed on intervening edits.
-      // Creates (unknown slug) skip baseline; missing baseline on an update preview fails closed.
-      const currentBaseline = await fetchChartBaselineOptional({
-        chartUuidOrSlug: args.slug,
-        getSavedChart: async (id) =>
-          asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
-        isNotFound: isNotFoundError,
-      });
-      return withClaimedPreviewApply(
-        {
-          previewId: args.previewId,
-          sessionId,
-          projectUuid: scope.projectUuid,
-          resourceKind: 'chart',
-          resourceKey: args.slug,
-          proposed,
-          currentBaseline,
-        },
-        async () => {
-          const result = await c.v1.charts.upsertChartAsCode(
-            scope.projectUuid,
-            args.slug,
-            proposed as unknown as UpsertChartAsCodeBody,
+    wrapDeveloperHandler<ChartUpsertArgs>(
+      contextProvider,
+      ({ client: c, subject, serverContext }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const parsedChart = parseChartUpsertBody(args.chart);
+          if (!parsedChart.ok) {
+            return codedErrorResult(parsedChart.code, parsedChart.message);
+          }
+          const proposed = parsedChart.data;
+          // Re-read when possible so update baselines fail closed on intervening edits.
+          // Creates (unknown slug) skip baseline; missing baseline on an update preview fails closed.
+          const currentBaseline = await fetchChartBaselineOptional({
+            chartUuidOrSlug: args.slug,
+            getSavedChart: async (id) =>
+              asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id)),
+            isNotFound: isNotFoundError,
+          });
+          return withValidatedPreviewApply(
+            {
+              previewToken: args.previewToken,
+              subject,
+              serverContext,
+              projectUuid: scope.projectUuid,
+              resourceKind: 'chart',
+              resourceKey: args.slug,
+              proposed,
+              currentBaseline,
+            },
+            async () => {
+              const result = await c.v1.charts.upsertChartAsCode(
+                scope.projectUuid,
+                args.slug,
+                proposed as unknown as UpsertChartAsCodeBody,
+              );
+              return jsonToolResult({ data: result, context: developerContext(scope) });
+            },
           );
-          return jsonToolResult({ data: result, context: developerContext(scope) });
         },
-      );
-    }),
+    ),
   );
 }
 
@@ -394,7 +405,7 @@ export function registerDuplicateChart(
         sourceChartUuidOrSlug: uuidOrSlugField('Source chart UUID or slug'),
         newSlug: z.string(),
         newName: z.string().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
       },
     },
     wrapDeveloperHandler<{
@@ -402,10 +413,9 @@ export function registerDuplicateChart(
       sourceChartUuidOrSlug: string;
       newSlug: string;
       newName?: string;
-      previewId: string;
-    }>(contextProvider, (c) => async (args) => {
+      previewToken: string;
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const proposed = normalizeDuplicateChartProposed({
         sourceChartUuidOrSlug: args.sourceChartUuidOrSlug,
         newSlug: args.newSlug,
@@ -468,10 +478,11 @@ export function registerDuplicateChart(
         );
       }
       const resourceKey = sourceBaseline?.uuid ?? args.sourceChartUuidOrSlug;
-      return withClaimedPreviewApply(
+      return withValidatedPreviewApply(
         {
-          previewId: args.previewId,
-          sessionId,
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
           projectUuid: scope.projectUuid,
           resourceKind: 'chart',
           resourceKey,
@@ -508,26 +519,26 @@ export function registerCreateDashboard(
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         dashboard: dashboardCreateBodySchema,
       },
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       dashboard: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const parsedDashboard = parseDashboardCreateBody(args.dashboard);
       if (!parsedDashboard.ok) {
         return codedErrorResult(parsedDashboard.code, parsedDashboard.message);
       }
       const proposed = parsedDashboard.data;
-      return withClaimedPreviewApply(
+      return withValidatedPreviewApply(
         {
-          previewId: args.previewId,
-          sessionId,
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
           projectUuid: scope.projectUuid,
           resourceKind: 'dashboard',
           resourceKey: 'new',
@@ -560,18 +571,17 @@ export function registerUpdateDashboard(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug'),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         dashboard: dashboardUpdateBodySchema,
       },
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
       dashboardUuidOrSlug: string;
-      previewId: string;
+      previewToken: string;
       dashboard: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const parsedDashboard = parseDashboardUpdateBody(args.dashboard);
       if (!parsedDashboard.ok) {
         return codedErrorResult(parsedDashboard.code, parsedDashboard.message);
@@ -580,10 +590,11 @@ export function registerUpdateDashboard(
       const current = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
       );
-      return withClaimedPreviewApply(
+      return withValidatedPreviewApply(
         {
-          previewId: args.previewId,
-          sessionId,
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
           projectUuid: scope.projectUuid,
           resourceKind: 'dashboard',
           resourceKey: args.dashboardUuidOrSlug,
@@ -620,27 +631,27 @@ export function registerDuplicateDashboard(
         projectUuid: projectUuidField().optional(),
         sourceDashboardUuid: z.string(),
         newName: z.string().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
       },
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
       sourceDashboardUuid: string;
       newName?: string;
-      previewId: string;
-    }>(contextProvider, (c) => async (args) => {
+      previewToken: string;
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const proposed = normalizeDuplicateDashboardProposed({ newName: args.newName });
       const source = asRecord(
         await c.v2.dashboards.getDashboard(scope.projectUuid, args.sourceDashboardUuid),
       );
       const sourceBaseline = baselineFromResource(source);
       const resourceKey = sourceBaseline?.uuid ?? args.sourceDashboardUuid;
-      return withClaimedPreviewApply(
+      return withValidatedPreviewApply(
         {
-          previewId: args.previewId,
-          sessionId,
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
           projectUuid: scope.projectUuid,
           resourceKind: 'dashboard',
           resourceKey,
@@ -668,7 +679,7 @@ export function registerDuplicateDashboard(
 type TileMutationArgs = {
   projectUuid?: string;
   dashboardUuidOrSlug: string;
-  previewId: string;
+  previewToken: string;
 };
 
 /** Shared factory for the four tile tools — each composes the full tile array and PATCHes the dashboard. */
@@ -698,40 +709,44 @@ function registerTileMutationTool<TArgs extends TileMutationArgs>(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug'),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         ...options.extraSchema,
       },
     },
-    wrapDeveloperHandler<TArgs>(contextProvider, (c) => async (args) => {
-      const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
-      const dashboard = asRecord(
-        await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
-      );
-      const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
-      const nextTiles = options.computeNextTiles(currentTiles, args);
-      const proposed = { tiles: nextTiles };
-      return withClaimedPreviewApply(
-        {
-          previewId: args.previewId,
-          sessionId,
-          projectUuid: scope.projectUuid,
-          resourceKind: 'dashboard',
-          resourceKey: args.dashboardUuidOrSlug,
-          proposed,
-          currentBaseline: baselineFromResource(dashboard),
-        },
-        async () => {
-          const body = buildDashboardUpdateBody(dashboard, proposed);
-          const updated = await c.v2.dashboards.updateDashboard(
-            scope.projectUuid,
-            args.dashboardUuidOrSlug,
-            body as unknown as UpdateDashboardBody,
+    wrapDeveloperHandler<TArgs>(
+      contextProvider,
+      ({ client: c, subject, serverContext }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const dashboard = asRecord(
+            await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
           );
-          return jsonToolResult({ data: updated, context: developerContext(scope) });
+          const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
+          const nextTiles = options.computeNextTiles(currentTiles, args);
+          const proposed = { tiles: nextTiles };
+          return withValidatedPreviewApply(
+            {
+              previewToken: args.previewToken,
+              subject,
+              serverContext,
+              projectUuid: scope.projectUuid,
+              resourceKind: 'dashboard',
+              resourceKey: args.dashboardUuidOrSlug,
+              proposed,
+              currentBaseline: baselineFromResource(dashboard),
+            },
+            async () => {
+              const body = buildDashboardUpdateBody(dashboard, proposed);
+              const updated = await c.v2.dashboards.updateDashboard(
+                scope.projectUuid,
+                args.dashboardUuidOrSlug,
+                body as unknown as UpdateDashboardBody,
+              );
+              return jsonToolResult({ data: updated, context: developerContext(scope) });
+            },
+          );
         },
-      );
-    }),
+    ),
   );
 }
 
@@ -750,46 +765,47 @@ export function registerAddDashboardTile(
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         dashboardUuidOrSlug: uuidOrSlugField('Dashboard UUID or slug'),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         tile: dashboardTileSchema,
       },
     },
     wrapDeveloperHandler<TileMutationArgs & { tile: Record<string, unknown> }>(
       contextProvider,
-      (c) => async (args) => {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const sessionId = getMcpClientSessionId();
-        const parsedTile = parseDashboardTile(args.tile);
-        if (!parsedTile.ok) {
-          return codedErrorResult(parsedTile.code, parsedTile.message);
-        }
-        const dashboard = asRecord(
-          await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
-        );
-        const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
-        const nextTiles = applyTileAdd(currentTiles, parsedTile.data);
-        const proposed = { tiles: nextTiles };
-        return withClaimedPreviewApply(
-          {
-            previewId: args.previewId,
-            sessionId,
-            projectUuid: scope.projectUuid,
-            resourceKind: 'dashboard',
-            resourceKey: args.dashboardUuidOrSlug,
-            proposed,
-            currentBaseline: baselineFromResource(dashboard),
-          },
-          async () => {
-            const body = buildDashboardUpdateBody(dashboard, proposed);
-            const updated = await c.v2.dashboards.updateDashboard(
-              scope.projectUuid,
-              args.dashboardUuidOrSlug,
-              body as unknown as UpdateDashboardBody,
-            );
-            return jsonToolResult({ data: updated, context: developerContext(scope) });
-          },
-        );
-      },
+      ({ client: c, subject, serverContext }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const parsedTile = parseDashboardTile(args.tile);
+          if (!parsedTile.ok) {
+            return codedErrorResult(parsedTile.code, parsedTile.message);
+          }
+          const dashboard = asRecord(
+            await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
+          );
+          const currentTiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
+          const nextTiles = applyTileAdd(currentTiles, parsedTile.data);
+          const proposed = { tiles: nextTiles };
+          return withValidatedPreviewApply(
+            {
+              previewToken: args.previewToken,
+              subject,
+              serverContext,
+              projectUuid: scope.projectUuid,
+              resourceKind: 'dashboard',
+              resourceKey: args.dashboardUuidOrSlug,
+              proposed,
+              currentBaseline: baselineFromResource(dashboard),
+            },
+            async () => {
+              const body = buildDashboardUpdateBody(dashboard, proposed);
+              const updated = await c.v2.dashboards.updateDashboard(
+                scope.projectUuid,
+                args.dashboardUuidOrSlug,
+                body as unknown as UpdateDashboardBody,
+              );
+              return jsonToolResult({ data: updated, context: developerContext(scope) });
+            },
+          );
+        },
     ),
   );
 }
@@ -855,7 +871,7 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         itemUuids: z.array(z.string()).min(1),
         contentTypes: z
           .array(z.enum(MOVE_CONTENT_TYPES))
@@ -872,14 +888,13 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       itemUuids: string[];
       contentTypes: MoveContentType[];
       chartSources?: MoveChartSource[];
       targetSpaceUuid: string | null;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
       const resolved = await resolveMoveContentManifest({
         itemUuids: args.itemUuids,
@@ -902,10 +917,11 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
         chartSources: args.chartSources,
       });
       const currentBaseline = baselineFromMoveContentManifest(resolved.manifest);
-      return withClaimedPreviewApply(
+      return withValidatedPreviewApply(
         {
-          previewId: args.previewId,
-          sessionId,
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
           projectUuid: scope.projectUuid,
           resourceKind: 'content-move',
           resourceKey,

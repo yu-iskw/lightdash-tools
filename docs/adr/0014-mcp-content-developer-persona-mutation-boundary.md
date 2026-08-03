@@ -8,9 +8,9 @@ Accepted
 
 Amends [6. MCP personas, shared registry, fixed paths](0006-mcp-personas-shared-registry-fixed-paths.md)
 
-Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [12. MCP content-reader persona](0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md), [16. Pluggable ephemeral store](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
+Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [12. MCP content-reader persona](0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md), [19. Stateless MCP without Redis](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
-Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
+Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md), [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
 ## Context
 
@@ -27,7 +27,7 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
    - Dashboards: native REST create / v2 PATCH update / create with `duplicateFrom`.
    - Layout: MCP composition over full dashboard tile array via v2 PATCH.
    - Spaces: **read-only** `list_spaces` / `get_space` on MCP; bulk `move_content` into existing spaces. Space create/update are **client-only** (managed out-of-band, e.g. Terraform).
-4. **Hard preview gate:** every SAFE_WRITE tool requires a session-owned, validated, unexpired `previewId` from `preview_*`. Every write path (create, update, duplicate, tiles, content-move) marks validated via `confirm_preview` bound to `resourceKind`/`resourceKey`. `validate_*` is an optional health check on a **saved** UUID only (upstream has no unsaved-payload validator) and does not unlock the ledger. Apply path is **claim → mutate → mark applied** (`validated` → `applying` via CAS, then delete on success). Never delete-before-I/O as the sole path: on mutation failure, `releaseOrReconcilePreview` returns to `validated` (known no-write 4xx) or `reconciliation_required` (timeouts/5xx/network). Patch / baseline drift → `PREVIEW_STALE`. Budget/session keys use MCP transport `sessionId` (stdio → `process:…`), same ALS pattern as content-reader query ledger. Persistence is pluggable ([ADR-0016](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)): default `LIGHTDASH_TOOLS_MCP_STORE=memory`; use `redis` for multi-instance HTTP.
+4. **Hard preview gate:** every SAFE_WRITE tool requires a validated, unexpired HMAC-signed `previewToken` from `preview_*` → `confirm_preview` ([ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)). Tokens bind subject, project, `resourceKind`/`resourceKey`, and `contentHash` of `{proposed,baseline}` — not the full proposed body. `confirm_preview` mints a validated token (no server write). Apply verifies the token + re-sends proposed (hash match) + baseline re-check → `PREVIEW_STALE` on drift. No server ledger / CAS / Redis. `validate_*` remains an optional saved-UUID health check and does not unlock writes.
 5. **Safety dimensions** (registration + handler):
    - `mutability`: `none` | `preview` | `write-nondestructive`
    - `queryCapability`: `none` (no warehouse execution on this persona)
@@ -38,16 +38,13 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
 
 ```mermaid
 flowchart TD
-  preview[preview_star] --> ledger[preview ledger draft]
-  ledger --> confirm[confirm_preview]
-  confirm --> validated[status validated]
-  validated --> claim[claimPreviewForApply]
-  claim --> applying[status applying]
-  applying --> mutate[upstream mutation]
-  mutate -->|success| applied[markPreviewApplied / delete]
-  mutate -->|known 4xx| release[release to validated]
-  mutate -->|uncertain| reconcile[reconciliation_required]
-  validate[validate_star] -.->|"optional saved UUID health check"| claim
+  preview[preview_star] --> draftTok[HMAC draft previewToken]
+  draftTok --> confirm[confirm_preview]
+  confirm --> validatedTok[HMAC validated previewToken]
+  validatedTok --> apply[write tool + proposed]
+  apply --> verify[verify hash + baseline]
+  verify --> mutate[upstream mutation]
+  validate[validate_star] -.->|"optional saved UUID health check"| apply
 ```
 
 ## Consequences

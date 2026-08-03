@@ -13,8 +13,6 @@ import { buildWwwAuthenticateHeader } from './www-authenticate.js';
 
 const baseConfig = makeTestMcpHttpConfig({
   host: '0.0.0.0',
-  sessionTtlMs: 1000,
-  sessionCleanupMs: 1000,
 });
 
 describe('getAuthorizationServerMetadataUrl', () => {

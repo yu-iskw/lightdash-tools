@@ -26,7 +26,7 @@ describe('codedErrorResult', () => {
       'CONTENT_NOT_FOUND',
       'INVALID_FILTER_OVERRIDE',
       'INVALID_PARAMETER_OVERRIDE',
-      'QUERY_NOT_OWNED',
+      'QUERY_NOT_FOUND',
       'QUERY_BUDGET_EXCEEDED',
       'ROW_LIMIT_EXCEEDED',
       'CHART_SLUG_EXISTS',

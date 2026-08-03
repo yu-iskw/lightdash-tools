@@ -10,6 +10,8 @@ Amends [4. Agent-safe exposure](0004-agent-safe-exposure-mcp-cli-vs-client-only.
 
 Related to [6. MCP personas](0006-mcp-personas-shared-registry-fixed-paths.md), [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md), [16. Pluggable ephemeral store](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
 
+Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+
 ## Context
 
 Agents author content on `content-developer` ([ADR-0014](0014-mcp-content-developer-persona-mutation-boundary.md)) but that persona excludes promote. Operators still need a trustworthy way to release a dashboard from a development/preview project to its configured upstream project ([How to promote content](https://docs.lightdash.com/guides/how-to-promote-content)).

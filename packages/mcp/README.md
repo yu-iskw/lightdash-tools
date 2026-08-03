@@ -8,18 +8,18 @@ Irrecoverable admin deletes, permanent content purge, and broad org mutations st
 
 ## Directory map
 
-| Edit…                                                   | Path                                                                                                                |
-| :------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------ |
-| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                        |
-| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                                                                                |
-| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                                                                                  |
-| HTTP transport / sessions                               | `src/transports/`                                                                                                   |
-| HTTP auth                                               | `src/auth/`                                                                                                         |
-| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                             |
-| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                |
-| Ephemeral store (memory/redis)                          | `src/store/` ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)) |
-| Audit logging helpers                                   | `src/audit/`                                                                                                        |
-| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                 |
+| Edit…                                                   | Path                                                                                                                    |
+| :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------- |
+| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                            |
+| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                                                                                    |
+| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                                                                                      |
+| HTTP transport (sessionless)                            | `src/transports/`                                                                                                       |
+| HTTP auth / OAuth broker (in-memory pending)            | `src/auth/`                                                                                                             |
+| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                                 |
+| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
+| OAuth broker (in-memory pending)                        | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Audit logging helpers                                   | `src/audit/`                                                                                                            |
+| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
 
 Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 
@@ -51,23 +51,22 @@ npm install -g @lightdash-tools/mcp
 ## Transports
 
 - **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.
-- **Streamable HTTP** — for remote use. Session-based; supports optional endpoint auth.
+- **Streamable HTTP** — for remote use. **Sessionless** per [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) (fresh transport per POST; no `Mcp-Session-Id`).
 
 ### SDK / protocol compatibility
 
 - Uses MCP TypeScript SDK v2 (`@modelcontextprotocol/server`, `@modelcontextprotocol/node`).
-- Speaks the established 2025-era protocol by default (not `2026-07-28` unless a future flag).
-- Hosted OAuth client setup: [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md). Protocol/auth details: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+- Aligns with MCP 2026-07-28 stateless HTTP (no protocol sessions). Hosted OAuth client setup: [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md). Protocol/auth details: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
 ### Hosted OAuth (primary HTTP)
 
 Auth is **inferred** from credentials ([ADR-0007](../../docs/adr/0007-mcp-http-transport-auth-modes-sdk-v2.md)). The MCP host holds the Lightdash OAuth app client id/secret and brokers login; Claude Code / Cursor use URL-only config. Protocol reference: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 
-| What works                                                      | Gap                                                                                                                                                                                                                       |
-| :-------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Server-held confidential client + `{PUBLIC_URL}/oauth/callback` | Full RFC 8707 audience binding on opaque Lightdash tokens                                                                                                                                                                 |
-| PRM + broker AS metadata; per-user Bearer to Lightdash          | MCP-local scope enforcement for opaque tokens                                                                                                                                                                             |
-| Session binding to `userUuid` / `organizationUuid`              | Multi-instance scale: default in-memory needs sticky routing; opt into Redis via `LIGHTDASH_TOOLS_MCP_STORE=redis` ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)) |
+| What works                                                      | Gap                                                                                                                                                                                        |
+| :-------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server-held confidential client + `{PUBLIC_URL}/oauth/callback` | Full RFC 8707 audience binding on opaque Lightdash tokens                                                                                                                                  |
+| PRM + broker AS metadata; per-user Bearer to Lightdash          | MCP-local scope enforcement for opaque tokens                                                                                                                                              |
+| Stateless MCP persona paths (any replica)                       | OAuth broker pending/codes/DCR are **process-local** — use one replica or sticky `/oauth/*` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
 
 Authorization: Lightdash RBAC + persona tool surface ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
@@ -91,12 +90,12 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 
 Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, `/content-developer/v1/mcp`, `/content-governance/v1/mcp`, or `/ai-agent-ops/v1/mcp`.
 
-### Content-governance (destructive soft-delete)
+### Content-developer / content-governance signing
 
-| Required (non-test)                     | Notes                                                                                       |
-| :-------------------------------------- | :------------------------------------------------------------------------------------------ |
-| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC-signed opaque `requestState` (not encrypted; fail closed if unset) |
-| Client form elicitation                 | Missing capability → `ELICITATION_REQUIRED`; no DELETE / promote                            |
+| Required (non-test)                     | Notes                                                                                                               |
+| :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC-signed `previewToken` and destructive `requestState` (not encrypted; fail closed if unset) |
+| Client form elicitation (governance)    | Missing capability → `ELICITATION_REQUIRED`; no DELETE / promote                                                    |
 
 ### HTTP shared-key / local (secondary)
 
@@ -105,26 +104,13 @@ Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL onl
 | Shared-key | `LIGHTDASH_API_KEY` + `LIGHTDASH_TOOLS_MCP_SHARED_KEY` |
 | Local none | `NODE_ENV=development` (not `production`)              |
 
-Obsolete `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, and `INSECURE_DEV` vars are **rejected**. Endpoint path is persona-owned (`LIGHTDASH_TOOLS_MCP_PATH` rejected).
+Obsolete `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, `INSECURE_DEV`, `LIGHTDASH_TOOLS_MCP_STORE`, and `LIGHTDASH_TOOLS_MCP_REDIS_URL` are **rejected**. Endpoint path is persona-owned (`LIGHTDASH_TOOLS_MCP_PATH` rejected).
 
-### Ephemeral store (HTTP sessions / preview / OAuth)
+### Stateless MCP + in-memory OAuth (ADR-0019)
 
-Start with **memory** (default). Add **Redis** when scaling beyond a single HTTP instance ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)).
+Persona MCP paths are **stateless**: no Redis, no transport sessions, HMAC-signed `previewToken` / `requestState` for cross-call continuity. Redis store env vars are obsolete and fail closed.
 
-| Env                             | Default  | Notes                                     |
-| :------------------------------ | :------- | :---------------------------------------- |
-| `LIGHTDASH_TOOLS_MCP_STORE`     | `memory` | `memory` \| `redis`                       |
-| `LIGHTDASH_TOOLS_MCP_REDIS_URL` | —        | Required when `STORE=redis` (fail closed) |
-
-What Redis shares vs what stays local:
-
-| Concern                             | memory        | redis                                                                                               |
-| :---------------------------------- | :------------ | :-------------------------------------------------------------------------------------------------- |
-| Content-developer preview ledger    | process-local | shared                                                                                              |
-| OAuth pending / codes / DCR clients | process-local | shared (full multi-instance OAuth)                                                                  |
-| Streamable HTTP session transports  | process-local | process-local + Redis session _index_; sticky or single instance still required for live transports |
-
-Stdio and tests use memory. Production may use memory on a single instance (HTTP logs a multi-instance/restart warning).
+The OAuth broker (`/oauth/*`) keeps **in-memory** pending authorizations, codes, and DCR clients. For multi-instance deployments, run a single replica for OAuth or sticky-route `/oauth/*` only. MCP tool traffic can still round-robin.
 
 See also: [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md), [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md), [threat model](../../docs/security/mcp-oauth-threat-model.md).
 
@@ -222,7 +208,7 @@ Project-scoped saved-content consumption ([ADR-0012](../../docs/adr/0012-mcp-con
 - **Scope / discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`
 - **Metadata**: `get_dashboard`, `get_chart`, `list_project_parameters`, `get_project_parameters`, `explain_content`
 - **Execution**: `run_chart`, `run_dashboard_tile` (semantic saved content only; SQL charts disabled by default)
-- **Lifecycle**: `get_query_result`, `cancel_query` (session-owned ledger)
+- **Lifecycle**: `get_query_result`, `cancel_query` (`queryUuid` handle; per-process budget)
 
 Project resolution: `X-Lightdash-Project` → tool `projectUuid`. Prompts and playbook: `lightdash://playbooks/content-reader`.
 
@@ -237,7 +223,7 @@ Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-dev
 - **Layout**: `add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`
 - **Spaces**: `list_spaces`, `get_space`, `move_content` (no create/update space; use `preview_content_move` before apply)
 
-Hard gate (25 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply. Apply is claim → mutate → mark applied (not delete-before-I/O); `contentHash` must match the apply payload. Ephemeral preview ledger defaults to `LIGHTDASH_TOOLS_MCP_STORE=memory`; use `redis` for multi-instance HTTP ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)). No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
+Hard gate (25 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply with HMAC-signed `previewToken` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)). Tokens bind subject/project/`contentHash` of `{proposed,baseline}`; apply re-sends proposed and re-checks baseline. No server ledger / Redis. No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
 
 ### `content-governance` persona
 
@@ -283,7 +269,7 @@ MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-sha
 | Which tools  | Persona `toolIds` in code (including `content-governance` soft-delete)                                                                 |
 | Who          | Auth mode + Lightdash API RBAC                                                                                                         |
 | Where (HTTP) | Optional `X-Lightdash-Project` pin; otherwise pass tool `projectUuid`; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling |
-| Hardening    | Input validation + audit log + org-audit GET asserts + preview ledger + elicitation/`requestState` for soft-delete                     |
+| Hardening    | Input validation + audit log + org-audit GET asserts + HMAC `previewToken` + elicitation/`requestState` for soft-delete                |
 
 Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.
 

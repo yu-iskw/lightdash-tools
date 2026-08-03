@@ -23,9 +23,6 @@ import { createStreamableHttpServer, startStreamableHttpServer } from './streama
 const oauthConfig = makeTestMcpHttpConfig({
   port: 0,
   oauthClientId: 'client-id',
-  sessionTtlMs: 10_000,
-  maxSessions: 1000,
-  maxSessionsPerSubject: 50,
   validateToken: false,
   tokenValidationCacheTtlMs: 60_000,
 });

@@ -2,12 +2,11 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   PreviewLedgerError,
-  addPreviewLedgerEntry,
-  claimPreviewForApply,
+  confirmPreviewToken,
   hashPreviewContent,
-  markPreviewApplied,
-  markPreviewValidated,
+  mintDraftPreviewToken,
   resetPreviewLedgerForTests,
+  withValidatedPreviewApply,
 } from './preview-ledger.js';
 
 async function expectPreviewErrorCode(
@@ -21,14 +20,6 @@ async function expectPreviewErrorCode(
     expect(err).toBeInstanceOf(PreviewLedgerError);
     expect((err as PreviewLedgerError).code).toBe(code);
   }
-}
-
-async function claimAndApply(
-  input: Parameters<typeof claimPreviewForApply>[0],
-): Promise<Awaited<ReturnType<typeof claimPreviewForApply>>> {
-  const claimed = await claimPreviewForApply(input);
-  await markPreviewApplied(claimed.previewId);
-  return claimed;
 }
 
 describe('preview-ledger', () => {
@@ -56,273 +47,446 @@ describe('preview-ledger', () => {
     });
   });
 
-  describe('claimPreviewForApply + markPreviewApplied', () => {
-    it('consumes a validated preview when kind/key/hash match', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+  describe('mintDraftPreviewToken + confirmPreviewToken', () => {
+    it('mints a draft token with correct claims', async () => {
+      const { previewToken, claims } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'chart',
-        resourceKey: 'my-slug',
-      });
-
-      const claimed = await claimAndApply({
-        previewId: entry.previewId,
-        sessionId: 's1',
-        projectUuid: 'p1',
-        resourceKind: 'chart',
-        resourceKey: 'my-slug',
-        proposed: { name: 'Foo' },
-      });
-      expect(claimed.previewId).toBe(entry.previewId);
-      expect(claimed.status).toBe('applying');
-
-      await expectPreviewErrorCode(
-        () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'my-slug',
-            proposed: { name: 'Foo' },
-          }),
-        'PREVIEW_REQUIRED',
-      );
+      expect(typeof previewToken).toBe('string');
+      expect(previewToken.length).toBeGreaterThan(0);
+      expect(claims.status).toBe('draft');
+      expect(claims.subject).toBe('s1');
+      expect(claims.projectUuid).toBe('p1');
+      expect(claims.resourceKey).toBe('my-slug');
+      expect(claims.resourceAliases).toContain('my-slug');
     });
 
-    it('rejects a draft (not yet validated) preview', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('confirms a draft token → validated', async () => {
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'my-slug',
         proposed: { name: 'Foo' },
       });
-      await expectPreviewErrorCode(
-        () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'my-slug',
-            proposed: { name: 'Foo' },
-          }),
-        'PREVIEW_NOT_VALIDATED',
-      );
-    });
-
-    it('rejects a mismatched resourceKind/resourceKey (stale target)', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+      const { claims } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'my-slug',
-        proposed: { name: 'Foo' },
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'chart',
-        resourceKey: 'my-slug',
-      });
-      await expectPreviewErrorCode(
-        () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'other-slug',
-            proposed: { name: 'Foo' },
-          }),
-        'PREVIEW_STALE',
-      );
+      expect(claims.status).toBe('validated');
+      expect(claims.subject).toBe('s1');
     });
 
-    it('rejects a drifted payload (content hash mismatch)', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
-        projectUuid: 'p1',
-        resourceKind: 'chart',
-        resourceKey: 'my-slug',
-        proposed: { name: 'Foo' },
-      });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'chart',
-        resourceKey: 'my-slug',
-      });
-      await expectPreviewErrorCode(
-        () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'my-slug',
-            proposed: { name: 'Changed after preview' },
-          }),
-        'PREVIEW_STALE',
-      );
-    });
-
-    it('rejects consumption from a different session', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('rejects confirmation from a different subject → PREVIEW_NOT_OWNED', async () => {
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'content-move',
         resourceKey: 'a,b',
         proposed: { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' },
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'content-move',
-        resourceKey: 'a,b',
-      });
       await expectPreviewErrorCode(
         () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's2',
+          confirmPreviewToken({
+            previewToken,
+            subject: 's2',
             projectUuid: 'p1',
             resourceKind: 'content-move',
             resourceKey: 'a,b',
-            proposed: { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' },
           }),
         'PREVIEW_NOT_OWNED',
       );
     });
 
-    it('consumes by alias resourceKey when uuid was stored as primary', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('rejects confirmation with mismatched resourceKind → PREVIEW_STALE', async () => {
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'dashboard',
+        resourceKey: 'dash-1',
+        proposed: { name: 'Dash' },
+      });
+      await expectPreviewErrorCode(
+        () =>
+          confirmPreviewToken({
+            previewToken,
+            subject: 's1',
+            projectUuid: 'p1',
+            resourceKind: 'chart',
+            resourceKey: 'dash-1',
+          }),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('rejects confirmation with mismatched resourceKey → PREVIEW_STALE', async () => {
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-1',
+        proposed: { name: 'Chart' },
+      });
+      await expectPreviewErrorCode(
+        () =>
+          confirmPreviewToken({
+            previewToken,
+            subject: 's1',
+            projectUuid: 'p1',
+            resourceKind: 'chart',
+            resourceKey: 'chart-2',
+          }),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('accepts an alias resourceKey for confirmation (uuid ↔ slug)', async () => {
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
         resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
-        proposed: { name: 'Foo' },
+        proposed: { name: 'Chart' },
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'chart',
-        resourceKey: 'chart-uuid-1',
-      });
-      const claimed = await claimAndApply({
-        previewId: entry.previewId,
-        sessionId: 's1',
+      const { claims } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'revenue-kpi',
-        proposed: { name: 'Foo' },
       });
-      expect(claimed.resourceKey).toBe('chart-uuid-1');
+      expect(claims.status).toBe('validated');
+    });
+  });
+
+  describe('withValidatedPreviewApply', () => {
+    it('runs the mutation when hash and subject match', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+        proposed,
+      });
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
+      const result = await withValidatedPreviewApply(
+        {
+          previewToken: validated,
+          subject: 's1',
+          projectUuid: 'p1',
+          resourceKind: 'chart',
+          resourceKey: 'my-slug',
+          proposed,
+        },
+        async () => ({ ok: true }),
+      );
+      expect(result).toEqual({ ok: true });
     });
 
-    it('rejects when baseline updatedAt drifted at apply time', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('rejects a draft (not yet confirmed) preview at apply → PREVIEW_NOT_VALIDATED', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+        proposed,
+      });
+      await expectPreviewErrorCode(
+        () =>
+          withValidatedPreviewApply(
+            {
+              previewToken,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'my-slug',
+              proposed,
+            },
+            async () => {},
+          ),
+        'PREVIEW_NOT_VALIDATED',
+      );
+    });
+
+    it('rejects a mismatched resourceKey at apply → PREVIEW_STALE', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+        proposed,
+      });
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
+      await expectPreviewErrorCode(
+        () =>
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'other-slug',
+              proposed,
+            },
+            async () => {},
+          ),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('rejects a drifted payload (content hash mismatch) → PREVIEW_STALE', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+        proposed,
+      });
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'my-slug',
+      });
+      await expectPreviewErrorCode(
+        () =>
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'my-slug',
+              proposed: { name: 'Changed after preview' },
+            },
+            async () => {},
+          ),
+        'PREVIEW_STALE',
+      );
+    });
+
+    it('rejects apply from a different subject → PREVIEW_NOT_OWNED', async () => {
+      const proposed = { itemUuids: ['a', 'b'], targetSpaceUuid: 's1' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'content-move',
+        resourceKey: 'a,b',
+        proposed,
+      });
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'content-move',
+        resourceKey: 'a,b',
+      });
+      await expectPreviewErrorCode(
+        () =>
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's2',
+              projectUuid: 'p1',
+              resourceKind: 'content-move',
+              resourceKey: 'a,b',
+              proposed,
+            },
+            async () => {},
+          ),
+        'PREVIEW_NOT_OWNED',
+      );
+    });
+
+    it('applies by alias resourceKey when uuid was stored as primary', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
         resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
-        proposed: { name: 'Foo' },
-        baseline: { updatedAt: '2026-08-01T00:00:00.000Z', uuid: 'chart-uuid-1' },
+        proposed,
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+      });
+      const result = await withValidatedPreviewApply(
+        {
+          previewToken: validated,
+          subject: 's1',
+          projectUuid: 'p1',
+          resourceKind: 'chart',
+          resourceKey: 'revenue-kpi',
+          proposed,
+        },
+        async (claims) => claims.resourceKey,
+      );
+      expect(result).toBe('chart-uuid-1');
+    });
+
+    it('rejects when baseline updatedAt drifted at apply time → PREVIEW_STALE', async () => {
+      const proposed = { name: 'Foo' };
+      const baseline = { updatedAt: '2026-08-01T00:00:00.000Z', uuid: 'chart-uuid-1' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'chart',
+        resourceKey: 'chart-uuid-1',
+        resourceAliases: ['chart-uuid-1', 'revenue-kpi'],
+        proposed,
+        baseline,
+      });
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
       });
       await expectPreviewErrorCode(
         () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'revenue-kpi',
-            proposed: { name: 'Foo' },
-            currentBaseline: { updatedAt: '2026-08-02T00:00:00.000Z', uuid: 'chart-uuid-1' },
-          }),
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'revenue-kpi',
+              proposed,
+              currentBaseline: { updatedAt: '2026-08-02T00:00:00.000Z', uuid: 'chart-uuid-1' },
+            },
+            async () => {},
+          ),
         'PREVIEW_STALE',
       );
     });
 
-    it('rejects when baseline was captured but currentBaseline is missing at apply', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('rejects when baseline was captured but currentBaseline is missing at apply → PREVIEW_STALE', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
-        proposed: { name: 'Foo' },
+        proposed,
         baseline: { updatedAt: '2026-08-01T00:00:00.000Z' },
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'chart-uuid-1',
       });
       await expectPreviewErrorCode(
         () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'chart-uuid-1',
-            proposed: { name: 'Foo' },
-          }),
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'chart-uuid-1',
+              proposed,
+            },
+            async () => {},
+          ),
         'PREVIEW_STALE',
       );
     });
 
-    it('rejects create previews when a resource appears before apply', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+    it('rejects create previews when a resource appears before apply → PREVIEW_STALE', async () => {
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'new-slug',
-        proposed: { name: 'Foo' },
+        proposed,
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
+        projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'new-slug',
       });
       await expectPreviewErrorCode(
         () =>
-          claimAndApply({
-            previewId: entry.previewId,
-            sessionId: 's1',
-            projectUuid: 'p1',
-            resourceKind: 'chart',
-            resourceKey: 'new-slug',
-            proposed: { name: 'Foo' },
-            currentBaseline: { uuid: 'appeared-after-preview', slug: 'new-slug' },
-          }),
+          withValidatedPreviewApply(
+            {
+              previewToken: validated,
+              subject: 's1',
+              projectUuid: 'p1',
+              resourceKind: 'chart',
+              resourceKey: 'new-slug',
+              proposed,
+              currentBaseline: { uuid: 'appeared-after-preview', slug: 'new-slug' },
+            },
+            async () => {},
+          ),
         'PREVIEW_STALE',
       );
     });
 
     it('allows create previews when the target is still absent at apply', async () => {
-      const entry = await addPreviewLedgerEntry({
-        sessionId: 's1',
+      const proposed = { name: 'Foo' };
+      const { previewToken } = await mintDraftPreviewToken({
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'new-slug',
-        proposed: { name: 'Foo' },
+        proposed,
       });
-      await markPreviewValidated(entry.previewId, 's1', 'p1', {
-        resourceKind: 'chart',
-        resourceKey: 'new-slug',
-      });
-      const claimed = await claimAndApply({
-        previewId: entry.previewId,
-        sessionId: 's1',
+      const { previewToken: validated } = await confirmPreviewToken({
+        previewToken,
+        subject: 's1',
         projectUuid: 'p1',
         resourceKind: 'chart',
         resourceKey: 'new-slug',
-        proposed: { name: 'Foo' },
       });
-      expect(claimed.resourceKey).toBe('new-slug');
+      const claims = await withValidatedPreviewApply(
+        {
+          previewToken: validated,
+          subject: 's1',
+          projectUuid: 'p1',
+          resourceKind: 'chart',
+          resourceKey: 'new-slug',
+          proposed,
+        },
+        async (c) => c,
+      );
+      expect(claims.resourceKey).toBe('new-slug');
     });
   });
 });

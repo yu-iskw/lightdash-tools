@@ -1,11 +1,9 @@
 /**
- * Query lifecycle tools: poll results and cancel session-owned queries.
+ * Query lifecycle tools: poll results and cancel queries by queryUuid handle.
  */
 
 import { z } from 'zod';
 
-import { getToolAuditAuth } from '../../audit/tool-audit-context.js';
-import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { ProjectScopeError, resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -13,11 +11,7 @@ import { clampWaitMs } from '../../policy/result-limits.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 
-import {
-  QueryLedgerError,
-  getOwnedQueryLedgerEntry,
-  releaseOwnedQueryBudget,
-} from './query-ledger.js';
+import { findQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.js';
 import {
   codedErrorResult,
   isCoverageComplete,
@@ -43,7 +37,7 @@ export function registerGetQueryResult(
     'get_query_result',
     {
       title: 'Get query result',
-      description: 'Poll or retrieve a query started by this persona (session-owned only)',
+      description: 'Poll or retrieve a query started by this persona (by queryUuid handle)',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -65,13 +59,10 @@ export function registerGetQueryResult(
         }) => {
           try {
             const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const sessionId = getMcpClientSessionId();
-            const userUuid = getToolAuditAuth()?.subject;
-            const ledgerEntry = getOwnedQueryLedgerEntry({
+            // Ledger is best-effort (same replica); queryUuid is the durable handle.
+            const ledgerEntry = findQueryLedgerEntry({
               projectUuid: scope.projectUuid,
               queryUuid: args.queryUuid,
-              sessionId,
-              userUuid,
             });
 
             const waitMs = clampWaitMs(args.waitMs ?? 0);
@@ -92,8 +83,8 @@ export function registerGetQueryResult(
                     { maxRows: pageSize },
                   );
 
-            if (isTerminalStatus(normalized.status)) {
-              releaseOwnedQueryBudget(ledgerEntry);
+            if (ledgerEntry && isTerminalStatus(normalized.status)) {
+              releaseQueryLedgerBudget(ledgerEntry);
             }
 
             return jsonToolResult(
@@ -106,7 +97,7 @@ export function registerGetQueryResult(
               }),
             );
           } catch (err) {
-            if (err instanceof ProjectScopeError || err instanceof QueryLedgerError) {
+            if (err instanceof ProjectScopeError) {
               return codedErrorResult(err.code, err.message);
             }
             throw err;
@@ -122,7 +113,7 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
     'cancel_query',
     {
       title: 'Cancel query',
-      description: 'Cancel a running session-owned query',
+      description: 'Cancel a running query by queryUuid handle',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -132,16 +123,14 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
     wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; queryUuid: string }) => {
       try {
         const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const sessionId = getMcpClientSessionId();
-        const userUuid = getToolAuditAuth()?.subject;
-        const ledgerEntry = getOwnedQueryLedgerEntry({
+        const ledgerEntry = findQueryLedgerEntry({
           projectUuid: scope.projectUuid,
           queryUuid: args.queryUuid,
-          sessionId,
-          userUuid,
         });
         await c.v2.query.cancelAsyncQuery(scope.projectUuid, args.queryUuid);
-        releaseOwnedQueryBudget(ledgerEntry);
+        if (ledgerEntry) {
+          releaseQueryLedgerBudget(ledgerEntry);
+        }
         return jsonToolResult(
           contentReaderEnvelope(
             { queryUuid: args.queryUuid, cancelled: true },
@@ -149,7 +138,7 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
           ),
         );
       } catch (err) {
-        if (err instanceof ProjectScopeError || err instanceof QueryLedgerError) {
+        if (err instanceof ProjectScopeError) {
           return codedErrorResult(err.code, err.message);
         }
         throw err;

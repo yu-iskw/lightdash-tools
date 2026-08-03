@@ -24,8 +24,6 @@ function baseConfig(overrides: Partial<McpHttpConfig> = {}): McpHttpConfig {
     oauthClientId: 'ld-client',
     oauthClientSecret: new SecretString('ld-secret'),
     maxBodyBytes: 1024 * 1024,
-    maxSessionsPerSubject: 2,
-    sessionCleanupMs: 1000,
     requiredScopes: [],
     scopesSupported: [],
     tokenValidationCacheTtlMs: 10_000,

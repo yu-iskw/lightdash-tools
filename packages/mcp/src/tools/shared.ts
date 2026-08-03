@@ -298,6 +298,8 @@ export type ToolExecutionContext = {
   /** SDK ServerContext when the transport provides it (second registerTool arg). */
   serverContext: ServerContext | undefined;
   sessionId: string;
+  /** Authenticated principal for signed handles (ADR-0019); anonymous when unset. */
+  subject: string;
 };
 
 function asServerContext(extra: unknown): ServerContext | undefined {
@@ -326,6 +328,7 @@ export function wrapToolContextual<T>(
               lightdashClient: context.lightdashClient,
               serverContext: asServerContext(extra),
               sessionId,
+              subject: auth?.subject ?? 'anonymous',
             };
             const handler = fn(execution);
             return await handler(args as T);

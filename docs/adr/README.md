@@ -32,9 +32,10 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 13. [Operation catalog as sole agent-surface SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md)
 14. [MCP content-developer persona mutation boundary](0014-mcp-content-developer-persona-mutation-boundary.md)
 15. [MCP content-governance persona elicitation-required soft-delete boundary](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)
-16. [MCP pluggable ephemeral store for HTTP preview sessions and OAuth](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
+16. [MCP pluggable ephemeral store for HTTP preview sessions and OAuth](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md) (superseded by 0019)
 17. [MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
 18. [MCP ai-agent-ops persona thin API boundary](0018-mcp-ai-agent-ops-persona-thin-api-boundary.md)
+19. [MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
 ## Old → new mapping
 

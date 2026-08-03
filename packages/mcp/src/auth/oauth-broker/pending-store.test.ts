@@ -1,13 +1,9 @@
 /**
- * In-memory OAuthBrokerStore unit tests (ADR-0016).
- * Redis path is covered only when LIGHTDASH_TOOLS_MCP_REDIS_URL is set
- * (skipped otherwise — no Redis required for default CI).
+ * In-memory OAuthBrokerStore unit tests (ADR-0016 / ADR-0019).
+ * Redis backend removed per ADR-0019; always memory.
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
-
-import { createOAuthBrokerStore } from '../../store/create-oauth-broker-store.js';
-import { resetSharedRedisClientForTests } from '../../store/redis-client.js';
+import { describe, expect, it } from 'vitest';
 
 import { InMemoryOAuthBrokerStore } from './pending-store.js';
 
@@ -121,43 +117,5 @@ describe('InMemoryOAuthBrokerStore', () => {
     const store = new InMemoryOAuthBrokerStore({ maxClients: 1 });
     expect(await store.registerClient(['http://127.0.0.1:1/cb'])).toBeDefined();
     expect(await store.registerClient(['http://127.0.0.1:1/cb2'])).toBeUndefined();
-  });
-});
-
-describe('createOAuthBrokerStore', () => {
-  it('returns memory store by default', async () => {
-    const store = createOAuthBrokerStore({ backend: 'memory' });
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
-    expect(pending?.brokerState).toBeTruthy();
-  });
-
-  const redisUrl = process.env.LIGHTDASH_TOOLS_MCP_REDIS_URL?.trim();
-  const describeRedis = redisUrl ? describe : describe.skip;
-
-  describeRedis('redis backend', () => {
-    afterEach(async () => {
-      await resetSharedRedisClientForTests();
-    });
-
-    it('persists pending across store instances', async () => {
-      const config = { backend: 'redis' as const, redisUrl: redisUrl! };
-      const a = createOAuthBrokerStore(config);
-      const pending = await a.createPending({
-        clientId: 'c1',
-        redirectUri: 'http://127.0.0.1:1/cb',
-        codeChallenge: 'ch',
-        codeChallengeMethod: 'S256',
-      });
-      expect(pending).toBeDefined();
-
-      const b = createOAuthBrokerStore(config);
-      const taken = await b.takePending(pending!.brokerState);
-      expect(taken?.clientId).toBe('c1');
-    });
   });
 });
