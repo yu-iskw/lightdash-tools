@@ -1,3 +1,4 @@
+import { LightdashApiError } from '@lightdash-tools/client';
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -337,7 +338,7 @@ describe('registerToolSafe', () => {
     expect(JSON.parse(result.content[0].text)).toEqual([{ id: 'a' }]);
   });
 
-  it('wrapTool returns a safe error message when the inner handler throws', async () => {
+  it('wrapTool returns a coded upstream error when the inner handler throws', async () => {
     const contextProvider = {
       getContext: async () => ({
         lightdashClient: {},
@@ -351,7 +352,39 @@ describe('registerToolSafe', () => {
     const result = await wrapped({});
 
     expect(result.isError).toBe(true);
-    expect(Array.isArray(result.content)).toBe(true);
-    expect((result.content as Array<{ type: string; text: string }>)[0]?.text).toBe('boom');
+    const body = {
+      error: { code: 'UPSTREAM_UNKNOWN', message: 'boom' },
+    };
+    expect(result.structuredContent).toEqual(body);
+    expect(
+      JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? ''),
+    ).toEqual(body);
+  });
+
+  it('wrapTool maps LightdashApiError 404 to UPSTREAM_NOT_FOUND', async () => {
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: { mode: 'none' as const },
+      }),
+    } as unknown as McpContextProvider;
+    const wrapped = wrapTool(contextProvider, () => async () => {
+      throw new LightdashApiError(
+        404,
+        { name: 'NotFound', statusCode: 404, message: 'chart missing' },
+        {},
+      );
+    });
+
+    const result = await wrapped({});
+
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toEqual({
+      error: {
+        code: 'UPSTREAM_NOT_FOUND',
+        message: 'Lightdash API error: chart missing',
+      },
+    });
+    expect(result).not.toHaveProperty('_lightdashBlocked');
   });
 });

@@ -9,6 +9,8 @@ import { DEFAULT_TIMEOUT } from '../config';
 import {
   type ApiErrorPayload,
   BinarySizeLimitError,
+  CONTRACT_ERROR_MESSAGE,
+  CONTRACT_ERROR_NAME,
   LightdashApiError,
   NetworkError,
 } from '../errors';
@@ -118,6 +120,20 @@ export function assertSafeBinaryFetchUrl(url: string, baseUrl: string): void {
   }
 }
 
+function readApiErrorPayload(data: unknown): ApiErrorPayload['error'] | undefined {
+  if (data === null || typeof data !== 'object' || !('error' in data)) {
+    return undefined;
+  }
+  const error = (data as { error: unknown }).error;
+  if (error === null || typeof error !== 'object') {
+    return undefined;
+  }
+  if (typeof (error as { statusCode?: unknown }).statusCode !== 'number') {
+    return undefined;
+  }
+  return error as ApiErrorPayload['error'];
+}
+
 /**
  * HTTP client that wraps Axios with rate limiting and retry.
  */
@@ -139,15 +155,35 @@ export class HttpClient {
     const response = await this.rateLimiter.schedule(() => withRetry(doRequest, this.config.retry));
 
     const data = response.data;
-    if (!isApiSuccessEnvelope(data)) {
+    if (data !== null && typeof data === 'object') {
+      const envelope = data as ApiEnvelope<T>;
+      if (isApiSuccessEnvelope(envelope)) {
+        return envelope.results;
+      }
+    }
+
+    const apiError = readApiErrorPayload(data);
+    if (apiError !== undefined) {
       throw new LightdashApiError(
-        data.error.statusCode,
-        data.error as ApiErrorPayload['error'],
+        apiError.statusCode,
+        apiError,
         response.config,
         response as AxiosResponse<ApiErrorPayload>,
       );
     }
-    return data.results;
+
+    const httpStatus = response.status;
+    const contractStatus = typeof httpStatus === 'number' && httpStatus >= 400 ? httpStatus : 502;
+    throw new LightdashApiError(
+      contractStatus,
+      {
+        name: CONTRACT_ERROR_NAME,
+        statusCode: contractStatus,
+        message: CONTRACT_ERROR_MESSAGE,
+      },
+      response.config,
+      response as AxiosResponse<ApiErrorPayload>,
+    );
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {

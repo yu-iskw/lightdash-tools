@@ -4,7 +4,7 @@
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
-import { jsonToolResult, withLightdashBlockedMarker } from '../shared.js';
+import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
@@ -33,11 +33,7 @@ const BLOCKED_POLICY_CODES = new Set([
 ]);
 
 export function codedErrorResult(code: string, message: string): TextContent {
-  const body = { error: { code, message } };
-  const result: TextContent = {
-    ...jsonToolResult(body),
-    isError: true,
-  };
+  const result = toolErrorResult(code, message);
   if (BLOCKED_POLICY_CODES.has(code)) {
     return withLightdashBlockedMarker(result);
   }
