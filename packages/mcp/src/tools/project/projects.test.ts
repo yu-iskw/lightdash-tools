@@ -231,4 +231,30 @@ describe('registerGetProject', () => {
     expect(result.isError).toBe(true);
     expect(getProject).not.toHaveBeenCalled();
   });
+
+  it('includes analystCapabilities for data-analyst persona when projectUuid is passed', async () => {
+    const getProject = vi.fn().mockResolvedValue({
+      projectUuid: PINNED,
+      name: 'Analyst',
+      type: 'DEFAULT',
+    });
+    const mockServer = { registerTool: vi.fn() };
+    bindServerPersona(mockServer, 'data-analyst');
+    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+    const result = await handler({ projectUuid: PINNED });
+    const body = JSON.parse(result.content[0].text) as {
+      data: Record<string, unknown>;
+    };
+    expect(body.data.analystCapabilities).toEqual({
+      canDiscoverExplores: true,
+      canCompileMetricQuery: true,
+      canRunMetricQuery: true,
+      canExecuteSavedCharts: false,
+      canExecuteSqlCharts: false,
+      canMutateContent: false,
+    });
+    expect(getProject).toHaveBeenCalledWith(PINNED);
+  });
 });

@@ -9,6 +9,7 @@ import type { CapabilityProfile, OperationDescriptor } from './types';
 
 const PROFILE_CONTENT_READER: CapabilityProfile = 'content-reader';
 const PROFILE_CONTENT_DEVELOPER: CapabilityProfile = 'content-developer';
+const PROFILE_DATA_ANALYST: CapabilityProfile = 'data-analyst';
 
 const op_search_content = defineOperation({
   id: 'content-reader.content.search',
@@ -178,7 +179,7 @@ const op_get_query_result = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_DATA_ANALYST],
 });
 
 const op_cancel_query = defineOperation({
@@ -192,7 +193,7 @@ const op_cancel_query = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
+  profiles: [PROFILE_CONTENT_READER, PROFILE_DATA_ANALYST],
 });
 
 export const CONTENT_READER_OPERATIONS: readonly OperationDescriptor[] = [

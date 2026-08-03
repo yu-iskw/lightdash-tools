@@ -1,6 +1,6 @@
 /**
- * Shared error/warning helpers for content-reader and content-developer (ADR-0014)
- * query and metadata tools.
+ * Shared error/warning helpers for pin-scoped and bounded-query MCP tools
+ * (content-reader, content-developer, data-analyst, semantic discovery).
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
@@ -60,4 +60,9 @@ export function isCoverageComplete(
   result: Pick<NormalizedQueryResult, 'status' | 'truncated'>,
 ): boolean {
   return result.status === 'complete' && !result.truncated;
+}
+
+/** True when the async query will not produce further status transitions. */
+export function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
+  return status === 'complete' || status === 'failed' || status === 'cancelled';
 }

@@ -5,6 +5,7 @@ import { AI_AGENT_OPS_TOOL_IDS } from './ai-agent-ops/v1/index.js';
 import { CONTENT_DEVELOPER_TOOL_IDS } from './content-developer/v1/index.js';
 import { CONTENT_GOVERNANCE_TOOL_IDS } from './content-governance/v1/index.js';
 import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
+import { DATA_ANALYST_TOOL_IDS } from './data-analyst/v1/index.js';
 import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 import { SEMANTIC_LAYER_TOOL_IDS } from './semantic-layer/v1/index.js';
 
@@ -41,6 +42,12 @@ describe('persona catalog parity', () => {
   it('content-governance allowlist matches catalog content-governance profile', () => {
     expect([...CONTENT_GOVERNANCE_TOOL_IDS].sort()).toEqual(
       [...listMcpToolNamesByProfile('content-governance')].sort(),
+    );
+  });
+
+  it('data-analyst allowlist matches catalog data-analyst profile', () => {
+    expect([...DATA_ANALYST_TOOL_IDS].sort()).toEqual(
+      [...listMcpToolNamesByProfile('data-analyst')].sort(),
     );
   });
 });

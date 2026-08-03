@@ -25,7 +25,7 @@ const READER_CAPABILITIES = {
   canExecuteSavedCharts: true,
   canExecuteSqlCharts: false,
   canExecuteDashboardTiles: true,
-};
+} as const;
 
 const DEVELOPER_CAPABILITIES = {
   canDiscoverContent: true,
@@ -33,6 +33,35 @@ const DEVELOPER_CAPABILITIES = {
   canExecuteSavedCharts: false,
   canExecuteSqlCharts: false,
   canExecuteDashboardTiles: false,
+} as const;
+
+const ANALYST_CAPABILITIES = {
+  canDiscoverExplores: true,
+  canCompileMetricQuery: true,
+  canRunMetricQuery: true,
+  canExecuteSavedCharts: false,
+  canExecuteSqlCharts: false,
+  canMutateContent: false,
+} as const;
+
+type ScopedGetProjectConfig = {
+  capabilitiesKey: 'analystCapabilities' | 'developerCapabilities' | 'readerCapabilities';
+  capabilities: Readonly<Record<string, boolean>>;
+};
+
+const SCOPED_GET_PROJECT_BY_PERSONA: Readonly<Record<string, ScopedGetProjectConfig>> = {
+  'content-reader': {
+    capabilitiesKey: 'readerCapabilities',
+    capabilities: READER_CAPABILITIES,
+  },
+  'content-developer': {
+    capabilitiesKey: 'developerCapabilities',
+    capabilities: DEVELOPER_CAPABILITIES,
+  },
+  'data-analyst': {
+    capabilitiesKey: 'analystCapabilities',
+    capabilities: ANALYST_CAPABILITIES,
+  },
 };
 
 export function registerListProjects(server: McpServer, contextProvider: McpContextProvider): void {
@@ -62,32 +91,22 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
 
 export function registerGetProject(server: McpServer, contextProvider: McpContextProvider): void {
   const personaId = requireServerPersona(server, 'get_project');
-  if (personaId === 'content-reader') {
-    registerScopedGetProject(server, contextProvider, 'readerCapabilities', READER_CAPABILITIES);
-    return;
-  }
-  if (personaId === 'content-developer') {
-    registerScopedGetProject(
-      server,
-      contextProvider,
-      'developerCapabilities',
-      DEVELOPER_CAPABILITIES,
-    );
+  // eslint-disable-next-line security/detect-object-injection -- personaId from requireServerPersona
+  const scoped = SCOPED_GET_PROJECT_BY_PERSONA[personaId];
+  if (scoped) {
+    registerScopedGetProject(server, contextProvider, scoped);
     return;
   }
   registerPinAwareGetProject(server, contextProvider);
 }
 
-/**
- * Project-scope-aware get_project shared by content-reader and content-developer (ADR-0012, ADR-0014).
- * Precedence: X-Lightdash-Project -> tool projectUuid -> PROJECT_SCOPE_REQUIRED.
- */
+/** Project-scope-aware get_project (pin → tool arg → PROJECT_SCOPE_REQUIRED). */
 function registerScopedGetProject(
   server: McpServer,
   contextProvider: McpContextProvider,
-  capabilitiesKey: 'developerCapabilities' | 'readerCapabilities',
-  capabilities: Record<string, boolean>,
+  config: ScopedGetProjectConfig,
 ): void {
+  const { capabilitiesKey, capabilities } = config;
   registerToolSafe(
     server,
     'get_project',

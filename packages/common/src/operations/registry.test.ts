@@ -5,6 +5,7 @@ import { CLI_CONTENT_OPERATIONS } from './cli-content';
 import { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
 import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
+import { DATA_ANALYST_OPERATIONS } from './data-analyst';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { getOperation, getOperationsByProfile, listOperations } from './registry';
 import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
@@ -85,6 +86,7 @@ describe('operation registry', () => {
         CONTENT_READER_OPERATIONS.length +
         CONTENT_DEVELOPER_OPERATIONS.length +
         CONTENT_GOVERNANCE_OPERATIONS.length +
+        DATA_ANALYST_OPERATIONS.length +
         CLI_CONTENT_OPERATIONS.length,
     );
   });

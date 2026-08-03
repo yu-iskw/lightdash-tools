@@ -5,12 +5,14 @@
 import { z } from 'zod';
 
 import { resolveProjectScope } from '../../governance/project-scope.js';
-import { projectUuidField } from '../lib/schema-fields.js';
+import { optionalProjectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
 
 import type { ResolvedProjectScope } from '../../governance/project-scope.js';
 import type { TextContent } from '../shared.js';
+
+export { optionalProjectUuidField };
 
 export const agentUuidField = (): z.ZodString => z.string().describe('AI agent UUID');
 
@@ -19,10 +21,6 @@ export const evalUuidField = (): z.ZodString => z.string().describe('Evaluation 
 export const runUuidField = (): z.ZodString => z.string().describe('Evaluation run UUID');
 
 export const threadUuidField = (): z.ZodString => z.string().describe('Thread UUID');
-
-/** Optional projectUuid when pin can resolve scope. */
-export const optionalProjectUuidField = (): z.ZodOptional<z.ZodString> =>
-  projectUuidField().optional();
 
 const evaluationPromptSchema = z.union([
   z.object({

@@ -7,6 +7,7 @@ import { CLI_CONTENT_OPERATIONS } from './cli-content';
 import { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
 import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
+import { DATA_ANALYST_OPERATIONS } from './data-analyst';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
 import { USER_OPERATIONS } from './users';
@@ -23,6 +24,7 @@ const ALL_OPERATIONS: readonly OperationDescriptor[] = [
   ...CONTENT_READER_OPERATIONS,
   ...CONTENT_DEVELOPER_OPERATIONS,
   ...CONTENT_GOVERNANCE_OPERATIONS,
+  ...DATA_ANALYST_OPERATIONS,
   ...CLI_CONTENT_OPERATIONS,
 ];
 
