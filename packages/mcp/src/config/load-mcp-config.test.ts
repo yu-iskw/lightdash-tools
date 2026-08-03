@@ -10,6 +10,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
+  ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
@@ -180,6 +181,14 @@ describe('loadMcpHttpConfig', () => {
     process.env[ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV] = '1';
 
     expect(() => loadMcpHttpConfig()).toThrow(/is removed/);
+  });
+
+  it('rejects obsolete STDIO_PERSONA env', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA] = 'semantic-layer';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/STDIO_PROFILE/);
   });
 
   it('rejects non-HTTPS public URL in OAuth mode', () => {
