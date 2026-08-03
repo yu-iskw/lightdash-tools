@@ -43,15 +43,30 @@ export class AiAgentsDiscoveryClient extends BaseApiClient {
 
   /**
    * Summarize explore access for tag-filtered explores
-   * (POST …/explore-access-summary).
+   * (POST …/explore-access-summary). Project-scoped; no agent path segment.
    */
-  async getExploreAccessSummary(
+  getExploreAccessSummary(
     projectUuid: string,
     body?: ExploreAccessSummaryBody,
+  ): Promise<AiAgentExploreAccessSummary[]>;
+  /**
+   * @deprecated `agentUuid` is ignored; the endpoint is project-scoped.
+   * Prefer `getExploreAccessSummary(projectUuid, body?)`.
+   */
+  getExploreAccessSummary(
+    projectUuid: string,
+    agentUuid: string,
+    body?: ExploreAccessSummaryBody,
+  ): Promise<AiAgentExploreAccessSummary[]>;
+  async getExploreAccessSummary(
+    projectUuid: string,
+    agentUuidOrBody?: ExploreAccessSummaryBody | string,
+    body?: ExploreAccessSummaryBody,
   ): Promise<AiAgentExploreAccessSummary[]> {
+    const resolvedBody = typeof agentUuidOrBody === 'string' ? body : agentUuidOrBody;
     return this.http.post<AiAgentExploreAccessSummary[]>(
       `/projects/${projectUuid}/aiAgents/explore-access-summary`,
-      body ?? { tags: null },
+      resolvedBody ?? { tags: null },
     );
   }
 

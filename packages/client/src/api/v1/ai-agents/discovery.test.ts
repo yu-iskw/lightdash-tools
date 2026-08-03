@@ -69,6 +69,24 @@ describe('AiAgentsDiscoveryClient', () => {
     });
   });
 
+  it('getExploreAccessSummary legacy (project, agentUuid, body) ignores agentUuid', async () => {
+    const client = new AiAgentsDiscoveryClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue([]);
+    await client.getExploreAccessSummary('proj1', 'a1', { tags: ['ai'] });
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
+      tags: ['ai'],
+    });
+  });
+
+  it('getExploreAccessSummary legacy (project, agentUuid) defaults tags to null', async () => {
+    const client = new AiAgentsDiscoveryClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue([]);
+    await client.getExploreAccessSummary('proj1', 'a1');
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
+      tags: null,
+    });
+  });
+
   it('getUserAgentPreferences should call GET …/preferences', async () => {
     const client = new AiAgentsDiscoveryClient(mockHttp);
     const prefs = { defaultAgentUuid: 'a1' };

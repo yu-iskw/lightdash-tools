@@ -153,8 +153,25 @@ export class AiAgentsClient extends BaseApiClient {
   getExploreAccessSummary(
     projectUuid: string,
     body?: ExploreAccessSummaryBody,
+  ): Promise<AiAgentExploreAccessSummary[]>;
+  /**
+   * @deprecated `agentUuid` is ignored; the endpoint is project-scoped.
+   * Prefer `getExploreAccessSummary(projectUuid, body?)`.
+   */
+  getExploreAccessSummary(
+    projectUuid: string,
+    agentUuid: string,
+    body?: ExploreAccessSummaryBody,
+  ): Promise<AiAgentExploreAccessSummary[]>;
+  getExploreAccessSummary(
+    projectUuid: string,
+    agentUuidOrBody?: ExploreAccessSummaryBody | string,
+    body?: ExploreAccessSummaryBody,
   ): Promise<AiAgentExploreAccessSummary[]> {
-    return this.discovery.getExploreAccessSummary(projectUuid, body);
+    if (typeof agentUuidOrBody === 'string') {
+      return this.discovery.getExploreAccessSummary(projectUuid, agentUuidOrBody, body);
+    }
+    return this.discovery.getExploreAccessSummary(projectUuid, agentUuidOrBody);
   }
 
   getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences | null> {
