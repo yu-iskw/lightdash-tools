@@ -192,12 +192,12 @@ Before commit: `pnpm verify` (or `pnpm verify:quick`) from the repo root — see
 
 ## Related ADRs
 
-- [ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md) — Personas, shared registry, fixed HTTP paths
+- [ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md) — Profiles, shared registry, fixed HTTP paths
 - [ADR-0007](../../docs/adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) — HTTP transport + OAuth broker (SDK v2)
 - [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md) — Project pin, input validation, audit
-- [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md) — Content-reader boundary
-- [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md) — Content-developer preview gate
-- [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md) — Soft-delete elicitation
-- [ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md) — AI-agent-ops thin API surface
-- [ADR-0020](../../docs/adr/0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md) — data-analyst ad-hoc metric-query boundary
+- ADR-0012 — Content-reader boundary
+- ADR-0014 — Content-developer preview gate
+- ADR-0015 — Soft-delete elicitation
+- ADR-0018 — AI-agent-ops thin API surface
+- ADR-0020 — data-analyst ad-hoc metric-query boundary
 - [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) — Stateless HTTP; HMAC handles; no Redis

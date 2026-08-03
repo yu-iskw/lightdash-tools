@@ -1,6 +1,6 @@
 # @lightdash-tools
 
-TypeScript client, CLI, and persona-scoped MCP servers for [Lightdash](https://www.lightdash.com/).
+TypeScript client, CLI, and profile-scoped MCP servers for [Lightdash](https://www.lightdash.com/).
 
 ## Choose your tool
 
@@ -56,7 +56,7 @@ Hosted OAuth for Cursor (URL-only client config): [docs/operators/cursor-claude.
 ## Safety
 
 - **CLI** — hierarchical safety stack: `LIGHTDASH_TOOLS_SAFETY_MODE` / `--safety-mode` (`read-only` default, `write-idempotent`, `write-destructive`), optional dry-run, shared project allowlist, and audit log ([ADR-0005](docs/adr/0005-cli-safety-stack.md)).
-- **MCP** — capability is the persona tool surface; optional HTTP pin via `X-Lightdash-Project`; shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN` ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)).
+- **MCP** — capability is the profile tool surface; optional HTTP pin via `X-Lightdash-Project`; shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN` ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)).
 - **Agent-safe surface** — irrecoverable ops stay off MCP and CLI; use the client for those ([ADR-0004](docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
 
 Agent-oriented notes: [docs/operators/agent-context.md](docs/operators/agent-context.md).
