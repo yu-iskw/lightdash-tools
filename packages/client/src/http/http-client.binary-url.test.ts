@@ -8,8 +8,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { assertSafeBinaryFetchUrl, HttpClient, isBlockedBinaryHostname } from './http-client.js';
 
 import type { ResolvedLightdashClientConfig } from '../config.js';
-import type { AxiosInstance } from 'axios';
 import type { RateLimiter } from './rate-limiter.js';
+import type { AxiosInstance } from 'axios';
 
 describe('isBlockedBinaryHostname', () => {
   it('blocks loopback and private IPv4 hosts', () => {
