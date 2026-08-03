@@ -32,7 +32,7 @@ OAuth authorization codes remain an AS concern ([RFC 6749](https://www.rfc-edito
 - Operators can run multi-replica MCP behind round-robin without Redis or sticky MCP sessions for preview/`requestState` (client-carried HMAC handles).
 - Preview/apply works across replicas because state is in the signed token + tool args.
 - Promote/soft-delete may be replayed within `requestState` TTL; upstream revalidation is the primary guard.
-- Content-governance **form elicitation capability** from `initialize` is remembered in a principal-scoped **process-local** cache and seeded onto each fresh `McpServer` (2025-era SDK shim needs connection-scoped caps). Same-replica HTTP works after `initialize` → `tools/call`; multi-replica without sticky routing should send per-request `_meta[io.modelcontextprotocol/clientCapabilities]` or pin content-governance to one replica.
+- Content-governance **form elicitation capability** from `initialize` is remembered in a **principal- and persona-scoped process-local** cache and seeded onto each fresh `McpServer` (2025-era SDK shim needs connection-scoped caps). Cache keys use OAuth `subject` (else `tokenHash`) plus persona path; anonymous shared-key/`none` principals skip the cache (require per-request `_meta` or accept fail-closed). Same-replica OAuth HTTP works after `initialize` → `tools/call`; multi-replica without sticky routing should send per-request `_meta[io.modelcontextprotocol/clientCapabilities]` or pin content-governance to one replica.
 - OAuth authorize→callback→token remains process-local (document sticky `/oauth/*` or single instance).
 - Breaking: remove Redis env vars; rename preview handle to `previewToken`; clients must re-send proposed on apply (already the case for write tool args).
 

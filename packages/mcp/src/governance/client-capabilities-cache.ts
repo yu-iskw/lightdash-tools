@@ -1,65 +1,79 @@
 /**
- * Principal-scoped, process-local client capabilities cache (ADR-0019).
+ * Principal- and persona-scoped, process-local client capabilities cache (ADR-0019).
  *
  * Sessionless HTTP creates a fresh McpServer per POST, so initialize-declared
  * capabilities would otherwise be lost on tools/call. Cache is best-effort
  * same-replica (like in-memory OAuth); clients may also send per-request
  * `_meta[CLIENT_CAPABILITIES_META_KEY]`.
+ *
+ * Anonymous principals (shared-key / none with no subject or tokenHash) never
+ * use the cache — last-writer-wins would cross clients on one process.
  */
 
 import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 
-import type { ClientCapabilities, Implementation, McpServer } from '@modelcontextprotocol/server';
+import type { ToolAuditAuthContext } from '../audit/tool-audit-context.js';
+import type { ClientCapabilities, McpServer } from '@modelcontextprotocol/server';
 
-/** Default TTL for remembered initialize capabilities. */
 export const CLIENT_CAPABILITIES_CACHE_TTL_MS = 30 * 60_000;
 
 const ANONYMOUS_PRINCIPAL = 'anonymous';
 
-type CachedIdentity = {
+type CacheEntry = {
   clientCapabilities: ClientCapabilities;
-  clientInfo?: Implementation;
   expiresAt: number;
 };
 
-const cache = new Map<string, CachedIdentity>();
+const cache = new Map<string, CacheEntry>();
 
-export type CapabilitiesPrincipal = {
-  subject?: string;
-  tokenHash?: string;
-};
+/** Same shape as tool-audit auth; subject → tokenHash → anonymous. */
+export type CapabilitiesPrincipal = ToolAuditAuthContext;
 
-/** Resolve cache key: subject → tokenHash → anonymous. */
-export function resolveCapabilitiesPrincipalKey(principal: CapabilitiesPrincipal): string {
+export function resolveCapabilitiesPrincipalKey(
+  principal: CapabilitiesPrincipal,
+  scope?: string,
+): string {
+  let key: string;
   if (typeof principal.subject === 'string' && principal.subject.length > 0) {
-    return `subject:${principal.subject}`;
+    key = `subject:${principal.subject}`;
+  } else if (typeof principal.tokenHash === 'string' && principal.tokenHash.length > 0) {
+    key = `token:${principal.tokenHash}`;
+  } else {
+    key = ANONYMOUS_PRINCIPAL;
   }
-  if (typeof principal.tokenHash === 'string' && principal.tokenHash.length > 0) {
-    return `token:${principal.tokenHash}`;
+  if (typeof scope === 'string' && scope.length > 0) {
+    return `${key}@${scope}`;
   }
-  return ANONYMOUS_PRINCIPAL;
+  return key;
+}
+
+function isAnonymousPrincipal(principal: CapabilitiesPrincipal): boolean {
+  return resolveCapabilitiesPrincipalKey(principal) === ANONYMOUS_PRINCIPAL;
 }
 
 export function rememberClientCapabilities(
   principal: CapabilitiesPrincipal,
-  identity: {
-    clientCapabilities: ClientCapabilities;
-    clientInfo?: Implementation;
-  },
-  ttlMs: number = CLIENT_CAPABILITIES_CACHE_TTL_MS,
+  clientCapabilities: ClientCapabilities,
+  options?: { ttlMs?: number; scope?: string },
 ): void {
-  const key = resolveCapabilitiesPrincipalKey(principal);
-  cache.set(key, {
-    clientCapabilities: identity.clientCapabilities,
-    clientInfo: identity.clientInfo,
+  if (isAnonymousPrincipal(principal)) {
+    return;
+  }
+  const ttlMs = options?.ttlMs ?? CLIENT_CAPABILITIES_CACHE_TTL_MS;
+  cache.set(resolveCapabilitiesPrincipalKey(principal, options?.scope), {
+    clientCapabilities,
     expiresAt: Date.now() + ttlMs,
   });
 }
 
 export function getRememberedClientCapabilities(
   principal: CapabilitiesPrincipal,
-): CachedIdentity | undefined {
-  const key = resolveCapabilitiesPrincipalKey(principal);
+  scope?: string,
+): ClientCapabilities | undefined {
+  if (isAnonymousPrincipal(principal)) {
+    return undefined;
+  }
+  const key = resolveCapabilitiesPrincipalKey(principal, scope);
   const entry = cache.get(key);
   if (!entry) {
     return undefined;
@@ -68,10 +82,9 @@ export function getRememberedClientCapabilities(
     cache.delete(key);
     return undefined;
   }
-  return entry;
+  return entry.clientCapabilities;
 }
 
-/** Test helper. */
 export function resetClientCapabilitiesCacheForTests(): void {
   cache.clear();
 }
@@ -80,39 +93,36 @@ type JsonRpcRequestLike = {
   method?: string;
   params?: {
     capabilities?: ClientCapabilities;
-    clientInfo?: Implementation;
     _meta?: Record<string, unknown>;
   };
 };
 
-function asJsonRpcRequest(body: unknown): JsonRpcRequestLike | undefined {
-  if (body === undefined || body === null) {
+function asSingleJsonRpcRequest(body: unknown): JsonRpcRequestLike | undefined {
+  // Streamable HTTP does not support JSON-RPC batches; ignore arrays here.
+  if (body === undefined || body === null || Array.isArray(body)) {
     return undefined;
   }
-  const msg = Array.isArray(body) ? body[0] : body;
-  if (typeof msg !== 'object' || msg === null) {
+  if (typeof body !== 'object') {
     return undefined;
   }
-  return msg as JsonRpcRequestLike;
+  return body as JsonRpcRequestLike;
 }
 
 /** Capabilities from initialize params or per-request `_meta` envelope. */
 export function extractClientCapabilitiesFromBody(body: unknown): {
   clientCapabilities?: ClientCapabilities;
-  clientInfo?: Implementation;
   fromInitialize: boolean;
 } {
-  const msg = asJsonRpcRequest(body);
+  const msg = asSingleJsonRpcRequest(body);
   if (!msg) {
     return { fromInitialize: false };
   }
 
-  if (msg.method === 'initialize' && msg.params?.capabilities !== undefined) {
-    return {
-      clientCapabilities: msg.params.capabilities,
-      clientInfo: msg.params.clientInfo,
-      fromInitialize: true,
-    };
+  if (msg.method === 'initialize') {
+    const caps = msg.params?.capabilities;
+    return caps !== undefined
+      ? { clientCapabilities: caps, fromInitialize: true }
+      : { fromInitialize: true };
   }
 
   const meta = msg.params?._meta;
@@ -120,10 +130,7 @@ export function extractClientCapabilitiesFromBody(body: unknown): {
     const fromMeta = Reflect.get(meta, CLIENT_CAPABILITIES_META_KEY) as
       ClientCapabilities | undefined;
     if (fromMeta !== undefined) {
-      return {
-        clientCapabilities: fromMeta,
-        fromInitialize: false,
-      };
+      return { clientCapabilities: fromMeta, fromInitialize: false };
     }
   }
 
@@ -131,68 +138,44 @@ export function extractClientCapabilitiesFromBody(body: unknown): {
 }
 
 /**
- * Seed connection-scoped client identity on a fresh per-request McpServer.
+ * Seed connection-scoped client capabilities on a fresh per-request McpServer.
  * Mirrors SDK-internal seedClientIdentityFromEnvelope (not public on 2.0.0).
  */
 export function seedClientCapabilitiesOntoServer(
   mcpServer: McpServer,
-  identity: {
-    clientCapabilities?: ClientCapabilities;
-    clientInfo?: Implementation;
-  },
+  clientCapabilities: ClientCapabilities | undefined,
 ): void {
-  if (identity.clientCapabilities === undefined && identity.clientInfo === undefined) {
+  if (clientCapabilities === undefined) {
     return;
   }
   // SDK Server stores initialize-scoped identity privately; 2025-era elicitation
   // shim reads `_clientCapabilities` via getClientCapabilities().
   const lowLevel = mcpServer.server as unknown as {
     _clientCapabilities?: ClientCapabilities;
-    _clientVersion?: Implementation;
   };
-  if (identity.clientCapabilities !== undefined) {
-    lowLevel._clientCapabilities = identity.clientCapabilities;
-  }
-  if (identity.clientInfo !== undefined) {
-    lowLevel._clientVersion = identity.clientInfo;
-  }
+  lowLevel._clientCapabilities = clientCapabilities;
 }
 
 /**
- * Remember initialize caps and/or seed the fresh server from envelope meta or cache.
+ * Remember initialize caps, or seed the fresh server from envelope meta / cache.
  * Call after createLightdashMcpServer, before transport.handleRequest.
+ * On initialize, only cache — the SDK seeds this connection from params.
+ * `scope` (e.g. persona.path) isolates cache entries across HTTP personas.
  */
 export function prepareServerClientCapabilities(
   mcpServer: McpServer,
   body: unknown,
   principal: CapabilitiesPrincipal,
+  scope?: string,
 ): void {
   const extracted = extractClientCapabilitiesFromBody(body);
-  if (extracted.fromInitialize && extracted.clientCapabilities !== undefined) {
-    rememberClientCapabilities(principal, {
-      clientCapabilities: extracted.clientCapabilities,
-      clientInfo: extracted.clientInfo,
-    });
-    seedClientCapabilitiesOntoServer(mcpServer, {
-      clientCapabilities: extracted.clientCapabilities,
-      clientInfo: extracted.clientInfo,
-    });
+  if (extracted.fromInitialize) {
+    if (extracted.clientCapabilities !== undefined) {
+      rememberClientCapabilities(principal, extracted.clientCapabilities, { scope });
+    }
     return;
   }
 
-  if (extracted.clientCapabilities !== undefined) {
-    seedClientCapabilitiesOntoServer(mcpServer, {
-      clientCapabilities: extracted.clientCapabilities,
-      clientInfo: extracted.clientInfo,
-    });
-    return;
-  }
-
-  const remembered = getRememberedClientCapabilities(principal);
-  if (remembered) {
-    seedClientCapabilitiesOntoServer(mcpServer, {
-      clientCapabilities: remembered.clientCapabilities,
-      clientInfo: remembered.clientInfo,
-    });
-  }
+  const caps = extracted.clientCapabilities ?? getRememberedClientCapabilities(principal, scope);
+  seedClientCapabilitiesOntoServer(mcpServer, caps);
 }

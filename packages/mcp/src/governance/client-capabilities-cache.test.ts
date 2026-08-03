@@ -1,5 +1,5 @@
 import { CLIENT_CAPABILITIES_META_KEY, McpServer } from '@modelcontextprotocol/server';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
   extractClientCapabilitiesFromBody,
@@ -16,41 +16,73 @@ describe('client-capabilities-cache', () => {
     resetClientCapabilitiesCacheForTests();
   });
 
-  afterEach(() => {
-    resetClientCapabilitiesCacheForTests();
-  });
-
   it('resolves principal key preferring subject then tokenHash', () => {
     expect(resolveCapabilitiesPrincipalKey({ subject: 'u1', tokenHash: 't1' })).toBe('subject:u1');
     expect(resolveCapabilitiesPrincipalKey({ tokenHash: 't1' })).toBe('token:t1');
     expect(resolveCapabilitiesPrincipalKey({})).toBe('anonymous');
+    expect(resolveCapabilitiesPrincipalKey({ subject: 'u1' }, '/content-governance/v1/mcp')).toBe(
+      'subject:u1@/content-governance/v1/mcp',
+    );
+  });
+
+  it('skips cache for anonymous principals to avoid cross-client collision', () => {
+    rememberClientCapabilities({}, { elicitation: { form: {} } });
+    expect(getRememberedClientCapabilities({})).toBeUndefined();
+
+    const server = new McpServer({ name: 't', version: '0.0.0' });
+    prepareServerClientCapabilities(
+      server,
+      {
+        jsonrpc: '2.0',
+        method: 'initialize',
+        params: { capabilities: { elicitation: { form: {} } } },
+        id: 1,
+      },
+      {},
+    );
+    expect(getRememberedClientCapabilities({})).toBeUndefined();
+
+    prepareServerClientCapabilities(
+      server,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: { name: 'x', arguments: {} },
+        id: 2,
+      },
+      {},
+    );
+    expect(readSeededClientCapabilities(server)).toBeUndefined();
+  });
+
+  it('isolates cache entries by persona scope', () => {
+    rememberClientCapabilities(
+      { subject: 'u1' },
+      { elicitation: { form: {} } },
+      { scope: '/content-governance/v1/mcp' },
+    );
+    expect(
+      getRememberedClientCapabilities({ subject: 'u1' }, '/semantic-layer/v1/mcp'),
+    ).toBeUndefined();
+    expect(
+      getRememberedClientCapabilities({ subject: 'u1' }, '/content-governance/v1/mcp'),
+    ).toEqual({ elicitation: { form: {} } });
   });
 
   it('remembers and returns capabilities until TTL expires', () => {
-    rememberClientCapabilities(
-      { subject: 'u1' },
-      { clientCapabilities: { elicitation: { form: {} } } },
-      60_000,
-    );
-    expect(getRememberedClientCapabilities({ subject: 'u1' })?.clientCapabilities).toEqual({
+    rememberClientCapabilities({ subject: 'u1' }, { elicitation: { form: {} } }, { ttlMs: 60_000 });
+    expect(getRememberedClientCapabilities({ subject: 'u1' })).toEqual({
       elicitation: { form: {} },
     });
 
-    rememberClientCapabilities(
-      { subject: 'u1' },
-      { clientCapabilities: { elicitation: { form: {} } } },
-      -1,
-    );
+    rememberClientCapabilities({ subject: 'u1' }, { elicitation: { form: {} } }, { ttlMs: -1 });
     expect(getRememberedClientCapabilities({ subject: 'u1' })).toBeUndefined();
   });
 
   it('overwrites capabilities on re-initialize for the same principal', () => {
-    rememberClientCapabilities({ subject: 'u1' }, { clientCapabilities: { roots: {} } });
-    rememberClientCapabilities(
-      { subject: 'u1' },
-      { clientCapabilities: { elicitation: { form: {} } } },
-    );
-    expect(getRememberedClientCapabilities({ subject: 'u1' })?.clientCapabilities).toEqual({
+    rememberClientCapabilities({ subject: 'u1' }, { roots: {} });
+    rememberClientCapabilities({ subject: 'u1' }, { elicitation: { form: {} } });
+    expect(getRememberedClientCapabilities({ subject: 'u1' })).toEqual({
       elicitation: { form: {} },
     });
   });
@@ -66,7 +98,7 @@ describe('client-capabilities-cache', () => {
         },
         id: 1,
       }),
-    ).toMatchObject({
+    ).toEqual({
       fromInitialize: true,
       clientCapabilities: { elicitation: { form: {} } },
     });
@@ -82,22 +114,25 @@ describe('client-capabilities-cache', () => {
         },
         id: 2,
       }),
-    ).toMatchObject({
+    ).toEqual({
       fromInitialize: false,
       clientCapabilities: { elicitation: { form: {} } },
+    });
+
+    expect(extractClientCapabilitiesFromBody([{ method: 'initialize' }])).toEqual({
+      fromInitialize: false,
     });
   });
 
   it('seeds Server getClientCapabilities for elicitation shim', () => {
     const server = new McpServer({ name: 'test', version: '0.0.0' });
     expect(readSeededClientCapabilities(server)).toBeUndefined();
-    seedClientCapabilitiesOntoServer(server, {
-      clientCapabilities: { elicitation: { form: {} } },
-    });
+    seedClientCapabilitiesOntoServer(server, { elicitation: { form: {} } });
     expect(readSeededClientCapabilities(server)).toEqual({ elicitation: { form: {} } });
   });
 
   it('prepare remembers initialize then seeds a fresh server from cache', () => {
+    const scope = '/content-governance/v1/mcp';
     const first = new McpServer({ name: 'a', version: '0.0.0' });
     prepareServerClientCapabilities(
       first,
@@ -112,8 +147,13 @@ describe('client-capabilities-cache', () => {
         id: 1,
       },
       { subject: 'user-a' },
+      scope,
     );
-    expect(readSeededClientCapabilities(first)).toEqual({ elicitation: { form: {} } });
+    // Initialize path only remembers; SDK seeds this connection from params.
+    expect(readSeededClientCapabilities(first)).toBeUndefined();
+    expect(getRememberedClientCapabilities({ subject: 'user-a' }, scope)).toEqual({
+      elicitation: { form: {} },
+    });
 
     const second = new McpServer({ name: 'b', version: '0.0.0' });
     prepareServerClientCapabilities(
@@ -125,12 +165,13 @@ describe('client-capabilities-cache', () => {
         id: 2,
       },
       { subject: 'user-a' },
+      scope,
     );
     expect(readSeededClientCapabilities(second)).toEqual({ elicitation: { form: {} } });
   });
 
   it('prepare prefers per-request _meta over cache', () => {
-    rememberClientCapabilities({ subject: 'u1' }, { clientCapabilities: { roots: {} } });
+    rememberClientCapabilities({ subject: 'u1' }, { roots: {} });
     const server = new McpServer({ name: 't', version: '0.0.0' });
     prepareServerClientCapabilities(
       server,

@@ -432,8 +432,9 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     );
     expect(call.status).toBe(200);
     const text = parseSseOrJsonToolText(await call.text());
-    // Caps bridge worked: we must not fail closed solely because initialize caps were discarded.
+    // Caps bridge worked: past ELICITATION_REQUIRED into chart resolve (mock has no chart).
     expect(text).not.toContain('ELICITATION_REQUIRED');
+    expect(text).toContain('CONTENT_NOT_FOUND');
   });
 
   it('returns 503 when Lightdash user validation is unavailable', async () => {

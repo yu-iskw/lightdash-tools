@@ -233,8 +233,7 @@ async function handleMcpPost(ctx: McpRequestContext): Promise<void> {
   const transport = new NodeStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   const server = createLightdashMcpServer(contextProvider, { persona });
   const auditAuth = getOAuthAuditContext(req);
-  // Bridge initialize-declared form elicitation caps across sessionless POSTs (ADR-0019).
-  prepareServerClientCapabilities(server, body, auditAuth);
+  prepareServerClientCapabilities(server, body, auditAuth, persona.path);
 
   try {
     await server.connect(transport);
