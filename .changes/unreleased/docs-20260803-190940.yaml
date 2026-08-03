@@ -1,0 +1,3 @@
+kind: docs
+body: Drop docs/archive, agent-context, security, and reference dirs; keep threat model and agent-context under operators; CLI AI-agents reference under personas/ai-agent-ops.
+time: 2026-08-03T19:09:40.097003+09:00

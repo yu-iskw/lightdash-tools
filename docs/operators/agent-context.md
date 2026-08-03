@@ -38,6 +38,4 @@ Safety modes gate **reversible** destructive ops at runtime. They do **not** rep
 ## Secrets and Credentials
 
 - Prefer env vars from the parent process (CI, shell, systemd). The tools do not load `.env` files.
-- Avoid plaintext `.env` when AI has file access—secrets on disk can be read by agents.
-- If using `.env`, use [dotenvx](https://dotenvx.com/) for encryption and run via `dotenvx run -- lightdash-ai ...` or `dotenvx run -- lightdash-mcp ...`.
-- See [docs/secrets-and-credentials.md](../secrets-and-credentials.md) for details.
+- Details (dotenvx, MCP OAuth secrets): [secrets.md](secrets.md).

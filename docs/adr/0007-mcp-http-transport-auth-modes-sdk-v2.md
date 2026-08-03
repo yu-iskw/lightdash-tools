@@ -6,7 +6,7 @@ Date: 2026-07-31
 
 Accepted
 
-Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md). Decision §6 updated 2026-08-03: dual-era `serveStdio` / `createMcpHandler` are the production entrypoints.
 
 ## Context
 
@@ -14,7 +14,7 @@ Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-
 
 [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) treats persona MCP paths as OAuth resource servers. The authorization server may be co-located with the resource server. Upstream Lightdash access tokens remain opaque and lack resource/audience binding this process can fully validate.
 
-SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. Frozen v1 AS helpers (`mcpAuthRouter`, `ProxyOAuthServerProvider` in `@modelcontextprotocol/server-legacy`) are not adopted. Serving helpers (`serveStdio`, `createMcpHandler`) stay out of scope for host compatibility.
+SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. Frozen v1 AS helpers (`mcpAuthRouter`, `ProxyOAuthServerProvider` in `@modelcontextprotocol/server-legacy`) are not adopted. Protocol-era serving uses SDK `serveStdio` / `createMcpHandler` (see Decision §6).
 
 ## Decision
 
@@ -23,7 +23,7 @@ SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. F
 3. **Resource server:** Persona paths (`/semantic-layer/v1/mcp`, …) accept `Authorization: Bearer`, validate identity via `GET /api/v1/user`, forward the same token upstream. RFC 8707 `resource` is accepted on the broker; full audience enforcement remains limited by opaque Lightdash tokens.
 4. **Secondary:** STDIO and local HTTP use PAT (`LIGHTDASH_API_KEY`). Optional `shared-key` gateway when `LIGHTDASH_TOOLS_MCP_SHARED_KEY` is set with a PAT. Unauthenticated HTTP only when `NODE_ENV` is not `production` (e.g. local Compose).
 5. **Config surface:** No `LIGHTDASH_TOOLS_MCP_AUTH_MODE` / `EXPERIMENTAL_IDENTITY_OAUTH` / `DANGEROUSLY_*` forest. Infer mode from credentials. Reject obsolete vars at startup with migration errors.
-6. **SDK:** Pin exact `@modelcontextprotocol/server@2.0.0` and `@modelcontextprotocol/node@2.0.0` (plus peers such as `hono`). Stdio: `server.connect(StdioServerTransport)`. HTTP: **sessionless** Streamable HTTP (no `Mcp-Session-Id` affinity; [ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)). Do **not** switch to `serveStdio` / `createMcpHandler` without a follow-up decision.
+6. **SDK:** Pin exact `@modelcontextprotocol/server@2.0.0` and `@modelcontextprotocol/node@2.0.0` (plus peers such as `hono`). **Stdio:** `serveStdio(factory, { legacy: 'serve' })` from `@modelcontextprotocol/server/stdio` (dual-era: 2026-07-28 + legacy initialize). **HTTP:** `createMcpHandler(factory, { legacy: 'stateless' })` + `toNodeHandler` from `@modelcontextprotocol/node`, with auth/Origin/PRM middleware in front (ADR-0019 sessionless). Hand-wiring `StdioServerTransport.connect()` / `NodeStreamableHTTPServerTransport` alone stays on the 2025-era wire and is not used for production entrypoints. Do **not** adopt `server-legacy` AS helpers.
 7. **Env naming:** MCP HTTP vars use `LIGHTDASH_TOOLS_MCP_*` / `LIGHTDASH_TOOLS_OAUTH_*` ([ADR-0009](0009-cross-cutting-conventions.md)). Official `LIGHTDASH_URL` / `LIGHTDASH_API_KEY` unchanged.
 
 ## Consequences
@@ -37,4 +37,4 @@ SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. F
 
 - [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
 - [SDK v2 Require authorization](https://ts.sdk.modelcontextprotocol.io/v2/serving/authorization.html)
-- Operator notes: `docs/mcp-oauth-http.md`, `docs/security/mcp-oauth-threat-model.md`
+- Operator notes: `docs/operators/mcp-oauth.md`, `docs/operators/mcp-oauth-threat-model.md`

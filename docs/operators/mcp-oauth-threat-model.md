@@ -38,7 +38,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 - [ ] Register exactly one Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`.
 - [ ] Confirm deployed persona URL matches intended capability (shipped `semantic-layer` = discovery/compile only; [ADR-0006](../adr/0006-mcp-personas-shared-registry-fixed-paths.md)).
 - [ ] Pin project via client/gateway `X-Lightdash-Project` when operators need a per-request project, and/or set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` for a process-level hard allowlist ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
-- [ ] On Cloud Run / hosted HTTP: leave `LIGHTDASH_TOOLS_AUDIT_LOG` **unset** so tool audits go to stderr → Cloud Logging (`jsonPayload.channel="audit"`). Use a file path only for CLI/local. See [cloud-run-mcp-oauth.md](../cloud-run-mcp-oauth.md).
+- [ ] On Cloud Run / hosted HTTP: leave `LIGHTDASH_TOOLS_AUDIT_LOG` **unset** so tool audits go to stderr → Cloud Logging (`jsonPayload.channel="audit"`). Use a file path only for CLI/local. See [cloud-run.md](cloud-run.md).
 - [ ] Do **not** set `LIGHTDASH_API_KEY` for primary OAuth hosting (PAT is secondary / stdio / shared-key).
 - [ ] Do not rely on `LIGHTDASH_TOOLS_SAFETY_MODE` / `DRY_RUN` for MCP — those are CLI-only (`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` is shared with MCP as the project ceiling).
 
@@ -46,14 +46,14 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 
 - [ ] Inject env vars from the platform (Cloud Run secrets, Kubernetes, systemd) — not plaintext `.env` on disk.
 - [ ] Keep OAuth **client secret on the MCP server** only — never in Cursor/Claude `mcp.json`.
-- [ ] See [secrets-and-credentials.md](../secrets-and-credentials.md).
+- [ ] See [secrets.md](secrets.md).
 
 ### Logging and observability
 
 - [ ] Configure log redaction for `Authorization` and `Proxy-Authorization` headers.
 - [ ] Tool-output PII redaction in MCP responses ([ADR-0011](../adr/0011-mcp-tool-response-sensitivity-classes.md)) is separate from log/token redaction above — handlers mask emails and omit connection secrets before results reach the agent transcript.
 - [ ] Verify audit log entries are structured JSON with `channel="audit"`, and contain `tokenHash` and `subject` (not raw tokens) for OAuth sessions; also expect `clientSessionId` / `personaId` when available.
-- [ ] For compliance retention beyond the `_Default` bucket (30 days by default), configure a Cloud Logging sink to a dedicated bucket (or BigQuery/GCS) filtered on `jsonPayload.channel="audit"` — see [cloud-run-mcp-oauth.md](../cloud-run-mcp-oauth.md).
+- [ ] For compliance retention beyond the `_Default` bucket (30 days by default), configure a Cloud Logging sink to a dedicated bucket (or BigQuery/GCS) filtered on `jsonPayload.channel="audit"` — see [cloud-run.md](cloud-run.md).
 - [ ] Avoid capturing full HTTP request dumps in production.
 
 ### Network and deployment
@@ -79,7 +79,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 
 ## Related documentation
 
-- [mcp-oauth-http.md](../mcp-oauth-http.md) — setup and troubleshooting
-- [cursor-lightdash-oauth-mcp.md](../cursor-lightdash-oauth-mcp.md) — Cursor client setup
-- [cloud-run-mcp-oauth.md](../cloud-run-mcp-oauth.md) — Cloud Run deployment
-- [agent-context/CONTEXT.md](../agent-context/CONTEXT.md) — agent guardrail invariants
+- [mcp-oauth.md](mcp-oauth.md) — setup and troubleshooting
+- [cursor-claude.md](cursor-claude.md) — Cursor client setup
+- [cloud-run.md](cloud-run.md) — Cloud Run deployment
+- [agent-context.md](agent-context.md) — agent guardrail invariants
