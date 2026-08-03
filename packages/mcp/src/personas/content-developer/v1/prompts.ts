@@ -73,7 +73,7 @@ Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_spa
 
 1. If the goal is vague on audience / decisions / what to understand: ask **2–4 clarifying questions** before a Spec (do not invent a viz-type checklist).
 2. Read-only discovery only (project/space/seeds).
-3. ${DESIGN_SPEC_STOP} Multi-viz / all chart types only if the user explicitly asked (see dashboards + chart-types playbooks).
+3. ${DESIGN_SPEC_STOP} Multi-viz / all chart types only if the user explicitly asked (see dashboards + chart-types playbooks). For explicit all-types work, keep primary insights decision-oriented and place redundant required forms in a labeled validation appendix; never weaken semantic field requirements.
 4. After approval: follow embedded playbooks (preview→confirm→apply).
 5. Report dashboard UUID/slug, tiles, filters, chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
         DASHBOARD_CHART_TOPIC_IDS,

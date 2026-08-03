@@ -112,6 +112,43 @@ describe('content-developer prompts/playbook', () => {
     expect(md).toContain('content-governance');
   });
 
+  it('keeps all-types dashboards decision-oriented and enforces chart semantics', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/decision-oriented|decision section/);
+    expect(md).toMatch(/validation appendix|visualization-validation/);
+    expect(md).toMatch(/scatter.*two numeric|two numeric.*scatter/);
+    expect(md).toMatch(/funnel.*discrete stages|discrete stages.*funnel/);
+    expect(md).toMatch(/sankey.*source.*target.*flow/);
+    expect(md).toMatch(/pie.*meaningful whole|meaningful whole.*pie/);
+    expect(md).toMatch(/area.*total.*parts|total.*parts.*area/);
+    expect(md).toMatch(/gauge.*target|target.*gauge/);
+  });
+
+  it('documents every supported native map input without permitting fabricated geography', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/iso 3166-1|iso3/);
+    expect(md).toMatch(/us state|state code/);
+    expect(md).toMatch(/latitude.*longitude|longitude.*latitude/);
+    expect(md).toMatch(/do not fabricate|never fabricate/);
+  });
+
+  it('documents that a legitimate scatter grain dimension is not a validate_chart defect', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/grain dimension/);
+    expect(md).toMatch(/two metric axes/);
+    expect(md).toMatch(/validate_chart/);
+    expect(md).toMatch(/flag(?:s|ged)? .*unused/);
+    expect(md).toMatch(/do not drop the dimension|never drop the dimension/);
+  });
+
+  it('documents a canonical proxy-naming template for validation-only funnel\\/sankey charts', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toContain('<metric>');
+    expect(md).toContain('<type>');
+    expect(md).toMatch(/<funnel\/flow>/);
+    expect(md).toMatch(/visualization validation, not a real/);
+  });
+
   it('does not register standalone build_chart or design_dashboard prompt', async () => {
     const { registerContentDeveloperPrompts } = await import('./prompts.js');
     const names: string[] = [];
