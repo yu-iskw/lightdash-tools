@@ -1,3 +1,0 @@
-kind: feat
-body: 'Make MCP HTTP stateless: drop Redis ephemeral store and transport sessions; use HMAC-signed preview tokens; keep in-memory OAuth broker only.'
-time: 2026-08-03T12:13:37.124477+09:00

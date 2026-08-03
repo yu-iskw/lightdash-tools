@@ -1,3 +1,0 @@
-kind: feat
-body: Emit Cloud Logging–parseable MCP/CLI audit JSON on stderr (channel=audit) with clientSessionId and personaId; document Cloud Run sink/retention.
-time: 2026-08-03T17:53:34.080346+09:00

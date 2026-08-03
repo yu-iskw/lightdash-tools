@@ -1,3 +1,0 @@
-kind: feat
-body: content-reader export_chart_image returns a single PNG snapshot (MCP ImageContent; SSRF-hardened download; SQL charts blocked)
-time: 2026-08-03T16:26:13.524919+09:00
