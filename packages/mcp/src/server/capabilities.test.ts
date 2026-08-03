@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { getServerPersona } from '../audit/server-persona.js';
 import { getDefaultPersona } from '../personas/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
 
@@ -42,6 +43,7 @@ describe('registerCapabilities', () => {
   it('registers persona tool allowlist and prompts/resources', () => {
     const persona = getDefaultPersona();
     registerCapabilities(server, mockContextProvider, { persona });
+    expect(getServerPersona(server)).toBe(persona.id);
     expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds, {
       personaId: persona.id,
     });

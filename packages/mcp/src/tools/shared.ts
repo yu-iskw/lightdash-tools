@@ -11,15 +11,16 @@
  */
 
 import {
+  buildAuditLogEntry,
   extractProjectUuids,
   ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
   READ_ONLY_DEFAULT,
   logAuditEntry,
-  getSessionId,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 import { isInputRequiredResult } from '@modelcontextprotocol/server';
 
+import { getServerPersona } from '../audit/server-persona.js';
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import { findUnavailableProjectUuids } from '../governance/available-projects.js';
 import {
@@ -146,25 +147,6 @@ function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
   return { ...DEFAULT_ANNOTATIONS, ...overrides };
 }
 
-function buildAuditFields(
-  name: string,
-  projectUuids: string[],
-  status: AuditStatus,
-  start: number,
-  auth: ReturnType<typeof getToolAuditAuth>,
-): Parameters<typeof logAuditEntry>[0] {
-  return {
-    timestamp: new Date().toISOString(),
-    sessionId: getSessionId(),
-    tool: name,
-    projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
-    tokenHash: auth?.tokenHash,
-    subject: auth?.subject,
-    status,
-    durationMs: Date.now() - start,
-  };
-}
-
 /** Internal marker attached to responses produced by a guardrail (project-pin denial
  * or input-validation failure). The audit wrapper reads this flag
  * to set status = 'blocked', then strips it before returning to the MCP client.
@@ -284,25 +266,39 @@ export function registerToolSafe(
 
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
+  // personaId is fixed at registration (bindServerPersona before registerToolsByIds).
+  const personaId =
+    typeof server === 'object' && server !== null ? getServerPersona(server) : undefined;
   const auditedInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
-    const start = Date.now();
+    const startMs = Date.now();
     const projectUuids = extractProjectUuids(args);
     // Snapshot before await — wrapTool ALS may end when the handler returns.
     const auth = getToolAuditAuth();
+    const clientSessionId = resolveMcpClientSessionId(extra);
     let status: AuditStatus = 'success';
-    let result: ToolResult;
+    let result!: ToolResult;
 
     try {
       result = await auditedInner(args, extra);
       status = resolveAuditStatus(result);
     } catch (err) {
       status = 'error';
-      logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
       throw err;
+    } finally {
+      logAuditEntry(
+        buildAuditLogEntry({
+          tool: name,
+          status,
+          startMs,
+          projectUuids,
+          tokenHash: auth?.tokenHash,
+          subject: auth?.subject,
+          clientSessionId,
+          personaId,
+        }),
+      );
     }
-
-    logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
 
     // Pass InputRequiredResult through unchanged (MRTR).
     if (isInputRequiredResult(result)) {

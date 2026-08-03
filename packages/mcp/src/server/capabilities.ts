@@ -2,6 +2,7 @@
  * Register tools / prompts / resources for a persona.
  */
 
+import { bindServerPersona } from '../audit/server-persona.js';
 import { getDefaultPersona } from '../personas/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
 
@@ -24,6 +25,7 @@ export function registerCapabilities(
   options?: RegisterCapabilitiesOptions,
 ): void {
   const persona = options?.persona ?? getDefaultPersona();
+  bindServerPersona(server, persona.id);
   registerToolsByIds(server, contextProvider, persona.toolIds, { personaId: persona.id });
   persona.registerPrompts(server);
   persona.registerResources(server);

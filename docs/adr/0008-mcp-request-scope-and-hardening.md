@@ -28,7 +28,7 @@ MCP security layers:
    - **HTTP pin (all personas):** optional `X-Lightdash-Project` → ALS → `governance.pinnedProjectUuid`. Mismatched tool `projectUuid` args are blocked; pinned `list_projects` returns the pinned project only. Pin always wins when set (within the ceiling below).
    - **Tool argument:** when HTTP pin is unset, tools that need a project require explicit `projectUuid`. If still unset → `PROJECT_SCOPE_REQUIRED`. There is **no** process default project env (`LIGHTDASH_TOOLS_PROJECT_UUID` removed).
    - **Shared project allowlist (CLI + MCP):** optional `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated UUIDs). Unset/empty → unrestricted beyond pin/arg + RBAC. Non-empty → **hard allowlist**: HTTP pin and every tool `projectUuid` (via `extractProjectUuids`) must be members; `resolveProjectScope` rejects non-members with `PROJECT_NOT_AVAILABLE`; `list_projects` intersects API results with the set. When restricted, `promote_dashboard` / `get_dashboard_promote_diff` also require the Data Ops upstream (and any `projectUuid`s in promoteDiff) to be members — fail closed if the upstream target cannot be determined. The list is a **ceiling only** — it is not an implicit project default. Invalid UUID entries fail closed at process startup. Removed `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` and `LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS` (no aliases) — if still set, startup fails with guidance to use `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
-4. **Hardening** — validate known identifier fields only (`project`, `projectUuid`, `projectUuids`, `projects`, `slug`); optional audit via `LIGHTDASH_TOOLS_AUDIT_LOG`. Call `initAuditLog()` at process start.
+4. **Hardening** — validate known identifier fields only (`project`, `projectUuid`, `projectUuids`, `projects`, `slug`). Audit every tool call via `initAuditLog()` at process start: entries are NDJSON with `channel: "audit"`. On hosted MCP (Cloud Run), leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset so audits go to **stderr as pure JSON** (Cloud Logging `jsonPayload`); a file path is for CLI/local only (container FS is ephemeral).
 
 **Removed from MCP** (no compatibility): `LIGHTDASH_TOOLS_SAFETY_MODE`, `--safety-mode`, `LIGHTDASH_TOOLS_DRY_RUN`, `--dry-run`, `--projects` (CLI flag only), JWT-based tool scope gating in tool wrappers, process default `LIGHTDASH_TOOLS_PROJECT_UUID`, and `LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS`.
 
@@ -48,7 +48,7 @@ flowchart TD
 
 ## Consequences
 
-- Operator story: choose persona URL; configure auth; optionally set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` and/or pin project on HTTP; pass `projectUuid` when unpinned; audit if desired.
+- Operator story: choose persona URL; configure auth; optionally set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` and/or pin project on HTTP; pass `projectUuid` when unpinned; rely on Cloud Logging for hosted audit (stderr JSON), or a local file via `LIGHTDASH_TOOLS_AUDIT_LOG` for CLI.
 - No false confidence from unused MCP safety-mode / dry-run knobs; one shared allowlist name for CLI and MCP.
 - Write personas need a new gate (likely introspection) before exposing writes over identity-only OAuth.
 

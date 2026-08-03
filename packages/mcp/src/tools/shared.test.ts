@@ -2,6 +2,7 @@ import { LightdashApiError } from '@lightdash-tools/client';
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { bindServerPersona } from '../audit/server-persona.js';
 import { resetAvailableProjectsCache } from '../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
@@ -62,6 +63,35 @@ describe('registerToolSafe', () => {
 
     const result = await handler({});
     expect(result.content[0].text).toBe('success');
+  });
+
+  it('audit entry includes channel, clientSessionId, and personaId', async () => {
+    bindServerPersona(mockServer, 'semantic-layer');
+    registerToolSafe(
+      mockServer,
+      'audit_attrs',
+      {
+        description: 'Audit attrs',
+        inputSchema: {},
+        annotations: READ_ONLY_DEFAULT,
+      },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    await handler({}, { sessionId: 'mcp-client-session-9' });
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'audit',
+        severity: 'INFO',
+        message: `${TOOL_PREFIX}audit_attrs success`,
+        status: 'success',
+        clientSessionId: 'mcp-client-session-9',
+        personaId: 'semantic-layer',
+        tool: `${TOOL_PREFIX}audit_attrs`,
+      }),
+    );
   });
 
   it('allows tools when OAuth subject is present (no local JWT scope gate)', async () => {
@@ -283,6 +313,9 @@ describe('registerToolSafe', () => {
 
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     await expect(handler({})).rejects.toThrow('boom');
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', tool: `${TOOL_PREFIX}throws_tool` }),
+    );
   });
 
   it('should mark audit status error when handler returns isError', async () => {
@@ -300,6 +333,9 @@ describe('registerToolSafe', () => {
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     const result = await handler({});
     expect(result.isError).toBe(true);
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', tool: `${TOOL_PREFIX}error_result_tool` }),
+    );
   });
 
   it('should attach structuredContent when handler returns JSON text', async () => {

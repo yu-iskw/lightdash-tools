@@ -23,13 +23,13 @@ Set credentials via environment variables injected by your parent process. The t
 
 **Optional (CLI primarily; audit also used by MCP):**
 
-| Variable                                | Description                                                                   |
-| :-------------------------------------- | :---------------------------------------------------------------------------- |
-| `LIGHTDASH_PROXY_AUTHORIZATION`         | Proxy authorization header                                                    |
-| `LIGHTDASH_TOOLS_SAFETY_MODE`           | CLI only — safety mode (`read-only`, `write-idempotent`, `write-destructive`) |
-| `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP — comma-separated project UUIDs (ceiling; unset = unrestricted)     |
-| `LIGHTDASH_TOOLS_DRY_RUN`               | CLI only — set to `1`, `true`, or `yes` to simulate mutating operations       |
-| `LIGHTDASH_TOOLS_AUDIT_LOG`             | File path for audit log; unset defaults to stderr                             |
+| Variable                                | Description                                                                                                                                                                                                                           |
+| :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_PROXY_AUTHORIZATION`         | Proxy authorization header                                                                                                                                                                                                            |
+| `LIGHTDASH_TOOLS_SAFETY_MODE`           | CLI only — safety mode (`read-only`, `write-idempotent`, `write-destructive`)                                                                                                                                                         |
+| `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP — comma-separated project UUIDs (ceiling; unset = unrestricted)                                                                                                                                                             |
+| `LIGHTDASH_TOOLS_DRY_RUN`               | CLI only — set to `1`, `true`, or `yes` to simulate mutating operations                                                                                                                                                               |
+| `LIGHTDASH_TOOLS_AUDIT_LOG`             | Optional file path for NDJSON audit append (CLI/local). Unset → stderr as pure JSON (`channel: "audit"`). On Cloud Run leave unset so Cloud Logging ingests structured audits — see [cloud-run-mcp-oauth.md](cloud-run-mcp-oauth.md). |
 
 **Hosted MCP OAuth (primary HTTP):**
 
