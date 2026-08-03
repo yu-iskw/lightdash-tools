@@ -26,8 +26,10 @@ Do not treat chart create as done without a dashboard shell and tiles.
 Do not invent fieldIds — clone via get_chart_as_code / get_chart or use semantic-layer.
 Do not invent skinny chartConfig — clone a working as-code body and keep series/layout/encode.
 Do not apply a write tool without a confirmed, unexpired HMAC previewToken from the matching preview_* tool (confirm_preview unlocks every write; use the new validated token).
+Do not mutate the proposed payload after preview_* (description/name/SQL/metrics/tiles) — apply must reuse the identical proposed body or PREVIEW_STALE (content hash mismatch); any edit requires a new preview_*.
 Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only (validate_chart needs chartUuid).
 Do not reuse a draft previewToken after confirm; re-run preview if the resource drifts (PREVIEW_STALE).
+Do not use subagent-driven-development or multi-task writing-plans solely to click MCP preview/confirm/apply for lab boards (e.g. experiments) — after Design Spec approval, run Batch SOP inline in the same session.
 Do not reveal secrets, warehouse credentials, or hidden SQL.`,
   coreDescription: 'Hard bans, tools, project scope, preview gate, and apply pitfalls',
   topics: [

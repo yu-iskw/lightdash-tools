@@ -34,48 +34,50 @@ export function registerListProjectParameters(
         pageSize: z.number().int().positive().max(100).optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          search?: string;
-          page?: number;
-          pageSize?: number;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const result = await c.v2.parameters.listParameters(scope.projectUuid, {
-              search: args.search,
-              page: args.page,
-              pageSize: args.pageSize ?? 25,
-            });
-            const { data, pagination } = asPaginated<Record<string, unknown>>(result);
-            const complete = isPageComplete(
-              data.length,
-              pagination?.totalResults,
-              pagination?.totalPageCount,
-              args.page ?? pagination?.page,
-            );
-            return jsonToolResult(
-              contentReaderEnvelope(
-                {
-                  parameters: data,
-                  pagination: { returned: data.length, ...pagination, complete },
-                },
-                {
-                  projectUuid: scope.projectUuid,
-                  projectPinned: scope.projectPinned,
-                  complete,
-                  truncated: !complete,
-                },
-              ),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            search?: string;
+            page?: number;
+            pageSize?: number;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              const result = await c.v2.parameters.listParameters(scope.projectUuid, {
+                search: args.search,
+                page: args.page,
+                pageSize: args.pageSize ?? 25,
+              });
+              const { data, pagination } = asPaginated<Record<string, unknown>>(result);
+              const complete = isPageComplete(
+                data.length,
+                pagination?.totalResults,
+                pagination?.totalPageCount,
+                args.page ?? pagination?.page,
+              );
+              return jsonToolResult(
+                contentReaderEnvelope(
+                  {
+                    parameters: data,
+                    pagination: { returned: data.length, ...pagination, complete },
+                  },
+                  {
+                    persona,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                    complete,
+                    truncated: !complete,
+                  },
+                ),
+              );
+            } catch (err) {
+              return projectScopeErrorResult(err);
+            }
+          },
+      ),
   );
 }
 
@@ -95,20 +97,27 @@ export function registerGetProjectParameters(
         names: z.array(z.string()).min(1),
       },
     },
-    wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; names: string[] }) => {
-      try {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const values = asRecord(await c.v2.parameters.getParameters(scope.projectUuid, args.names));
-        const unresolvedNames = args.names.filter((name) => !(name in values));
-        return jsonToolResult(
-          contentReaderEnvelope(
-            { values, unresolvedNames },
-            { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
-          ),
-        );
-      } catch (err) {
-        return projectScopeErrorResult(err);
-      }
-    }),
+    (persona) =>
+      wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; names: string[] }) => {
+        try {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const values = asRecord(
+            await c.v2.parameters.getParameters(scope.projectUuid, args.names),
+          );
+          const unresolvedNames = args.names.filter((name) => !(name in values));
+          return jsonToolResult(
+            contentReaderEnvelope(
+              { values, unresolvedNames },
+              {
+                persona,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+              },
+            ),
+          );
+        } catch (err) {
+          return projectScopeErrorResult(err);
+        }
+      }),
   );
 }

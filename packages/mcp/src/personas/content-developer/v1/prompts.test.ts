@@ -100,7 +100,37 @@ describe('content-developer prompts/playbook', () => {
       /tiles.*diff\.removed|diff\.removed.*tiles|omit.*tiles|do \*\*not\*\* apply/,
     );
     expect(md).toContain('chartuuidorslug');
-    expect(md).toMatch(/persona:\s*content-reader|content-reader.*envelope/);
+    expect(md).toMatch(/persona:\s*content-developer|serving persona/);
+  });
+
+  it('documents lab/inline Batch SOP and bans SDD-only MCP click loops', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    const bans = CONTENT_DEVELOPER_HARD_BANS.toLowerCase();
+    expect(md).toMatch(/lab \/ inline|lab\/inline|inline build/);
+    expect(md).toMatch(/batch sop in the same session|same session/);
+    expect(md).toMatch(/subagent-driven-development|writing-plans/);
+    expect(bans).toMatch(/subagent-driven-development|writing-plans/);
+    expect(bans).toMatch(/lab boards|experiments/);
+  });
+
+  it('locks identical proposed payload, preview failure taxonomy, and mid-build UUID inventory', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    const bans = CONTENT_DEVELOPER_HARD_BANS.toLowerCase();
+    expect(md).toMatch(
+      /identical proposed|same proposed payload|immutable.*proposed|do not (mutate|edit|change).*proposed/,
+    );
+    expect(bans).toMatch(
+      /proposed payload|identical proposed|mutate.*proposed|edit.*after preview/,
+    );
+    expect(md).toMatch(/content hash/);
+    expect(md).toMatch(/preview_stale/);
+    expect(md).toMatch(/preview_required/);
+    expect(md).toMatch(/invalid or expired/);
+    expect(md).toMatch(
+      /running inventory|uuid inventory|after each.*create_chart|inventory.*charts\[0\]\.data\.uuid/,
+    );
+    expect(md).toMatch(/batch sop|one.*update_dashboard/);
+    expect(md).toMatch(/avoid n single-tile|do not interleave tiling/);
   });
 
   it('documents improve/professionalize Spec delta, cull, and leftover handoff', () => {
@@ -110,6 +140,43 @@ describe('content-developer prompts/playbook', () => {
     expect(md).toMatch(/cull/);
     expect(md).toMatch(/untiled|leftover/);
     expect(md).toContain('content-governance');
+  });
+
+  it('keeps all-types dashboards decision-oriented and enforces chart semantics', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/decision-oriented|decision section/);
+    expect(md).toMatch(/validation appendix|visualization-validation/);
+    expect(md).toMatch(/scatter.*two numeric|two numeric.*scatter/);
+    expect(md).toMatch(/funnel.*discrete stages|discrete stages.*funnel/);
+    expect(md).toMatch(/sankey.*source.*target.*flow/);
+    expect(md).toMatch(/pie.*meaningful whole|meaningful whole.*pie/);
+    expect(md).toMatch(/area.*total.*parts|total.*parts.*area/);
+    expect(md).toMatch(/gauge.*target|target.*gauge/);
+  });
+
+  it('documents every supported native map input without permitting fabricated geography', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/iso 3166-1|iso3/);
+    expect(md).toMatch(/us state|state code/);
+    expect(md).toMatch(/latitude.*longitude|longitude.*latitude/);
+    expect(md).toMatch(/do not fabricate|never fabricate/);
+  });
+
+  it('documents that a legitimate scatter grain dimension is not a validate_chart defect', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/grain dimension/);
+    expect(md).toMatch(/two metric axes/);
+    expect(md).toMatch(/validate_chart/);
+    expect(md).toMatch(/flag(?:s|ged)? .*unused/);
+    expect(md).toMatch(/do not drop the dimension|never drop the dimension/);
+  });
+
+  it('documents a canonical proxy-naming template for validation-only funnel\\/sankey charts', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toContain('<metric>');
+    expect(md).toContain('<type>');
+    expect(md).toMatch(/<funnel\/flow>/);
+    expect(md).toMatch(/visualization validation, not a real/);
   });
 
   it('does not register standalone build_chart or design_dashboard prompt', async () => {

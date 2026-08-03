@@ -4,6 +4,7 @@
 
 import { READ_ONLY_DEFAULT, READ_ONLY_TRANSIENT } from '@lightdash-tools/common';
 
+import { requireServerPersona } from '../audit/server-persona.js';
 import { registerToolSafe } from '../tools/shared.js';
 
 import type { ToolHandler, ToolOptions } from '../tools/shared.js';
@@ -70,7 +71,10 @@ export function assertContentReaderSafe(safety: ReaderOperationSafety): void {
   }
 }
 
-/** Register a content-reader tool after safety asserts. */
+/**
+ * Register a content-reader-family tool after safety asserts.
+ * Fail-closed: requires bindServerPersona on the server (serving persona for envelopes/audit).
+ */
 export function registerContentReaderTool(
   server: McpServer,
   shortName: string,
@@ -78,8 +82,9 @@ export function registerContentReaderTool(
     annotations?: ToolOptions['annotations'];
     safety: ReaderOperationSafety;
   },
-  handler: ToolHandler,
+  createHandler: (persona: string) => ToolHandler,
 ): void {
+  const persona = requireServerPersona(server, shortName);
   const annotations =
     options.annotations ??
     (options.safety === SAVED_EXECUTION_SAFETY
@@ -91,5 +96,5 @@ export function registerContentReaderTool(
   if (annotations.readOnlyHint !== true) {
     throw new Error(`content-reader requires readOnlyHint for '${shortName}'`);
   }
-  registerToolSafe(server, shortName, { ...options, annotations }, handler);
+  registerToolSafe(server, shortName, { ...options, annotations }, createHandler(persona));
 }

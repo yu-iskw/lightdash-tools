@@ -34,7 +34,7 @@ Then stop and ask: proceed / amend?
 
 Approval phrases: proceed, approved, go ahead, looks good, or an explicit amended plan.
 
-**Explicit multi-viz / all-types asks:** When the user already named the full viz checklist + analysis goal + `projectUuid`, a one-line Objective restatement + tile→insight map **is** the Spec. Treat that ask as approval after you restate once (do not re-ask clarifying questions that restate their checklist). Still skip **map** when no lat/lon and say so.
+**Explicit multi-viz / all-types asks:** When the user already named the full viz checklist + analysis goal + `projectUuid`, a one-line Objective restatement + tile→insight map **is** the Spec. Treat that ask as approval after you restate once (do not re-ask clarifying questions that restate their checklist). Split the board into a **decision-oriented** section — one best visualization per insight — plus a clearly titled **visualization-validation appendix** for required-but-redundant chart forms; the appendix relaxes the cull rule only, never field validity or semantic-fit (see chart-types **semantic fit gate**). Still skip **map** — and report it unsupported — unless the explore has latitude+longitude, ISO 3166-1 alpha-3 / US state codes, or a compatible custom-GeoJSON join field; never fabricate geography (or any field) to complete the checklist.
 
 ### Improve / professionalize Spec delta
 

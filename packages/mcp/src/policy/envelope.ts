@@ -24,7 +24,7 @@ export type ContentReaderWarning = {
 export type ContentReaderEnvelope<T> = {
   data: T;
   context: {
-    persona: 'content-reader';
+    persona: string;
     projectUuid: string;
     projectPinned: boolean;
     observedAt: string;
@@ -40,6 +40,7 @@ export type ContentReaderEnvelope<T> = {
 export function contentReaderEnvelope<T>(
   data: T,
   opts: {
+    persona: string;
     projectUuid: string;
     projectPinned: boolean;
     complete?: boolean;
@@ -51,7 +52,7 @@ export function contentReaderEnvelope<T>(
   return {
     data,
     context: {
-      persona: 'content-reader',
+      persona: opts.persona,
       projectUuid: opts.projectUuid,
       projectPinned: opts.projectPinned,
       observedAt: new Date().toISOString(),

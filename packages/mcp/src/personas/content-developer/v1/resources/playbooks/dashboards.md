@@ -59,10 +59,11 @@ If fieldIds are unknown → stop; use semantic-layer. Do **not** hand-author min
 Only when the user **explicitly** asks for every chart type (or a large multi-viz board)—not the default:
 
 1. Raise the new-chart budget (default ≤8 is too low).
-2. Cover: bar, horizontal bar, line, area, mixed, scatter, pie, funnel, treemap, sankey, table, big_number, gauge; **skip map** if no lat/lon and say so.
-3. One-line Objective is enough when the user already listed the viz checklist + analysis goal; still map each tile to an insight id (or label demo tiles clearly). Treat that explicit ask as Design Spec approval after you restate the checklist once.
-4. **Batch SOP:** create shell → create all charts (`dashboardSlug` set; **≤2** concurrent preview→confirm→apply chains) → capture each `charts[0].data.uuid` → **one** `update_dashboard` with full tiles + optional empty-value filters. Do not interleave tiling with chart creates.
-5. Cap concurrent writes at **≤2** on hosted tunnels — parallel bursts often return HTTP 502.
+2. Split the board into a **decision-oriented** primary section — one best visualization per insight — plus a clearly titled **visualization-validation appendix** for required-but-redundant chart forms. The checklist relaxes the normal cull rule only in the appendix; it never relaxes field validity or semantic-fit requirements (`chart-types` **semantic fit gate**). Report an unsupported type instead of manufacturing meaningless data.
+3. Cover: bar, horizontal bar, line, area, mixed, scatter, pie, funnel, treemap, sankey, table, big_number, gauge — each checked against the semantic fit gate; **skip map** and report it unsupported unless the explore has latitude+longitude, ISO 3166-1 alpha-3 / US state codes, or a compatible custom-GeoJSON join field. Never fabricate geography (or any other field) to force a type onto the checklist.
+4. One-line Objective is enough when the user already listed the viz checklist + analysis goal; still map each tile to an insight id (or label demo tiles clearly). Treat that explicit ask as Design Spec approval after you restate the checklist once.
+5. **Batch SOP:** create shell → create all charts (`dashboardSlug` set; **≤2** concurrent preview→confirm→apply chains) → after **each** successful `create_chart`, append `slug` + `charts[0].data.uuid` to a **running inventory** in the reply (mid-build progress without tiling) → **one** `update_dashboard` with full tiles + optional empty-value filters. Do not interleave tiling with chart creates. Preview failure codes (hash vs expiry) → `lightdash://playbooks/content-developer/core`. Optional `validate_chart` only on risky charts (scatter grain, SQL custom dims) — not unlock.
+6. Cap concurrent writes at **≤2** on hosted tunnels — parallel bursts often return HTTP 502.
 
 ### Duplicate chart
 
@@ -77,9 +78,13 @@ Only when the user **explicitly** asks for every chart type (or a large multi-vi
 2. Require `properties.savedChartUuid` from the chart create/duplicate result (OpenAPI `CreateDashboardChartTile`). Optional `chartSlug` is metadata only — do not tile with slug alone.
 3. `preview_dashboard_changes` → `confirm_preview` (`resourceKey` = dashboard **UUID**, plus **`projectUuid`**) → `update_dashboard` with nested `dashboard: { name?, tiles, tabs, filters? }` matching preview `changes`.
 
-Avoid N single-tile round-trips when you already know the layout. If preview `diff.removed` includes **`tiles`/`tabs`/`filters`**, re-preview with those arrays included — do not treat that as harmless noise (see core).
+Avoid N single-tile round-trips when you already know the layout. Mid-build progress = running UUID inventory (+ optional validate), not an `update_dashboard` after every chart — unless the user explicitly asks to see tiles appear early (then still send full `tiles`/`tabs`/`filters`, never description-only). If preview `diff.removed` includes **`tiles`/`tabs`/`filters`**, re-preview with those arrays included — do not treat that as harmless noise (see core).
 
 Layout, optional markdown, optional filters → `lightdash://playbooks/content-developer/dashboard-design`.
+
+## Lab / inline build
+
+For lab spaces (e.g. `experiments`) and other non-production content boards: after Design Spec approval, run the **Batch SOP in the same session** (shell → charts → one `update_dashboard`). Do **not** use subagent-driven-development or multi-task writing-plans solely to click MCP `preview_*` / `confirm_preview` / apply for those boards — that ceremony adds latency without changing the required write loop. Still require Spec stop, `projectUuid`, identical proposed payload, and ≤2 concurrent chains.
 
 ## Improve / refactor / duplicate dashboard
 

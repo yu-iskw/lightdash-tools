@@ -47,63 +47,65 @@ export function registerGetQueryResult(
         pageSize: z.number().int().positive().max(1000).optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          queryUuid: string;
-          waitMs?: number;
-          page?: number;
-          pageSize?: number;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            // Ledger is best-effort (same replica); queryUuid is the durable handle.
-            const ledgerEntry = findQueryLedgerEntry({
-              projectUuid: scope.projectUuid,
-              queryUuid: args.queryUuid,
-            });
-
-            const waitMs = clampWaitMs(args.waitMs ?? 0);
-            const pageSize = args.pageSize ?? 100;
-            const page = args.page ?? 1;
-            const normalized =
-              waitMs > 0
-                ? await waitForAsyncQueryResults(c, scope.projectUuid, args.queryUuid, {
-                    waitMs,
-                    maxRows: pageSize,
-                    page,
-                  })
-                : normalizeAsyncQueryResult(
-                    await c.v2.query.getAsyncQueryResults(scope.projectUuid, args.queryUuid, {
-                      page,
-                      pageSize,
-                    }),
-                    { maxRows: pageSize },
-                  );
-
-            if (ledgerEntry && isTerminalStatus(normalized.status)) {
-              releaseQueryLedgerBudget(ledgerEntry);
-            }
-
-            return jsonToolResult(
-              contentReaderEnvelope(normalized, {
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            queryUuid: string;
+            waitMs?: number;
+            page?: number;
+            pageSize?: number;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              // Ledger is best-effort (same replica); queryUuid is the durable handle.
+              const ledgerEntry = findQueryLedgerEntry({
                 projectUuid: scope.projectUuid,
-                projectPinned: scope.projectPinned,
-                complete: isCoverageComplete(normalized),
-                truncated: normalized.truncated,
-                warnings: normalized.warnings.map(warningFromNormalizedMessage),
-              }),
-            );
-          } catch (err) {
-            if (err instanceof ProjectScopeError) {
-              return codedErrorResult(err.code, err.message);
+                queryUuid: args.queryUuid,
+              });
+
+              const waitMs = clampWaitMs(args.waitMs ?? 0);
+              const pageSize = args.pageSize ?? 100;
+              const page = args.page ?? 1;
+              const normalized =
+                waitMs > 0
+                  ? await waitForAsyncQueryResults(c, scope.projectUuid, args.queryUuid, {
+                      waitMs,
+                      maxRows: pageSize,
+                      page,
+                    })
+                  : normalizeAsyncQueryResult(
+                      await c.v2.query.getAsyncQueryResults(scope.projectUuid, args.queryUuid, {
+                        page,
+                        pageSize,
+                      }),
+                      { maxRows: pageSize },
+                    );
+
+              if (ledgerEntry && isTerminalStatus(normalized.status)) {
+                releaseQueryLedgerBudget(ledgerEntry);
+              }
+
+              return jsonToolResult(
+                contentReaderEnvelope(normalized, {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                  complete: isCoverageComplete(normalized),
+                  truncated: normalized.truncated,
+                  warnings: normalized.warnings.map(warningFromNormalizedMessage),
+                }),
+              );
+            } catch (err) {
+              if (err instanceof ProjectScopeError) {
+                return codedErrorResult(err.code, err.message);
+              }
+              throw err;
             }
-            throw err;
-          }
-        },
-    ),
+          },
+      ),
   );
 }
 
@@ -120,29 +122,37 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
         queryUuid: z.string(),
       },
     },
-    wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; queryUuid: string }) => {
-      try {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const ledgerEntry = findQueryLedgerEntry({
-          projectUuid: scope.projectUuid,
-          queryUuid: args.queryUuid,
-        });
-        await c.v2.query.cancelAsyncQuery(scope.projectUuid, args.queryUuid);
-        if (ledgerEntry) {
-          releaseQueryLedgerBudget(ledgerEntry);
-        }
-        return jsonToolResult(
-          contentReaderEnvelope(
-            { queryUuid: args.queryUuid, cancelled: true },
-            { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
-          ),
-        );
-      } catch (err) {
-        if (err instanceof ProjectScopeError) {
-          return codedErrorResult(err.code, err.message);
-        }
-        throw err;
-      }
-    }),
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) => async (args: { projectUuid?: string; queryUuid: string }) => {
+          try {
+            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+            const ledgerEntry = findQueryLedgerEntry({
+              projectUuid: scope.projectUuid,
+              queryUuid: args.queryUuid,
+            });
+            await c.v2.query.cancelAsyncQuery(scope.projectUuid, args.queryUuid);
+            if (ledgerEntry) {
+              releaseQueryLedgerBudget(ledgerEntry);
+            }
+            return jsonToolResult(
+              contentReaderEnvelope(
+                { queryUuid: args.queryUuid, cancelled: true },
+                {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                },
+              ),
+            );
+          } catch (err) {
+            if (err instanceof ProjectScopeError) {
+              return codedErrorResult(err.code, err.message);
+            }
+            throw err;
+          }
+        },
+      ),
   );
 }
