@@ -27,6 +27,7 @@ Discover, explain, and **optionally execute** saved Lightdash charts/dashboards 
 | Spaces deep-dived (`get_space`)                 | **≤3**                                                                |
 | Charts / dashboards fully inspected             | **≤5** metadata fetches                                               |
 | Executions (`run_chart` / `run_dashboard_tile`) | **≤3** total; dashboard tiles **≤5** when summarizing                 |
+| Chart image exports (`export_chart_image`)      | **≤3** (prefer when the user needs to **see** the viz)                |
 | Result rows kept in the answer                  | **≤20** (even if more returned)                                       |
 | `get_query_result` polls                        | only while status is non-terminal; then stop                          |
 
@@ -48,7 +49,8 @@ Record budget / pagination / truncation stops in the answer.
 | `get_dashboard` / `get_chart`                        | Structure / definition (SQL text hidden)                 |
 | `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                  |
 | `explain_content`                                    | Compact metadata explanation                             |
-| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution                                  |
+| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers)                        |
+| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless   |
 | `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid`                             |
 
 ## Phase 0 — Resolve project

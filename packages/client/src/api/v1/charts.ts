@@ -2,6 +2,7 @@
  * Charts API client. Endpoints for saved charts and chart-as-code operations.
  */
 
+import { DEFAULT_BINARY_MAX_BYTES } from '../../http/http-client';
 import { BaseApiClient } from '../base-client';
 
 import type {
@@ -23,6 +24,18 @@ export type ChartHistoryResults = components['schemas']['ApiGetChartHistoryRespo
 
 /** Results of GET saved/{chartUuid}/version/{versionUuid} (a single chart version). */
 export type ChartVersionResults = components['schemas']['ApiGetChartVersionResponse']['results'];
+
+/** Headless chart PNG export can take longer than the default HTTP timeout. */
+export const CHART_IMAGE_EXPORT_TIMEOUT_MS = 120_000;
+
+/** Hard cap on downloaded PNG size (8 MiB). */
+export const CHART_IMAGE_MAX_BYTES = DEFAULT_BINARY_MAX_BYTES;
+
+export type ChartImagePng = {
+  imageUrl: string;
+  bytes: Buffer;
+  mimeType: string;
+};
 
 export class ChartsClient extends BaseApiClient {
   /**
@@ -68,5 +81,33 @@ export class ChartsClient extends BaseApiClient {
   /** Get a single chart version by UUID. */
   async getChartVersion(chartUuid: string, versionUuid: string): Promise<ChartVersionResults> {
     return this.http.get<ChartVersionResults>(`/saved/${chartUuid}/version/${versionUuid}`);
+  }
+
+  /**
+   * Export a saved chart as a PNG via headless render.
+   * @returns Image URL string from `ApiExportChartImageResponse.results`.
+   */
+  async exportChartImage(chartUuid: string, projectUuid?: string): Promise<string> {
+    return this.http.post<string>(`/saved/${encodeURIComponent(chartUuid)}/export`, undefined, {
+      params: projectUuid ? { projectUuid } : undefined,
+      timeout: CHART_IMAGE_EXPORT_TIMEOUT_MS,
+    });
+  }
+
+  /**
+   * Export a saved chart PNG and download the image bytes.
+   * Requires Lightdash headless browser support on the instance.
+   */
+  async exportChartImagePng(chartUuid: string, projectUuid?: string): Promise<ChartImagePng> {
+    const imageUrl = await this.exportChartImage(chartUuid, projectUuid);
+    const { bytes, mimeType } = await this.http.getBytes(imageUrl, {
+      maxBytes: CHART_IMAGE_MAX_BYTES,
+      timeout: CHART_IMAGE_EXPORT_TIMEOUT_MS,
+    });
+    return {
+      imageUrl,
+      bytes,
+      mimeType: mimeType === 'application/octet-stream' ? 'image/png' : mimeType,
+    };
   }
 }

@@ -58,13 +58,21 @@ describe('developerErrorResult', () => {
       new ProjectScopeError('PROJECT_SCOPE_REQUIRED', 'no project'),
     );
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toContain('PROJECT_SCOPE_REQUIRED');
+    const first = result.content[0];
+    expect(first?.type).toBe('text');
+    if (first?.type === 'text') {
+      expect(first.text).toContain('PROJECT_SCOPE_REQUIRED');
+    }
   });
 
   it('maps PreviewLedgerError to a coded blocked result', () => {
     const result = developerErrorResult(new PreviewLedgerError('PREVIEW_STALE', 'stale preview'));
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toContain('PREVIEW_STALE');
+    const first = result.content[0];
+    expect(first?.type).toBe('text');
+    if (first?.type === 'text') {
+      expect(first.text).toContain('PREVIEW_STALE');
+    }
   });
 
   it('rethrows unrelated errors', () => {

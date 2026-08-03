@@ -89,8 +89,9 @@ Procedure:
 1. get_project → get_chart (includeQueryDefinition as needed) and/or explain_content.
 2. If chartType/source is sql, do not run; cite non-executable / capability.
 3. When includeLatestValues is true and semantic: run_chart (cache, bounded limit); cite queryUuid.
-4. Separate explicit metadata from inferred meaning; quote population caveats from the description.
-5. Do not construct a new query or retrieve underlying data.`,
+4. If the user needs to **see** the rendered viz (not just numbers), call export_chart_image (≤3); requires headless browser.
+5. Separate explicit metadata from inferred meaning; quote population caveats from the description.
+6. Do not construct a new query or retrieve underlying data.`,
         TOPIC_EXPLAIN_RUN,
       ),
   );

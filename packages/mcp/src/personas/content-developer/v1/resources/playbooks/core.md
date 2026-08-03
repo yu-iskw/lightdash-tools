@@ -4,7 +4,7 @@ URI: `lightdash://playbooks/content-developer/core`
 
 ## Purpose
 
-Author **semantic** charts and dashboards inside one resolved project. **Create the dashboard shell first**, then create charts scoped with `dashboardSlug` (official Lightdash as-code: dashboard-owned charts do not appear as independent space charts). Every write is gated: `preview_*` → `confirm_preview` → apply.
+Author **semantic** charts and dashboards inside one resolved project. **Clarify objective → Design Spec → user approval →** create the dashboard shell first, then create charts scoped with `dashboardSlug` (official Lightdash as-code: dashboard-owned charts do not appear as independent space charts). Every write is gated: `preview_*` → `confirm_preview` → apply.
 
 This persona does **not** execute queries, compile explores, create spaces, or promote. Clone viz configs via `get_chart_as_code` / `duplicate_chart`. For unknown fieldIds use semantic-layer. For promote use content-governance.
 
@@ -16,6 +16,9 @@ This persona does **not** execute queries, compile explores, create spaces, or p
 - Do not perform organization administration or list org-wide projects.
 - Do not create or update spaces — spaces are Terraform / out-of-band. Use existing spaces only.
 - Do not create **space-only** charts for dashboard work (omit `dashboardSlug`). New charts must set `dashboardSlug` to the dashboard already created.
+- Do not call `preview_*` or write tools for a **new** dashboard or a **material** dashboard redesign until a Design Spec (with settled **Objective**) was presented and the user approved or amended it in-thread.
+- Do not start writes from a viz-type / “all chart types” checklist alone — Objective and insight questions come first.
+- Do not attach dashboard filters whose `target.tableName` is absent from a tile’s explore without explicitly excluding that tile (or remapping) via `tileTargets`.
 - Do not treat chart create as done without a dashboard shell and tiles that reference those charts.
 - Do not invent `fieldId`s. Copy from `get_chart_as_code` / `get_chart` (`includeQueryDefinition`) or semantic-layer.
 - Do not invent skinny `chartConfig` (e.g. `{ series: [{ type: 'bar' }] }` only) — clone a working as-code body and keep series/layout/encode structure.
@@ -27,14 +30,15 @@ This persona does **not** execute queries, compile explores, create spaces, or p
 
 ## Default budgets (override when the user expands scope)
 
-| Resource                                            | Default                                                                         |
-| --------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `search_content` pages                              | `pageSize≤25`, stop after **2** pages                                           |
-| Spaces deep-dived (`get_space`)                     | **≤3**                                                                          |
-| Seed charts inspected / cloned                      | **≤12**                                                                         |
-| New charts created per dashboard                    | **≤8** (raise to match an explicit multi-viz checklist, e.g. all chart types)   |
-| Tile mutations after shell                          | Prefer one `update_dashboard` with full tiles; else **≤8** `add_dashboard_tile` |
-| Preview→confirm→apply retries after `PREVIEW_STALE` | **≤2** per resource                                                             |
+| Resource                                            | Default                                                                          |
+| --------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `search_content` pages                              | `pageSize≤25`, stop after **2** pages                                            |
+| Spaces deep-dived (`get_space`)                     | **≤3**                                                                           |
+| Seed charts inspected / cloned                      | **≤12**                                                                          |
+| New charts created per dashboard                    | **≤8** (raise only when the user explicitly expands scope, e.g. all chart types) |
+| Concurrent preview→confirm→apply chains             | **≤2** (hosted tunnels often 502 under heavier parallelism)                      |
+| Tile mutations after shell                          | Prefer one `update_dashboard` with full tiles; else **≤8** `add_dashboard_tile`  |
+| Preview→confirm→apply retries after `PREVIEW_STALE` | **≤2** per resource                                                              |
 
 Record when a budget stopped you. User-requested “one of every chart type” overrides the new-chart cap.
 
@@ -93,4 +97,5 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 - Dashboards use **`spaceUuid`** (not `spaceSlug`).
 - `dashboardSlug` owns the chart to the dashboard but does **not** add tiles — still `update_dashboard` with a full tile array.
 - Tile shape: `{ type: 'saved_chart', x, y, w, h, properties: { savedChartUuid, title? } }` — use the UUID from `create_chart` / `duplicate_chart` (36-column grid; half-width ≈ `w: 18`). Optional `chartSlug` is metadata only; do not omit `savedChartUuid`.
+- `create_chart` response: extract UUID from `charts[0].data.uuid` (not a bare chart object).
 - Viz shapes: `lightdash://playbooks/content-developer/chart-types`.

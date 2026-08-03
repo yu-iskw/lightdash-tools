@@ -93,6 +93,7 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-reader.parameters.get': 'v2.parameters.getParameters',
   'content-reader.content.explain': 'composed:v2.charts.getSavedChart+v2.dashboards.getDashboard',
   'content-reader.charts.run': 'v2.query.runChartQuery',
+  'content-reader.charts.export-image': 'composed:v1.charts.exportChartImagePng',
   'content-reader.dashboards.run-tile': 'v2.query.runDashboardChartQuery',
   'content-reader.query.result.get': 'v2.query.getAsyncQueryResults',
   'content-reader.query.cancel': 'v2.query.cancelAsyncQuery',

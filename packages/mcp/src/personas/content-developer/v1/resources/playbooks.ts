@@ -18,6 +18,9 @@ Do not hard-delete, rollback, or promote content (use content-governance for pro
 Do not perform organization administration or list org-wide projects.
 Do not create or update spaces — spaces are Terraform / out-of-band; use existing spaces only.
 Do not create space-only charts for dashboard work — set dashboardSlug to the dashboard shell already created.
+Do not call preview_* or write tools for a new dashboard or a material dashboard redesign until a Design Spec (with settled Objective) was presented and the user approved or amended it in-thread.
+Do not start writes from a viz-type or all-chart-types checklist alone — settle Objective and insight questions first.
+Do not attach dashboard filters whose target.tableName is absent from a tile explore without excluding that tile (or remapping) via tileTargets.
 Do not treat chart create as done without a dashboard shell and tiles.
 Do not invent fieldIds — clone via get_chart_as_code / get_chart or use semantic-layer.
 Do not invent skinny chartConfig — clone a working as-code body and keep series/layout/encode.
@@ -36,13 +39,14 @@ Do not reveal secrets, warehouse credentials, or hidden SQL.`,
     {
       id: 'dashboard-design',
       title: 'Content-developer dashboard-design playbook',
-      description: 'Layout, optional markdown, optional filters, and tabs guidance',
+      description:
+        'Objective-first Design Spec, explore↔filter / tileTargets, layout, markdown, filters, tabs',
       file: 'dashboard-design.md',
     },
     {
       id: 'chart-types',
       title: 'Content-developer chart-types playbook',
-      description: 'Cartesian encode checklist and UI intent → as-code type map',
+      description: 'Insight-first viz pick; cartesian encode checklist; UI intent → as-code map',
       file: 'chart-types.md',
     },
     {

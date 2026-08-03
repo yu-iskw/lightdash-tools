@@ -139,6 +139,20 @@ const op_run_chart = defineOperation({
   profiles: [PROFILE_CONTENT_READER],
 });
 
+const op_export_chart_image = defineOperation({
+  id: 'content-reader.charts.export-image',
+  summary: 'Export a saved chart as a PNG image snapshot',
+  http: { method: 'POST', path: '/api/v1/saved/{chartUuid}/export' },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'export_chart_image',
+    annotations: READ_ONLY_TRANSIENT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_READER],
+});
+
 const op_run_dashboard_tile = defineOperation({
   id: 'content-reader.dashboards.run-tile',
   summary: 'Execute a dashboard tile with bounded results',
@@ -191,6 +205,7 @@ export const CONTENT_READER_OPERATIONS: readonly OperationDescriptor[] = [
   op_get_project_parameters,
   op_explain_content,
   op_run_chart,
+  op_export_chart_image,
   op_run_dashboard_tile,
   op_get_query_result,
   op_cancel_query,

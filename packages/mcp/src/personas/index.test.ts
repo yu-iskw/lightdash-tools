@@ -78,10 +78,11 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-org-audit');
   });
 
-  it('content-reader allowlists 13 tools and server name', () => {
+  it('content-reader allowlists 14 tools and server name', () => {
     const persona = getPersona('content-reader');
-    expect(persona.toolIds).toHaveLength(13);
+    expect(persona.toolIds).toHaveLength(14);
     expect(persona.toolIds).toEqual([...CONTENT_READER_TOOL_IDS]);
+    expect(persona.toolIds).toContain('export_chart_image');
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-content');
   });
 

@@ -65,3 +65,19 @@ export class NetworkError extends Error {
     Object.setPrototypeOf(this, NetworkError.prototype);
   }
 }
+
+/**
+ * Thrown when a chart PNG export exceeds the configured byte limit.
+ */
+export class ChartImageSizeError extends Error {
+  readonly code = 'IMAGE_TOO_LARGE' as const;
+
+  constructor(
+    public readonly byteLength: number,
+    public readonly maxBytes: number,
+  ) {
+    super(`Chart image exceeds size limit (${byteLength} > ${maxBytes} bytes)`);
+    this.name = 'ChartImageSizeError';
+    Object.setPrototypeOf(this, ChartImageSizeError.prototype);
+  }
+}

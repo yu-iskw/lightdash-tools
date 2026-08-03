@@ -2,7 +2,7 @@
  * MCP prompts for content-developer workflows.
  *
  * Procedure detail lives in playbooks (embedded via createPromptPlaybookEmbedder).
- * Prompt bodies stay goal/input-specific — do not restate core/dashboard SOPs here.
+ * Prompt bodies stay goal/input-specific — do not restate entire SOPs here.
  */
 
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
@@ -17,6 +17,7 @@ import {
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
+import type { ContentDeveloperPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const userMessages = createPromptPlaybookEmbedder({
@@ -28,12 +29,28 @@ const optionalProjectUuid = projectUuidField().optional();
 
 const PROJECT_UUID_HINT = '(pass on every tool, or use HTTP pin — else PROJECT_SCOPE_REQUIRED)';
 
+const TOPIC_DASHBOARDS = 'dashboards' as const satisfies ContentDeveloperPlaybookTopic;
+const TOPIC_DASHBOARD_DESIGN = 'dashboard-design' as const satisfies ContentDeveloperPlaybookTopic;
+const TOPIC_CHART_TYPES = 'chart-types' as const satisfies ContentDeveloperPlaybookTopic;
+const DASHBOARD_CHART_TOPIC_IDS = [
+  TOPIC_DASHBOARDS,
+  TOPIC_DASHBOARD_DESIGN,
+  TOPIC_CHART_TYPES,
+] as const;
+const DASHBOARD_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_DASHBOARD_DESIGN] as const;
+const DASHBOARD_PUBLISH_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_CHART_TYPES] as const;
+
+/** Thin stop gate — Phase Design / Objective detail lives in dashboard-design playbook. */
+const DESIGN_SPEC_STOP =
+  'Emit a Design Spec (dashboard-design Phase Design: Objective + tiles with tableName citing insights + filter apply/exclude plan), then **stop until the user proceeds / approves / amends** before any preview_* or write.';
+
 export function registerContentDeveloperPrompts(server: McpServer): void {
   server.registerPrompt(
     'create_dashboard',
     {
       title: 'Create dashboard',
-      description: 'Create a dashboard shell first, then dashboardSlug-scoped charts as tiles',
+      description:
+        'Clarify Objective → Design Spec (await approval) → shell → dashboardSlug charts → tiles / filters',
       argsSchema: {
         goal: z.string(),
         projectUuid: optionalProjectUuid,
@@ -52,10 +69,14 @@ Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
 ${CONTENT_DEVELOPER_HARD_BANS}
 
 Target existing space: ${spaceUuid ?? '(resolve with lightdash_list_spaces / lightdash_get_space — never create a space)'}.
-Chart hints: ${chartReferences ?? '(none provided)'}.
-Follow core + dashboards + dashboard-design playbooks (preview→confirm→apply; shell first; tile after create).
-Report dashboard UUID/slug, tiles, and chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
-        ['dashboards', 'dashboard-design'],
+Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_space / short search_content, then get_chart_as_code)'}.
+
+1. If the goal is vague on audience / decisions / what to understand: ask **2–4 clarifying questions** before a Spec (do not invent a viz-type checklist).
+2. Read-only discovery only (project/space/seeds).
+3. ${DESIGN_SPEC_STOP} Multi-viz / all chart types only if the user explicitly asked (see dashboards + chart-types playbooks).
+4. After approval: follow embedded playbooks (preview→confirm→apply).
+5. Report dashboard UUID/slug, tiles, filters, chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
+        DASHBOARD_CHART_TOPIC_IDS,
       ),
   );
 
@@ -63,7 +84,8 @@ Report dashboard UUID/slug, tiles, and chart UUIDs — reject space-only orphans
     'improve_dashboard',
     {
       title: 'Improve dashboard',
-      description: 'Improve an existing dashboard (layout, filters, or tile set)',
+      description:
+        'Clarify Objective if needed → Design Spec delta (await approval) → layout / filters / tiles',
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         improvementGoal: z.string(),
@@ -80,10 +102,12 @@ Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
 
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-Inspect with lightdash_get_dashboard first. Follow core + dashboards + dashboard-design playbooks.
-New charts: get_chart_as_code seed + dashboardSlug, then tile — never space-only publishes.
-Report what changed and any remaining validation warnings.`,
-        ['dashboards', 'dashboard-design'],
+1. Inspect with lightdash_get_dashboard first (tile x/y/w/h may be missing — rebuild layout intentionally).
+2. If the improvement goal is vague on decisions / insights: ask **2–4 clarifying questions** before a Spec delta.
+3. For material layout/tile/filter changes (including professionalize): ${DESIGN_SPEC_STOP} Use the **Improve / professionalize Spec delta** (keep / drop / rename + cull) in dashboard-design. Trivial one-shot renames the user already specified may skip the stop. Multi-viz / all chart types only if the user explicitly asked.
+4. After approval: follow embedded playbooks. New charts: get_chart_as_code + dashboardSlug, then tile. Rename tile titles and chart names when stripping demo prefixes.
+Report what changed (tiles, filters, chart UUIDs), any untiled dashboard-owned leftovers (content-governance for soft-delete), and validation warnings.`,
+        DASHBOARD_CHART_TOPIC_IDS,
       ),
   );
 
@@ -91,7 +115,8 @@ Report what changed and any remaining validation warnings.`,
     'refactor_dashboard',
     {
       title: 'Refactor dashboard',
-      description: 'Refactor a dashboard by comparing versions and reconciling drift',
+      description:
+        'Compare versions; Design Spec delta for material changes (await approval), then reconcile',
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         concern: z.string().optional(),
@@ -107,9 +132,10 @@ Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
 ${CONTENT_DEVELOPER_HARD_BANS}
 
 Concern: ${concern ?? '(general cleanup)'}.
-Use lightdash_compare_dashboard_versions before proposing changes. Follow core + dashboards playbooks.
-Do not remove tiles unless explicitly requested.`,
-        'dashboards',
+1. Use lightdash_compare_dashboard_versions before proposing changes.
+2. For material layout/tile/filter changes: ${DESIGN_SPEC_STOP} Trivial one-shot renames may skip the stop.
+3. After approval: follow embedded dashboards + dashboard-design. Do not remove tiles unless the approved Spec or user request allows it.`,
+        DASHBOARD_TOPIC_IDS,
       ),
   );
 
@@ -138,9 +164,10 @@ Dashboard slug: ${dashboardSlug ?? '(omit only for intentional space-owned chart
 
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-Follow core + chart-types playbooks (clone via get_chart_as_code; preview with top-level slug; tile if dashboardSlug set).
-Report UUID/slug; note this persona cannot run_chart / prove UI render.`,
-        'chart-types',
+Follow core + chart-types (clone via get_chart_as_code; preview with top-level slug; keep customDimensions when needed; tile if dashboardSlug set).
+When dashboardSlug is set, the chart must serve a **board insight** from the approved Design Spec — do not invent a viz type for its own sake.
+Report UUID/slug from charts[0].data; note this persona cannot run_chart / prove UI render.`,
+        TOPIC_CHART_TYPES,
       ),
   );
 
@@ -192,9 +219,9 @@ Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
 
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-Follow core + dashboards playbooks done checklist (dashboardSlug + tiles, encode intact, no invented fieldIds).
+Done checklist: markdown/description states the **Objective**; tiles map to approved insight questions; every saved filter matches each tile explore or has explicit tileTargets exclude/remap; dashboardSlug on new charts + tiles present; cartesian encode intact; no invented fieldIds. Report untiled dashboard-owned leftovers (soft-delete via content-governance). Follow embedded playbooks for encode/map/filter detail. UI runtime not verified on this persona.
 Optionally validate_* (schema/health only). Promote is content-governance, not this persona.`,
-        'dashboards',
+        DASHBOARD_PUBLISH_TOPIC_IDS,
       ),
   );
 }

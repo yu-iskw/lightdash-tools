@@ -14,9 +14,13 @@ describe('codedErrorResult', () => {
     expect(result.isError).toBe(true);
     expect('_lightdashBlocked' in result).toBe(false);
     expect(result.structuredContent).toEqual({ error: { code: 'QUERY_FAILED', message: 'boom' } });
-    expect(JSON.parse(result.content[0].text)).toEqual({
-      error: { code: 'QUERY_FAILED', message: 'boom' },
-    });
+    const first = result.content[0];
+    expect(first?.type).toBe('text');
+    if (first?.type === 'text') {
+      expect(JSON.parse(first.text)).toEqual({
+        error: { code: 'QUERY_FAILED', message: 'boom' },
+      });
+    }
   });
 
   it('marks scope / not-executable / ownership / budget denials as blocked', () => {

@@ -83,6 +83,7 @@ import {
   registerSearchContent,
 } from './project/reader-content.js';
 import { registerRunChart, registerRunDashboardTile } from './project/reader-execution.js';
+import { registerExportChartImage } from './project/reader-export-chart-image.js';
 import { registerGetScheduler, registerListProjectSchedulers } from './project/schedulers.js';
 import { registerGetSpace, registerListSpaces } from './project/spaces.js';
 import { registerCancelQuery, registerGetQueryResult } from './query/lifecycle.js';
@@ -149,6 +150,7 @@ export const toolRegistry = {
   get_project_parameters: { register: registerGetProjectParameters },
   explain_content: { register: registerExplainContent },
   run_chart: { register: registerRunChart },
+  export_chart_image: { register: registerExportChartImage },
   run_dashboard_tile: { register: registerRunDashboardTile },
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },

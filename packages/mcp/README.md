@@ -1,86 +1,80 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), `content-developer` (project-scoped authoring with a hard preview gate), `content-governance` (elicitation-gated soft-delete), and `ai-agent-ops` (thin AI-agent APIs + product evaluation runs). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md), [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md), and [ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md).
+MCP server for Lightdash with **persona-scoped** surfaces. One package, six personas: explore/compile, org audit, saved-content reads, chart/dashboard authoring, soft-delete governance, and AI-agent ops. Uses [`@lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client) for API access. <!-- markdown-link-check-disable-line -->
 
-Irrecoverable admin deletes, permanent content purge, and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is on `content-developer` only (preview → confirm_preview → apply; 26 tools). Soft-delete of charts/dashboards is on `content-governance` only (form elicitation required).
+Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-**Response sensitivity** ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)): `list_projects` / `get_project` return project metadata only (warehouse/dbt connection secrets are never exposed). Organization-audit tools mask emails by default (`includeEmail=true` to reveal) and redact scheduler destinations by default (`revealDestinations=true` to reveal). There is no global `withSensitive` flag.
+## Choose a persona
 
-## Directory map
+| Persona              | Use when                                 | HTTP path                    | Stdio                | Catalog                                                          |
+| :------------------- | :--------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
+| `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | **default**          | —                                                                |
+| `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/organization-audit-endpoint-inventory.md) |
+| `content-reader`     | Discover and run saved content           | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/content-reader-endpoint-inventory.md)     |
+| `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/content-developer-endpoint-inventory.md)  |
+| `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/content-governance-endpoint-inventory.md) |
+| `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/ai-agent-ops-endpoint-inventory.md)       |
 
-| Edit…                                                   | Path                                                                                                                    |
-| :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------- |
-| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                            |
-| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                                                                                    |
-| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                                                                                      |
-| HTTP transport (sessionless)                            | `src/transports/`                                                                                                       |
-| HTTP auth / OAuth broker (in-memory pending)            | `src/auth/`                                                                                                             |
-| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                                 |
-| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
-| OAuth broker (in-memory pending)                        | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
-| Audit logging helpers                                   | `src/audit/`                                                                                                            |
-| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
+Tool names are prefixed with `lightdash_`. MCP display names are shortened where needed for client length limits (e.g. `lightdash-mcp-content`).
 
-Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
+## Quick start
 
-## Replaces `@lightdash-tools/semantic-layer-mcp`
-
-That package was removed (ADR-0006). Migrate as follows:
-
-| Removed                               | Use instead              |
-| ------------------------------------- | ------------------------ |
-| `@lightdash-tools/semantic-layer-mcp` | `@lightdash-tools/mcp`   |
-| Binary `lightdash-semantic-layer-mcp` | `lightdash-mcp`          |
-| HTTP `/mcp` (old)                     | `/semantic-layer/v1/mcp` |
-| Unprefixed tool names                 | `lightdash_*`            |
-
-## Installation
-
-You can run the MCP server using `npx`:
+### Stdio (local)
 
 ```bash
-npx @lightdash-tools/mcp
+npx @lightdash-tools/mcp                 # semantic-layer (default)
+npx @lightdash-tools/mcp content-reader  # other personas by name
 ```
 
-Or install it globally:
+Required env: `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`. Logs go to **stderr**; stdout is JSON-RPC only ([stdio transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)).
+
+Example Cursor / Claude Desktop config:
+
+```json
+{
+  "mcpServers": {
+    "lightdash": {
+      "command": "npx",
+      "args": ["@lightdash-tools/mcp", "content-reader"],
+      "env": {
+        "LIGHTDASH_URL": "https://app.lightdash.cloud",
+        "LIGHTDASH_API_KEY": "your_pat"
+      }
+    }
+  }
+}
+```
+
+Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp [persona]`.
+
+### Streamable HTTP (remote)
 
 ```bash
-npm install -g @lightdash-tools/mcp
+export LIGHTDASH_URL="https://app.lightdash.cloud"
+export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
+export LIGHTDASH_TOOLS_OAUTH_CLIENT_ID="..."
+export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
+npx @lightdash-tools/mcp serve-http
 ```
 
-## Transports
+Persona MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`).
 
-- **Stdio** — for local use (e.g. Claude Desktop, IDE). One process per client.
-- **Streamable HTTP** — for remote use. **Sessionless** per [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) (fresh transport per POST; no `Mcp-Session-Id`).
+- Hosted OAuth (Cursor URL-only): [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md)
+- Operator guide: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md)
 
-### SDK / protocol compatibility
+Local Compose smoke: `docker compose -f docker-compose.dev.yml --profile semantic-layer up --build` → `http://localhost:8080/semantic-layer/v1/mcp`.
 
-- Uses MCP TypeScript SDK v2 (`@modelcontextprotocol/server`, `@modelcontextprotocol/node`).
-- Aligns with MCP 2026-07-28 stateless HTTP (no protocol sessions). Hosted OAuth client setup: [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md). Protocol/auth details: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+## Configuration
 
-### Hosted OAuth (primary HTTP)
+Prefer `LIGHTDASH_TOOLS_*` env from the parent process. Avoid plaintext `.env` when agents can read files; if needed, use [dotenvx](https://dotenvx.com/). See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
 
-Auth is **inferred** from credentials ([ADR-0007](../../docs/adr/0007-mcp-http-transport-auth-modes-sdk-v2.md)). The MCP host holds the Lightdash OAuth app client id/secret and brokers login; Claude Code / Cursor use URL-only config. Protocol reference: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
+### Stdio
 
-| What works                                                      | Gap                                                                                                                                                                                        |
-| :-------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Server-held confidential client + `{PUBLIC_URL}/oauth/callback` | Full RFC 8707 audience binding on opaque Lightdash tokens                                                                                                                                  |
-| PRM + broker AS metadata; per-user Bearer to Lightdash          | MCP-local scope enforcement for opaque tokens                                                                                                                                              |
-| Stateless MCP persona paths (any replica)                       | OAuth broker pending/codes/DCR are **process-local** — use one replica or sticky `/oauth/*` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Required                             | Optional                                                             |
+| :----------------------------------- | :------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` |
 
-Authorization: Lightdash RBAC + persona tool surface ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
-
-## Environment variables
-
-Preferred names use the `LIGHTDASH_TOOLS_*` prefixes (see [ADR-0009](../../docs/adr/0009-cross-cutting-conventions.md)). Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/). See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
-
-### Stdio (secondary)
-
-| Required                             | Optional                    |
-| :----------------------------------- | :-------------------------- |
-| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_AUDIT_LOG` |
-
-Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE` / `DRY_RUN`. Optional shared ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
+Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN`.
 
 ### HTTP OAuth (primary)
 
@@ -88,14 +82,15 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, audit log, token cache TTL |
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, `/content-developer/v1/mcp`, `/content-governance/v1/mcp`, or `/ai-agent-ops/v1/mcp`.
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect with URL only to a persona path above. Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 
 ### Content-developer / content-governance signing
 
-| Required (non-test)                     | Notes                                                                                                               |
-| :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------ |
-| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC-signed `previewToken` and destructive `requestState` (not encrypted; fail closed if unset) |
-| Client form elicitation (governance)    | Missing capability → `ELICITATION_REQUIRED`; no DELETE / promote                                                    |
+| Required (non-test)                     | Notes                                                                                           |
+| :-------------------------------------- | :---------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC `previewToken` / `requestState` (fail closed if unset; not encryption) |
+
+Governance soft-delete needs client form elicitation; missing capability → `ELICITATION_REQUIRED`.
 
 ### HTTP shared-key / local (secondary)
 
@@ -104,204 +99,59 @@ Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL onl
 | Shared-key | `LIGHTDASH_API_KEY` + `LIGHTDASH_TOOLS_MCP_SHARED_KEY` |
 | Local none | `NODE_ENV=development` (not `production`)              |
 
-Obsolete `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, `INSECURE_DEV`, `LIGHTDASH_TOOLS_MCP_STORE`, and `LIGHTDASH_TOOLS_MCP_REDIS_URL` are **rejected**. Endpoint path is persona-owned (`LIGHTDASH_TOOLS_MCP_PATH` rejected).
+Obsolete vars (`AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, `INSECURE_DEV`, `MCP_STORE`, `MCP_REDIS_URL`, free-form `MCP_PATH`) are **rejected**. See [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md).
 
-### Stateless MCP + in-memory OAuth (ADR-0019)
+## Personas at a glance
 
-Persona MCP paths are **stateless**: no Redis, no transport sessions, HMAC-signed `previewToken` / `requestState` for cross-call continuity. Redis store env vars are obsolete and fail closed.
+### `semantic-layer`
 
-The OAuth broker (`/oauth/*`) keeps **in-memory** pending authorizations, codes, and DCR clients. For multi-instance deployments, run a single replica for OAuth or sticky-route `/oauth/*` only. MCP tool traffic can still round-robin.
+Projects, explores, metrics, and `compile_query` (no warehouse run). Playbook: `lightdash://playbooks/semantic-layer`.
 
-See also: [mcp-oauth-http.md](../../docs/mcp-oauth-http.md), [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md), [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md), [threat model](../../docs/security/mcp-oauth-threat-model.md).
+### `organization-audit`
 
-## Running
+Read-only inventory, access, content health, usage, and schedulers. No mutations or warehouse queries. Server name: `lightdash-mcp-org-audit`.
 
-### Stdio (local)
+### `content-reader`
 
-For use with Claude Desktop or IDEs, use `npx`:
+Project-scoped discovery, metadata, bounded `run_chart` / `run_dashboard_tile`, and `export_chart_image` (PNG). SQL charts off by default. Project: `X-Lightdash-Project` or tool `projectUuid`. Server name: `lightdash-mcp-content`.
 
-```bash
-npx @lightdash-tools/mcp
-# or explicit personas:
-npx @lightdash-tools/mcp semantic-layer
-npx @lightdash-tools/mcp organization-audit
-npx @lightdash-tools/mcp content-reader
-npx @lightdash-tools/mcp content-developer
-npx @lightdash-tools/mcp content-governance
-npx @lightdash-tools/mcp ai-agent-ops
-```
+### `content-developer`
 
-Or if installed globally:
+Author charts (as-code) and dashboards behind preview → `confirm_preview` → apply with HMAC `previewToken`. No warehouse execution or hard delete. Server name: `lightdash-mcp-cdev`.
 
-```bash
-lightdash-mcp
-lightdash-mcp organization-audit
-lightdash-mcp content-reader
-lightdash-mcp content-developer
-lightdash-mcp content-governance
-lightdash-mcp ai-agent-ops
-```
+### `content-governance`
 
-Logging goes to stderr only; stdout is JSON-RPC. Bare `lightdash-mcp` defaults to `semantic-layer`.
+Soft-delete charts/dashboards and elicitation-gated dashboard promote. Permanent purge stays off MCP. Server name: `lightdash-mcp-gov`.
 
-### Streamable HTTP (remote)
+### `ai-agent-ops`
 
-```bash
-# Backward-compatible
-npx @lightdash-tools/mcp --http
+Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/ai-agent-ops-loop.md](../../docs/ai-agent-ops-loop.md).
 
-# Explicit subcommand
-npx @lightdash-tools/mcp serve-http
+## Safety
 
-# Hosted OAuth (server-held Lightdash confidential client)
-export LIGHTDASH_URL="https://app.lightdash.cloud"
-export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
-export LIGHTDASH_TOOLS_OAUTH_CLIENT_ID="..."
-export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
-npx @lightdash-tools/mcp serve-http
-```
+- **Off MCP:** irrecoverable admin deletes, permanent content purge, broad org mutations — use `@lightdash-tools/client` or the CLI ([ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
+- **Writes:** only on `content-developer` (preview gate). Soft-delete / promote: only on `content-governance` (form elicitation).
+- **Redaction:** emails masked unless `includeEmail=true`; scheduler destinations redacted unless `revealDestinations=true`; warehouse/dbt connection secrets never on MCP ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)).
+- **Project scope:** optional HTTP pin `X-Lightdash-Project`, else tool `projectUuid`; optional ceiling `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
-The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT`). Persona MCP endpoints:
+Persona tool allowlists are the capability surface — not CLI safety-mode.
 
-- `POST/GET/DELETE /semantic-layer/v1/mcp`
-- `POST/GET/DELETE /organization-audit/v1/mcp`
-- `POST/GET/DELETE /content-reader/v1/mcp`
-- `POST/GET/DELETE /content-developer/v1/mcp`
-- `POST/GET/DELETE /content-governance/v1/mcp`
-- `POST/GET/DELETE /ai-agent-ops/v1/mcp`
+## Migration from `@lightdash-tools/semantic-layer-mcp`
 
-Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+| Removed                               | Use instead              |
+| :------------------------------------ | :----------------------- |
+| `@lightdash-tools/semantic-layer-mcp` | `@lightdash-tools/mcp`   |
+| Binary `lightdash-semantic-layer-mcp` | `lightdash-mcp`          |
+| HTTP `/mcp` (old)                     | `/semantic-layer/v1/mcp` |
+| Unprefixed tool names                 | `lightdash_*`            |
 
-**Local Compose (dev):**
+## Further reading
 
-- Unauthenticated / PAT smoke: `docker compose -f docker-compose.dev.yml --profile semantic-layer up --build` then Cursor `url: http://localhost:8080/semantic-layer/v1/mcp` (`NODE_ENV=development` + PAT from `.env`).
-- Hosted OAuth smoke: expose `:3100` with Cloudflare Tunnel (`cloudflared tunnel --url http://127.0.0.1:3100`), set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` in `.env` to the `*.trycloudflare.com` URL, recreate the container, register `{PUBLIC_URL}/oauth/callback` in Lightdash, and point Cursor at `{PUBLIC_URL}/semantic-layer/v1/mcp`. Do not use free ngrok. Details: [cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md).
-
-## Tools
-
-### `semantic-layer` persona
-
-Registers these tools (names prefixed with `lightdash_`):
-
-- **Projects**: `list_projects`, `get_project`
-- **Explores**: `list_explores`, `get_explore`, `list_dimensions`, `get_field_lineage`
-- **Metrics**: `list_metrics`, `get_metric`
-- **Query**: `compile_query` (empty SELECT → `isError`; no run-query)
-
-Prompts and playbook: `lightdash://playbooks/semantic-layer` (cite `lightdash_*` names only).
-
-### `organization-audit` persona
-
-Read-only organization inventory, access, content health, usage signals, and schedulers ([ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md)). MCP server display name is `lightdash-mcp-org-audit` (60-char client limit). Endpoint inventory: [docs/organization-audit-endpoint-inventory.md](../../docs/organization-audit-endpoint-inventory.md).
-
-- **Inventory**: `get_org_profile`, `list_org_members`, `get_org_member`, `list_org_groups`, `list_org_projects`
-- **Access**: `list_org_role_assignments`, `list_custom_roles`, `get_custom_role`, `list_project_roles`, `list_project_direct_access`, `list_space_access`, `resolve_effective_access`
-- **Content / health**: `list_content`, `get_dashboard_meta`, `list_validation_results`, `get_project_user_activity`
-- **Delivery**: `list_project_schedulers`, `get_scheduler`
-
-Prompts and playbook: `lightdash://playbooks/organization-audit` (host orchestrates multi-step audits via primitives). No mutation, warehouse queries, or user-activity CSV download.
-
-### `content-reader` persona
-
-Project-scoped saved-content consumption ([ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md)). MCP server display name is `lightdash-mcp-content` (60-char client limit). Endpoint inventory: [docs/content-reader-endpoint-inventory.md](../../docs/content-reader-endpoint-inventory.md).
-
-- **Scope / discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`
-- **Metadata**: `get_dashboard`, `get_chart`, `list_project_parameters`, `get_project_parameters`, `explain_content`
-- **Execution**: `run_chart`, `run_dashboard_tile` (semantic saved content only; SQL charts disabled by default)
-- **Lifecycle**: `get_query_result`, `cancel_query` (`queryUuid` handle; per-process budget)
-
-Project resolution: `X-Lightdash-Project` → tool `projectUuid`. Prompts and playbook: `lightdash://playbooks/content-reader`.
-
-### `content-developer` persona
-
-Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)). MCP server display name is `lightdash-mcp-cdev` (60-char client limit). Endpoint inventory: [docs/content-developer-endpoint-inventory.md](../../docs/content-developer-endpoint-inventory.md).
-
-- **Discovery**: `get_project`, `search_content`, `list_spaces`, `get_space`, `get_dashboard`, `get_chart`
-- **Preview / confirm / validate / diff**: `preview_chart_changes`, `preview_dashboard_changes`, `preview_content_move`, `confirm_preview`, `validate_chart`, `validate_dashboard`, `compare_chart_versions`, `compare_dashboard_versions`
-- **Charts (as-code)**: `create_chart`, `update_chart`, `duplicate_chart`
-- **Dashboards (REST)**: `create_dashboard`, `update_dashboard`, `duplicate_dashboard`
-- **Layout**: `add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`
-- **Spaces**: `list_spaces`, `get_space`, `move_content` (no create/update space; use `preview_content_move` before apply)
-
-Hard gate (26 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply with HMAC-signed `previewToken` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)). Tokens bind subject/project/`contentHash` of `{proposed,baseline}`; apply re-sends proposed and re-checks baseline. No server ledger / Redis. No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
-
-### `content-governance` persona
-
-Project-scoped soft-delete with form elicitation ([ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)). MCP server display name is `lightdash-mcp-gov` (60-char client limit). Endpoint inventory: [docs/content-governance-endpoint-inventory.md](../../docs/content-governance-endpoint-inventory.md). Client matrix: [docs/content-governance-client-compatibility.md](../../docs/content-governance-client-compatibility.md).
-
-- **Soft-delete**: `delete_chart`, `delete_dashboard` (restorable; permanent purge is client-only)
-- **Promote**: `get_dashboard_promote_diff`, elicitation-gated `promote_dashboard` (upstream via Data Ops config)
-- **Confirmation**: MCP form elicitation (`decision` + typed `confirmationText`) + HMAC-signed opaque `requestState` (do not put secrets in the token payload); fail closed without form capability
-- **Not included**: bulk delete, space delete, permanent purge, chart/SQL promote, authoring, warehouse queries
-
-Prompts and playbooks: `lightdash://playbooks/content-governance` (core + charts + dashboards topics).
-
-### `ai-agent-ops` persona
-
-Project-scoped thin AI-agent APIs and product evaluation runs ([ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md)). MCP server display name is `lightdash-mcp-aops` (60-char client limit). Endpoint inventory: [docs/ai-agent-ops-endpoint-inventory.md](../../docs/ai-agent-ops-endpoint-inventory.md). Distributed loop (MCP + CLI `agentops` + host): [docs/ai-agent-ops-loop.md](../../docs/ai-agent-ops-loop.md).
-
-- **Inventory**: `list_project_agents`, `get_project_agent`
-- **Discovery**: `evaluate_agent_readiness`, `get_agent_suggestions`, `get_agent_models`, `get_explore_access_summary`
-- **Threads (read)**: `list_agent_threads`, `get_agent_thread` (message bodies redacted by default)
-- **Evaluations**: suite CRUD + `run_agent_evaluation` + run list/get
-
-No agent create/update/delete, no thread generate/continue, no offline scorers or Git dataset tools on MCP. Promotion gates stay on CLI `agentops evaluate-gate`. Same project resolution as content-reader. Prompts and playbooks: `lightdash://playbooks/ai-agent-ops`.
-
-### CLI Binary
-
-If installed globally, you can use the `lightdash-mcp` binary:
-
-```bash
-lightdash-mcp --help
-```
-
-### CLI Options
-
-- `--http` — Run as HTTP server instead of Stdio.
-- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `content-developer` / `content-governance` / `ai-agent-ops` / `serve-http` — Explicit transport/persona subcommands.
-
-## Safety (persona-first)
-
-MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md)):
-
-| Concern      | Mechanism                                                                                                                              |
-| :----------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| Which tools  | Persona `toolIds` in code (including `content-governance` soft-delete)                                                                 |
-| Who          | Auth mode + Lightdash API RBAC                                                                                                         |
-| Where (HTTP) | Optional `X-Lightdash-Project` pin; otherwise pass tool `projectUuid`; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling |
-| Hardening    | Input validation + audit log + org-audit GET asserts + HMAC `previewToken` + elicitation/`requestState` for soft-delete                |
-
-Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.
-
-### Agent-safe surface
-
-See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md). Irrecoverable admin deletes and permanent content purge stay on `@lightdash-tools/client` / CLI. Content authoring is limited to `content-developer` ([ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md)). Soft-delete is limited to `content-governance` with form elicitation ([ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)).
-
-### Input validation
-
-Resource IDs (project UUIDs, slugs) are validated before execution. Invalid inputs (control characters, `?`, `#`, `%`, path traversal) are rejected. See [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md).
-
-## Testing
-
-This package includes unit tests and integration tests. Integration tests run against a real Lightdash API and are only executed if the required environment variables are set.
-
-### Running unit tests
-
-```bash
-pnpm test
-```
-
-### Running integration tests
-
-To run tests against a real Lightdash instance, provide your credentials:
-
-```bash
-LIGHTDASH_URL=https://app.lightdash.cloud LIGHTDASH_API_KEY=your_api_key pnpm test
-```
-
-The integration tests will automatically detect these environment variables and run additional scenarios, such as verifying authentication and tool execution against the live API.
-
-For OAuth HTTP mode, set `LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN` (and `LIGHTDASH_URL`) to run the optional live OAuth integration test.
+- Architecture / contributing — [CONTRIBUTING.md](./CONTRIBUTING.md)
+- OAuth operator guide — [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md)
+- Cursor hosted OAuth — [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md)
+- Architecture decisions — [docs/adr/](../../docs/adr/)
+- MCP transports — [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)
 
 ## License
 

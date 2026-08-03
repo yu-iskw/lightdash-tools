@@ -24,6 +24,13 @@ Execute only for values, trends, rankings, summaries, comparisons, or discrepanc
 
 Defaults: `useCache=true`, modest `limit` (≤100; summarize ≤20 rows in the answer), prefer `waitForResults=true` for single charts.
 
+## Chart images (see the viz)
+
+- Use `export_chart_image` when the user needs to **see** the rendered chart (layout, series, labels), not raw numbers.
+- Prefer `run_chart` when they need values/aggregates.
+- Export relies on Lightdash headless browser; self-hosted instances without Browserless will fail — report the API error; do not invent a screenshot.
+- Budget ≤3 image exports per turn.
+
 ## Dashboard tile execution
 
 1. Pick tiles with `executable=true` and a `chartUuid` (skip markdown / non-chart tiles).
