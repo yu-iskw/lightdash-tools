@@ -4,6 +4,8 @@ URI: `lightdash://playbooks/content-developer/chart-types`
 
 Pick a viz type to **answer an insight question** from the Design Spec Objective. The table below is a **reference map**, not a build order — do not walk every row unless the user explicitly asked for multi-viz / all chart types. Prefer **clone** (`get_chart_as_code` / `duplicate_chart`) over inventing viz configs. Docs: [overview](https://docs.lightdash.com/references/chart-types/overview).
 
+When the user **does** ask for all types: follow dashboards **Multi-viz batch SOP** (shell → ≤2 concurrent chart creates → one tile update). Skip **map** without lat/lon.
+
 ## UI intent → as-code `chartConfig.type`
 
 | User / UI intent                    | As-code                                                                                              |

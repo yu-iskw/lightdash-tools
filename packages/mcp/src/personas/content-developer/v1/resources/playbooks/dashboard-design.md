@@ -34,6 +34,8 @@ Then stop and ask: proceed / amend?
 
 Approval phrases: proceed, approved, go ahead, looks good, or an explicit amended plan.
 
+**Explicit multi-viz / all-types asks:** When the user already named the full viz checklist + analysis goal + `projectUuid`, a one-line Objective restatement + tile→insight map **is** the Spec. Treat that ask as approval after you restate once (do not re-ask clarifying questions that restate their checklist). Still skip **map** when no lat/lon and say so.
+
 ### Improve / professionalize Spec delta
 
 Use this instead of inventing a full new-board Spec when the user asks to **professionalize**, **clean up**, or **redesign** an existing dashboard — or when the board looks like a viz showcase (`[loop*]`, “all chart types”, many redundant status/revenue charts).

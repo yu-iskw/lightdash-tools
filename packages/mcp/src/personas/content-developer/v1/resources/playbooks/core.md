@@ -17,7 +17,8 @@ This persona does **not** execute queries, compile explores, create spaces, or p
 - Do not create or update spaces — spaces are Terraform / out-of-band. Use existing spaces only.
 - Do not create **space-only** charts for dashboard work (omit `dashboardSlug`). New charts must set `dashboardSlug` to the dashboard already created.
 - Do not call `preview_*` or write tools for a **new** dashboard or a **material** dashboard redesign until a Design Spec (with settled **Objective**) was presented and the user approved or amended it in-thread.
-- Do not start writes from a viz-type / “all chart types” checklist alone — Objective and insight questions come first.
+- Do not start writes from a viz-type / “all chart types” checklist alone — Objective and insight questions come first (an explicit user all-types ask may be the Objective after a one-line restatement).
+- Do not call `confirm_preview` without **`projectUuid`** when there is no HTTP pin — `PROJECT_SCOPE_REQUIRED` even if the matching `preview_*` already had a project.
 - Do not attach dashboard filters whose `target.tableName` is absent from a tile’s explore without explicitly excluding that tile (or remapping) via `tileTargets`.
 - Do not treat chart create as done without a dashboard shell and tiles that reference those charts.
 - Do not invent `fieldId`s. Copy from `get_chart_as_code` / `get_chart` (`includeQueryDefinition`) or semantic-layer.
@@ -44,21 +45,21 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 
 ## Allowed tools (`lightdash_*`)
 
-| Tool                                                                                             | Use for                                                                                      |
-| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `get_project`                                                                                    | Resolve project; read `developerCapabilities` (mutate yes; **execute charts/tiles = false**) |
-| `search_content`                                                                                 | Find charts/dashboards; prefer short tokens, not marketing phrases                           |
-| `list_spaces` / `get_space`                                                                      | Existing spaces; pick `spaceUuid` / `spaceSlug`                                              |
-| `get_dashboard` / `get_chart`                                                                    | Metadata summaries. `get_dashboard` tiles often omit `x/y/w/h`                               |
-| `get_chart_as_code`                                                                              | **Clone** upsert-shaped `chartConfig` + `metricQuery` before create/update                   |
-| `preview_chart_changes` / `preview_dashboard_changes` / `preview_content_move`                   | Mint draft `previewToken` + `resourceKey`                                                    |
-| `confirm_preview`                                                                                | Unlock; returns **new** validated `previewToken`                                             |
-| `create_chart` / `update_chart` / `duplicate_chart`                                              | Semantic as-code writes (after confirm); set `dashboardSlug`                                 |
-| `create_dashboard` / `update_dashboard` / `duplicate_dashboard`                                  | Dashboard shell then tile updates                                                            |
-| `add_dashboard_tile` / `move_dashboard_tile` / `remove_dashboard_tile` / `resize_dashboard_tile` | Tile ops; each needs preview of the **full next tiles array**                                |
-| `move_content`                                                                                   | Relocate into existing spaces                                                                |
-| `validate_chart` / `validate_dashboard`                                                          | Optional post-apply health (`chartUuid` / dashboard UUID)                                    |
-| `compare_chart_versions` / `compare_dashboard_versions`                                          | Drift / refactor                                                                             |
+| Tool                                                                                             | Use for                                                                                          |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `get_project`                                                                                    | Resolve project; read `developerCapabilities` (mutate yes; **execute charts/tiles = false**)     |
+| `search_content`                                                                                 | Find charts/dashboards; prefer short tokens, not marketing phrases                               |
+| `list_spaces` / `get_space`                                                                      | Existing spaces; pick `spaceUuid` / `spaceSlug`                                                  |
+| `get_dashboard` / `get_chart`                                                                    | Metadata. `get_chart` arg is **`chartUuidOrSlug`** (not `chartUuid`). Tiles often omit `x/y/w/h` |
+| `get_chart_as_code`                                                                              | **Clone** upsert-shaped `chartConfig` + `metricQuery` before create/update                       |
+| `preview_chart_changes` / `preview_dashboard_changes` / `preview_content_move`                   | Mint draft `previewToken` + `resourceKey`                                                        |
+| `confirm_preview`                                                                                | Unlock; returns **new** validated token — always pass **`projectUuid`** without HTTP pin         |
+| `create_chart` / `update_chart` / `duplicate_chart`                                              | Semantic as-code writes (after confirm); set `dashboardSlug`                                     |
+| `create_dashboard` / `update_dashboard` / `duplicate_dashboard`                                  | Dashboard shell then tile updates                                                                |
+| `add_dashboard_tile` / `move_dashboard_tile` / `remove_dashboard_tile` / `resize_dashboard_tile` | Tile ops; each needs preview of the **full next tiles array**                                    |
+| `move_content`                                                                                   | Relocate into existing spaces                                                                    |
+| `validate_chart` / `validate_dashboard`                                                          | Optional post-apply health (`chartUuid` / dashboard UUID)                                        |
+| `compare_chart_versions` / `compare_dashboard_versions`                                          | Drift / refactor                                                                                 |
 
 ## Phase 0 — Resolve project
 
@@ -66,14 +67,17 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 2. Call `get_project`. Record UUID, name, pin, and `developerCapabilities`.
 3. Expect execution capabilities **false** — you cannot verify query results here.
 4. Never switch projects or invent an org project list.
+5. Shared discovery tools (`get_dashboard`, `get_chart`, …) may report `context.persona: content-reader` in the envelope even on this persona — ignore that label; write tools still use content-developer.
 
 ## Preview → confirm → apply (every write)
 
 1. `preview_*` → record `previewToken`, `previewId`, `contentHash`, `resourceKey`, `expiresAt`, diff.
-2. `confirm_preview` with that draft token + exact `resourceKind` / `resourceKey` → use the **returned** validated `previewToken`.
-3. Apply write with the validated token and the **same** proposed payload.
+2. `confirm_preview` with that draft token + exact `resourceKind` / `resourceKey` **and `projectUuid` (required when there is no HTTP pin)** → use the **returned** validated `previewToken`. Omitting `projectUuid` on confirm yields `PROJECT_SCOPE_REQUIRED` even if preview succeeded with a project arg.
+3. Apply write with the validated token, **`projectUuid`**, and the **same** proposed payload (`dashboard:{}` / `chart:{}` nested shapes).
 4. Drift / expiry → re-preview → confirm → apply (≤2 retries).
 5. Optionally `validate_*` on saved UUIDs. Report UUIDs/slugs — never claim success without a successful apply response. UI render is not guaranteed by MCP success alone.
+
+**Diff noise vs real omissions:** On dashboard **update** previews, `diff.removed` often lists server-owned metadata omitted from the proposal (`access`, `views`, `updatedAt`, `uuid`, `slug`, `organizationUuid`, …). Ignore those. If **`tiles`**, **`tabs`**, or **`filters`** appear in `diff.removed`, you omitted them from `changes` — do **not** apply. Re-preview with the full intentional `tiles`/`tabs`/`filters` (copy layout from preview `current` when only editing name/description). Never ship a description-only body that drops the board.
 
 ### ResourceKey cheat sheet
 

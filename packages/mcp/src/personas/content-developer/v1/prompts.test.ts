@@ -89,6 +89,20 @@ describe('content-developer prompts/playbook', () => {
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toMatch(/target\.tablename|tablename/);
   });
 
+  it('requires projectUuid on confirm_preview and multi-viz batch SOP', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toMatch(/confirm_preview.*projectuuid|projectuuid.*confirm_preview/);
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('confirm_preview');
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('projectuuid');
+    expect(md).toMatch(/batch sop|shell → create all charts|one.*update_dashboard/);
+    expect(md).toMatch(/diff\.removed|diff noise/);
+    expect(md).toMatch(
+      /tiles.*diff\.removed|diff\.removed.*tiles|omit.*tiles|do \*\*not\*\* apply/,
+    );
+    expect(md).toContain('chartuuidorslug');
+    expect(md).toMatch(/persona:\s*content-reader|content-reader.*envelope/);
+  });
+
   it('documents improve/professionalize Spec delta, cull, and leftover handoff', () => {
     const md = getAllPlaybookMarkdown().toLowerCase();
     expect(md).toMatch(/professionalize|improve \/ professionalize/);

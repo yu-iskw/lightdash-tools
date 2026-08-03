@@ -28,8 +28,8 @@ Only after Phase Design approval (see `lightdash://playbooks/content-developer/d
 
 1. Resolve target **existing** `spaceUuid`.
 2. `preview_dashboard_changes` without `dashboardUuidOrSlug`, `changes: { name, description?, spaceUuid, tabs: [], tiles: [] }` → `resourceKey` is literal **`new`**.
-3. `confirm_preview` (`resourceKind: 'dashboard'`, `resourceKey: 'new'`).
-4. `create_dashboard` with **`dashboard: { … }`** — same fields as `changes` (nested object; not flat tool args). Empty or markdown-only `tiles`.
+3. `confirm_preview` (`resourceKind: 'dashboard'`, `resourceKey: 'new'`, **`projectUuid`**).
+4. `create_dashboard` with **`dashboard: { … }`** — same fields as `changes` (nested object; not flat tool args). Empty or markdown-only `tiles`. **Pass `projectUuid`.**
 5. Record returned **`slug`** and **`uuid`** — required as `dashboardSlug` for new charts.
 
 ## New chart for that dashboard (step 2)
@@ -47,7 +47,7 @@ Then:
 
 1. Set `spaceSlug`, `skipSpaceCreate: true`, `version`, `tableName`, `dashboardSlug`.
 2. Every dimension in `metricQuery.dimensions` must appear in viz config (cartesian layout / pie groups / sankey source-target / …) — unused dimensions change SQL GROUP BY and can yield “Results may be incorrect”.
-3. `preview_chart_changes` with top-level **`slug`** + `changes` body → `confirm_preview` (`resourceKey` = that slug) → `create_chart` / `update_chart` (`slug` + `chart: { … }` matching `changes`).
+3. `preview_chart_changes` with top-level **`slug`** + `changes` body → `confirm_preview` (`resourceKey` = that slug, **`projectUuid`**) → `create_chart` / `update_chart` (`slug` + `chart: { … }` matching `changes`, **`projectUuid`**).
 4. Capture `charts[0].data.uuid` immediately for tiling.
 
 If fieldIds are unknown → stop; use semantic-layer. Do **not** hand-author minimal cartesian configs (series without `encode.xRef`/`yRef`).
@@ -60,14 +60,14 @@ Only when the user **explicitly** asks for every chart type (or a large multi-vi
 
 1. Raise the new-chart budget (default ≤8 is too low).
 2. Cover: bar, horizontal bar, line, area, mixed, scatter, pie, funnel, treemap, sankey, table, big_number, gauge; **skip map** if no lat/lon and say so.
-3. Still settle Objective first; map each type to an insight (or label demo tiles clearly).
-4. Create charts after the shell; then one `update_dashboard` with the full tile array + optional filters.
-5. Cap concurrent writes (preview→confirm→apply) at **≤2** when using hosted tunnels — parallel bursts often return HTTP 502.
+3. One-line Objective is enough when the user already listed the viz checklist + analysis goal; still map each tile to an insight id (or label demo tiles clearly). Treat that explicit ask as Design Spec approval after you restate the checklist once.
+4. **Batch SOP:** create shell → create all charts (`dashboardSlug` set; **≤2** concurrent preview→confirm→apply chains) → capture each `charts[0].data.uuid` → **one** `update_dashboard` with full tiles + optional empty-value filters. Do not interleave tiling with chart creates.
+5. Cap concurrent writes at **≤2** on hosted tunnels — parallel bursts often return HTTP 502.
 
 ### Duplicate chart
 
 1. Preview with `chartUuidOrSlug` = source and `changes` = `{ sourceChartUuidOrSlug, newSlug, newName? }`.
-2. Confirm `resourceKind: 'chart'`, `resourceKey` = **source** UUID.
+2. Confirm `resourceKind: 'chart'`, `resourceKey` = **source** UUID (**always pass `projectUuid`**).
 3. `duplicate_chart`, then `update_chart` if needed to set `dashboardSlug` and any metricQuery edits (clone body via `get_chart_as_code` first).
 4. Tile the result onto the dashboard.
 
@@ -75,9 +75,9 @@ Only when the user **explicitly** asks for every chart type (or a large multi-vi
 
 1. Compose the **full** tile array (markdown + `saved_chart` with `x/y/w/h`; grid width max **36**).
 2. Require `properties.savedChartUuid` from the chart create/duplicate result (OpenAPI `CreateDashboardChartTile`). Optional `chartSlug` is metadata only — do not tile with slug alone.
-3. `preview_dashboard_changes` → `confirm_preview` (`resourceKey` = dashboard **UUID**) → `update_dashboard` (or `add_dashboard_tile` with a full next-tiles preview each time).
+3. `preview_dashboard_changes` → `confirm_preview` (`resourceKey` = dashboard **UUID**, plus **`projectUuid`**) → `update_dashboard` with nested `dashboard: { name?, tiles, tabs, filters? }` matching preview `changes`.
 
-Avoid N single-tile round-trips when you already know the layout.
+Avoid N single-tile round-trips when you already know the layout. If preview `diff.removed` includes **`tiles`/`tabs`/`filters`**, re-preview with those arrays included — do not treat that as harmless noise (see core).
 
 Layout, optional markdown, optional filters → `lightdash://playbooks/content-developer/dashboard-design`.
 

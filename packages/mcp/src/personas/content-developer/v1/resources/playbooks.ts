@@ -19,7 +19,8 @@ Do not perform organization administration or list org-wide projects.
 Do not create or update spaces — spaces are Terraform / out-of-band; use existing spaces only.
 Do not create space-only charts for dashboard work — set dashboardSlug to the dashboard shell already created.
 Do not call preview_* or write tools for a new dashboard or a material dashboard redesign until a Design Spec (with settled Objective) was presented and the user approved or amended it in-thread.
-Do not start writes from a viz-type or all-chart-types checklist alone — settle Objective and insight questions first.
+Do not start writes from a viz-type or all-chart-types checklist alone — settle Objective and insight questions first (an explicit user all-types ask may be the Objective after a one-line restatement).
+Do not call confirm_preview without projectUuid when there is no HTTP X-Lightdash-Project pin (PROJECT_SCOPE_REQUIRED).
 Do not attach dashboard filters whose target.tableName is absent from a tile explore without excluding that tile (or remapping) via tileTargets.
 Do not treat chart create as done without a dashboard shell and tiles.
 Do not invent fieldIds — clone via get_chart_as_code / get_chart or use semantic-layer.
