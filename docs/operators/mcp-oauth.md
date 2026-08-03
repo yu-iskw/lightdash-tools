@@ -1,6 +1,6 @@
 # OAuth-backed Streamable HTTP MCP
 
-Operator guide for hosted `@lightdash-tools/mcp` with a **server-held Lightdash OAuth application** (confidential client + broker). Architecture: [ADR-0007](adr/0007-mcp-http-transport-auth-modes-sdk-v2.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Threat model: [mcp-oauth-threat-model.md](security/mcp-oauth-threat-model.md).
+Operator guide for hosted `@lightdash-tools/mcp` with a **server-held Lightdash OAuth application** (confidential client + broker). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Threat model: [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md).
 
 ## Mental model
 
@@ -23,7 +23,7 @@ Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
 | PRM + broker AS metadata                                      | Supported                                     |
 | Full RFC 8707 audience enforcement on opaque Lightdash tokens | **Limited** — identity via `GET /api/v1/user` |
 
-Authorization in practice: Lightdash RBAC + persona `toolIds` ([ADR-0006](adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](adr/0008-mcp-request-scope-and-hardening.md)).
+Authorization in practice: Lightdash RBAC + persona `toolIds` ([ADR-0006](../adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
 
 ## Primary: hosted OAuth
 
@@ -60,7 +60,7 @@ MCP endpoint: `POST/GET/DELETE /semantic-layer/v1/mcp`.
 | Shared-key HTTP gateway    | + `LIGHTDASH_TOOLS_MCP_SHARED_KEY`        |
 | Local unauthenticated HTTP | `NODE_ENV=development` (not `production`) |
 
-Compose local profile uses `NODE_ENV=development` + credentials from `.env` (see `docker-compose.dev.yml`). For hosted OAuth against Cursor, expose port `3100` with Cloudflare Tunnel and set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` to the `*.trycloudflare.com` URL — see [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md). Do not use free ngrok for that path.
+Compose local profile uses `NODE_ENV=development` + credentials from `.env` (see `docker-compose.dev.yml`). For hosted OAuth against Cursor, expose port `3100` with Cloudflare Tunnel and set `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` to the `*.trycloudflare.com` URL — see [cursor-claude.md](cursor-claude.md). Do not use free ngrok for that path.
 
 ## Client config (Claude Code / Cursor)
 
@@ -76,7 +76,7 @@ URL only:
 }
 ```
 
-Do **not** put `LIGHTDASH_TOOLS_OAUTH_CLIENT_*` in the client. See [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md).
+Do **not** put `LIGHTDASH_TOOLS_OAUTH_CLIENT_*` in the client. See [cursor-claude.md](cursor-claude.md).
 
 ## Environment reference
 
@@ -109,7 +109,7 @@ CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `DRY_RUN`. Share
 
 ## Related
 
-- [cursor-lightdash-oauth-mcp.md](cursor-lightdash-oauth-mcp.md)
-- [cloud-run-mcp-oauth.md](cloud-run-mcp-oauth.md)
-- [security/mcp-oauth-threat-model.md](security/mcp-oauth-threat-model.md)
-- [secrets-and-credentials.md](secrets-and-credentials.md)
+- [cursor-claude.md](cursor-claude.md)
+- [cloud-run.md](cloud-run.md)
+- [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md)
+- [secrets.md](secrets.md)

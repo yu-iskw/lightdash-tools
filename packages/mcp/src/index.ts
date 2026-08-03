@@ -3,9 +3,13 @@
  * Logging: stderr only (stdout is JSON-RPC).
  *
  * Optional persona via LIGHTDASH_TOOLS_MCP_STDIO_PERSONA (set by bin subcommands).
+ *
+ * Uses SDK `serveStdio` so the process speaks 2026-07-28 (and legacy initialize
+ * via `legacy: 'serve'`). Hand-wiring `StdioServerTransport` + `connect()` stays
+ * on the 2025-era wire only.
  */
 
-import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
@@ -30,21 +34,26 @@ function resolveStdioPersona(): PersonaDefinition {
   return getPersona(id);
 }
 
-async function main(): Promise<void> {
+function main(): void {
   warnIgnoredCliGuardrailEnvVars();
   validateAvailableProjectsConfig();
   initAuditLog(getAuditLogPath());
 
   const persona = resolveStdioPersona();
   const contextProvider = new EnvContextProvider();
-  const server = createLightdashMcpServer(contextProvider, { persona });
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  serveStdio(() => createLightdashMcpServer(contextProvider, { persona }), {
+    legacy: 'serve',
+    onerror: (error) => {
+      console.error('MCP stdio error:', error);
+    },
+  });
   console.error(`Lightdash MCP server (${persona.id}) running on stdio`);
 }
 
-main().catch((err) => {
+try {
+  main();
+} catch (err) {
   console.error('Fatal:', err);
   process.exit(1);
-});
+}

@@ -1,6 +1,6 @@
 # AI agent-ops distributed loop
 
-Companion to [RFC](rfc-ai-agent-ops-mcp-persona.md) and [ADR-0018](adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md).
+Companion to [ADR-0018](../../adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md) and [endpoint inventory](inventory.md).
 
 ## Surfaces
 

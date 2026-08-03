@@ -1,10 +1,6 @@
 # Cloud Run deployment: Lightdash OAuth MCP
 
-Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker (server-held Lightdash confidential client). See [mcp-oauth-http.md](mcp-oauth-http.md).
-
-## Production limitations
-
-Bearer validation confirms **who** the user is (`GET /api/v1/user`). Opaque Lightdash tokens are not fully resource/audience-bound yet. Rely on Lightdash RBAC + persona tool surface + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
+Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker. OAuth mental model, limitations, and full env reference: [mcp-oauth.md](mcp-oauth.md).
 
 ## Dockerfile
 
@@ -95,7 +91,7 @@ Grant the sink writer identity permission on the destination bucket after create
 - OAuth identity + Lightdash RBAC
 - `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` process ceiling for shared services
 - Optional `X-Lightdash-Project` pin
-- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state
+- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state (persona MCP paths scale horizontally via `createMcpHandler`)
 
 ## Deploy example
 
@@ -111,7 +107,7 @@ gcloud run deploy lightdash-mcp \
   --allow-unauthenticated
 ```
 
-`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on persona paths. Use sticky sessions / single instance until broker pending-auth and MCP sessions use an external store.
+`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on persona paths. Use sticky sessions / single instance for `/oauth/*` until broker pending-auth uses signed state or CIMD (persona MCP paths need no sticky sessions).
 
 ## Checklist
 

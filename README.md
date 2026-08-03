@@ -20,7 +20,7 @@ Set credentials from the parent process (shell, CI, or MCP client `env`). Create
 | `LIGHTDASH_API_KEY`                     | Client, CLI, MCP stdio | Personal access token (PAT)                                          |
 | `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP              | Optional comma-separated project UUID ceiling (unset = unrestricted) |
 
-Prefer env vars over plaintext `.env` files when agents can read the filesystem. Details: [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
+Prefer env vars over plaintext `.env` files when agents can read the filesystem. Details: [docs/operators/secrets.md](docs/operators/secrets.md).
 
 ## MCP quick start (stdio)
 
@@ -51,7 +51,7 @@ For remote Streamable HTTP (POST-only MCP endpoints, no protocol sessions):
 npx @lightdash-tools/mcp serve-http
 ```
 
-Hosted OAuth for Cursor (URL-only client config): [docs/cursor-lightdash-oauth-mcp.md](docs/cursor-lightdash-oauth-mcp.md). Operator setup: [packages/mcp/README.md](packages/mcp/README.md).
+Hosted OAuth for Cursor (URL-only client config): [docs/operators/cursor-claude.md](docs/operators/cursor-claude.md). Operator setup: [packages/mcp/README.md](packages/mcp/README.md).
 
 ## Safety
 
@@ -59,7 +59,7 @@ Hosted OAuth for Cursor (URL-only client config): [docs/cursor-lightdash-oauth-m
 - **MCP** — capability is the persona tool surface; optional HTTP pin via `X-Lightdash-Project`; shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN` ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)).
 - **Agent-safe surface** — irrecoverable ops stay off MCP and CLI; use the client for those ([ADR-0004](docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
 
-Agent-oriented notes: [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md).
+Agent-oriented notes: [docs/operators/agent-context.md](docs/operators/agent-context.md).
 
 ## Developing
 

@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 
-import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
+import { toNodeHandler } from '@modelcontextprotocol/node';
+import { createMcpHandler, type McpHttpHandler } from '@modelcontextprotocol/server';
 
 import { initAuditLog } from '../audit/audit.js';
 import { runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
@@ -37,7 +38,10 @@ import {
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from '../config/runtime.js';
 import { validateAvailableProjectsConfig } from '../governance/available-projects.js';
-import { prepareServerClientCapabilities } from '../governance/client-capabilities-cache.js';
+import {
+  getMcpPostFactoryStore,
+  runWithMcpPostFactoryAsync,
+} from '../governance/mcp-post-factory-context.js';
 import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
@@ -50,6 +54,25 @@ import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from '.
 
 import type { PersonaDefinition } from '../personas/types.js';
 import type { McpContextProvider } from '../server/request-context.js';
+
+type McpNodeHandler = ReturnType<typeof toNodeHandler>;
+
+function reportMcpHttpError(error: unknown): void {
+  console.error('MCP HTTP error:', error);
+}
+
+function createProcessMcpHttpHandler(): McpHttpHandler {
+  return createMcpHandler(
+    () => {
+      const store = getMcpPostFactoryStore();
+      if (!store) {
+        throw new Error('MCP request factory context is missing');
+      }
+      return createLightdashMcpServer(store.contextProvider, { persona: store.persona });
+    },
+    { legacy: 'stateless', onerror: reportMcpHttpError },
+  );
+}
 
 type OAuthRequest = IncomingMessage & {
   lightdashOAuth?: Awaited<ReturnType<typeof authenticateLightdashOAuth>> & { ok: true };
@@ -198,19 +221,21 @@ function createContextProviderForRequest(
   return createEnvContextProvider(config);
 }
 
-interface McpRequestContext {
+/** Local HTTP POST args — not the SDK `McpRequestContext` factory type. */
+interface HttpMcpPostArgs {
   req: IncomingMessage;
   res: ServerResponse;
   config: McpHttpConfig;
   persona: PersonaDefinition;
+  nodeHandler: McpNodeHandler;
 }
 
 /**
- * Handles a MCP POST by creating a fresh stateless transport + server per request.
- * No session affinity — each POST is independent (ADR-0019).
+ * Auth / Origin / pin run outside the handler. ALS supplies persona + provider
+ * so the process-lifetime createMcpHandler factory can build a fresh McpServer.
  */
-async function handleMcpPost(ctx: McpRequestContext): Promise<void> {
-  const { req, res, config, persona } = ctx;
+async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
+  const { req, res, config, persona, nodeHandler } = ctx;
 
   if (!(await ensureEndpointAuth(req, res, config, persona.path))) {
     drainRequestBody(req);
@@ -231,18 +256,11 @@ async function handleMcpPost(ctx: McpRequestContext): Promise<void> {
   }
 
   const contextProvider = createContextProviderForRequest(config, req);
-  const transport = new NodeStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-  const server = createLightdashMcpServer(contextProvider, { persona });
   const auditAuth = getOAuthAuditContext(req);
-  prepareServerClientCapabilities(server, body, auditAuth, persona.path);
 
-  try {
-    await server.connect(transport);
-    await runWithToolAuditAuthAsync(auditAuth, () => transport.handleRequest(req, res, body));
-  } finally {
-    await transport.close().catch(() => undefined);
-    await server.close().catch(() => undefined);
-  }
+  await runWithMcpPostFactoryAsync({ contextProvider, persona }, () =>
+    runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
+  );
 }
 
 export interface StreamableHttpServerHandle {
@@ -268,9 +286,12 @@ export async function createStreamableHttpServer(
 
   let oauthBroker: OAuthBroker | undefined;
 
+  const mcpHttpHandler = createProcessMcpHttpHandler();
+  const mcpNodeHandler = toNodeHandler(mcpHttpHandler, { onerror: reportMcpHttpError });
+
   const server = createServer((req, res) => {
-    handleHttpRequest(req, res, httpConfig, oauthBroker).catch((err) => {
-      console.error('MCP HTTP handler error:', err);
+    handleHttpRequest(req, res, httpConfig, oauthBroker, mcpNodeHandler).catch((err) => {
+      reportMcpHttpError(err);
       if (!res.headersSent) {
         sendJson(res, 500, { error: 'Internal Server Error' });
       }
@@ -291,13 +312,17 @@ export async function createStreamableHttpServer(
     port,
     baseUrl,
     config: httpConfig,
-    close: () =>
-      new Promise<void>((resolve, reject) => {
+    close: async () => {
+      await mcpHttpHandler.close().catch((err) => {
+        reportMcpHttpError(err);
+      });
+      await new Promise<void>((resolve, reject) => {
         server.close((err) => {
           if (err) reject(err);
           else resolve();
         });
-      }),
+      });
+    },
   };
 }
 
@@ -405,6 +430,7 @@ async function handleHttpRequest(
   res: ServerResponse,
   config: McpHttpConfig,
   oauthBroker: OAuthBroker | undefined,
+  nodeHandler: McpNodeHandler,
 ): Promise<void> {
   const path = (req.url ?? '').split('?')[0] ?? '';
 
@@ -432,6 +458,6 @@ async function handleHttpRequest(
   const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
   await runWithProjectPinAsync(pinnedProjectUuid, () =>
-    handleMcpPost({ req, res, config, persona }),
+    handleMcpPost({ req, res, config, persona, nodeHandler }),
   );
 }
