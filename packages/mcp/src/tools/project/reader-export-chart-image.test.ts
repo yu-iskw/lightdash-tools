@@ -99,7 +99,7 @@ describe('registerExportChartImage', () => {
         _server: unknown,
         _name: unknown,
         _meta: unknown,
-        createHandler: (persona: string) => typeof handler,
+        createHandler: (profile: string) => typeof handler,
       ) => {
         handler = createHandler('content-reader');
       },

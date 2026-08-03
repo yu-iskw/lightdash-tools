@@ -1,12 +1,11 @@
 /**
- * Persona safety invariant: all content-reader tools register as read-only GET.
+ * Profile safety invariant: all content-reader tools register as read-only GET.
  */
 
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { bindServerPersona } from '../../audit/server-persona.js';
-import { CONTENT_READER_TOOL_IDS } from '../../personas/content-reader/v1/index.js';
+import { bindServerProfile } from '../../audit/server-profile.js';
 import { registerToolsByIds } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
@@ -28,13 +27,14 @@ describe('content-reader safety invariants', () => {
       }),
     };
     const mockCtx = { getContext: async () => ({ lightdashClient: {} }) };
+    const toolIds = listMcpToolNamesByProfile('content-reader');
 
-    bindServerPersona(mockServer, 'content-reader');
-    registerToolsByIds(mockServer as never, mockCtx as never, CONTENT_READER_TOOL_IDS);
+    bindServerProfile(mockServer, 'content-reader');
+    registerToolsByIds(mockServer as never, mockCtx as never, toolIds);
 
-    expect(CONTENT_READER_TOOL_IDS).toHaveLength(14);
-    expect(annotationsByName.size).toBe(CONTENT_READER_TOOL_IDS.length);
-    for (const id of CONTENT_READER_TOOL_IDS) {
+    expect(toolIds).toHaveLength(14);
+    expect(annotationsByName.size).toBe(toolIds.length);
+    for (const id of toolIds) {
       const annotations = annotationsByName.get(`${TOOL_PREFIX}${id}`) as {
         readOnlyHint?: boolean;
         idempotentHint?: boolean;

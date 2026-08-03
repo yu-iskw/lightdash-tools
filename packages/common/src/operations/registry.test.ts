@@ -7,12 +7,17 @@ import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
 import { DATA_ANALYST_OPERATIONS } from './data-analyst';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
-import { getOperation, getOperationsByProfile, listOperations } from './registry';
+import {
+  getOperation,
+  getOperationsByProfile,
+  listMcpToolNamesByProfile,
+  listOperations,
+} from './registry';
 import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
-import { defineOperation } from './types';
+import { defineOperation, PROFILE_IDS } from './types';
 import { USER_OPERATIONS } from './users';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { OperationDescriptor, ProfileId } from './types';
 
 const P0_OPERATION_IDS = [
   'ai-agents.admin.agents.list',
@@ -35,13 +40,7 @@ const P0_OPERATION_IDS = [
   'ai-agents.project.evaluations.runs.list',
 ] as const;
 
-const ALL_PROFILES: CapabilityProfile[] = [
-  'ai-agent-ops',
-  'core-lifecycle',
-  'evaluations',
-  'conversations',
-  'discovery-readonly',
-];
+const ALL_PROFILES: ProfileId[] = [...PROFILE_IDS];
 
 function requiredFields(operation: OperationDescriptor): string[] {
   const agentExposure = operation.agentExposure ?? 'agent';
@@ -99,7 +98,12 @@ describe('operation registry', () => {
       if (operation.agentExposure === 'agent') {
         expect(operation.mcp !== undefined || operation.cli !== undefined).toBe(true);
       }
-      expect(operation.profiles.length).toBeGreaterThan(0);
+      const mcpExposed = operation.mcp?.taskSupport.exposed === true;
+      if (mcpExposed) {
+        expect(operation.profiles.length).toBeGreaterThan(0);
+      } else {
+        expect(operation.profiles).toEqual([]);
+      }
       expect(
         operation.http.path.startsWith('/api/v1/') || operation.http.path.startsWith('/api/v2/'),
       ).toBe(true);
@@ -122,7 +126,7 @@ describe('operation registry', () => {
     }
   });
 
-  it('exposes profile filters for all capability profiles', () => {
+  it('exposes profile filters for all serving profiles', () => {
     for (const profile of ALL_PROFILES) {
       const operations = getOperationsByProfile(profile);
       expect(operations.length).toBeGreaterThan(0);
@@ -132,23 +136,20 @@ describe('operation registry', () => {
     }
   });
 
-  it('maps agent CRUD to core-lifecycle profile', () => {
-    const crudIds = [
-      'ai-agents.project.agents.list',
-      'ai-agents.project.agents.get',
-      'ai-agents.project.agents.create',
-      'ai-agents.project.agents.update',
-      'ai-agents.project.agents.delete',
-    ];
-    for (const id of crudIds) {
-      const operation = getOperation(id);
-      expect(operation?.profiles).toContain('core-lifecycle');
+  it('listMcpToolNamesByProfile matches exposed ops per profile', () => {
+    for (const profile of ALL_PROFILES) {
+      const toolNames = listMcpToolNamesByProfile(profile);
+      const exposedOps = getOperationsByProfile(profile).filter(
+        (operation) => operation.mcp?.taskSupport.exposed === true,
+      );
+      expect(toolNames).toHaveLength(exposedOps.length);
+      expect(new Set(toolNames).size).toBe(toolNames.length);
     }
   });
 
-  it('maps thread start and continue to conversations profile', () => {
-    expect(getOperation('ai-agents.project.threads.start')?.profiles).toContain('conversations');
-    expect(getOperation('ai-agents.project.threads.continue')?.profiles).toContain('conversations');
+  it('maps exposed ai-agent-ops tools to ai-agent-ops profile only', () => {
+    expect(getOperation('ai-agents.project.agents.list')?.profiles).toEqual(['ai-agent-ops']);
+    expect(getOperation('ai-agents.project.agents.create')?.profiles).toEqual([]);
   });
 
   it('documents multi-step workflow for thread start', () => {
@@ -169,25 +170,8 @@ describe('operation registry', () => {
     expect(operation?.workflow?.[1]?.path).toContain('/generate');
   });
 
-  it('maps evaluation lifecycle operations to evaluations profile', () => {
-    const evalIds = [
-      'ai-agents.project.evaluations.create',
-      'ai-agents.project.evaluations.append',
-      'ai-agents.project.evaluations.run',
-      'ai-agents.project.evaluations.runs.list',
-    ];
-    for (const id of evalIds) {
-      expect(getOperation(id)?.profiles).toContain('evaluations');
-    }
-  });
-
   it('returns undefined for unknown operation id', () => {
     expect(getOperation('ai-agents.unknown.operation')).toBeUndefined();
-  });
-
-  it('filters operations by profile with empty result for unknown profile usage', () => {
-    const ops = getOperationsByProfile('core-lifecycle');
-    expect(ops.every((op) => op.profiles.includes('core-lifecycle'))).toBe(true);
   });
 
   it('registers users.members.delete as client-only', () => {
@@ -197,6 +181,7 @@ describe('operation registry', () => {
     expect(operation?.cli).toBeUndefined();
     expect(operation?.bannedMcpToolName).toBe('delete_member');
     expect(operation?.http.path).toBe('/api/v1/org/user/{userUuid}');
+    expect(operation?.profiles).toEqual([]);
   });
 
   it('excludes client-only operations from profile discovery catalogs', () => {
@@ -206,15 +191,6 @@ describe('operation registry', () => {
       }
     }
     expect(getOperation('users.members.delete')).toBeDefined();
-    expect(
-      getOperationsByProfile('discovery-readonly').some((op) => op.id === 'users.members.delete'),
-    ).toBe(false);
-  });
-
-  it('keeps discovery-readonly profile operations read-only', () => {
-    for (const operation of getOperationsByProfile('discovery-readonly')) {
-      expect(operation.authorization.safetyImpact).toBe('read');
-    }
   });
 
   it('never exposes client-only operations on MCP', () => {
@@ -246,7 +222,7 @@ describe('operation registry', () => {
         },
         cli: { commandPath: 'test' },
         agentExposure: 'agent',
-        profiles: ['discovery-readonly'],
+        profiles: ['semantic-layer'],
       }),
     ).toThrow(/authorization\.safetyImpact/);
   });

@@ -343,7 +343,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(metadata.resource).toBe(`${mcpServer.baseUrl}/content-governance/v1/mcp`);
   });
 
-  it('returns 401 with organization-audit resource_metadata on that persona path', async () => {
+  it('returns 401 with organization-audit resource_metadata on that profile path', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/organization-audit/v1/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -358,7 +358,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
   });
 
-  it('returns 401 with content-reader resource_metadata on that persona path', async () => {
+  it('returns 401 with content-reader resource_metadata on that profile path', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/content-reader/v1/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -373,7 +373,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
   });
 
-  it('returns 401 with content-governance resource_metadata on that persona path', async () => {
+  it('returns 401 with content-governance resource_metadata on that profile path', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/content-governance/v1/mcp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -638,7 +638,7 @@ describe('MCP HTTP transport (sessionless)', () => {
     expect(await response.json()).toEqual({ error: 'Payload Too Large' });
   });
 
-  it('returns 405 for GET on persona endpoint (sessionless, no persistent streams)', async () => {
+  it('returns 405 for GET on profile endpoint (sessionless, no persistent streams)', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'GET',
       headers: {
@@ -650,7 +650,7 @@ describe('MCP HTTP transport (sessionless)', () => {
     expect(response.status).toBe(405);
   });
 
-  it('returns 405 for DELETE on persona endpoint (sessionless, no sessions to close)', async () => {
+  it('returns 405 for DELETE on profile endpoint (sessionless, no sessions to close)', async () => {
     const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'DELETE',
       headers: {

@@ -3,18 +3,18 @@
  * (createMcpHandler + StreamableHTTPClientTransport with versionNegotiation).
  * No Lightdash network calls — stub McpContextProvider only.
  */
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { createMcpHandler, InMemoryTransport } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { SEMANTIC_LAYER_TOOL_IDS } from './personas/semantic-layer/v1/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 import type { McpContextProvider } from './server/request-context.js';
 import type { McpHttpHandler, McpServer } from '@modelcontextprotocol/server';
 
-const EXPECTED_TOOL_COUNT = SEMANTIC_LAYER_TOOL_IDS.length;
+const EXPECTED_TOOL_COUNT = listMcpToolNamesByProfile('semantic-layer').length;
 
 function createStubContextProvider(): McpContextProvider {
   return {

@@ -5,9 +5,9 @@ import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { ProfileId, OperationDescriptor } from './types';
 
-const PROFILE_ORG_AUDIT: CapabilityProfile = 'org-audit-readonly';
+const PROFILE_ORG_AUDIT: ProfileId = 'organization-audit';
 
 const op_get_org_profile = defineOperation({
   id: 'org-audit.org.profile.get',

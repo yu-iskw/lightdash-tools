@@ -34,7 +34,7 @@ export function registerListProjectParameters(
         pageSize: z.number().int().positive().max(100).optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -65,7 +65,7 @@ export function registerListProjectParameters(
                     pagination: { returned: data.length, ...pagination, complete },
                   },
                   {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                     complete,
@@ -97,7 +97,7 @@ export function registerGetProjectParameters(
         names: z.array(z.string()).min(1),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; names: string[] }) => {
         try {
           const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -109,7 +109,7 @@ export function registerGetProjectParameters(
             contentReaderEnvelope(
               { values, unresolvedNames },
               {
-                persona,
+                profile,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
               },

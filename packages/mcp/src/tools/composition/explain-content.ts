@@ -35,7 +35,7 @@ export function registerExplainContent(
       },
     },
     /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- explain branches */
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -95,7 +95,7 @@ export function registerExplainContent(
                 };
                 return jsonToolResult(
                   contentReaderEnvelope(explanation, {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                   }),
@@ -131,7 +131,7 @@ export function registerExplainContent(
               };
               return jsonToolResult(
                 contentReaderEnvelope(explanation, {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 }),

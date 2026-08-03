@@ -31,7 +31,7 @@ export function warnIgnoredCliGuardrailEnvVars(
   if (ignored.length > 0) {
     warn(
       `Warning: ${ignored.join(', ')} ${ignored.length === 1 ? 'is' : 'are'} set but ignored by MCP. ` +
-        'Those variables apply to the CLI only. MCP uses persona toolIds + auth/RBAC + optional ' +
+        'Those variables apply to the CLI only. MCP uses catalog profile membership + auth/RBAC + optional ' +
         `${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS} + optional X-Lightdash-Project (ADR-0008).`,
     );
   }

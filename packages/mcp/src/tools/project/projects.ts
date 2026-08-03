@@ -2,7 +2,7 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
-import { requireServerPersona } from '../../audit/server-persona.js';
+import { requireServerProfile } from '../../audit/server-profile.js';
 import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
@@ -18,6 +18,7 @@ import {
 } from '../shared.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { ProfileId } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const READER_CAPABILITIES = {
@@ -49,20 +50,21 @@ type ScopedGetProjectConfig = {
   capabilities: Readonly<Record<string, boolean>>;
 };
 
-const SCOPED_GET_PROJECT_BY_PERSONA: Readonly<Record<string, ScopedGetProjectConfig>> = {
-  'content-reader': {
-    capabilitiesKey: 'readerCapabilities',
-    capabilities: READER_CAPABILITIES,
-  },
-  'content-developer': {
-    capabilitiesKey: 'developerCapabilities',
-    capabilities: DEVELOPER_CAPABILITIES,
-  },
-  'data-analyst': {
-    capabilitiesKey: 'analystCapabilities',
-    capabilities: ANALYST_CAPABILITIES,
-  },
-};
+const SCOPED_GET_PROJECT_BY_PROFILE: Readonly<Partial<Record<ProfileId, ScopedGetProjectConfig>>> =
+  {
+    'content-reader': {
+      capabilitiesKey: 'readerCapabilities',
+      capabilities: READER_CAPABILITIES,
+    },
+    'content-developer': {
+      capabilitiesKey: 'developerCapabilities',
+      capabilities: DEVELOPER_CAPABILITIES,
+    },
+    'data-analyst': {
+      capabilitiesKey: 'analystCapabilities',
+      capabilities: ANALYST_CAPABILITIES,
+    },
+  };
 
 export function registerListProjects(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
@@ -90,9 +92,9 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
 }
 
 export function registerGetProject(server: McpServer, contextProvider: McpContextProvider): void {
-  const personaId = requireServerPersona(server, 'get_project');
-  // eslint-disable-next-line security/detect-object-injection -- personaId from requireServerPersona
-  const scoped = SCOPED_GET_PROJECT_BY_PERSONA[personaId];
+  const profileId = requireServerProfile(server, 'get_project');
+  // eslint-disable-next-line security/detect-object-injection -- profileId from requireServerProfile
+  const scoped = SCOPED_GET_PROJECT_BY_PROFILE[profileId];
   if (scoped) {
     registerScopedGetProject(server, contextProvider, scoped);
     return;

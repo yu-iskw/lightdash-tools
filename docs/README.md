@@ -13,16 +13,16 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 | [operators/mcp-oauth-threat-model.md](operators/mcp-oauth-threat-model.md) | OAuth threat model                                      |
 | [operators/agent-context.md](operators/agent-context.md)                   | CLI/MCP agent invariants                                |
 
-## Personas
+## Profiles
 
-| Persona            | Docs                                                                                                                                            |
+| Profile            | Docs                                                                                                                                            |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| organization-audit | [inventory](personas/organization-audit/inventory.md)                                                                                           |
-| content-reader     | [inventory](personas/content-reader/inventory.md)                                                                                               |
-| content-developer  | [inventory](personas/content-developer/inventory.md)                                                                                            |
-| content-governance | [inventory](personas/content-governance/inventory.md), [client compatibility](personas/content-governance/client-compatibility.md)              |
-| ai-agent-ops       | [inventory](personas/ai-agent-ops/inventory.md), [loop](personas/ai-agent-ops/loop.md), [CLI reference](personas/ai-agent-ops/cli-ai-agents.md) |
-| data-analyst       | [inventory](personas/data-analyst/inventory.md)                                                                                                 |
+| organization-audit | [inventory](profiles/organization-audit/inventory.md)                                                                                           |
+| content-reader     | [inventory](profiles/content-reader/inventory.md)                                                                                               |
+| content-developer  | [inventory](profiles/content-developer/inventory.md)                                                                                            |
+| content-governance | [inventory](profiles/content-governance/inventory.md), [client compatibility](profiles/content-governance/client-compatibility.md)              |
+| ai-agent-ops       | [inventory](profiles/ai-agent-ops/inventory.md), [loop](profiles/ai-agent-ops/loop.md), [CLI reference](profiles/ai-agent-ops/cli-ai-agents.md) |
+| data-analyst       | [inventory](profiles/data-analyst/inventory.md)                                                                                                 |
 
 ## Decisions
 

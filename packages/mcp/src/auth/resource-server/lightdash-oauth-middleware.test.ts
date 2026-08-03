@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
-import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../../personas/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PERSONA_PATH } from '../../personas/semantic-layer/v1/index.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../profiles/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../../profiles/semantic-layer/v1/index.js';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
@@ -35,7 +35,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -53,11 +53,11 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).not.toContain('scope=');
   });
 
-  it('points resource_metadata at the requested persona path', async () => {
+  it('points resource_metadata at the requested profile path', async () => {
     const result = await authenticateLightdashOAuth(
       createRequest(),
       baseConfig,
-      ORGANIZATION_AUDIT_PERSONA_PATH,
+      ORGANIZATION_AUDIT_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -78,7 +78,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -99,7 +99,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer token'),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -121,7 +121,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer token'),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -141,7 +141,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result).toEqual({
@@ -162,7 +162,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer opaque-token'),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result).toEqual({
@@ -186,7 +186,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(true);
@@ -204,7 +204,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest('Bearer opaque-token'),
       scopedConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -229,7 +229,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       scopedConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -250,7 +250,7 @@ describe('authenticateLightdashOAuth', () => {
     const result = await authenticateLightdashOAuth(
       createRequest(`bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(true);

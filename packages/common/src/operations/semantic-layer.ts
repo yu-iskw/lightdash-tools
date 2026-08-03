@@ -6,10 +6,10 @@ import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { ProfileId, OperationDescriptor } from './types';
 
-const PROFILE_SEMANTIC: CapabilityProfile = 'semantic-discovery';
-const PROFILE_DATA_ANALYST: CapabilityProfile = 'data-analyst';
+const PROFILE_SEMANTIC: ProfileId = 'semantic-layer';
+const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
 const API_V1 = '/api/v1';
 
 const listProjects = defineOperation({

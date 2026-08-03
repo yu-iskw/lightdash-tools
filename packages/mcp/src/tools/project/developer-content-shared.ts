@@ -31,12 +31,12 @@ export async function findContentByUuid(
 }
 
 export function developerContext(scope: ResolvedProjectScope): {
-  persona: 'content-developer';
+  profile: 'content-developer';
   projectUuid: string;
   projectPinned: boolean;
 } {
   return {
-    persona: 'content-developer',
+    profile: 'content-developer',
     projectUuid: scope.projectUuid,
     projectPinned: scope.projectPinned,
   };

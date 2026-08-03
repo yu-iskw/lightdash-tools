@@ -20,7 +20,7 @@ ENV NODE_ENV=production
 ENV LIGHTDASH_TOOLS_MCP_HTTP_HOST=0.0.0.0
 ENV LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 
-CMD ["node", "packages/mcp/dist/bin.js", "serve-http"]
+CMD ["node", "packages/mcp/dist/bin.js", "http"]
 ```
 
 ## Cloud Run environment variables
@@ -45,7 +45,7 @@ https://lightdash-mcp-xxxxx.a.run.app/oauth/callback
 
 ## Audit logs (Cloud Logging)
 
-Each MCP tool call emits one structured line with `"channel":"audit"`, plus `severity`, `message`, `tool`, `status`, `subject` / `tokenHash` (OAuth), `clientSessionId`, `personaId`, and optional `projectUuids`. See [structured logging](https://docs.cloud.google.com/logging/docs/structured-logging).
+Each MCP tool call emits one structured line with `"channel":"audit"`, plus `severity`, `message`, `tool`, `status`, `subject` / `tokenHash` (OAuth), `clientSessionId`, `profileId`, and optional `projectUuids`. See [structured logging](https://docs.cloud.google.com/logging/docs/structured-logging).
 
 ### Logs Explorer filter
 
@@ -87,11 +87,11 @@ Grant the sink writer identity permission on the destination bucket after create
 
 ### Governance companions (already in the product)
 
-- Persona URL / fixed `toolIds` (capability surface)
+- Profile URL + catalog membership (capability surface)
 - OAuth identity + Lightdash RBAC
 - `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` process ceiling for shared services
 - Optional `X-Lightdash-Project` pin
-- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state (persona MCP paths scale horizontally via `createMcpHandler`)
+- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state (profile MCP paths scale horizontally via `createMcpHandler`)
 
 ## Deploy example
 
@@ -107,7 +107,7 @@ gcloud run deploy lightdash-mcp \
   --allow-unauthenticated
 ```
 
-`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on persona paths. Use sticky sessions / single instance for `/oauth/*` until broker pending-auth uses signed state or CIMD (persona MCP paths need no sticky sessions).
+`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on profile paths. Use sticky sessions / single instance for `/oauth/*` until broker pending-auth uses signed state or CIMD (profile MCP paths need no sticky sessions).
 
 ## Checklist
 

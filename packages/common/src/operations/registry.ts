@@ -10,9 +10,10 @@ import { CONTENT_READER_OPERATIONS } from './content-reader';
 import { DATA_ANALYST_OPERATIONS } from './data-analyst';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
+import { PROFILE_IDS } from './types';
 import { USER_OPERATIONS } from './users';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { OperationDescriptor, ProfileId } from './types';
 
 const AGENT_EXPOSURE_CLIENT_ONLY = 'client-only' as const;
 
@@ -85,6 +86,35 @@ const BANNED_MCP_TOOL_NAMES: readonly string[] = ALL_OPERATIONS.filter(
   }
   return banned;
 });
+
+/** Precomputed tool names per serving profile (ADR-0006 registration source). */
+const MCP_TOOL_NAMES_BY_PROFILE: ReadonlyMap<ProfileId, readonly string[]> = (() => {
+  const map = new Map<ProfileId, string[]>(PROFILE_IDS.map((id) => [id, []]));
+  for (const operation of ALL_OPERATIONS) {
+    if (operation.agentExposure === AGENT_EXPOSURE_CLIENT_ONLY) {
+      continue;
+    }
+    const mcp = operation.mcp;
+    if (mcp === undefined || mcp.taskSupport.exposed !== true) {
+      continue;
+    }
+    for (const profile of operation.profiles) {
+      const names = map.get(profile);
+      if (names === undefined) {
+        throw new Error(
+          `Unknown profile '${profile}' on operation '${operation.id}' while indexing MCP tools`,
+        );
+      }
+      names.push(mcp.toolName);
+    }
+  }
+  for (const [id, names] of map) {
+    Object.freeze(names);
+    map.set(id, names);
+  }
+  return map;
+})();
+
 /** Returns a registered operation by id, or undefined when not found. */
 export function getOperation(id: string): OperationDescriptor | undefined {
   return operationsById.get(id);
@@ -100,8 +130,8 @@ export function listOperations(): readonly OperationDescriptor[] {
   return ALL_OPERATIONS;
 }
 
-/** Returns agent-surface operations that include the given capability profile. */
-export function getOperationsByProfile(profile: CapabilityProfile): readonly OperationDescriptor[] {
+/** Returns agent-surface operations that include the given MCP serving profile. */
+export function getOperationsByProfile(profile: ProfileId): readonly OperationDescriptor[] {
   return ALL_OPERATIONS.filter(
     (operation) =>
       operation.agentExposure !== 'client-only' && operation.profiles.includes(profile),
@@ -118,13 +148,11 @@ export function listBannedMcpToolNames(): readonly string[] {
   return BANNED_MCP_TOOL_NAMES;
 }
 
-/** Exposed MCP tool names for a capability profile (persona allowlist source). */
-export function listMcpToolNamesByProfile(profile: CapabilityProfile): readonly string[] {
-  return getOperationsByProfile(profile).flatMap((operation) => {
-    const mcp = operation.mcp;
-    if (mcp === undefined || mcp.taskSupport.exposed !== true) {
-      return [];
-    }
-    return [mcp.toolName];
-  });
+/** Exposed MCP tool names for a serving profile (registration source, ADR-0006). */
+export function listMcpToolNamesByProfile(profile: ProfileId): readonly string[] {
+  const names = MCP_TOOL_NAMES_BY_PROFILE.get(profile);
+  if (names === undefined) {
+    throw new Error(`Unknown profile id: ${profile}`);
+  }
+  return names;
 }

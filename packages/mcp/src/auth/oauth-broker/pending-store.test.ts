@@ -1,5 +1,5 @@
 /**
- * In-memory OAuthBrokerStore unit tests (ADR-0016 / ADR-0019).
+ * In-memory OAuthBrokerStore unit tests (ADR-0019).
  * Redis backend removed per ADR-0019; always memory.
  */
 

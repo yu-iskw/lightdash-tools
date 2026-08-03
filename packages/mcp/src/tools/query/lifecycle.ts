@@ -34,7 +34,7 @@ export function registerGetQueryResult(
     {
       title: 'Get query result',
       description:
-        'Poll or retrieve a query started by this persona (by queryUuid handle). Shared by content-reader and data-analyst; safety preset is saved-execution (budget/ledger identical for metric_query).',
+        'Poll or retrieve a query started by this profile (by queryUuid handle). Shared by content-reader and data-analyst; safety preset is saved-execution (budget/ledger identical for metric_query).',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -44,7 +44,7 @@ export function registerGetQueryResult(
         pageSize: z.number().int().positive().max(1000).optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -87,7 +87,7 @@ export function registerGetQueryResult(
 
               return jsonToolResult(
                 contentReaderEnvelope(normalized, {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   complete: isCoverageComplete(normalized),
@@ -119,7 +119,7 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
         queryUuid: z.string(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) => async (args: { projectUuid?: string; queryUuid: string }) => {
@@ -137,7 +137,7 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
               contentReaderEnvelope(
                 { queryUuid: args.queryUuid, cancelled: true },
                 {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 },

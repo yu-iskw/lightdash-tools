@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { AI_AGENT_OPS_PERSONA_PATH } from '../personas/ai-agent-ops/v1/index.js';
-import { CONTENT_READER_PERSONA_PATH } from '../personas/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../personas/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PERSONA_PATH } from '../personas/semantic-layer/v1/index.js';
+import { AI_AGENT_OPS_PROFILE_PATH } from '../profiles/ai-agent-ops/v1/index.js';
+import { CONTENT_READER_PROFILE_PATH } from '../profiles/content-reader/v1/index.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../profiles/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../profiles/semantic-layer/v1/index.js';
 
 import { normalizeMcpPath, normalizePublicUrl } from './normalize-url.js';
 
@@ -44,31 +44,31 @@ describe('normalizePublicUrl', () => {
     );
   });
 
-  it('strips the semantic-layer persona path', () => {
+  it('strips the semantic-layer profile path', () => {
     expect(
-      normalizePublicUrl(`https://mcp.example.com${SEMANTIC_LAYER_PERSONA_PATH}/`, [
-        SEMANTIC_LAYER_PERSONA_PATH,
+      normalizePublicUrl(`https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}/`, [
+        SEMANTIC_LAYER_PROFILE_PATH,
       ]),
     ).toBe('https://mcp.example.com');
   });
 
-  it('strips any known persona path when given a path list', () => {
+  it('strips any known profile path when given a path list', () => {
     const paths = [
-      SEMANTIC_LAYER_PERSONA_PATH,
-      ORGANIZATION_AUDIT_PERSONA_PATH,
-      CONTENT_READER_PERSONA_PATH,
-      AI_AGENT_OPS_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      ORGANIZATION_AUDIT_PROFILE_PATH,
+      CONTENT_READER_PROFILE_PATH,
+      AI_AGENT_OPS_PROFILE_PATH,
     ];
     expect(
-      normalizePublicUrl(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`, paths),
+      normalizePublicUrl(`https://mcp.example.com${ORGANIZATION_AUDIT_PROFILE_PATH}`, paths),
     ).toBe('https://mcp.example.com');
     expect(
-      normalizePublicUrl(`https://mcp.example.com${SEMANTIC_LAYER_PERSONA_PATH}/`, paths),
+      normalizePublicUrl(`https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}/`, paths),
     ).toBe('https://mcp.example.com');
-    expect(normalizePublicUrl(`https://mcp.example.com${CONTENT_READER_PERSONA_PATH}`, paths)).toBe(
+    expect(normalizePublicUrl(`https://mcp.example.com${CONTENT_READER_PROFILE_PATH}`, paths)).toBe(
       'https://mcp.example.com',
     );
-    expect(normalizePublicUrl(`https://mcp.example.com${AI_AGENT_OPS_PERSONA_PATH}`, paths)).toBe(
+    expect(normalizePublicUrl(`https://mcp.example.com${AI_AGENT_OPS_PROFILE_PATH}`, paths)).toBe(
       'https://mcp.example.com',
     );
   });

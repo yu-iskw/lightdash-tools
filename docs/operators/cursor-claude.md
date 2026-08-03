@@ -35,7 +35,7 @@ MCP    → Lightdash API with same Bearer token
 }
 ```
 
-Replace the host with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Path is persona-owned: `/semantic-layer/v1/mcp`.
+Replace the host with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Path is profile-owned: `/semantic-layer/v1/mcp`.
 
 **Do not** put `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID` / `_SECRET` (or any Lightdash client secret) in Cursor or Claude Code config.
 
@@ -77,7 +77,7 @@ Clients/gateways may send `X-Lightdash-Project: <projectUuid>` so the MCP proces
 - OAuth redirect errors → confirm Lightdash app redirect is exactly `{PUBLIC_URL}/oauth/callback`.
 - Discovery fails → open `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` on the MCP host.
 - Identity works but tools fail → check Lightdash RBAC for that user; MCP does not reimplement object permissions.
-- OAuth token exchange from Cursor’s loopback page (`http://localhost:8787`) needs CORS on broker routes. The server reflects `Origin` on `/oauth/*` and discovery independently of `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` (persona MCP routes stay allowlist-gated).
+- OAuth token exchange from Cursor’s loopback page (`http://localhost:8787`) needs CORS on broker routes. The server reflects `Origin` on `/oauth/*` and discovery independently of `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` (profile MCP routes stay allowlist-gated).
 - **`Unexpected token 'Y', "You are ab"... is not valid JSON`** / Cursor log `OAuth callback exchange failed` → browser-UA GET hit an **HTML interstitial** (classic **free ngrok** `ERR_NGROK_6024`). Do **not** use free ngrok for Cursor OAuth. Use [Cloudflare Tunnel](#local-smoke-cloudflare-tunnel) (or another public HTTPS edge without an interstitial). Confirm:
 
   ```bash

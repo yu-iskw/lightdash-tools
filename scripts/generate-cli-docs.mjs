@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate docs/personas/ai-agent-ops/cli-ai-agents.md from the shared operation registry.
+ * Generate docs/profiles/ai-agent-ops/cli-ai-agents.md from the shared operation registry.
  */
 
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const COMMON_DIST = path.join(ROOT, 'packages/common/dist/operations/index.js');
-const OUTPUT_PATH = path.join(ROOT, 'docs/personas/ai-agent-ops/cli-ai-agents.md');
+const OUTPUT_PATH = path.join(ROOT, 'docs/profiles/ai-agent-ops/cli-ai-agents.md');
 
 async function loadRegistry() {
   if (!fs.existsSync(COMMON_DIST)) {

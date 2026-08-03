@@ -40,13 +40,13 @@ describe('audit', () => {
       status: 'blocked',
       startMs: Date.now() - 5,
       projectUuids: [],
-      personaId: 'semantic-layer',
+      profileId: 'semantic-layer',
     });
     expect(entry.channel).toBe('audit');
     expect(entry.severity).toBe('WARNING');
     expect(entry.message).toBe('demo_tool blocked');
     expect(entry.projectUuids).toBeUndefined();
-    expect(entry.personaId).toBe('semantic-layer');
+    expect(entry.profileId).toBe('semantic-layer');
     expect(entry.sessionId).toBe(getSessionId());
   });
 
@@ -73,7 +73,7 @@ describe('audit', () => {
         tokenHash: 'abc123',
         subject: 'user-uuid',
         clientSessionId: 'mcp-session-1',
-        personaId: 'semantic-layer',
+        profileId: 'semantic-layer',
       }),
     );
 
@@ -90,7 +90,7 @@ describe('audit', () => {
     expect(parsed.tokenHash).toBe('abc123');
     expect(parsed.subject).toBe('user-uuid');
     expect(parsed.clientSessionId).toBe('mcp-session-1');
-    expect(parsed.personaId).toBe('semantic-layer');
+    expect(parsed.profileId).toBe('semantic-layer');
   });
 
   it('logAuditEntry appends to a file when initAuditLog receives a path', async () => {

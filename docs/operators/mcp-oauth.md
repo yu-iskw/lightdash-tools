@@ -9,7 +9,7 @@ Operator guide for hosted `@lightdash-tools/mcp` with a **server-held Lightdash 
 | Lightdash OAuth app (client id/secret) | **MCP server** env                                                |
 | Redirect URI (one, shared)             | `{PUBLIC_URL}/oauth/callback`                                     |
 | AS façade for MCP clients              | MCP host (`/oauth/*`, PRM `authorization_servers` = `PUBLIC_URL`) |
-| Resource servers                       | Persona paths (`/semantic-layer/v1/mcp`, …)                       |
+| Resource servers                       | Profile paths (`/semantic-layer/v1/mcp`, …)                       |
 | MCP clients (Claude Code / Cursor)     | **URL only** — no client secret                                   |
 
 Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
@@ -23,7 +23,7 @@ Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
 | PRM + broker AS metadata                                      | Supported                                     |
 | Full RFC 8707 audience enforcement on opaque Lightdash tokens | **Limited** — identity via `GET /api/v1/user` |
 
-Authorization in practice: Lightdash RBAC + persona `toolIds` ([ADR-0006](../adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
+Authorization in practice: Lightdash RBAC + catalog `profiles` + `listMcpToolNamesByProfile` (ADR-0006) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
 
 ## Primary: hosted OAuth
 
@@ -33,7 +33,7 @@ export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_ID="..."
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
 
-npx @lightdash-tools/mcp serve-http
+npx @lightdash-tools/mcp http
 ```
 
 1. Create a Lightdash OAuth application.

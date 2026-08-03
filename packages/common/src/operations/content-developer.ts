@@ -3,15 +3,15 @@
  * Hybrid authoring surface: chart as-code upsert, dashboard REST create/update,
  * MCP-composed tile layout, and bulk content move into existing spaces.
  * Space create/update are client-only (spaces managed out-of-band, e.g. Terraform).
- * Preview -> validate -> apply is enforced by the persona policy layer, not here.
+ * Preview -> validate -> apply is enforced by the profile policy layer, not here.
  */
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor, SafetyImpact } from './types';
+import type { ProfileId, OperationDescriptor, SafetyImpact } from './types';
 
-const PROFILE_CONTENT_DEVELOPER: CapabilityProfile = 'content-developer';
+const PROFILE_CONTENT_DEVELOPER: ProfileId = 'content-developer';
 const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
 const WRITE_NONDESTRUCTIVE_IMPACT: SafetyImpact = 'write-nondestructive';
@@ -446,7 +446,7 @@ const op_create_space = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'create_space',
-  profiles: [PROFILE_CONTENT_DEVELOPER],
+  profiles: [],
 });
 
 const op_update_space = defineOperation({
@@ -458,7 +458,7 @@ const op_update_space = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'update_space',
-  profiles: [PROFILE_CONTENT_DEVELOPER],
+  profiles: [],
 });
 
 const op_move_content = defineOperation({

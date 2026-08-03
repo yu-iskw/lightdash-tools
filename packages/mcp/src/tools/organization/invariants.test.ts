@@ -1,11 +1,10 @@
 /**
- * Persona safety invariant: all org-audit tools register as read-only GET.
+ * Profile safety invariant: all org-audit tools register as read-only GET.
  */
 
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ORGANIZATION_AUDIT_TOOL_IDS } from '../../personas/organization-audit/v1/index.js';
 import { registerToolsByIds } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
@@ -18,11 +17,12 @@ describe('organization-audit safety invariants', () => {
       }),
     };
     const mockCtx = { getContext: async () => ({ lightdashClient: {} }) };
+    const toolIds = listMcpToolNamesByProfile('organization-audit');
 
-    registerToolsByIds(mockServer as never, mockCtx as never, ORGANIZATION_AUDIT_TOOL_IDS);
+    registerToolsByIds(mockServer as never, mockCtx as never, toolIds);
 
-    expect(annotationsByName.size).toBe(ORGANIZATION_AUDIT_TOOL_IDS.length);
-    for (const id of ORGANIZATION_AUDIT_TOOL_IDS) {
+    expect(annotationsByName.size).toBe(toolIds.length);
+    for (const id of toolIds) {
       const annotations = annotationsByName.get(`${TOOL_PREFIX}${id}`) as {
         readOnlyHint?: boolean;
       };

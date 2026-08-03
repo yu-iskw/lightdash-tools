@@ -8,11 +8,11 @@ import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor, SafetyImpact } from './types';
+import type { ProfileId, OperationDescriptor, SafetyImpact } from './types';
 
 const IMPACT_READ: SafetyImpact = 'read';
 const IMPACT_WRITE_DESTRUCTIVE: SafetyImpact = 'write-destructive';
-const PROFILE_CONTENT_GOVERNANCE: CapabilityProfile = 'content-governance';
+const PROFILE_CONTENT_GOVERNANCE: ProfileId = 'content-governance';
 
 const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
@@ -98,7 +98,7 @@ const op_permanent_purge = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'permanent_delete_content',
-  profiles: [PROFILE_CONTENT_GOVERNANCE],
+  profiles: [],
 });
 
 export const CONTENT_GOVERNANCE_OPERATIONS: readonly OperationDescriptor[] = [

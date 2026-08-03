@@ -10,7 +10,7 @@ const TEST_FALLBACK_KEY = 'lightdash-tools-dev-request-state-key!!';
 export const PREVIEW_TOKEN_KEY_PURPOSE = 'content-developer preview tokens are enabled';
 export const DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE =
   'content-governance destructive tools are enabled';
-/** HTTP ships all personas; preview + destructive elicitation share one signing key. */
+/** HTTP ships all profiles; preview + destructive elicitation share one signing key. */
 export const HTTP_SIGNED_STATE_KEY_PURPOSE =
   'HTTP MCP exposes content-developer preview tokens and content-governance destructive tools';
 
@@ -49,7 +49,7 @@ export function assertRequestStateKeyConfigured(purpose: string): void {
   resolveRequestStateKey(purpose);
 }
 
-/** Fail fast when HTTP starts with personas that require signed preview/destructive tokens. */
+/** Fail fast when HTTP starts with profiles that require signed preview/destructive tokens. */
 export function assertHttpSignedStateKeyConfigured(): void {
   assertRequestStateKeyConfigured(HTTP_SIGNED_STATE_KEY_PURPOSE);
 }

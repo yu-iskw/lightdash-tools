@@ -1,0 +1,3 @@
+kind: feat
+body: 'BREAKING: MCP packaging uses profile (not persona): catalog profiles are tool-membership SSOT; envelope context.profile; LIGHTDASH_TOOLS_MCP_STDIO_PROFILE (stdio subcommand); drop semantic-discovery/org-audit-readonly and granular CLI profile tags.'
+time: 2026-08-04T06:44:40.09877+09:00

@@ -46,13 +46,13 @@ import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
 } from '../governance/project-pin.js';
-import { getPersonaByPath, listPersonaPaths } from '../personas/index.js';
+import { getProfileByPath, listProfilePaths } from '../profiles/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
 import { applyResponseHeaders, buildCorsHeaders, checkOrigin, sendJson } from './http-response.js';
 
-import type { PersonaDefinition } from '../personas/types.js';
+import type { ProfileDefinition } from '../profiles/types.js';
 import type { McpContextProvider } from '../server/request-context.js';
 
 type McpNodeHandler = ReturnType<typeof toNodeHandler>;
@@ -68,7 +68,7 @@ function createProcessMcpHttpHandler(): McpHttpHandler {
       if (!store) {
         throw new Error('MCP request factory context is missing');
       }
-      return createLightdashMcpServer(store.contextProvider, { persona: store.persona });
+      return createLightdashMcpServer(store.contextProvider, { profile: store.profile });
     },
     { legacy: 'stateless', onerror: reportMcpHttpError },
   );
@@ -151,7 +151,7 @@ function handleHealth(path: string, res: ServerResponse, config: McpHttpConfig):
 }
 
 /**
- * Auth helpers for persona MCP routes. PRM path resolution lives in
+ * Auth helpers for profile MCP routes. PRM path resolution lives in
  * `oauth-protected-resource.ts` (single owner for well-known PRM grammar).
  */
 
@@ -226,18 +226,18 @@ interface HttpMcpPostArgs {
   req: IncomingMessage;
   res: ServerResponse;
   config: McpHttpConfig;
-  persona: PersonaDefinition;
+  profile: ProfileDefinition;
   nodeHandler: McpNodeHandler;
 }
 
 /**
- * Auth / Origin / pin run outside the handler. ALS supplies persona + provider
+ * Auth / Origin / pin run outside the handler. ALS supplies profile + provider
  * so the process-lifetime createMcpHandler factory can build a fresh McpServer.
  */
 async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
-  const { req, res, config, persona, nodeHandler } = ctx;
+  const { req, res, config, profile, nodeHandler } = ctx;
 
-  if (!(await ensureEndpointAuth(req, res, config, persona.path))) {
+  if (!(await ensureEndpointAuth(req, res, config, profile.path))) {
     drainRequestBody(req);
     return;
   }
@@ -258,7 +258,7 @@ async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
   const contextProvider = createContextProviderForRequest(config, req);
   const auditAuth = getOAuthAuditContext(req);
 
-  await runWithMcpPostFactoryAsync({ contextProvider, persona }, () =>
+  await runWithMcpPostFactoryAsync({ contextProvider, profile }, () =>
     runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
   );
 }
@@ -329,7 +329,7 @@ export async function createStreamableHttpServer(
 export function startStreamableHttpServer(config?: McpHttpConfig): void {
   void createStreamableHttpServer(config)
     .then(({ baseUrl, config: httpConfig }) => {
-      const paths = listPersonaPaths()
+      const paths = listProfilePaths()
         .map((p) => `${baseUrl}${p}`)
         .join(', ');
       console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
@@ -352,7 +352,7 @@ function requestOrigin(req: IncomingMessage): string | undefined {
  * Applies CORS reflect headers without blocking.
  * When `reflectAnyOrigin` is true (OAuth AS / PRM), always echo Origin and ignore
  * `ALLOWED_ORIGINS` so Cursor loopback (`http://localhost:8787`) can read token JSON
- * even if persona MCP routes use a browser allowlist.
+ * even if profile MCP routes use a browser allowlist.
  */
 function applyOptionalCorsHeaders(
   req: IncomingMessage,
@@ -365,7 +365,7 @@ function applyOptionalCorsHeaders(
 }
 
 /**
- * Validates Origin and applies CORS headers for persona MCP routes.
+ * Validates Origin and applies CORS headers for profile MCP routes.
  * Short-circuits OPTIONS preflight with 204; returns true when the request is fully handled.
  */
 function applyOriginGuardAndCors(
@@ -438,18 +438,18 @@ async function handleHttpRequest(
     return;
   }
 
-  // Persona MCP routes: Origin allowlist is enforced (CSRF / browser blast-radius).
+  // Profile MCP routes: Origin allowlist is enforced (CSRF / browser blast-radius).
   if (applyOriginGuardAndCors(req, res, config)) {
     return;
   }
 
-  const persona = getPersonaByPath(path);
-  if (!persona) {
+  const profile = getProfileByPath(path);
+  if (!profile) {
     sendJson(res, 404, { error: 'Not Found' });
     return;
   }
 
-  // Sessionless: only POST is supported on persona MCP paths.
+  // Sessionless: only POST is supported on profile MCP paths.
   if (req.method !== 'POST') {
     res.writeHead(405, { Allow: 'POST' }).end();
     return;
@@ -458,6 +458,6 @@ async function handleHttpRequest(
   const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
   await runWithProjectPinAsync(pinnedProjectUuid, () =>
-    handleMcpPost({ req, res, config, persona, nodeHandler }),
+    handleMcpPost({ req, res, config, profile, nodeHandler }),
   );
 }

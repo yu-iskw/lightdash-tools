@@ -28,7 +28,7 @@ export interface OAuthAuthFailure {
 
 export type OAuthAuthResult = OAuthAuthFailure | OAuthAuthSuccess;
 
-/** Builds the standard missing-Bearer challenge for a persona MCP path. */
+/** Builds the standard missing-Bearer challenge for a profile MCP path. */
 export function buildBearerRequiredFailure(
   config: McpHttpConfig,
   mcpPath: string,

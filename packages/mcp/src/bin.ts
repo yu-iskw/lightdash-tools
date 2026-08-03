@@ -1,27 +1,46 @@
+import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
 const program = new Command();
 
-const PERSONA_SEMANTIC_LAYER = 'semantic-layer' as const;
-const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
-const PERSONA_CONTENT_READER = 'content-reader' as const;
-const PERSONA_CONTENT_DEVELOPER = 'content-developer' as const;
-const PERSONA_CONTENT_GOVERNANCE = 'content-governance' as const;
-const PERSONA_AI_AGENT_OPS = 'ai-agent-ops' as const;
-const PERSONA_DATA_ANALYST = 'data-analyst' as const;
+const DEFAULT_STDIO_PROFILE: ProfileId = 'semantic-layer';
 
-type StdioPersonaId =
-  | typeof PERSONA_AI_AGENT_OPS
-  | typeof PERSONA_CONTENT_DEVELOPER
-  | typeof PERSONA_CONTENT_GOVERNANCE
-  | typeof PERSONA_CONTENT_READER
-  | typeof PERSONA_DATA_ANALYST
-  | typeof PERSONA_ORGANIZATION_AUDIT
-  | typeof PERSONA_SEMANTIC_LAYER;
+const PROFILE_STDIO_DESCRIPTIONS = new Map<ProfileId, string>([
+  ['semantic-layer', 'Run semantic-layer profile on stdio'],
+  ['organization-audit', 'Run organization-audit profile on stdio (read-only org governance)'],
+  [
+    'content-reader',
+    'Run content-reader profile on stdio (saved-content discovery and bounded execution)',
+  ],
+  [
+    'content-developer',
+    'Run content-developer profile on stdio (chart/dashboard/space authoring behind preview -> validate -> apply)',
+  ],
+  [
+    'content-governance',
+    'Run content-governance profile on stdio (elicitation-gated soft-delete of charts and dashboards)',
+  ],
+  [
+    'ai-agent-ops',
+    'Run ai-agent-ops profile on stdio (thin AI-agent APIs and product evaluation runs)',
+  ],
+  [
+    'data-analyst',
+    'Run data-analyst profile on stdio (explore discovery and bounded ad-hoc metric queries)',
+  ],
+]);
 
-function runStdio(personaId?: StdioPersonaId): void {
-  if (personaId) {
-    process.env.LIGHTDASH_TOOLS_MCP_STDIO_PERSONA = personaId;
+function profileStdioDescription(profileId: ProfileId): string {
+  const description = PROFILE_STDIO_DESCRIPTIONS.get(profileId);
+  if (description === undefined) {
+    throw new Error(`Missing stdio description for profile '${profileId}'`);
+  }
+  return description;
+}
+
+function runStdio(profileId?: ProfileId): void {
+  if (profileId) {
+    process.env.LIGHTDASH_TOOLS_MCP_STDIO_PROFILE = profileId;
   }
   void import('./index.js');
 }
@@ -33,91 +52,39 @@ function runHttp(): void {
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer, content-governance, ai-agent-ops, data-analyst). Default stdio persona is semantic-layer.',
+    `MCP server for Lightdash (${PROFILE_IDS.join(', ')}). Default stdio profile is ${DEFAULT_STDIO_PROFILE}.`,
   )
   .version('0.10.0');
 
 program
-  .command('stdio')
-  .description('Run MCP server on stdio with the default semantic-layer persona')
+  .command('stdio', { isDefault: true })
+  .description(`Run MCP server on stdio with the default ${DEFAULT_STDIO_PROFILE} profile`)
   .action(() => {
-    runStdio(PERSONA_SEMANTIC_LAYER);
+    runStdio(DEFAULT_STDIO_PROFILE);
   });
 
-program
-  .command(PERSONA_SEMANTIC_LAYER)
-  .description('Run semantic-layer persona on stdio')
-  .action(() => {
-    runStdio(PERSONA_SEMANTIC_LAYER);
-  });
+for (const profileId of PROFILE_IDS) {
+  program
+    .command(profileId)
+    .description(profileStdioDescription(profileId))
+    .action(() => {
+      runStdio(profileId);
+    });
+}
 
 program
-  .command(PERSONA_ORGANIZATION_AUDIT)
-  .description('Run organization-audit persona on stdio (read-only org governance)')
-  .action(() => {
-    runStdio(PERSONA_ORGANIZATION_AUDIT);
-  });
-
-program
-  .command(PERSONA_CONTENT_READER)
-  .description(
-    'Run content-reader persona on stdio (saved-content discovery and bounded execution)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_READER);
-  });
-
-program
-  .command(PERSONA_CONTENT_DEVELOPER)
-  .description(
-    'Run content-developer persona on stdio (chart/dashboard/space authoring behind preview -> validate -> apply)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_DEVELOPER);
-  });
-
-program
-  .command(PERSONA_CONTENT_GOVERNANCE)
-  .description(
-    'Run content-governance persona on stdio (elicitation-gated soft-delete of charts and dashboards)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_GOVERNANCE);
-  });
-
-program
-  .command(PERSONA_AI_AGENT_OPS)
-  .description('Run ai-agent-ops persona on stdio (thin AI-agent APIs and product evaluation runs)')
-  .action(() => {
-    runStdio(PERSONA_AI_AGENT_OPS);
-  });
-
-program
-  .command(PERSONA_DATA_ANALYST)
-  .description(
-    'Run data-analyst persona on stdio (explore discovery and bounded ad-hoc metric queries)',
-  )
-  .action(() => {
-    runStdio(PERSONA_DATA_ANALYST);
-  });
-
-program
-  .command('serve-http')
-  .description(
-    'Run MCP server with Streamable HTTP transport (auth inferred from OAuth client credentials, shared-key, or NODE_ENV=development)',
-  )
+  .command('http')
+  .description('Run MCP server over Streamable HTTP (all fixed profile paths)')
   .action(() => {
     runHttp();
   });
 
 program
-  .option('--http', 'Run as HTTP server instead of Stdio (alias for serve-http)')
-  .action((options) => {
-    if (options.http) {
-      runHttp();
-    } else {
-      runStdio();
-    }
+  .command('serve-http')
+  .description('Deprecated alias for `http`')
+  .action(() => {
+    console.warn('Warning: `serve-http` is deprecated; use `lightdash-mcp http`.');
+    runHttp();
   });
 
 program.parse(process.argv);

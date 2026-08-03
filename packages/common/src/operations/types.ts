@@ -1,5 +1,5 @@
 /**
- * Shared typed operation catalog (ADR-0013).
+ * Shared typed operation catalog (ADR-0013 / ADR-0006).
  * Single source of truth for HTTP, CLI, and MCP exposure of Lightdash API operations.
  */
 
@@ -13,21 +13,19 @@ export type AgentExposure = 'agent' | 'client-only';
 /** HTTP verbs supported by registered operations. */
 export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 
-/**
- * Capability profiles group operations for selective exposure (CLI profiles, MCP subsets).
- */
-export type CapabilityProfile =
-  | 'ai-agent-ops'
-  | 'content-developer'
-  | 'content-governance'
-  | 'content-reader'
-  | 'conversations'
-  | 'core-lifecycle'
-  | 'data-analyst'
-  | 'discovery-readonly'
-  | 'evaluations'
-  | 'org-audit-readonly'
-  | 'semantic-discovery';
+/** Runtime list of every MCP serving profile id (ADR-0006; fixed mounts / stdio). */
+export const PROFILE_IDS = [
+  'ai-agent-ops',
+  'content-developer',
+  'content-governance',
+  'content-reader',
+  'data-analyst',
+  'organization-audit',
+  'semantic-layer',
+] as const;
+
+/** MCP serving profile ids aligned to fixed HTTP mounts / stdio subcommands (ADR-0006). */
+export type ProfileId = (typeof PROFILE_IDS)[number];
 
 /**
  * MCP response sensitivity class (ADR-0011).
@@ -86,7 +84,11 @@ export type OperationDescriptor = {
    * Defaults to `none` when omitted from `defineOperation` input.
    */
   sensitivity: SensitivityClass;
-  profiles: readonly CapabilityProfile[];
+  /**
+   * MCP mounts that expose this op when `mcp.taskSupport.exposed` is true (ADR-0006).
+   * Empty when the op is not MCP-exposed (CLI-only / reserved / client-only).
+   */
+  profiles: readonly ProfileId[];
   /** `agent` (default) = may appear on MCP and/or CLI; `client-only` = typed client only. */
   agentExposure: AgentExposure;
   /** Present when the operation is registered (or reserved) as an MCP tool. */
@@ -108,19 +110,7 @@ export type OperationDefinitionInput = Omit<
   sensitivity?: SensitivityClass;
 };
 
-const VALID_PROFILES = new Set<CapabilityProfile>([
-  'ai-agent-ops',
-  'content-developer',
-  'content-governance',
-  'content-reader',
-  'conversations',
-  'core-lifecycle',
-  'data-analyst',
-  'discovery-readonly',
-  'evaluations',
-  'org-audit-readonly',
-  'semantic-discovery',
-]);
+const VALID_PROFILES = new Set<ProfileId>(PROFILE_IDS);
 
 const VALID_SENSITIVITY = new Set<SensitivityClass>([
   'none',
@@ -160,14 +150,30 @@ function validateIdempotentHint(
   }
 }
 
-function validateProfiles(id: string, profiles: readonly CapabilityProfile[]): void {
-  if (profiles.length === 0) {
-    throw new Error(`Operation '${id}' must declare at least one capability profile`);
+function validateProfiles(input: OperationDefinitionInput): void {
+  const { id, profiles, mcp } = input;
+  const mcpExposed = mcp?.taskSupport.exposed === true;
+
+  if (mcpExposed && profiles.length === 0) {
+    throw new Error(
+      `Operation '${id}' must declare at least one profile when mcp.taskSupport.exposed is true`,
+    );
   }
+
+  if (new Set(profiles).size !== profiles.length) {
+    throw new Error(`Operation '${id}' has duplicate profiles: ${profiles.join(', ')}`);
+  }
+
   for (const profile of profiles) {
     if (!VALID_PROFILES.has(profile)) {
-      throw new Error(`Operation '${id}' has unknown capability profile '${profile}'`);
+      throw new Error(`Operation '${id}' has unknown profile '${profile}'`);
     }
+  }
+
+  if (!mcpExposed && profiles.length > 0) {
+    throw new Error(
+      `Operation '${id}' must use empty profiles when not MCP-exposed (got ${profiles.join(', ')})`,
+    );
   }
 }
 
@@ -215,7 +221,7 @@ export function defineOperation(input: OperationDefinitionInput): OperationDescr
     throw new Error(`Operation '${input.id}' has unknown sensitivity '${String(sensitivity)}'`);
   }
 
-  validateProfiles(input.id, input.profiles);
+  validateProfiles(input);
 
   const agentExposure = input.agentExposure ?? 'agent';
   if (agentExposure === 'client-only') {

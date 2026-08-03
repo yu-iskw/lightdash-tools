@@ -6,24 +6,24 @@ End-user install and configuration live in [README.md](./README.md).
 
 ## Package layout
 
-| Edit…                                                   | Path                                                                                                                    |
-| :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------- |
-| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                            |
-| Persona (tools allowlist, prompts, playbook, HTTP path) | `src/personas/<id>/`                                                                                                    |
-| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                                                                                      |
-| HTTP transport (sessionless)                            | `src/transports/`                                                                                                       |
-| HTTP auth / OAuth broker (in-memory pending)            | `src/auth/`                                                                                                             |
-| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                                 |
-| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
-| OAuth broker (in-memory pending)                        | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
-| Audit logging helpers                                   | `src/audit/`                                                                                                            |
-| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
+| Edit…                                                 | Path                                                                                                                    |
+| :---------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| Shared tools / registry                               | `src/tools/` (`registry.ts`, domain modules)                                                                            |
+| Profile (path, prompts, playbook; tools from catalog) | `src/profiles/<id>/`                                                                                                    |
+| Destructive confirmation (form elicitation / MRTR)    | `src/destructive/`                                                                                                      |
+| HTTP transport (sessionless)                          | `src/transports/`                                                                                                       |
+| HTTP auth / OAuth broker (in-memory pending)          | `src/auth/`                                                                                                             |
+| Runtime client + guardrail env                        | `src/config/runtime.ts`                                                                                                 |
+| HTTP env / loader                                     | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
+| OAuth broker (in-memory pending)                      | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Audit logging helpers                                 | `src/audit/`                                                                                                            |
+| Entrypoints                                           | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
 
-Prompts and resources are **persona-owned** (e.g. `src/personas/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
+Prompts and resources are **profile-owned** (e.g. `src/profiles/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 
 ## Architecture overview
 
-One package ships multiple **personas**. Shared tools live under `src/tools/`; each persona selects an explicit `toolIds` allowlist, prompts, playbooks, and a fixed HTTP path ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md)). Registration goes through `registerToolsByIds` → `registerToolSafe` → `@lightdash-tools/client`.
+One package ships multiple **profiles**. Shared tools live under `src/tools/`; each profile derives tools from the operation catalog, prompts, playbooks, and a fixed HTTP path ([ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md)). Registration goes through `registerToolsByIds` → `registerToolSafe` → `@lightdash-tools/client`.
 
 ```mermaid
 flowchart TB
@@ -43,7 +43,7 @@ flowchart TB
   end
 
   subgraph mcpCore [MCPCore]
-    Persona[PersonaDefinition_toolIds]
+    Profile[ProfileDefinition_toolIds]
     Cap[capabilities.ts]
     Registry[registerToolsByIds]
     Safe[registerToolSafe]
@@ -59,9 +59,9 @@ flowchart TB
   Bin --> PAT
   Http --> OAuthMW
   Http --> OAuthBroker
-  OAuthMW --> Persona
-  PAT --> Persona
-  Persona --> Cap --> Registry --> Safe
+  OAuthMW --> Profile
+  PAT --> Profile
+  Profile --> Cap --> Registry --> Safe
   Safe --> ClientPkg --> LD
 ```
 
@@ -95,7 +95,7 @@ sequenceDiagram
   end
 ```
 
-Capability surface is the persona `toolIds` list — not CLI `SAFETY_MODE` / dry-run.
+Capability surface is the profile `toolIds` list — not CLI `SAFETY_MODE` / dry-run.
 
 ## Sequence diagrams
 
@@ -110,14 +110,14 @@ sequenceDiagram
   participant Transport as FreshTransportPlusServer
   participant Tools
 
-  Client->>HttpServer: POST_persona_path
+  Client->>HttpServer: POST_profile_path
   HttpServer->>Transport: create_stateless_transport
   Transport->>Tools: tools/call
   Tools-->>Transport: result
   Transport-->>Client: JSON_or_SSE
 ```
 
-OAuth broker pending/codes/DCR remain **process-local** — sticky-route `/oauth/*` or a single replica for multi-instance. Persona MCP paths can round-robin. Operator details: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md).
+OAuth broker pending/codes/DCR remain **process-local** — sticky-route `/oauth/*` or a single replica for multi-instance. Profile MCP paths can round-robin. Operator details: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md).
 
 ### content-developer preview gate
 
@@ -166,7 +166,7 @@ sequenceDiagram
 | Change                      | Where                                                            |
 | :-------------------------- | :--------------------------------------------------------------- |
 | New shared tool             | `packages/common/src/operations/` + `src/tools/` + `registry.ts` |
-| New persona                 | `src/personas/<id>/v1/` + ADR                                    |
+| New profile                 | `src/profiles/<id>/v1/` + ADR                                    |
 | Auth / OAuth                | `src/auth/`                                                      |
 | Preview / destructive gates | `src/policy/`, `src/destructive/`                                |
 
@@ -192,12 +192,12 @@ Before commit: `pnpm verify` (or `pnpm verify:quick`) from the repo root — see
 
 ## Related ADRs
 
-- [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md) — Personas, shared registry, fixed HTTP paths
+- [ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md) — Profiles, shared registry, fixed HTTP paths
 - [ADR-0007](../../docs/adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) — HTTP transport + OAuth broker (SDK v2)
 - [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md) — Project pin, input validation, audit
-- [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md) — Content-reader boundary
-- [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md) — Content-developer preview gate
-- [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md) — Soft-delete elicitation
-- [ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md) — AI-agent-ops thin API surface
-- [ADR-0020](../../docs/adr/0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md) — data-analyst ad-hoc metric-query boundary
+- ADR-0012 — Content-reader boundary
+- ADR-0014 — Content-developer preview gate
+- ADR-0015 — Soft-delete elicitation
+- ADR-0018 — AI-agent-ops thin API surface
+- ADR-0020 — data-analyst ad-hoc metric-query boundary
 - [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) — Stateless HTTP; HMAC handles; no Redis

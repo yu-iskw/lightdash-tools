@@ -8,18 +8,18 @@ describe('contentReaderEnvelope', () => {
     projectPinned: false,
   };
 
-  it('stamps the required persona onto context', () => {
-    const reader = contentReaderEnvelope({ ok: true }, { ...baseOpts, persona: 'content-reader' });
-    expect(reader.context.persona).toBe('content-reader');
+  it('stamps the required profile onto context', () => {
+    const reader = contentReaderEnvelope({ ok: true }, { ...baseOpts, profile: 'content-reader' });
+    expect(reader.context.profile).toBe('content-reader');
     expect(reader.context.projectUuid).toBe(baseOpts.projectUuid);
     expect(reader.context.projectPinned).toBe(false);
     expect(reader.data).toEqual({ ok: true });
 
     const developer = contentReaderEnvelope(
       { ok: true },
-      { ...baseOpts, persona: 'content-developer' },
+      { ...baseOpts, profile: 'content-developer' },
     );
-    expect(developer.context.persona).toBe('content-developer');
+    expect(developer.context.profile).toBe('content-developer');
   });
 
   it('preserves coverage and warnings options', () => {
@@ -27,7 +27,7 @@ describe('contentReaderEnvelope', () => {
       { items: [] },
       {
         ...baseOpts,
-        persona: 'content-reader',
+        profile: 'content-reader',
         complete: false,
         truncated: true,
         inaccessibleResources: ['x'],

@@ -20,7 +20,7 @@ vi.mock('../../policy/content-developer.js', () => ({
 
 vi.mock('./developer-content-shared.js', () => ({
   developerContext: (scope: { projectUuid: string; projectPinned: boolean }) => ({
-    persona: 'content-developer',
+    profile: 'content-developer',
     projectUuid: scope.projectUuid,
     projectPinned: scope.projectPinned,
   }),
