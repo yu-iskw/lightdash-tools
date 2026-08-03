@@ -1,12 +1,12 @@
 # Content-governance client compatibility matrix
 
-Soft-delete tools (`delete_chart`, `delete_dashboard`) and dashboard promote (`promote_dashboard`) on the `content-governance` persona require **MCP form elicitation**. Clients that cannot present a form and return `inputResponses` are fail-closed with `ELICITATION_REQUIRED` — there is no chat-“yes” or `confirmed: true` fallback ([ADR-0015](adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md), [ADR-0017](adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).
+Soft-delete tools (`delete_chart`, `delete_dashboard`) and dashboard promote (`promote_dashboard`) on the `content-governance` persona require **MCP form elicitation**. Clients that cannot present a form and return `inputResponses` are fail-closed with `ELICITATION_REQUIRED` — there is no chat-“yes” or `confirmed: true` fallback ([ADR-0015](../../adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md), [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).
 
 `get_dashboard_promote_diff` is read-only and does not require elicitation.
 
-## Sessionless Streamable HTTP ([ADR-0019](adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md))
+## Sessionless Streamable HTTP ([ADR-0019](../../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md))
 
-Each HTTP POST uses a fresh `McpServer`. Form elicitation support declared at `initialize` is bridged via a **principal- and persona-scoped, process-local** capabilities cache (and seeded onto the next `McpServer` so the 2025-era SDK elicitation shim still sees `getClientCapabilities()`). The cache keys on OAuth `subject` (else `tokenHash`) plus persona path; **shared-key / unauthenticated** principals do not use the cache (avoids cross-client last-writer-wins). Prefer also sending per-request:
+Each HTTP POST uses a fresh `McpServer` via SDK `createMcpHandler` (`legacy: 'stateless'`). Form elicitation support must be present on the **current request** — prefer per-request:
 
 ```json
 "params": {
@@ -16,16 +16,16 @@ Each HTTP POST uses a fresh `McpServer`. Form elicitation support declared at `i
 }
 ```
 
-on every `tools/call` (including MRTR retries) when running multi-replica without sticky routing for `/content-governance/v1/mcp`. Stdio keeps one process-lifetime server and does not need the cache.
+on every gated `tools/call` (including MRTR retries). There is no process-local initialize→call caps cache across POSTs. Stdio via `serveStdio` pins one connection-lifetime server, so initialize-declared caps still apply for that process.
 
-| Client / transport                               | Form elicitation                                           | Expected behavior                                                                                                                                                    | Status       |
-| ------------------------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| MCP Inspector (stdio / Streamable HTTP)          | Supported when elicitation UI enabled                      | Can complete accept / decline / cancel round-trips                                                                                                                   | Tested (SDK) |
-| `@modelcontextprotocol/client` InMemoryTransport | Via `elicitation/create` handler (SDK 2.0.0 2025-era shim) | Contract tests assert handler `InputRequiredResult` + legacy auto-fulfill paths                                                                                      | Tested       |
-| Sessionless HTTP (same replica after initialize) | Caps remembered by auth subject / token hash + persona     | OAuth: `initialize` with form elicitation then `tools/call` does not false-`ELICITATION_REQUIRED`. Shared-key/`none`: send `_meta` caps per call (no process cache). | Tested       |
-| Claude Code (stdio / HTTP)                       | Depends on host elicitation support                        | Unsupported hosts → blocked `ELICITATION_REQUIRED`; no DELETE/POST promote                                                                                           | Fail-closed  |
-| Cursor (Streamable HTTP)                         | Depends on host elicitation support                        | Same as Claude Code; same-replica caps bridge applies when host declares form                                                                                        | Fail-closed  |
-| Codex / other agent hosts                        | Depends on host elicitation support                        | Same fail-closed policy                                                                                                                                              | Fail-closed  |
+| Client / transport                               | Form elicitation                                           | Expected behavior                                                                          | Status       |
+| ------------------------------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------ |
+| MCP Inspector (stdio / Streamable HTTP)          | Supported when elicitation UI enabled                      | Can complete accept / decline / cancel round-trips                                         | Tested (SDK) |
+| `@modelcontextprotocol/client` InMemoryTransport | Via `elicitation/create` handler (SDK 2.0.0 2025-era shim) | Contract tests assert handler `InputRequiredResult` + legacy auto-fulfill paths            | Tested       |
+| Sessionless HTTP                                 | Per-request `_meta` clientCapabilities                     | Missing form caps → blocked `ELICITATION_REQUIRED`. Send `_meta` caps on every gated call. | Tested       |
+| Claude Code (stdio / HTTP)                       | Depends on host elicitation support                        | Unsupported hosts → blocked `ELICITATION_REQUIRED`; no DELETE/POST promote                 | Fail-closed  |
+| Cursor (Streamable HTTP)                         | Depends on host elicitation support                        | Same as Claude Code; host must declare form elicitation (envelope or initialize on stdio)  | Fail-closed  |
+| Codex / other agent hosts                        | Depends on host elicitation support                        | Same fail-closed policy                                                                    | Fail-closed  |
 
 ## How to verify a host
 

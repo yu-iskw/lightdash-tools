@@ -44,7 +44,7 @@ Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mc
 6. **Excluded from MCP:** `metric-query`, `sql`, `underlying-data`, CSV/`download`, `schedule-download`, and all content/org/project mutations (create/update/delete/move).
 7. **Chart PNG snapshot (narrow carve-out):** `POST /api/v1/saved/{chartUuid}/export` may be exposed as MCP `export_chart_image`. It returns one rendered PNG (MCP `ImageContent`), not tabular bulk export. Requires Lightdash headless browser on the instance. Dashboard image export and query result downloads stay off MCP.
 8. **In-memory query ledger v1:** track async `queryUuid` handles issued in-process for cancel/results correlation. `queryUuid` is the client-carried handle ([ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)); ownership is not bound to MCP transport sessions. Per-process query budget is best-effort only. Not durable across restarts; not a substitute for Lightdash query history.
-9. Shared tool implementations live under `packages/mcp/src/tools/`; the persona owns `toolIds`, prompts, playbook, and capability asserts. Endpoint map: [content-reader-endpoint-inventory.md](../content-reader-endpoint-inventory.md).
+9. Shared tool implementations live under `packages/mcp/src/tools/`; the persona owns `toolIds`, prompts, playbook, and capability asserts. Endpoint map: [content-reader inventory](../personas/content-reader/inventory.md).
 
 ```mermaid
 flowchart TD
@@ -66,5 +66,5 @@ flowchart TD
 
 ## References
 
-- [content-reader-endpoint-inventory.md](../content-reader-endpoint-inventory.md)
+- [content-reader inventory](../personas/content-reader/inventory.md)
 - Implementation (planned): `packages/mcp/src/personas/content-reader/`, `packages/mcp/src/governance/project-pin.ts`

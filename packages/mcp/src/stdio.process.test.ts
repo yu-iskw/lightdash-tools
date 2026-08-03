@@ -5,7 +5,15 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
 
+import {
+  CLIENT_CAPABILITIES_META_KEY,
+  CLIENT_INFO_META_KEY,
+  PROTOCOL_VERSION_META_KEY,
+} from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
+
+import { SEMANTIC_LAYER_TOOL_IDS } from './personas/semantic-layer/v1/index.js';
+import { TOOL_PREFIX } from './tools/shared.js';
 
 /** Vitest runs from the monorepo root (`vitest.config.ts`). */
 const repoRoot = process.cwd();
@@ -90,6 +98,72 @@ describe('stdio process smoke', () => {
   let child: ChildProcessWithoutNullStreams | undefined;
 
   afterEach(() => {
+    killChild(child);
+    child = undefined;
+  });
+
+  it('server/discover then tools/list over stdio (modern era)', async () => {
+    let stderr = '';
+    child = spawn(process.execPath, [binPath], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        LIGHTDASH_URL: 'https://app.lightdash.cloud',
+        LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
+        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'semantic-layer',
+        LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+
+    const modernMeta = {
+      [PROTOCOL_VERSION_META_KEY]: '2026-07-28',
+      [CLIENT_INFO_META_KEY]: {
+        name: 'stdio-process-smoke-modern',
+        version: '0.0.0',
+      },
+      [CLIENT_CAPABILITIES_META_KEY]: {},
+    };
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'server/discover',
+      params: { _meta: modernMeta },
+    });
+
+    const discoverResponse = await readJsonRpcResponse(child, 1, INIT_TIMEOUT_MS, () => stderr);
+    expect(discoverResponse.error).toBeUndefined();
+    expect(discoverResponse.result).toBeDefined();
+    const discoverResult = discoverResponse.result as {
+      supportedVersions?: string[];
+      capabilities?: { tools?: unknown };
+    };
+    expect(discoverResult.supportedVersions).toContain('2026-07-28');
+    expect(discoverResult.capabilities?.tools).toBeDefined();
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/list',
+      params: { _meta: modernMeta },
+    });
+
+    const listResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS, () => stderr);
+    expect(listResponse.error).toBeUndefined();
+    expect(listResponse.result).toMatchObject({
+      tools: expect.arrayContaining([
+        expect.objectContaining({ name: `${TOOL_PREFIX}list_projects` }),
+      ]),
+    });
+    const listResult = listResponse.result as { tools: unknown[] };
+    expect(listResult.tools).toHaveLength(SEMANTIC_LAYER_TOOL_IDS.length);
+
     killChild(child);
     child = undefined;
   });

@@ -1,6 +1,6 @@
 # Content-governance endpoint inventory
 
-Capability map for the `content-governance` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0015](adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md) for elicitation-required soft-delete and [ADR-0017](adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md) for dashboard promote.
+Capability map for the `content-governance` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0015](../../adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md) for elicitation-required soft-delete and [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md) for dashboard promote.
 
 | Capability                 | Method | Path                                                              | Client                                  | Notes                                                                                              |
 | -------------------------- | ------ | ----------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------- |

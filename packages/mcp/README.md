@@ -9,11 +9,11 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 | Persona              | Use when                                 | HTTP path                    | Stdio                | Catalog                                                          |
 | :------------------- | :--------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
 | `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | **default**          | —                                                                |
-| `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/organization-audit-endpoint-inventory.md) |
-| `content-reader`     | Discover and run saved content           | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/content-reader-endpoint-inventory.md)     |
-| `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/content-developer-endpoint-inventory.md)  |
-| `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/content-governance-endpoint-inventory.md) |
-| `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/ai-agent-ops-endpoint-inventory.md)       |
+| `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/personas/organization-audit/inventory.md) |
+| `content-reader`     | Discover and run saved content           | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/personas/content-reader/inventory.md)     |
+| `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/personas/content-developer/inventory.md)  |
+| `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/personas/content-governance/inventory.md) |
+| `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/personas/ai-agent-ops/inventory.md)       |
 
 Tool names are prefixed with `lightdash_`. MCP display names are shortened where needed for client length limits (e.g. `lightdash-mcp-content`).
 
@@ -59,14 +59,14 @@ npx @lightdash-tools/mcp serve-http
 
 Persona MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`).
 
-- Hosted OAuth (Cursor URL-only): [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md)
-- Operator guide: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md)
+- Hosted OAuth (Cursor URL-only): [docs/operators/cursor-claude.md](../../docs/operators/cursor-claude.md)
+- Operator guide: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md)
 
 Local Compose smoke: `docker compose -f docker-compose.dev.yml --profile semantic-layer up --build` → `http://localhost:8080/semantic-layer/v1/mcp`.
 
 ## Configuration
 
-Prefer `LIGHTDASH_TOOLS_*` env from the parent process. Avoid plaintext `.env` when agents can read files; if needed, use [dotenvx](https://dotenvx.com/). See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
+Prefer `LIGHTDASH_TOOLS_*` env from the parent process. Avoid plaintext `.env` when agents can read files; if needed, use [dotenvx](https://dotenvx.com/). See [docs/operators/secrets.md](../../docs/operators/secrets.md).
 
 ### Stdio
 
@@ -82,7 +82,7 @@ Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `
 | :-------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, `ALLOWED_PROJECT_UUIDS`, token cache TTL |
 
-On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run-mcp-oauth.md](../../docs/cloud-run-mcp-oauth.md).
+On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).
 
 Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect with URL only to a persona path above. Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 
@@ -127,7 +127,7 @@ Soft-delete charts/dashboards and elicitation-gated dashboard promote. Permanent
 
 ### `ai-agent-ops`
 
-Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/ai-agent-ops-loop.md](../../docs/ai-agent-ops-loop.md).
+Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/personas/ai-agent-ops/loop.md](../../docs/personas/ai-agent-ops/loop.md).
 
 ## Safety
 
@@ -169,8 +169,8 @@ Intentional API upgrades still go through the pinned OpenAPI sync (`config/light
 ## Further reading
 
 - Architecture / contributing — [CONTRIBUTING.md](./CONTRIBUTING.md)
-- OAuth operator guide — [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md)
-- Cursor hosted OAuth — [docs/cursor-lightdash-oauth-mcp.md](../../docs/cursor-lightdash-oauth-mcp.md)
+- OAuth operator guide — [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md)
+- Cursor hosted OAuth — [docs/operators/cursor-claude.md](../../docs/operators/cursor-claude.md)
 - Architecture decisions — [docs/adr/](../../docs/adr/)
 - MCP transports — [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)
 

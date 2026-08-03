@@ -117,7 +117,7 @@ sequenceDiagram
   Transport-->>Client: JSON_or_SSE
 ```
 
-OAuth broker pending/codes/DCR remain **process-local** — sticky-route `/oauth/*` or a single replica for multi-instance. Persona MCP paths can round-robin. Operator details: [docs/mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
+OAuth broker pending/codes/DCR remain **process-local** — sticky-route `/oauth/*` or a single replica for multi-instance. Persona MCP paths can round-robin. Operator details: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md).
 
 ### content-developer preview gate
 

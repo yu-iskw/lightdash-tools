@@ -1,6 +1,6 @@
 # Content-developer endpoint inventory
 
-Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0014](adr/0014-mcp-content-developer-persona-mutation-boundary.md) for mutation boundaries and the hard preview gate.
+Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0014](../../adr/0014-mcp-content-developer-persona-mutation-boundary.md) for mutation boundaries and the hard preview gate.
 
 | Capability                  | Method | Path                                                                | Client                                                      | Notes                                                                                                |
 | --------------------------- | ------ | ------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -30,4 +30,4 @@ Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/l
 
 **Hard gate:** SAFE_WRITE tools require HMAC-signed validated `previewToken` matching `contentHash` of `{proposed,baseline}`; apply re-sends proposed (ADR-0019).
 
-**SOP:** Dashboard-first authoring — new charts are tile prerequisites; release via content-governance [dashboard promote](https://docs.lightdash.com/guides/how-to-promote-content) (form elicitation; [ADR-0017](adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).
+**SOP:** Dashboard-first authoring — new charts are tile prerequisites; release via content-governance [dashboard promote](https://docs.lightdash.com/guides/how-to-promote-content) (form elicitation; [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).

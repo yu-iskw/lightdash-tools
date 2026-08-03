@@ -1,10 +1,10 @@
 import { createServer, type Server } from 'node:http';
 
 import { SecretString } from '@lightdash-tools/client';
+import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getAuthorizationServerMetadataUrl } from './auth/resource-server/oauth-protected-resource.js';
-import { resetClientCapabilitiesCacheForTests } from './governance/client-capabilities-cache.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -219,7 +219,6 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
-    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -399,21 +398,8 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_B}`);
   });
 
-  it('bridges initialize form-elicitation caps to a later content-governance tools/call', async () => {
+  it('accepts form-elicitation caps from per-request _meta on content-governance tools/call', async () => {
     const governancePath = '/content-governance/v1/mcp';
-    const init = await postMcp(
-      mcpServer.baseUrl,
-      {
-        ...INITIALIZE_BODY,
-        params: {
-          ...INITIALIZE_BODY.params,
-          capabilities: { elicitation: { form: {} } },
-        },
-      },
-      { token: TOKEN_A, path: governancePath },
-    );
-    expect(init.status).toBe(200);
-
     const call = await postMcp(
       mcpServer.baseUrl,
       {
@@ -425,6 +411,9 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
             projectUuid: '11111111-1111-4111-8111-111111111111',
             chartUuidOrSlug: '22222222-2222-4222-8222-222222222222',
           },
+          _meta: {
+            [CLIENT_CAPABILITIES_META_KEY]: { elicitation: { form: {} } },
+          },
         },
         id: 2,
       },
@@ -432,7 +421,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     );
     expect(call.status).toBe(200);
     const text = parseSseOrJsonToolText(await call.text());
-    // Caps bridge worked: past ELICITATION_REQUIRED into chart resolve (mock has no chart).
+    // Per-request envelope caps: past ELICITATION_REQUIRED into chart resolve (mock has no chart).
     expect(text).not.toContain('ELICITATION_REQUIRED');
     expect(text).toContain('CONTENT_NOT_FOUND');
   });
@@ -489,7 +478,6 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
-    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -572,7 +560,6 @@ describe('MCP HTTP CORS integration', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
-    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -628,7 +615,6 @@ describe('MCP HTTP transport (sessionless)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
-    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -705,7 +691,6 @@ describe('MCP HTTP shared-key integration', () => {
   afterEach(async () => {
     await mcpServer.close();
     process.env = { ...originalEnv };
-    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 

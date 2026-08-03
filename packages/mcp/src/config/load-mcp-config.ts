@@ -155,7 +155,7 @@ function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv): void {
           `and ${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} for hosted OAuth; ` +
           `or ${ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY} + LIGHTDASH_API_KEY for shared-key; ` +
           `or NODE_ENV=development for local unauthenticated HTTP. ` +
-          `See docs/mcp-oauth-http.md and ADR-0007.`,
+          `See docs/operators/mcp-oauth.md and ADR-0007.`,
       );
     }
   }
