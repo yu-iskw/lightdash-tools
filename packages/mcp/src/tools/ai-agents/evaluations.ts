@@ -1,5 +1,5 @@
 /**
- * AI agent evaluation suite/run tools (ai-agent-ops persona).
+ * AI agent evaluation suite/run tools (ai-agent-ops profile).
  */
 
 import { WRITE_DESTRUCTIVE, WRITE_NONDESTRUCTIVE, WRITE_OPEN_WORLD } from '@lightdash-tools/common';

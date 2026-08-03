@@ -1,5 +1,5 @@
 /**
- * AI agent thread read tools (ai-agent-ops persona).
+ * AI agent thread read tools (ai-agent-ops profile).
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';

@@ -1,5 +1,5 @@
 /**
- * Project AI agent inventory tools (ai-agent-ops persona).
+ * Project AI agent inventory tools (ai-agent-ops profile).
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';

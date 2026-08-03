@@ -19,4 +19,4 @@ Return `PASS`, `CONDITIONAL`, or `FAIL` with:
 - unresolved risks
 - rollback notes
 
-Never deploy or mutate the agent from this MCP persona.
+Never deploy or mutate the agent from this MCP profile.

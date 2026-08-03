@@ -78,7 +78,7 @@ describe('loadMcpHttpConfig', () => {
     expect(config.scopesSupported).toEqual([]);
   });
 
-  it('strips organization-audit persona path from public URL', () => {
+  it('strips organization-audit profile path from public URL', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
       'https://mcp.example.com/organization-audit/v1/mcp';
@@ -87,7 +87,7 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('https://mcp.example.com');
   });
 
-  it('strips content-reader persona path from public URL', () => {
+  it('strips content-reader profile path from public URL', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
       'https://mcp.example.com/content-reader/v1/mcp';

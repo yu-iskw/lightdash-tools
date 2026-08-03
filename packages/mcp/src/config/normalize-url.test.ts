@@ -44,7 +44,7 @@ describe('normalizePublicUrl', () => {
     );
   });
 
-  it('strips the semantic-layer persona path', () => {
+  it('strips the semantic-layer profile path', () => {
     expect(
       normalizePublicUrl(`https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}/`, [
         SEMANTIC_LAYER_PROFILE_PATH,
@@ -52,7 +52,7 @@ describe('normalizePublicUrl', () => {
     ).toBe('https://mcp.example.com');
   });
 
-  it('strips any known persona path when given a path list', () => {
+  it('strips any known profile path when given a path list', () => {
     const paths = [
       SEMANTIC_LAYER_PROFILE_PATH,
       ORGANIZATION_AUDIT_PROFILE_PATH,

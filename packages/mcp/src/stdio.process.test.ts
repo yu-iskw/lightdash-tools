@@ -234,7 +234,7 @@ describe('stdio process smoke', () => {
     child = undefined;
   });
 
-  it('initialize then tools/list for content-reader persona', async () => {
+  it('initialize then tools/list for content-reader profile', async () => {
     let stderr = '';
     child = spawn(process.execPath, [binPath, 'content-reader'], {
       cwd: repoRoot,
@@ -299,7 +299,7 @@ describe('stdio process smoke', () => {
     child = undefined;
   });
 
-  it('initialize then tools/list for content-governance persona', async () => {
+  it('initialize then tools/list for content-governance profile', async () => {
     let stderr = '';
     child = spawn(process.execPath, [binPath, 'content-governance'], {
       cwd: repoRoot,
@@ -367,7 +367,7 @@ describe('stdio process smoke', () => {
     child = undefined;
   });
 
-  it('initialize then tools/list for content-developer persona', async () => {
+  it('initialize then tools/list for content-developer profile', async () => {
     let stderr = '';
     child = spawn(process.execPath, [binPath, 'content-developer'], {
       cwd: repoRoot,

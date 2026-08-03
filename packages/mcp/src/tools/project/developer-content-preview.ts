@@ -4,7 +4,7 @@
  * Issues an HMAC-signed previewToken (ADR-0019) via mintDraftPreviewToken.
  * Draft → confirm remints validated; apply re-checks hash/baseline (not single-use CAS).
  * `preview_content_move` previews bulk moves (`itemUuids` + `targetSpaceUuid` +
- * required `contentTypes`); space create/update is out of band (not on this persona).
+ * required `contentTypes`); space create/update is out of band (not on this profile).
  */
 
 import { z } from 'zod';

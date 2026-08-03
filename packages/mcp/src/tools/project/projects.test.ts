@@ -193,7 +193,7 @@ describe('registerGetProject', () => {
     expect(getProject).not.toHaveBeenCalled();
   });
 
-  it('includes readerCapabilities for content-reader persona when projectUuid is passed', async () => {
+  it('includes readerCapabilities for content-reader profile when projectUuid is passed', async () => {
     const getProject = vi.fn().mockResolvedValue({
       projectUuid: PINNED,
       name: 'Reader',
@@ -232,7 +232,7 @@ describe('registerGetProject', () => {
     expect(getProject).not.toHaveBeenCalled();
   });
 
-  it('includes analystCapabilities for data-analyst persona when projectUuid is passed', async () => {
+  it('includes analystCapabilities for data-analyst profile when projectUuid is passed', async () => {
     const getProject = vi.fn().mockResolvedValue({
       projectUuid: PINNED,
       name: 'Analyst',

@@ -2,7 +2,7 @@
  * MCP prompts for data-analyst workflows.
  */
 
-/* eslint-disable @typescript-eslint/no-deprecated -- matches other persona prompt registration pattern */
+/* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
 import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
