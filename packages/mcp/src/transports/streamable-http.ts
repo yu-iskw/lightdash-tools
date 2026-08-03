@@ -36,6 +36,7 @@ import {
 } from '../config/load-mcp-config.js';
 import { getClient, getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from '../config/runtime.js';
 import { validateAvailableProjectsConfig } from '../governance/available-projects.js';
+import { prepareServerClientCapabilities } from '../governance/client-capabilities-cache.js';
 import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
@@ -231,10 +232,12 @@ async function handleMcpPost(ctx: McpRequestContext): Promise<void> {
   const contextProvider = createContextProviderForRequest(config, req);
   const transport = new NodeStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
   const server = createLightdashMcpServer(contextProvider, { persona });
+  const auditAuth = getOAuthAuditContext(req);
+  // Bridge initialize-declared form elicitation caps across sessionless POSTs (ADR-0019).
+  prepareServerClientCapabilities(server, body, auditAuth);
 
   try {
     await server.connect(transport);
-    const auditAuth = getOAuthAuditContext(req);
     await runWithToolAuditAuthAsync(auditAuth, () => transport.handleRequest(req, res, body));
   } finally {
     await transport.close().catch(() => undefined);

@@ -4,6 +4,7 @@ import { SecretString } from '@lightdash-tools/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getAuthorizationServerMetadataUrl } from './auth/resource-server/oauth-protected-resource.js';
+import { resetClientCapabilitiesCacheForTests } from './governance/client-capabilities-cache.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -173,7 +174,7 @@ function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
 async function postMcp(
   baseUrl: string,
   body: unknown,
-  options?: { token?: string },
+  options?: { token?: string; path?: string },
 ): Promise<Response> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -183,11 +184,23 @@ async function postMcp(
     headers.Authorization = `Bearer ${options.token}`;
   }
 
-  return fetch(`${baseUrl}/semantic-layer/v1/mcp`, {
+  const path = options?.path ?? '/semantic-layer/v1/mcp';
+  return fetch(`${baseUrl}${path}`, {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
   });
+}
+
+function parseSseOrJsonToolText(raw: string): string {
+  if (raw.includes('data:')) {
+    const lines = raw
+      .split('\n')
+      .filter((line) => line.startsWith('data:'))
+      .map((line) => line.slice('data:'.length).trim());
+    return lines.join('\n');
+  }
+  return raw;
 }
 
 describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
@@ -206,6 +219,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
+    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -385,6 +399,43 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_B}`);
   });
 
+  it('bridges initialize form-elicitation caps to a later content-governance tools/call', async () => {
+    const governancePath = '/content-governance/v1/mcp';
+    const init = await postMcp(
+      mcpServer.baseUrl,
+      {
+        ...INITIALIZE_BODY,
+        params: {
+          ...INITIALIZE_BODY.params,
+          capabilities: { elicitation: { form: {} } },
+        },
+      },
+      { token: TOKEN_A, path: governancePath },
+    );
+    expect(init.status).toBe(200);
+
+    const call = await postMcp(
+      mcpServer.baseUrl,
+      {
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: {
+          name: 'lightdash_delete_chart',
+          arguments: {
+            projectUuid: '11111111-1111-4111-8111-111111111111',
+            chartUuidOrSlug: '22222222-2222-4222-8222-222222222222',
+          },
+        },
+        id: 2,
+      },
+      { token: TOKEN_A, path: governancePath },
+    );
+    expect(call.status).toBe(200);
+    const text = parseSseOrJsonToolText(await call.text());
+    // Caps bridge worked: we must not fail closed solely because initialize caps were discarded.
+    expect(text).not.toContain('ELICITATION_REQUIRED');
+  });
+
   it('returns 503 when Lightdash user validation is unavailable', async () => {
     const unavailableServer = createServer((_req, res) => {
       res.writeHead(503, { 'Content-Type': 'application/json' }).end(
@@ -437,6 +488,7 @@ describe('MCP HTTP OAuth integration (continued)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
+    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -519,6 +571,7 @@ describe('MCP HTTP CORS integration', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
+    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -574,6 +627,7 @@ describe('MCP HTTP transport (sessionless)', () => {
   afterEach(async () => {
     await mcpServer.close();
     await mockLightdash.close();
+    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
@@ -650,6 +704,7 @@ describe('MCP HTTP shared-key integration', () => {
   afterEach(async () => {
     await mcpServer.close();
     process.env = { ...originalEnv };
+    resetClientCapabilitiesCacheForTests();
     vi.restoreAllMocks();
   });
 
