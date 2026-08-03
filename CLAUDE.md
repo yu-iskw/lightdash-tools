@@ -74,3 +74,7 @@ When you notice repeated mistakes, recurring explanations, or opportunities for 
 4. **Be Specific & Minimal**: Only add rules or skills that provide clear, non-obvious value.
 
 Use the `/improve-claude-config` skill to orchestrate deeper changes.
+
+## Recent Learnings
+
+- [2026-08-04]: `AGENTS.md` Common Gotchas is capped at ≤30 lines (pointer hub + traps). Profile/ADR essays belong in `docs/adr` and `docs/profiles`; replace obsolete bullets instead of appending forever.
