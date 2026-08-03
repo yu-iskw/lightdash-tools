@@ -6,6 +6,25 @@
 
 import { getOperationByMcpToolName, listBannedMcpToolNames } from '@lightdash-tools/common';
 
+import { registerGetProjectAgent, registerListProjectAgents } from './ai-agents/agents.js';
+import {
+  registerEvaluateAgentReadiness,
+  registerGetAgentModels,
+  registerGetAgentSuggestions,
+  registerGetExploreAccessSummary,
+} from './ai-agents/discovery.js';
+import {
+  registerAppendAgentEvaluationPrompts,
+  registerCreateAgentEvaluation,
+  registerDeleteAgentEvaluation,
+  registerGetAgentEvalRunResults,
+  registerGetAgentEvaluation,
+  registerListAgentEvaluationRuns,
+  registerListAgentEvaluations,
+  registerRunAgentEvaluation,
+  registerUpdateAgentEvaluation,
+} from './ai-agents/evaluations.js';
+import { registerGetAgentThread, registerListAgentThreads } from './ai-agents/threads.js';
 import { registerExplainContent } from './composition/explain-content.js';
 import {
   registerGetOrgMember,
@@ -159,6 +178,25 @@ export const toolRegistry = {
   delete_dashboard: { register: registerDeleteDashboard },
   get_dashboard_promote_diff: { register: registerGetDashboardPromoteDiff },
   promote_dashboard: { register: registerPromoteDashboard },
+
+  // ai-agent-ops (ADR-0018)
+  list_project_agents: { register: registerListProjectAgents },
+  get_project_agent: { register: registerGetProjectAgent },
+  evaluate_agent_readiness: { register: registerEvaluateAgentReadiness },
+  get_agent_suggestions: { register: registerGetAgentSuggestions },
+  get_agent_models: { register: registerGetAgentModels },
+  get_explore_access_summary: { register: registerGetExploreAccessSummary },
+  list_agent_threads: { register: registerListAgentThreads },
+  get_agent_thread: { register: registerGetAgentThread },
+  list_agent_evaluations: { register: registerListAgentEvaluations },
+  get_agent_evaluation: { register: registerGetAgentEvaluation },
+  create_agent_evaluation: { register: registerCreateAgentEvaluation },
+  update_agent_evaluation: { register: registerUpdateAgentEvaluation },
+  append_agent_evaluation_prompts: { register: registerAppendAgentEvaluationPrompts },
+  delete_agent_evaluation: { register: registerDeleteAgentEvaluation },
+  run_agent_evaluation: { register: registerRunAgentEvaluation },
+  list_agent_evaluation_runs: { register: registerListAgentEvaluationRuns },
+  get_agent_eval_run_results: { register: registerGetAgentEvalRunResults },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;

@@ -35,6 +35,7 @@ const P0_OPERATION_IDS = [
 ] as const;
 
 const ALL_PROFILES: CapabilityProfile[] = [
+  'ai-agent-ops',
   'core-lifecycle',
   'evaluations',
   'conversations',

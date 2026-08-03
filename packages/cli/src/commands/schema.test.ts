@@ -10,9 +10,10 @@ describe('schema command', () => {
       expect(schema).toHaveProperty('path', '/api/v1/projects/{projectUuid}/aiAgents');
       expect(schema).toHaveProperty('method', 'GET');
       expect(schema).toHaveProperty('cliCommand', 'agents list');
-      expect(schema).not.toHaveProperty('mcpToolName');
+      expect(schema).toHaveProperty('mcpToolName', 'list_project_agents');
       expect(schema).toHaveProperty('profiles');
       expect(schema?.profiles).toContain('core-lifecycle');
+      expect(schema?.profiles).toContain('ai-agent-ops');
       expect(schema).toHaveProperty('sensitivity', 'none');
     });
 
