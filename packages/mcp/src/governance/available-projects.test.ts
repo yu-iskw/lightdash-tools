@@ -6,7 +6,6 @@ import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
-  ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED,
   AvailableProjectsConfigError,
   filterProjectsByAvailability,
   findUnavailableProjectUuids,
@@ -30,7 +29,7 @@ function uuidsFromPolicy(env: NodeJS.ProcessEnv): string[] {
 describe('available-projects', () => {
   afterEach(() => {
     delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
-    delete process.env[ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED];
+    delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
     resetAvailableProjectsCache();
   });
 
@@ -47,36 +46,18 @@ describe('available-projects', () => {
       ).toEqual([UUID_A, UUID_B]);
     });
 
-    it('accepts deprecated MCP_AVAILABLE alias when canonical unset', () => {
-      expect(
-        uuidsFromPolicy({
-          [ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED]: UUID_A,
-        }),
-      ).toEqual([UUID_A]);
-    });
-
     it('rejects empty segments', () => {
       expect(() =>
         getAvailableProjectsPolicy({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: ',,,' }),
       ).toThrow(/empty segments/);
     });
 
-    it('accepts equivalent canonical and deprecated lists regardless of order', () => {
+    it('ignores removed MCP_AVAILABLE env when reading policy (validate catches it)', () => {
       expect(
         uuidsFromPolicy({
-          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: `${UUID_A},${UUID_B}`,
-          [ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED]: `${UUID_B},${UUID_A}`,
+          LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS: UUID_A,
         }),
-      ).toEqual([UUID_A, UUID_B]);
-    });
-
-    it('rejects conflicting canonical and deprecated values', () => {
-      expect(() =>
-        getAvailableProjectsPolicy({
-          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: UUID_A,
-          [ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED]: UUID_B,
-        }),
-      ).toThrow(AvailableProjectsConfigError);
+      ).toEqual([]);
     });
   });
 
@@ -139,6 +120,19 @@ describe('available-projects', () => {
       expect(() =>
         validateAvailableProjectsConfig({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: 'bad' }),
       ).toThrow(AvailableProjectsConfigError);
+    });
+
+    it('rejects removed MCP_AVAILABLE env', () => {
+      expect(() =>
+        validateAvailableProjectsConfig({
+          LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS: UUID_A,
+        }),
+      ).toThrow(/no longer supported/);
+      expect(() =>
+        validateAvailableProjectsConfig({
+          LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS: UUID_A,
+        }),
+      ).toThrow(/LIGHTDASH_TOOLS_ALLOWED_PROJECTS/);
     });
   });
 });

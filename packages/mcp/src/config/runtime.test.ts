@@ -7,7 +7,6 @@ describe('config/runtime', () => {
   const originalSafety = process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
   const originalAllowlist = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
   const originalDryRun = process.env.LIGHTDASH_TOOLS_DRY_RUN;
-  const originalDeprecated = process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
   const originalProjectUuid = process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
 
   beforeEach(() => {
@@ -15,7 +14,6 @@ describe('config/runtime', () => {
     delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
     delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
     delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
-    delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
     delete process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
   });
 
@@ -31,7 +29,6 @@ describe('config/runtime', () => {
     restore('LIGHTDASH_TOOLS_SAFETY_MODE', originalSafety);
     restore('LIGHTDASH_TOOLS_ALLOWED_PROJECTS', originalAllowlist);
     restore('LIGHTDASH_TOOLS_DRY_RUN', originalDryRun);
-    restore('LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS', originalDeprecated);
     restore('LIGHTDASH_TOOLS_PROJECT_UUID', originalProjectUuid);
   });
 
@@ -52,7 +49,7 @@ describe('config/runtime', () => {
   });
 
   describe('warnIgnoredCliGuardrailEnvVars', () => {
-    it('does not warn when CLI-only / deprecated / removed vars are unset', () => {
+    it('does not warn when CLI-only / removed vars are unset', () => {
       const warn = vi.fn();
       warnIgnoredCliGuardrailEnvVars(process.env, warn);
       expect(warn).not.toHaveBeenCalled();
@@ -84,19 +81,6 @@ describe('config/runtime', () => {
         /^Warning: LIGHTDASH_TOOLS_SAFETY_MODE, LIGHTDASH_TOOLS_DRY_RUN are set but ignored/,
       );
       expect(message).toContain('LIGHTDASH_TOOLS_ALLOWED_PROJECTS');
-    });
-
-    it('warns that MCP_AVAILABLE_PROJECT_UUIDS is deprecated', () => {
-      const warn = vi.fn();
-      process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS =
-        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-      warnIgnoredCliGuardrailEnvVars(process.env, warn);
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS'),
-      );
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('LIGHTDASH_TOOLS_ALLOWED_PROJECTS'),
-      );
     });
 
     it('warns that PROJECT_UUID is no longer used', () => {

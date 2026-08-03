@@ -12,40 +12,27 @@ import {
   ENV_LIGHTDASH_TOOLS_SAFETY_MODE,
 } from '@lightdash-tools/common';
 
-import { ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED } from '../governance/available-projects.js';
-
 import type { PartialLightdashClientConfig } from '@lightdash-tools/client';
 
-/** CLI-only guardrail env vars that MCP deliberately ignores (ADR-0008). */
-const CLI_ONLY_GUARDRAIL_ENV_VARS = [
-  ENV_LIGHTDASH_TOOLS_SAFETY_MODE,
-  ENV_LIGHTDASH_TOOLS_DRY_RUN,
-] as const;
-
 /**
- * Warn when operators set CLI-only guardrails, removed project default, or deprecated allowlist alias.
+ * Warn when operators set CLI-only guardrails or the removed project default env.
  */
 export function warnIgnoredCliGuardrailEnvVars(
   env: NodeJS.ProcessEnv = process.env,
   warn: (message: string) => void = console.warn,
 ): void {
-  const ignored = CLI_ONLY_GUARDRAIL_ENV_VARS.filter((name) => {
-    const value = env[name];
-    return value !== undefined && value !== '';
-  });
+  const ignored: string[] = [];
+  if (env.LIGHTDASH_TOOLS_SAFETY_MODE !== undefined && env.LIGHTDASH_TOOLS_SAFETY_MODE !== '') {
+    ignored.push(ENV_LIGHTDASH_TOOLS_SAFETY_MODE);
+  }
+  if (env.LIGHTDASH_TOOLS_DRY_RUN !== undefined && env.LIGHTDASH_TOOLS_DRY_RUN !== '') {
+    ignored.push(ENV_LIGHTDASH_TOOLS_DRY_RUN);
+  }
   if (ignored.length > 0) {
     warn(
       `Warning: ${ignored.join(', ')} ${ignored.length === 1 ? 'is' : 'are'} set but ignored by MCP. ` +
         'Those variables apply to the CLI only. MCP uses persona toolIds + auth/RBAC + optional ' +
         `${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS} + optional X-Lightdash-Project (ADR-0008).`,
-    );
-  }
-
-  const deprecatedAllowlist = env[ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED];
-  if (deprecatedAllowlist !== undefined && deprecatedAllowlist.trim() !== '') {
-    warn(
-      `Warning: ${ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED} is deprecated. ` +
-        `Use ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS} (shared with the CLI).`,
     );
   }
 

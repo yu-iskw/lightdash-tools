@@ -2,19 +2,18 @@
  * Shared project allowlist for MCP (ADR-0008).
  *
  * Canonical: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` (same env as CLI).
- * Deprecated alias: `LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS` (accepted when canonical unset).
- *
  * Unset/empty → unrestricted. Non-empty → hard ceiling for all personas.
  * UUIDs normalized to lowercase; invalid / empty segments fail closed.
+ *
+ * `LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS` is removed — startup fails if set.
  */
 
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS, validateUuid } from '@lightdash-tools/common';
 
-/** Deprecated alias of LIGHTDASH_TOOLS_ALLOWED_PROJECTS (prefer canonical). */
-export const ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED =
-  'LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS';
-
 export const ENV_ALLOWED_PROJECTS = ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+
+/** Removed env — fail closed at validate if still present. */
+const ENV_MCP_AVAILABLE_PROJECT_UUIDS_REMOVED = 'LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS';
 
 export class AvailableProjectsConfigError extends Error {
   constructor(message: string) {
@@ -62,58 +61,15 @@ function parsePolicy(raw: string | undefined, envLabel: string): AvailableProjec
   return { restricted: true, uuids: seen, list: normalized };
 }
 
-function envNonEmpty(value: string | undefined): value is string {
-  return value !== undefined && value.trim() !== '';
-}
-
-function policiesEqual(a: AvailableProjectsPolicy, b: AvailableProjectsPolicy): boolean {
-  if (!a.restricted && !b.restricted) {
-    return true;
-  }
-  if (!a.restricted || !b.restricted || a.uuids.size !== b.uuids.size) {
-    return false;
-  }
-  for (const uuid of a.uuids) {
-    if (!b.uuids.has(uuid)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-type ResolvedAllowlist = {
+function resolveAllowlist(env: NodeJS.ProcessEnv): {
   raw: string;
-  source:
-    typeof ENV_ALLOWED_PROJECTS | typeof ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED | undefined;
-  /** Set when both envs were parsed for a conflict check (reuse; avoid re-parse). */
   policy?: AvailableProjectsPolicy;
-};
-
-/**
- * Prefer ALLOWED_PROJECTS; else deprecated MCP_AVAILABLE_*.
- * Conflict path parses both once and threads the winning policy.
- */
-function resolveAllowlist(env: NodeJS.ProcessEnv): ResolvedAllowlist {
-  const canonical = env[ENV_ALLOWED_PROJECTS];
-  const deprecated = env[ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED];
-
-  if (envNonEmpty(canonical) && envNonEmpty(deprecated)) {
-    const canonicalPolicy = parsePolicy(canonical, ENV_ALLOWED_PROJECTS);
-    const deprecatedPolicy = parsePolicy(deprecated, ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED);
-    if (!policiesEqual(canonicalPolicy, deprecatedPolicy)) {
-      throw new AvailableProjectsConfigError(
-        `Conflicting project allowlists: ${ENV_ALLOWED_PROJECTS} and ${ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED} differ. Use only ${ENV_ALLOWED_PROJECTS}.`,
-      );
-    }
-    return { raw: canonical, source: ENV_ALLOWED_PROJECTS, policy: canonicalPolicy };
+} {
+  const raw = env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+  if (raw === undefined || raw.trim() === '') {
+    return { raw: '', policy: { restricted: false } };
   }
-  if (envNonEmpty(canonical)) {
-    return { raw: canonical, source: ENV_ALLOWED_PROJECTS };
-  }
-  if (envNonEmpty(deprecated)) {
-    return { raw: deprecated, source: ENV_MCP_AVAILABLE_PROJECT_UUIDS_DEPRECATED };
-  }
-  return { raw: '', source: undefined, policy: { restricted: false } };
+  return { raw };
 }
 
 /** Parsed allowlist policy (cached for `process.env`). */
@@ -124,9 +80,7 @@ export function getAvailableProjectsPolicy(
   if (env === process.env && processCache?.raw === resolved.raw) {
     return processCache.policy;
   }
-  const policy =
-    resolved.policy ??
-    parsePolicy(resolved.raw || undefined, resolved.source ?? ENV_ALLOWED_PROJECTS);
+  const policy = resolved.policy ?? parsePolicy(resolved.raw || undefined, ENV_ALLOWED_PROJECTS);
   if (env === process.env) {
     processCache = { raw: resolved.raw, policy };
   }
@@ -183,7 +137,14 @@ export function resolveSearchProjectUuids(
   return undefined;
 }
 
-/** Fail-closed startup: validate allowlist (and alias conflict). */
+/** Fail-closed startup: reject removed alias env; validate ALLOWED_PROJECTS. */
 export function validateAvailableProjectsConfig(env: NodeJS.ProcessEnv = process.env): void {
+  const removed = env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
+  if (removed !== undefined && removed.trim() !== '') {
+    throw new AvailableProjectsConfigError(
+      `${ENV_MCP_AVAILABLE_PROJECT_UUIDS_REMOVED} is no longer supported. ` +
+        `Use ${ENV_ALLOWED_PROJECTS} instead.`,
+    );
+  }
   getAvailableProjectsPolicy(env);
 }
