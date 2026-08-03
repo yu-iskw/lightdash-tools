@@ -12,6 +12,8 @@ Related to [6. MCP personas, shared registry, fixed paths](0006-mcp-personas-sha
 
 Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
+Related to [20. MCP data-analyst persona ad-hoc metric-query boundary](0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md)
+
 ## Context
 
 Agents and analysts need to read saved Lightdash content (charts, dashboards, spaces) and run **saved** semantic-layer queries to answer questions — without gaining arbitrary warehouse access. The `semantic-layer` persona exposes explore/compile primitives but not saved-content execution. The `organization-audit` persona ([ADR-0010](0010-mcp-organization-audit-persona-read-only-boundary.md)) is metadata-only: no query execution, no row-level data.

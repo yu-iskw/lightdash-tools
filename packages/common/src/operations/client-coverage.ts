@@ -98,6 +98,9 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-reader.query.result.get': 'v2.query.getAsyncQueryResults',
   'content-reader.query.cancel': 'v2.query.cancelAsyncQuery',
 
+  // data-analyst
+  'data-analyst.query.metric-query.run': 'v2.query.runMetricQuery',
+
   // content-developer
   'content-developer.preview.chart': 'composed:v2.charts.getSavedChart',
   'content-developer.preview.dashboard': 'composed:v2.dashboards.getDashboard',

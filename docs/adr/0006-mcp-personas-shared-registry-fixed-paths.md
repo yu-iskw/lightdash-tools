@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 Accepted
 
+Amended by [20. MCP data-analyst persona ad-hoc metric-query boundary](0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md)
+
 ## Context
 
 A broad all-in-one MCP catalog mixed admin tools with discovery/compile UX. A separate semantic-layer package duplicated transport and used unprefixed names. Clients isolate servers by URL path ([MCP transports](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports)); free-form path/persona env knobs invite drift.

@@ -36,6 +36,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 17. [MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)
 18. [MCP ai-agent-ops persona thin API boundary](0018-mcp-ai-agent-ops-persona-thin-api-boundary.md)
 19. [MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+20. [MCP data-analyst persona ad-hoc metric-query boundary](0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md)
 
 ## Old → new mapping
 

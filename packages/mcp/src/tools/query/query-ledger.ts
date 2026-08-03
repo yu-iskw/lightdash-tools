@@ -5,12 +5,14 @@
 
 import { DEFAULT_QUERY_LEDGER_TTL_MS, releaseQueryBudget } from '../../policy/result-limits.js';
 
+export type QueryLedgerSourceType = 'chart' | 'dashboard_tile' | 'metric_query';
+
 export type ReaderQueryLedgerEntry = {
   queryUuid: string;
   sessionId: string;
   userUuid?: string;
   projectUuid: string;
-  sourceType: 'chart' | 'dashboard_tile';
+  sourceType: QueryLedgerSourceType;
   sourceUuid: string;
   /** True while concurrency budget is held for this in-flight warehouse query. */
   budgetHeld: boolean;

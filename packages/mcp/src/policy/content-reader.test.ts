@@ -6,25 +6,27 @@ import { describe, expect, it } from 'vitest';
 
 import {
   METADATA_SAFETY,
+  METRIC_QUERY_SAFETY,
   SAVED_EXECUTION_SAFETY,
   IMAGE_SNAPSHOT_SAFETY,
   assertContentReaderSafe,
 } from './content-reader.js';
 
 describe('assertContentReaderSafe', () => {
-  it('accepts metadata, saved-execution, and image-snapshot presets', () => {
+  it('accepts metadata, saved-execution, metric-query, and image-snapshot presets', () => {
     expect(() => assertContentReaderSafe(METADATA_SAFETY)).not.toThrow();
     expect(() => assertContentReaderSafe(SAVED_EXECUTION_SAFETY)).not.toThrow();
+    expect(() => assertContentReaderSafe(METRIC_QUERY_SAFETY)).not.toThrow();
     expect(() => assertContentReaderSafe(IMAGE_SNAPSHOT_SAFETY)).not.toThrow();
   });
 
-  it('rejects arbitrary query capability', () => {
+  it('rejects raw SQL query capability', () => {
     expect(() =>
       assertContentReaderSafe({
         ...METADATA_SAFETY,
         queryCapability: 'raw_sql',
       }),
-    ).toThrow(/saved-content/);
+    ).toThrow(/saved-content or arbitrary-semantic/);
   });
 
   it('rejects row-level results', () => {

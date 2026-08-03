@@ -4,6 +4,10 @@ export const PROJECT_UUID_DESC = 'Project UUID';
 
 export const projectUuidField = (): z.ZodString => z.string().describe(PROJECT_UUID_DESC);
 
+/** Optional projectUuid when HTTP pin (`X-Lightdash-Project`) can resolve scope. */
+export const optionalProjectUuidField = (): z.ZodOptional<z.ZodString> =>
+  projectUuidField().optional();
+
 /** OpenAPI UuidOrSlug field (dashboard/chart identifiers). */
 export const uuidOrSlugField = (description = 'UUID or slug'): z.ZodString =>
   z.string().describe(description);

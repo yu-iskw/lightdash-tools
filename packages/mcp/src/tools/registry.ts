@@ -87,6 +87,7 @@ import { registerExportChartImage } from './project/reader-export-chart-image.js
 import { registerGetScheduler, registerListProjectSchedulers } from './project/schedulers.js';
 import { registerGetSpace, registerListSpaces } from './project/spaces.js';
 import { registerCancelQuery, registerGetQueryResult } from './query/lifecycle.js';
+import { registerRunMetricQuery } from './query/run-metric-query.js';
 import {
   registerGetExplore,
   registerGetFieldLineage,
@@ -150,6 +151,7 @@ export const toolRegistry = {
   run_dashboard_tile: { register: registerRunDashboardTile },
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },
+  run_metric_query: { register: registerRunMetricQuery },
 
   // content-developer (ADR-0014)
   get_chart_as_code: { register: registerGetChartAsCode },

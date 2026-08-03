@@ -15,18 +15,14 @@ import { findQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.j
 import {
   codedErrorResult,
   isCoverageComplete,
+  isTerminalStatus,
   warningFromNormalizedMessage,
 } from './reader-tool-helpers.js';
 import { normalizeAsyncQueryResult } from './result-normalizer.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
-import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
-  return status === 'complete' || status === 'failed' || status === 'cancelled';
-}
 
 export function registerGetQueryResult(
   server: McpServer,
@@ -37,7 +33,8 @@ export function registerGetQueryResult(
     'get_query_result',
     {
       title: 'Get query result',
-      description: 'Poll or retrieve a query started by this persona (by queryUuid handle)',
+      description:
+        'Poll or retrieve a query started by this persona (by queryUuid handle). Shared by content-reader and data-analyst; safety preset is saved-execution (budget/ledger identical for metric_query).',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),

@@ -1,6 +1,6 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **persona-scoped** surfaces. One package, six personas: explore/compile, org audit, saved-content reads, chart/dashboard authoring, soft-delete governance, and AI-agent ops. Uses [`@lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client) for API access. <!-- markdown-link-check-disable-line -->
+MCP server for Lightdash with **persona-scoped** surfaces. One package, seven personas: explore/compile, org audit, saved-content reads, chart/dashboard authoring, soft-delete governance, AI-agent ops, and ad-hoc Explore queries. Uses [`@lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client) for API access. <!-- markdown-link-check-disable-line -->
 
 Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -14,6 +14,7 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 | `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/personas/content-developer/inventory.md)  |
 | `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/personas/content-governance/inventory.md) |
 | `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/personas/ai-agent-ops/inventory.md)       |
+| `data-analyst`       | Unsaved Explore metric queries           | `/data-analyst/v1/mcp`       | `data-analyst`       | [inventory](../../docs/personas/data-analyst/inventory.md)       |
 
 Tool names are prefixed with `lightdash_`. MCP display names are shortened where needed for client length limits (e.g. `lightdash-mcp-content`).
 
@@ -128,6 +129,10 @@ Soft-delete charts/dashboards and elicitation-gated dashboard promote. Permanent
 ### `ai-agent-ops`
 
 Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/personas/ai-agent-ops/loop.md](../../docs/personas/ai-agent-ops/loop.md).
+
+### `data-analyst`
+
+Unsaved Explore-style metric queries (`run_metric_query`) with explore discovery and optional `compile_query`. Bounded rows; no chart save. Server name: `lightdash-mcp-analyst`.
 
 ## Safety
 

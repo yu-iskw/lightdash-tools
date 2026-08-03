@@ -23,6 +23,7 @@ export type CapabilityProfile =
   | 'content-reader'
   | 'conversations'
   | 'core-lifecycle'
+  | 'data-analyst'
   | 'discovery-readonly'
   | 'evaluations'
   | 'org-audit-readonly'
@@ -114,6 +115,7 @@ const VALID_PROFILES = new Set<CapabilityProfile>([
   'content-reader',
   'conversations',
   'core-lifecycle',
+  'data-analyst',
   'discovery-readonly',
   'evaluations',
   'org-audit-readonly',

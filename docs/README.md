@@ -22,6 +22,7 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 | content-developer  | [inventory](personas/content-developer/inventory.md)                                                                                            |
 | content-governance | [inventory](personas/content-governance/inventory.md), [client compatibility](personas/content-governance/client-compatibility.md)              |
 | ai-agent-ops       | [inventory](personas/ai-agent-ops/inventory.md), [loop](personas/ai-agent-ops/loop.md), [CLI reference](personas/ai-agent-ops/cli-ai-agents.md) |
+| data-analyst       | [inventory](personas/data-analyst/inventory.md)                                                                                                 |
 
 ## Decisions
 

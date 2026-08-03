@@ -9,6 +9,7 @@ import { defineOperation } from './types';
 import type { CapabilityProfile, OperationDescriptor } from './types';
 
 const PROFILE_SEMANTIC: CapabilityProfile = 'semantic-discovery';
+const PROFILE_DATA_ANALYST: CapabilityProfile = 'data-analyst';
 const API_V1 = '/api/v1';
 
 const listProjects = defineOperation({
@@ -38,7 +39,7 @@ const getProject = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects get' },
-  profiles: [PROFILE_SEMANTIC, 'content-reader', 'content-developer'],
+  profiles: [PROFILE_SEMANTIC, 'content-reader', 'content-developer', PROFILE_DATA_ANALYST],
 });
 
 const listExplores = defineOperation({
@@ -53,7 +54,7 @@ const listExplores = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores list' },
-  profiles: [PROFILE_SEMANTIC],
+  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getExplore = defineOperation({
@@ -68,7 +69,7 @@ const getExplore = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores get' },
-  profiles: [PROFILE_SEMANTIC],
+  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const listDimensions = defineOperation({
@@ -83,7 +84,7 @@ const listDimensions = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores dimensions' },
-  profiles: [PROFILE_SEMANTIC],
+  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getFieldLineage = defineOperation({
@@ -113,7 +114,7 @@ const listMetrics = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'metrics list' },
-  profiles: [PROFILE_SEMANTIC],
+  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getMetric = defineOperation({
@@ -149,7 +150,7 @@ const compileQuery = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'query compile' },
-  profiles: [PROFILE_SEMANTIC],
+  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 /** Semantic-layer operations registered in the shared operation catalog. */

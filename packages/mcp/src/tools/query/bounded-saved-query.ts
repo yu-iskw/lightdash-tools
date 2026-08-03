@@ -1,5 +1,6 @@
 /**
- * Shared budget / ledger / wait / normalize path for content-reader saved execution.
+ * Shared budget / ledger / wait / normalize path for bounded async queries
+ * (content-reader saved execution and data-analyst metric-query; ADR-0012 / ADR-0020).
  */
 
 import { getToolAuditAuth } from '../../audit/tool-audit-context.js';
@@ -7,8 +8,16 @@ import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { acquireQueryBudget, clampWaitMs, releaseQueryBudget } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
 
-import { addQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.js';
-import { codedErrorResult, warningFromNormalizedMessage } from './reader-tool-helpers.js';
+import {
+  addQueryLedgerEntry,
+  releaseQueryLedgerBudget,
+  type QueryLedgerSourceType,
+} from './query-ledger.js';
+import {
+  codedErrorResult,
+  isTerminalStatus,
+  warningFromNormalizedMessage,
+} from './reader-tool-helpers.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
 import type { ContentReaderWarning } from '../../policy/envelope.js';
@@ -16,12 +25,10 @@ import type { TextContent } from '../shared.js';
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 
-export type BoundedSavedQuerySourceType = 'chart' | 'dashboard_tile';
-
 export type RunBoundedSavedQueryArgs = {
   client: LightdashClient;
   projectUuid: string;
-  sourceType: BoundedSavedQuerySourceType;
+  sourceType: QueryLedgerSourceType;
   sourceUuid: string;
   limit: number;
   waitForResults?: boolean;
@@ -43,10 +50,6 @@ export type RunBoundedSavedQueryFail = {
 };
 
 export type RunBoundedSavedQueryResult = RunBoundedSavedQueryFail | RunBoundedSavedQueryOk;
-
-function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
-  return status === 'complete' || status === 'failed' || status === 'cancelled';
-}
 
 /**
  * Acquire budget, execute, ledger, wait/normalize, and map envelope warnings.

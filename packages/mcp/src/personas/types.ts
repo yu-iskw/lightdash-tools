@@ -10,6 +10,7 @@ export type PersonaId =
   | 'content-developer'
   | 'content-governance'
   | 'content-reader'
+  | 'data-analyst'
   | 'organization-audit'
   | 'semantic-layer';
 
