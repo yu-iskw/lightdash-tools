@@ -69,16 +69,22 @@ jobs:
           upload-artifact-retention: 14
           upload-release-assets: false
 
-      - name: Scan SBOM for vulnerabilities
-        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
+      - name: Download Grype
+        id: grype
+        uses: anchore/scan-action/download-grype@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7.4.0
         with:
-          sbom: sbom.spdx.json
-          severity-cutoff: high
-          only-fixed: false
-          fail-build: false
-          output-format: json
-          output-file: grype-report.json
           cache-db: true
+
+      - name: Scan SBOM for vulnerabilities
+        shell: bash
+        env:
+          GRYPE_CMD: ${{ steps.grype.outputs.cmd }}
+        run: |
+          set -euo pipefail
+          "${GRYPE_CMD}" \
+            sbom:sbom.spdx.json \
+            -o json \
+            --file grype-report.json
 
       - name: Enforce High and Critical vulnerability gate
         shell: bash
