@@ -8,6 +8,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { assertSafeBinaryFetchUrl, HttpClient, isBlockedBinaryHostname } from './http-client.js';
 
 import type { ResolvedLightdashClientConfig } from '../config.js';
+import type { AxiosInstance } from 'axios';
 import type { RateLimiter } from './rate-limiter.js';
 
 describe('isBlockedBinaryHostname', () => {
@@ -54,22 +55,17 @@ describe('assertSafeBinaryFetchUrl', () => {
 });
 
 describe('HttpClient.getBytes', () => {
-  const baseConfig = {
-    baseUrl: 'https://app.lightdash.com',
-    timeout: 30_000,
-    retry: { maxRetries: 0, baseDelayMs: 0, maxDelayMs: 0 },
-  } satisfies Partial<ResolvedLightdashClientConfig>;
-
   function makeClient(getImpl: ReturnType<typeof vi.fn>) {
-    const axiosInstance = { get: getImpl };
-    const rateLimiter: RateLimiter = {
+    const axiosInstance = { get: getImpl } as unknown as AxiosInstance;
+    const rateLimiter = {
       schedule: <T>(fn: () => Promise<T>) => fn(),
-    };
-    return new HttpClient(
-      axiosInstance as never,
-      rateLimiter,
-      baseConfig as ResolvedLightdashClientConfig,
-    );
+    } as unknown as RateLimiter;
+    const config = {
+      baseUrl: 'https://app.lightdash.com',
+      timeout: 30_000,
+      retry: { maxRetries: 0 },
+    } as unknown as ResolvedLightdashClientConfig;
+    return new HttpClient(axiosInstance, rateLimiter, config);
   }
 
   it('maps axios maxContentLength errors to BinarySizeLimitError', async () => {
