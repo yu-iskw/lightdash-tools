@@ -1,3 +1,0 @@
-kind: feat
-body: MCP dual-era protocol serving via SDK serveStdio and createMcpHandler; remove initialize caps process cache
-time: 2026-08-03T18:52:29.315464+09:00

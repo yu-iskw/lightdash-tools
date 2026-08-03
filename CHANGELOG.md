@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.10.0] - 2026-08-03
+
+### Features
+
+- MCP dual-era protocol serving via SDK serveStdio and createMcpHandler; remove initialize caps process cache
+
+### Documentation
+
+- Reorganize docs into operators/personas audience taxonomy; archive Accepted RFCs; OAuth hub at docs/operators/mcp-oauth.md.
+- Drop docs/archive, agent-context, security, and reference dirs; keep threat model and agent-context under operators; CLI AI-agents reference under personas/ai-agent-ops.
+
 ## [0.9.0] - 2026-08-03
 
 ### Features
