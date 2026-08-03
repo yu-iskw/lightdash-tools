@@ -1,5 +1,5 @@
 /**
- * Content response envelope helpers (RFC §10 / ADR-0021).
+ * Content response envelope helpers (RFC §10 / ADR-0006).
  */
 
 import type { ProfileId } from '@lightdash-tools/common';

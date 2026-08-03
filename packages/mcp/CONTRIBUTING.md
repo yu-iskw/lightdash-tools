@@ -6,18 +6,18 @@ End-user install and configuration live in [README.md](./README.md).
 
 ## Package layout
 
-| Edit…                                                   | Path                                                                                                                    |
-| :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------------------- |
-| Shared tools / registry                                 | `src/tools/` (`registry.ts`, domain modules)                                                                            |
-| Profile (tools allowlist, prompts, playbook, HTTP path) | `src/profiles/<id>/`                                                                                                    |
-| Destructive confirmation (form elicitation / MRTR)      | `src/destructive/`                                                                                                      |
-| HTTP transport (sessionless)                            | `src/transports/`                                                                                                       |
-| HTTP auth / OAuth broker (in-memory pending)            | `src/auth/`                                                                                                             |
-| Runtime client + guardrail env                          | `src/config/runtime.ts`                                                                                                 |
-| HTTP env / loader                                       | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
-| OAuth broker (in-memory pending)                        | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
-| Audit logging helpers                                   | `src/audit/`                                                                                                            |
-| Entrypoints                                             | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
+| Edit…                                                 | Path                                                                                                                    |
+| :---------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| Shared tools / registry                               | `src/tools/` (`registry.ts`, domain modules)                                                                            |
+| Profile (path, prompts, playbook; tools from catalog) | `src/profiles/<id>/`                                                                                                    |
+| Destructive confirmation (form elicitation / MRTR)    | `src/destructive/`                                                                                                      |
+| HTTP transport (sessionless)                          | `src/transports/`                                                                                                       |
+| HTTP auth / OAuth broker (in-memory pending)          | `src/auth/`                                                                                                             |
+| Runtime client + guardrail env                        | `src/config/runtime.ts`                                                                                                 |
+| HTTP env / loader                                     | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
+| OAuth broker (in-memory pending)                      | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Audit logging helpers                                 | `src/audit/`                                                                                                            |
+| Entrypoints                                           | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
 
 Prompts and resources are **profile-owned** (e.g. `src/profiles/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 

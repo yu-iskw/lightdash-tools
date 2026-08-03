@@ -19,7 +19,7 @@ export type RegisterCapabilitiesOptions = {
 
 /**
  * Registers MCP capabilities for the given profile.
- * Tools come from the operation catalog via listMcpToolNamesByProfile (ADR-0021).
+ * Tools come from the operation catalog via listMcpToolNamesByProfile (ADR-0006).
  */
 export function registerCapabilities(
   server: McpServer,

@@ -23,7 +23,7 @@ Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
 | PRM + broker AS metadata                                      | Supported                                     |
 | Full RFC 8707 audience enforcement on opaque Lightdash tokens | **Limited** — identity via `GET /api/v1/user` |
 
-Authorization in practice: Lightdash RBAC + catalog `profiles` + `listMcpToolNamesByProfile` (ADR-0021) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
+Authorization in practice: Lightdash RBAC + catalog `profiles` + `listMcpToolNamesByProfile` (ADR-0006) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
 
 ## Primary: hosted OAuth
 

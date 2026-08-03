@@ -1,5 +1,5 @@
 /**
- * Shipped MCP profiles (path → definition). No PROFILE/PATH env knobs (ADR-0021).
+ * Shipped MCP profiles (path → definition). No PROFILE/PATH env knobs (ADR-0006).
  */
 
 import { PROFILE_IDS } from '@lightdash-tools/common';

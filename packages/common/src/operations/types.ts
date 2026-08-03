@@ -1,5 +1,5 @@
 /**
- * Shared typed operation catalog (ADR-0013 / ADR-0021).
+ * Shared typed operation catalog (ADR-0013 / ADR-0006).
  * Single source of truth for HTTP, CLI, and MCP exposure of Lightdash API operations.
  */
 
@@ -13,7 +13,7 @@ export type AgentExposure = 'agent' | 'client-only';
 /** HTTP verbs supported by registered operations. */
 export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 
-/** Runtime list of every MCP serving profile id (ADR-0021; fixed mounts / stdio). */
+/** Runtime list of every MCP serving profile id (ADR-0006; fixed mounts / stdio). */
 export const PROFILE_IDS = [
   'ai-agent-ops',
   'content-developer',
@@ -24,7 +24,7 @@ export const PROFILE_IDS = [
   'semantic-layer',
 ] as const;
 
-/** MCP serving profile ids aligned to fixed HTTP mounts / stdio subcommands (ADR-0021). */
+/** MCP serving profile ids aligned to fixed HTTP mounts / stdio subcommands (ADR-0006). */
 export type ProfileId = (typeof PROFILE_IDS)[number];
 
 /**
@@ -85,7 +85,7 @@ export type OperationDescriptor = {
    */
   sensitivity: SensitivityClass;
   /**
-   * MCP mounts that expose this op when `mcp.taskSupport.exposed` is true (ADR-0021).
+   * MCP mounts that expose this op when `mcp.taskSupport.exposed` is true (ADR-0006).
    * Empty when the op is not MCP-exposed (CLI-only / reserved / client-only).
    */
   profiles: readonly ProfileId[];

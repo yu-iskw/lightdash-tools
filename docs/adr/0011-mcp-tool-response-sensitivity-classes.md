@@ -6,7 +6,7 @@ Date: 2026-08-01
 
 Accepted
 
-Amends [10. MCP organization-audit persona read-only boundary](0010-mcp-organization-audit-persona-read-only-boundary.md)
+Amends [10. MCP organization-audit profile read-only boundary](0010-mcp-organization-audit-profile-read-only-boundary.md)
 
 Relates [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
 
@@ -16,7 +16,7 @@ Relates [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardenin
 
 MCP tools return Lightdash API payloads into agent context (chat transcripts, host memory). The MCP specification requires servers to **sanitize tool outputs** ([Tools — Security Considerations](https://modelcontextprotocol.io/specification/2025-11-25/server/tools), 2025-11-25). Protocol-level sensitivity annotations (e.g. draft SEPs) are not shipped; implementors must enforce privacy in handlers.
 
-[ADR-0010](0010-mcp-organization-audit-persona-read-only-boundary.md) already requires scheduler destinations to be redacted by default (`revealDestinations` opt-in). Member/group tools already mask emails (`includeEmail`). Gaps remained: project direct-access emails passed through raw, and semantic-layer `get_project` / pinned `list_projects` could return `warehouseConnection`, `dbtConnection` (including PATs), and `schedulerFailureContactOverride`.
+[ADR-0010](0010-mcp-organization-audit-profile-read-only-boundary.md) already requires scheduler destinations to be redacted by default (`revealDestinations` opt-in). Member/group tools already mask emails (`includeEmail`). Gaps remained: project direct-access emails passed through raw, and semantic-layer `get_project` / pinned `list_projects` could return `warehouseConnection`, `dbtConnection` (including PATs), and `schedulerFailureContactOverride`.
 
 A single global `withSensitive` flag would collapse distinct risk classes and fight existing opt-in names. Display-name redaction was considered and deferred: org-audit workflows need identifiable principals via `firstName`/`lastName`/`userUuid` without always revealing email.
 

@@ -20,7 +20,7 @@ Every CLI `.action()` runs through `wrapAction` in `packages/cli/src/utils/safet
    - `write-destructive` — all annotated commands
 2. **Project allowlist** (`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` / `--projects`) — reject calls whose known project UUID args fall outside the list; empty list allows all. Flag overrides env.
 3. **Dry-run** (`LIGHTDASH_TOOLS_DRY_RUN` / `--dry-run`) — write commands describe what would be sent without calling the API.
-4. **Input validation** — `validateResourceId` only on known identifier keys (`project`, `projectUuid`, `projectUuids`, `projects`, `slug`), not bare free-form positionals.
+4. **Input validation** — validate known identifier keys only (project UUIDs, slugs, uuid-or-slug content ids, and peers in `RESOURCE_ID_KEYS`), not bare free-form positionals.
 5. **Audit log** — `initAuditLog()` at process start; optional `LIGHTDASH_TOOLS_AUDIT_LOG` file (else stderr). Blocked calls use an internal `_lightdashBlocked` marker stripped before output.
 
 ```mermaid

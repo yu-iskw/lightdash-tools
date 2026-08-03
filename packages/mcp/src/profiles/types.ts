@@ -1,5 +1,5 @@
 /**
- * Profile packaging types (tools from the operation catalog, ADR-0021).
+ * Profile packaging types (tools from the operation catalog, ADR-0006).
  */
 
 import type { ProfileId } from '@lightdash-tools/common';

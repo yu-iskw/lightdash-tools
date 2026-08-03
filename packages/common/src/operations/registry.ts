@@ -87,7 +87,7 @@ const BANNED_MCP_TOOL_NAMES: readonly string[] = ALL_OPERATIONS.filter(
   return banned;
 });
 
-/** Precomputed tool names per serving profile (ADR-0021 registration source). */
+/** Precomputed tool names per serving profile (ADR-0006 registration source). */
 const MCP_TOOL_NAMES_BY_PROFILE: ReadonlyMap<ProfileId, readonly string[]> = (() => {
   const map = new Map<ProfileId, string[]>(PROFILE_IDS.map((id) => [id, []]));
   for (const operation of ALL_OPERATIONS) {
@@ -148,7 +148,7 @@ export function listBannedMcpToolNames(): readonly string[] {
   return BANNED_MCP_TOOL_NAMES;
 }
 
-/** Exposed MCP tool names for a serving profile (registration source, ADR-0021). */
+/** Exposed MCP tool names for a serving profile (registration source, ADR-0006). */
 export function listMcpToolNamesByProfile(profile: ProfileId): readonly string[] {
   const names = MCP_TOOL_NAMES_BY_PROFILE.get(profile);
   if (names === undefined) {

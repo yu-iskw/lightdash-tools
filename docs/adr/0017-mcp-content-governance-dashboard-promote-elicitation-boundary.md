@@ -6,23 +6,23 @@ Date: 2026-08-02
 
 Accepted
 
-Amends [4. Agent-safe exposure](0004-agent-safe-exposure-mcp-cli-vs-client-only.md), [14. MCP content-developer persona](0014-mcp-content-developer-persona-mutation-boundary.md), [15. MCP content-governance persona](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)
+Amends [4. Agent-safe exposure](0004-agent-safe-exposure-mcp-cli-vs-client-only.md), [14. MCP content-developer profile](0014-mcp-content-developer-profile-mutation-boundary.md), [15. MCP content-governance profile](0015-mcp-content-governance-profile-elicitation-required-soft-delete-boundary.md)
 
-Related to [6. MCP personas](0006-mcp-personas-shared-registry-fixed-paths.md), [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md), [16. Pluggable ephemeral store](0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)
+Related to [6. MCP profiles](0006-mcp-profiles-shared-registry-fixed-paths.md), [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md)
 
 Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
 ## Context
 
-Agents author content on `content-developer` ([ADR-0014](0014-mcp-content-developer-persona-mutation-boundary.md)) but that persona excludes promote. Operators still need a trustworthy way to release a dashboard from a development/preview project to its configured upstream project ([How to promote content](https://docs.lightdash.com/guides/how-to-promote-content)).
+Agents author content on `content-developer` ([ADR-0014](0014-mcp-content-developer-profile-mutation-boundary.md)) but that profile excludes promote. Operators still need a trustworthy way to release a dashboard from a development/preview project to its configured upstream project ([How to promote content](https://docs.lightdash.com/guides/how-to-promote-content)).
 
-Lightdash exposes `GET /api/v1/dashboards/{dashboardUuidOrSlug}/promoteDiff` and `POST …/promote`. Dashboard promote also creates/updates nested charts, optional spaces, and data-app tiles — high blast radius. Boolean tool arguments and chat “please confirm” are not trustworthy (same rationale as soft-delete in [ADR-0015](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md)).
+Lightdash exposes `GET /api/v1/dashboards/{dashboardUuidOrSlug}/promoteDiff` and `POST …/promote`. Dashboard promote also creates/updates nested charts, optional spaces, and data-app tiles — high blast radius. Boolean tool arguments and chat “please confirm” are not trustworthy (same rationale as soft-delete in [ADR-0015](0015-mcp-content-governance-profile-elicitation-required-soft-delete-boundary.md)).
 
 MCP form elicitation via multi-round-trip requests ([elicitation](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation), [MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)) remains the human-approval boundary.
 
 ## Decision
 
-1. Expose dashboard promote on the existing **`content-governance`** persona (not `content-developer`, not a new release persona in v1).
+1. Expose dashboard promote on the existing **`content-governance`** profile (not `content-developer`, not a new release profile in v1). Tools come from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).
 2. **v1 tools:**
    - `get_dashboard_promote_diff` — read-only `promoteDiff`
    - `promote_dashboard` — elicitation-gated `promote`
@@ -37,6 +37,7 @@ MCP form elicitation via multi-round-trip requests ([elicitation](https://modelc
    - when `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` is set, that upstream (and promoteDiff target project UUIDs) must also be allowlisted before elicitation or apply (`PROJECT_NOT_AVAILABLE` otherwise).
 5. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-governance`; promote annotated `WRITE_DESTRUCTIVE` with `destructiveHint: true`.
 6. One tool call → one dashboard → one elicitation → one promote API call (no bulk).
+7. No server-side confirmation-claim store; TTL + precondition re-fetch bound replay ([ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)).
 
 ## Consequences
 
@@ -44,12 +45,3 @@ MCP form elicitation via multi-round-trip requests ([elicitation](https://modelc
 - Content-developer remains authoring-only; playbooks point release work at content-governance.
 - Clients without form elicitation cannot promote via MCP (same fail-closed policy as soft-delete).
 - Soft-delete and promote share the elicitation framework; operation-specific form schemas and audit statuses stay distinct (`deletion_*` vs `promotion_*`).
-
-## References
-
-- [How to promote content](https://docs.lightdash.com/guides/how-to-promote-content)
-- [Promote dashboard API](https://docs.lightdash.com/api-reference/dashboards/promote-dashboard)
-- [Get dashboard promotion diff](https://docs.lightdash.com/api-reference/dashboards/get-dashboard-promotion-diff)
-- [MCP elicitation (2026-07-28)](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation)
-- [MCP MRTR](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr)
-- Implementation: `packages/mcp/src/destructive/`, `packages/common/src/operations/content-governance.ts`

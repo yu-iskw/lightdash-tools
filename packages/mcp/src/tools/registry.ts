@@ -205,7 +205,7 @@ export type ToolId = keyof typeof toolRegistry;
 
 const BANNED_MCP_TOOL_IDS = new Set(listBannedMcpToolNames());
 
-/** Register a subset of tools by id (catalog membership, ADR-0021). */
+/** Register a subset of tools by id (catalog membership, ADR-0006). */
 export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,

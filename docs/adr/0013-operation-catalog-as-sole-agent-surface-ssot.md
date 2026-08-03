@@ -6,21 +6,19 @@ Date: 2026-08-01
 
 Accepted
 
-Amended by [21. MCP profile packaging; catalog tool-membership SSOT](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)
-
 Amends [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
 
 Relates [2. Monorepo packages](0002-monorepo-packages-client-common-cli-mcp.md)
 
-Relates [6. MCP personas, shared registry, fixed paths](0006-mcp-personas-shared-registry-fixed-paths.md)
+Relates [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-registry-fixed-paths.md)
 
 Relates [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
-Amended by [21. MCP profile packaging; catalog tool-membership SSOT](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)
-
 ## Context
 
-Agent exposure metadata lived in three places: `packages/common/src/operations/` (partial), CLI `LEGACY_SCHEMA_REGISTRY`, and MCP `tools/registry.ts` + persona allowlists. Dual maintenance caused drift (CLI schema keys ≠ catalog ids; MCP tool ids ≠ operation `mcp.toolName` for admin surfaces). OpenAPI remains the type SSOT via pinned swagger → `openapi-typescript`; it must not become the agent product catalog (full API exposure is unsafe).
+Agent exposure metadata lived in three places: `packages/common/src/operations/` (partial), CLI `LEGACY_SCHEMA_REGISTRY`, and MCP `tools/registry.ts` plus hand-maintained profile tool allowlists. Dual maintenance caused drift (CLI schema keys ≠ catalog ids; MCP tool ids ≠ operation `mcp.toolName` for admin surfaces). OpenAPI remains the type SSOT via pinned swagger → `openapi-typescript`; it must not become the agent product catalog (full API exposure is unsafe).
+
+Former ADR-0021 (profile packaging / catalog tool-membership) is absorbed into [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md): catalog `profiles` is mount membership SSOT, and registration derives tools via `listMcpToolNamesByProfile`.
 
 ### Alternatives considered
 
@@ -29,6 +27,7 @@ Agent exposure metadata lived in three places: `packages/common/src/operations/`
 | Generate MCP/CLI from every OpenAPI path        | Violates agent-safe surface; blows past client name limits |
 | Keep legacy schema + catalog hybrid             | Dual registries without an end state                       |
 | Replace axios client with openapi-fetch/hey-api | Loses Bottleneck/retries and Lightdash pagination unwrap   |
+| Hand-maintained profile `toolIds` allowlists    | Drift vs catalog; superseded by ADR-0006 membership rule   |
 
 ## Decision
 
@@ -39,8 +38,8 @@ Agent exposure metadata lived in three places: `packages/common/src/operations/`
    - `agent` ops require **at least one** of `mcp` (non-empty `toolName`) or `cli` (non-empty `commandPath`). MCP-only and CLI-only entries are valid.
    - `mcp.taskSupport.exposed` gates real MCP registration; reserved/`exposed: false` names must not be advertised as live tools by schema introspection.
    - `client-only` ops omit `mcp` / `cli`; use optional `bannedMcpToolName` for the irrecoverable denylist.
-   - Serving profiles match MCP mounts (`semantic-layer`, `organization-audit`, `content-reader`, …); see ADR-0021.
-4. **Profiles derive tool membership from the catalog** (`listMcpToolNamesByProfile`, [ADR-0021](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)). Handlers stay in MCP; registration/CI require a catalog hit. (Supersedes earlier “personas remain code allowlists” wording.)
+   - Serving profiles match MCP mounts (`semantic-layer`, `organization-audit`, `content-reader`, …); see [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md).
+4. **Profiles derive tool membership from the catalog** (`listMcpToolNamesByProfile`, [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)) — not hand-maintained allowlists. Handlers stay in MCP; registration/CI require a catalog hit. (ADR-0006 absorbed former ADR-0021.)
 5. **OpenAPI pipeline unchanged** (pin → generate types in `common`). Client stays axios + Bottleneck; coverage gates link catalog `http.path` to client methods.
 6. **Runtime policy unchanged:** CLI `wrapAction` ([ADR-0005](0005-cli-safety-stack.md)); MCP `registerToolSafe` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)). Catalog is build/CI policy, not a substitute for those stacks.
 
@@ -66,5 +65,5 @@ flowchart TB
 
 - Adding an agent tool/command requires a catalog entry first; CI fails closed on drift.
 - Breaking changes to descriptor shape, CLI schema ids, and type export paths are allowed without shims.
-- MCP OAuth, fixed persona paths, and package boundaries stay as previously decided.
+- MCP OAuth, fixed profile paths, and package boundaries stay as previously decided ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).
 - Handler-level redaction remains required for non-`none` sensitivity; the catalog field documents class, it does not auto-redact.
