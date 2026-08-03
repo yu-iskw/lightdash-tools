@@ -2,6 +2,7 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
+import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { CREDENTIALS_OMITTED_WARNING, toProjectSummary } from '../lib/redaction.js';
@@ -44,7 +45,7 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
     {
       title: 'List projects',
       description:
-        'List project metadata in the current organization (or the pinned project when X-Lightdash-Project is set). Connection credentials are never returned.',
+        'List project metadata in the current organization (or the pinned project when X-Lightdash-Project is set). When LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS is set, only those projects are returned. Connection credentials are never returned.',
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },
@@ -53,8 +54,9 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
       const projects = pinned
         ? [await c.v1.projects.getProject(pinned)]
         : await c.v1.projects.listProjects();
+      const summaries = filterProjectsByAvailability(projects.map((p) => toProjectSummary(p)));
       return jsonToolResult({
-        data: projects.map((p) => toProjectSummary(p)),
+        data: summaries,
         warnings: [CREDENTIALS_OMITTED_WARNING],
       });
     }),
@@ -84,7 +86,7 @@ export function registerGetProject(
 
 /**
  * Project-scope-aware get_project shared by content-reader and content-developer (ADR-0012, ADR-0014).
- * Precedence: X-Lightdash-Project -> LIGHTDASH_TOOLS_PROJECT_UUID -> tool projectUuid -> PROJECT_SCOPE_REQUIRED.
+ * Precedence: X-Lightdash-Project -> tool projectUuid -> PROJECT_SCOPE_REQUIRED.
  */
 function registerScopedGetProject(
   server: McpServer,
@@ -98,7 +100,7 @@ function registerScopedGetProject(
     {
       title: 'Get project',
       description:
-        'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides). projectUuid is optional when X-Lightdash-Project or LIGHTDASH_TOOLS_PROJECT_UUID is set.',
+        'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides). projectUuid is optional when X-Lightdash-Project is set.',
       inputSchema: { projectUuid: projectUuidField().optional() },
       annotations: READ_ONLY_DEFAULT,
     },

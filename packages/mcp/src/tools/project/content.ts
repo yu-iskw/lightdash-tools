@@ -5,6 +5,7 @@
 import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
 import { z } from 'zod';
 
+import { resolveSearchProjectUuids } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
@@ -74,7 +75,10 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
         }) => {
           const session = await resolveSessionOrganization(c);
           const pinned = getPinnedProjectUuid();
-          const projectUuids = pinned ? [pinned] : args.projectUuids;
+          const projectUuids = resolveSearchProjectUuids({
+            pinned,
+            explicit: args.projectUuids,
+          });
           const result = await c.v2.content.searchContent({
             projectUuids,
             spaceUuids: args.spaceUuids,

@@ -6,6 +6,7 @@ import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 import { summarizePromotionChanges } from '../../destructive/content-promote.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
+import { assertPromoteTargetsAllowlisted } from '../../governance/promote-allowlist.js';
 import { isNotFoundError } from '../lib/api-errors.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
@@ -42,11 +43,17 @@ export function registerGetDashboardPromoteDiff(
           dashboardUuidOrSlug: string;
         }) => {
           try {
-            const scope = resolveProjectScope({ projectUuid }, { allowConfiguredEnv: false });
-            const promoteDiff = await client.v1.dashboards.getDashboardPromoteDiff(
-              dashboardUuidOrSlug,
-              { projectUuid: scope.projectUuid },
-            );
+            const scope = resolveProjectScope({ projectUuid });
+            const [promoteDiff, project] = await Promise.all([
+              client.v1.dashboards.getDashboardPromoteDiff(dashboardUuidOrSlug, {
+                projectUuid: scope.projectUuid,
+              }),
+              client.v1.projects.getProject(scope.projectUuid),
+            ]);
+            assertPromoteTargetsAllowlisted({
+              upstreamProjectUuid: project.upstreamProjectUuid,
+              promoteDiff,
+            });
             return jsonToolResult({
               status: 'ok',
               projectUuid: scope.projectUuid,

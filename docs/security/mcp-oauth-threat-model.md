@@ -4,14 +4,14 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 
 ## Assets
 
-| Asset                           | Protection need                                                                               |
-| :------------------------------ | :-------------------------------------------------------------------------------------------- |
-| Lightdash OAuth client secret   | Server-only; never in MCP client config or logs.                                              |
-| Lightdash OAuth access token    | Must never be logged or persisted by default.                                                 |
-| Lightdash data and tool results | Must be scoped by Lightdash permissions, persona tool surface, and optional HTTP project pin. |
-| MCP endpoint                    | Must not expose tools unauthenticated in production.                                          |
-| Session / broker pending state  | Must not allow user or token confusion across sessions.                                       |
-| Audit logs                      | Must not leak credentials or unnecessary sensitive raw data.                                  |
+| Asset                           | Protection need                                                                                                                                 |
+| :------------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lightdash OAuth client secret   | Server-only; never in MCP client config or logs.                                                                                                |
+| Lightdash OAuth access token    | Must never be logged or persisted by default.                                                                                                   |
+| Lightdash data and tool results | Must be scoped by Lightdash permissions, persona tool surface, optional HTTP project pin, and optional `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`. |
+| MCP endpoint                    | Must not expose tools unauthenticated in production.                                                                                            |
+| Session / broker pending state  | Must not allow user or token confusion across sessions.                                                                                         |
+| Audit logs                      | Must not leak credentials or unnecessary sensitive raw data.                                                                                    |
 
 ## Threats and mitigations
 
@@ -20,7 +20,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 | Public unauthenticated MCP endpoint        | High   | Production requires OAuth client credentials + `PUBLIC_URL`, or shared-key+PAT. Unauthenticated HTTP rejected unless `NODE_ENV` is not `production` (e.g. local Compose).                                                                                   |
 | Client secret leakage to MCP clients       | High   | Secret stays on MCP process; clients use URL-only config. Broker is confidential client to Lightdash.                                                                                                                                                       |
 | Open redirect / confused deputy on broker  | High   | Bind pending auth to client `redirect_uri` + PKCE + `resource`; Lightdash always sees fixed `{PUBLIC_URL}/oauth/callback` only.                                                                                                                             |
-| Shared PAT overreach                       | High   | PAT/shared-key is secondary; prefer OAuth. Persona tool surface + Lightdash RBAC (+ optional `X-Lightdash-Project` pin).                                                                                                                                    |
+| Shared PAT overreach                       | High   | PAT/shared-key is secondary; prefer OAuth. Persona tool surface + Lightdash RBAC (+ optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`).                                                                                     |
 | Token replay / audience gap                | High   | Identity validation via `GET /api/v1/user` only until upstream resource-bound tokens. Restrict ingress; one Lightdash OAuth app per deployment.                                                                                                             |
 | Token leakage in logs                      | High   | Redact `Authorization` in reverse proxies and platform logs. Never log raw tokens or client secret. Audit entries use token hash only.                                                                                                                      |
 | Token/session confusion                    | High   | Bind sessions to `userUuid` and `organizationUuid`; reject subject or organization mismatch on resume.                                                                                                                                                      |
@@ -37,10 +37,10 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 - [ ] Set `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`.
 - [ ] Register exactly one Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`.
 - [ ] Confirm deployed persona URL matches intended capability (shipped `semantic-layer` = discovery/compile only; [ADR-0006](../adr/0006-mcp-personas-shared-registry-fixed-paths.md)).
-- [ ] Pin project via client/gateway `X-Lightdash-Project` when operators need to restrict where users can work ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
+- [ ] Pin project via client/gateway `X-Lightdash-Project` when operators need a per-request project, and/or set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` for a process-level hard allowlist ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
 - [ ] Optionally set `LIGHTDASH_TOOLS_AUDIT_LOG` for tool-call audit trail.
 - [ ] Do **not** set `LIGHTDASH_API_KEY` for primary OAuth hosting (PAT is secondary / stdio / shared-key).
-- [ ] Do not rely on `LIGHTDASH_TOOLS_SAFETY_MODE` / `ALLOWED_PROJECTS` / `DRY_RUN` for MCP — those are CLI-only.
+- [ ] Do not rely on `LIGHTDASH_TOOLS_SAFETY_MODE` / `DRY_RUN` for MCP — those are CLI-only (`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` is shared with MCP as the project ceiling).
 
 ### Secrets handling
 

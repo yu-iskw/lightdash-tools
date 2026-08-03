@@ -23,16 +23,16 @@ A third persona must therefore:
 
 Lightdash v2 query APIs already separate saved-chart execution (`POST …/query/chart`, `POST …/query/dashboard-chart`) from ad-hoc paths (`metric-query`, `sql`, `underlying-data`, downloads). MCP should mirror that boundary in persona capability, not only in tool omission.
 
-Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)). The content-reader persona also needs a configured default for stdio and un-pinned HTTP, without letting tool arguments override operator intent.
+Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)). Clients must pin or pass `projectUuid`; there is no process default project env.
 
 ## Decision
 
 1. Ship a **`content-reader`** persona at fixed path `/content-reader/v1/mcp` with MCP server display name **`lightdash-mcp-content`** (shortened for ~60-character client limits; persona id remains `content-reader`). Stdio selects it via explicit subcommand `lightdash-mcp content-reader` ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md) amendment).
-2. **Project scope** resolves in strict precedence; later sources are ignored when an earlier source is set. Tool `projectUuid` arguments **cannot override** HTTP pin or env config:
+2. **Project scope** resolves in strict precedence; tool `projectUuid` **cannot override** HTTP pin:
    1. `X-Lightdash-Project` → `governance.pinnedProjectUuid` (HTTP only)
-   2. `LIGHTDASH_TOOLS_PROJECT_UUID` (persona env default)
-   3. Tool `projectUuid` argument
-   4. If still unset → `PROJECT_SCOPE_REQUIRED` (blocked before handler)
+   2. Tool `projectUuid` argument
+   3. If still unset → `PROJECT_SCOPE_REQUIRED` (blocked before handler)
+      Optional process ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)).
 3. **Saved-content execution allowed** for semantic (metric-query-backed) saved charts and dashboard tiles via `POST /api/v2/projects/{projectUuid}/query/chart` and `POST …/query/dashboard-chart`, with **values-only** filter and parameter overrides (override literal values only; no ad-hoc field/metric composition).
 4. **SQL charts disabled by default.** Saved charts whose query class is SQL (including dashboard SQL tiles) return `CONTENT_NOT_EXECUTABLE` unless an explicit future opt-in is added. OpenAPI also exposes `query/sql-chart` and `query/dashboard-sql-chart`; those remain off the MCP allowlist by default.
 5. **Safety dimensions** (persona-level, enforced at registration and handler):
@@ -46,9 +46,7 @@ Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mc
 ```mermaid
 flowchart TD
   pin[X-Lightdash-Project pin] -->|set| scope[resolved projectUuid]
-  pin -->|unset| env[LIGHTDASH_TOOLS_PROJECT_UUID]
-  env -->|set| scope
-  env -->|unset| arg[tool projectUuid]
+  pin -->|unset| arg[tool projectUuid]
   arg -->|set| scope
   arg -->|unset| err[PROJECT_SCOPE_REQUIRED]
   scope --> tools[content-reader tools]
@@ -57,10 +55,10 @@ flowchart TD
 ## Consequences
 
 - Third HTTP path and stdio subcommand; Cursor/Compose configs must document `/content-reader/v1/mcp` alongside semantic-layer and organization-audit.
-- [ADR-0008](0008-mcp-request-scope-and-hardening.md) gains persona-specific configured project scope (`LIGHTDASH_TOOLS_PROJECT_UUID`); HTTP pin still wins when present.
+- [ADR-0008](0008-mcp-request-scope-and-hardening.md) project scope is pin or tool arg only; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling.
 - Distinct from [ADR-0010](0010-mcp-organization-audit-persona-read-only-boundary.md): content-reader may return bounded aggregate rows; org-audit remains metadata-only.
 - Client gaps (saved chart GET, parameters, async results/cancel) are filled under `@lightdash-tools/client` as tools ship.
-- Operators must set project scope for stdio (env or documented project UUID in host config); unpinned multi-project crawl is intentionally unsupported.
+- Operators must pin or pass `projectUuid` for stdio/unpinned HTTP; unpinned multi-project crawl is intentionally unsupported.
 - SQL chart execution requires a deliberate future ADR/opt-in; default deny avoids silent warehouse access via saved SQL artifacts.
 
 ## References

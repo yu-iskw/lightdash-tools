@@ -40,7 +40,8 @@ import {
   emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
-import { getClient, getAuditLogPath } from '../config/runtime.js';
+import { getClient, getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from '../config/runtime.js';
+import { validateAvailableProjectsConfig } from '../governance/available-projects.js';
 import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
@@ -474,6 +475,8 @@ export async function createStreamableHttpServer(
 
   emitMcpHttpSecurityWarnings(inputConfig);
 
+  warnIgnoredCliGuardrailEnvVars();
+  validateAvailableProjectsConfig();
   initAuditLog(getAuditLogPath());
 
   const ephemeralStoreConfig = resolveEphemeralStoreConfig();

@@ -18,7 +18,7 @@ There are no `recommend_*`, `analyze_*`, or offline dataset MCP tools (no offlin
 
 ## Project scope
 
-Resolve via `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid`. Otherwise `PROJECT_SCOPE_REQUIRED`.
+Resolve via `X-Lightdash-Project` or tool `projectUuid`. Otherwise `PROJECT_SCOPE_REQUIRED`. Optional ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
 ## Truth labels
 

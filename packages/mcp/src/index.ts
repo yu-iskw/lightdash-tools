@@ -10,6 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
+import { validateAvailableProjectsConfig } from './governance/available-projects.js';
 import { getDefaultPersona, getPersona, parsePersonaId } from './personas/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 
@@ -31,6 +32,7 @@ function resolveStdioPersona(): PersonaDefinition {
 
 async function main(): Promise<void> {
   warnIgnoredCliGuardrailEnvVars();
+  validateAvailableProjectsConfig();
   initAuditLog(getAuditLogPath());
 
   const persona = resolveStdioPersona();

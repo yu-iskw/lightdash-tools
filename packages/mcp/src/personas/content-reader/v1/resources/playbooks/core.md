@@ -34,7 +34,7 @@ Use only these `lightdash_*` tools:
 
 ## Phase 0 — Resolve project
 
-1. Call `lightdash_get_project` (pin / `LIGHTDASH_TOOLS_PROJECT_UUID` / explicit UUID).
+1. Call `lightdash_get_project` (pin or explicit `projectUuid`).
 2. Record project UUID, pin, and `readerCapabilities`.
 3. Stop when project scope is unresolved (`PROJECT_SCOPE_REQUIRED`).
 4. Never enumerate organization projects.

@@ -1,0 +1,3 @@
+kind: feat
+body: 'Breaking: MCP/CLI share LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS allowlist (renamed from ALLOWED_PROJECTS); removes PROJECT_UUID default and MCP_AVAILABLE_PROJECT_UUIDS — startup/CLI fail if legacy ALLOWED_PROJECTS or MCP_AVAILABLE still set; promote_dashboard also fails closed when upstream is outside the ceiling'
+time: 2026-08-03T10:23:17.50789+09:00

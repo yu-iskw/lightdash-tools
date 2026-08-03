@@ -25,7 +25,7 @@ Combined MCP server+tool names must stay under ~60 characters on common clients.
 2. **Loop engineering is distributed:** MCP playbooks/prompts guide the host; CLI/`agentops` owns bundles, drift, and promotion gates (`evaluateGatePolicy`); the coding host synthesizes failures and implements interventions (optionally via other MCP personas such as `semantic-layer` / `content-reader`).
 3. MCP server display name is **`lightdash-mcp-aops`**. Long catalog tool names may be shortened at the MCP `toolName` (e.g. `get_agent_eval_run_results`) to satisfy the ~60-character combined limit.
 4. **v1 allowlist:** project agent list/get; readiness / suggestions / models / explore-access-summary; thread list/get; evaluation suite CRUD + run + run list/get. **Deferred on MCP:** agent create/update/delete, thread generate/continue, org admin mutations.
-5. Project scope follows content-reader precedence: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`.
+5. Project scope follows content-reader precedence: `X-Lightdash-Project` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`. Optional ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 6. Prefer project-scoped agent endpoints over org admin inventory + filter.
 7. Truth labeling is mandatory in playbooks: readiness API ≠ evaluation run ≠ thread generation. Hosts must not silently substitute modes.
 8. Thread/message and evaluation prompt text are conversation-class; redact message bodies by default on MCP (ADR-0011 patterns).

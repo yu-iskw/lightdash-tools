@@ -143,7 +143,7 @@ flowchart TB
 
 ### Architectural invariants
 
-1. Exactly one project is resolved (pin → `LIGHTDASH_TOOLS_PROJECT_UUID` → arg → `PROJECT_SCOPE_REQUIRED`).
+1. Exactly one project is resolved (pin → arg → `PROJECT_SCOPE_REQUIRED`).
 2. Every MCP tool maps to a catalogued Lightdash API operation (ADR-0013).
 3. No Git artifact store, scorer, or promotion engine in `packages/mcp`.
 4. Evaluation mode truth: readiness ≠ eval run ≠ thread generate.

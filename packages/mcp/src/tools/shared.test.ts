@@ -1,6 +1,7 @@
-import { logAuditEntry } from '@lightdash-tools/common';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { resetAvailableProjectsCache } from '../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT, TOOL_PREFIX } from './shared.js';
@@ -33,6 +34,11 @@ describe('registerToolSafe', () => {
     mockServer.registerTool.mockClear();
     mockHandler.mockClear();
     vi.mocked(logAuditEntry).mockClear();
+  });
+
+  afterEach(() => {
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
+    resetAvailableProjectsCache();
   });
 
   it('registers tools and invokes the handler', async () => {
@@ -153,6 +159,77 @@ describe('registerToolSafe', () => {
         expect(result.isError).toBeUndefined();
         expect(result.content[0].text).toBe('success');
       });
+    });
+  });
+
+  describe('shared project allowlist (LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS)', () => {
+    it('allows projectUuid in the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = `${PROJECT_A},${PROJECT_B}`;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_ok',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuid: PROJECT_A });
+      expect(result.isError).toBeUndefined();
+      expect(mockHandler).toHaveBeenCalled();
+    });
+
+    it('blocks projectUuid outside the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_block',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuid: PROJECT_B });
+      expect(mockHandler).not.toHaveBeenCalled();
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('PROJECT_NOT_AVAILABLE');
+      expect(result.content[0].text).toContain(PROJECT_B);
+      expect(logAuditEntry).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'blocked', tool: `${TOOL_PREFIX}available_block` }),
+      );
+    });
+
+    it('blocks pinned project outside the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_pin_block',
+        { description: 'List', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      await runWithProjectPinAsync(PROJECT_B, async () => {
+        const result = await handler({});
+        expect(mockHandler).not.toHaveBeenCalled();
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).toContain('PROJECT_NOT_AVAILABLE');
+        expect(result.content[0].text).toContain(PROJECT_B);
+      });
+    });
+
+    it('allows tools with no projectUuid when allowlist is set', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_no_uuid',
+        { description: 'Org list', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({});
+      expect(result.isError).toBeUndefined();
+      expect(mockHandler).toHaveBeenCalled();
     });
   });
 

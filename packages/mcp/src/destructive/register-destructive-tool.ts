@@ -438,13 +438,9 @@ async function handleElicitationGatedMutation<
 
   let scopedArgs: ScopedDestructiveArgs;
   try {
-    const scope = resolveProjectScope(
-      {
-        projectUuid:
-          typeof argsRecord.projectUuid === 'string' ? argsRecord.projectUuid : undefined,
-      },
-      { allowConfiguredEnv: false },
-    );
+    const scope = resolveProjectScope({
+      projectUuid: typeof argsRecord.projectUuid === 'string' ? argsRecord.projectUuid : undefined,
+    });
     scopedArgs = { projectUuid: scope.projectUuid, resourceId };
   } catch (err) {
     return projectScopeErrorResult(err);

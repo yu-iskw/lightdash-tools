@@ -25,7 +25,7 @@ One mutating tool call → one resource → one elicitation → one API call. No
 
 ## Phase 0 — Resolve project
 
-1. Require a resolved project: HTTP `X-Lightdash-Project` pin or explicit `projectUuid` on the tool (`LIGHTDASH_TOOLS_PROJECT_UUID` is ignored on this persona).
+1. Require a resolved project: HTTP `X-Lightdash-Project` pin or explicit `projectUuid` on the tool.
 2. Stop when project scope is unresolved (`PROJECT_SCOPE_REQUIRED`).
 3. Never enumerate organization projects from this persona (no `list_projects`).
 

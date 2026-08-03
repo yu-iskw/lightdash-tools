@@ -21,7 +21,7 @@ Lightdash APIs are uneven: charts lack a clean UI-shaped create/update pair (as-
 ## Decision
 
 1. Ship a **`content-developer`** persona at fixed path `/content-developer/v1/mcp` with MCP server display name **`lightdash-mcp-cdev`** (shortened for ~60-character client limits). Stdio: `lightdash-mcp content-developer`.
-2. **Project scope** matches content-reader precedence: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`. Tool args cannot override pin/env.
+2. **Project scope** matches content-reader precedence: `X-Lightdash-Project` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`. Tool args cannot override pin. Optional ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 3. **Hybrid authoring:**
    - Charts: as-code upsert (`POST …/code/charts/{slug}`); `duplicate_chart` is MCP composition (read as-code + upsert new slug). Soft SOP: author charts only as dashboard tile prerequisites (dashboard is the [promotion](https://docs.lightdash.com/guides/how-to-promote-content) unit via content-governance).
    - Dashboards: native REST create / v2 PATCH update / create with `duplicateFrom`.

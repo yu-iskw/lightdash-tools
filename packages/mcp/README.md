@@ -81,7 +81,7 @@ Preferred names use the `LIGHTDASH_TOOLS_*` prefixes (see [ADR-0009](../../docs/
 | :----------------------------------- | :-------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_AUDIT_LOG` |
 
-Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE` / `ALLOWED_PROJECTS` / `DRY_RUN`.
+Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE` / `DRY_RUN`. Optional shared ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
 ### HTTP OAuth (primary)
 
@@ -224,7 +224,7 @@ Project-scoped saved-content consumption ([ADR-0012](../../docs/adr/0012-mcp-con
 - **Execution**: `run_chart`, `run_dashboard_tile` (semantic saved content only; SQL charts disabled by default)
 - **Lifecycle**: `get_query_result`, `cancel_query` (session-owned ledger)
 
-Project resolution: `X-Lightdash-Project` → `LIGHTDASH_TOOLS_PROJECT_UUID` → tool `projectUuid`. Prompts and playbook: `lightdash://playbooks/content-reader`.
+Project resolution: `X-Lightdash-Project` → tool `projectUuid`. Prompts and playbook: `lightdash://playbooks/content-reader`.
 
 ### `content-developer` persona
 
@@ -278,12 +278,12 @@ lightdash-mcp --help
 
 MCP safety is **persona-first** ([ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md)):
 
-| Concern      | Mechanism                                                                                                          |
-| :----------- | :----------------------------------------------------------------------------------------------------------------- |
-| Which tools  | Persona `toolIds` in code (including `content-governance` soft-delete)                                             |
-| Who          | Auth mode + Lightdash API RBAC                                                                                     |
-| Where (HTTP) | Optional `X-Lightdash-Project` pin; content-reader/content-developer also use `LIGHTDASH_TOOLS_PROJECT_UUID`       |
-| Hardening    | Input validation + audit log + org-audit GET asserts + preview ledger + elicitation/`requestState` for soft-delete |
+| Concern      | Mechanism                                                                                                                              |
+| :----------- | :------------------------------------------------------------------------------------------------------------------------------------- |
+| Which tools  | Persona `toolIds` in code (including `content-governance` soft-delete)                                                                 |
+| Who          | Auth mode + Lightdash API RBAC                                                                                                         |
+| Where (HTTP) | Optional `X-Lightdash-Project` pin; otherwise pass tool `projectUuid`; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling |
+| Hardening    | Input validation + audit log + org-audit GET asserts + preview ledger + elicitation/`requestState` for soft-delete                     |
 
 Process `LIGHTDASH_TOOLS_SAFETY_MODE` / allowlist / dry-run are **CLI-only**, not used by this package.
 
