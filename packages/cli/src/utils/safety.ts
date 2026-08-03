@@ -2,8 +2,8 @@ import {
   isAllowed,
   getSafetyModeFromEnv,
   SafetyMode,
+  buildAuditLogEntry,
   logAuditEntry,
-  getSessionId,
   areAllProjectsAllowed,
   getAllowedProjectUuidsFromEnv,
   extractProjectUuids,
@@ -11,7 +11,7 @@ import {
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 
-import type { ToolAnnotations } from '@lightdash-tools/common';
+import type { AuditStatus, ToolAnnotations } from '@lightdash-tools/common';
 import type { Command } from 'commander';
 
 /**
@@ -93,6 +93,15 @@ function getCommandPath(cmd: Command): string {
   return parts.join(' ');
 }
 
+function recordCliAudit(
+  tool: string,
+  status: AuditStatus,
+  startMs: number,
+  projectUuids: string[] | undefined,
+): void {
+  logAuditEntry(buildAuditLogEntry({ tool, status, startMs, projectUuids }));
+}
+
 /**
  * Wraps a CLI action with safety-mode enforcement and audit logging.
  */
@@ -108,6 +117,7 @@ export function wrapAction<T extends unknown[]>(
     const targetProjects = [
       ...new Set([...extractProjectUuids(args), ...extractProjectUuids(this.opts())]),
     ];
+    const projectUuids = targetProjects.length > 0 ? targetProjects : undefined;
 
     // ── Input Validation ─────────────────────────────────────────────────────
     // Validate only known identifier fields (RESOURCE_ID_KEYS) in objects.
@@ -118,14 +128,7 @@ export function wrapAction<T extends unknown[]>(
       }
       validateResourceIdsInObject(this.opts());
     } catch (err) {
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: commandPath,
-        projectUuids: targetProjects,
-        status: 'blocked',
-        durationMs: Date.now() - start,
-      });
+      recordCliAudit(commandPath, 'blocked', start, projectUuids);
       console.error(
         `Error: Invalid resource ID: ${err instanceof Error ? err.message : String(err)}`,
       );
@@ -134,14 +137,7 @@ export function wrapAction<T extends unknown[]>(
 
     // ── Safety Mode Enforcement ──────────────────────────────────────────────
     if (!isAllowed(mode, annotations)) {
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: commandPath,
-        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
-        status: 'blocked',
-        durationMs: Date.now() - start,
-      });
+      recordCliAudit(commandPath, 'blocked', start, projectUuids);
       console.error(
         `Error: This command is disabled in ${mode} mode. To enable it, use --safety-mode or set LIGHTDASH_TOOLS_SAFETY_MODE.`,
       );
@@ -151,14 +147,7 @@ export function wrapAction<T extends unknown[]>(
     // ── Dry-Run (Write Commands Only) ────────────────────────────────────────
     const isReadOnly = !!annotations.readOnlyHint;
     if (!isReadOnly && isDryRun(this)) {
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: commandPath,
-        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
-        status: 'blocked',
-        durationMs: Date.now() - start,
-      });
+      recordCliAudit(commandPath, 'blocked', start, projectUuids);
       console.log(
         `[DRY-RUN] Would execute: ${commandPath} with args: ${JSON.stringify(args)}. No changes were made.`,
       );
@@ -171,14 +160,7 @@ export function wrapAction<T extends unknown[]>(
         (p) => !areAllProjectsAllowed(allowedProjects, [p]),
       );
       if (deniedProjects.length > 0) {
-        logAuditEntry({
-          timestamp: new Date().toISOString(),
-          sessionId: getSessionId(),
-          tool: commandPath,
-          projectUuids: targetProjects,
-          status: 'blocked',
-          durationMs: Date.now() - start,
-        });
+        recordCliAudit(commandPath, 'blocked', start, projectUuids);
         console.error(
           `Error: Project(s) [${deniedProjects.join(', ')}] are not in the list of allowed projects. Allowed: [${allowedProjects.join(', ')}].`,
         );
@@ -188,24 +170,10 @@ export function wrapAction<T extends unknown[]>(
 
     try {
       const result = await action.apply(this, args);
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: commandPath,
-        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
-        status: 'success',
-        durationMs: Date.now() - start,
-      });
+      recordCliAudit(commandPath, 'success', start, projectUuids);
       return result;
     } catch (err) {
-      logAuditEntry({
-        timestamp: new Date().toISOString(),
-        sessionId: getSessionId(),
-        tool: commandPath,
-        projectUuids: targetProjects.length > 0 ? targetProjects : undefined,
-        status: 'error',
-        durationMs: Date.now() - start,
-      });
+      recordCliAudit(commandPath, 'error', start, projectUuids);
       throw err;
     }
   };
