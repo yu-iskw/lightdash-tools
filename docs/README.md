@@ -13,9 +13,9 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 | [operators/mcp-oauth-threat-model.md](operators/mcp-oauth-threat-model.md) | OAuth threat model                                      |
 | [operators/agent-context.md](operators/agent-context.md)                   | CLI/MCP agent invariants                                |
 
-## Personas
+## Profiles
 
-| Persona            | Docs                                                                                                                                            |
+| Profile            | Docs                                                                                                                                            |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | organization-audit | [inventory](profiles/organization-audit/inventory.md)                                                                                           |
 | content-reader     | [inventory](profiles/content-reader/inventory.md)                                                                                               |
