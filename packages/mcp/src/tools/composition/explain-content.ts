@@ -4,7 +4,6 @@
 
 import { z } from 'zod';
 
-import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -22,7 +21,6 @@ export function registerExplainContent(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  const persona = requireServerPersona(server, 'explain_content');
   registerContentReaderTool(
     server,
     'explain_content',
@@ -37,62 +35,99 @@ export function registerExplainContent(
       },
     },
     /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- explain branches */
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          contentType: 'chart' | 'dashboard';
-          contentUuidOrSlug: string;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            if (args.contentType === 'chart') {
-              const preClass = await classifyChartSource(
-                c,
-                scope.projectUuid,
-                args.contentUuidOrSlug,
-              );
-              if (preClass === 'sql') {
-                return codedErrorResult(
-                  'CONTENT_NOT_EXECUTABLE',
-                  'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            contentType: 'chart' | 'dashboard';
+            contentUuidOrSlug: string;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              if (args.contentType === 'chart') {
+                const preClass = await classifyChartSource(
+                  c,
+                  scope.projectUuid,
+                  args.contentUuidOrSlug,
+                );
+                if (preClass === 'sql') {
+                  return codedErrorResult(
+                    'CONTENT_NOT_EXECUTABLE',
+                    'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+                  );
+                }
+                const chart = asRecord(
+                  await c.v2.charts.getSavedChart(scope.projectUuid, args.contentUuidOrSlug),
+                );
+                const metricQuery = (chart.metricQuery ?? {}) as Record<string, unknown>;
+                const verification = chart.verification as { verifiedAt?: string } | null;
+                const chartType = detectChartType(chart);
+                const explanation = {
+                  identity: {
+                    uuid: chart.uuid,
+                    name: chart.name,
+                    type: 'chart' as const,
+                  },
+                  businessDescription: chart.description,
+                  verification: {
+                    verified: Boolean(verification?.verifiedAt),
+                    verifiedAt: verification?.verifiedAt,
+                  },
+                  measures: Array.isArray(metricQuery.metrics)
+                    ? (metricQuery.metrics as string[])
+                    : [],
+                  groupings: Array.isArray(metricQuery.dimensions)
+                    ? (metricQuery.dimensions as string[])
+                    : [],
+                  filters: metricQuery.filters ? ['saved filters present'] : [],
+                  parameters: chart.parameters ? Object.keys(asRecord(chart.parameters)) : [],
+                  timeContext: [],
+                  knownWarnings:
+                    chartType === 'sql'
+                      ? ['SQL chart; execution disabled by default on content-reader']
+                      : [],
+                  executionRequirements:
+                    chartType === 'semantic'
+                      ? ['lightdash_run_chart with chart UUID']
+                      : ['Not executable on content-reader v1'],
+                };
+                return jsonToolResult(
+                  contentReaderEnvelope(explanation, {
+                    persona,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                  }),
                 );
               }
-              const chart = asRecord(
-                await c.v2.charts.getSavedChart(scope.projectUuid, args.contentUuidOrSlug),
+
+              const dashboard = asRecord(
+                await c.v2.dashboards.getDashboard(scope.projectUuid, args.contentUuidOrSlug),
               );
-              const metricQuery = (chart.metricQuery ?? {}) as Record<string, unknown>;
-              const verification = chart.verification as { verifiedAt?: string } | null;
-              const chartType = detectChartType(chart);
+              const tiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
+              const verification = dashboard.verification as { verifiedAt?: string } | null;
               const explanation = {
                 identity: {
-                  uuid: chart.uuid,
-                  name: chart.name,
-                  type: 'chart' as const,
+                  uuid: dashboard.uuid,
+                  name: dashboard.name,
+                  type: 'dashboard' as const,
                 },
-                businessDescription: chart.description,
+                businessDescription: dashboard.description,
                 verification: {
                   verified: Boolean(verification?.verifiedAt),
                   verifiedAt: verification?.verifiedAt,
                 },
-                measures: Array.isArray(metricQuery.metrics)
-                  ? (metricQuery.metrics as string[])
-                  : [],
-                groupings: Array.isArray(metricQuery.dimensions)
-                  ? (metricQuery.dimensions as string[])
-                  : [],
-                filters: metricQuery.filters ? ['saved filters present'] : [],
-                parameters: chart.parameters ? Object.keys(asRecord(chart.parameters)) : [],
+                measures: [],
+                groupings: [],
+                filters: dashboard.filters ? ['dashboard filters present'] : [],
+                parameters: dashboard.parameters ? Object.keys(asRecord(dashboard.parameters)) : [],
                 timeContext: [],
-                knownWarnings:
-                  chartType === 'sql'
-                    ? ['SQL chart; execution disabled by default on content-reader']
-                    : [],
-                executionRequirements:
-                  chartType === 'semantic'
-                    ? ['lightdash_run_chart with chart UUID']
-                    : ['Not executable on content-reader v1'],
+                chartOrTileCount: tiles.length,
+                knownWarnings: [],
+                executionRequirements: [
+                  'lightdash_run_dashboard_tile with dashboard UUID and tile UUID',
+                ],
               };
               return jsonToolResult(
                 contentReaderEnvelope(explanation, {
@@ -101,47 +136,11 @@ export function registerExplainContent(
                   projectPinned: scope.projectPinned,
                 }),
               );
+            } catch (err) {
+              return projectScopeErrorResult(err);
             }
-
-            const dashboard = asRecord(
-              await c.v2.dashboards.getDashboard(scope.projectUuid, args.contentUuidOrSlug),
-            );
-            const tiles = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
-            const verification = dashboard.verification as { verifiedAt?: string } | null;
-            const explanation = {
-              identity: {
-                uuid: dashboard.uuid,
-                name: dashboard.name,
-                type: 'dashboard' as const,
-              },
-              businessDescription: dashboard.description,
-              verification: {
-                verified: Boolean(verification?.verifiedAt),
-                verifiedAt: verification?.verifiedAt,
-              },
-              measures: [],
-              groupings: [],
-              filters: dashboard.filters ? ['dashboard filters present'] : [],
-              parameters: dashboard.parameters ? Object.keys(asRecord(dashboard.parameters)) : [],
-              timeContext: [],
-              chartOrTileCount: tiles.length,
-              knownWarnings: [],
-              executionRequirements: [
-                'lightdash_run_dashboard_tile with dashboard UUID and tile UUID',
-              ],
-            };
-            return jsonToolResult(
-              contentReaderEnvelope(explanation, {
-                persona,
-                projectUuid: scope.projectUuid,
-                projectPinned: scope.projectPinned,
-              }),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+          },
+      ),
     /* eslint-enable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
   );
 }

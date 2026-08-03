@@ -4,13 +4,13 @@ Date: 2026-08-03
 Status: implemented (2026-08-03) — built via Inline Lab Batch SOP (no SDD)
 Approach: **1 — List-first action board** (F×M approximation; Recency out of scope)
 
-### Implementation record
+## Implementation record
 
 | Field               | Value                                                                                                                                   |
 | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Dashboard UUID      | `be726a30-9ed5-43fa-b8fe-a58039cb6bcc`                                                                                                  |
 | Slug                | `jaffle-shop-rfm-action-lists`                                                                                                          |
-| URL                 | https://ubie.lightdash.cloud/projects/3dda11cb-aac8-42f7-82f1-26fa6b1afa80/dashboards/be726a30-9ed5-43fa-b8fe-a58039cb6bcc              |
+| URL                 | <https://ubie.lightdash.cloud/projects/3dda11cb-aac8-42f7-82f1-26fa6b1afa80/dashboards/be726a30-9ed5-43fa-b8fe-a58039cb6bcc>            |
 | Tiles               | 6 (1 markdown + 5 charts)                                                                                                               |
 | Filter              | Order month (`orders_order_date_month`, empty values)                                                                                   |
 | bucketStrategy      | `monetary-fallback` (top customers by `orders_sum_order_amount`; frequency bins invalid — bins require numeric dimensions, not metrics) |

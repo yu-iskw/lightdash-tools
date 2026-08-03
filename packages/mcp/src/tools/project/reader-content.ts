@@ -5,7 +5,6 @@
 import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
 import { z } from 'zod';
 
-import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -109,7 +108,6 @@ export function registerSearchContent(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
-  const persona = requireServerPersona(server, 'search_content');
   registerContentReaderTool(
     server,
     'search_content',
@@ -129,63 +127,63 @@ export function registerSearchContent(
         pageSize: z.number().int().positive().max(100).optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          query?: string;
-          contentTypes?: Array<'chart' | 'dashboard' | 'data_app' | 'space'>;
-          spaceUuids?: string[];
-          parentSpaceUuid?: string;
-          sortBy?: (typeof CONTENT_SORT_BY_COLUMNS)[number];
-          sortDirection?: 'asc' | 'desc';
-          page?: number;
-          pageSize?: number;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const pageSize = args.pageSize ?? 25;
-            const result = await c.v2.content.searchContent({
-              projectUuids: [scope.projectUuid],
-              spaceUuids: args.spaceUuids,
-              parentSpaceUuid: args.parentSpaceUuid,
-              contentTypes: args.contentTypes,
-              search: args.query,
-              sortBy: args.sortBy,
-              sortDirection: args.sortDirection,
-              page: args.page,
-              pageSize,
-            });
-            const { data, pagination } = asPaginated<Record<string, unknown>>(result);
-            const complete = isPageComplete(
-              data.length,
-              pagination?.totalResults,
-              pagination?.totalPageCount,
-              args.page ?? pagination?.page,
-            );
-            return jsonToolResult(
-              contentReaderEnvelope(
-                { items: data, pagination: { returned: data.length, ...pagination, complete } },
-                {
-                  persona,
-                  projectUuid: scope.projectUuid,
-                  projectPinned: scope.projectPinned,
-                  complete,
-                  truncated: !complete,
-                },
-              ),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            query?: string;
+            contentTypes?: Array<'chart' | 'dashboard' | 'data_app' | 'space'>;
+            spaceUuids?: string[];
+            parentSpaceUuid?: string;
+            sortBy?: (typeof CONTENT_SORT_BY_COLUMNS)[number];
+            sortDirection?: 'asc' | 'desc';
+            page?: number;
+            pageSize?: number;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              const pageSize = args.pageSize ?? 25;
+              const result = await c.v2.content.searchContent({
+                projectUuids: [scope.projectUuid],
+                spaceUuids: args.spaceUuids,
+                parentSpaceUuid: args.parentSpaceUuid,
+                contentTypes: args.contentTypes,
+                search: args.query,
+                sortBy: args.sortBy,
+                sortDirection: args.sortDirection,
+                page: args.page,
+                pageSize,
+              });
+              const { data, pagination } = asPaginated<Record<string, unknown>>(result);
+              const complete = isPageComplete(
+                data.length,
+                pagination?.totalResults,
+                pagination?.totalPageCount,
+                args.page ?? pagination?.page,
+              );
+              return jsonToolResult(
+                contentReaderEnvelope(
+                  { items: data, pagination: { returned: data.length, ...pagination, complete } },
+                  {
+                    persona,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                    complete,
+                    truncated: !complete,
+                  },
+                ),
+              );
+            } catch (err) {
+              return projectScopeErrorResult(err);
+            }
+          },
+      ),
   );
 }
 
 export function registerGetDashboard(server: McpServer, contextProvider: McpContextProvider): void {
-  const persona = requireServerPersona(server, 'get_dashboard');
   registerContentReaderTool(
     server,
     'get_dashboard',
@@ -200,41 +198,41 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
         includeFilterDefinitions: z.boolean().optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          dashboardUuidOrSlug: string;
-          includeTiles?: boolean;
-          includeFilterDefinitions?: boolean;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const dashboard = asRecord(
-              await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
-            );
-            const normalized = toReaderDashboard(dashboard, args.includeTiles !== false);
-            if (args.includeFilterDefinitions === false) {
-              delete (normalized as { filters?: unknown }).filters;
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            dashboardUuidOrSlug: string;
+            includeTiles?: boolean;
+            includeFilterDefinitions?: boolean;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              const dashboard = asRecord(
+                await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
+              );
+              const normalized = toReaderDashboard(dashboard, args.includeTiles !== false);
+              if (args.includeFilterDefinitions === false) {
+                delete (normalized as { filters?: unknown }).filters;
+              }
+              return jsonToolResult(
+                contentReaderEnvelope(normalized, {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                }),
+              );
+            } catch (err) {
+              return projectScopeErrorResult(err);
             }
-            return jsonToolResult(
-              contentReaderEnvelope(normalized, {
-                persona,
-                projectUuid: scope.projectUuid,
-                projectPinned: scope.projectPinned,
-              }),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+          },
+      ),
   );
 }
 
 export function registerGetChart(server: McpServer, contextProvider: McpContextProvider): void {
-  const persona = requireServerPersona(server, 'get_chart');
   registerContentReaderTool(
     server,
     'get_chart',
@@ -248,37 +246,42 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
         includeQueryDefinition: z.boolean().optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          chartUuidOrSlug: string;
-          includeQueryDefinition?: boolean;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const preClass = await classifyChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
-            if (preClass === 'sql') {
-              return codedErrorResult(
-                'CONTENT_NOT_EXECUTABLE',
-                'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            chartUuidOrSlug: string;
+            includeQueryDefinition?: boolean;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              const preClass = await classifyChartSource(
+                c,
+                scope.projectUuid,
+                args.chartUuidOrSlug,
               );
+              if (preClass === 'sql') {
+                return codedErrorResult(
+                  'CONTENT_NOT_EXECUTABLE',
+                  'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+                );
+              }
+              const chart = asRecord(
+                await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),
+              );
+              return jsonToolResult(
+                contentReaderEnvelope(toReaderChart(chart, args.includeQueryDefinition !== false), {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                }),
+              );
+            } catch (err) {
+              return projectScopeErrorResult(err);
             }
-            const chart = asRecord(
-              await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),
-            );
-            return jsonToolResult(
-              contentReaderEnvelope(toReaderChart(chart, args.includeQueryDefinition !== false), {
-                persona,
-                projectUuid: scope.projectUuid,
-                projectPinned: scope.projectPinned,
-              }),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+          },
+      ),
   );
 }

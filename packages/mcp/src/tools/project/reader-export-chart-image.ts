@@ -41,62 +41,68 @@ export function registerExportChartImage(
         chartUuid: uuidOrSlugField('Chart UUID or slug'),
       },
     },
-    wrapTool(contextProvider, (c) => async (args: { projectUuid?: string; chartUuid: string }) => {
-      const sessionId = getMcpClientSessionId();
-      const userKey = getToolAuditAuth()?.subject;
-      let budgetHeld = false;
-      try {
-        const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-        const preClass = await classifyChartSource(c, scope.projectUuid, args.chartUuid);
-        if (preClass === 'sql') {
-          return codedErrorResult(
-            'CONTENT_NOT_EXECUTABLE',
-            'Saved SQL chart image export is disabled by default on content-reader',
-          );
-        }
-        const chart = asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuid));
-        const chartType = detectChartType(chart);
-        if (chartType !== 'semantic') {
-          return codedErrorResult(
-            'CONTENT_NOT_EXECUTABLE',
-            chartType === 'sql'
-              ? 'Saved SQL chart image export is disabled by default on content-reader'
-              : 'Chart type is not exportable as an image snapshot',
-          );
-        }
+    (_persona) =>
+      wrapTool(
+        contextProvider,
+        (c) => async (args: { projectUuid?: string; chartUuid: string }) => {
+          const sessionId = getMcpClientSessionId();
+          const userKey = getToolAuditAuth()?.subject;
+          let budgetHeld = false;
+          try {
+            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+            const preClass = await classifyChartSource(c, scope.projectUuid, args.chartUuid);
+            if (preClass === 'sql') {
+              return codedErrorResult(
+                'CONTENT_NOT_EXECUTABLE',
+                'Saved SQL chart image export is disabled by default on content-reader',
+              );
+            }
+            const chart = asRecord(
+              await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuid),
+            );
+            const chartType = detectChartType(chart);
+            if (chartType !== 'semantic') {
+              return codedErrorResult(
+                'CONTENT_NOT_EXECUTABLE',
+                chartType === 'sql'
+                  ? 'Saved SQL chart image export is disabled by default on content-reader'
+                  : 'Chart type is not exportable as an image snapshot',
+              );
+            }
 
-        acquireQueryBudget(sessionId, userKey);
-        budgetHeld = true;
-        const png = await c.v1.charts.exportChartImagePng(args.chartUuid, scope.projectUuid);
-        return imageToolResult({
-          meta: {
-            chartUuid: args.chartUuid,
-            projectUuid: scope.projectUuid,
-            mimeType: png.mimeType,
-            byteLength: png.bytes.byteLength,
-          },
-          imageBase64: png.bytes.toString('base64'),
-          mimeType: png.mimeType,
-        });
-      } catch (err) {
-        if (err instanceof ChartImageSizeError) {
-          return codedErrorResult(
-            err.code,
-            `${err.message}. Ask for a simpler chart or contact an admin.`,
-          );
-        }
-        if (err instanceof ProjectScopeError) {
-          return codedErrorResult(err.code, err.message);
-        }
-        if (err instanceof ResultLimitError) {
-          return codedErrorResult(err.code, err.message);
-        }
-        throw err;
-      } finally {
-        if (budgetHeld) {
-          releaseQueryBudget(sessionId, userKey);
-        }
-      }
-    }),
+            acquireQueryBudget(sessionId, userKey);
+            budgetHeld = true;
+            const png = await c.v1.charts.exportChartImagePng(args.chartUuid, scope.projectUuid);
+            return imageToolResult({
+              meta: {
+                chartUuid: args.chartUuid,
+                projectUuid: scope.projectUuid,
+                mimeType: png.mimeType,
+                byteLength: png.bytes.byteLength,
+              },
+              imageBase64: png.bytes.toString('base64'),
+              mimeType: png.mimeType,
+            });
+          } catch (err) {
+            if (err instanceof ChartImageSizeError) {
+              return codedErrorResult(
+                err.code,
+                `${err.message}. Ask for a simpler chart or contact an admin.`,
+              );
+            }
+            if (err instanceof ProjectScopeError) {
+              return codedErrorResult(err.code, err.message);
+            }
+            if (err instanceof ResultLimitError) {
+              return codedErrorResult(err.code, err.message);
+            }
+            throw err;
+          } finally {
+            if (budgetHeld) {
+              releaseQueryBudget(sessionId, userKey);
+            }
+          }
+        },
+      ),
   );
 }

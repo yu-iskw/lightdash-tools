@@ -4,17 +4,17 @@ Date: 2026-08-03
 Status: implemented (2026-08-03) — dashboard live in experiments space
 Approach: **A — Customer-grain RFM board**
 
-### Implementation record
+## Implementation record
 
-| Field          | Value                                                                                                                      |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Dashboard UUID | `5c830291-a978-4042-baeb-8ba09f7c78fd`                                                                                     |
-| Slug           | `jaffle-shop-rfm-overview`                                                                                                 |
-| URL            | https://ubie.lightdash.cloud/projects/3dda11cb-aac8-42f7-82f1-26fa6b1afa80/dashboards/5c830291-a978-4042-baeb-8ba09f7c78fd |
-| Tiles          | 9 (1 markdown + 8 charts)                                                                                                  |
-| Filter         | Order month (`orders_order_date_month`, empty values)                                                                      |
+| Field          | Value                                                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Dashboard UUID | `5c830291-a978-4042-baeb-8ba09f7c78fd`                                                                                       |
+| Slug           | `jaffle-shop-rfm-overview`                                                                                                   |
+| URL            | <https://ubie.lightdash.cloud/projects/3dda11cb-aac8-42f7-82f1-26fa6b1afa80/dashboards/5c830291-a978-4042-baeb-8ba09f7c78fd> |
+| Tiles          | 9 (1 markdown + 8 charts)                                                                                                    |
+| Filter         | Order month (`orders_order_date_month`, empty values)                                                                        |
 
-### Spec self-review (2026-08-03)
+## Spec self-review (2026-08-03)
 
 - No open product TBD: remaining “TBD pending seed” items are **implementation gates** (Recency bin dim, segment dim thresholds, distinct-customer KPI metric), resolved by seed/`get_chart_as_code` before writes — not deferred product decisions.
 - Insight ids Q1–Q7 each have exactly one primary tile (Q1 split across two KPIs by design).

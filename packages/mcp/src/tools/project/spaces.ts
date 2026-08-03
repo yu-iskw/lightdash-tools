@@ -4,7 +4,6 @@
 
 import { z } from 'zod';
 
-import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -30,7 +29,6 @@ function spaceSummary(space: Record<string, unknown>) {
 }
 
 export function registerListSpaces(server: McpServer, contextProvider: McpContextProvider): void {
-  const persona = requireServerPersona(server, 'list_spaces');
   registerContentReaderTool(
     server,
     'list_spaces',
@@ -43,39 +41,39 @@ export function registerListSpaces(server: McpServer, contextProvider: McpContex
         parentSpaceUuid: z.string().optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) => async (args: { projectUuid?: string; parentSpaceUuid?: string }) => {
-        try {
-          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-          const spaces = await c.v1.spaces.listSpacesInProject(scope.projectUuid);
-          const items = spaces
-            .map((s) => spaceSummary(asRecord(s)))
-            .filter((s) =>
-              args.parentSpaceUuid
-                ? s.parentSpaceUuid === args.parentSpaceUuid
-                : s.parentSpaceUuid === undefined || s.parentSpaceUuid === null,
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) => async (args: { projectUuid?: string; parentSpaceUuid?: string }) => {
+          try {
+            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+            const spaces = await c.v1.spaces.listSpacesInProject(scope.projectUuid);
+            const items = spaces
+              .map((s) => spaceSummary(asRecord(s)))
+              .filter((s) =>
+                args.parentSpaceUuid
+                  ? s.parentSpaceUuid === args.parentSpaceUuid
+                  : s.parentSpaceUuid === undefined || s.parentSpaceUuid === null,
+              );
+            return jsonToolResult(
+              contentReaderEnvelope(
+                { spaces: items },
+                {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                },
+              ),
             );
-          return jsonToolResult(
-            contentReaderEnvelope(
-              { spaces: items },
-              {
-                persona,
-                projectUuid: scope.projectUuid,
-                projectPinned: scope.projectPinned,
-              },
-            ),
-          );
-        } catch (err) {
-          return projectScopeErrorResult(err);
-        }
-      },
-    ),
+          } catch (err) {
+            return projectScopeErrorResult(err);
+          }
+        },
+      ),
   );
 }
 
 export function registerGetSpace(server: McpServer, contextProvider: McpContextProvider): void {
-  const persona = requireServerPersona(server, 'get_space');
   registerContentReaderTool(
     server,
     'get_space',
@@ -90,70 +88,71 @@ export function registerGetSpace(server: McpServer, contextProvider: McpContextP
         includeContent: z.boolean().optional(),
       },
     },
-    wrapTool(
-      contextProvider,
-      (c) =>
-        async (args: {
-          projectUuid?: string;
-          spaceUuid: string;
-          includeChildren?: boolean;
-          includeContent?: boolean;
-        }) => {
-          try {
-            const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-            const space = asRecord(await c.v1.spaces.getSpace(scope.projectUuid, args.spaceUuid));
-            const childSpaces =
-              args.includeChildren === false
-                ? []
-                : (Array.isArray(space.childSpaces) ? space.childSpaces : []).map((s) =>
-                    spaceSummary(asRecord(s)),
-                  );
-            const dashboards =
-              args.includeContent === false
-                ? []
-                : (Array.isArray(space.dashboards) ? space.dashboards : []).map((d) => {
-                    const row = asRecord(d);
-                    return {
-                      contentType: 'dashboard' as const,
-                      uuid: row.uuid,
-                      name: row.name,
-                      slug: row.slug,
-                    };
-                  });
-            const charts =
-              args.includeContent === false
-                ? []
-                : (Array.isArray(space.queries) ? space.queries : []).map((q) => {
-                    const row = asRecord(q);
-                    return {
-                      contentType: 'chart' as const,
-                      uuid: row.uuid,
-                      name: row.name,
-                      slug: row.slug,
-                    };
-                  });
-            return jsonToolResult(
-              contentReaderEnvelope(
-                {
-                  ...spaceSummary(space),
-                  description: space.description,
-                  breadcrumbs: Array.isArray(space.path) ? space.path : [],
-                  childSpaces,
-                  dashboards,
-                  charts,
-                  truncated: false,
-                },
-                {
-                  persona,
-                  projectUuid: scope.projectUuid,
-                  projectPinned: scope.projectPinned,
-                },
-              ),
-            );
-          } catch (err) {
-            return projectScopeErrorResult(err);
-          }
-        },
-    ),
+    (persona) =>
+      wrapTool(
+        contextProvider,
+        (c) =>
+          async (args: {
+            projectUuid?: string;
+            spaceUuid: string;
+            includeChildren?: boolean;
+            includeContent?: boolean;
+          }) => {
+            try {
+              const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+              const space = asRecord(await c.v1.spaces.getSpace(scope.projectUuid, args.spaceUuid));
+              const childSpaces =
+                args.includeChildren === false
+                  ? []
+                  : (Array.isArray(space.childSpaces) ? space.childSpaces : []).map((s) =>
+                      spaceSummary(asRecord(s)),
+                    );
+              const dashboards =
+                args.includeContent === false
+                  ? []
+                  : (Array.isArray(space.dashboards) ? space.dashboards : []).map((d) => {
+                      const row = asRecord(d);
+                      return {
+                        contentType: 'dashboard' as const,
+                        uuid: row.uuid,
+                        name: row.name,
+                        slug: row.slug,
+                      };
+                    });
+              const charts =
+                args.includeContent === false
+                  ? []
+                  : (Array.isArray(space.queries) ? space.queries : []).map((q) => {
+                      const row = asRecord(q);
+                      return {
+                        contentType: 'chart' as const,
+                        uuid: row.uuid,
+                        name: row.name,
+                        slug: row.slug,
+                      };
+                    });
+              return jsonToolResult(
+                contentReaderEnvelope(
+                  {
+                    ...spaceSummary(space),
+                    description: space.description,
+                    breadcrumbs: Array.isArray(space.path) ? space.path : [],
+                    childSpaces,
+                    dashboards,
+                    charts,
+                    truncated: false,
+                  },
+                  {
+                    persona,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                  },
+                ),
+              );
+            } catch (err) {
+              return projectScopeErrorResult(err);
+            }
+          },
+      ),
   );
 }

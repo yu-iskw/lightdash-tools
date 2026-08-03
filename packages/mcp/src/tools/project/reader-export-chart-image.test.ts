@@ -95,8 +95,13 @@ describe('registerExportChartImage', () => {
     let handler:
       ((args: { chartUuid: string; projectUuid?: string }) => Promise<unknown>) | undefined;
     registerContentReaderToolMock.mockImplementation(
-      (_server: unknown, _name: unknown, _meta: unknown, wrapped: typeof handler) => {
-        handler = wrapped as typeof handler;
+      (
+        _server: unknown,
+        _name: unknown,
+        _meta: unknown,
+        createHandler: (persona: string) => typeof handler,
+      ) => {
+        handler = createHandler('content-reader');
       },
     );
     registerExportChartImage({} as never, {} as never);
