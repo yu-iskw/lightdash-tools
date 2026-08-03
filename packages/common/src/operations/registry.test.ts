@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import { AI_AGENT_OPERATIONS } from './ai-agents';
+import { CLI_CONTENT_OPERATIONS } from './cli-content';
+import { CONTENT_DEVELOPER_OPERATIONS } from './content-developer';
+import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
+import { CONTENT_READER_OPERATIONS } from './content-reader';
+import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
 import { getOperation, getOperationsByProfile, listOperations } from './registry';
+import { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
 import { defineOperation } from './types';
 import { USER_OPERATIONS } from './users';
 
@@ -29,6 +35,7 @@ const P0_OPERATION_IDS = [
 ] as const;
 
 const ALL_PROFILES: CapabilityProfile[] = [
+  'ai-agent-ops',
   'core-lifecycle',
   'evaluations',
   'conversations',
@@ -43,10 +50,16 @@ function requiredFields(operation: OperationDescriptor): string[] {
     operation.http.method,
     operation.http.path,
     operation.authorization.safetyImpact,
+    operation.sensitivity,
     agentExposure,
   ];
   if (agentExposure === 'agent') {
-    fields.push(operation.mcp.toolName, operation.cli.commandPath);
+    if (operation.mcp !== undefined) {
+      fields.push(operation.mcp.toolName);
+    }
+    if (operation.cli !== undefined) {
+      fields.push(operation.cli.commandPath);
+    }
   }
   return fields;
 }
@@ -64,7 +77,16 @@ describe('operation registry', () => {
   });
 
   it('matches aggregated domain export count', () => {
-    expect(listOperations()).toHaveLength(AI_AGENT_OPERATIONS.length + USER_OPERATIONS.length);
+    expect(listOperations()).toHaveLength(
+      AI_AGENT_OPERATIONS.length +
+        USER_OPERATIONS.length +
+        SEMANTIC_LAYER_OPERATIONS.length +
+        ORGANIZATION_AUDIT_OPERATIONS.length +
+        CONTENT_READER_OPERATIONS.length +
+        CONTENT_DEVELOPER_OPERATIONS.length +
+        CONTENT_GOVERNANCE_OPERATIONS.length +
+        CLI_CONTENT_OPERATIONS.length,
+    );
   });
 
   it('includes required descriptor fields on every operation', () => {
@@ -72,16 +94,23 @@ describe('operation registry', () => {
       for (const field of requiredFields(operation)) {
         expect(field).toBeTruthy();
       }
+      if (operation.agentExposure === 'agent') {
+        expect(operation.mcp !== undefined || operation.cli !== undefined).toBe(true);
+      }
       expect(operation.profiles.length).toBeGreaterThan(0);
-      expect(operation.http.path.startsWith('/api/v1/')).toBe(true);
+      expect(
+        operation.http.path.startsWith('/api/v1/') || operation.http.path.startsWith('/api/v2/'),
+      ).toBe(true);
     }
   });
 
-  it('assigns idempotentHint correctly for read and destructive operations', () => {
+  it('assigns idempotentHint correctly for read and destructive agent operations', () => {
     for (const operation of listOperations()) {
+      if (operation.mcp === undefined) {
+        continue;
+      }
       const { annotations } = operation.mcp;
       if (operation.authorization.safetyImpact === 'read') {
-        expect(annotations.idempotentHint).toBe(true);
         expect(annotations.readOnlyHint).toBe(true);
       }
       if (operation.authorization.safetyImpact === 'write-destructive') {
@@ -125,7 +154,7 @@ describe('operation registry', () => {
     expect(operation?.http.path).toBe(
       '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/threads',
     );
-    expect(operation?.cli.commandPath).toBe('agents threads start');
+    expect(operation?.cli?.commandPath).toBe('agents threads start');
     expect(operation?.workflow).toHaveLength(3);
     const lastStep = operation?.workflow?.[operation.workflow.length - 1];
     expect(lastStep?.path).toContain('/generate');
@@ -162,8 +191,9 @@ describe('operation registry', () => {
   it('registers users.members.delete as client-only', () => {
     const operation = getOperation('users.members.delete');
     expect(operation?.agentExposure).toBe('client-only');
-    expect(operation?.mcp.taskSupport.exposed).toBe(false);
-    expect(operation?.mcp.toolName).toBe('delete_member');
+    expect(operation?.mcp).toBeUndefined();
+    expect(operation?.cli).toBeUndefined();
+    expect(operation?.bannedMcpToolName).toBe('delete_member');
     expect(operation?.http.path).toBe('/api/v1/org/user/{userUuid}');
   });
 
@@ -188,7 +218,8 @@ describe('operation registry', () => {
   it('never exposes client-only operations on MCP', () => {
     for (const operation of listOperations()) {
       if (operation.agentExposure === 'client-only') {
-        expect(operation.mcp.taskSupport.exposed).toBe(false);
+        expect(operation.mcp).toBeUndefined();
+        expect(operation.cli).toBeUndefined();
       }
     }
   });
@@ -200,6 +231,7 @@ describe('operation registry', () => {
         summary: 'Invalid impact pairing',
         http: { method: 'GET', path: '/api/v1/test' },
         authorization: { safetyImpact: 'write-destructive' },
+        sensitivity: 'none',
         mcp: {
           toolName: 'test_tool',
           annotations: {

@@ -24,15 +24,13 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
-  ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
-  ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
+  ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
-  ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
-  ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
+  ENV_LIGHTDASH_TOOLS_MCP_STORE,
   ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
@@ -42,11 +40,8 @@ import {
   ENV_MCP_AUTH_ENABLED,
   ENV_MCP_HTTP_PORT,
   ENV_MCP_MAX_BODY_BYTES,
-  ENV_MCP_MAX_SESSIONS,
   ENV_MCP_PUBLIC_URL,
   ENV_MCP_SERVER_PORT,
-  ENV_MCP_SESSION_CLEANUP_MS,
-  ENV_MCP_SESSION_TTL_MS,
   OAUTH_CALLBACK_PATH,
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
@@ -65,6 +60,8 @@ const OBSOLETE_ENV_VARS = [
   ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
   ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
+  ENV_LIGHTDASH_TOOLS_MCP_STORE,
+  ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
 ] as const;
 
 const warnedAliases = new Set<string>();
@@ -145,6 +142,13 @@ function parseBooleanEnv(name: string, value: string | undefined, defaultValue: 
 function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv): void {
   for (const name of OBSOLETE_ENV_VARS) {
     if (readEnv(name, env) !== undefined) {
+      if (name === ENV_LIGHTDASH_TOOLS_MCP_STORE || name === ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL) {
+        throw new Error(
+          `${name} is removed (ADR-0019). ` +
+            `MCP HTTP is now stateless (sessionless) and has no Redis ephemeral store. ` +
+            `Remove this variable from your environment.`,
+        );
+      }
       throw new Error(
         `${name} is removed. Auth is inferred from credentials: set ` +
           `${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID}, ${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET}, ` +
@@ -223,10 +227,6 @@ export interface McpHttpConfig {
   oauthClientSecret?: SecretString;
   allowedOrigins: string[];
   maxBodyBytes: number;
-  sessionTtlMs: number;
-  maxSessions: number;
-  maxSessionsPerSubject: number;
-  sessionCleanupMs: number;
   requiredScopes: string[];
   scopesSupported: string[];
   validateToken: boolean;
@@ -300,13 +300,6 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
     console.warn(
       `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
         'Use only for local development.',
-    );
-  }
-
-  if (config.maxSessionsPerSubject > 0) {
-    console.warn(
-      `Note: in-memory sessions are capped at ${config.maxSessions} global and ${config.maxSessionsPerSubject} per OAuth subject. ` +
-        'Use gateway-level rate limits and short session TTLs for multi-tenant production deployments.',
     );
   }
 
@@ -475,30 +468,6 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
       [{ name: ENV_MCP_MAX_BODY_BYTES, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES }],
       1024 * 1024,
-    ),
-    sessionTtlMs: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS,
-      [{ name: ENV_MCP_SESSION_TTL_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS }],
-      30 * 60 * 1000,
-    ),
-    maxSessions: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
-      [{ name: ENV_MCP_MAX_SESSIONS, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS }],
-      100,
-    ),
-    maxSessionsPerSubject: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
-      [],
-      10,
-    ),
-    sessionCleanupMs: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
-      [{ name: ENV_MCP_SESSION_CLEANUP_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS }],
-      60_000,
     ),
     requiredScopes,
     scopesSupported: readScopeList(

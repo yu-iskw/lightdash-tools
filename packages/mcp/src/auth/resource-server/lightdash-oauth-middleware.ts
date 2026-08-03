@@ -46,29 +46,6 @@ export function buildBearerRequiredFailure(
   };
 }
 
-/** Builds an invalid_token challenge (e.g. session subject/org mismatch). */
-export function buildInvalidTokenFailure(
-  config: McpHttpConfig,
-  mcpPath: string,
-  errorDescription: string,
-): OAuthAuthFailure {
-  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
-  return {
-    ok: false,
-    status: 401,
-    body: {
-      error: 'invalid_token',
-      error_description: errorDescription,
-    },
-    wwwAuthenticate: buildWwwAuthenticateHeader({
-      resourceMetadataUrl,
-      scope: config.requiredScopes.join(' '),
-      error: 'invalid_token',
-      errorDescription,
-    }),
-  };
-}
-
 export async function authenticateLightdashOAuth(
   req: IncomingMessage,
   config: McpHttpConfig,

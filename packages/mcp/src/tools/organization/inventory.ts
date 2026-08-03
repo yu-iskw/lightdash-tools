@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
 import {
@@ -273,7 +274,7 @@ export function registerListOrgProjects(
       if (!args.includePreviewProjects) {
         projects = projects.filter((p) => p.type !== 'PREVIEW');
       }
-      const data = projects.map((p) => toProjectSummary(p));
+      const data = filterProjectsByAvailability(projects.map((p) => toProjectSummary(p)));
       return jsonToolResult({
         data,
         pagination: { returned: data.length, complete: true },

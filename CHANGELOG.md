@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.9.0] - 2026-08-03
+
+### Features
+
+- Breaking: MCP/CLI share LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS allowlist (renamed from ALLOWED_PROJECTS); removes PROJECT_UUID default and MCP_AVAILABLE_PROJECT_UUIDS — startup/CLI fail if legacy ALLOWED_PROJECTS or MCP_AVAILABLE still set; promote_dashboard also fails closed when upstream is outside the ceiling
+- Make MCP HTTP stateless: drop Redis ephemeral store and transport sessions; use HMAC-signed preview tokens; keep in-memory OAuth broker only.
+- content-developer prompts/playbooks require Design Spec approval before dashboard writes
+- content-reader export_chart_image returns a single PNG snapshot (MCP ImageContent; SSRF-hardened download; SQL charts blocked)
+- Emit Cloud Logging–parseable MCP/CLI audit JSON on stderr (channel=audit) with clientSessionId and personaId; document Cloud Run sink/retention.
+
+### Bug Fixes
+
+- MCP wrapTool maps uncaught Lightdash API failures to structured UPSTREAM and RATE_LIMITED tool errors; HttpClient rejects malformed success envelopes as ContractError
+
+## [0.8.0] - 2026-08-02
+
+### Features
+
+- Add content-reader MCP persona for project-scoped saved-content reads and bounded semantic chart execution (ADR-0012).
+- Add content-governance MCP persona with elicitation-gated soft-delete for charts and dashboards (ADR-0015).
+- Add elicitation-gated dashboard promote (and read-only promoteDiff) on the content-governance MCP persona.
+- Add pluggable MCP ephemeral store (memory/redis) and preview claim/apply/release state machine (ADR-0016).
+
+### Bug Fixes
+
+- Redact MCP emails on direct access and omit project connection secrets by default (ADR-0011).
+
 ## [0.7.0] - 2026-08-01
 
 ### Features

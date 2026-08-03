@@ -3,7 +3,7 @@
  */
 
 import { registerSemanticLayerPrompts } from './prompts.js';
-import { registerPlaybookResource } from './resources/playbook.js';
+import { registerSemanticLayerPlaybook } from './resources/playbooks.js';
 
 import type { ToolId } from '../../../tools/registry.js';
 import type { PersonaDefinition } from '../../types.js';
@@ -31,6 +31,6 @@ export const semanticLayerPersona: PersonaDefinition = {
     registerSemanticLayerPrompts(server);
   },
   registerResources: (server) => {
-    registerPlaybookResource(server);
+    registerSemanticLayerPlaybook(server);
   },
 };

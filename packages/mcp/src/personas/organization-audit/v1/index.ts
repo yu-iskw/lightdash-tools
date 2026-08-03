@@ -3,7 +3,7 @@
  */
 
 import { registerOrganizationAuditPrompts } from './prompts.js';
-import { registerOrganizationAuditPlaybook } from './resources/playbook.js';
+import { registerOrganizationAuditPlaybook } from './resources/playbooks.js';
 
 import type { ToolId } from '../../../tools/registry.js';
 import type { PersonaDefinition } from '../../types.js';

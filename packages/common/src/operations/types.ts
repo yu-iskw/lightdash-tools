@@ -1,5 +1,5 @@
 /**
- * Shared typed operation registry (RFC Section 7).
+ * Shared typed operation catalog (ADR-0013).
  * Single source of truth for HTTP, CLI, and MCP exposure of Lightdash API operations.
  */
 
@@ -17,7 +17,22 @@ export type HttpMethod = 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
  * Capability profiles group operations for selective exposure (CLI profiles, MCP subsets).
  */
 export type CapabilityProfile =
-  'conversations' | 'core-lifecycle' | 'discovery-readonly' | 'evaluations';
+  | 'ai-agent-ops'
+  | 'content-developer'
+  | 'content-governance'
+  | 'content-reader'
+  | 'conversations'
+  | 'core-lifecycle'
+  | 'discovery-readonly'
+  | 'evaluations'
+  | 'org-audit-readonly'
+  | 'semantic-discovery';
+
+/**
+ * MCP response sensitivity class (ADR-0011).
+ * Documents which redaction class handlers must apply; does not auto-redact.
+ */
+export type SensitivityClass = 'none' | 'pii.email' | 'secret.connection' | 'secret.destination';
 
 /** MCP task semantics for an operation. */
 export type McpTaskSupport = {
@@ -36,7 +51,7 @@ export type OperationAuthorization = {
 
 export type OperationHttp = {
   method: HttpMethod;
-  /** OpenAPI-style path template (includes `/api/v1` prefix). */
+  /** OpenAPI-style path template (includes `/api/v1` or `/api/v2` prefix). */
   path: string;
 };
 
@@ -65,20 +80,51 @@ export type OperationDescriptor = {
   summary: string;
   http: OperationHttp;
   authorization: OperationAuthorization;
-  mcp: OperationMcp;
-  cli: OperationCli;
-  /** `agent` (default) = may be exposed on MCP/CLI; `client-only` = typed client only. */
-  agentExposure?: AgentExposure;
+  /**
+   * Response sensitivity class for agent surfaces (ADR-0011).
+   * Defaults to `none` when omitted from `defineOperation` input.
+   */
+  sensitivity: SensitivityClass;
   profiles: readonly CapabilityProfile[];
+  /** `agent` (default) = may appear on MCP and/or CLI; `client-only` = typed client only. */
+  agentExposure: AgentExposure;
+  /** Present when the operation is registered (or reserved) as an MCP tool. */
+  mcp?: OperationMcp;
+  /** Present when a real CLI command exists (`commandPath` must match Commander). */
+  cli?: OperationCli;
+  /** Irrecoverable denylist name for client-only ops (sans `lightdash_` prefix). */
+  bannedMcpToolName?: string;
   /** When set, documents the ordered client-side HTTP steps behind this operation. */
   workflow?: readonly OperationWorkflowStep[];
 };
 
+/** Input to `defineOperation` before defaults are applied. */
+export type OperationDefinitionInput = Omit<
+  OperationDescriptor,
+  'agentExposure' | 'sensitivity'
+> & {
+  agentExposure?: AgentExposure;
+  sensitivity?: SensitivityClass;
+};
+
 const VALID_PROFILES = new Set<CapabilityProfile>([
+  'ai-agent-ops',
+  'content-developer',
+  'content-governance',
+  'content-reader',
   'conversations',
   'core-lifecycle',
   'discovery-readonly',
   'evaluations',
+  'org-audit-readonly',
+  'semantic-discovery',
+]);
+
+const VALID_SENSITIVITY = new Set<SensitivityClass>([
+  'none',
+  'pii.email',
+  'secret.connection',
+  'secret.destination',
 ]);
 
 function assertNonEmpty(value: string, field: string): void {
@@ -105,11 +151,6 @@ function validateIdempotentHint(
   impact: SafetyImpact,
   id: string,
 ): void {
-  if (impact === 'read' && annotations.idempotentHint !== true) {
-    throw new Error(
-      `Operation '${id}': read operations must set mcp.annotations.idempotentHint = true`,
-    );
-  }
   if (impact === 'write-destructive' && annotations.idempotentHint === true) {
     throw new Error(
       `Operation '${id}': destructive operations must not set mcp.annotations.idempotentHint = true`,
@@ -117,52 +158,76 @@ function validateIdempotentHint(
   }
 }
 
-/**
- * Defines a typed operation descriptor with RFC consistency checks.
- * Throws when authorization impact disagrees with MCP annotations or profiles are invalid.
- */
-export function defineOperation<T extends OperationDescriptor>(
-  descriptor: T,
-): T & { agentExposure: AgentExposure } {
-  assertNonEmpty(descriptor.id, 'id');
-  assertNonEmpty(descriptor.summary, 'summary');
-  assertNonEmpty(descriptor.http.path, 'http.path');
-
-  const agentExposure = descriptor.agentExposure ?? 'agent';
-
-  if (agentExposure === 'agent') {
-    assertNonEmpty(descriptor.mcp.toolName, 'mcp.toolName');
-    assertNonEmpty(descriptor.cli.commandPath, 'cli.commandPath');
+function validateProfiles(id: string, profiles: readonly CapabilityProfile[]): void {
+  if (profiles.length === 0) {
+    throw new Error(`Operation '${id}' must declare at least one capability profile`);
   }
-
-  if (agentExposure === 'client-only' && descriptor.mcp.taskSupport.exposed) {
-    throw new Error(
-      `Operation '${descriptor.id}': client-only operations must set mcp.taskSupport.exposed to false`,
-    );
-  }
-
-  if (descriptor.profiles.length === 0) {
-    throw new Error(`Operation '${descriptor.id}' must declare at least one capability profile`);
-  }
-
-  for (const profile of descriptor.profiles) {
+  for (const profile of profiles) {
     if (!VALID_PROFILES.has(profile)) {
-      throw new Error(`Operation '${descriptor.id}' has unknown capability profile '${profile}'`);
+      throw new Error(`Operation '${id}' has unknown capability profile '${profile}'`);
     }
   }
+}
 
-  const expectedImpact = expectedImpactFromAnnotations(descriptor.mcp.annotations);
-  if (descriptor.authorization.safetyImpact !== expectedImpact) {
+function validateClientOnlyOperation(input: OperationDefinitionInput): OperationDescriptor {
+  if (input.mcp !== undefined || input.cli !== undefined) {
     throw new Error(
-      `Operation '${descriptor.id}': authorization.safetyImpact is '${descriptor.authorization.safetyImpact}' but MCP annotations imply '${expectedImpact}'`,
+      `Operation '${input.id}': client-only operations must omit mcp and cli metadata`,
     );
   }
+  if (input.bannedMcpToolName !== undefined && input.bannedMcpToolName.trim().length === 0) {
+    throw new Error(`Operation '${input.id}': bannedMcpToolName must be non-empty when set`);
+  }
+  return {
+    ...input,
+    agentExposure: 'client-only',
+    sensitivity: input.sensitivity ?? 'none',
+  };
+}
 
-  validateIdempotentHint(
-    descriptor.mcp.annotations,
-    descriptor.authorization.safetyImpact,
-    descriptor.id,
-  );
+function validateAgentMcp(input: OperationDefinitionInput): void {
+  if (input.mcp === undefined) {
+    return;
+  }
+  assertNonEmpty(input.mcp.toolName, 'mcp.toolName');
+  const expectedImpact = expectedImpactFromAnnotations(input.mcp.annotations);
+  if (input.authorization.safetyImpact !== expectedImpact) {
+    throw new Error(
+      `Operation '${input.id}': authorization.safetyImpact is '${input.authorization.safetyImpact}' but MCP annotations imply '${expectedImpact}'`,
+    );
+  }
+  validateIdempotentHint(input.mcp.annotations, input.authorization.safetyImpact, input.id);
+}
 
-  return { ...descriptor, agentExposure };
+/**
+ * Defines a typed operation descriptor with catalog consistency checks (ADR-0013).
+ * Agent ops require at least one of `mcp` or `cli`. Client-only ops omit both.
+ */
+export function defineOperation(input: OperationDefinitionInput): OperationDescriptor {
+  assertNonEmpty(input.id, 'id');
+  assertNonEmpty(input.summary, 'summary');
+  assertNonEmpty(input.http.path, 'http.path');
+
+  const sensitivity = input.sensitivity ?? 'none';
+  if (!VALID_SENSITIVITY.has(sensitivity)) {
+    throw new Error(`Operation '${input.id}' has unknown sensitivity '${String(sensitivity)}'`);
+  }
+
+  validateProfiles(input.id, input.profiles);
+
+  const agentExposure = input.agentExposure ?? 'agent';
+  if (agentExposure === 'client-only') {
+    return validateClientOnlyOperation({ ...input, sensitivity });
+  }
+
+  if (input.mcp === undefined && input.cli === undefined) {
+    throw new Error(`Operation '${input.id}': agent operations require mcp and/or cli metadata`);
+  }
+
+  validateAgentMcp(input);
+  if (input.cli !== undefined) {
+    assertNonEmpty(input.cli.commandPath, 'cli.commandPath');
+  }
+
+  return { ...input, agentExposure: 'agent', sensitivity };
 }

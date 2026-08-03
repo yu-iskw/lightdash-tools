@@ -9,11 +9,13 @@ import { CONTENT_READER_TOOL_IDS } from '../../personas/content-reader/v1/index.
 import { registerToolsByIds } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
-const EXECUTION_TOOL_IDS = new Set([
+/** Tools that are read-only but not idempotent (warehouse / headless work). */
+const NON_IDEMPOTENT_TOOL_IDS = new Set([
   'run_chart',
   'run_dashboard_tile',
   'get_query_result',
   'cancel_query',
+  'export_chart_image',
 ]);
 
 describe('content-reader safety invariants', () => {
@@ -30,7 +32,7 @@ describe('content-reader safety invariants', () => {
       personaId: 'content-reader',
     });
 
-    expect(CONTENT_READER_TOOL_IDS).toHaveLength(13);
+    expect(CONTENT_READER_TOOL_IDS).toHaveLength(14);
     expect(annotationsByName.size).toBe(CONTENT_READER_TOOL_IDS.length);
     for (const id of CONTENT_READER_TOOL_IDS) {
       const annotations = annotationsByName.get(`${TOOL_PREFIX}${id}`) as {
@@ -38,7 +40,7 @@ describe('content-reader safety invariants', () => {
         idempotentHint?: boolean;
       };
       expect(annotations?.readOnlyHint).toBe(true);
-      if (EXECUTION_TOOL_IDS.has(id)) {
+      if (NON_IDEMPOTENT_TOOL_IDS.has(id)) {
         expect(annotations?.idempotentHint).toBe(false);
       } else {
         expect(annotations).toMatchObject(READ_ONLY_DEFAULT);

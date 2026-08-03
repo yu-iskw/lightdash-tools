@@ -1,8 +1,30 @@
 /**
  * Shared MCP tool registry: short id → register(server, ctx).
  * Wire names are always `lightdash_` + id via registerToolSafe.
+ * Persona allowlists must resolve through the operation catalog (ADR-0013).
  */
 
+import { getOperationByMcpToolName, listBannedMcpToolNames } from '@lightdash-tools/common';
+
+import { registerGetProjectAgent, registerListProjectAgents } from './ai-agents/agents.js';
+import {
+  registerEvaluateAgentReadiness,
+  registerGetAgentModels,
+  registerGetAgentSuggestions,
+  registerGetExploreAccessSummary,
+} from './ai-agents/discovery.js';
+import {
+  registerAppendAgentEvaluationPrompts,
+  registerCreateAgentEvaluation,
+  registerDeleteAgentEvaluation,
+  registerGetAgentEvalRunResults,
+  registerGetAgentEvaluation,
+  registerListAgentEvaluationRuns,
+  registerListAgentEvaluations,
+  registerRunAgentEvaluation,
+  registerUpdateAgentEvaluation,
+} from './ai-agents/evaluations.js';
+import { registerGetAgentThread, registerListAgentThreads } from './ai-agents/threads.js';
 import { registerExplainContent } from './composition/explain-content.js';
 import {
   registerGetOrgMember,
@@ -24,17 +46,44 @@ import {
   registerListContent,
   registerListValidationResults,
 } from './project/content.js';
+import { registerDeleteChart } from './project/delete-chart.js';
+import { registerDeleteDashboard } from './project/delete-dashboard.js';
+import {
+  registerAddDashboardTile,
+  registerCompareChartVersions,
+  registerCompareDashboardVersions,
+  registerConfirmPreview,
+  registerCreateChart,
+  registerCreateDashboard,
+  registerDuplicateChart,
+  registerDuplicateDashboard,
+  registerMoveContent,
+  registerMoveDashboardTile,
+  registerPreviewChartChanges,
+  registerPreviewContentMove,
+  registerPreviewDashboardChanges,
+  registerRemoveDashboardTile,
+  registerResizeDashboardTile,
+  registerUpdateChart,
+  registerUpdateDashboard,
+  registerValidateChart,
+  registerValidateDashboard,
+} from './project/developer-content.js';
+import { registerGetChartAsCode } from './project/developer-get-chart-as-code.js';
+import { registerGetDashboardPromoteDiff } from './project/get-dashboard-promote-diff.js';
 import {
   registerGetProjectParameters,
   registerListProjectParameters,
 } from './project/parameters.js';
 import { registerGetProject, registerListProjects } from './project/projects.js';
+import { registerPromoteDashboard } from './project/promote-dashboard.js';
 import {
   registerGetChart,
   registerGetDashboard,
   registerSearchContent,
 } from './project/reader-content.js';
 import { registerRunChart, registerRunDashboardTile } from './project/reader-execution.js';
+import { registerExportChartImage } from './project/reader-export-chart-image.js';
 import { registerGetScheduler, registerListProjectSchedulers } from './project/schedulers.js';
 import { registerGetSpace, registerListSpaces } from './project/spaces.js';
 import { registerCancelQuery, registerGetQueryResult } from './query/lifecycle.js';
@@ -101,14 +150,64 @@ export const toolRegistry = {
   get_project_parameters: { register: registerGetProjectParameters },
   explain_content: { register: registerExplainContent },
   run_chart: { register: registerRunChart },
+  export_chart_image: { register: registerExportChartImage },
   run_dashboard_tile: { register: registerRunDashboardTile },
   get_query_result: { register: registerGetQueryResult },
   cancel_query: { register: registerCancelQuery },
+
+  // content-developer (ADR-0014)
+  get_chart_as_code: { register: registerGetChartAsCode },
+  preview_chart_changes: { register: registerPreviewChartChanges },
+  preview_dashboard_changes: { register: registerPreviewDashboardChanges },
+  preview_content_move: { register: registerPreviewContentMove },
+  validate_chart: { register: registerValidateChart },
+  validate_dashboard: { register: registerValidateDashboard },
+  confirm_preview: { register: registerConfirmPreview },
+  compare_chart_versions: { register: registerCompareChartVersions },
+  compare_dashboard_versions: { register: registerCompareDashboardVersions },
+  create_chart: { register: registerCreateChart },
+  update_chart: { register: registerUpdateChart },
+  duplicate_chart: { register: registerDuplicateChart },
+  create_dashboard: { register: registerCreateDashboard },
+  update_dashboard: { register: registerUpdateDashboard },
+  duplicate_dashboard: { register: registerDuplicateDashboard },
+  add_dashboard_tile: { register: registerAddDashboardTile },
+  move_dashboard_tile: { register: registerMoveDashboardTile },
+  remove_dashboard_tile: { register: registerRemoveDashboardTile },
+  resize_dashboard_tile: { register: registerResizeDashboardTile },
+  move_content: { register: registerMoveContent },
+
+  // content-governance (ADR-0015 / ADR-0017)
+  delete_chart: { register: registerDeleteChart },
+  delete_dashboard: { register: registerDeleteDashboard },
+  get_dashboard_promote_diff: { register: registerGetDashboardPromoteDiff },
+  promote_dashboard: { register: registerPromoteDashboard },
+
+  // ai-agent-ops (ADR-0018)
+  list_project_agents: { register: registerListProjectAgents },
+  get_project_agent: { register: registerGetProjectAgent },
+  evaluate_agent_readiness: { register: registerEvaluateAgentReadiness },
+  get_agent_suggestions: { register: registerGetAgentSuggestions },
+  get_agent_models: { register: registerGetAgentModels },
+  get_explore_access_summary: { register: registerGetExploreAccessSummary },
+  list_agent_threads: { register: registerListAgentThreads },
+  get_agent_thread: { register: registerGetAgentThread },
+  list_agent_evaluations: { register: registerListAgentEvaluations },
+  get_agent_evaluation: { register: registerGetAgentEvaluation },
+  create_agent_evaluation: { register: registerCreateAgentEvaluation },
+  update_agent_evaluation: { register: registerUpdateAgentEvaluation },
+  append_agent_evaluation_prompts: { register: registerAppendAgentEvaluationPrompts },
+  delete_agent_evaluation: { register: registerDeleteAgentEvaluation },
+  run_agent_evaluation: { register: registerRunAgentEvaluation },
+  list_agent_evaluation_runs: { register: registerListAgentEvaluationRuns },
+  get_agent_eval_run_results: { register: registerGetAgentEvalRunResults },
 } as const satisfies Record<string, ToolRegistration>;
 
 export type ToolId = keyof typeof toolRegistry;
 
-/** Register a subset of tools by id (persona allowlist). */
+const BANNED_MCP_TOOL_IDS = new Set(listBannedMcpToolNames());
+
+/** Register a subset of tools by id (persona allowlist). Requires catalog parity (ADR-0013). */
 export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,
@@ -116,11 +215,14 @@ export function registerToolsByIds(
   options?: { personaId?: string },
 ): void {
   for (const id of ids) {
-    // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
-    const entry = toolRegistry[id];
-    if (!entry) {
-      throw new Error(`Unknown MCP tool id: ${String(id)}`);
+    if (BANNED_MCP_TOOL_IDS.has(id)) {
+      throw new Error(`MCP tool id '${id}' is banned (client-only / irrecoverable)`);
     }
-    entry.register(server, contextProvider, options);
+    const catalogOp = getOperationByMcpToolName(id);
+    if (catalogOp?.mcp?.taskSupport.exposed !== true) {
+      throw new Error(`MCP tool id '${id}' is not an exposed operation in the catalog (ADR-0013)`);
+    }
+    // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
+    toolRegistry[id].register(server, contextProvider, options);
   }
 }

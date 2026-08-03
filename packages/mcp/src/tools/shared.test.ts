@@ -1,6 +1,9 @@
-import { logAuditEntry } from '@lightdash-tools/common';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { LightdashApiError } from '@lightdash-tools/client';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
+import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { bindServerPersona } from '../audit/server-persona.js';
+import { resetAvailableProjectsCache } from '../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT, TOOL_PREFIX } from './shared.js';
@@ -35,6 +38,11 @@ describe('registerToolSafe', () => {
     vi.mocked(logAuditEntry).mockClear();
   });
 
+  afterEach(() => {
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
+    resetAvailableProjectsCache();
+  });
+
   it('registers tools and invokes the handler', async () => {
     registerToolSafe(
       mockServer,
@@ -57,6 +65,35 @@ describe('registerToolSafe', () => {
     expect(result.content[0].text).toBe('success');
   });
 
+  it('audit entry includes channel, clientSessionId, and personaId', async () => {
+    bindServerPersona(mockServer, 'semantic-layer');
+    registerToolSafe(
+      mockServer,
+      'audit_attrs',
+      {
+        description: 'Audit attrs',
+        inputSchema: {},
+        annotations: READ_ONLY_DEFAULT,
+      },
+      mockHandler,
+    );
+
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    await handler({}, { sessionId: 'mcp-client-session-9' });
+
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channel: 'audit',
+        severity: 'INFO',
+        message: `${TOOL_PREFIX}audit_attrs success`,
+        status: 'success',
+        clientSessionId: 'mcp-client-session-9',
+        personaId: 'semantic-layer',
+        tool: `${TOOL_PREFIX}audit_attrs`,
+      }),
+    );
+  });
+
   it('allows tools when OAuth subject is present (no local JWT scope gate)', async () => {
     const contextProvider = {
       getContext: async () => ({
@@ -75,7 +112,8 @@ describe('registerToolSafe', () => {
 
     const result = await wrapped({});
     expect(result.isError).toBeUndefined();
-    expect(result.content[0].text).toBe('success');
+    expect(Array.isArray(result.content)).toBe(true);
+    expect((result.content as Array<{ type: string; text: string }>)[0]?.text).toBe('success');
   });
 
   it('should reject invalid projectUuid before calling handler', async () => {
@@ -155,6 +193,77 @@ describe('registerToolSafe', () => {
     });
   });
 
+  describe('shared project allowlist (LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS)', () => {
+    it('allows projectUuid in the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = `${PROJECT_A},${PROJECT_B}`;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_ok',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuid: PROJECT_A });
+      expect(result.isError).toBeUndefined();
+      expect(mockHandler).toHaveBeenCalled();
+    });
+
+    it('blocks projectUuid outside the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_block',
+        { description: 'Get project', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({ projectUuid: PROJECT_B });
+      expect(mockHandler).not.toHaveBeenCalled();
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain('PROJECT_NOT_AVAILABLE');
+      expect(result.content[0].text).toContain(PROJECT_B);
+      expect(logAuditEntry).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'blocked', tool: `${TOOL_PREFIX}available_block` }),
+      );
+    });
+
+    it('blocks pinned project outside the allowlist', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_pin_block',
+        { description: 'List', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      await runWithProjectPinAsync(PROJECT_B, async () => {
+        const result = await handler({});
+        expect(mockHandler).not.toHaveBeenCalled();
+        expect(result.isError).toBe(true);
+        expect(result.content[0].text).toContain('PROJECT_NOT_AVAILABLE');
+        expect(result.content[0].text).toContain(PROJECT_B);
+      });
+    });
+
+    it('allows tools with no projectUuid when allowlist is set', async () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
+      resetAvailableProjectsCache();
+      registerToolSafe(
+        mockServer,
+        'available_no_uuid',
+        { description: 'Org list', inputSchema: {}, annotations: READ_ONLY_DEFAULT },
+        mockHandler,
+      );
+      const [, , handler] = mockServer.registerTool.mock.calls[0];
+      const result = await handler({});
+      expect(result.isError).toBeUndefined();
+      expect(mockHandler).toHaveBeenCalled();
+    });
+  });
+
   it('should reject invalid slug before calling handler', async () => {
     registerToolSafe(
       mockServer,
@@ -204,6 +313,9 @@ describe('registerToolSafe', () => {
 
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     await expect(handler({})).rejects.toThrow('boom');
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', tool: `${TOOL_PREFIX}throws_tool` }),
+    );
   });
 
   it('should mark audit status error when handler returns isError', async () => {
@@ -221,6 +333,9 @@ describe('registerToolSafe', () => {
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     const result = await handler({});
     expect(result.isError).toBe(true);
+    expect(logAuditEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'error', tool: `${TOOL_PREFIX}error_result_tool` }),
+    );
   });
 
   it('should attach structuredContent when handler returns JSON text', async () => {
@@ -259,7 +374,7 @@ describe('registerToolSafe', () => {
     expect(JSON.parse(result.content[0].text)).toEqual([{ id: 'a' }]);
   });
 
-  it('wrapTool returns a safe error message when the inner handler throws', async () => {
+  it('wrapTool returns a coded upstream error when the inner handler throws', async () => {
     const contextProvider = {
       getContext: async () => ({
         lightdashClient: {},
@@ -273,6 +388,39 @@ describe('registerToolSafe', () => {
     const result = await wrapped({});
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toBe('boom');
+    const body = {
+      error: { code: 'UPSTREAM_UNKNOWN', message: 'boom' },
+    };
+    expect(result.structuredContent).toEqual(body);
+    expect(
+      JSON.parse((result.content as Array<{ type: string; text: string }>)[0]?.text ?? ''),
+    ).toEqual(body);
+  });
+
+  it('wrapTool maps LightdashApiError 404 to UPSTREAM_NOT_FOUND', async () => {
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {},
+        auth: { mode: 'none' as const },
+      }),
+    } as unknown as McpContextProvider;
+    const wrapped = wrapTool(contextProvider, () => async () => {
+      throw new LightdashApiError(
+        404,
+        { name: 'NotFound', statusCode: 404, message: 'chart missing' },
+        {},
+      );
+    });
+
+    const result = await wrapped({});
+
+    expect(result.isError).toBe(true);
+    expect(result.structuredContent).toEqual({
+      error: {
+        code: 'UPSTREAM_NOT_FOUND',
+        message: 'Lightdash API error: chart missing',
+      },
+    });
+    expect(result).not.toHaveProperty('_lightdashBlocked');
   });
 });

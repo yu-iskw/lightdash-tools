@@ -7,7 +7,6 @@ import { EventEmitter } from 'node:events';
 import { describe, expect, it } from 'vitest';
 
 import { parseJsonBody, readBody } from './transports/http-body.js';
-import { isInitializeMessage } from './transports/http-request-utils.js';
 import {
   buildCorsHeaders,
   checkOrigin,
@@ -151,20 +150,6 @@ describe('HTTP transport helpers', () => {
 
     it('returns undefined for empty body', () => {
       expect(parseJsonBody(Buffer.from('   '))).toBeUndefined();
-    });
-  });
-
-  describe('initialize detection', () => {
-    it('detects initialize POST body', () => {
-      expect(isInitializeMessage({ jsonrpc: '2.0', method: 'initialize', id: 1 })).toBe(true);
-    });
-
-    it('detects initialize in batch array', () => {
-      expect(isInitializeMessage([{ jsonrpc: '2.0', method: 'initialize', id: 1 }])).toBe(true);
-    });
-
-    it('returns false for non-initialize methods', () => {
-      expect(isInitializeMessage({ jsonrpc: '2.0', method: 'tools/list', id: 1 })).toBe(false);
     });
   });
 });

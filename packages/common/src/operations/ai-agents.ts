@@ -5,6 +5,7 @@
 import {
   READ_ONLY_DEFAULT,
   WRITE_DESTRUCTIVE,
+  WRITE_IDEMPOTENT,
   WRITE_NONDESTRUCTIVE,
   WRITE_OPEN_WORLD,
 } from '../safety';
@@ -22,6 +23,7 @@ const PROFILE_CORE_LIFECYCLE: CapabilityProfile = 'core-lifecycle';
 const PROFILE_DISCOVERY: CapabilityProfile = 'discovery-readonly';
 const PROFILE_CONVERSATIONS: CapabilityProfile = 'conversations';
 const PROFILE_EVALUATIONS: CapabilityProfile = 'evaluations';
+const PROFILE_AI_AGENT_OPS: CapabilityProfile = 'ai-agent-ops';
 
 const API_V1 = '/api/v1';
 const PROJECT_AGENTS_PATH = `${API_V1}/projects/{projectUuid}/aiAgents`;
@@ -32,10 +34,11 @@ const adminListAgents = defineOperation({
   summary: 'List all AI agents across the organization (admin)',
   http: { method: 'GET', path: `${API_V1}/aiAgents/admin/agents` },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_admin_agents',
     annotations: READ_ONLY_DEFAULT,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents list' },
   profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY],
@@ -46,10 +49,11 @@ const adminListThreads = defineOperation({
   summary: 'List AI agent threads across the organization with optional filters (admin)',
   http: { method: 'GET', path: `${API_V1}/aiAgents/admin/threads` },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_admin_agent_threads',
     annotations: READ_ONLY_DEFAULT,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents threads' },
   profiles: [PROFILE_DISCOVERY],
@@ -60,31 +64,26 @@ const adminSettingsGet = defineOperation({
   summary: 'Get AI organization settings (admin)',
   http: { method: 'GET', path: `${API_V1}/aiAgents/admin/settings` },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'get_ai_organization_settings',
     annotations: READ_ONLY_DEFAULT,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents settings get' },
   profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY],
 });
-
-const WRITE_SETTINGS_UPDATE = {
-  readOnlyHint: false,
-  openWorldHint: false,
-  destructiveHint: false,
-  idempotentHint: true,
-} as const;
 
 const adminSettingsUpdate = defineOperation({
   id: 'ai-agents.admin.settings.update',
   summary: 'Update AI organization settings (admin)',
   http: { method: 'PATCH', path: `${API_V1}/aiAgents/admin/settings` },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'update_ai_organization_settings',
-    annotations: WRITE_SETTINGS_UPDATE,
-    taskSupport: { exposed: true, taskEligible: false },
+    annotations: WRITE_IDEMPOTENT,
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents settings update' },
   profiles: [PROFILE_CORE_LIFECYCLE],
@@ -95,13 +94,14 @@ const projectAgentsList = defineOperation({
   summary: 'List all AI agents in a project',
   http: { method: 'GET', path: PROJECT_AGENTS_PATH },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_project_agents',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents list' },
-  profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY],
+  profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const projectAgentsGet = defineOperation({
@@ -109,13 +109,14 @@ const projectAgentsGet = defineOperation({
   summary: 'Get a single AI agent in a project',
   http: { method: 'GET', path: PROJECT_AGENT_PATH },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'get_project_agent',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents get' },
-  profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY],
+  profiles: [PROFILE_CORE_LIFECYCLE, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const projectAgentsCreate = defineOperation({
@@ -123,10 +124,11 @@ const projectAgentsCreate = defineOperation({
   summary: 'Create a new AI agent in a project',
   http: { method: 'POST', path: PROJECT_AGENTS_PATH },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'create_project_agent',
     annotations: WRITE_NONDESTRUCTIVE,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents create' },
   profiles: [PROFILE_CORE_LIFECYCLE],
@@ -137,10 +139,11 @@ const projectAgentsUpdate = defineOperation({
   summary: 'Update an existing AI agent in a project',
   http: { method: 'PATCH', path: PROJECT_AGENT_PATH },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'update_project_agent',
     annotations: WRITE_NONDESTRUCTIVE,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents update' },
   profiles: [PROFILE_CORE_LIFECYCLE],
@@ -151,10 +154,11 @@ const projectAgentsDelete = defineOperation({
   summary: 'Delete an AI agent from a project',
   http: { method: 'DELETE', path: PROJECT_AGENT_PATH },
   authorization: { safetyImpact: IMPACT_WRITE_DESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'delete_project_agent',
     annotations: WRITE_DESTRUCTIVE,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents delete' },
   profiles: [PROFILE_CORE_LIFECYCLE],
@@ -170,13 +174,14 @@ const threadsList = defineOperation({
     path: PROJECT_AGENT_THREADS_PATH,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_agent_threads',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents threads list' },
-  profiles: [PROFILE_CONVERSATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_CONVERSATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_THREAD_PATH = `${PROJECT_AGENT_THREADS_PATH}/{threadUuid}`;
@@ -189,13 +194,14 @@ const threadsGet = defineOperation({
     path: PROJECT_AGENT_THREAD_PATH,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'get_agent_thread',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents threads get' },
-  profiles: [PROFILE_CONVERSATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_CONVERSATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_THREAD_MESSAGES_PATH = `${PROJECT_AGENT_THREAD_PATH}/messages`;
@@ -227,10 +233,11 @@ const threadsStart = defineOperation({
     },
   ],
   authorization: { safetyImpact: IMPACT_EXTERNAL },
+  sensitivity: 'none',
   mcp: {
     toolName: 'generate_agent_message',
     annotations: WRITE_OPEN_WORLD,
-    taskSupport: { exposed: true, taskEligible: true },
+    taskSupport: { exposed: false, taskEligible: true },
   },
   cli: { commandPath: 'agents threads start' },
   profiles: [PROFILE_CONVERSATIONS],
@@ -256,10 +263,11 @@ const threadsContinue = defineOperation({
     },
   ],
   authorization: { safetyImpact: IMPACT_EXTERNAL },
+  sensitivity: 'none',
   mcp: {
     toolName: 'continue_agent_thread',
     annotations: WRITE_OPEN_WORLD,
-    taskSupport: { exposed: true, taskEligible: true },
+    taskSupport: { exposed: false, taskEligible: true },
   },
   cli: { commandPath: 'agents threads continue' },
   profiles: [PROFILE_CONVERSATIONS],
@@ -275,13 +283,14 @@ const evaluationsList = defineOperation({
     path: PROJECT_AGENT_EVALUATIONS_PATH,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_agent_evaluations',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals list' },
-  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_EVALUATION_PATH = `${PROJECT_AGENT_EVALUATIONS_PATH}/{evalUuid}`;
@@ -294,13 +303,14 @@ const evaluationsGet = defineOperation({
     path: PROJECT_AGENT_EVALUATION_PATH,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'get_agent_evaluation',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals get' },
-  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsCreate = defineOperation({
@@ -311,13 +321,14 @@ const evaluationsCreate = defineOperation({
     path: PROJECT_AGENT_EVALUATIONS_PATH,
   },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'create_agent_evaluation',
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals create' },
-  profiles: [PROFILE_EVALUATIONS],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsUpdate = defineOperation({
@@ -328,13 +339,14 @@ const evaluationsUpdate = defineOperation({
     path: PROJECT_AGENT_EVALUATION_PATH,
   },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'update_agent_evaluation',
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals update' },
-  profiles: [PROFILE_EVALUATIONS],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsAppend = defineOperation({
@@ -345,13 +357,14 @@ const evaluationsAppend = defineOperation({
     path: `${PROJECT_AGENT_EVALUATION_PATH}/append`,
   },
   authorization: { safetyImpact: IMPACT_WRITE_NONDESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'append_agent_evaluation_prompts',
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals append' },
-  profiles: [PROFILE_EVALUATIONS],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsDelete = defineOperation({
@@ -362,13 +375,14 @@ const evaluationsDelete = defineOperation({
     path: PROJECT_AGENT_EVALUATION_PATH,
   },
   authorization: { safetyImpact: IMPACT_WRITE_DESTRUCTIVE },
+  sensitivity: 'none',
   mcp: {
     toolName: 'delete_agent_evaluation',
     annotations: WRITE_DESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals delete' },
-  profiles: [PROFILE_EVALUATIONS],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsRun = defineOperation({
@@ -379,13 +393,14 @@ const evaluationsRun = defineOperation({
     path: `${PROJECT_AGENT_EVALUATION_PATH}/run`,
   },
   authorization: { safetyImpact: IMPACT_EXTERNAL },
+  sensitivity: 'none',
   mcp: {
     toolName: 'run_agent_evaluation',
     annotations: WRITE_OPEN_WORLD,
     taskSupport: { exposed: true, taskEligible: true },
   },
   cli: { commandPath: 'agents evals run' },
-  profiles: [PROFILE_EVALUATIONS],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_EVALUATION_RUNS_PATH = `${PROJECT_AGENT_EVALUATION_PATH}/runs`;
@@ -398,13 +413,14 @@ const evaluationsRunsList = defineOperation({
     path: PROJECT_AGENT_EVALUATION_RUNS_PATH,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
     toolName: 'list_agent_evaluation_runs',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals runs' },
-  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsRunResultsGet = defineOperation({
@@ -415,13 +431,85 @@ const evaluationsRunResultsGet = defineOperation({
     path: `${PROJECT_AGENT_EVALUATION_RUNS_PATH}/{runUuid}`,
   },
   authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
   mcp: {
-    toolName: 'get_agent_evaluation_run_results',
+    toolName: 'get_agent_eval_run_results',
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals run-results' },
-  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY],
+  profiles: [PROFILE_EVALUATIONS, PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
+});
+
+const evaluateAgentReadiness = defineOperation({
+  id: 'ai-agents.project.agents.evaluate-readiness',
+  summary: 'Evaluate release readiness score for an agent (not an evaluation-suite run)',
+  http: {
+    method: 'POST',
+    path: `${PROJECT_AGENT_PATH}/evaluateReadiness`,
+  },
+  authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'evaluate_agent_readiness',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  cli: { commandPath: 'agents readiness evaluate' },
+  profiles: [PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
+});
+
+const getAgentSuggestions = defineOperation({
+  id: 'ai-agents.project.agents.suggestions',
+  summary: 'List suggestion chips for an agent',
+  http: {
+    method: 'GET',
+    path: `${PROJECT_AGENT_PATH}/suggestions`,
+  },
+  authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_agent_suggestions',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  cli: { commandPath: 'agents suggestions' },
+  profiles: [PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
+});
+
+const getAgentModels = defineOperation({
+  id: 'ai-agents.project.agents.models',
+  summary: 'List available AI model options for an agent',
+  http: {
+    method: 'GET',
+    path: `${PROJECT_AGENT_PATH}/models`,
+  },
+  authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_agent_models',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  cli: { commandPath: 'agents models' },
+  profiles: [PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
+});
+
+const getExploreAccessSummary = defineOperation({
+  id: 'ai-agents.project.explore-access-summary',
+  summary: 'Summarize explore access for tag-filtered explores',
+  http: {
+    method: 'POST',
+    path: `${PROJECT_AGENTS_PATH}/explore-access-summary`,
+  },
+  authorization: { safetyImpact: IMPACT_READ },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_explore_access_summary',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_DISCOVERY, PROFILE_AI_AGENT_OPS],
 });
 
 /** All registered P0 AI agent operations. */
@@ -435,6 +523,10 @@ export const AI_AGENT_OPERATIONS: readonly OperationDescriptor[] = [
   projectAgentsCreate,
   projectAgentsUpdate,
   projectAgentsDelete,
+  evaluateAgentReadiness,
+  getAgentSuggestions,
+  getAgentModels,
+  getExploreAccessSummary,
   threadsList,
   threadsGet,
   threadsStart,

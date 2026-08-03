@@ -7,13 +7,15 @@ import { describe, expect, it } from 'vitest';
 import {
   METADATA_SAFETY,
   SAVED_EXECUTION_SAFETY,
+  IMAGE_SNAPSHOT_SAFETY,
   assertContentReaderSafe,
 } from './content-reader.js';
 
 describe('assertContentReaderSafe', () => {
-  it('accepts metadata and saved-execution presets', () => {
+  it('accepts metadata, saved-execution, and image-snapshot presets', () => {
     expect(() => assertContentReaderSafe(METADATA_SAFETY)).not.toThrow();
     expect(() => assertContentReaderSafe(SAVED_EXECUTION_SAFETY)).not.toThrow();
+    expect(() => assertContentReaderSafe(IMAGE_SNAPSHOT_SAFETY)).not.toThrow();
   });
 
   it('rejects arbitrary query capability', () => {

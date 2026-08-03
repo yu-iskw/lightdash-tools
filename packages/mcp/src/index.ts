@@ -10,6 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
+import { validateAvailableProjectsConfig } from './governance/available-projects.js';
 import { getDefaultPersona, getPersona, parsePersonaId } from './personas/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 
@@ -23,7 +24,7 @@ function resolveStdioPersona(): PersonaDefinition {
   const id = parsePersonaId(raw);
   if (!id) {
     throw new Error(
-      `Invalid LIGHTDASH_TOOLS_MCP_STDIO_PERSONA='${raw}'. Expected semantic-layer, organization-audit, or content-reader.`,
+      `Invalid LIGHTDASH_TOOLS_MCP_STDIO_PERSONA='${raw}'. Expected semantic-layer, organization-audit, content-reader, content-developer, content-governance, or ai-agent-ops.`,
     );
   }
   return getPersona(id);
@@ -31,6 +32,7 @@ function resolveStdioPersona(): PersonaDefinition {
 
 async function main(): Promise<void> {
   warnIgnoredCliGuardrailEnvVars();
+  validateAvailableProjectsConfig();
   initAuditLog(getAuditLogPath());
 
   const persona = resolveStdioPersona();

@@ -21,13 +21,26 @@ export { SchedulersClient } from './api/v1/schedulers';
 export { TagsClient } from './api/v1/tags';
 export { AnalyticsClient } from './api/v1/analytics';
 export { ContentClient } from './api/v2/content';
+export { ChartsClientV2 } from './api/v2/charts';
 export { DashboardsClientV2 } from './api/v2/dashboards';
 export type { ListMembersParams, ListAllMembersParams } from './api/v1/users';
 export type { GetValidationResultsParams, ValidateProjectBody } from './api/v1/validation';
 export type { ListValidationResultsParams } from './api/v2/validation';
 export type { ListMetricsParams } from './api/v1/metrics';
 export type { ListSchedulersParams } from './api/v1/schedulers';
-export type { SearchContentParams } from './api/v2/content';
+export type {
+  BulkMoveContentBody,
+  MoveContentBody,
+  PermanentlyDeleteContentBody,
+  SearchContentParams,
+} from './api/v2/content';
+export type { SavedChart } from './api/v2/charts';
+export type { Dashboard, UpdateDashboardBody } from './api/v2/dashboards';
+export type {
+  DashboardPromoteDiffResults,
+  DashboardPromoteOptions,
+  PromoteDashboardResult,
+} from './api/v1/dashboards';
 export type {
   ListGroupsParams,
   ListAllGroupsParams,
@@ -51,8 +64,26 @@ export type {
 } from './config';
 export { noopLogger, consoleLogger } from './utils/logger';
 export { DEFAULT_RATE_LIMIT, DEFAULT_TIMEOUT, DEFAULT_RETRY } from './config';
-export { LightdashApiError, RateLimitError, NetworkError } from './errors';
+export {
+  LightdashApiError,
+  RateLimitError,
+  NetworkError,
+  ChartImageSizeError,
+  CONTRACT_ERROR_NAME,
+  CONTRACT_ERROR_MESSAGE,
+} from './errors';
 export type { ApiErrorPayload } from './errors';
+export {
+  CHART_IMAGE_EXPORT_TIMEOUT_MS,
+  CHART_IMAGE_MAX_BYTES,
+  type ChartImagePng,
+} from './api/v1/charts';
+export {
+  DEFAULT_BINARY_MAX_BYTES,
+  isBlockedBinaryHostname,
+  type GetBytesOptions,
+  type GetBytesResult,
+} from './http/http-client';
 export { loadConfigFromEnv, mergeConfig, createBearerConfig } from './utils/env';
 export {
   ENV_LIGHTDASH_API_KEY,
@@ -60,6 +91,13 @@ export {
   ENV_LIGHTDASH_PROXY_AUTHORIZATION,
 } from './utils/env';
 export { HttpClient } from './http/http-client';
+export {
+  isApiSuccessEnvelope,
+  unwrapApiSuccessResults,
+  type ApiEnvelope,
+  type ApiErrorEnvelope,
+  type ApiSuccessEnvelope,
+} from './http/unwrap-api-success';
 export { RateLimiter } from './http/rate-limiter';
 export { SecretString } from './utils/secret-string';
 export type { ApiResponseOk, ApiResponseError, ApiResponseBody, ApiError } from './types/api';

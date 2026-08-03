@@ -31,6 +31,8 @@ minimumReleaseAgeExclude:
   - '@modelcontextprotocol/client'
   - '@modelcontextprotocol/core'
   - '@hono/node-server'
+  - redis
+  - '@redis/*'
 
 overrides:
   form-data: '>=4.0.6'

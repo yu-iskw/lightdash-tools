@@ -1,8 +1,8 @@
 /**
- * Organization member operations in the shared operation registry.
+ * Organization member operations in the shared operation catalog.
  */
 
-import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from '../safety';
+import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
@@ -21,10 +21,11 @@ const membersList = defineOperation({
   summary: 'List organization members (one page)',
   http: { method: 'GET', path: MEMBERS_PATH },
   authorization: { safetyImpact: 'read' },
+  sensitivity: 'pii.email',
   mcp: {
     toolName: 'list_organization_members',
     annotations: READ_ONLY_DEFAULT,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users list' },
   profiles: [PROFILE_DISCOVERY],
@@ -35,10 +36,11 @@ const membersGet = defineOperation({
   summary: 'Get an organization member by UUID',
   http: { method: 'GET', path: MEMBER_PATH },
   authorization: { safetyImpact: 'read' },
+  sensitivity: 'pii.email',
   mcp: {
     toolName: 'get_member',
     annotations: READ_ONLY_DEFAULT,
-    taskSupport: { exposed: true, taskEligible: false },
+    taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users get' },
   profiles: [PROFILE_DISCOVERY],
@@ -49,17 +51,13 @@ const membersDelete = defineOperation({
   summary: 'Permanently remove a user from the organization (irrecoverable; client-only)',
   http: { method: 'DELETE', path: DELETE_MEMBER_PATH },
   authorization: { safetyImpact: 'write-destructive' },
-  mcp: {
-    toolName: 'delete_member',
-    annotations: WRITE_DESTRUCTIVE,
-    taskSupport: { exposed: false, taskEligible: false },
-  },
-  cli: { commandPath: '' },
+  sensitivity: 'none',
   agentExposure: 'client-only',
+  bannedMcpToolName: 'delete_member',
   profiles: [PROFILE_CORE_LIFECYCLE],
 });
 
-/** Organization member operations registered in the shared operation registry. */
+/** Organization member operations registered in the shared operation catalog. */
 export const USER_OPERATIONS: readonly OperationDescriptor[] = [
   membersList,
   membersGet,

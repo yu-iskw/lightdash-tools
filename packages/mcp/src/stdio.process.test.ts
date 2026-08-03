@@ -215,9 +215,145 @@ describe('stdio process smoke', () => {
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
-    expect(listResult.tools!).toHaveLength(13);
+    expect(listResult.tools!).toHaveLength(14);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_search_content')).toBe(true);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_run_chart')).toBe(true);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_export_chart_image')).toBe(true);
+
+    killChild(child);
+    child = undefined;
+  });
+
+  it('initialize then tools/list for content-governance persona', async () => {
+    let stderr = '';
+    child = spawn(process.execPath, [binPath, 'content-governance'], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        LIGHTDASH_URL: 'https://app.lightdash.cloud',
+        LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
+        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'content-governance',
+        LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'stdio-process-smoke', version: '0.0.0' },
+      },
+    });
+
+    const initResponse = await readJsonRpcResponse(child, 1, INIT_TIMEOUT_MS, () => stderr);
+    expect(initResponse.error).toBeUndefined();
+    expect(initResponse.result).toBeDefined();
+    const initResult = initResponse.result as {
+      serverInfo?: { name?: string };
+      protocolVersion?: string;
+    };
+    expect(initResult.serverInfo?.name).toBe('lightdash-mcp-gov');
+    expect(initResult.protocolVersion).toBeTruthy();
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      method: 'notifications/initialized',
+    });
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const listResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS, () => stderr);
+    expect(listResponse.error).toBeUndefined();
+    const listResult = listResponse.result as { tools?: Array<{ name: string }> };
+    expect(Array.isArray(listResult.tools)).toBe(true);
+    expect(listResult.tools!).toHaveLength(4);
+    expect(listResult.tools!.map((t) => t.name).sort()).toEqual([
+      'lightdash_delete_chart',
+      'lightdash_delete_dashboard',
+      'lightdash_get_dashboard_promote_diff',
+      'lightdash_promote_dashboard',
+    ]);
+
+    killChild(child);
+    child = undefined;
+  });
+
+  it('initialize then tools/list for content-developer persona', async () => {
+    let stderr = '';
+    child = spawn(process.execPath, [binPath, 'content-developer'], {
+      cwd: repoRoot,
+      env: {
+        ...process.env,
+        LIGHTDASH_URL: 'https://app.lightdash.cloud',
+        LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
+        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'content-developer',
+        LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
+      },
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'initialize',
+      params: {
+        protocolVersion: '2024-11-05',
+        capabilities: {},
+        clientInfo: { name: 'stdio-process-smoke', version: '0.0.0' },
+      },
+    });
+
+    const initResponse = await readJsonRpcResponse(child, 1, INIT_TIMEOUT_MS, () => stderr);
+    expect(initResponse.error).toBeUndefined();
+    expect(initResponse.result).toBeDefined();
+    const initResult = initResponse.result as {
+      serverInfo?: { name?: string };
+      protocolVersion?: string;
+    };
+    expect(initResult.serverInfo?.name).toBe('lightdash-mcp-cdev');
+    expect(initResult.protocolVersion).toBeTruthy();
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      method: 'notifications/initialized',
+    });
+
+    writeLine(child, {
+      jsonrpc: '2.0',
+      id: 2,
+      method: 'tools/list',
+      params: {},
+    });
+
+    const listResponse = await readJsonRpcResponse(child, 2, INIT_TIMEOUT_MS, () => stderr);
+    expect(listResponse.error).toBeUndefined();
+    const listResult = listResponse.result as { tools?: Array<{ name: string }> };
+    expect(Array.isArray(listResult.tools)).toBe(true);
+    expect(listResult.tools!).toHaveLength(26);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_get_chart_as_code')).toBe(true);
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_preview_dashboard_changes')).toBe(
+      true,
+    );
+    expect(listResult.tools!.some((t) => t.name === 'lightdash_move_content')).toBe(true);
 
     killChild(child);
     child = undefined;

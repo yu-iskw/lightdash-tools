@@ -7,7 +7,7 @@ import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { acquireQueryBudget, clampWaitMs, releaseQueryBudget } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
 
-import { addQueryLedgerEntry, releaseOwnedQueryBudget } from './query-ledger.js';
+import { addQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.js';
 import { codedErrorResult, warningFromNormalizedMessage } from './reader-tool-helpers.js';
 import { waitForAsyncQueryResults } from './wait-for-async.js';
 
@@ -100,7 +100,7 @@ export async function runBoundedSavedQuery(
         };
 
     if (isTerminalStatus(normalized.status)) {
-      releaseOwnedQueryBudget(ledgerEntry);
+      releaseQueryLedgerBudget(ledgerEntry);
     }
 
     return {

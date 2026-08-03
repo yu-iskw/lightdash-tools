@@ -6,44 +6,23 @@ import { z } from 'zod';
 
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
 import { exploreIdField } from '../../../tools/semantic/schema-fields.js';
+import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
 import {
-  getPlaybookMarkdown,
+  SEMANTIC_LAYER_COMPOSE_COMPILE_URI,
+  SEMANTIC_LAYER_CORE_PLAYBOOK,
+  SEMANTIC_LAYER_CORE_URI,
+  SEMANTIC_LAYER_EXPLORE_URI,
   SEMANTIC_LAYER_HARD_BANS,
-  SEMANTIC_LAYER_PLAYBOOK_MIME,
-  SEMANTIC_LAYER_PLAYBOOK_URI,
-} from './resources/playbook.js';
+  SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
+} from './resources/playbooks.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function playbookEmbeddedResource() {
-  return {
-    type: 'resource' as const,
-    resource: {
-      uri: SEMANTIC_LAYER_PLAYBOOK_URI,
-      mimeType: SEMANTIC_LAYER_PLAYBOOK_MIME,
-      text: getPlaybookMarkdown(),
-    },
-  };
-}
-
-function userMessages(text: string) {
-  return {
-    messages: [
-      {
-        role: 'user' as const,
-        content: {
-          type: 'text' as const,
-          text,
-        },
-      },
-      {
-        role: 'user' as const,
-        content: playbookEmbeddedResource(),
-      },
-    ],
-  };
-}
+const userMessages = createPromptPlaybookEmbedder({
+  core: SEMANTIC_LAYER_CORE_PLAYBOOK,
+  topics: SEMANTIC_LAYER_TOPIC_PLAYBOOKS,
+});
 
 export function registerSemanticLayerPrompts(server: McpServer): void {
   server.registerPrompt(
@@ -58,19 +37,24 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
       }),
     },
     async ({ projectUuid, question }) => {
-      const topic = question ? ` Question/topic: ${question}.` : '';
+      const topic = question ? `Question/topic: ${question}.` : '';
       return userMessages(
-        [
-          'Discover the Lightdash semantic layer for this project. Compile is out of scope unless asked.',
-          `Project: ${projectUuid}.${topic}`,
-          SEMANTIC_LAYER_HARD_BANS,
-          'Procedure:',
-          '1) Stick to this projectUuid (do not switch from an org-wide list_projects). Warehouse/dataset/table hints are search keys only.',
-          '2) Always lightdash_list_explores with search+limit; disambiguate per playbook (schemaName, label or name __{table}, skip empty schema when dataset known).',
-          '3) Shortlist base-table dimensions by role; once explore is known prefer get_explore → tables[baseTable].metrics only (catalog keyword optional, still filter tableName === explore id).',
-          'Deliverable: shortlist name/label/schemaName/fieldId (+ why). Do not dump full explore/dimension/metric/lineage payloads.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}). Use only lightdash_* tools.`,
-        ].join('\n'),
+        `Discover the Lightdash semantic layer for this project. Compile is out of scope unless asked.
+
+Project UUID (required on every tool): ${projectUuid}.
+${topic}
+
+${SEMANTIC_LAYER_HARD_BANS}
+
+Procedure:
+1. get_project once to confirm name. Do not switch projects from org-wide list_projects.
+2. list_explores with search+limit (≤15). Disambiguate: skip empty schemaName / errors; prefer exact label or name __{table}; deprioritize eda_/reporting_ unless asked.
+3. list_dimensions (base table) → shortlist ≤12 fieldIds by role (time/channel/segment/entity). Copy fieldIds literally.
+4. get_explore → tables[baseTable].metrics only (≤8 names/labels). Skip list_metrics once explore is known. Skip get_metric / get_field_lineage unless needed.
+5. Deliverable: chosen explore (name/label/schemaName/databaseName + why) + field shortlist. Never dump full explore/dimension/metric/lineage payloads.
+
+Follow embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_EXPLORE_URI}). Use only lightdash_* tools.`,
+        'explore',
       );
     },
   );
@@ -88,21 +72,26 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
       }),
     },
     async ({ projectUuid, question, exploreId }) => {
-      const topic = question ? ` Goal: ${question}.` : '';
-      const explore = exploreId ? ` Preferred explore: ${exploreId}.` : '';
+      const topic = question ? `Goal: ${question}.` : '';
+      const explore = exploreId ? `Preferred explore: ${exploreId}.` : '';
       return userMessages(
-        [
-          'Compose a Lightdash metric query and compile it with lightdash_compile_query. Do not run the query.',
-          `Project: ${projectUuid}.${topic}${explore}`,
-          SEMANTIC_LAYER_HARD_BANS,
-          'Procedure:',
-          '1) If exploreId is missing, resolve it per playbook (search + disambiguation).',
-          '2) Use full fieldIds from list_dimensions / {exploreId}_{metricName}; prefer get_explore → tables[baseTable].metrics once explore is known.',
-          '3) If the user asked for N insights, reuse one explore and compile N diverse cuts from available fields.',
-          '4) Compile with fieldIds only; on empty SELECT or unknown field id, fix fieldIds and re-compile once. Extra related metrics in SQL can be OK. Stop after a good compile.',
-          'Deliverable: insight title(s) + fieldIds + compiled SQL (or errors). Never paste full explore/dimension/metric/lineage payloads.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
-        ].join('\n'),
+        `Compose a Lightdash metric query and compile it with lightdash_compile_query. Do not run the query.
+
+Project UUID: ${projectUuid}.
+${topic}
+${explore}
+
+${SEMANTIC_LAYER_HARD_BANS}
+
+Procedure:
+1. If exploreId is missing, resolve it per explore playbook (search + disambiguation). Stay on this projectUuid.
+2. Copy fieldIds from list_dimensions and {exploreId}_{metricName} from get_explore → tables[baseTable].metrics. Never invent grains.
+3. If the user asked for N insights, reuse one explore and compile N diverse cuts.
+4. compile_query with fieldIds only. After each compile, verify every requested fieldId appears as a SELECT alias (missing alias = failure even without isError). ≤2 fix retries.
+5. Deliverable: insight title(s) + fieldIds + compiled SQL (or errors). Never paste full explore/dimension/metric/lineage payloads.
+
+Follow embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_COMPOSE_COMPILE_URI}).`,
+        'compose-compile',
       );
     },
   );
@@ -120,20 +109,24 @@ export function registerSemanticLayerPrompts(server: McpServer): void {
       }),
     },
     async ({ projectUuid, exploreId, errorText }) => {
-      const err = errorText ? ` Error: ${errorText}` : '';
+      const err = errorText ? `Known error: ${errorText}` : '';
       return userMessages(
-        [
-          'Debug a failing lightdash_compile_query call and re-compile until it succeeds or you explain blockers.',
-          `Project: ${projectUuid}`,
-          `Explore: ${exploreId}.${err}`,
-          SEMANTIC_LAYER_HARD_BANS,
-          'Checklist:',
-          '- Empty SELECT or unknown field id → use fieldIds from lightdash_list_dimensions (base table).',
-          '- Wrong explore → re-disambiguate per playbook (schemaName; label or name __{table}).',
-          '- Metric not found / catalog empty → get_explore tables[baseTable].metrics; tableName must be the full explore id; compile as {exploreId}_{metricName}.',
-          'Deliverable: successful compile (SQL with expected columns) or a clear blocker. Stop after a good compile.',
-          `Follow the embedded playbook (${SEMANTIC_LAYER_PLAYBOOK_URI}).`,
-        ].join('\n'),
+        `Debug a failing lightdash_compile_query call and re-compile until it succeeds or you explain blockers.
+
+Project UUID: ${projectUuid}
+Explore: ${exploreId}
+${err}
+
+${SEMANTIC_LAYER_HARD_BANS}
+
+Checklist:
+- unknown field id / empty SELECT / missing SELECT alias → use fieldIds from list_dimensions (base table) + explore-local metrics; re-compile (≤2 retries).
+- Wrong explore → re-disambiguate (schemaName; label or name __{table}; skip empty schema / eda unless asked).
+- Metric not found / catalog empty → get_explore tables[baseTable].metrics; tableName must be the full explore id; compile as {exploreId}_{metricName}.
+- Verify SELECT aliases after every compile. Stop after a good compile or a clear blocker.
+
+Follow embedded playbooks (${SEMANTIC_LAYER_CORE_URI}, ${SEMANTIC_LAYER_COMPOSE_COMPILE_URI}).`,
+        'compose-compile',
       );
     },
   );

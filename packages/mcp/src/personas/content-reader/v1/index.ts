@@ -3,7 +3,7 @@
  */
 
 import { registerContentReaderPrompts } from './prompts.js';
-import { registerContentReaderPlaybook } from './resources/playbook.js';
+import { registerContentReaderPlaybook } from './resources/playbooks.js';
 
 import type { ToolId } from '../../../tools/registry.js';
 import type { PersonaDefinition } from '../../types.js';
@@ -22,6 +22,7 @@ export const CONTENT_READER_TOOL_IDS = [
   'get_project_parameters',
   'explain_content',
   'run_chart',
+  'export_chart_image',
   'run_dashboard_tile',
   'get_query_result',
   'cancel_query',

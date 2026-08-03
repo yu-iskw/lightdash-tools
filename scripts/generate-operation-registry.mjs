@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Validates the shared operation registry and emits a JSON snapshot.
- * Exit 0 when the registry is complete and consistent; non-zero on failure.
+ * Validates the shared operation catalog and emits a JSON snapshot.
+ * Exit 0 when the catalog is complete and consistent; non-zero on failure.
  */
 
 import fs from 'fs';
@@ -13,7 +13,15 @@ const ROOT = path.resolve(__dirname, '..');
 const COMMON_DIST = path.join(ROOT, 'packages/common/dist');
 const OUTPUT_PATH = path.join(ROOT, 'packages/common/dist/operation-registry.json');
 
-const REQUIRED_PROFILES = ['core-lifecycle', 'evaluations', 'conversations', 'discovery-readonly'];
+const REQUIRED_PROFILES = [
+  'core-lifecycle',
+  'evaluations',
+  'conversations',
+  'discovery-readonly',
+  'semantic-discovery',
+  'org-audit-readonly',
+  'content-reader',
+];
 
 const P0_OPERATION_IDS = [
   'ai-agents.admin.agents.list',
@@ -56,13 +64,19 @@ function validateOperation(operation, errors) {
     ['http.method', operation.http?.method],
     ['http.path', operation.http?.path],
     ['authorization.safetyImpact', operation.authorization?.safetyImpact],
+    ['sensitivity', operation.sensitivity],
   ];
 
   if (agentExposure === 'agent') {
-    requiredStringFields.push(
-      ['mcp.toolName', operation.mcp?.toolName],
-      ['cli.commandPath', operation.cli?.commandPath],
-    );
+    if (!operation.mcp && !operation.cli) {
+      errors.push(`Operation '${operation.id}' agent ops require mcp and/or cli`);
+    }
+    if (operation.mcp) {
+      requiredStringFields.push(['mcp.toolName', operation.mcp.toolName]);
+    }
+    if (operation.cli) {
+      requiredStringFields.push(['cli.commandPath', operation.cli.commandPath]);
+    }
   }
 
   for (const [label, value] of requiredStringFields) {
@@ -71,27 +85,31 @@ function validateOperation(operation, errors) {
     }
   }
 
-  if (agentExposure === 'client-only' && operation.mcp?.taskSupport?.exposed === true) {
-    errors.push(
-      `Operation '${operation.id}' client-only must set mcp.taskSupport.exposed to false`,
-    );
+  if (agentExposure === 'client-only') {
+    if (operation.mcp !== undefined || operation.cli !== undefined) {
+      errors.push(`Operation '${operation.id}' client-only must omit mcp and cli`);
+    }
   }
 
   if (!Array.isArray(operation.profiles) || operation.profiles.length === 0) {
     errors.push(`Operation '${operation.id}' must declare at least one profile`);
   }
 
-  if (operation.http?.path && !operation.http.path.startsWith('/api/v1/')) {
-    errors.push(`Operation '${operation.id}' http.path must start with /api/v1/`);
+  if (operation.http?.path) {
+    const opPath = operation.http.path;
+    if (!opPath.startsWith('/api/v1/') && !opPath.startsWith('/api/v2/')) {
+      errors.push(`Operation '${operation.id}' http.path must start with /api/v1/ or /api/v2/`);
+    }
   }
 
   const impact = operation.authorization?.safetyImpact;
   const annotations = operation.mcp?.annotations;
-  if (impact === 'read' && annotations?.idempotentHint !== true) {
-    errors.push(`Operation '${operation.id}' read impact requires idempotentHint=true`);
-  }
-  if (impact === 'write-destructive' && annotations?.idempotentHint === true) {
-    errors.push(`Operation '${operation.id}' destructive impact must not set idempotentHint=true`);
+  if (annotations) {
+    if (impact === 'write-destructive' && annotations.idempotentHint === true) {
+      errors.push(
+        `Operation '${operation.id}' destructive impact must not set idempotentHint=true`,
+      );
+    }
   }
 }
 
@@ -119,6 +137,7 @@ async function main() {
     }
   }
 
+  // Persona + AI-agent profiles must have at least one operation once catalog cutover is complete.
   for (const profile of REQUIRED_PROFILES) {
     if (getOperationsByProfile(profile).length === 0) {
       errors.push(`No operations registered for profile '${profile}'`);
@@ -143,11 +162,16 @@ async function main() {
       summary: operation.summary,
       http: operation.http,
       authorization: operation.authorization,
-      mcp: {
-        toolName: operation.mcp.toolName,
-        annotations: operation.mcp.annotations,
-        taskSupport: operation.mcp.taskSupport,
-      },
+      sensitivity: operation.sensitivity,
+      agentExposure: operation.agentExposure,
+      bannedMcpToolName: operation.bannedMcpToolName,
+      mcp: operation.mcp
+        ? {
+            toolName: operation.mcp.toolName,
+            annotations: operation.mcp.annotations,
+            taskSupport: operation.mcp.taskSupport,
+          }
+        : undefined,
       cli: operation.cli,
       profiles: operation.profiles,
     })),

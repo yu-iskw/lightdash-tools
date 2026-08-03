@@ -4,7 +4,7 @@ Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker (server-
 
 ## Production limitations
 
-Bearer validation confirms **who** the user is (`GET /api/v1/user`). Opaque Lightdash tokens are not fully resource/audience-bound yet. Rely on Lightdash RBAC + persona tool surface + optional `X-Lightdash-Project` pin.
+Bearer validation confirms **who** the user is (`GET /api/v1/user`). Opaque Lightdash tokens are not fully resource/audience-bound yet. Rely on Lightdash RBAC + persona tool surface + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
 ## Dockerfile
 
@@ -37,13 +37,65 @@ LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=...   # from Secret Manager
 LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=...
 ```
 
-Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_PROXY_AUTHORIZATION`.
+Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI).
+
+**Do not set `LIGHTDASH_TOOLS_AUDIT_LOG` on Cloud Run.** Tool audit entries are written as pure JSON NDJSON on **stderr** and are captured automatically by [Cloud Run logging](https://docs.cloud.google.com/run/docs/logging) into Cloud Logging (`jsonPayload`). A container file path is ephemeral and unsuitable as the primary audit sink. Use `LIGHTDASH_TOOLS_AUDIT_LOG` only for CLI/local file append.
 
 Register in Lightdash:
 
 ```text
 https://lightdash-mcp-xxxxx.a.run.app/oauth/callback
 ```
+
+## Audit logs (Cloud Logging)
+
+Each MCP tool call emits one structured line with `"channel":"audit"`, plus `severity`, `message`, `tool`, `status`, `subject` / `tokenHash` (OAuth), `clientSessionId`, `personaId`, and optional `projectUuids`. See [structured logging](https://docs.cloud.google.com/logging/docs/structured-logging).
+
+### Logs Explorer filter
+
+Replace `SERVICE` with your Cloud Run service name:
+
+```text
+resource.type="cloud_run_revision"
+resource.labels.service_name="SERVICE"
+jsonPayload.channel="audit"
+```
+
+Example CLI read:
+
+```bash
+gcloud logging read \
+  'resource.type="cloud_run_revision" AND resource.labels.service_name="lightdash-mcp" AND jsonPayload.channel="audit"' \
+  --project=PROJECT_ID --limit=20 --format=json
+```
+
+### Longer retention (recommended for compliance)
+
+`_Default` log buckets retain **30 days** by default (configurable 1–3650 days on project buckets). For a dedicated audit trail, create a user log bucket and sink — see [Configure log buckets](https://docs.cloud.google.com/logging/docs/buckets) and [Route log entries](https://docs.cloud.google.com/logging/docs/routing/overview).
+
+Example (365-day retention; raise up to 3650 if policy requires):
+
+```bash
+gcloud logging buckets create mcp-audit \
+  --location=global \
+  --retention-days=365 \
+  --project=PROJECT_ID
+
+gcloud logging sinks create mcp-audit-sink \
+  logging.googleapis.com/projects/PROJECT_ID/locations/global/buckets/mcp-audit \
+  --log-filter='resource.type="cloud_run_revision" AND resource.labels.service_name="lightdash-mcp" AND jsonPayload.channel="audit"' \
+  --project=PROJECT_ID
+```
+
+Grant the sink writer identity permission on the destination bucket after create (Cloud Logging prints the service account). Restrict who can delete the sink/bucket.
+
+### Governance companions (already in the product)
+
+- Persona URL / fixed `toolIds` (capability surface)
+- OAuth identity + Lightdash RBAC
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` process ceiling for shared services
+- Optional `X-Lightdash-Project` pin
+- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state
 
 ## Deploy example
 
@@ -67,3 +119,6 @@ gcloud run deploy lightdash-mcp \
 - [ ] Lightdash redirect URI is `{PUBLIC_URL}/oauth/callback`
 - [ ] Client secrets only in Secret Manager
 - [ ] Cursor/Claude config is URL-only (`…/semantic-layer/v1/mcp`)
+- [ ] `LIGHTDASH_TOOLS_AUDIT_LOG` unset (stderr → Cloud Logging)
+- [ ] Audit sink / retention configured if compliance requires >30 days
+- [ ] `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` set when the service must not see the whole org

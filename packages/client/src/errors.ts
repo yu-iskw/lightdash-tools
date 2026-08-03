@@ -4,6 +4,12 @@
 
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
+/** HttpClient name when the response body is not a Lightdash success/error envelope. */
+export const CONTRACT_ERROR_NAME = 'ContractError';
+
+/** Human-readable message for {@link CONTRACT_ERROR_NAME}. */
+export const CONTRACT_ERROR_MESSAGE = 'Unexpected Lightdash API response shape';
+
 /** API error payload shape (from Lightdash ApiErrorPayload). */
 export interface ApiErrorPayload {
   error: {
@@ -63,5 +69,45 @@ export class NetworkError extends Error {
     super(message);
     this.name = 'NetworkError';
     Object.setPrototypeOf(this, NetworkError.prototype);
+  }
+}
+
+/**
+ * Thrown when a binary download exceeds the configured byte limit.
+ */
+export class BinarySizeLimitError extends Error {
+  readonly code = 'PAYLOAD_TOO_LARGE' as const;
+
+  constructor(
+    public readonly maxBytes: number,
+    public readonly byteLength?: number,
+  ) {
+    super(
+      byteLength === undefined
+        ? `Binary payload exceeds size limit (≥ ${maxBytes} bytes)`
+        : `Binary payload exceeds size limit (${byteLength} > ${maxBytes} bytes)`,
+    );
+    this.name = 'BinarySizeLimitError';
+    Object.setPrototypeOf(this, BinarySizeLimitError.prototype);
+  }
+}
+
+/**
+ * Thrown when a chart PNG export exceeds the configured byte limit.
+ */
+export class ChartImageSizeError extends Error {
+  readonly code = 'IMAGE_TOO_LARGE' as const;
+
+  constructor(
+    public readonly maxBytes: number,
+    public readonly byteLength?: number,
+  ) {
+    super(
+      byteLength === undefined
+        ? `Chart image exceeds size limit (≥ ${maxBytes} bytes)`
+        : `Chart image exceeds size limit (${byteLength} > ${maxBytes} bytes)`,
+    );
+    this.name = 'ChartImageSizeError';
+    Object.setPrototypeOf(this, ChartImageSizeError.prototype);
   }
 }

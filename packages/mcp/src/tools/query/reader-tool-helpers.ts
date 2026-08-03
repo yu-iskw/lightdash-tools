@@ -1,9 +1,10 @@
 /**
- * Shared error/warning helpers for content-reader query and metadata tools.
+ * Shared error/warning helpers for content-reader and content-developer (ADR-0014)
+ * query and metadata tools.
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
-import { jsonToolResult, withLightdashBlockedMarker } from '../shared.js';
+import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
@@ -11,25 +12,28 @@ import type { TextContent } from '../shared.js';
 
 /** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
 const BLOCKED_POLICY_CODES = new Set([
+  'PROJECT_NOT_AVAILABLE',
   'PROJECT_SCOPE_MISMATCH',
   'PROJECT_SCOPE_REQUIRED',
   'CONTENT_NOT_EXECUTABLE',
   'CONTENT_NOT_FOUND',
   'INVALID_FILTER_OVERRIDE',
   'INVALID_PARAMETER_OVERRIDE',
-  'QUERY_NOT_OWNED',
+  'QUERY_NOT_FOUND',
   'QUERY_EXPIRED',
   'QUERY_BUDGET_EXCEEDED',
   'RATE_LIMITED',
   'ROW_LIMIT_EXCEEDED',
+  // content-developer preview tokens (ADR-0014 / ADR-0019)
+  'PREVIEW_REQUIRED',
+  'PREVIEW_STALE',
+  'PREVIEW_NOT_VALIDATED',
+  'PREVIEW_NOT_OWNED',
+  'CHART_SLUG_EXISTS',
 ]);
 
 export function codedErrorResult(code: string, message: string): TextContent {
-  const body = { error: { code, message } };
-  const result: TextContent = {
-    ...jsonToolResult(body),
-    isError: true,
-  };
+  const result = toolErrorResult(code, message);
   if (BLOCKED_POLICY_CODES.has(code)) {
     return withLightdashBlockedMarker(result);
   }

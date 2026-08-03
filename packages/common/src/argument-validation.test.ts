@@ -18,12 +18,17 @@ describe('argument-validation', () => {
           'agentUuid',
           'artifactUuid',
           'chartUuid',
+          'chartUuidOrSlug',
+          'contentUuidOrSlug',
           'dashboardUuid',
+          'dashboardUuidOrSlug',
           'evalUuid',
           'fingerprint',
           'groupUuid',
+          'itemUuids',
           'mcpServerUuid',
           'messageUuid',
+          'newSlug',
           'organizationUuid',
           'parentSpaceUuid',
           'project',
@@ -36,12 +41,18 @@ describe('argument-validation', () => {
           'savedQueryUuid',
           'schedulerUuid',
           'slug',
+          'sourceChartUuidOrSlug',
+          'sourceDashboardUuid',
           'spaceUuid',
           'spaceUuids',
+          'targetSpaceUuid',
           'threadUuid',
+          'tileUuid',
           'toolCallId',
           'userUuid',
           'versionUuid',
+          'versionUuidA',
+          'versionUuidB',
         ].sort(),
       );
     });
@@ -207,6 +218,26 @@ describe('argument-validation', () => {
       );
       expect(() => validateResourceIdsInObject({ dashboardUuid: '..' })).toThrow(
         'Slug must not contain path traversal segments',
+      );
+    });
+
+    it('validates chartUuidOrSlug/dashboardUuidOrSlug and itemUuids/targetSpaceUuid', () => {
+      expect(() =>
+        validateResourceIdsInObject({
+          chartUuidOrSlug: 'my-chart',
+          dashboardUuidOrSlug: VALID_UUID,
+          itemUuids: [VALID_UUID],
+          targetSpaceUuid: VALID_UUID,
+        }),
+      ).not.toThrow();
+      expect(() => validateResourceIdsInObject({ itemUuids: [VALID_UUID, 'bad-uuid'] })).toThrow(
+        'Invalid UUID format',
+      );
+      expect(() => validateResourceIdsInObject({ targetSpaceUuid: 'bad?' })).toThrow(
+        'Invalid UUID format',
+      );
+      expect(() => validateResourceIdsInObject({ chartUuidOrSlug: 'bad?' })).toThrow(
+        'Slug must contain only alphanumeric characters',
       );
     });
 
