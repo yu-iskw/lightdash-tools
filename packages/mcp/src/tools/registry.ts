@@ -69,6 +69,7 @@ import {
   registerValidateChart,
   registerValidateDashboard,
 } from './project/developer-content.js';
+import { registerGetChartAsCode } from './project/developer-get-chart-as-code.js';
 import { registerGetDashboardPromoteDiff } from './project/get-dashboard-promote-diff.js';
 import {
   registerGetProjectParameters,
@@ -153,6 +154,7 @@ export const toolRegistry = {
   cancel_query: { register: registerCancelQuery },
 
   // content-developer (ADR-0014)
+  get_chart_as_code: { register: registerGetChartAsCode },
   preview_chart_changes: { register: registerPreviewChartChanges },
   preview_dashboard_changes: { register: registerPreviewDashboardChanges },
   preview_content_move: { register: registerPreviewContentMove },

@@ -13,8 +13,8 @@ const playbooks = definePersonaPlaybooks<SemanticLayerPlaybookTopic>({
   moduleDir: __dirname,
   /** Shared hard-ban text for prompts (keep in sync with playbooks/core.md Hard bans section). */
   hardBans:
-    'Do not run metric/SQL/chart queries, use SQL runner, trigger validation jobs, mutate content, or call AI/identity tools. Those are not available on this server.',
-  coreDescription: 'Hard bans, allowed tools, project scope, and stop criteria',
+    'Do not run metric/SQL/chart queries, use SQL runner, trigger validation jobs, mutate content, switch away from the given projectUuid, invent fieldIds, dump full explore/metric/lineage payloads, or call AI/identity tools. Those are not available on this server.',
+  coreDescription: 'Hard bans, budgets, allowed tools, project scope, and stop criteria',
   topics: [
     {
       id: 'explore',

@@ -6,28 +6,44 @@ import { definePersonaPlaybooks } from '../../../lib/playbook-resources.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';
 
-export type ContentDeveloperPlaybookTopic = 'content-move' | 'dashboards';
+export type ContentDeveloperPlaybookTopic =
+  'chart-types' | 'content-move' | 'dashboard-design' | 'dashboards';
 
 const playbooks = definePersonaPlaybooks<ContentDeveloperPlaybookTopic>({
   personaId: 'content-developer',
   moduleDir: __dirname,
-  hardBans: `Do not execute arbitrary metric queries, raw SQL, or underlying-data queries.
+  hardBans: `Do not execute arbitrary metric queries, raw SQL, warehouse runs, or saved-chart execution.
 Do not author or upsert SQL charts.
-Do not hard-delete, rollback, or promote content.
-Do not perform organization administration.
-Do not create or update spaces — spaces are managed outside this agent (e.g. Terraform).
-Do not treat a standalone chart create/update as a finished publish unit; attach charts as dashboard tiles.
-Do not apply a write tool without a confirmed, unexpired HMAC previewToken from the matching preview_* tool (confirm_preview unlocks every write).
-Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only.
-Do not reuse a draft previewToken after confirm (use the validated token); re-run preview if the resource drifts (PREVIEW_STALE).
+Do not hard-delete, rollback, or promote content (use content-governance for promote).
+Do not perform organization administration or list org-wide projects.
+Do not create or update spaces — spaces are Terraform / out-of-band; use existing spaces only.
+Do not create space-only charts for dashboard work — set dashboardSlug to the dashboard shell already created.
+Do not treat chart create as done without a dashboard shell and tiles.
+Do not invent fieldIds — clone via get_chart_as_code / get_chart or use semantic-layer.
+Do not invent skinny chartConfig — clone a working as-code body and keep series/layout/encode.
+Do not apply a write tool without a confirmed, unexpired HMAC previewToken from the matching preview_* tool (confirm_preview unlocks every write; use the new validated token).
+Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only (validate_chart needs chartUuid).
+Do not reuse a draft previewToken after confirm; re-run preview if the resource drifts (PREVIEW_STALE).
 Do not reveal secrets, warehouse credentials, or hidden SQL.`,
-  coreDescription: 'Hard bans, tools, project scope, and preview gate',
+  coreDescription: 'Hard bans, tools, project scope, preview gate, and apply pitfalls',
   topics: [
     {
       id: 'dashboards',
       title: 'Content-developer dashboards playbook',
-      description: 'Dashboard-first authoring with charts as tiles',
+      description: 'Dashboard shell first, then dashboardSlug-scoped charts as tiles',
       file: 'dashboards.md',
+    },
+    {
+      id: 'dashboard-design',
+      title: 'Content-developer dashboard-design playbook',
+      description: 'Layout, optional markdown, optional filters, and tabs guidance',
+      file: 'dashboard-design.md',
+    },
+    {
+      id: 'chart-types',
+      title: 'Content-developer chart-types playbook',
+      description: 'Cartesian encode checklist and UI intent → as-code type map',
+      file: 'chart-types.md',
     },
     {
       id: 'content-move',

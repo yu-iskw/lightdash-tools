@@ -1,10 +1,14 @@
 /**
  * MCP prompts for content-developer workflows.
+ *
+ * Procedure detail lives in playbooks (embedded via createPromptPlaybookEmbedder).
+ * Prompt bodies stay goal/input-specific — do not restate core/dashboard SOPs here.
  */
 
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
+import { projectUuidField } from '../../../tools/lib/schema-fields.js';
 import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
 
 import {
@@ -20,53 +24,38 @@ const userMessages = createPromptPlaybookEmbedder({
   topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 });
 
-const PREVIEW_VALIDATE_APPLY = `Hard rule: preview -> confirm_preview -> apply. Call the matching lightdash_preview_* tool first,
-record the previewToken and resourceKey. Unlock every write (create, update, duplicate, tile ops, content moves)
-with lightdash_confirm_preview using that previewToken and the exact resourceKind/resourceKey the preview was
-created with. Then apply with the write tool using the new validated previewToken from confirm (and the same
-proposed payload). Never call a write tool without a fresh, confirmed previewToken bound to that exact resource.
-lightdash_validate_chart / lightdash_validate_dashboard are optional health checks on a saved UUID only — they do not unlock apply.`;
+const optionalProjectUuid = projectUuidField().optional();
 
-const DASHBOARD_FIRST = `Dashboard-first: the dashboard is the authoring and promotion unit. Create/update charts only as
-tile prerequisites in this workflow; every new chart must be added as a dashboard tile before treating work as done.
-Do not create or update spaces (Terraform / out-of-band) — place content in an existing spaceUuid from list_spaces/get_space.
-Promote via the content-governance persona (form elicitation), not this persona.`;
+const PROJECT_UUID_HINT = '(pass on every tool, or use HTTP pin — else PROJECT_SCOPE_REQUIRED)';
 
 export function registerContentDeveloperPrompts(server: McpServer): void {
   server.registerPrompt(
     'create_dashboard',
     {
       title: 'Create dashboard',
-      description:
-        'Create a dashboard in an existing space, authoring charts only as tiles on that dashboard',
+      description: 'Create a dashboard shell first, then dashboardSlug-scoped charts as tiles',
       argsSchema: {
         goal: z.string(),
+        projectUuid: optionalProjectUuid,
         spaceUuid: z.string().optional(),
         chartReferences: z.string().optional(),
       },
     },
-    ({ goal, spaceUuid, chartReferences }) =>
+    ({ goal, projectUuid, spaceUuid, chartReferences }) =>
       userMessages(
         `Create a new dashboard for this goal:
 
 ${goal}
 
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+
 ${CONTENT_DEVELOPER_HARD_BANS}
-
-${PREVIEW_VALIDATE_APPLY}
-
-${DASHBOARD_FIRST}
 
 Target existing space: ${spaceUuid ?? '(resolve with lightdash_list_spaces / lightdash_get_space — never create a space)'}.
 Chart hints: ${chartReferences ?? '(none provided)'}.
-Discover reusable charts with lightdash_search_content / lightdash_get_chart.
-If a new semantic chart is required, preview_chart_changes → confirm_preview → create_chart, then immediately
-preview_dashboard_changes / add_dashboard_tile so the chart is on this dashboard.
-Preview dashboard create with lightdash_preview_dashboard_changes (resourceKey 'new'), confirm with
-lightdash_confirm_preview (resourceKind 'dashboard', resourceKey 'new'), apply with lightdash_create_dashboard.
-For each tile, preview the tile array, confirm_preview, then lightdash_add_dashboard_tile.
-Report dashboard UUID/slug, tiles, and chart UUIDs — do not stop at orphan charts.`,
-        'dashboards',
+Follow core + dashboards + dashboard-design playbooks (preview→confirm→apply; shell first; tile after create).
+Report dashboard UUID/slug, tiles, and chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
+        ['dashboards', 'dashboard-design'],
       ),
   );
 
@@ -78,28 +67,23 @@ Report dashboard UUID/slug, tiles, and chart UUIDs — do not stop at orphan cha
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         improvementGoal: z.string(),
+        projectUuid: optionalProjectUuid,
       },
     },
-    ({ dashboardUuidOrSlug, improvementGoal }) =>
+    ({ dashboardUuidOrSlug, improvementGoal, projectUuid }) =>
       userMessages(
         `Improve dashboard ${dashboardUuidOrSlug} for this goal:
 
 ${improvementGoal}
 
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-${PREVIEW_VALIDATE_APPLY}
-
-${DASHBOARD_FIRST}
-
-Inspect current structure with lightdash_get_dashboard first.
-If new charts are needed, author them as tile prerequisites then add tiles — never as a standalone publish.
-Preview with lightdash_preview_dashboard_changes, unlock with lightdash_confirm_preview,
-then apply with lightdash_update_dashboard and/or the tile tools (lightdash_add_dashboard_tile,
-lightdash_move_dashboard_tile, lightdash_remove_dashboard_tile, lightdash_resize_dashboard_tile).
-Optionally run lightdash_validate_dashboard afterward as a saved-resource health check.
+Inspect with lightdash_get_dashboard first. Follow core + dashboards + dashboard-design playbooks.
+New charts: get_chart_as_code seed + dashboardSlug, then tile — never space-only publishes.
 Report what changed and any remaining validation warnings.`,
-        'dashboards',
+        ['dashboards', 'dashboard-design'],
       ),
   );
 
@@ -111,23 +95,52 @@ Report what changed and any remaining validation warnings.`,
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         concern: z.string().optional(),
+        projectUuid: optionalProjectUuid,
       },
     },
-    ({ dashboardUuidOrSlug, concern }) =>
+    ({ dashboardUuidOrSlug, concern, projectUuid }) =>
       userMessages(
         `Refactor dashboard ${dashboardUuidOrSlug}.
 
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-${PREVIEW_VALIDATE_APPLY}
-
-${DASHBOARD_FIRST}
-
 Concern: ${concern ?? '(general cleanup)'}.
-Use lightdash_compare_dashboard_versions to understand recent drift before proposing changes.
-Preview with lightdash_preview_dashboard_changes, confirm_preview, then apply with lightdash_update_dashboard
-and the tile tools as needed. Do not remove tiles unless explicitly requested.`,
+Use lightdash_compare_dashboard_versions before proposing changes. Follow core + dashboards playbooks.
+Do not remove tiles unless explicitly requested.`,
         'dashboards',
+      ),
+  );
+
+  server.registerPrompt(
+    'author_chart',
+    {
+      title: 'Author chart',
+      description:
+        'Clone a working seed chart (cartesian encode intact); optional dashboardSlug scoping',
+      argsSchema: {
+        goal: z.string(),
+        projectUuid: optionalProjectUuid,
+        seedChartUuidOrSlug: z.string().optional(),
+        dashboardSlug: z.string().optional(),
+      },
+    },
+    ({ goal, projectUuid, seedChartUuidOrSlug, dashboardSlug }) =>
+      userMessages(
+        `Author a semantic chart for this goal:
+
+${goal}
+
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Seed chart: ${seedChartUuidOrSlug ?? '(find a rendering seed on the same tableName via search_content / get_space)'}.
+Dashboard slug: ${dashboardSlug ?? '(omit only for intentional space-owned charts; for dashboard work set dashboardSlug to an existing dashboard shell)'}.
+
+${CONTENT_DEVELOPER_HARD_BANS}
+
+Follow core + chart-types playbooks (clone via get_chart_as_code; preview with top-level slug; tile if dashboardSlug set).
+Report UUID/slug; note this persona cannot run_chart / prove UI render.`,
+        'chart-types',
       ),
   );
 
@@ -138,24 +151,22 @@ and the tile tools as needed. Do not remove tiles unless explicitly requested.`,
       description: 'Move charts/dashboards into an existing space (no space create/update)',
       argsSchema: {
         goal: z.string(),
+        projectUuid: optionalProjectUuid,
         spaceReferences: z.string().optional(),
       },
     },
-    ({ goal, spaceReferences }) =>
+    ({ goal, projectUuid, spaceReferences }) =>
       userMessages(
         `Move content between existing spaces for this goal:
 
 ${goal}
 
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-${PREVIEW_VALIDATE_APPLY}
-
 Space hints: ${spaceReferences ?? '(discover with lightdash_list_spaces)'}.
-Inspect with lightdash_list_spaces / lightdash_get_space. Target spaces must already exist —
-do not call create_space or update_space (not available; Terraform / out-of-band).
-Preview with lightdash_preview_content_move using itemUuids + targetSpaceUuid + contentTypes,
-confirm with lightdash_confirm_preview (resourceKind 'content-move'), then apply with lightdash_move_content.
+Follow core + content-move playbooks. Target spaces must already exist.
 Report moved items and target space.`,
         'content-move',
       ),
@@ -168,24 +179,21 @@ Report moved items and target space.`,
       description: 'Validate dashboard-scoped authored content before treating it as done',
       argsSchema: {
         contentReferences: z.string(),
+        projectUuid: optionalProjectUuid,
       },
     },
-    ({ contentReferences }) =>
+    ({ contentReferences, projectUuid }) =>
       userMessages(
-        `Finalize and validate this authored Lightdash content before considering it done:
+        `Finalize this authored Lightdash content before considering it done:
 
 ${contentReferences}
 
+Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-${DASHBOARD_FIRST}
-
-Run lightdash_validate_chart / lightdash_validate_dashboard on every touched chart and dashboard.
-Every new/updated chart must appear on a dashboard tile — reject orphan chart-only done states.
-Do not report success while validation errors remain outstanding.
-Summarize validation results, remaining warnings, dashboard and chart UUIDs/slugs touched.
-This persona cannot promote, publish permissions, or perform org-level release actions;
-operators should use content-governance (lightdash_promote_dashboard) when promoting across projects.`,
+Follow core + dashboards playbooks done checklist (dashboardSlug + tiles, encode intact, no invented fieldIds).
+Optionally validate_* (schema/health only). Promote is content-governance, not this persona.`,
         'dashboards',
       ),
   );

@@ -20,6 +20,7 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'get_space',
   'get_dashboard',
   'get_chart',
+  'get_chart_as_code',
   'preview_chart_changes',
   'preview_dashboard_changes',
   'preview_content_move',

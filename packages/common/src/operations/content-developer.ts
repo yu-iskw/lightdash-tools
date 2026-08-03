@@ -96,6 +96,21 @@ const op_preview_content_move = defineOperation({
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
+const op_get_chart_as_code = defineOperation({
+  id: 'content-developer.charts.get-as-code',
+  summary:
+    'Get a chart in as-code (upsert) shape for cloning chartConfig/metricQuery before dashboard-scoped create',
+  http: { method: 'GET', path: `${API_V1}/projects/{projectUuid}/code/charts` },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'get_chart_as_code',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
 const op_validate_chart = defineOperation({
   id: 'content-developer.charts.validate',
   summary: "Validate a saved chart's fields against its underlying explore",
@@ -464,6 +479,7 @@ export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [
   op_preview_chart_changes,
   op_preview_dashboard_changes,
   op_preview_content_move,
+  op_get_chart_as_code,
   op_validate_chart,
   op_validate_dashboard,
   op_confirm_preview,

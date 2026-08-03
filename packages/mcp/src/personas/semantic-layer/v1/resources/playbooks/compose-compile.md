@@ -2,25 +2,12 @@
 
 URI: `lightdash://playbooks/semantic-layer/compose-compile`
 
-## Multi-insight composition (“compose N queries”)
+## Recommended sequence
 
-When the user asks for several insights on one table/explore:
-
-1. Disambiguate explore once; reuse the same `exploreId` and metric shortlist.
-2. Pick **diverse** cuts from available metrics/dims (don’t repeat the same grain N times)—e.g. trend, breakdown by a categorical dim, quality/rate metrics, outcome metrics, acquisition/source—only when those fields exist.
-3. Compile each with `lightdash_compile_query`; verify SELECT columns; present **insight title + metric/dimension fieldIds + compiled SQL** (or errors). Do not paste full dimension/explore payloads.
-4. Metrics that join other tables may produce large CTE SQL — still OK; mention the join briefly.
-
-## Field IDs and empty SELECT
-
-Prefer `fieldId` from `lightdash_list_dimensions` / `{exploreId}_{metricName}`.
-
-Short names alone are unsafe:
-
-1. Upstream may “succeed” with an **empty `SELECT`** — this server returns **`isError`**. Fix to `fieldId`s and re-compile once.
-2. Or hard-error on unknown field id.
-
-Compiled SQL may include **extra related metrics** the semantic layer pulls in — verify columns against the goal; unexpected helpers can be OK if the requested fields are present.
+1. Scope: `get_project` with the user-given project UUID (do not switch from org-wide `list_projects`).
+2. Discover: search explores → disambiguate → `list_dimensions` shortlist + `get_explore` → `tables[baseTable].metrics`.
+3. Build `metricQuery` using **only** copied `fieldId`s.
+4. `compile_query` → **verify SELECT aliases** → stop (or ≤2 fix retries).
 
 ## metricQuery skeleton
 
@@ -36,20 +23,38 @@ Compiled SQL may include **extra related metrics** the semantic layer pulls in �
 }
 ```
 
-`metrics` may be `[]`.
+`metrics` may be `[]`. Every string in `dimensions` / `metrics` / `sorts[].fieldId` must appear in prior tool output.
 
-## Recommended sequence
+## Field IDs — failure modes
 
-1. Scope: `lightdash_get_project` with the user-given project UUID (do not switch from an org-wide list)
-2. Discover: search explores → disambiguate → base-table dimensions (shortlist) + explore-local metrics (`get_explore` metrics map; catalog keyword optional)
-3. `lightdash_compile_query` with `fieldId`s (repeat for multi-insight)
-4. Verify SELECT columns; stop
+| Symptom                                                              | Cause                                                                                             | Fix                                                                    |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `unknown field id` / hard error                                      | Short names or typos                                                                              | Use full `fieldId` from `list_dimensions` / `{exploreId}_{metricName}` |
+| Server `isError` + empty SELECT                                      | Upstream accepted bad ids with **zero** columns                                                   | Replace with real fieldIds; re-compile once                            |
+| SQL “succeeds” but a requested dim/metric is **missing** from SELECT | Invented or wrong fieldId (e.g. non-existent `*_session_day`) while another field still projected | Re-check against `list_dimensions` / metrics map; re-compile           |
+| `Metric not found` on `get_metric`                                   | `tableName` was warehouse label                                                                   | Use full explore id                                                    |
 
-## Compose / debug stop criteria
+Compiled SQL may include **extra related metrics** the semantic layer pulls in — OK if every **requested** fieldId still appears as a SELECT alias.
 
-- Deliverable: insight title(s) + fieldIds + compiled SQL (or errors). Never paste full explore/dimension/metric/lineage payloads.
-- Stop after a good compile. Re-compile only while debugging (empty SELECT / unknown field id / wrong explore / metric not found).
-- Multi-insight: N titled queries with fieldIds + SQL; one explore resolution shared across them.
-- Empty SELECT or unknown field id → use fieldIds from `lightdash_list_dimensions` (base table) and re-compile once.
-- Wrong explore → re-disambiguate (schemaName; label or name `__{table}`).
-- Metric not found / catalog empty → `get_explore` `tables[baseTable].metrics`; `tableName` must be the full explore id; compile as `{exploreId}_{metricName}`.
+## Verify after every compile (mandatory)
+
+1. Parse the compiled `query` SELECT list (aliases / AS names).
+2. Confirm **each** requested dimension and metric `fieldId` is present.
+3. If any are missing → treat as failure even when the tool did not set `isError`.
+4. Confirm `ORDER BY` / sorts only reference fields that exist in the SELECT (or known group keys).
+
+## Multi-insight composition
+
+When the user asks for N insights on one table/explore:
+
+1. Disambiguate explore **once**; reuse the same `exploreId` and metric shortlist.
+2. Pick **diverse** cuts from available fields (trend, categorical breakdown, rate/quality, outcome, acquisition) — only when those fields exist. Don’t repeat the same grain N times.
+3. Compile each; verify aliases; present **title + fieldIds + SQL** (or errors).
+4. Metrics that join other tables may produce large CTE SQL — still OK; mention the join briefly.
+
+## Debug checklist
+
+- Empty SELECT / unknown field id / missing alias → fix fieldIds from `list_dimensions` + explore-local metrics; re-compile (≤2 retries).
+- Wrong explore → re-disambiguate (`schemaName`; exact `label` or `name` `__{table}`; skip empty schema / eda unless asked).
+- Catalog empty / metric not found → `get_explore` `tables[baseTable].metrics`; compile as `{exploreId}_{metricName}`.
+- Stop after a good verified compile or a clear blocker.

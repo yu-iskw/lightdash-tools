@@ -88,15 +88,16 @@ type PromptUserMessage = {
 };
 
 /**
- * Build prompt message helpers that embed core, and optionally one topic playbook,
- * after the user text message. When `topicId` is omitted, only core is embedded.
+ * Build prompt message helpers that embed core, and optionally one or more topic
+ * playbooks, after the user text message. When `topicId` is omitted, only core is
+ * embedded.
  */
 export function createPromptPlaybookEmbedder<TopicId extends string>(options: {
   core: EmbeddedPlaybook;
   topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
-}): (text: string, topicId?: TopicId) => { messages: PromptUserMessage[] } {
+}): (text: string, topicId?: TopicId | readonly TopicId[]) => { messages: PromptUserMessage[] } {
   const { core, topics } = options;
-  return (text: string, topicId?: TopicId) => {
+  return (text: string, topicId?: TopicId | readonly TopicId[]) => {
     const messages: PromptUserMessage[] = [
       {
         role: 'user' as const,
@@ -110,15 +111,18 @@ export function createPromptPlaybookEmbedder<TopicId extends string>(options: {
     if (topicId === undefined) {
       return { messages };
     }
-    // eslint-disable-next-line security/detect-object-injection -- topicId from persona PROMPT_TOPICS constants
-    const topic = topics[topicId];
-    if (!topic) {
-      throw new Error(`Unknown playbook topic '${topicId}'`);
+    const topicIds = typeof topicId === 'string' ? [topicId] : topicId;
+    for (const id of topicIds) {
+      // eslint-disable-next-line security/detect-object-injection -- topic ids from persona prompt constants
+      const topic = topics[id];
+      if (!topic) {
+        throw new Error(`Unknown playbook topic '${id}'`);
+      }
+      messages.push({
+        role: 'user' as const,
+        content: embedResource(topic),
+      });
     }
-    messages.push({
-      role: 'user' as const,
-      content: embedResource(topic),
-    });
     return { messages };
   };
 }
