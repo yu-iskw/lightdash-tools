@@ -1,5 +1,8 @@
 import { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
-import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from './env';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, ENV_LIGHTDASH_TOOLS_SAFETY_MODE } from './env';
+
+/** Removed allowlist env — fail closed if still set. */
+const ENV_ALLOWED_PROJECTS_REMOVED = 'LIGHTDASH_TOOLS_ALLOWED_PROJECTS';
 
 /**
  * Semantic impact classification for operations (RFC Phase 0).
@@ -150,14 +153,22 @@ export function getSafetyModeFromEnv(): SafetyMode {
 }
 
 /**
- * Parses allowed project UUIDs from the LIGHTDASH_TOOLS_ALLOWED_PROJECTS environment
+ * Parses allowed project UUIDs from the LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS environment
  * variable (comma-separated). Returns an empty array when the variable is unset, meaning
  * all projects are allowed.
  *
- * Note: CLI/MCP flags (--allowed-projects) always take priority over this env var.
+ * Throws if the removed name LIGHTDASH_TOOLS_ALLOWED_PROJECTS is still set.
+ * Note: CLI `--projects` takes priority over this env var.
  */
 export function getAllowedProjectUuidsFromEnv(): string[] {
-  const raw = process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] ?? '';
+  const legacy = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+  if (legacy !== undefined && legacy.trim() !== '') {
+    throw new Error(
+      `${ENV_ALLOWED_PROJECTS_REMOVED} is no longer supported. ` +
+        `Use ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS} instead.`,
+    );
+  }
+  const raw = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS ?? '';
   return raw
     .split(',')
     .map((s) => s.trim())

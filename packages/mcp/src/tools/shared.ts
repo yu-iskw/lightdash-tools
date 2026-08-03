@@ -3,7 +3,7 @@
  *
  * Guardrail layers applied by registerToolSafe (outer → inner):
  *   1. Audit log wrapper       — captures timing and outcome for every call.
- *   2. Project scope           — pin mismatch + LIGHTDASH_TOOLS_ALLOWED_PROJECTS membership.
+ *   2. Project scope           — pin mismatch + LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS membership.
  *   3. Input validation        — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
  *   4. Raw handler             — the actual tool implementation.
  *
@@ -12,7 +12,7 @@
 
 import {
   extractProjectUuids,
-  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS,
+  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
@@ -225,7 +225,7 @@ export function registerToolSafe(
   };
 
   // ── Project pin + shared allowlist ────────────────────────────────────────
-  // One ALS read + one arg extract: pin mismatch, then ALLOWED_PROJECTS membership.
+  // One ALS read + one arg extract: pin mismatch, then ALLOWED_PROJECT_UUIDS membership.
   const scopeInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
     const pinned = getPinnedProjectUuid();
@@ -244,7 +244,7 @@ export function registerToolSafe(
     const unavailable = findUnavailableProjectUuids(candidates);
     if (unavailable.length > 0) {
       return blockedToolContent(
-        `Error: PROJECT_NOT_AVAILABLE: Project(s) [${unavailable.join(', ')}] are not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS}.`,
+        `Error: PROJECT_NOT_AVAILABLE: Project(s) [${unavailable.join(', ')}] are not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS}.`,
       );
     }
     return scopeInner(args, extra);

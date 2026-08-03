@@ -213,35 +213,61 @@ describe('Safety Logic', () => {
   });
 
   describe('getAllowedProjectUuidsFromEnv', () => {
-    const originalEnv = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+    const originalEnv = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS;
+    const originalLegacy = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
 
     afterEach(() => {
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = originalEnv;
+      if (originalEnv === undefined) {
+        delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS;
+      } else {
+        process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS = originalEnv;
+      }
+      if (originalLegacy === undefined) {
+        delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+      } else {
+        process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = originalLegacy;
+      }
     });
 
     it('should return empty array when env is not set', () => {
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS;
       delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
       expect(getAllowedProjectUuidsFromEnv()).toEqual([]);
     });
 
     it('should parse a single UUID', () => {
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a';
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS = 'uuid-a';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a']);
     });
 
     it('should parse comma-separated UUIDs', () => {
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a,uuid-b,uuid-c';
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS = 'uuid-a,uuid-b,uuid-c';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b', 'uuid-c']);
     });
 
     it('should trim whitespace around UUIDs', () => {
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = ' uuid-a , uuid-b ';
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS = ' uuid-a , uuid-b ';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
     });
 
     it('should filter out empty entries', () => {
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a,,uuid-b';
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS = 'uuid-a,,uuid-b';
       expect(getAllowedProjectUuidsFromEnv()).toEqual(['uuid-a', 'uuid-b']);
+    });
+
+    it('should reject removed LIGHTDASH_TOOLS_ALLOWED_PROJECTS', () => {
+      delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS;
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid-a';
+      expect(() => getAllowedProjectUuidsFromEnv()).toThrow(
+        /LIGHTDASH_TOOLS_ALLOWED_PROJECTS is no longer supported/,
+      );
+      expect(() => getAllowedProjectUuidsFromEnv()).toThrow(
+        /LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS/,
+      );
     });
   });
 

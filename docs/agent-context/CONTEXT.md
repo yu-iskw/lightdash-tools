@@ -5,7 +5,7 @@ Guidance for AI agents using the Lightdash CLI (`lightdash-ai`) or MCP tools (`l
 ## Safety and Guardrails
 
 - **Always use `--dry-run` for mutating operations when testing.** Set `LIGHTDASH_TOOLS_DRY_RUN=1` or pass `--dry-run` to simulate writes without executing them.
-- **Validate project UUIDs against the allowlist before running.** Set `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` or `--projects` to restrict which projects the agent can access. Empty allowlist = all projects permitted.
+- **Validate project UUIDs against the allowlist before running.** Set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` or `--projects` to restrict which projects the agent can access. Empty allowlist = all projects permitted.
 - **Safety modes:** `read-only` (default), `write-idempotent`, `write-destructive`. Use `--safety-mode` or `LIGHTDASH_TOOLS_SAFETY_MODE` to control which operations are allowed.
 
 ## Agent-safe surface

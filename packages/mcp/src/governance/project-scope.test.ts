@@ -2,7 +2,7 @@
  * Project scope unit tests (ADR-0008 / ADR-0012).
  */
 
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from '@lightdash-tools/common';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { resetAvailableProjectsCache } from './available-projects.js';
@@ -15,7 +15,7 @@ const OTHER = '22222222-2222-4222-8222-222222222222';
 
 describe('project-scope', () => {
   afterEach(() => {
-    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
     delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
     resetAvailableProjectsCache();
   });
@@ -62,7 +62,7 @@ describe('project-scope', () => {
 
   describe('shared allowlist', () => {
     it('allows resolved UUID inside the allowlist', () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = `${ARG},${OTHER}`;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = `${ARG},${OTHER}`;
       resetAvailableProjectsCache();
       expect(resolveProjectScope({ projectUuid: ARG })).toEqual({
         projectUuid: ARG,
@@ -72,7 +72,7 @@ describe('project-scope', () => {
     });
 
     it('rejects resolved UUID outside the allowlist', () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = OTHER;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = OTHER;
       resetAvailableProjectsCache();
       expect(() => resolveProjectScope({ projectUuid: ARG })).toThrow(ProjectScopeError);
       try {

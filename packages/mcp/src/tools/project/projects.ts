@@ -45,7 +45,7 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
     {
       title: 'List projects',
       description:
-        'List project metadata in the current organization (or the pinned project when X-Lightdash-Project is set). When LIGHTDASH_TOOLS_ALLOWED_PROJECTS is set, only those projects are returned. Connection credentials are never returned.',
+        'List project metadata in the current organization (or the pinned project when X-Lightdash-Project is set). When LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS is set, only those projects are returned. Connection credentials are never returned.',
       inputSchema: {},
       annotations: READ_ONLY_DEFAULT,
     },

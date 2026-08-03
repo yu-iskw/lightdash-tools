@@ -26,7 +26,7 @@ The CLI requires the following environment variables (consistent with `@lightdas
 - `LIGHTDASH_API_KEY` - Personal access token (PAT)
 - `LIGHTDASH_PROXY_AUTHORIZATION` - Optional proxy authorization header
 - `LIGHTDASH_TOOLS_SAFETY_MODE` - Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`)
-- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` - Optional comma-separated project UUIDs (restrict operations to these projects; empty = all allowed)
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` - Optional comma-separated project UUIDs (restrict operations to these projects; empty = all allowed)
 - `LIGHTDASH_TOOLS_DRY_RUN` - Set to `1`, `true`, or `yes` to simulate mutating operations without executing
 
 Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).

@@ -4,7 +4,7 @@ Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker (server-
 
 ## Production limitations
 
-Bearer validation confirms **who** the user is (`GET /api/v1/user`). Opaque Lightdash tokens are not fully resource/audience-bound yet. Rely on Lightdash RBAC + persona tool surface + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`.
+Bearer validation confirms **who** the user is (`GET /api/v1/user`). Opaque Lightdash tokens are not fully resource/audience-bound yet. Rely on Lightdash RBAC + persona tool surface + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
 ## Dockerfile
 
@@ -37,7 +37,7 @@ LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=...   # from Secret Manager
 LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=...
 ```
 
-Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` (comma-separated project UUID hard allowlist shared with CLI).
+Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_TOOLS_AUDIT_LOG`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI).
 
 Register in Lightdash:
 

@@ -1,4 +1,4 @@
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS, logAuditEntry } from '@lightdash-tools/common';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { resetAvailableProjectsCache } from '../governance/available-projects.js';
@@ -37,7 +37,7 @@ describe('registerToolSafe', () => {
   });
 
   afterEach(() => {
-    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
     resetAvailableProjectsCache();
   });
 
@@ -162,9 +162,9 @@ describe('registerToolSafe', () => {
     });
   });
 
-  describe('shared project allowlist (LIGHTDASH_TOOLS_ALLOWED_PROJECTS)', () => {
+  describe('shared project allowlist (LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS)', () => {
     it('allows projectUuid in the allowlist', async () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = `${PROJECT_A},${PROJECT_B}`;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = `${PROJECT_A},${PROJECT_B}`;
       resetAvailableProjectsCache();
       registerToolSafe(
         mockServer,
@@ -179,7 +179,7 @@ describe('registerToolSafe', () => {
     });
 
     it('blocks projectUuid outside the allowlist', async () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = PROJECT_A;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
       resetAvailableProjectsCache();
       registerToolSafe(
         mockServer,
@@ -199,7 +199,7 @@ describe('registerToolSafe', () => {
     });
 
     it('blocks pinned project outside the allowlist', async () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = PROJECT_A;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
       resetAvailableProjectsCache();
       registerToolSafe(
         mockServer,
@@ -218,7 +218,7 @@ describe('registerToolSafe', () => {
     });
 
     it('allows tools with no projectUuid when allowlist is set', async () => {
-      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = PROJECT_A;
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PROJECT_A;
       resetAvailableProjectsCache();
       registerToolSafe(
         mockServer,

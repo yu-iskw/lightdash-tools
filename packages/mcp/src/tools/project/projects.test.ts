@@ -1,4 +1,4 @@
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from '@lightdash-tools/common';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resetAvailableProjectsCache } from '../../governance/available-projects.js';
@@ -29,7 +29,7 @@ function mockContext(
 describe('registerListProjects', () => {
   afterEach(() => {
     vi.restoreAllMocks();
-    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
     resetAvailableProjectsCache();
   });
 
@@ -109,8 +109,8 @@ describe('registerListProjects', () => {
     expect(getProject).not.toHaveBeenCalled();
   });
 
-  it('filters list results to LIGHTDASH_TOOLS_ALLOWED_PROJECTS when set', async () => {
-    process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = PINNED;
+  it('filters list results to LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS when set', async () => {
+    process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PINNED;
     resetAvailableProjectsCache();
     const all = [
       { projectUuid: PINNED, name: 'A', type: 'DEFAULT', warehouseType: 'snowflake' },

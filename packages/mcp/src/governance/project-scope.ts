@@ -2,10 +2,10 @@
  * Project scope resolution (ADR-0008 / ADR-0012).
  *
  * Precedence: X-Lightdash-Project pin → tool projectUuid → PROJECT_SCOPE_REQUIRED.
- * When LIGHTDASH_TOOLS_ALLOWED_PROJECTS is set, the resolved UUID must be a member.
+ * When LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS is set, the resolved UUID must be a member.
  */
 
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS, validateUuid } from '@lightdash-tools/common';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, validateUuid } from '@lightdash-tools/common';
 
 import { isProjectAvailable } from './available-projects.js';
 import { getPinnedProjectUuid } from './project-pin.js';
@@ -57,7 +57,7 @@ function assertAvailable(projectUuid: string): void {
   if (!isProjectAvailable(projectUuid)) {
     throw new ProjectScopeError(
       'PROJECT_NOT_AVAILABLE',
-      `projectUuid '${projectUuid}' is not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS}`,
+      `projectUuid '${projectUuid}' is not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS}`,
     );
   }
 }

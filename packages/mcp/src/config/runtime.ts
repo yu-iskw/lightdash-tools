@@ -1,13 +1,13 @@
 /**
  * MCP runtime config: Lightdash client + audit path.
  * Credentials: LIGHTDASH_URL, LIGHTDASH_API_KEY (stdio / shared-key).
- * Project allowlist: LIGHTDASH_TOOLS_ALLOWED_PROJECTS (shared with CLI).
+ * Project allowlist: LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS (shared with CLI).
  * Process safety-mode / dry-run are CLI-only (ADR-0008).
  */
 
 import { LightdashClient, mergeConfig } from '@lightdash-tools/client';
 import {
-  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS,
+  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
   ENV_LIGHTDASH_TOOLS_DRY_RUN,
   ENV_LIGHTDASH_TOOLS_SAFETY_MODE,
 } from '@lightdash-tools/common';
@@ -32,7 +32,7 @@ export function warnIgnoredCliGuardrailEnvVars(
     warn(
       `Warning: ${ignored.join(', ')} ${ignored.length === 1 ? 'is' : 'are'} set but ignored by MCP. ` +
         'Those variables apply to the CLI only. MCP uses persona toolIds + auth/RBAC + optional ' +
-        `${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS} + optional X-Lightdash-Project (ADR-0008).`,
+        `${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS} + optional X-Lightdash-Project (ADR-0008).`,
     );
   }
 
@@ -41,7 +41,7 @@ export function warnIgnoredCliGuardrailEnvVars(
     warn(
       'Warning: LIGHTDASH_TOOLS_PROJECT_UUID is no longer used by MCP. ' +
         'Pass projectUuid on tools or set X-Lightdash-Project. ' +
-        `Optional ceiling: ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS}.`,
+        `Optional ceiling: ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS}.`,
     );
   }
 }

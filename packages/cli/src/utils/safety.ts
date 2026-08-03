@@ -43,7 +43,7 @@ export function isDryRun(cmd: Command): boolean {
 /**
  * Resolves the allowed project UUIDs from the command line options or environment variables.
  * We specifically want the root --projects flag as the security guardrail.
- * CLI --projects takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECTS.
+ * CLI --projects takes priority over LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS.
  */
 export function getAllowedProjects(cmd: Command): string[] {
   let root = cmd;
@@ -58,7 +58,12 @@ export function getAllowedProjects(cmd: Command): string[] {
       .map((s) => s.trim())
       .filter(Boolean);
   }
-  return getAllowedProjectUuidsFromEnv();
+  try {
+    return getAllowedProjectUuidsFromEnv();
+  } catch (err) {
+    console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
 }
 
 /**

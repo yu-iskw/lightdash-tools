@@ -2,7 +2,7 @@
  * Shared project allowlist unit tests.
  */
 
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from '@lightdash-tools/common';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -28,7 +28,8 @@ function uuidsFromPolicy(env: NodeJS.ProcessEnv): string[] {
 
 describe('available-projects', () => {
   afterEach(() => {
-    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
+    delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
     delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
     resetAvailableProjectsCache();
   });
@@ -38,17 +39,17 @@ describe('available-projects', () => {
       expect(getAvailableProjectsPolicy({})).toEqual({ restricted: false });
     });
 
-    it('parses ALLOWED_PROJECTS with lowercasing', () => {
+    it('parses ALLOWED_PROJECT_UUIDS with lowercasing', () => {
       expect(
         uuidsFromPolicy({
-          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: ` ${UUID_A_UPPER} , ${UUID_B} `,
+          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: ` ${UUID_A_UPPER} , ${UUID_B} `,
         }),
       ).toEqual([UUID_A, UUID_B]);
     });
 
     it('rejects empty segments', () => {
       expect(() =>
-        getAvailableProjectsPolicy({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: ',,,' }),
+        getAvailableProjectsPolicy({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: ',,,' }),
       ).toThrow(/empty segments/);
     });
 
@@ -67,7 +68,7 @@ describe('available-projects', () => {
     });
 
     it('allows members case-insensitively', () => {
-      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: `${UUID_A},${UUID_B}` };
+      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: `${UUID_A},${UUID_B}` };
       expect(isProjectAvailable(UUID_A_UPPER, env)).toBe(true);
       expect(isProjectAvailable(UUID_C, env)).toBe(false);
     });
@@ -75,12 +76,12 @@ describe('available-projects', () => {
 
   describe('findUnavailableProjectUuids / filter', () => {
     it('returns unavailable UUIDs', () => {
-      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: `${UUID_A},${UUID_B}` };
+      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: `${UUID_A},${UUID_B}` };
       expect(findUnavailableProjectUuids([UUID_A, UUID_C], env)).toEqual([UUID_C]);
     });
 
     it('filters projects', () => {
-      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: UUID_A };
+      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: UUID_A };
       const projects = [
         { projectUuid: UUID_A, name: 'a' },
         { projectUuid: UUID_C, name: 'c' },
@@ -98,7 +99,7 @@ describe('available-projects', () => {
 
   describe('resolveSearchProjectUuids', () => {
     it('defaults to allowlist when restricted', () => {
-      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: `${UUID_A},${UUID_B}` };
+      const env = { [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: `${UUID_A},${UUID_B}` };
       expect(resolveSearchProjectUuids({}, env)).toEqual([UUID_A, UUID_B]);
     });
 
@@ -111,14 +112,14 @@ describe('available-projects', () => {
     it('accepts valid allowlist', () => {
       expect(() =>
         validateAvailableProjectsConfig({
-          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: `${UUID_A},${UUID_B}`,
+          [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: `${UUID_A},${UUID_B}`,
         }),
       ).not.toThrow();
     });
 
     it('rejects invalid UUID', () => {
       expect(() =>
-        validateAvailableProjectsConfig({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS]: 'bad' }),
+        validateAvailableProjectsConfig({ [ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]: 'bad' }),
       ).toThrow(AvailableProjectsConfigError);
     });
 
@@ -132,7 +133,20 @@ describe('available-projects', () => {
         validateAvailableProjectsConfig({
           LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS: UUID_A,
         }),
-      ).toThrow(/LIGHTDASH_TOOLS_ALLOWED_PROJECTS/);
+      ).toThrow(/LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS/);
+    });
+
+    it('rejects removed ALLOWED_PROJECTS env', () => {
+      expect(() =>
+        validateAvailableProjectsConfig({
+          LIGHTDASH_TOOLS_ALLOWED_PROJECTS: UUID_A,
+        }),
+      ).toThrow(/LIGHTDASH_TOOLS_ALLOWED_PROJECTS is no longer supported/);
+      expect(() =>
+        validateAvailableProjectsConfig({
+          LIGHTDASH_TOOLS_ALLOWED_PROJECTS: UUID_A,
+        }),
+      ).toThrow(/LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS/);
     });
   });
 });

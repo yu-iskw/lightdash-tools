@@ -32,7 +32,7 @@ Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mc
    1. `X-Lightdash-Project` → `governance.pinnedProjectUuid` (HTTP only)
    2. Tool `projectUuid` argument
    3. If still unset → `PROJECT_SCOPE_REQUIRED` (blocked before handler)
-      Optional process ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)).
+      Optional process ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)).
 3. **Saved-content execution allowed** for semantic (metric-query-backed) saved charts and dashboard tiles via `POST /api/v2/projects/{projectUuid}/query/chart` and `POST …/query/dashboard-chart`, with **values-only** filter and parameter overrides (override literal values only; no ad-hoc field/metric composition).
 4. **SQL charts disabled by default.** Saved charts whose query class is SQL (including dashboard SQL tiles) return `CONTENT_NOT_EXECUTABLE` unless an explicit future opt-in is added. OpenAPI also exposes `query/sql-chart` and `query/dashboard-sql-chart`; those remain off the MCP allowlist by default.
 5. **Safety dimensions** (persona-level, enforced at registration and handler):
@@ -55,7 +55,7 @@ flowchart TD
 ## Consequences
 
 - Third HTTP path and stdio subcommand; Cursor/Compose configs must document `/content-reader/v1/mcp` alongside semantic-layer and organization-audit.
-- [ADR-0008](0008-mcp-request-scope-and-hardening.md) project scope is pin or tool arg only; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` ceiling.
+- [ADR-0008](0008-mcp-request-scope-and-hardening.md) project scope is pin or tool arg only; optional shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling.
 - Distinct from [ADR-0010](0010-mcp-organization-audit-persona-read-only-boundary.md): content-reader may return bounded aggregate rows; org-audit remains metadata-only.
 - Client gaps (saved chart GET, parameters, async results/cancel) are filled under `@lightdash-tools/client` as tools ship.
 - Operators must pin or pass `projectUuid` for stdio/unpinned HTTP; unpinned multi-project crawl is intentionally unsupported.
