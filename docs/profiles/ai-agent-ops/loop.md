@@ -1,6 +1,6 @@
 # AI agent-ops distributed loop
 
-Companion to [ADR-0018](../../adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md) and [endpoint inventory](inventory.md).
+Companion to ADR-0018 and [endpoint inventory](inventory.md).
 
 ## Surfaces
 
@@ -31,7 +31,7 @@ Gates use `kind: LightdashAiEvaluationGate` and `evaluateGatePolicy()` in `@ligh
 1. MCP: `list_project_agents` → `get_project_agent` → optional `evaluate_agent_readiness`
 2. MCP: ensure suite (`list/get/create/update` evaluation) → `run_agent_evaluation` → poll runs → `get_agent_eval_run_results`
 3. CLI: `agentops evaluate-gate` against the completed run
-4. Host: cluster failures; prefer semantic/metadata fixes (other personas) before instruction changes
+4. Host: cluster failures; prefer semantic/metadata fixes (other profiles) before instruction changes
 5. CLI: `agentops plan|apply` when changing agent config via Git
 6. MCP: re-run evaluation; repeat until gate passes or budget exhausted
 

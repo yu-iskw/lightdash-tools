@@ -1,6 +1,6 @@
 # Organization-audit endpoint inventory
 
-Capability map for the `organization-audit` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`).
+Capability map for the `organization-audit` MCP profile (OpenAPI pin in `config/lightdash-openapi-ref.txt`).
 
 | Capability               | Method | Path                                                | Client                                      | Notes                                                                                                                                        |
 | ------------------------ | ------ | --------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -1,6 +1,6 @@
 # Content-developer endpoint inventory
 
-Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0014](../../adr/0014-mcp-content-developer-persona-mutation-boundary.md) for mutation boundaries and the hard preview gate.
+Capability map for the `content-developer` MCP profile (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See ADR-0014 for mutation boundaries and the hard preview gate.
 
 | Capability                  | Method | Path                                                                | Client                                                      | Notes                                                                                                |
 | --------------------------- | ------ | ------------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -24,7 +24,7 @@ Capability map for the `content-developer` MCP persona (OpenAPI pin in `config/l
 | Tile layout ops             | —      | MCP composition                                                     | getDashboard + updateDashboard                              | add/move/remove/resize                                                                               |
 | Move content                | POST   | `/api/v2/content/bulk-action/{projectUuid}/move`                    | `v2.content.bulkMoveContent`                                | Preview-gated; target space must already exist                                                       |
 
-**Client-only (not on MCP persona):** space create/update (`v1.spaces.createSpace` / `updateSpace`) — spaces are managed out-of-band (e.g. Terraform).
+**Client-only (not on MCP profile):** space create/update (`v1.spaces.createSpace` / `updateSpace`) — spaces are managed out-of-band (e.g. Terraform).
 
 **Excluded:** `metric-query`, `sql`, `underlying-data`, downloads, hard DELETE chart/dashboard/space, rollback, promote, SQL chart as-code, saved-query execution (`run_chart` — use content-reader), space create/update.
 

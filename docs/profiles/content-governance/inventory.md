@@ -1,6 +1,6 @@
 # Content-governance endpoint inventory
 
-Capability map for the `content-governance` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0015](../../adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md) for elicitation-required soft-delete and [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md) for dashboard promote.
+Capability map for the `content-governance` MCP profile (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See ADR-0015 for elicitation-required soft-delete and [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md) for dashboard promote.
 
 | Capability                 | Method | Path                                                              | Client                                  | Notes                                                                                              |
 | -------------------------- | ------ | ----------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -8,7 +8,7 @@ Capability map for the `content-governance` MCP persona (OpenAPI pin in `config/
 | Soft-delete dashboard      | DELETE | `/api/v2/projects/{projectUuid}/dashboards/{dashboardUuidOrSlug}` | `v2.dashboards.deleteDashboard`         | MCP `delete_dashboard`; same confirmation framework as charts                                      |
 | Get dashboard promote diff | GET    | `/api/v1/dashboards/{dashboardUuidOrSlug}/promoteDiff`            | `v1.dashboards.getDashboardPromoteDiff` | MCP `get_dashboard_promote_diff` (read-only); optional `projectUuid` query for slug disambiguation |
 | Promote dashboard          | POST   | `/api/v1/dashboards/{dashboardUuidOrSlug}/promote`                | `v1.dashboards.promoteDashboard`        | MCP `promote_dashboard`; form elicitation + diff-bound `requestState` before POST                  |
-| Get saved chart (pre)      | GET    | `/api/v2/projects/{projectUuid}/saved/{chartUuidOrSlug}`          | `v2.charts.getSavedChart`               | Used internally to snapshot name/`updatedAt` for confirmation binding (not a persona tool)         |
+| Get saved chart (pre)      | GET    | `/api/v2/projects/{projectUuid}/saved/{chartUuidOrSlug}`          | `v2.charts.getSavedChart`               | Used internally to snapshot name/`updatedAt` for confirmation binding (not a profile tool)         |
 | Get dashboard (pre)        | GET    | `/api/v2/projects/{projectUuid}/dashboards/{dashboardUuidOrSlug}` | `v2.dashboards.getDashboard`            | Same as chart pre-check; also used for promote snapshot                                            |
 
 **Client-only (never MCP):**

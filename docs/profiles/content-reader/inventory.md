@@ -1,6 +1,6 @@
 # Content-reader endpoint inventory
 
-Capability map for the `content-reader` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0012](../../adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md) for execution boundaries.
+Capability map for the `content-reader` MCP profile (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See ADR-0012 for execution boundaries.
 
 | Capability         | Method | Path                                                              | Client                                | Notes                                                                                                                                           |
 | ------------------ | ------ | ----------------------------------------------------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |

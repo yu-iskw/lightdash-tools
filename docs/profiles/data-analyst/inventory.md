@@ -1,6 +1,6 @@
 # Data-analyst endpoint inventory
 
-Capability map for the `data-analyst` MCP persona (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See [ADR-0020](../../adr/0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md).
+Capability map for the `data-analyst` MCP profile (OpenAPI pin in `config/lightdash-openapi-ref.txt`). See ADR-0020.
 
 | Capability       | Method | Path                                                               | Client                          | Notes                                   |
 | ---------------- | ------ | ------------------------------------------------------------------ | ------------------------------- | --------------------------------------- |

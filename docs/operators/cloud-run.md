@@ -87,11 +87,11 @@ Grant the sink writer identity permission on the destination bucket after create
 
 ### Governance companions (already in the product)
 
-- Persona URL / fixed `toolIds` (capability surface)
+- Profile URL + catalog membership (capability surface)
 - OAuth identity + Lightdash RBAC
 - `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` process ceiling for shared services
 - Optional `X-Lightdash-Project` pin
-- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state (persona MCP paths scale horizontally via `createMcpHandler`)
+- Sessionless HTTP (ADR-0019): sticky `/oauth/*` or single replica for in-memory OAuth broker pending state (profile MCP paths scale horizontally via `createMcpHandler`)
 
 ## Deploy example
 
@@ -107,7 +107,7 @@ gcloud run deploy lightdash-mcp \
   --allow-unauthenticated
 ```
 
-`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on persona paths. Use sticky sessions / single instance for `/oauth/*` until broker pending-auth uses signed state or CIMD (persona MCP paths need no sticky sessions).
+`--allow-unauthenticated` on Cloud Run means Google IAM is open; **MCP still requires OAuth bearer** on profile paths. Use sticky sessions / single instance for `/oauth/*` until broker pending-auth uses signed state or CIMD (profile MCP paths need no sticky sessions).
 
 ## Checklist
 

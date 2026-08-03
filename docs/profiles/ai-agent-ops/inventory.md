@@ -1,7 +1,7 @@
 # AI Agent Ops MCP — endpoint inventory
 
-Persona: `ai-agent-ops` · Path: `/ai-agent-ops/v1/mcp` · Server: `lightdash-mcp-aops`
-See [ADR-0018](../../adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md) and [distributed loop](loop.md).
+Profile: `ai-agent-ops` · Path: `/ai-agent-ops/v1/mcp` · Server: `lightdash-mcp-aops`
+See ADR-0018 and [distributed loop](loop.md).
 
 | MCP tool (`lightdash_` + id)      | HTTP                                                      | Notes                                     |
 | --------------------------------- | --------------------------------------------------------- | ----------------------------------------- |

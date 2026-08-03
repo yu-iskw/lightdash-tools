@@ -1,6 +1,6 @@
 # Content-governance client compatibility matrix
 
-Soft-delete tools (`delete_chart`, `delete_dashboard`) and dashboard promote (`promote_dashboard`) on the `content-governance` persona require **MCP form elicitation**. Clients that cannot present a form and return `inputResponses` are fail-closed with `ELICITATION_REQUIRED` — there is no chat-“yes” or `confirmed: true` fallback ([ADR-0015](../../adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md), [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).
+Soft-delete tools (`delete_chart`, `delete_dashboard`) and dashboard promote (`promote_dashboard`) on the `content-governance` profile require **MCP form elicitation**. Clients that cannot present a form and return `inputResponses` are fail-closed with `ELICITATION_REQUIRED` — there is no chat-“yes” or `confirmed: true` fallback (ADR-0015, [ADR-0017](../../adr/0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)).
 
 `get_dashboard_promote_diff` is read-only and does not require elicitation.
 
