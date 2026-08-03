@@ -9,28 +9,18 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
-import { getDefaultPersona, listPersonaPaths } from '../personas/index.js';
+import { getDefaultProfile, listProfilePaths } from '../profiles/index.js';
 
 import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
-  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
-  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
-  ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
-  ENV_LIGHTDASH_TOOLS_MCP_STORE,
   ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
@@ -45,24 +35,12 @@ import {
   OAUTH_CALLBACK_PATH,
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
+import { assertObsoleteEnvRejected } from './obsolete-env.js';
 import { requirePublicUrl } from './public-url.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
 const DEFAULT_SCOPES_SUPPORTED = ['read', 'write', 'mcp:read', 'mcp:write'] as const;
-
-const OBSOLETE_ENV_VARS = [
-  ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
-  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
-  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
-  ENV_LIGHTDASH_TOOLS_MCP_STORE,
-  ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
-] as const;
 
 const warnedAliases = new Set<string>();
 
@@ -137,28 +115,6 @@ function parseBooleanEnv(name: string, value: string | undefined, defaultValue: 
   if (value === '1' || value === 'true' || value === 'yes') return true;
   if (value === '0' || value === 'false' || value === 'no') return false;
   throw new Error(`Invalid ${name}: ${value}. Expected 1, true, yes, 0, false, or no.`);
-}
-
-function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv): void {
-  for (const name of OBSOLETE_ENV_VARS) {
-    if (readEnv(name, env) !== undefined) {
-      if (name === ENV_LIGHTDASH_TOOLS_MCP_STORE || name === ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL) {
-        throw new Error(
-          `${name} is removed (ADR-0019). ` +
-            `MCP HTTP is now stateless (sessionless) and has no Redis ephemeral store. ` +
-            `Remove this variable from your environment.`,
-        );
-      }
-      throw new Error(
-        `${name} is removed. Auth is inferred from credentials: set ` +
-          `${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID}, ${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET}, ` +
-          `and ${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} for hosted OAuth; ` +
-          `or ${ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY} + LIGHTDASH_API_KEY for shared-key; ` +
-          `or NODE_ENV=development for local unauthenticated HTTP. ` +
-          `See docs/operators/mcp-oauth.md and ADR-0007.`,
-      );
-    }
-  }
 }
 
 function inferAuthMode(params: {
@@ -272,7 +228,7 @@ function assertLightdashOAuthScopePolicy(
   if (requiredScopes.length > 0) {
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} cannot be set in OAuth broker mode. ` +
-        `Leave it unset and rely on Lightdash RBAC plus the persona tool surface (ADR-0006).`,
+        `Leave it unset and rely on Lightdash RBAC plus the profile tool surface (ADR-0006).`,
     );
   }
 
@@ -326,7 +282,7 @@ function emitCorsSecurityWarnings(config: McpHttpConfig): void {
   }
 
   console.warn(
-    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — persona MCP routes do not reflect browser Origins. ` +
+    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — profile MCP routes do not reflect browser Origins. ` +
       'OAuth broker/discovery routes still reflect Origin.',
   );
 }
@@ -405,7 +361,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   if (readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) !== undefined) {
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_PATH} is unused and rejected. ` +
-        `The MCP endpoint path is persona-owned (${getDefaultPersona().path}); leave this variable unset.`,
+        `The MCP endpoint path is profile-owned (${getDefaultProfile().path}); leave this variable unset.`,
     );
   }
 
@@ -428,8 +384,8 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
-  const mcpPath = getDefaultPersona().path;
-  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listPersonaPaths()) : undefined;
+  const mcpPath = getDefaultProfile().path;
+  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
 
   const validateToken = parseBooleanEnv(

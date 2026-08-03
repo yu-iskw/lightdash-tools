@@ -4,7 +4,7 @@ export function stripTrailingSlash(url: string): string {
 }
 
 /**
- * Normalizes a public MCP base URL: no trailing slash, no persona MCP path suffix.
+ * Normalizes a public MCP base URL: no trailing slash, no profile MCP path suffix.
  * Longer suffixes are tried first so nested paths strip correctly.
  */
 export function normalizePublicUrl(url: string, mcpPaths: readonly string[]): string {

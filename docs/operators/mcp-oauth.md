@@ -33,7 +33,7 @@ export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_ID="..."
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
 
-npx @lightdash-tools/mcp serve-http
+npx @lightdash-tools/mcp http
 ```
 
 1. Create a Lightdash OAuth application.

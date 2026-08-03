@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { bindServerPersona } from '../../audit/server-persona.js';
+import { bindServerProfile } from '../../audit/server-profile.js';
 import {
   runWithMcpClientSessionAsync,
   resolveMcpClientSessionId,
@@ -45,7 +45,7 @@ describe('registerRunMetricQuery', () => {
     } as unknown as McpContextProvider;
 
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'data-analyst');
+    bindServerProfile(mockServer, 'data-analyst');
     registerRunMetricQuery(mockServer as never, contextProvider);
     const [toolName, , handler] = mockServer.registerTool.mock.calls[0];
     expect(toolName).toBe('lightdash_run_metric_query');
@@ -80,12 +80,12 @@ describe('registerRunMetricQuery', () => {
 
       const body = JSON.parse(result.content[0].text) as {
         data: { queryUuid: string; status: string };
-        context: { persona: string; projectUuid: string };
+        context: { profile: string; projectUuid: string };
         coverage: { complete: boolean };
       };
       expect(body.data.queryUuid).toBe('q-metric');
       expect(body.data.status).toBe('complete');
-      expect(body.context.persona).toBe('data-analyst');
+      expect(body.context.profile).toBe('data-analyst');
       expect(body.context.projectUuid).toBe(PROJECT);
       expect(body.coverage.complete).toBe(true);
     });
@@ -101,7 +101,7 @@ describe('registerRunMetricQuery', () => {
     } as unknown as McpContextProvider;
 
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'data-analyst');
+    bindServerProfile(mockServer, 'data-analyst');
     registerRunMetricQuery(mockServer as never, contextProvider);
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
@@ -127,7 +127,7 @@ describe('registerRunMetricQuery', () => {
     } as unknown as McpContextProvider;
 
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'data-analyst');
+    bindServerProfile(mockServer, 'data-analyst');
     registerRunMetricQuery(mockServer as never, contextProvider);
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 

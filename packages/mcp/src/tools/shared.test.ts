@@ -2,7 +2,7 @@ import { LightdashApiError } from '@lightdash-tools/client';
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { bindServerPersona } from '../audit/server-persona.js';
+import { bindServerProfile } from '../audit/server-profile.js';
 import { resetAvailableProjectsCache } from '../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
@@ -65,8 +65,8 @@ describe('registerToolSafe', () => {
     expect(result.content[0].text).toBe('success');
   });
 
-  it('audit entry includes channel, clientSessionId, and personaId', async () => {
-    bindServerPersona(mockServer, 'semantic-layer');
+  it('audit entry includes channel, clientSessionId, and profileId', async () => {
+    bindServerProfile(mockServer, 'semantic-layer');
     registerToolSafe(
       mockServer,
       'audit_attrs',
@@ -88,7 +88,7 @@ describe('registerToolSafe', () => {
         message: `${TOOL_PREFIX}audit_attrs success`,
         status: 'success',
         clientSessionId: 'mcp-client-session-9',
-        personaId: 'semantic-layer',
+        profileId: 'semantic-layer',
         tool: `${TOOL_PREFIX}audit_attrs`,
       }),
     );

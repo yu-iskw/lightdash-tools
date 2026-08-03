@@ -1,7 +1,8 @@
 export {
   defineOperation,
+  PROFILE_IDS,
   type AgentExposure,
-  type CapabilityProfile,
+  type ProfileId,
   type HttpMethod,
   type McpTaskSupport,
   type OperationAuthorization,

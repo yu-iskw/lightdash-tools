@@ -6,9 +6,9 @@ import { READ_ONLY_TRANSIENT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { ProfileId, OperationDescriptor } from './types';
 
-const PROFILE_DATA_ANALYST: CapabilityProfile = 'data-analyst';
+const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
 
 const op_run_metric_query = defineOperation({
   id: 'data-analyst.query.metric-query.run',

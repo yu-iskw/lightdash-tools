@@ -8,7 +8,7 @@ All packages are published under the `@lightdash-tools` npm scope.
 
 - **HTTP client** ([packages/client/README.md](packages/client/README.md)) — Type-safe Lightdash API client with rate limiting, retries, and shared types. [`npm install @lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client). <!-- markdown-link-check-disable-line -->
 - **CLI** ([packages/cli/README.md](packages/cli/README.md)) — Command-line interface for Lightdash ops. [`npx @lightdash-tools/cli`](https://www.npmjs.com/package/@lightdash-tools/cli) or `npm install -g @lightdash-tools/cli`. <!-- markdown-link-check-disable-line -->
-- **MCP** ([packages/mcp/README.md](packages/mcp/README.md)) — MCP server that exposes Lightdash as tools for AI assistants (seven personas). [`npx @lightdash-tools/mcp`](https://www.npmjs.com/package/@lightdash-tools/mcp). <!-- markdown-link-check-disable-line -->
+- **MCP** ([packages/mcp/README.md](packages/mcp/README.md)) — MCP server that exposes Lightdash as tools for AI assistants (seven profiles). [`npx @lightdash-tools/mcp`](https://www.npmjs.com/package/@lightdash-tools/mcp). <!-- markdown-link-check-disable-line -->
 
 ## Credentials
 
@@ -41,14 +41,14 @@ Add a server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project). S
 }
 ```
 
-Omit the persona argument for `semantic-layer` (default). Other personas and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
+Omit the profile argument for `semantic-layer` (default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
 
 ## HTTP MCP
 
 For remote Streamable HTTP (POST-only MCP endpoints, no protocol sessions):
 
 ```bash
-npx @lightdash-tools/mcp serve-http
+npx @lightdash-tools/mcp http
 ```
 
 Hosted OAuth for Cursor (URL-only client config): [docs/operators/cursor-claude.md](docs/operators/cursor-claude.md). Operator setup: [packages/mcp/README.md](packages/mcp/README.md).

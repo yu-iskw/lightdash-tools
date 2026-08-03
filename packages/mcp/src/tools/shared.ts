@@ -7,7 +7,7 @@
  *   3. Input validation        — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
  *   4. Raw handler             — the actual tool implementation.
  *
- * Capability surface is the persona toolIds allowlist (ADR-0006), not process safety mode.
+ * Capability surface is the catalog profile membership (ADR-0006), not process safety mode.
  */
 
 import {
@@ -20,7 +20,7 @@ import {
 } from '@lightdash-tools/common';
 import { isInputRequiredResult } from '@modelcontextprotocol/server';
 
-import { getServerPersona } from '../audit/server-persona.js';
+import { getServerProfile } from '../audit/server-profile.js';
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
 import { findUnavailableProjectUuids } from '../governance/available-projects.js';
 import {
@@ -266,9 +266,9 @@ export function registerToolSafe(
 
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
-  // personaId is fixed at registration (bindServerPersona before registerToolsByIds).
-  const personaId =
-    typeof server === 'object' && server !== null ? getServerPersona(server) : undefined;
+  // profileId is fixed at registration (bindServerProfile before registerToolsByIds).
+  const profileId =
+    typeof server === 'object' && server !== null ? getServerProfile(server) : undefined;
   const auditedInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
     const startMs = Date.now();
@@ -295,7 +295,7 @@ export function registerToolSafe(
           tokenHash: auth?.tokenHash,
           subject: auth?.subject,
           clientSessionId,
-          personaId,
+          profileId,
         }),
       );
     }

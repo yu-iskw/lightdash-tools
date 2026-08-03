@@ -1,8 +1,9 @@
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { getServerPersona } from '../audit/server-persona.js';
-import { getDefaultPersona } from '../personas/index.js';
+import { getServerProfile } from '../audit/server-profile.js';
+import { getDefaultProfile } from '../profiles/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
 
 import { registerCapabilities } from './capabilities.js';
@@ -40,11 +41,15 @@ describe('registerCapabilities', () => {
     vi.mocked(registerToolsByIds).mockClear();
   });
 
-  it('registers persona tool allowlist and prompts/resources', () => {
-    const persona = getDefaultPersona();
-    registerCapabilities(server, mockContextProvider, { persona });
-    expect(getServerPersona(server)).toBe(persona.id);
-    expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds);
+  it('registers catalog tools and prompts/resources for the profile', () => {
+    const profile = getDefaultProfile();
+    registerCapabilities(server, mockContextProvider, { profile });
+    expect(getServerProfile(server)).toBe(profile.id);
+    expect(registerToolsByIds).toHaveBeenCalledWith(
+      server,
+      mockContextProvider,
+      listMcpToolNamesByProfile(profile.id),
+    );
     expect(registerPromptSpy).toHaveBeenCalled();
     expect(registerResourceSpy).toHaveBeenCalled();
   });

@@ -2,7 +2,7 @@
  * Shared project allowlist for MCP (ADR-0008).
  *
  * Canonical: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (same env as CLI).
- * Unset/empty → unrestricted. Non-empty → hard ceiling for all personas.
+ * Unset/empty → unrestricted. Non-empty → hard ceiling for all profiles.
  * UUIDs normalized to lowercase; invalid / empty segments fail closed.
  *
  * Removed envs fail at startup if still set:

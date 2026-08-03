@@ -66,7 +66,7 @@ export function registerRunMetricQuery(
       safety: METRIC_QUERY_SAFETY,
       inputSchema: runMetricQueryInputSchema.shape,
     },
-    (persona) =>
+    (profile) =>
       wrapTool(contextProvider, (c) => async (args: RunMetricQueryArgs) => {
         try {
           const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -102,7 +102,7 @@ export function registerRunMetricQuery(
 
           return jsonToolResult(
             contentReaderEnvelope(bounded.normalized, {
-              persona,
+              profile,
               projectUuid: scope.projectUuid,
               projectPinned: scope.projectPinned,
               complete: isCoverageComplete(bounded.normalized),

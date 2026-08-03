@@ -1,32 +1,34 @@
 /**
- * Register tools / prompts / resources for a persona.
+ * Register tools / prompts / resources for a profile.
  */
 
-import { bindServerPersona } from '../audit/server-persona.js';
-import { getDefaultPersona } from '../personas/index.js';
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
+
+import { bindServerProfile } from '../audit/server-profile.js';
+import { getDefaultProfile } from '../profiles/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
 
 import type { McpContextProvider } from './request-context.js';
-import type { PersonaDefinition } from '../personas/types.js';
+import type { ProfileDefinition } from '../profiles/types.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type RegisterCapabilitiesOptions = {
-  /** Persona to register (defaults to the sole shipped persona). */
-  persona?: PersonaDefinition;
+  /** Profile to register (defaults to {@link getDefaultProfile}). */
+  profile?: ProfileDefinition;
 };
 
 /**
- * Registers MCP capabilities for the given persona.
- * Tools come from the shared registry via persona.toolIds.
+ * Registers MCP capabilities for the given profile.
+ * Tools come from the operation catalog via listMcpToolNamesByProfile (ADR-0021).
  */
 export function registerCapabilities(
   server: McpServer,
   contextProvider: McpContextProvider,
   options?: RegisterCapabilitiesOptions,
 ): void {
-  const persona = options?.persona ?? getDefaultPersona();
-  bindServerPersona(server, persona.id);
-  registerToolsByIds(server, contextProvider, persona.toolIds);
-  persona.registerPrompts(server);
-  persona.registerResources(server);
+  const profile = options?.profile ?? getDefaultProfile();
+  bindServerProfile(server, profile.id);
+  registerToolsByIds(server, contextProvider, listMcpToolNamesByProfile(profile.id));
+  profile.registerPrompts(server);
+  profile.registerResources(server);
 }

@@ -6,6 +6,8 @@ Date: 2026-08-01
 
 Accepted
 
+Amended by [21. MCP profile packaging; catalog tool-membership SSOT](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)
+
 Amends [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
 
 Relates [2. Monorepo packages](0002-monorepo-packages-client-common-cli-mcp.md)
@@ -13,6 +15,8 @@ Relates [2. Monorepo packages](0002-monorepo-packages-client-common-cli-mcp.md)
 Relates [6. MCP personas, shared registry, fixed paths](0006-mcp-personas-shared-registry-fixed-paths.md)
 
 Relates [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
+
+Amended by [21. MCP profile packaging; catalog tool-membership SSOT](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)
 
 ## Context
 
@@ -35,8 +39,8 @@ Agent exposure metadata lived in three places: `packages/common/src/operations/`
    - `agent` ops require **at least one** of `mcp` (non-empty `toolName`) or `cli` (non-empty `commandPath`). MCP-only and CLI-only entries are valid.
    - `mcp.taskSupport.exposed` gates real MCP registration; reserved/`exposed: false` names must not be advertised as live tools by schema introspection.
    - `client-only` ops omit `mcp` / `cli`; use optional `bannedMcpToolName` for the irrecoverable denylist.
-   - Capability profiles include persona profiles (`semantic-discovery`, `org-audit-readonly`, `content-reader`) plus AI-agent profiles.
-4. **Personas remain code allowlists** of catalog `mcp.toolName` values ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)). Handlers stay in MCP; registration/CI require a catalog hit.
+   - Serving profiles match MCP mounts (`semantic-layer`, `organization-audit`, `content-reader`, …); see ADR-0021.
+4. **Profiles derive tool membership from the catalog** (`listMcpToolNamesByProfile`, [ADR-0021](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)). Handlers stay in MCP; registration/CI require a catalog hit. (Supersedes earlier “personas remain code allowlists” wording.)
 5. **OpenAPI pipeline unchanged** (pin → generate types in `common`). Client stays axios + Bottleneck; coverage gates link catalog `http.path` to client methods.
 6. **Runtime policy unchanged:** CLI `wrapAction` ([ADR-0005](0005-cli-safety-stack.md)); MCP `registerToolSafe` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)). Catalog is build/CI policy, not a substitute for those stacks.
 
@@ -47,15 +51,15 @@ flowchart TB
   client["client HTTP"]
   cli["CLI wrapAction"]
   mcp["MCP registerToolSafe"]
-  personas["persona toolIds"]
+  profiles["profile path + prompts"]
 
   openapi --> client
+  catalog -->|"CI parity + tool membership"| mcp
   catalog -->|"CI parity"| cli
-  catalog -->|"CI parity"| mcp
   catalog -->|"banned names"| mcp
   client --> cli
   client --> mcp
-  personas --> mcp
+  profiles --> mcp
 ```
 
 ## Consequences

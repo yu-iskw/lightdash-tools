@@ -5,6 +5,7 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
 
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import {
   CLIENT_CAPABILITIES_META_KEY,
   CLIENT_INFO_META_KEY,
@@ -12,7 +13,6 @@ import {
 } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { SEMANTIC_LAYER_TOOL_IDS } from './personas/semantic-layer/v1/index.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 /** Vitest runs from the monorepo root (`vitest.config.ts`). */
@@ -20,6 +20,7 @@ const repoRoot = process.cwd();
 const binPath = path.join(repoRoot, 'packages/mcp/dist/bin.js');
 
 const INIT_TIMEOUT_MS = 5_000;
+const SEMANTIC_LAYER_TOOL_COUNT = listMcpToolNamesByProfile('semantic-layer').length;
 
 interface JsonRpcMessage {
   jsonrpc?: string;
@@ -110,7 +111,7 @@ describe('stdio process smoke', () => {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
-        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'semantic-layer',
+        LIGHTDASH_TOOLS_MCP_STDIO_PROFILE: 'semantic-layer',
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -162,7 +163,7 @@ describe('stdio process smoke', () => {
       ]),
     });
     const listResult = listResponse.result as { tools: unknown[] };
-    expect(listResult.tools).toHaveLength(SEMANTIC_LAYER_TOOL_IDS.length);
+    expect(listResult.tools).toHaveLength(SEMANTIC_LAYER_TOOL_COUNT);
 
     killChild(child);
     child = undefined;
@@ -176,7 +177,7 @@ describe('stdio process smoke', () => {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
-        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'semantic-layer',
+        LIGHTDASH_TOOLS_MCP_STDIO_PROFILE: 'semantic-layer',
         // Avoid inheriting real credentials or network-affecting settings.
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
@@ -241,7 +242,7 @@ describe('stdio process smoke', () => {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
-        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'content-reader',
+        LIGHTDASH_TOOLS_MCP_STDIO_PROFILE: 'content-reader',
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -306,7 +307,7 @@ describe('stdio process smoke', () => {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
-        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'content-governance',
+        LIGHTDASH_TOOLS_MCP_STDIO_PROFILE: 'content-governance',
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],
@@ -374,7 +375,7 @@ describe('stdio process smoke', () => {
         ...process.env,
         LIGHTDASH_URL: 'https://app.lightdash.cloud',
         LIGHTDASH_API_KEY: 'dummy-key-for-stdio-smoke',
-        LIGHTDASH_TOOLS_MCP_STDIO_PERSONA: 'content-developer',
+        LIGHTDASH_TOOLS_MCP_STDIO_PROFILE: 'content-developer',
         LIGHTDASH_TOOLS_AUDIT_LOG: undefined,
       },
       stdio: ['pipe', 'pipe', 'pipe'],

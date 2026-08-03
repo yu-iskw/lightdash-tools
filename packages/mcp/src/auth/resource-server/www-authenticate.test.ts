@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
-import { CONTENT_READER_PERSONA_PATH } from '../../personas/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../../personas/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PERSONA_PATH } from '../../personas/semantic-layer/v1/index.js';
+import { CONTENT_READER_PROFILE_PATH } from '../../profiles/content-reader/v1/index.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../profiles/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../../profiles/semantic-layer/v1/index.js';
 
 import {
   buildOAuthProtectedResourceMetadata,
@@ -28,9 +28,9 @@ describe('getAuthorizationServerMetadataUrl', () => {
 
 describe('buildOAuthProtectedResourceMetadata', () => {
   it('includes resource and MCP host as authorization_servers', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, SEMANTIC_LAYER_PERSONA_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, SEMANTIC_LAYER_PROFILE_PATH);
     expect(metadata).toEqual({
-      resource: `https://mcp.example.com${SEMANTIC_LAYER_PERSONA_PATH}`,
+      resource: `https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}`,
       authorization_servers: ['https://mcp.example.com'],
       bearer_methods_supported: ['header'],
       scopes_supported: ['mcp:read', 'mcp:write'],
@@ -40,18 +40,18 @@ describe('buildOAuthProtectedResourceMetadata', () => {
     );
   });
 
-  it('builds persona-specific resource metadata for organization-audit', () => {
+  it('builds profile-specific resource metadata for organization-audit', () => {
     const metadata = buildOAuthProtectedResourceMetadata(
       baseConfig,
-      ORGANIZATION_AUDIT_PERSONA_PATH,
+      ORGANIZATION_AUDIT_PROFILE_PATH,
     );
-    expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`);
+    expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PROFILE_PATH}`);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
   });
 
-  it('builds persona-specific resource metadata for content-reader', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, CONTENT_READER_PERSONA_PATH);
-    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PERSONA_PATH}`);
+  it('builds profile-specific resource metadata for content-reader', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, CONTENT_READER_PROFILE_PATH);
+    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PROFILE_PATH}`);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
   });
 });

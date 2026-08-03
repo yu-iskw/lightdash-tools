@@ -1,5 +1,5 @@
 /**
- * Deterministic JSON stringify for digests and diffs (persona-neutral).
+ * Deterministic JSON stringify for digests and diffs (profile-neutral).
  */
 
 import { createHash } from 'node:crypto';

@@ -1,5 +1,5 @@
 /**
- * Tool registration: shared registry only (personas select via registerToolsByIds).
+ * Tool registration: shared registry only (profiles select via registerToolsByIds).
  */
 
 export { registerToolsByIds } from './registry.js';

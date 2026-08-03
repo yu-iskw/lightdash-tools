@@ -138,6 +138,13 @@ describe('loadMcpHttpConfig', () => {
     expect(() => loadMcpHttpConfig()).toThrow(/is removed/);
   });
 
+  it('rejects obsolete STDIO_PERSONA env', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_STDIO_PERSONA = 'semantic-layer';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/ADR-0021/);
+  });
+
   it('rejects obsolete EXPERIMENTAL_IDENTITY_OAUTH env', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH] = '1';

@@ -41,7 +41,7 @@ export function registerExportChartImage(
         chartUuid: uuidOrSlugField('Chart UUID or slug'),
       },
     },
-    (_persona) =>
+    (_profile) =>
       wrapTool(
         contextProvider,
         (c) => async (args: { projectUuid?: string; chartUuid: string }) => {

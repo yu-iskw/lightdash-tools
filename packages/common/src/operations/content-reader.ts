@@ -5,11 +5,11 @@ import { READ_ONLY_DEFAULT, READ_ONLY_TRANSIENT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
+import type { ProfileId, OperationDescriptor } from './types';
 
-const PROFILE_CONTENT_READER: CapabilityProfile = 'content-reader';
-const PROFILE_CONTENT_DEVELOPER: CapabilityProfile = 'content-developer';
-const PROFILE_DATA_ANALYST: CapabilityProfile = 'data-analyst';
+const PROFILE_CONTENT_READER: ProfileId = 'content-reader';
+const PROFILE_CONTENT_DEVELOPER: ProfileId = 'content-developer';
+const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
 
 const op_search_content = defineOperation({
   id: 'content-reader.content.search',

@@ -55,7 +55,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
         timeoutMs: z.number().int().nonnegative().optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -134,7 +134,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                     appliedParameters: args.parameters ?? {},
                   },
                   {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                     complete: isCoverageComplete(bounded.normalized),
@@ -190,7 +190,7 @@ export function registerRunDashboardTile(
       },
     },
     /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- tile validation + execution */
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -303,7 +303,7 @@ export function registerRunDashboardTile(
                     appliedDateZoom: args.dateZoom,
                   },
                   {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                     complete: isCoverageComplete(bounded.normalized),

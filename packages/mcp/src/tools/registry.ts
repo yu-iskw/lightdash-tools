@@ -1,7 +1,7 @@
 /**
  * Shared MCP tool registry: short id → register(server, ctx).
  * Wire names are always `lightdash_` + id via registerToolSafe.
- * Persona allowlists must resolve through the operation catalog (ADR-0013).
+ * Profile allowlists must resolve through the operation catalog (ADR-0013).
  */
 
 import { getOperationByMcpToolName, listBannedMcpToolNames } from '@lightdash-tools/common';
@@ -117,7 +117,7 @@ export const toolRegistry = {
   list_metrics: { register: registerListMetrics },
   list_projects: { register: registerListProjects },
 
-  // organization inventory / access / content / delivery (shared; persona allowlists select)
+  // organization inventory / access / content / delivery (shared; profile membership selects)
   get_org_profile: { register: registerGetOrgProfile },
   list_org_members: { register: registerListOrgMembers },
   get_org_member: { register: registerGetOrgMember },
@@ -205,11 +205,11 @@ export type ToolId = keyof typeof toolRegistry;
 
 const BANNED_MCP_TOOL_IDS = new Set(listBannedMcpToolNames());
 
-/** Register a subset of tools by id (persona allowlist). Requires catalog parity (ADR-0013). */
+/** Register a subset of tools by id (catalog membership, ADR-0021). */
 export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,
-  ids: readonly ToolId[],
+  ids: readonly string[],
 ): void {
   for (const id of ids) {
     if (BANNED_MCP_TOOL_IDS.has(id)) {
@@ -219,7 +219,10 @@ export function registerToolsByIds(
     if (catalogOp?.mcp?.taskSupport.exposed !== true) {
       throw new Error(`MCP tool id '${id}' is not an exposed operation in the catalog (ADR-0013)`);
     }
-    // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
-    toolRegistry[id].register(server, contextProvider);
+    if (!(id in toolRegistry)) {
+      throw new Error(`MCP tool id '${id}' is not registered in the tool registry`);
+    }
+
+    toolRegistry[id as ToolId].register(server, contextProvider);
   }
 }

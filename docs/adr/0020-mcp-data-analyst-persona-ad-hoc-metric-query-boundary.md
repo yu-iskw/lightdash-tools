@@ -34,7 +34,7 @@ Putting ad-hoc metric-query on `content-reader` would collapse the saved-content
    - `resultCapability`: `bounded_aggregate_rows` (reuse content-reader row/concurrency/rate caps)
 4. Project scope matches content-reader for **all** persona tools (discovery + run + lifecycle): `X-Lightdash-Project` → tool `projectUuid` → `PROJECT_SCOPE_REQUIRED`. Optional ceiling: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`. Shared explore/metrics/`compile_query` tools accept optional `projectUuid` so HTTP pin works for semantic-layer and data-analyst alike.
 5. **Excluded from MCP v1:** raw SQL, metric-query `tableCalculations` (always sent as `[]`; not accepted on the tool input), field-values search, underlying-data, CSV/download / schedule-download, saved-chart/dashboard execution or mutation, CLI `query run`.
-6. Catalog profile: `data-analyst`. Do not add `metric-query` to the `content-reader` or `semantic-discovery` profiles.
+6. Catalog profile: `data-analyst`. Do not add `metric-query` to the `content-reader` or `semantic-layer` profiles.
 7. Inventory: [data-analyst inventory](../personas/data-analyst/inventory.md).
 
 ## Consequences

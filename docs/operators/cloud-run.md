@@ -20,7 +20,7 @@ ENV NODE_ENV=production
 ENV LIGHTDASH_TOOLS_MCP_HTTP_HOST=0.0.0.0
 ENV LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 
-CMD ["node", "packages/mcp/dist/bin.js", "serve-http"]
+CMD ["node", "packages/mcp/dist/bin.js", "http"]
 ```
 
 ## Cloud Run environment variables
@@ -45,7 +45,7 @@ https://lightdash-mcp-xxxxx.a.run.app/oauth/callback
 
 ## Audit logs (Cloud Logging)
 
-Each MCP tool call emits one structured line with `"channel":"audit"`, plus `severity`, `message`, `tool`, `status`, `subject` / `tokenHash` (OAuth), `clientSessionId`, `personaId`, and optional `projectUuids`. See [structured logging](https://docs.cloud.google.com/logging/docs/structured-logging).
+Each MCP tool call emits one structured line with `"channel":"audit"`, plus `severity`, `message`, `tool`, `status`, `subject` / `tokenHash` (OAuth), `clientSessionId`, `profileId`, and optional `projectUuids`. See [structured logging](https://docs.cloud.google.com/logging/docs/structured-logging).
 
 ### Logs Explorer filter
 

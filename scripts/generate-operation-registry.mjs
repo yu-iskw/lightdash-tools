@@ -13,16 +13,6 @@ const ROOT = path.resolve(__dirname, '..');
 const COMMON_DIST = path.join(ROOT, 'packages/common/dist');
 const OUTPUT_PATH = path.join(ROOT, 'packages/common/dist/operation-registry.json');
 
-const REQUIRED_PROFILES = [
-  'core-lifecycle',
-  'evaluations',
-  'conversations',
-  'discovery-readonly',
-  'semantic-discovery',
-  'org-audit-readonly',
-  'content-reader',
-];
-
 const P0_OPERATION_IDS = [
   'ai-agents.admin.agents.list',
   'ai-agents.admin.settings.get',
@@ -91,8 +81,20 @@ function validateOperation(operation, errors) {
     }
   }
 
-  if (!Array.isArray(operation.profiles) || operation.profiles.length === 0) {
-    errors.push(`Operation '${operation.id}' must declare at least one profile`);
+  if (!Array.isArray(operation.profiles)) {
+    errors.push(`Operation '${operation.id}' must declare a profiles array`);
+  } else {
+    const mcpExposed = operation.mcp?.taskSupport?.exposed === true;
+    if (mcpExposed && operation.profiles.length === 0) {
+      errors.push(
+        `Operation '${operation.id}' must declare at least one profile when mcp.taskSupport.exposed is true`,
+      );
+    }
+    if (!mcpExposed && operation.profiles.length > 0) {
+      errors.push(
+        `Operation '${operation.id}' must use empty profiles when not MCP-exposed (got ${operation.profiles.join(', ')})`,
+      );
+    }
   }
 
   if (operation.http?.path) {
@@ -115,8 +117,10 @@ function validateOperation(operation, errors) {
 
 async function main() {
   const errors = [];
-  const { listOperations, getOperation, getOperationsByProfile } = await loadRegistry();
+  const { listOperations, getOperation, getOperationsByProfile, PROFILE_IDS } =
+    await loadRegistry();
   const operations = listOperations();
+  const requiredProfiles = [...PROFILE_IDS];
 
   if (operations.length === 0) {
     errors.push('Registry is empty');
@@ -137,8 +141,8 @@ async function main() {
     }
   }
 
-  // Persona + AI-agent profiles must have at least one operation once catalog cutover is complete.
-  for (const profile of REQUIRED_PROFILES) {
+  // Every serving profile must have at least one catalog operation.
+  for (const profile of requiredProfiles) {
     if (getOperationsByProfile(profile).length === 0) {
       errors.push(`No operations registered for profile '${profile}'`);
     }
@@ -155,7 +159,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     operationCount: operations.length,
     profiles: Object.fromEntries(
-      REQUIRED_PROFILES.map((profile) => [profile, getOperationsByProfile(profile).length]),
+      requiredProfiles.map((profile) => [profile, getOperationsByProfile(profile).length]),
     ),
     operations: operations.map((operation) => ({
       id: operation.id,

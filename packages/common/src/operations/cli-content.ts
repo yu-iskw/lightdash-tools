@@ -4,10 +4,7 @@
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
-
-const PROFILE_DISCOVERY: CapabilityProfile = 'discovery-readonly';
-const PROFILE_CORE: CapabilityProfile = 'core-lifecycle';
+import type { OperationDescriptor } from './types';
 
 const chartsList = defineOperation({
   id: 'cli.charts.list',
@@ -16,7 +13,7 @@ const chartsList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts list' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 const chartsCodeList = defineOperation({
@@ -26,7 +23,7 @@ const chartsCodeList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts code list' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 const chartsCodeUpsert = defineOperation({
@@ -36,7 +33,7 @@ const chartsCodeUpsert = defineOperation({
   authorization: { safetyImpact: 'write-nondestructive' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts code upsert' },
-  profiles: [PROFILE_CORE],
+  profiles: [],
 });
 
 const dashboardsList = defineOperation({
@@ -46,7 +43,7 @@ const dashboardsList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects dashboards list' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 const validateRun = defineOperation({
@@ -56,7 +53,7 @@ const validateRun = defineOperation({
   authorization: { safetyImpact: 'write-nondestructive' },
   sensitivity: 'none',
   cli: { commandPath: 'projects validate run' },
-  profiles: [PROFILE_CORE],
+  profiles: [],
 });
 
 const validateResults = defineOperation({
@@ -66,7 +63,7 @@ const validateResults = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects validate results' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 export const CLI_CONTENT_OPERATIONS: readonly OperationDescriptor[] = [

@@ -1,7 +1,7 @@
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { bindServerPersona } from '../../audit/server-persona.js';
+import { bindServerProfile } from '../../audit/server-profile.js';
 import { resetAvailableProjectsCache } from '../../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
 import { CREDENTIALS_OMITTED_WARNING } from '../lib/redaction.js';
@@ -159,7 +159,7 @@ describe('registerGetProject', () => {
     const listProjects = vi.fn();
 
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'semantic-layer');
+    bindServerProfile(mockServer, 'semantic-layer');
     registerGetProject(mockServer as never, mockContext(listProjects, getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
@@ -183,7 +183,7 @@ describe('registerGetProject', () => {
     process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
     const getProject = vi.fn();
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'semantic-layer');
+    bindServerProfile(mockServer, 'semantic-layer');
     registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
     expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
@@ -200,7 +200,7 @@ describe('registerGetProject', () => {
       type: 'DEFAULT',
     });
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'content-reader');
+    bindServerProfile(mockServer, 'content-reader');
     registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
     expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
@@ -224,7 +224,7 @@ describe('registerGetProject', () => {
     process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
     const getProject = vi.fn();
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'content-reader');
+    bindServerProfile(mockServer, 'content-reader');
     registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     const result = await handler({});
@@ -239,7 +239,7 @@ describe('registerGetProject', () => {
       type: 'DEFAULT',
     });
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'data-analyst');
+    bindServerProfile(mockServer, 'data-analyst');
     registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 

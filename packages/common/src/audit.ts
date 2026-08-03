@@ -10,6 +10,8 @@
 import { randomUUID } from 'node:crypto';
 import { createWriteStream, type WriteStream } from 'node:fs';
 
+import type { ProfileId } from './operations/types';
+
 export type AuditStatus =
   | 'blocked'
   | 'confirmation_cancelled'
@@ -41,7 +43,7 @@ export type AuditLogEntry = {
   /** Lightdash user UUID when the call runs under OAuth bearer auth. */
   subject?: string;
   clientSessionId?: string;
-  personaId?: string;
+  profileId?: ProfileId;
   status: AuditStatus;
   durationMs: number;
 };
@@ -55,7 +57,7 @@ export type BuildAuditLogEntryInput = {
   tokenHash?: string;
   subject?: string;
   clientSessionId?: string;
-  personaId?: string;
+  profileId?: ProfileId;
 };
 
 /** Unique ID for the current process lifetime. Generated once at module load. */
@@ -107,7 +109,7 @@ export function buildAuditLogEntry(input: BuildAuditLogEntryInput): AuditLogEntr
     tokenHash: input.tokenHash,
     subject: input.subject,
     clientSessionId: input.clientSessionId,
-    personaId: input.personaId,
+    profileId: input.profileId,
     status: input.status,
     durationMs: Date.now() - input.startMs,
   };

@@ -37,6 +37,7 @@ Feature "support X API" notes, superseded-only history, and process/skill record
 18. [MCP ai-agent-ops persona thin API boundary](0018-mcp-ai-agent-ops-persona-thin-api-boundary.md)
 19. [MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 20. [MCP data-analyst persona ad-hoc metric-query boundary](0020-mcp-data-analyst-persona-ad-hoc-metric-query-boundary.md)
+21. [MCP profile packaging; catalog tool-membership SSOT](0021-mcp-profile-packaging-catalog-tool-membership-ssot.md)
 
 ## Old → new mapping
 

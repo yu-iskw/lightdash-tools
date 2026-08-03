@@ -1,7 +1,7 @@
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../../config/env.js';
 import { normalizeMcpPath } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
-import { getPersonaByPath } from '../../personas/index.js';
+import { getProfileByPath } from '../../profiles/index.js';
 
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
@@ -18,8 +18,8 @@ export interface OAuthProtectedResourceMetadata {
 }
 
 /**
- * Builds MCP OAuth protected-resource metadata for a persona MCP path.
- * Callers must pass an explicit persona path (root PRM uses `config.mcpPath`).
+ * Builds MCP OAuth protected-resource metadata for a profile MCP path.
+ * Callers must pass an explicit profile path (root PRM uses `config.mcpPath`).
  */
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
@@ -44,7 +44,7 @@ export function getProtectedResourceMetadataUrl(config: McpHttpConfig): string {
   return `${requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT)}${OAUTH_PROTECTED_RESOURCE_ROOT}`;
 }
 
-/** Path-specific PRM URL for a persona MCP endpoint. */
+/** Path-specific PRM URL for a profile MCP endpoint. */
 export function getProtectedResourceMetadataPathUrl(
   config: McpHttpConfig,
   mcpPath: string,
@@ -55,9 +55,9 @@ export function getProtectedResourceMetadataPathUrl(
 }
 
 /**
- * Resolves the persona MCP path for a PRM well-known request.
- * Root PRM maps to the default persona (`config.mcpPath`); path-specific PRM
- * is served only for shipped persona paths.
+ * Resolves the profile MCP path for a PRM well-known request.
+ * Root PRM maps to the default profile (`config.mcpPath`); path-specific PRM
+ * is served only for shipped profile paths.
  */
 export function resolveProtectedResourceMcpPath(
   path: string,
@@ -74,7 +74,7 @@ export function resolveProtectedResourceMcpPath(
     return undefined;
   }
   const resourcePath = `/${path.slice(prefix.length)}`;
-  return getPersonaByPath(resourcePath)?.path;
+  return getProfileByPath(resourcePath)?.path;
 }
 
 /** Well-known OAuth Authorization Server Metadata URL for an AS origin. */

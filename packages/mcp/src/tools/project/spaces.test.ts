@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { bindServerPersona } from '../../audit/server-persona.js';
+import { bindServerProfile } from '../../audit/server-profile.js';
 
 import { registerListSpaces } from './spaces.js';
 
@@ -19,41 +19,41 @@ function mockContext(listSpacesInProject: ReturnType<typeof vi.fn>): McpContextP
   } as unknown as McpContextProvider;
 }
 
-describe('registerListSpaces persona envelope', () => {
-  it('stamps content-developer when server persona is bound', async () => {
+describe('registerListSpaces profile envelope', () => {
+  it('stamps content-developer when server profile is bound', async () => {
     const listSpacesInProject = vi
       .fn()
       .mockResolvedValue([{ uuid: 'space-1', name: 'Root', slug: 'root', parentSpaceUuid: null }]);
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'content-developer');
+    bindServerProfile(mockServer, 'content-developer');
     registerListSpaces(mockServer as never, mockContext(listSpacesInProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
     const result = await handler({ projectUuid: PROJECT });
     expect(result.isError).toBeUndefined();
     const body = JSON.parse(result.content[0].text) as {
-      context: { persona: string; projectUuid: string };
+      context: { profile: string; projectUuid: string };
     };
-    expect(body.context.persona).toBe('content-developer');
+    expect(body.context.profile).toBe('content-developer');
     expect(body.context.projectUuid).toBe(PROJECT);
   });
 
-  it('stamps content-reader when server persona is bound', async () => {
+  it('stamps content-reader when server profile is bound', async () => {
     const listSpacesInProject = vi.fn().mockResolvedValue([]);
     const mockServer = { registerTool: vi.fn() };
-    bindServerPersona(mockServer, 'content-reader');
+    bindServerProfile(mockServer, 'content-reader');
     registerListSpaces(mockServer as never, mockContext(listSpacesInProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
     const result = await handler({ projectUuid: PROJECT });
-    const body = JSON.parse(result.content[0].text) as { context: { persona: string } };
-    expect(body.context.persona).toBe('content-reader');
+    const body = JSON.parse(result.content[0].text) as { context: { profile: string } };
+    expect(body.context.profile).toBe('content-reader');
   });
 
-  it('throws when server persona is unbound at registration', () => {
+  it('throws when server profile is unbound at registration', () => {
     const mockServer = { registerTool: vi.fn() };
     expect(() => registerListSpaces(mockServer as never, mockContext(vi.fn()))).toThrow(
-      'personaId is required to register list_spaces',
+      'profileId is required to register list_spaces',
     );
     expect(mockServer.registerTool).not.toHaveBeenCalled();
   });

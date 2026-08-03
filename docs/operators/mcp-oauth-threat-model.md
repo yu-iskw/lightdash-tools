@@ -52,7 +52,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **OAuth broker** (s
 
 - [ ] Configure log redaction for `Authorization` and `Proxy-Authorization` headers.
 - [ ] Tool-output PII redaction in MCP responses ([ADR-0011](../adr/0011-mcp-tool-response-sensitivity-classes.md)) is separate from log/token redaction above — handlers mask emails and omit connection secrets before results reach the agent transcript.
-- [ ] Verify audit log entries are structured JSON with `channel="audit"`, and contain `tokenHash` and `subject` (not raw tokens) for OAuth sessions; also expect `clientSessionId` / `personaId` when available.
+- [ ] Verify audit log entries are structured JSON with `channel="audit"`, and contain `tokenHash` and `subject` (not raw tokens) for OAuth sessions; also expect `clientSessionId` / `profileId` when available.
 - [ ] For compliance retention beyond the `_Default` bucket (30 days by default), configure a Cloud Logging sink to a dedicated bucket (or BigQuery/GCS) filtered on `jsonPayload.channel="audit"` — see [cloud-run.md](cloud-run.md).
 - [ ] Avoid capturing full HTTP request dumps in production.
 

@@ -6,10 +6,7 @@ import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { CapabilityProfile, OperationDescriptor } from './types';
-
-const PROFILE_DISCOVERY: CapabilityProfile = 'discovery-readonly';
-const PROFILE_CORE_LIFECYCLE: CapabilityProfile = 'core-lifecycle';
+import type { OperationDescriptor } from './types';
 
 const API_V1 = '/api/v1';
 const MEMBERS_PATH = `${API_V1}/org/users`;
@@ -28,7 +25,7 @@ const membersList = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users list' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 const membersGet = defineOperation({
@@ -43,7 +40,7 @@ const membersGet = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users get' },
-  profiles: [PROFILE_DISCOVERY],
+  profiles: [],
 });
 
 const membersDelete = defineOperation({
@@ -54,7 +51,7 @@ const membersDelete = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'delete_member',
-  profiles: [PROFILE_CORE_LIFECYCLE],
+  profiles: [],
 });
 
 /** Organization member operations registered in the shared operation catalog. */

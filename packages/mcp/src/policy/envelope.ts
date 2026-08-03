@@ -1,6 +1,8 @@
 /**
- * Content-reader response envelope helpers (RFC §10).
+ * Content response envelope helpers (RFC §10 / ADR-0021).
  */
+
+import type { ProfileId } from '@lightdash-tools/common';
 
 export type ContentReaderWarningCode =
   | 'CACHE_STALE'
@@ -24,7 +26,7 @@ export type ContentReaderWarning = {
 export type ContentReaderEnvelope<T> = {
   data: T;
   context: {
-    persona: string;
+    profile: ProfileId;
     projectUuid: string;
     projectPinned: boolean;
     observedAt: string;
@@ -40,7 +42,7 @@ export type ContentReaderEnvelope<T> = {
 export function contentReaderEnvelope<T>(
   data: T,
   opts: {
-    persona: string;
+    profile: ProfileId;
     projectUuid: string;
     projectPinned: boolean;
     complete?: boolean;
@@ -52,7 +54,7 @@ export function contentReaderEnvelope<T>(
   return {
     data,
     context: {
-      persona: opts.persona,
+      profile: opts.profile,
       projectUuid: opts.projectUuid,
       projectPinned: opts.projectPinned,
       observedAt: new Date().toISOString(),

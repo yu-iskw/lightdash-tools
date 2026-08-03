@@ -6,7 +6,7 @@
 export const ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST = 'LIGHTDASH_TOOLS_MCP_HTTP_HOST';
 export const ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT = 'LIGHTDASH_TOOLS_MCP_HTTP_PORT';
 export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_URL';
-/** Rejected at config load — MCP path is persona-owned (see personas/). */
+/** Rejected at config load — MCP path is profile-owned (see profiles/). */
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
 /** Rejected — auth mode is inferred from credentials (ADR-0007). */
 export const ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE = 'LIGHTDASH_TOOLS_MCP_AUTH_MODE';

@@ -41,7 +41,7 @@ export function registerListSpaces(server: McpServer, contextProvider: McpContex
         parentSpaceUuid: z.string().optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) => async (args: { projectUuid?: string; parentSpaceUuid?: string }) => {
@@ -59,7 +59,7 @@ export function registerListSpaces(server: McpServer, contextProvider: McpContex
               contentReaderEnvelope(
                 { spaces: items },
                 {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 },
@@ -88,7 +88,7 @@ export function registerGetSpace(server: McpServer, contextProvider: McpContextP
         includeContent: z.boolean().optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -143,7 +143,7 @@ export function registerGetSpace(server: McpServer, contextProvider: McpContextP
                     truncated: false,
                   },
                   {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                   },

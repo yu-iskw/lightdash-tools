@@ -127,7 +127,7 @@ export function registerSearchContent(
         pageSize: z.number().int().positive().max(100).optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -167,7 +167,7 @@ export function registerSearchContent(
                 contentReaderEnvelope(
                   { items: data, pagination: { returned: data.length, ...pagination, complete } },
                   {
-                    persona,
+                    profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                     complete,
@@ -198,7 +198,7 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
         includeFilterDefinitions: z.boolean().optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -219,7 +219,7 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
               }
               return jsonToolResult(
                 contentReaderEnvelope(normalized, {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 }),
@@ -246,7 +246,7 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
         includeQueryDefinition: z.boolean().optional(),
       },
     },
-    (persona) =>
+    (profile) =>
       wrapTool(
         contextProvider,
         (c) =>
@@ -273,7 +273,7 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
               );
               return jsonToolResult(
                 contentReaderEnvelope(toReaderChart(chart, args.includeQueryDefinition !== false), {
-                  persona,
+                  profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 }),
