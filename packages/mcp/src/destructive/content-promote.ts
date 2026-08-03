@@ -4,6 +4,7 @@
 
 import { WRITE_DESTRUCTIVE } from '@lightdash-tools/common';
 
+import { assertPromoteTargetsAllowlisted } from '../governance/promote-allowlist.js';
 import { uuidOrSlugField } from '../tools/lib/schema-fields.js';
 
 import {
@@ -100,12 +101,17 @@ function buildPromoteSpec(): DestructiveOperationSpec<ScopedDestructiveArgs, Pro
     resourceType: 'dashboard',
     async resolveTarget(args, ctx) {
       const client = ctx.lightdashClient as LightdashClient;
-      const [dashboard, promoteDiff] = await Promise.all([
+      const [dashboard, promoteDiff, project] = await Promise.all([
         client.v2.dashboards.getDashboard(args.projectUuid, args.resourceId),
         client.v1.dashboards.getDashboardPromoteDiff(args.resourceId, {
           projectUuid: args.projectUuid,
         }),
+        client.v1.projects.getProject(args.projectUuid),
       ]);
+      assertPromoteTargetsAllowlisted({
+        upstreamProjectUuid: project.upstreamProjectUuid,
+        promoteDiff,
+      });
       return { dashboard: toDashboardSlice(dashboard), promoteDiff };
     },
     summarizeTarget(snapshot) {

@@ -31,7 +31,8 @@ MCP form elicitation via multi-round-trip requests ([elicitation](https://modelc
    - message summarizes `PromotionChanges` (`create` / `update` / `no changes` counts) and upstream-overwrite consequences;
    - binds HMAC `requestState` to identity + digest of dashboard metadata **and** promoteDiff material;
    - re-fetches dashboard + promoteDiff on accept; digest mismatch → `RESOURCE_CHANGED`;
-   - no free-form upstream project UUID (API uses the project’s configured upstream).
+   - no free-form upstream project UUID (API uses the project’s configured upstream);
+   - when `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` is set, that upstream (and promoteDiff target project UUIDs) must also be allowlisted before elicitation or apply (`PROJECT_NOT_AVAILABLE` otherwise).
 5. Catalog SSOT ([ADR-0013](0013-operation-catalog-as-sole-agent-surface-ssot.md)): profile `content-governance`; promote annotated `WRITE_DESTRUCTIVE` with `destructiveHint: true`.
 6. One tool call → one dashboard → one elicitation → one promote API call (no bulk).
 

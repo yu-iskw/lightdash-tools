@@ -25,7 +25,7 @@ Soft-delete a single dashboard after human form elicitation, or promote a dashbo
    - `decision`: `confirm_promote` or `do_not_promote`
    - `confirmationText`: exact dashboard name from the elicitation message
 6. On accept, server re-fetches dashboard + promoteDiff. Drift → `RESOURCE_CHANGED` — re-invoke for a fresh elicitation.
-7. On success, report the promotion receipt. Do not claim chart-only or SQL-chart promote (not available on MCP). Upstream project is configured in Data Ops, not chosen via tool args.
+7. On success, report the promotion receipt. Do not claim chart-only or SQL-chart promote (not available on MCP). Upstream project is configured in Data Ops, not chosen via tool args. If `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` is set, the upstream target must be on that list (including for `get_dashboard_promote_diff`); otherwise expect `PROJECT_NOT_AVAILABLE`.
 
 ## Soft-delete confirmation form fields
 
