@@ -186,15 +186,14 @@ describe('ai-agent-ops tools', () => {
     vi.restoreAllMocks();
   });
 
-  it('lists agents for the configured project', async () => {
-    vi.stubEnv('LIGHTDASH_TOOLS_PROJECT_UUID', PROJECT);
+  it('lists agents when projectUuid is passed', async () => {
     const listAgents = vi.fn().mockResolvedValue([{ uuid: AGENT, name: 'Revenue' }]);
     const handler = registeredHandler(
       registerListProjectAgents,
       mockContext({ listAgents }),
       'list_project_agents',
     );
-    const result = await handler({});
+    const result = await handler({ projectUuid: PROJECT });
     expect(result.isError).toBeUndefined();
     const body = parseBody(result);
     expect(listAgents).toHaveBeenCalledWith(PROJECT);
@@ -203,35 +202,36 @@ describe('ai-agent-ops tools', () => {
   });
 
   it('labels readiness as non-e2e', async () => {
-    vi.stubEnv('LIGHTDASH_TOOLS_PROJECT_UUID', PROJECT);
     const evaluateAgentReadiness = vi.fn().mockResolvedValue({ score: 0.8 });
     const handler = registeredHandler(
       registerEvaluateAgentReadiness,
       mockContext({ evaluateAgentReadiness }),
       'evaluate_agent_readiness',
     );
-    const result = await handler({ agentUuid: AGENT });
+    const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
     const body = parseBody(result);
     expect(body.mode).toBe('project_readiness_api');
     expect((body.limitations as string[])[0]).toMatch(/not an evaluation-suite run/i);
   });
 
   it('run evaluation notes CLI gate ownership', async () => {
-    vi.stubEnv('LIGHTDASH_TOOLS_PROJECT_UUID', PROJECT);
     const runEvaluation = vi.fn().mockResolvedValue({ runUuid: RUN, status: 'pending' });
     const handler = registeredHandler(
       registerRunAgentEvaluation,
       mockContext({ runEvaluation }),
       'run_agent_evaluation',
     );
-    const result = await handler({ agentUuid: AGENT, evalUuid: EVAL_UUID });
+    const result = await handler({
+      projectUuid: PROJECT,
+      agentUuid: AGENT,
+      evalUuid: EVAL_UUID,
+    });
     const body = parseBody(result);
     expect(body.mode).toBe('lightdash_agent_evaluation_run');
     expect((body.limitations as string[]).join(' ')).toMatch(/agentops evaluate-gate/);
   });
 
   it('get run results does not claim gate passed', async () => {
-    vi.stubEnv('LIGHTDASH_TOOLS_PROJECT_UUID', PROJECT);
     const getEvaluationRunResults = vi
       .fn()
       .mockResolvedValue({ runUuid: RUN, status: 'completed' });
@@ -241,6 +241,7 @@ describe('ai-agent-ops tools', () => {
       'get_agent_eval_run_results',
     );
     const result = await handler({
+      projectUuid: PROJECT,
       agentUuid: AGENT,
       evalUuid: EVAL_UUID,
       runUuid: RUN,
@@ -251,7 +252,6 @@ describe('ai-agent-ops tools', () => {
   });
 
   it('surfaces PROJECT_SCOPE_REQUIRED when unresolved', async () => {
-    vi.stubEnv('LIGHTDASH_TOOLS_PROJECT_UUID', '');
     const getAgent = vi.fn();
     const handler = registeredHandler(
       registerGetProjectAgent,

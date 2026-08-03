@@ -7,12 +7,16 @@ describe('config/runtime', () => {
   const originalSafety = process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
   const originalAllowlist = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
   const originalDryRun = process.env.LIGHTDASH_TOOLS_DRY_RUN;
+  const originalDeprecated = process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
+  const originalProjectUuid = process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
 
   beforeEach(() => {
     delete process.env.LIGHTDASH_TOOLS_AUDIT_LOG;
     delete process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
     delete process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
     delete process.env.LIGHTDASH_TOOLS_DRY_RUN;
+    delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
+    delete process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
   });
 
   afterEach(() => {
@@ -27,6 +31,8 @@ describe('config/runtime', () => {
     restore('LIGHTDASH_TOOLS_SAFETY_MODE', originalSafety);
     restore('LIGHTDASH_TOOLS_ALLOWED_PROJECTS', originalAllowlist);
     restore('LIGHTDASH_TOOLS_DRY_RUN', originalDryRun);
+    restore('LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS', originalDeprecated);
+    restore('LIGHTDASH_TOOLS_PROJECT_UUID', originalProjectUuid);
   });
 
   describe('getAuditLogPath', () => {
@@ -46,7 +52,7 @@ describe('config/runtime', () => {
   });
 
   describe('warnIgnoredCliGuardrailEnvVars', () => {
-    it('does not warn when CLI guardrail env vars are unset', () => {
+    it('does not warn when CLI-only / deprecated / removed vars are unset', () => {
       const warn = vi.fn();
       warnIgnoredCliGuardrailEnvVars(process.env, warn);
       expect(warn).not.toHaveBeenCalled();
@@ -60,17 +66,45 @@ describe('config/runtime', () => {
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('ignored by MCP'));
     });
 
-    it('lists all set CLI-only vars in one warning', () => {
+    it('does not treat ALLOWED_PROJECTS as ignored (shared with MCP)', () => {
+      const warn = vi.fn();
+      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+      warnIgnoredCliGuardrailEnvVars(process.env, warn);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
+    it('lists SAFETY_MODE and DRY_RUN in one warning', () => {
       const warn = vi.fn();
       process.env.LIGHTDASH_TOOLS_SAFETY_MODE = 'read-only';
-      process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS = 'uuid';
       process.env.LIGHTDASH_TOOLS_DRY_RUN = '1';
       warnIgnoredCliGuardrailEnvVars(process.env, warn);
       expect(warn).toHaveBeenCalledTimes(1);
       const message = warn.mock.calls[0][0] as string;
-      expect(message).toContain('LIGHTDASH_TOOLS_SAFETY_MODE');
+      expect(message).toMatch(
+        /^Warning: LIGHTDASH_TOOLS_SAFETY_MODE, LIGHTDASH_TOOLS_DRY_RUN are set but ignored/,
+      );
       expect(message).toContain('LIGHTDASH_TOOLS_ALLOWED_PROJECTS');
-      expect(message).toContain('LIGHTDASH_TOOLS_DRY_RUN');
+    });
+
+    it('warns that MCP_AVAILABLE_PROJECT_UUIDS is deprecated', () => {
+      const warn = vi.fn();
+      process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS =
+        'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+      warnIgnoredCliGuardrailEnvVars(process.env, warn);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS'),
+      );
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('LIGHTDASH_TOOLS_ALLOWED_PROJECTS'),
+      );
+    });
+
+    it('warns that PROJECT_UUID is no longer used', () => {
+      const warn = vi.fn();
+      process.env.LIGHTDASH_TOOLS_PROJECT_UUID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+      warnIgnoredCliGuardrailEnvVars(process.env, warn);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('LIGHTDASH_TOOLS_PROJECT_UUID'));
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('no longer used'));
     });
   });
 });

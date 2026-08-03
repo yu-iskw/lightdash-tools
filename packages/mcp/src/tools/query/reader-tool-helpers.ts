@@ -12,6 +12,7 @@ import type { TextContent } from '../shared.js';
 
 /** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
 const BLOCKED_POLICY_CODES = new Set([
+  'PROJECT_NOT_AVAILABLE',
   'PROJECT_SCOPE_MISMATCH',
   'PROJECT_SCOPE_REQUIRED',
   'CONTENT_NOT_EXECUTABLE',

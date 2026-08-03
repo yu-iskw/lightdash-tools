@@ -2,16 +2,17 @@
  * Shared types and helpers for MCP tool registration.
  *
  * Guardrail layers applied by registerToolSafe (outer → inner):
- *   1. Audit log wrapper    — captures timing and outcome for every call.
- *   2. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
- *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   4. Raw handler            — the actual tool implementation.
+ *   1. Audit log wrapper       — captures timing and outcome for every call.
+ *   2. Project scope           — pin mismatch + LIGHTDASH_TOOLS_ALLOWED_PROJECTS membership.
+ *   3. Input validation        — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   4. Raw handler             — the actual tool implementation.
  *
  * Capability surface is the persona toolIds allowlist (ADR-0006), not process safety mode.
  */
 
 import {
   extractProjectUuids,
+  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS,
   READ_ONLY_DEFAULT,
   logAuditEntry,
   getSessionId,
@@ -20,6 +21,7 @@ import {
 import { isInputRequiredResult } from '@modelcontextprotocol/server';
 
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
+import { findUnavailableProjectUuids } from '../governance/available-projects.js';
 import {
   resolveMcpClientSessionId,
   runWithMcpClientSessionAsync,
@@ -222,21 +224,30 @@ export function registerToolSafe(
     return validatedInner(args, extra);
   };
 
-  // ── HTTP project pin wrapper ──────────────────────────────────────────────
-  // When X-Lightdash-Project is set (ALS), reject tools that target another project.
-  const pinInner = finalHandler;
+  // ── Project pin + shared allowlist ────────────────────────────────────────
+  // One ALS read + one arg extract: pin mismatch, then ALLOWED_PROJECTS membership.
+  const scopeInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
     const pinned = getPinnedProjectUuid();
+    const projectUuids = extractProjectUuids(args);
     if (pinned) {
-      const projectUuids = extractProjectUuids(args);
-      const mismatched = projectUuids.filter((uuid) => uuid !== pinned);
+      const pinnedLower = pinned.toLowerCase();
+      const mismatched = projectUuids.filter((uuid) => uuid.toLowerCase() !== pinnedLower);
       if (mismatched.length > 0) {
         return blockedToolContent(
           `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
         );
       }
     }
-    return pinInner(args, extra);
+    // After pin match, args equal the pin — check pin alone; else check arg UUIDs.
+    const candidates = pinned ? [pinned] : projectUuids;
+    const unavailable = findUnavailableProjectUuids(candidates);
+    if (unavailable.length > 0) {
+      return blockedToolContent(
+        `Error: PROJECT_NOT_AVAILABLE: Project(s) [${unavailable.join(', ')}] are not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS}.`,
+      );
+    }
+    return scopeInner(args, extra);
   };
 
   // ── Audit log wrapper ─────────────────────────────────────────────────────

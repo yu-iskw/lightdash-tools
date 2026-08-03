@@ -20,7 +20,7 @@ export const runUuidField = (): z.ZodString => z.string().describe('Evaluation r
 
 export const threadUuidField = (): z.ZodString => z.string().describe('Thread UUID');
 
-/** Optional projectUuid when pin / LIGHTDASH_TOOLS_PROJECT_UUID can resolve scope. */
+/** Optional projectUuid when pin can resolve scope. */
 export const optionalProjectUuidField = (): z.ZodOptional<z.ZodString> =>
   projectUuidField().optional();
 

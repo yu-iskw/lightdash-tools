@@ -23,7 +23,7 @@ Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
 | PRM + broker AS metadata                                      | Supported                                     |
 | Full RFC 8707 audience enforcement on opaque Lightdash tokens | **Limited** — identity via `GET /api/v1/user` |
 
-Authorization in practice: Lightdash RBAC + persona `toolIds` ([ADR-0006](adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin ([ADR-0008](adr/0008-mcp-request-scope-and-hardening.md)).
+Authorization in practice: Lightdash RBAC + persona `toolIds` ([ADR-0006](adr/0006-mcp-personas-shared-registry-fixed-paths.md)) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` ([ADR-0008](adr/0008-mcp-request-scope-and-hardening.md)).
 
 ## Primary: hosted OAuth
 
@@ -94,7 +94,7 @@ Do **not** put `LIGHTDASH_TOOLS_OAUTH_CLIENT_*` in the client. See [cursor-light
 
 **Rejected at startup** (removed): `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_IDENTITY_OAUTH`, `DANGEROUSLY_*`, `ALLOW_INSECURE_PUBLIC_URL`, `LIGHTDASH_TOOLS_MCP_INSECURE_DEV`, `LIGHTDASH_TOOLS_MCP_PATH`.
 
-CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `ALLOWED_PROJECTS`, `DRY_RUN`.
+CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `DRY_RUN`. Shared with MCP: `LIGHTDASH_TOOLS_ALLOWED_PROJECTS`.
 
 ## Broker routes
 

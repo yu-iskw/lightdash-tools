@@ -1,33 +1,26 @@
 /**
- * Project scope unit tests (ADR-0012).
+ * Project scope unit tests (ADR-0008 / ADR-0012).
  */
 
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { resetAvailableProjectsCache } from './available-projects.js';
 import { runWithProjectPinAsync } from './project-pin.js';
-import {
-  ENV_PROJECT_UUID,
-  ProjectScopeError,
-  getConfiguredProjectUuid,
-  resolveProjectScope,
-} from './project-scope.js';
+import { ProjectScopeError, resolveProjectScope } from './project-scope.js';
 
 const PIN = '11111111-1111-4111-8111-111111111111';
-const CFG = '22222222-2222-4222-8222-222222222222';
 const ARG = '33333333-3333-4333-8333-333333333333';
+const OTHER = '22222222-2222-4222-8222-222222222222';
 
 describe('project-scope', () => {
   afterEach(() => {
-    delete process.env[ENV_PROJECT_UUID];
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS];
+    delete process.env.LIGHTDASH_TOOLS_MCP_AVAILABLE_PROJECT_UUIDS;
+    resetAvailableProjectsCache();
   });
 
-  it('reads configured project UUID from env', () => {
-    process.env[ENV_PROJECT_UUID] = CFG;
-    expect(getConfiguredProjectUuid()).toBe(CFG);
-  });
-
-  it('prefers HTTP pin over configured and argument', async () => {
-    process.env[ENV_PROJECT_UUID] = CFG;
+  it('prefers HTTP pin over argument', async () => {
     await runWithProjectPinAsync(PIN, async () => {
       expect(resolveProjectScope({ projectUuid: PIN })).toEqual({
         projectUuid: PIN,
@@ -49,23 +42,7 @@ describe('project-scope', () => {
     });
   });
 
-  it('uses configured when no pin', () => {
-    process.env[ENV_PROJECT_UUID] = CFG;
-    expect(resolveProjectScope()).toEqual({
-      projectUuid: CFG,
-      source: 'configured',
-      projectPinned: false,
-    });
-  });
-
-  it('rejects argument that mismatches configured', () => {
-    process.env[ENV_PROJECT_UUID] = CFG;
-    expect(() => resolveProjectScope({ projectUuid: ARG })).toThrow(
-      /PROJECT_SCOPE_MISMATCH|conflicts/,
-    );
-  });
-
-  it('uses explicit argument when no pin or config', () => {
+  it('uses explicit argument when no pin', () => {
     expect(resolveProjectScope({ projectUuid: ARG })).toEqual({
       projectUuid: ARG,
       source: 'argument',
@@ -79,42 +56,29 @@ describe('project-scope', () => {
       resolveProjectScope();
     } catch (err) {
       expect((err as ProjectScopeError).code).toBe('PROJECT_SCOPE_REQUIRED');
+      expect((err as ProjectScopeError).message).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
     }
   });
 
-  describe('allowConfiguredEnv: false', () => {
-    it('ignores LIGHTDASH_TOOLS_PROJECT_UUID and uses argument', () => {
-      process.env[ENV_PROJECT_UUID] = CFG;
-      expect(resolveProjectScope({ projectUuid: ARG }, { allowConfiguredEnv: false })).toEqual({
+  describe('shared allowlist', () => {
+    it('allows resolved UUID inside the allowlist', () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = `${ARG},${OTHER}`;
+      resetAvailableProjectsCache();
+      expect(resolveProjectScope({ projectUuid: ARG })).toEqual({
         projectUuid: ARG,
         source: 'argument',
         projectPinned: false,
       });
     });
 
-    it('still prefers HTTP pin over argument', async () => {
-      process.env[ENV_PROJECT_UUID] = CFG;
-      await runWithProjectPinAsync(PIN, async () => {
-        expect(resolveProjectScope({ projectUuid: PIN }, { allowConfiguredEnv: false })).toEqual({
-          projectUuid: PIN,
-          source: 'pin',
-          projectPinned: true,
-        });
-      });
-    });
-
-    it('throws PROJECT_SCOPE_REQUIRED without mentioning env when pin and arg missing', () => {
-      process.env[ENV_PROJECT_UUID] = CFG;
-      expect(() => resolveProjectScope(undefined, { allowConfiguredEnv: false })).toThrow(
-        ProjectScopeError,
-      );
+    it('rejects resolved UUID outside the allowlist', () => {
+      process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] = OTHER;
+      resetAvailableProjectsCache();
+      expect(() => resolveProjectScope({ projectUuid: ARG })).toThrow(ProjectScopeError);
       try {
-        resolveProjectScope(undefined, { allowConfiguredEnv: false });
+        resolveProjectScope({ projectUuid: ARG });
       } catch (err) {
-        expect(err).toBeInstanceOf(ProjectScopeError);
-        expect((err as ProjectScopeError).code).toBe('PROJECT_SCOPE_REQUIRED');
-        expect((err as ProjectScopeError).message).not.toContain(ENV_PROJECT_UUID);
-        expect((err as ProjectScopeError).message).toMatch(/X-Lightdash-Project|projectUuid/);
+        expect((err as ProjectScopeError).code).toBe('PROJECT_NOT_AVAILABLE');
       }
     });
   });

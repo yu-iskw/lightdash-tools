@@ -42,7 +42,7 @@ export function registerGetDashboardPromoteDiff(
           dashboardUuidOrSlug: string;
         }) => {
           try {
-            const scope = resolveProjectScope({ projectUuid }, { allowConfiguredEnv: false });
+            const scope = resolveProjectScope({ projectUuid });
             const promoteDiff = await client.v1.dashboards.getDashboardPromoteDiff(
               dashboardUuidOrSlug,
               { projectUuid: scope.projectUuid },
