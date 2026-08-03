@@ -27,7 +27,7 @@ import {
   runWithMcpClientSessionAsync,
 } from '../governance/mcp-client-session.js';
 import { getPinnedProjectUuid } from '../governance/project-pin.js';
-import { toMcpErrorMessage } from '../server/errors.js';
+import { classifyUpstreamError } from '../server/upstream-errors.js';
 
 import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -69,6 +69,11 @@ export function jsonToolResult(data: unknown): TextContent {
     content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
     structuredContent: toStructuredContent(data),
   };
+}
+
+/** Tool execution error with structured `{ error: { code, message } }` (not policy-blocked). */
+export function toolErrorResult(code: string, message: string): TextContent {
+  return { ...jsonToolResult({ error: { code, message } }), isError: true };
 }
 
 /**
@@ -363,8 +368,8 @@ export function wrapToolContextual<T>(
         );
       });
     } catch (err) {
-      const text = toMcpErrorMessage(err);
-      return { content: [{ type: 'text', text }], isError: true };
+      const { code, message } = classifyUpstreamError(err);
+      return toolErrorResult(code, message);
     }
   };
 }

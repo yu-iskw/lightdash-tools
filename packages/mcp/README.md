@@ -136,6 +136,25 @@ Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/r
 
 Persona tool allowlists are the capability surface — not CLI safety-mode.
 
+## Upstream API failures
+
+When a tool handler throws (for example a Lightdash HTTP/API failure), MCP returns a **tool execution error** (`isError: true`) with structured `{ error: { code, message } }` — not a JSON-RPC protocol error — so clients/models can self-correct ([MCP tools error handling](https://modelcontextprotocol.io/specification/2025-11-25/server/tools#error-handling)).
+
+| Code                    | Typical cause                                  |
+| :---------------------- | :--------------------------------------------- |
+| `RATE_LIMITED`          | HTTP 429                                       |
+| `UPSTREAM_TRANSIENT`    | Network errors, 408, 5xx                       |
+| `UPSTREAM_NOT_FOUND`    | HTTP 404                                       |
+| `UPSTREAM_FORBIDDEN`    | HTTP 403                                       |
+| `UPSTREAM_UNSUPPORTED`  | HTTP 501                                       |
+| `UPSTREAM_VALIDATION`   | HTTP 400 / 422 (including new required fields) |
+| `UPSTREAM_CLIENT_ERROR` | Other 4xx                                      |
+| `UPSTREAM_CONTRACT`     | Success HTTP but unexpected response shape     |
+| `IMAGE_TOO_LARGE`       | Chart PNG over size limit                      |
+| `UPSTREAM_UNKNOWN`      | Non-API throws                                 |
+
+Intentional API upgrades still go through the pinned OpenAPI sync (`config/lightdash-openapi-ref.txt`). This layer only makes runtime drift fail safely and legibly.
+
 ## Migration from `@lightdash-tools/semantic-layer-mcp`
 
 | Removed                               | Use instead              |

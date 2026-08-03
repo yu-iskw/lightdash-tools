@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-03]: MCP `wrapTool` maps uncaught Lightdash failures via `classifyUpstreamError` to structured `{ error: { code, message } }` (`UPSTREAM_*` / `RATE_LIMITED`); HttpClient malformed envelopes throw `ContractError` → `UPSTREAM_CONTRACT`. Tool execution errors (`isError`), not protocol errors.
 - [2026-08-03]: Content-developer loop-playbook (jaffle all types): `confirm_preview` needs `projectUuid` without HTTP pin. Multi-viz batch = shell → ≤2 concurrent chart creates → one `update_dashboard`. If update preview `diff.removed` includes `tiles`/`tabs`/`filters`, re-preview with those arrays — do not apply a description-only body. Ignore only server-owned metadata removals. Shared discovery tools may label `persona: content-reader` in the envelope. `get_chart` arg is `chartUuidOrSlug`. Explicit user all-types ask = Design Spec after one-line Objective restatement.
 - [2026-08-03]: Content-developer explore↔filter: dashboard filters auto-apply only when `fieldId`/`tableName` match the tile explore. Multi-explore boards (e.g. customers LTV + orders filters) need `tileTargets: { "<tileUuid>": false }` excludes (MCP native keys = tile UUID; as-code uses slugs). Prefer one explore for filtered boards.
 - [2026-08-03]: Content-developer professionalize = Spec delta (keep/drop/rename + cull one viz per insight) + rename chart `name` via `update_chart` (not only tile titles) + report untiled dashboard-owned leftovers for content-governance soft-delete.

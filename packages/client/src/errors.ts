@@ -4,6 +4,12 @@
 
 import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
+/** HttpClient name when the response body is not a Lightdash success/error envelope. */
+export const CONTRACT_ERROR_NAME = 'ContractError';
+
+/** Human-readable message for {@link CONTRACT_ERROR_NAME}. */
+export const CONTRACT_ERROR_MESSAGE = 'Unexpected Lightdash API response shape';
+
 /** API error payload shape (from Lightdash ApiErrorPayload). */
 export interface ApiErrorPayload {
   error: {
