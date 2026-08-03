@@ -1,3 +1,0 @@
-kind: fix
-body: MCP wrapTool maps uncaught Lightdash API failures to structured UPSTREAM and RATE_LIMITED tool errors; HttpClient rejects malformed success envelopes as ContractError
-time: 2026-08-03T17:11:44.651562+09:00
