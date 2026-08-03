@@ -100,7 +100,37 @@ describe('content-developer prompts/playbook', () => {
       /tiles.*diff\.removed|diff\.removed.*tiles|omit.*tiles|do \*\*not\*\* apply/,
     );
     expect(md).toContain('chartuuidorslug');
-    expect(md).toMatch(/persona:\s*content-reader|content-reader.*envelope/);
+    expect(md).toMatch(/persona:\s*content-developer|serving persona/);
+  });
+
+  it('documents lab/inline Batch SOP and bans SDD-only MCP click loops', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    const bans = CONTENT_DEVELOPER_HARD_BANS.toLowerCase();
+    expect(md).toMatch(/lab \/ inline|lab\/inline|inline build/);
+    expect(md).toMatch(/batch sop in the same session|same session/);
+    expect(md).toMatch(/subagent-driven-development|writing-plans/);
+    expect(bans).toMatch(/subagent-driven-development|writing-plans/);
+    expect(bans).toMatch(/lab boards|experiments/);
+  });
+
+  it('locks identical proposed payload, preview failure taxonomy, and mid-build UUID inventory', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    const bans = CONTENT_DEVELOPER_HARD_BANS.toLowerCase();
+    expect(md).toMatch(
+      /identical proposed|same proposed payload|immutable.*proposed|do not (mutate|edit|change).*proposed/,
+    );
+    expect(bans).toMatch(
+      /proposed payload|identical proposed|mutate.*proposed|edit.*after preview/,
+    );
+    expect(md).toMatch(/content hash/);
+    expect(md).toMatch(/preview_stale/);
+    expect(md).toMatch(/preview_required/);
+    expect(md).toMatch(/invalid or expired/);
+    expect(md).toMatch(
+      /running inventory|uuid inventory|after each.*create_chart|inventory.*charts\[0\]\.data\.uuid/,
+    );
+    expect(md).toMatch(/batch sop|one.*update_dashboard/);
+    expect(md).toMatch(/avoid n single-tile|do not interleave tiling/);
   });
 
   it('documents improve/professionalize Spec delta, cull, and leftover handoff', () => {

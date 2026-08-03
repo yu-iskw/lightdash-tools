@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -29,6 +30,7 @@ function spaceSummary(space: Record<string, unknown>) {
 }
 
 export function registerListSpaces(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'list_spaces');
   registerContentReaderTool(
     server,
     'list_spaces',
@@ -57,7 +59,11 @@ export function registerListSpaces(server: McpServer, contextProvider: McpContex
           return jsonToolResult(
             contentReaderEnvelope(
               { spaces: items },
-              { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
+              {
+                persona,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+              },
             ),
           );
         } catch (err) {
@@ -69,6 +75,7 @@ export function registerListSpaces(server: McpServer, contextProvider: McpContex
 }
 
 export function registerGetSpace(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'get_space');
   registerContentReaderTool(
     server,
     'get_space',
@@ -136,7 +143,11 @@ export function registerGetSpace(server: McpServer, contextProvider: McpContextP
                   charts,
                   truncated: false,
                 },
-                { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
+                {
+                  persona,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                },
               ),
             );
           } catch (err) {

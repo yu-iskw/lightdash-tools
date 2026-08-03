@@ -5,6 +5,7 @@
 import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -108,6 +109,7 @@ export function registerSearchContent(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'search_content');
   registerContentReaderTool(
     server,
     'search_content',
@@ -166,6 +168,7 @@ export function registerSearchContent(
               contentReaderEnvelope(
                 { items: data, pagination: { returned: data.length, ...pagination, complete } },
                 {
+                  persona,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   complete,
@@ -182,6 +185,7 @@ export function registerSearchContent(
 }
 
 export function registerGetDashboard(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'get_dashboard');
   registerContentReaderTool(
     server,
     'get_dashboard',
@@ -216,6 +220,7 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
             }
             return jsonToolResult(
               contentReaderEnvelope(normalized, {
+                persona,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
               }),
@@ -229,6 +234,7 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
 }
 
 export function registerGetChart(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'get_chart');
   registerContentReaderTool(
     server,
     'get_chart',
@@ -264,6 +270,7 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
             );
             return jsonToolResult(
               contentReaderEnvelope(toReaderChart(chart, args.includeQueryDefinition !== false), {
+                persona,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
               }),

@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { ProjectScopeError, resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -32,6 +33,7 @@ export function registerGetQueryResult(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'get_query_result');
   registerContentReaderTool(
     server,
     'get_query_result',
@@ -89,6 +91,7 @@ export function registerGetQueryResult(
 
             return jsonToolResult(
               contentReaderEnvelope(normalized, {
+                persona,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
                 complete: isCoverageComplete(normalized),
@@ -108,6 +111,7 @@ export function registerGetQueryResult(
 }
 
 export function registerCancelQuery(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'cancel_query');
   registerContentReaderTool(
     server,
     'cancel_query',
@@ -134,7 +138,11 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
         return jsonToolResult(
           contentReaderEnvelope(
             { queryUuid: args.queryUuid, cancelled: true },
-            { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
+            {
+              persona,
+              projectUuid: scope.projectUuid,
+              projectPinned: scope.projectPinned,
+            },
           ),
         );
       } catch (err) {

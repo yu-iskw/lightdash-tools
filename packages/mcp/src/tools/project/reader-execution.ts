@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { ProjectScopeError, resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -36,6 +37,7 @@ const dateZoomSchema = z
   .optional();
 
 export function registerRunChart(server: McpServer, contextProvider: McpContextProvider): void {
+  const persona = requireServerPersona(server, 'run_chart');
   registerContentReaderTool(
     server,
     'run_chart',
@@ -129,6 +131,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                   appliedParameters: args.parameters ?? {},
                 },
                 {
+                  persona,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   complete: isCoverageComplete(bounded.normalized),
@@ -155,6 +158,7 @@ export function registerRunDashboardTile(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'run_dashboard_tile');
   registerContentReaderTool(
     server,
     'run_dashboard_tile',
@@ -296,6 +300,7 @@ export function registerRunDashboardTile(
                   appliedDateZoom: args.dateZoom,
                 },
                 {
+                  persona,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   complete: isCoverageComplete(bounded.normalized),

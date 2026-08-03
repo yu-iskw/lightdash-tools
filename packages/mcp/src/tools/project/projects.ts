@@ -2,6 +2,7 @@
  * MCP tools: projects (list, get) — shared catalog entries.
  */
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
@@ -18,10 +19,6 @@ import {
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-export type RegisterToolOptions = {
-  personaId?: string;
-};
 
 const READER_CAPABILITIES = {
   canDiscoverContent: true,
@@ -63,16 +60,13 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
   );
 }
 
-export function registerGetProject(
-  server: McpServer,
-  contextProvider: McpContextProvider,
-  options?: RegisterToolOptions,
-): void {
-  if (options?.personaId === 'content-reader') {
+export function registerGetProject(server: McpServer, contextProvider: McpContextProvider): void {
+  const personaId = requireServerPersona(server, 'get_project');
+  if (personaId === 'content-reader') {
     registerScopedGetProject(server, contextProvider, 'readerCapabilities', READER_CAPABILITIES);
     return;
   }
-  if (options?.personaId === 'content-developer') {
+  if (personaId === 'content-developer') {
     registerScopedGetProject(
       server,
       contextProvider,

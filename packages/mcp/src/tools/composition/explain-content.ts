@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -21,6 +22,7 @@ export function registerExplainContent(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'explain_content');
   registerContentReaderTool(
     server,
     'explain_content',
@@ -94,6 +96,7 @@ export function registerExplainContent(
               };
               return jsonToolResult(
                 contentReaderEnvelope(explanation, {
+                  persona,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                 }),
@@ -129,6 +132,7 @@ export function registerExplainContent(
             };
             return jsonToolResult(
               contentReaderEnvelope(explanation, {
+                persona,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
               }),

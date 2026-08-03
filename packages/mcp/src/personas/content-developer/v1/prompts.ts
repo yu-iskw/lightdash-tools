@@ -74,7 +74,7 @@ Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_spa
 1. If the goal is vague on audience / decisions / what to understand: ask **2–4 clarifying questions** before a Spec (do not invent a viz-type checklist).
 2. Read-only discovery only (project/space/seeds).
 3. ${DESIGN_SPEC_STOP} Multi-viz / all chart types only if the user explicitly asked (see dashboards + chart-types playbooks). For explicit all-types work, keep primary insights decision-oriented and place redundant required forms in a labeled validation appendix; never weaken semantic field requirements.
-4. After approval: follow embedded playbooks (preview→confirm→apply).
+4. After approval: follow embedded playbooks (preview→confirm→apply; reuse the **exact** preview payload on apply — do not tidy description/name between confirm and create).
 5. Report dashboard UUID/slug, tiles, filters, chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
         DASHBOARD_CHART_TOPIC_IDS,
       ),
@@ -105,7 +105,7 @@ ${CONTENT_DEVELOPER_HARD_BANS}
 1. Inspect with lightdash_get_dashboard first (tile x/y/w/h may be missing — rebuild layout intentionally).
 2. If the improvement goal is vague on decisions / insights: ask **2–4 clarifying questions** before a Spec delta.
 3. For material layout/tile/filter changes (including professionalize): ${DESIGN_SPEC_STOP} Use the **Improve / professionalize Spec delta** (keep / drop / rename + cull) in dashboard-design. Trivial one-shot renames the user already specified may skip the stop. Multi-viz / all chart types only if the user explicitly asked.
-4. After approval: follow embedded playbooks. New charts: get_chart_as_code + dashboardSlug, then tile. Rename tile titles and chart names when stripping demo prefixes.
+4. After approval: follow embedded playbooks (reuse the **exact** preview payload on apply). New charts: get_chart_as_code + dashboardSlug, then tile. Rename tile titles and chart names when stripping demo prefixes.
 Report what changed (tiles, filters, chart UUIDs), any untiled dashboard-owned leftovers (content-governance for soft-delete), and validation warnings.`,
         DASHBOARD_CHART_TOPIC_IDS,
       ),

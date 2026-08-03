@@ -44,9 +44,7 @@ describe('registerCapabilities', () => {
     const persona = getDefaultPersona();
     registerCapabilities(server, mockContextProvider, { persona });
     expect(getServerPersona(server)).toBe(persona.id);
-    expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds, {
-      personaId: persona.id,
-    });
+    expect(registerToolsByIds).toHaveBeenCalledWith(server, mockContextProvider, persona.toolIds);
     expect(registerPromptSpy).toHaveBeenCalled();
     expect(registerResourceSpy).toHaveBeenCalled();
   });

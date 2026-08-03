@@ -101,11 +101,7 @@ import type { McpContextProvider } from '../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ToolRegistration = {
-  register: (
-    server: McpServer,
-    contextProvider: McpContextProvider,
-    options?: { personaId?: string },
-  ) => void;
+  register: (server: McpServer, contextProvider: McpContextProvider) => void;
 };
 
 export const toolRegistry = {
@@ -212,7 +208,6 @@ export function registerToolsByIds(
   server: McpServer,
   contextProvider: McpContextProvider,
   ids: readonly ToolId[],
-  options?: { personaId?: string },
 ): void {
   for (const id of ids) {
     if (BANNED_MCP_TOOL_IDS.has(id)) {
@@ -223,6 +218,6 @@ export function registerToolsByIds(
       throw new Error(`MCP tool id '${id}' is not an exposed operation in the catalog (ADR-0013)`);
     }
     // eslint-disable-next-line security/detect-object-injection -- ToolId union keys only
-    toolRegistry[id].register(server, contextProvider, options);
+    toolRegistry[id].register(server, contextProvider);
   }
 }

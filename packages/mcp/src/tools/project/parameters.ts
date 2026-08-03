@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { requireServerPersona } from '../../audit/server-persona.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
@@ -20,6 +21,7 @@ export function registerListProjectParameters(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'list_project_parameters');
   registerContentReaderTool(
     server,
     'list_project_parameters',
@@ -64,6 +66,7 @@ export function registerListProjectParameters(
                   pagination: { returned: data.length, ...pagination, complete },
                 },
                 {
+                  persona,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   complete,
@@ -83,6 +86,7 @@ export function registerGetProjectParameters(
   server: McpServer,
   contextProvider: McpContextProvider,
 ): void {
+  const persona = requireServerPersona(server, 'get_project_parameters');
   registerContentReaderTool(
     server,
     'get_project_parameters',
@@ -103,7 +107,11 @@ export function registerGetProjectParameters(
         return jsonToolResult(
           contentReaderEnvelope(
             { values, unresolvedNames },
-            { projectUuid: scope.projectUuid, projectPinned: scope.projectPinned },
+            {
+              persona,
+              projectUuid: scope.projectUuid,
+              projectPinned: scope.projectPinned,
+            },
           ),
         );
       } catch (err) {

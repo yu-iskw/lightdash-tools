@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import { bindServerPersona } from '../audit/server-persona.js';
 import { getDefaultPersona } from '../personas/index.js';
 
 import { registerToolsByIds } from './registry.js';
@@ -34,6 +35,7 @@ describe('registerToolsByIds', () => {
     const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
     const persona = getDefaultPersona();
 
+    bindServerPersona(mockServer, persona.id);
     registerToolsByIds(mockServer as never, mockContextProvider as never, persona.toolIds);
 
     expect(registeredTools).toHaveLength(persona.toolIds.length);
