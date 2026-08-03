@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.11.0] - 2026-08-04
+
+### Features
+
+- Add data-analyst MCP persona for unsaved Explore metric queries (run_metric_query).
+- BREAKING: MCP packaging uses profile (not persona): catalog profiles are tool-membership SSOT; envelope context.profile; LIGHTDASH_TOOLS_MCP_STDIO_PROFILE (stdio subcommand); drop semantic-discovery/org-audit-readonly and granular CLI profile tags.
+
+### Bug Fixes
+
+- Content tool envelopes stamp the serving persona from bindServerPersona (no hard-coded content-reader label).
+
 ## [0.10.0] - 2026-08-03
 
 ### Features
