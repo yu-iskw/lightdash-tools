@@ -47,7 +47,6 @@ export class AiAgentsDiscoveryClient extends BaseApiClient {
    */
   async getExploreAccessSummary(
     projectUuid: string,
-    _agentUuid: string,
     body?: ExploreAccessSummaryBody,
   ): Promise<AiAgentExploreAccessSummary[]> {
     return this.http.post<AiAgentExploreAccessSummary[]>(

@@ -152,10 +152,9 @@ export class AiAgentsClient extends BaseApiClient {
 
   getExploreAccessSummary(
     projectUuid: string,
-    agentUuid: string,
     body?: ExploreAccessSummaryBody,
   ): Promise<AiAgentExploreAccessSummary[]> {
-    return this.discovery.getExploreAccessSummary(projectUuid, agentUuid, body);
+    return this.discovery.getExploreAccessSummary(projectUuid, body);
   }
 
   getUserAgentPreferences(projectUuid: string): Promise<AiAgentUserPreferences | null> {

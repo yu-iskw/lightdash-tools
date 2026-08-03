@@ -53,7 +53,7 @@ describe('AiAgentsDiscoveryClient', () => {
     const client = new AiAgentsDiscoveryClient(mockHttp);
     const summary = [{ exploreName: 'orders', metrics: [], dimensions: [], joinedTables: [] }];
     vi.mocked(mockHttp.post).mockResolvedValue(summary);
-    const result = await client.getExploreAccessSummary('proj1', 'a1', { tags: ['ai'] });
+    const result = await client.getExploreAccessSummary('proj1', { tags: ['ai'] });
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
       tags: ['ai'],
     });
@@ -63,7 +63,7 @@ describe('AiAgentsDiscoveryClient', () => {
   it('getExploreAccessSummary without body should default tags to null', async () => {
     const client = new AiAgentsDiscoveryClient(mockHttp);
     vi.mocked(mockHttp.post).mockResolvedValue([]);
-    await client.getExploreAccessSummary('proj1', 'a1');
+    await client.getExploreAccessSummary('proj1');
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/explore-access-summary', {
       tags: null,
     });

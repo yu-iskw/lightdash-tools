@@ -1,6 +1,7 @@
 import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
 
+import { AI_AGENT_OPS_TOOL_IDS } from './ai-agent-ops/v1/index.js';
 import { CONTENT_DEVELOPER_TOOL_IDS } from './content-developer/v1/index.js';
 import { CONTENT_GOVERNANCE_TOOL_IDS } from './content-governance/v1/index.js';
 import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
@@ -8,6 +9,11 @@ import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 import { SEMANTIC_LAYER_TOOL_IDS } from './semantic-layer/v1/index.js';
 
 describe('persona catalog parity', () => {
+  it('ai-agent-ops allowlist matches catalog ai-agent-ops profile', () => {
+    expect([...AI_AGENT_OPS_TOOL_IDS].sort()).toEqual(
+      [...listMcpToolNamesByProfile('ai-agent-ops')].sort(),
+    );
+  });
   it('semantic-layer allowlist matches catalog semantic-discovery profile', () => {
     expect([...SEMANTIC_LAYER_TOOL_IDS].sort()).toEqual(
       [...listMcpToolNamesByProfile('semantic-discovery')].sort(),

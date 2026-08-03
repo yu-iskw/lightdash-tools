@@ -3,12 +3,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { registerToolsByIds } from '../tools/registry.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
+import { AI_AGENT_OPS_TOOL_IDS } from './ai-agent-ops/v1/index.js';
 import { CONTENT_DEVELOPER_TOOL_IDS } from './content-developer/v1/index.js';
 import { CONTENT_GOVERNANCE_TOOL_IDS } from './content-governance/v1/index.js';
 import { CONTENT_READER_TOOL_IDS } from './content-reader/v1/index.js';
 import { ORGANIZATION_AUDIT_TOOL_IDS } from './organization-audit/v1/index.js';
 
 import {
+  AI_AGENT_OPS_PERSONA_PATH,
   CONTENT_DEVELOPER_PERSONA_PATH,
   CONTENT_GOVERNANCE_PERSONA_PATH,
   CONTENT_READER_PERSONA_PATH,
@@ -25,8 +27,9 @@ import {
 } from './index.js';
 
 describe('personas', () => {
-  it('ships five personas with fixed paths', () => {
+  it('ships six personas with fixed paths', () => {
     expect(Object.keys(PERSONAS).sort()).toEqual([
+      'ai-agent-ops',
       'content-developer',
       'content-governance',
       'content-reader',
@@ -36,6 +39,7 @@ describe('personas', () => {
     expect(DEFAULT_PERSONA_ID).toBe('semantic-layer');
     expect(listPersonaPaths().sort()).toEqual(
       [
+        AI_AGENT_OPS_PERSONA_PATH,
         CONTENT_DEVELOPER_PERSONA_PATH,
         CONTENT_GOVERNANCE_PERSONA_PATH,
         CONTENT_READER_PERSONA_PATH,
@@ -48,6 +52,7 @@ describe('personas', () => {
     expect(getPersonaByPath(CONTENT_READER_PERSONA_PATH)?.id).toBe('content-reader');
     expect(getPersonaByPath(CONTENT_DEVELOPER_PERSONA_PATH)?.id).toBe('content-developer');
     expect(getPersonaByPath(CONTENT_GOVERNANCE_PERSONA_PATH)?.id).toBe('content-governance');
+    expect(getPersonaByPath(AI_AGENT_OPS_PERSONA_PATH)?.id).toBe('ai-agent-ops');
     expect(getPersonaByPath('/mcp')).toBeUndefined();
   });
 
@@ -57,6 +62,7 @@ describe('personas', () => {
     expect(getPersonaByPath(`${CONTENT_READER_PERSONA_PATH}/`)?.id).toBe('content-reader');
     expect(getPersonaByPath(`${CONTENT_DEVELOPER_PERSONA_PATH}/`)?.id).toBe('content-developer');
     expect(getPersonaByPath(`${CONTENT_GOVERNANCE_PERSONA_PATH}/`)?.id).toBe('content-governance');
+    expect(getPersonaByPath(`${AI_AGENT_OPS_PERSONA_PATH}/`)?.id).toBe('ai-agent-ops');
   });
 
   it('semantic-layer allowlists exactly nine tools', () => {
@@ -101,6 +107,15 @@ describe('personas', () => {
     expect(getPersonaServerName(persona)).toBe('lightdash-mcp-gov');
   });
 
+  it('ai-agent-ops allowlists 17 thin API tools and short server name', () => {
+    const persona = getPersona('ai-agent-ops');
+    expect(persona.toolIds).toHaveLength(17);
+    expect(persona.toolIds).toEqual([...AI_AGENT_OPS_TOOL_IDS]);
+    expect(persona.toolIds).not.toContain('create_project_agent');
+    expect(persona.toolIds).not.toContain('generate_agent_message');
+    expect(getPersonaServerName(persona)).toBe('lightdash-mcp-aops');
+  });
+
   it('keeps combined server+tool wire names under 60 characters', () => {
     for (const persona of Object.values(PERSONAS)) {
       const serverName = getPersonaServerName(persona);
@@ -117,6 +132,7 @@ describe('personas', () => {
     expect(parsePersonaId('content-reader')).toBe('content-reader');
     expect(parsePersonaId('content-developer')).toBe('content-developer');
     expect(parsePersonaId('content-governance')).toBe('content-governance');
+    expect(parsePersonaId('ai-agent-ops')).toBe('ai-agent-ops');
     expect(parsePersonaId('nope')).toBeUndefined();
   });
 

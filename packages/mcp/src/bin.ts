@@ -7,8 +7,10 @@ const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
 const PERSONA_CONTENT_READER = 'content-reader' as const;
 const PERSONA_CONTENT_DEVELOPER = 'content-developer' as const;
 const PERSONA_CONTENT_GOVERNANCE = 'content-governance' as const;
+const PERSONA_AI_AGENT_OPS = 'ai-agent-ops' as const;
 
 type StdioPersonaId =
+  | typeof PERSONA_AI_AGENT_OPS
   | typeof PERSONA_CONTENT_DEVELOPER
   | typeof PERSONA_CONTENT_GOVERNANCE
   | typeof PERSONA_CONTENT_READER
@@ -29,7 +31,7 @@ function runHttp(): void {
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer, content-governance). Default stdio persona is semantic-layer.',
+    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer, content-governance, ai-agent-ops). Default stdio persona is semantic-layer.',
   )
   .version('0.7.0');
 
@@ -79,6 +81,13 @@ program
   )
   .action(() => {
     runStdio(PERSONA_CONTENT_GOVERNANCE);
+  });
+
+program
+  .command(PERSONA_AI_AGENT_OPS)
+  .description('Run ai-agent-ops persona on stdio (thin AI-agent APIs and product evaluation runs)')
+  .action(() => {
+    runStdio(PERSONA_AI_AGENT_OPS);
   });
 
 program

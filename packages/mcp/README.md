@@ -1,6 +1,6 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), `content-developer` (project-scoped authoring with a hard preview gate), and `content-governance` (elicitation-gated soft-delete). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md), and [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md).
+MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), `content-developer` (project-scoped authoring with a hard preview gate), `content-governance` (elicitation-gated soft-delete), and `ai-agent-ops` (thin AI-agent APIs + product evaluation runs). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md), [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md), and [ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md).
 
 Irrecoverable admin deletes, permanent content purge, and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is on `content-developer` only (preview → confirm_preview → apply; 25 tools). Soft-delete of charts/dashboards is on `content-governance` only (form elicitation required).
 
@@ -89,7 +89,7 @@ Do **not** set OAuth client secrets for stdio. MCP does not use CLI `SAFETY_MODE
 | :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, audit log, token cache TTL |
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, `/content-developer/v1/mcp`, or `/content-governance/v1/mcp`.
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients: URL only to `/semantic-layer/v1/mcp`, `/organization-audit/v1/mcp`, `/content-reader/v1/mcp`, `/content-developer/v1/mcp`, `/content-governance/v1/mcp`, or `/ai-agent-ops/v1/mcp`.
 
 ### Content-governance (destructive soft-delete)
 
@@ -142,6 +142,7 @@ npx @lightdash-tools/mcp organization-audit
 npx @lightdash-tools/mcp content-reader
 npx @lightdash-tools/mcp content-developer
 npx @lightdash-tools/mcp content-governance
+npx @lightdash-tools/mcp ai-agent-ops
 ```
 
 Or if installed globally:
@@ -152,6 +153,7 @@ lightdash-mcp organization-audit
 lightdash-mcp content-reader
 lightdash-mcp content-developer
 lightdash-mcp content-governance
+lightdash-mcp ai-agent-ops
 ```
 
 Logging goes to stderr only; stdout is JSON-RPC. Bare `lightdash-mcp` defaults to `semantic-layer`.
@@ -180,6 +182,7 @@ The server listens on `http://localhost:3100` (or `LIGHTDASH_TOOLS_MCP_HTTP_PORT
 - `POST/GET/DELETE /content-reader/v1/mcp`
 - `POST/GET/DELETE /content-developer/v1/mcp`
 - `POST/GET/DELETE /content-governance/v1/mcp`
+- `POST/GET/DELETE /ai-agent-ops/v1/mcp`
 
 Register `{PUBLIC_URL}/oauth/callback` in Lightdash. See [mcp-oauth-http.md](../../docs/mcp-oauth-http.md).
 
@@ -247,6 +250,17 @@ Project-scoped soft-delete with form elicitation ([ADR-0015](../../docs/adr/0015
 
 Prompts and playbooks: `lightdash://playbooks/content-governance` (core + charts + dashboards topics).
 
+### `ai-agent-ops` persona
+
+Project-scoped thin AI-agent APIs and product evaluation runs ([ADR-0018](../../docs/adr/0018-mcp-ai-agent-ops-persona-thin-api-boundary.md)). MCP server display name is `lightdash-mcp-aops` (60-char client limit). Endpoint inventory: [docs/ai-agent-ops-endpoint-inventory.md](../../docs/ai-agent-ops-endpoint-inventory.md). Distributed loop (MCP + CLI `agentops` + host): [docs/ai-agent-ops-loop.md](../../docs/ai-agent-ops-loop.md).
+
+- **Inventory**: `list_project_agents`, `get_project_agent`
+- **Discovery**: `evaluate_agent_readiness`, `get_agent_suggestions`, `get_agent_models`, `get_explore_access_summary`
+- **Threads (read)**: `list_agent_threads`, `get_agent_thread` (message bodies redacted by default)
+- **Evaluations**: suite CRUD + `run_agent_evaluation` + run list/get
+
+No agent create/update/delete, no thread generate/continue, no offline scorers or Git dataset tools on MCP. Promotion gates stay on CLI `agentops evaluate-gate`. Same project resolution as content-reader. Prompts and playbooks: `lightdash://playbooks/ai-agent-ops`.
+
 ### CLI Binary
 
 If installed globally, you can use the `lightdash-mcp` binary:
@@ -258,7 +272,7 @@ lightdash-mcp --help
 ### CLI Options
 
 - `--http` — Run as HTTP server instead of Stdio.
-- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `content-developer` / `content-governance` / `serve-http` — Explicit transport/persona subcommands.
+- `stdio` / `semantic-layer` / `organization-audit` / `content-reader` / `content-developer` / `content-governance` / `ai-agent-ops` / `serve-http` — Explicit transport/persona subcommands.
 
 ## Safety (persona-first)
 
