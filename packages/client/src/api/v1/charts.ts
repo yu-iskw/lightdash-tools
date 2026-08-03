@@ -2,6 +2,7 @@
  * Charts API client. Endpoints for saved charts and chart-as-code operations.
  */
 
+import { BinarySizeLimitError, ChartImageSizeError } from '../../errors';
 import { DEFAULT_BINARY_MAX_BYTES } from '../../http/http-client';
 import { BaseApiClient } from '../base-client';
 
@@ -100,10 +101,19 @@ export class ChartsClient extends BaseApiClient {
    */
   async exportChartImagePng(chartUuid: string, projectUuid?: string): Promise<ChartImagePng> {
     const imageUrl = await this.exportChartImage(chartUuid, projectUuid);
-    const { bytes, mimeType } = await this.http.getBytes(imageUrl, {
-      maxBytes: CHART_IMAGE_MAX_BYTES,
-      timeout: CHART_IMAGE_EXPORT_TIMEOUT_MS,
-    });
+    let bytes: Buffer;
+    let mimeType: string;
+    try {
+      ({ bytes, mimeType } = await this.http.getBytes(imageUrl, {
+        maxBytes: CHART_IMAGE_MAX_BYTES,
+        timeout: CHART_IMAGE_EXPORT_TIMEOUT_MS,
+      }));
+    } catch (err) {
+      if (err instanceof BinarySizeLimitError) {
+        throw new ChartImageSizeError(err.maxBytes, err.byteLength);
+      }
+      throw err;
+    }
     return {
       imageUrl,
       bytes,

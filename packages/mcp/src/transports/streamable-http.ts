@@ -16,6 +16,7 @@ import {
 } from '../auth/oauth-broker/routes.js';
 import { createOAuthBearerProvider } from '../auth/providers/bearer-context-provider.js';
 import { EnvContextProvider } from '../auth/providers/env-context-provider.js';
+import { assertHttpSignedStateKeyConfigured } from '../auth/request-state-key.js';
 import {
   authenticateLightdashOAuth,
   writeOAuthAuthFailure,
@@ -260,6 +261,7 @@ export async function createStreamableHttpServer(
 
   warnIgnoredCliGuardrailEnvVars();
   validateAvailableProjectsConfig();
+  assertHttpSignedStateKeyConfigured();
   initAuditLog(getAuditLogPath());
 
   let httpConfig = inputConfig;

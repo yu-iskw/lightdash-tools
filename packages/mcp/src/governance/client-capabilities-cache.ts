@@ -8,6 +8,10 @@
  *
  * Anonymous principals (shared-key / none with no subject or tokenHash) never
  * use the cache — last-writer-wins would cross clients on one process.
+ *
+ * OAuth clients are keyed by tokenHash (not subject) so concurrent MCP hosts
+ * for the same user do not overwrite each other's capabilities. Per-request
+ * `_meta[CLIENT_CAPABILITIES_META_KEY]` remains the multi-replica escape hatch.
  */
 
 import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
@@ -26,7 +30,7 @@ type CacheEntry = {
 
 const cache = new Map<string, CacheEntry>();
 
-/** Same shape as tool-audit auth; subject → tokenHash → anonymous. */
+/** Same shape as tool-audit auth; tokenHash → subject → anonymous. */
 export type CapabilitiesPrincipal = ToolAuditAuthContext;
 
 export function resolveCapabilitiesPrincipalKey(
@@ -34,10 +38,10 @@ export function resolveCapabilitiesPrincipalKey(
   scope?: string,
 ): string {
   let key: string;
-  if (typeof principal.subject === 'string' && principal.subject.length > 0) {
-    key = `subject:${principal.subject}`;
-  } else if (typeof principal.tokenHash === 'string' && principal.tokenHash.length > 0) {
+  if (typeof principal.tokenHash === 'string' && principal.tokenHash.length > 0) {
     key = `token:${principal.tokenHash}`;
+  } else if (typeof principal.subject === 'string' && principal.subject.length > 0) {
+    key = `subject:${principal.subject}`;
   } else {
     key = ANONYMOUS_PRINCIPAL;
   }
@@ -47,8 +51,11 @@ export function resolveCapabilitiesPrincipalKey(
   return key;
 }
 
-function isAnonymousPrincipal(principal: CapabilitiesPrincipal): boolean {
-  return resolveCapabilitiesPrincipalKey(principal) === ANONYMOUS_PRINCIPAL;
+function hasCapabilitiesPrincipal(principal: CapabilitiesPrincipal): boolean {
+  return (
+    (typeof principal.tokenHash === 'string' && principal.tokenHash.length > 0) ||
+    (typeof principal.subject === 'string' && principal.subject.length > 0)
+  );
 }
 
 export function rememberClientCapabilities(
@@ -56,11 +63,12 @@ export function rememberClientCapabilities(
   clientCapabilities: ClientCapabilities,
   options?: { ttlMs?: number; scope?: string },
 ): void {
-  if (isAnonymousPrincipal(principal)) {
+  if (!hasCapabilitiesPrincipal(principal)) {
     return;
   }
+  const key = resolveCapabilitiesPrincipalKey(principal, options?.scope);
   const ttlMs = options?.ttlMs ?? CLIENT_CAPABILITIES_CACHE_TTL_MS;
-  cache.set(resolveCapabilitiesPrincipalKey(principal, options?.scope), {
+  cache.set(key, {
     clientCapabilities,
     expiresAt: Date.now() + ttlMs,
   });
@@ -70,7 +78,7 @@ export function getRememberedClientCapabilities(
   principal: CapabilitiesPrincipal,
   scope?: string,
 ): ClientCapabilities | undefined {
-  if (isAnonymousPrincipal(principal)) {
+  if (!hasCapabilitiesPrincipal(principal)) {
     return undefined;
   }
   const key = resolveCapabilitiesPrincipalKey(principal, scope);

@@ -8,7 +8,7 @@ import axios from 'axios';
 import { DEFAULT_TIMEOUT } from '../config';
 import {
   type ApiErrorPayload,
-  ChartImageSizeError,
+  BinarySizeLimitError,
   LightdashApiError,
   NetworkError,
 } from '../errors';
@@ -56,6 +56,16 @@ function isBlockedIpv6Host(host: string): boolean {
   return host.startsWith('fc') || host.startsWith('fd');
 }
 
+function isAxiosMaxContentLengthError(err: unknown): boolean {
+  if (!axios.isAxiosError(err)) {
+    return false;
+  }
+  if (typeof err.message !== 'string') {
+    return false;
+  }
+  return err.message.includes('maxContentLength') || err.message.includes('maxBodyLength');
+}
+
 /** True when hostname is loopback, link-local, or RFC1918 (cross-host SSRF guard). */
 export function isBlockedBinaryHostname(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/^\[|\]$/g, '');
@@ -69,7 +79,8 @@ export function isBlockedBinaryHostname(hostname: string): boolean {
   return isBlockedIpv6Host(host);
 }
 
-function assertSafeBinaryFetchUrl(url: string, baseUrl: string): void {
+/** Reject unsafe absolute binary download URLs (exported for unit tests). */
+export function assertSafeBinaryFetchUrl(url: string, baseUrl: string): void {
   if (!/^https?:\/\//i.test(url)) {
     return;
   }
@@ -82,8 +93,14 @@ function assertSafeBinaryFetchUrl(url: string, baseUrl: string): void {
       err instanceof Error ? err : new Error(String(err)),
     );
   }
-  const baseHost = new URL(baseUrl).host;
-  const crossHost = parsed.host !== baseHost;
+  const base = new URL(baseUrl);
+  if (parsed.host === base.host && parsed.protocol === 'http:' && base.protocol === 'https:') {
+    throw new NetworkError(
+      'Binary download URL must not downgrade HTTPS to HTTP',
+      new Error(`${base.protocol} -> ${parsed.protocol}`),
+    );
+  }
+  const crossHost = parsed.host !== base.host;
   if (!crossHost) {
     return;
   }
@@ -182,13 +199,19 @@ export class HttpClient {
       return this.axiosInstance.get<ArrayBuffer>(url, binaryConfig);
     };
 
-    // No retries: binary bodies can be multi-MiB; a 5xx would re-download the payload.
-    const response = await this.rateLimiter.schedule(() =>
-      withRetry(doRequest, { ...this.config.retry, maxRetries: 0 }),
-    );
+    let response: AxiosResponse<ArrayBuffer>;
+    try {
+      // No retries: binary bodies can be multi-MiB; a 5xx would re-download the payload.
+      response = await this.rateLimiter.schedule(doRequest);
+    } catch (err) {
+      if (isAxiosMaxContentLengthError(err)) {
+        throw new BinarySizeLimitError(maxBytes);
+      }
+      throw err;
+    }
     const bytes = Buffer.from(response.data);
     if (bytes.byteLength > maxBytes) {
-      throw new ChartImageSizeError(bytes.byteLength, maxBytes);
+      throw new BinarySizeLimitError(maxBytes, bytes.byteLength);
     }
     const rawType = response.headers['content-type'];
     const mimeType =

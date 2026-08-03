@@ -173,7 +173,7 @@ describe('registerExportChartImage', () => {
   it('returns IMAGE_TOO_LARGE on size cap', async () => {
     const exportChartImagePng = vi
       .fn()
-      .mockRejectedValue(new ChartImageSizeError(9_000_000, 8_000_000));
+      .mockRejectedValue(new ChartImageSizeError(8_000_000, 9_000_000));
     const handler = captureHandler(semanticClient(exportChartImagePng));
     const result = (await handler({ chartUuid: 'chart-1' })) as {
       isError?: boolean;

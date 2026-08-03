@@ -1,10 +1,14 @@
 /**
- * Unit tests for binary download URL hostname SSRF guards.
+ * Unit tests for binary download URL guards and getBytes error mapping.
  */
 
-import { describe, expect, it } from 'vitest';
+import { AxiosError } from 'axios';
+import { describe, expect, it, vi } from 'vitest';
 
-import { isBlockedBinaryHostname } from './http-client.js';
+import { assertSafeBinaryFetchUrl, HttpClient, isBlockedBinaryHostname } from './http-client.js';
+
+import type { ResolvedLightdashClientConfig } from '../config.js';
+import type { RateLimiter } from './rate-limiter.js';
 
 describe('isBlockedBinaryHostname', () => {
   it('blocks loopback and private IPv4 hosts', () => {
@@ -20,5 +24,69 @@ describe('isBlockedBinaryHostname', () => {
   it('allows public hostnames', () => {
     expect(isBlockedBinaryHostname('cdn.example.com')).toBe(false);
     expect(isBlockedBinaryHostname('s3.amazonaws.com')).toBe(false);
+  });
+});
+
+describe('assertSafeBinaryFetchUrl', () => {
+  it('rejects same-host HTTPS to HTTP downgrades', () => {
+    expect(() =>
+      assertSafeBinaryFetchUrl(
+        'http://app.lightdash.com/export/chart.png',
+        'https://app.lightdash.com',
+      ),
+    ).toThrow(/must not downgrade HTTPS to HTTP/);
+  });
+
+  it('allows same-host HTTPS URLs', () => {
+    expect(() =>
+      assertSafeBinaryFetchUrl(
+        'https://app.lightdash.com/export/chart.png',
+        'https://app.lightdash.com',
+      ),
+    ).not.toThrow();
+  });
+
+  it('allows relative URLs without validation', () => {
+    expect(() =>
+      assertSafeBinaryFetchUrl('/api/v1/export.png', 'https://app.lightdash.com'),
+    ).not.toThrow();
+  });
+});
+
+describe('HttpClient.getBytes', () => {
+  const baseConfig = {
+    baseUrl: 'https://app.lightdash.com',
+    timeout: 30_000,
+    retry: { maxRetries: 0, baseDelayMs: 0, maxDelayMs: 0 },
+  } satisfies Partial<ResolvedLightdashClientConfig>;
+
+  function makeClient(getImpl: ReturnType<typeof vi.fn>) {
+    const axiosInstance = { get: getImpl };
+    const rateLimiter: RateLimiter = {
+      schedule: <T>(fn: () => Promise<T>) => fn(),
+    };
+    return new HttpClient(
+      axiosInstance as never,
+      rateLimiter,
+      baseConfig as ResolvedLightdashClientConfig,
+    );
+  }
+
+  it('maps axios maxContentLength errors to BinarySizeLimitError', async () => {
+    const maxBytes = 1024;
+    const axiosError = new AxiosError('maxContentLength size of 1024 exceeded');
+    const client = makeClient(vi.fn().mockRejectedValue(axiosError));
+
+    await expect(client.getBytes('/chart.png', { maxBytes })).rejects.toMatchObject({
+      code: 'PAYLOAD_TOO_LARGE',
+      maxBytes,
+    });
+  });
+
+  it('rejects same-host HTTP downgrade before fetching', async () => {
+    const client = makeClient(vi.fn());
+    await expect(client.getBytes('http://app.lightdash.com/chart.png')).rejects.toThrow(
+      /must not downgrade HTTPS to HTTP/,
+    );
   });
 });

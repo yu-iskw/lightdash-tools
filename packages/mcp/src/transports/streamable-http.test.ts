@@ -8,6 +8,7 @@ import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenti
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
+  ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
 } from '../config/env.js';
@@ -127,5 +128,20 @@ describe('streamable HTTP OAuth metadata', () => {
 
   it('exports createStreamableHttpServer', () => {
     expect(typeof createStreamableHttpServer).toBe('function');
+  });
+
+  it('rejects HTTP startup when request-state key is missing in production', async () => {
+    const savedVitest = process.env.VITEST;
+    delete process.env.VITEST;
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY];
+
+    await expect(createStreamableHttpServer(makeTestMcpHttpConfig({ port: 0 }))).rejects.toThrow(
+      /LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY/,
+    );
+
+    if (savedVitest !== undefined) {
+      process.env.VITEST = savedVitest;
+    }
   });
 });

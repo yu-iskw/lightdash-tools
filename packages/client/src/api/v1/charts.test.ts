@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ChartsClient } from './charts';
+import { BinarySizeLimitError } from '../../errors.js';
+
+import { ChartsClient } from './charts.js';
 
 import type { HttpClient } from '../../http/http-client';
 
@@ -147,6 +149,17 @@ describe('ChartsClient', () => {
       imageUrl: 'https://cdn.example/chart.png',
       bytes: png,
       mimeType: 'image/png',
+    });
+  });
+
+  it('exportChartImagePng maps BinarySizeLimitError to ChartImageSizeError', async () => {
+    const client = new ChartsClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue('https://cdn.example/chart.png');
+    vi.mocked(mockHttp.getBytes).mockRejectedValue(new BinarySizeLimitError(8 * 1024 * 1024));
+
+    await expect(client.exportChartImagePng('c1')).rejects.toMatchObject({
+      code: 'IMAGE_TOO_LARGE',
+      maxBytes: 8 * 1024 * 1024,
     });
   });
 });

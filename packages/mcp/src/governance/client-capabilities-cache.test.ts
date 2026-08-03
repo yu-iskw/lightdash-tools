@@ -16,13 +16,28 @@ describe('client-capabilities-cache', () => {
     resetClientCapabilitiesCacheForTests();
   });
 
-  it('resolves principal key preferring subject then tokenHash', () => {
-    expect(resolveCapabilitiesPrincipalKey({ subject: 'u1', tokenHash: 't1' })).toBe('subject:u1');
+  it('resolves principal key preferring tokenHash then subject', () => {
+    expect(resolveCapabilitiesPrincipalKey({ subject: 'u1', tokenHash: 't1' })).toBe('token:t1');
     expect(resolveCapabilitiesPrincipalKey({ tokenHash: 't1' })).toBe('token:t1');
+    expect(resolveCapabilitiesPrincipalKey({ subject: 'u1' })).toBe('subject:u1');
     expect(resolveCapabilitiesPrincipalKey({})).toBe('anonymous');
     expect(resolveCapabilitiesPrincipalKey({ subject: 'u1' }, '/content-governance/v1/mcp')).toBe(
       'subject:u1@/content-governance/v1/mcp',
     );
+  });
+
+  it('isolates cache entries for same subject with different tokenHash', () => {
+    rememberClientCapabilities(
+      { subject: 'u1', tokenHash: 'token-a' },
+      { elicitation: { form: {} } },
+    );
+    rememberClientCapabilities({ subject: 'u1', tokenHash: 'token-b' }, { roots: {} });
+    expect(getRememberedClientCapabilities({ subject: 'u1', tokenHash: 'token-a' })).toEqual({
+      elicitation: { form: {} },
+    });
+    expect(getRememberedClientCapabilities({ subject: 'u1', tokenHash: 'token-b' })).toEqual({
+      roots: {},
+    });
   });
 
   it('skips cache for anonymous principals to avoid cross-client collision', () => {
