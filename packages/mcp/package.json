@@ -21,7 +21,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc && for p in semantic-layer organization-audit content-reader content-developer content-governance ai-agent-ops data-analyst; do mkdir -p dist/profiles/$p/v1/resources/playbooks && cp -R src/profiles/$p/v1/resources/playbooks/. dist/profiles/$p/v1/resources/playbooks/; done",
     "start:http": "node dist/bin.js http",
-    "start:stdio": "node dist/bin.js semantic-layer",
+    "start:stdio": "node dist/bin.js stdio --profile semantic-layer",
     "test": "pnpm --dir ../.. exec vitest run packages/mcp/src"
   },
   "dependencies": {

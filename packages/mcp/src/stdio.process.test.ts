@@ -192,7 +192,7 @@ describe('stdio process smoke', () => {
   });
 
   it('server/discover then tools/list over stdio (modern era)', async () => {
-    const spawned = spawnStdioBin(['semantic-layer']);
+    const spawned = spawnStdioBin(['stdio', '--profile', 'semantic-layer']);
     child = spawned.child;
     const getStderr = spawned.getStderr;
 
@@ -244,7 +244,7 @@ describe('stdio process smoke', () => {
   });
 
   it('initialize then tools/list over stdio', async () => {
-    const spawned = spawnStdioBin(['semantic-layer']);
+    const spawned = spawnStdioBin(['stdio', '--profile', 'semantic-layer']);
     child = spawned.child;
     const { serverName, tools } = await initializeThenListTools(
       child,
@@ -260,7 +260,7 @@ describe('stdio process smoke', () => {
   });
 
   it('initialize then tools/list for content-reader profile', async () => {
-    const spawned = spawnStdioBin(['content-reader']);
+    const spawned = spawnStdioBin(['stdio', '--profile', 'content-reader']);
     child = spawned.child;
     const { serverName, tools } = await initializeThenListTools(
       child,
@@ -278,7 +278,7 @@ describe('stdio process smoke', () => {
   });
 
   it('initialize then tools/list for content-governance profile', async () => {
-    const spawned = spawnStdioBin(['content-governance']);
+    const spawned = spawnStdioBin(['stdio', '--profile', 'content-governance']);
     child = spawned.child;
     const { serverName, tools } = await initializeThenListTools(
       child,
@@ -299,7 +299,7 @@ describe('stdio process smoke', () => {
   });
 
   it('initialize then tools/list for content-developer profile', async () => {
-    const spawned = spawnStdioBin(['content-developer']);
+    const spawned = spawnStdioBin(['stdio', '--profile', 'content-developer']);
     child = spawned.child;
     const { serverName, tools } = await initializeThenListTools(
       child,
@@ -316,16 +316,23 @@ describe('stdio process smoke', () => {
     child = undefined;
   });
 
-  it('bare invoke exits nonzero without a profile', async () => {
+  it('bare invoke exits nonzero without a transport', async () => {
     const result = await spawnBinAndAwaitExit([]);
     expect(result.code).toBe(1);
-    expect(result.stderr).toMatch(/profile required/i);
+    expect(result.stderr).toMatch(/stdio --profile/i);
     expect(result.stdout).toBe('');
   });
 
-  it('stdio without profile arg exits nonzero', async () => {
+  it('stdio without --profile exits nonzero', async () => {
     const result = await spawnBinAndAwaitExit(['stdio']);
     expect(result.code).not.toBe(0);
-    expect(result.stderr).toMatch(/missing required argument|usage:/i);
+    expect(result.stderr).toMatch(/required option|--profile|usage:/i);
+  });
+
+  it('stdio with invalid --profile exits nonzero', async () => {
+    const result = await spawnBinAndAwaitExit(['stdio', '--profile', 'not-a-profile']);
+    expect(result.code).toBe(1);
+    expect(result.stderr).toMatch(/Invalid profile/i);
+    expect(result.stdout).toBe('');
   });
 });

@@ -31,7 +31,7 @@ Project pinning today is HTTP-only via `X-Lightdash-Project` ([ADR-0008](0008-mc
 
 ## Decision
 
-1. Ship a **`content-reader`** profile at fixed path `/content-reader/v1/mcp` with MCP server display name **`lightdash-mcp-content`** (shortened for ~60-character client limits; profile id remains `content-reader`). Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp content-reader`.
+1. Ship a **`content-reader`** profile at fixed path `/content-reader/v1/mcp` with MCP server display name **`lightdash-mcp-content`** (shortened for ~60-character client limits; profile id remains `content-reader`). Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp stdio --profile content-reader`.
 2. **Project scope** resolves in strict precedence; tool `projectUuid` **cannot override** HTTP pin:
    1. `X-Lightdash-Project` → `governance.pinnedProjectUuid` (HTTP only)
    2. Tool `projectUuid` argument

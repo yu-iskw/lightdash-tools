@@ -4,6 +4,8 @@
  * no space create/update (spaces are Terraform / out-of-band).
  */
 
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
+
 import { registerContentDeveloperPrompts } from './prompts.js';
 import { registerContentDeveloperPlaybook } from './resources/playbooks.js';
 
@@ -15,6 +17,7 @@ export const contentDeveloperProfile: ProfileDefinition = {
   id: 'content-developer',
   path: CONTENT_DEVELOPER_PROFILE_PATH,
   serverName: 'lightdash-mcp-cdev',
+  mcpToolNames: listMcpToolNamesByProfile('content-developer'),
   registerPrompts: (server) => {
     registerContentDeveloperPrompts(server);
   },

@@ -26,7 +26,7 @@ Putting ad-hoc metric-query on `content-reader` would collapse the saved-content
 
 ## Decision
 
-1. Ship a separate **`data-analyst`** profile at fixed path `/data-analyst/v1/mcp` with MCP server display name **`lightdash-mcp-analyst`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp data-analyst`.
+1. Ship a separate **`data-analyst`** profile at fixed path `/data-analyst/v1/mcp` with MCP server display name **`lightdash-mcp-analyst`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp stdio --profile data-analyst`.
 2. **v1 surface:** `get_project`, `list_explores`, `get_explore`, `list_dimensions`, `list_metrics`, `compile_query` (optional pre-flight), **`run_metric_query`** (`POST …/query/metric-query`), `get_query_result`, `cancel_query`.
 3. Safety dimensions for `run_metric_query`:
    - `mutability`: `transient` (async `queryUuid` only; no content mutations)

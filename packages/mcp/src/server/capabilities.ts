@@ -2,8 +2,6 @@
  * Register tools / prompts / resources for a profile.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
-
 import { bindServerProfile } from '../audit/server-profile.js';
 import { getDefaultProfile } from '../profiles/index.js';
 import { registerToolsByIds } from '../tools/registry.js';
@@ -19,7 +17,7 @@ export type RegisterCapabilitiesOptions = {
 
 /**
  * Registers MCP capabilities for the given profile.
- * Tools come from the operation catalog via listMcpToolNamesByProfile (ADR-0006).
+ * Tools come from profile.mcpToolNames (catalog projection, ADR-0006).
  */
 export function registerCapabilities(
   server: McpServer,
@@ -28,7 +26,7 @@ export function registerCapabilities(
 ): void {
   const profile = options?.profile ?? getDefaultProfile();
   bindServerProfile(server, profile.id);
-  registerToolsByIds(server, contextProvider, listMcpToolNamesByProfile(profile.id));
+  registerToolsByIds(server, contextProvider, profile.mcpToolNames);
   profile.registerPrompts(server);
   profile.registerResources(server);
 }

@@ -2,6 +2,8 @@
  * Content-reader profile: saved-content discovery + bounded execution.
  */
 
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
+
 import { registerContentReaderPrompts } from './prompts.js';
 import { registerContentReaderPlaybook } from './resources/playbooks.js';
 
@@ -13,6 +15,7 @@ export const contentReaderProfile: ProfileDefinition = {
   id: 'content-reader',
   path: CONTENT_READER_PROFILE_PATH,
   serverName: 'lightdash-mcp-content',
+  mcpToolNames: listMcpToolNamesByProfile('content-reader'),
   registerPrompts: (server) => {
     registerContentReaderPrompts(server);
   },

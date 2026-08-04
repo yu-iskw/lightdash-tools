@@ -39,4 +39,11 @@ describe('profile catalog membership', () => {
       }
     }
   });
+
+  it('every ProfileDefinition.mcpToolNames matches listMcpToolNamesByProfile', () => {
+    for (const id of PROFILE_IDS) {
+      const profile = PROFILES[id];
+      expect(profile.mcpToolNames).toEqual(listMcpToolNamesByProfile(id));
+    }
+  });
 });

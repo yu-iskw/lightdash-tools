@@ -61,7 +61,7 @@ If you prefer file-based configuration:
 ```bash
 # Install dotenvx: npm install -g @dotenvx/dotenvx
 dotenvx run -- lightdash-ai projects list
-dotenvx run -- lightdash-mcp semantic-layer
+dotenvx run -- lightdash-mcp stdio --profile semantic-layer
 ```
 
 The private decryption key (`DOTENV_PRIVATE_KEY`) must be kept secure and injected via your environment (e.g. CI secrets, secret manager). Locally, `dotenvx run` can read it from `.env.keys`.

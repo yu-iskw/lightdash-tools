@@ -1,4 +1,3 @@
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { McpServer } from '@modelcontextprotocol/server';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -48,7 +47,7 @@ describe('registerCapabilities', () => {
     expect(registerToolsByIds).toHaveBeenCalledWith(
       server,
       mockContextProvider,
-      listMcpToolNamesByProfile(profile.id),
+      profile.mcpToolNames,
     );
     expect(registerPromptSpy).toHaveBeenCalled();
     expect(registerResourceSpy).toHaveBeenCalled();

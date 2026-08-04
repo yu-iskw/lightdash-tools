@@ -31,7 +31,7 @@ Add a server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project). S
   "mcpServers": {
     "lightdash": {
       "command": "npx",
-      "args": ["-y", "@lightdash-tools/mcp", "content-reader"],
+      "args": ["-y", "@lightdash-tools/mcp", "stdio", "--profile", "content-reader"],
       "env": {
         "LIGHTDASH_URL": "https://app.lightdash.cloud",
         "LIGHTDASH_API_KEY": "your_pat"
@@ -41,7 +41,7 @@ Add a server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project). S
 }
 ```
 
-Pass an explicit profile in `args` (required — there is no default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
+Pass `stdio --profile <id>` in `args` (required — there is no default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
 
 ## HTTP MCP
 

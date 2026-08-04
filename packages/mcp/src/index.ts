@@ -2,7 +2,7 @@
  * MCP server entrypoint (Stdio). Use LIGHTDASH_URL and LIGHTDASH_API_KEY.
  * Logging: stderr only (stdout is JSON-RPC).
  *
- * Profile is selected by CLI argv (`lightdash-mcp <profile>` / `stdio <profile>`)
+ * Profile is selected by CLI argv (`lightdash-mcp stdio --profile <id>`)
  * and passed into {@link startStdio} — not via env.
  *
  * Uses SDK `serveStdio` so the process speaks 2026-07-28 (and legacy initialize

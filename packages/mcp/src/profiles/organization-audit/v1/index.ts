@@ -2,6 +2,8 @@
  * Organization-audit profile: read-only org inventory, access, content health, schedulers.
  */
 
+import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
+
 import { registerOrganizationAuditPrompts } from './prompts.js';
 import { registerOrganizationAuditPlaybook } from './resources/playbooks.js';
 
@@ -13,6 +15,7 @@ export const organizationAuditProfile: ProfileDefinition = {
   id: 'organization-audit',
   path: ORGANIZATION_AUDIT_PROFILE_PATH,
   serverName: 'lightdash-mcp-org-audit',
+  mcpToolNames: listMcpToolNamesByProfile('organization-audit'),
   registerPrompts: (server) => {
     registerOrganizationAuditPrompts(server);
   },

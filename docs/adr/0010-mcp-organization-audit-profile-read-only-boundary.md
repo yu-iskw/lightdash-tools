@@ -26,7 +26,7 @@ MCP [tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tool
 4. Prefer v2 when semantically complete (content, roles, validation); retain v1 where required. Unsupported capabilities return coverage metadata, not silent empty success.
 5. Direct project access is labeled `direct_only` and never claimed as complete effective access. Effective access is composed with an explicit `complete` flag.
 6. Scheduler destinations are redacted by default; `revealDestinations` is opt-in. Broader response sensitivity classes (emails, connection secrets) are defined in [ADR-0011](0011-mcp-tool-response-sensitivity-classes.md).
-7. Stdio selects the profile via explicit subcommand (`lightdash-mcp organization-audit`); bare `lightdash-mcp` fails closed with no profile ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).
+7. Stdio selects the profile via `lightdash-mcp stdio --profile organization-audit`; bare `lightdash-mcp` fails closed ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).
 8. Host-synthesized findings must carry policy assumptions and evidence; prompts must not claim compliance certification.
 9. Shared tool implementations live under `packages/mcp/src/tools/` in scope folders (`organization/`, `project/`, `space/`, `semantic/`, plus `lib/` helpers). The profile owns path, optional `serverName`, prompts, and playbooks under `packages/mcp/src/profiles/organization-audit/`. Inventory: [docs/profiles/organization-audit/](../profiles/organization-audit/inventory.md).
 

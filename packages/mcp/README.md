@@ -6,7 +6,7 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Choose a profile
 
-| Profile              | Use when                                 | HTTP path                    | Stdio                | Catalog                                                          |
+| Profile              | Use when                                 | HTTP path                    | Stdio `--profile`    | Catalog                                                          |
 | :------------------- | :--------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
 | `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | `semantic-layer`     | —                                                                |
 | `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/profiles/organization-audit/inventory.md) |
@@ -23,9 +23,9 @@ Tool names are prefixed with `lightdash_`. MCP display names are shortened where
 ### Stdio (local)
 
 ```bash
-npx @lightdash-tools/mcp semantic-layer  # required: pick a profile
-npx @lightdash-tools/mcp content-reader  # other profiles by name
-# pnpm one-shot: pnpm dlx @lightdash-tools/mcp <profile>
+npx @lightdash-tools/mcp stdio --profile semantic-layer
+npx @lightdash-tools/mcp stdio --profile content-reader
+# pnpm one-shot: pnpm dlx @lightdash-tools/mcp stdio --profile <id>
 ```
 
 Required env: `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`. Logs go to **stderr**; stdout is JSON-RPC only ([stdio transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)).
@@ -37,7 +37,7 @@ Example Cursor / Claude Desktop config:
   "mcpServers": {
     "lightdash": {
       "command": "npx",
-      "args": ["@lightdash-tools/mcp", "content-reader"],
+      "args": ["@lightdash-tools/mcp", "stdio", "--profile", "content-reader"],
       "env": {
         "LIGHTDASH_URL": "https://app.lightdash.cloud",
         "LIGHTDASH_API_KEY": "your_pat"
@@ -47,7 +47,7 @@ Example Cursor / Claude Desktop config:
 }
 ```
 
-Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp <profile>` (or `lightdash-mcp stdio <profile>`).
+Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp stdio --profile <id>`.
 
 ### Streamable HTTP (remote)
 

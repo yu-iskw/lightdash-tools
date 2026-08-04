@@ -157,7 +157,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` / catalog membership (ADR-0006).
 - Guardrails return `_lightdashBlocked`; upstream failures are coded `UPSTREAM_*` / `RATE_LIMITED`, not blocked markers.
 - Env: `LIGHTDASH_TOOLS_*`; shared allowlist `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`; obsolete allowlist names fail closed. MCP HTTP listen: `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, else platform `PORT` (Cloud Run), else `3100`. Launch via `npx`/`pnpm dlx`/`lightdash-mcp` — not `pnpm exec @lightdash-tools/mcp`.
-- Stdio: explicit `lightdash-mcp <profile>` or `stdio <profile>` only — no default.
+- Stdio: `lightdash-mcp stdio --profile <id>` only — no default; `http` mounts all profiles.
 - Audit: `initAuditLog()` once at startup; unset `LIGHTDASH_TOOLS_AUDIT_LOG` → JSON audit on stderr (Cloud Run).
 - Stateless MCP HTTP (ADR-0019): no SessionStore/Redis; obsolete store/redis env fail closed; OAuth broker is in-memory (sticky `/oauth/*`).
 - Content-developer: do not edit proposed body after preview (hash mismatch ≠ TTL); see ADR-0014/0019.

@@ -16,6 +16,12 @@ export type ProfileDefinition = {
    * Use a shorter name when combined with `lightdash_*` tools would exceed ~60 chars.
    */
   serverName?: string;
+  /**
+   * Exposed MCP tool names (sans `lightdash_` prefix) for this mount.
+   * Read-only projection of the operation catalog — do not hand-edit a parallel list.
+   * Edit membership via OperationDescriptor.profiles in packages/common/src/operations/.
+   */
+  mcpToolNames: readonly string[];
   registerPrompts: (server: McpServer) => void;
   registerResources: (server: McpServer) => void;
 };

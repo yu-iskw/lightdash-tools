@@ -5,7 +5,7 @@
 ### Features
 
 - Honor Cloud Run PORT for MCP HTTP listen when LIGHTDASH_TOOLS_MCP_HTTP_PORT is unset
-- BREAKING: MCP stdio no longer defaults to semantic-layer; pass a profile subcommand (or stdio <profile>).
+- BREAKING: MCP stdio no longer defaults to semantic-layer; use `stdio --profile <id>`.
 - BREAKING: remove deprecated lightdash-mcp serve-http alias; use http.
 
 ## [0.12.0] - 2026-08-04
