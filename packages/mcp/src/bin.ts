@@ -54,7 +54,7 @@ program
   .description(
     `MCP server for Lightdash (${PROFILE_IDS.join(', ')}). Default stdio profile is ${DEFAULT_STDIO_PROFILE}.`,
   )
-  .version('0.11.0');
+  .version('0.12.0');
 
 program
   .command('stdio', { isDefault: true })

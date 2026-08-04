@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.12.0] - 2026-08-04
+
+### Bug Fixes
+
+- Remediate audit findings for hono and brace-expansion.
+
 ## [0.11.0] - 2026-08-04
 
 ### Features
