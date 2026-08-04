@@ -2,7 +2,12 @@
  * Shared CLI schema command — catalog-only introspection (ADR-0013).
  */
 
-import { getOperation, listOperations, READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import {
+  getOperation,
+  listOperations,
+  listProfilesForMcpToolName,
+  READ_ONLY_DEFAULT,
+} from '@lightdash-tools/common';
 
 import { wrapAction } from '../utils/safety';
 
@@ -31,7 +36,10 @@ function operationToSchema(operation: OperationDescriptor): Record<string, unkno
       : {}),
     agentExposure: operation.agentExposure,
     sensitivity: operation.sensitivity,
-    profiles: [...operation.profiles],
+    profiles:
+      operation.mcp?.taskSupport.exposed === true
+        ? [...listProfilesForMcpToolName(operation.mcp.toolName)]
+        : [],
     safetyImpact: operation.authorization.safetyImpact,
     ...(operation.workflow != null ? { workflow: [...operation.workflow] } : {}),
   };

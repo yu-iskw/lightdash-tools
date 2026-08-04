@@ -5,9 +5,7 @@ import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor } from './types';
-
-const PROFILE_ORG_AUDIT: ProfileId = 'organization-audit';
+import type { OperationDescriptor } from './types';
 
 const op_get_org_profile = defineOperation({
   id: 'org-audit.org.profile.get',
@@ -21,7 +19,6 @@ const op_get_org_profile = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'organization get' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_org_members = defineOperation({
@@ -36,7 +33,6 @@ const op_list_org_members = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'users list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_get_org_member = defineOperation({
@@ -51,7 +47,6 @@ const op_get_org_member = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'users get' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_org_groups = defineOperation({
@@ -66,7 +61,6 @@ const op_list_org_groups = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'groups list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_org_projects = defineOperation({
@@ -81,7 +75,6 @@ const op_list_org_projects = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_org_role_assignments = defineOperation({
@@ -95,7 +88,6 @@ const op_list_org_role_assignments = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_custom_roles = defineOperation({
@@ -109,7 +101,6 @@ const op_list_custom_roles = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_get_custom_role = defineOperation({
@@ -123,7 +114,6 @@ const op_get_custom_role = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_project_roles = defineOperation({
@@ -138,7 +128,6 @@ const op_list_project_roles = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects roles list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_project_direct_access = defineOperation({
@@ -153,7 +142,6 @@ const op_list_project_direct_access = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects access list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_space_access = defineOperation({
@@ -167,7 +155,6 @@ const op_list_space_access = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_resolve_effective_access = defineOperation({
@@ -181,7 +168,6 @@ const op_resolve_effective_access = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_content = defineOperation({
@@ -196,7 +182,6 @@ const op_list_content = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'content search' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_get_dashboard_meta = defineOperation({
@@ -210,7 +195,6 @@ const op_get_dashboard_meta = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_validation_results = defineOperation({
@@ -224,7 +208,6 @@ const op_list_validation_results = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_get_project_user_activity = defineOperation({
@@ -238,7 +221,6 @@ const op_get_project_user_activity = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_list_project_schedulers = defineOperation({
@@ -253,7 +235,6 @@ const op_list_project_schedulers = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'schedulers list' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 const op_get_scheduler = defineOperation({
@@ -268,7 +249,6 @@ const op_get_scheduler = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'schedulers get' },
-  profiles: [PROFILE_ORG_AUDIT],
 });
 
 export const ORGANIZATION_AUDIT_OPERATIONS: readonly OperationDescriptor[] = [

@@ -18,8 +18,8 @@ export type ProfileDefinition = {
   serverName?: string;
   /**
    * Exposed MCP tool names (sans `lightdash_` prefix) for this mount.
-   * Read-only projection of the operation catalog — do not hand-edit a parallel list.
-   * Edit membership via OperationDescriptor.profiles in packages/common/src/operations/.
+   * Bind a named export from packages/common/src/operations/profile-membership.ts
+   * (membership SSOT). Do not hand-edit a parallel list in the MCP package.
    */
   mcpToolNames: readonly string[];
   registerPrompts: (server: McpServer) => void;

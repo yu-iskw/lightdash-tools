@@ -8,11 +8,10 @@ import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor, SafetyImpact } from './types';
+import type { OperationDescriptor, SafetyImpact } from './types';
 
 const IMPACT_READ: SafetyImpact = 'read';
 const IMPACT_WRITE_DESTRUCTIVE: SafetyImpact = 'write-destructive';
-const PROFILE_CONTENT_GOVERNANCE: ProfileId = 'content-governance';
 
 const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
@@ -34,7 +33,6 @@ const op_delete_chart = defineOperation({
     annotations: WRITE_DESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_GOVERNANCE],
 });
 
 const op_delete_dashboard = defineOperation({
@@ -52,7 +50,6 @@ const op_delete_dashboard = defineOperation({
     annotations: WRITE_DESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_GOVERNANCE],
 });
 
 const op_get_dashboard_promote_diff = defineOperation({
@@ -69,7 +66,6 @@ const op_get_dashboard_promote_diff = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_GOVERNANCE],
 });
 
 const op_promote_dashboard = defineOperation({
@@ -86,7 +82,6 @@ const op_promote_dashboard = defineOperation({
     annotations: WRITE_DESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_GOVERNANCE],
 });
 
 const op_permanent_purge = defineOperation({
@@ -98,7 +93,6 @@ const op_permanent_purge = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'permanent_delete_content',
-  profiles: [],
 });
 
 export const CONTENT_GOVERNANCE_OPERATIONS: readonly OperationDescriptor[] = [

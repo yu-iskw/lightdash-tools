@@ -154,7 +154,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Changie: `kindFormat: '### {{.Kind}}'`; fragments use kind keys (`feat`/`fix`), not Keep-a-Changelog labels.
 - `pnpm -r version` needs a clean tree — bump `packages/*/package.json` versions directly if dirty.
 - Agent surface SSOT: `packages/common/src/operations/` (ADR-0013); irrecoverable ops stay `client-only` (ADR-0004).
-- MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` / catalog membership (ADR-0006).
+- MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` / literal profile membership tables (ADR-0021).
 - Guardrails return `_lightdashBlocked`; upstream failures are coded `UPSTREAM_*` / `RATE_LIMITED`, not blocked markers.
 - Env: `LIGHTDASH_TOOLS_*`; shared allowlist `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`; obsolete allowlist names fail closed. MCP HTTP listen: `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, else platform `PORT` (Cloud Run), else `3100`. Launch via `npx`/`pnpm dlx`/`lightdash-mcp` — not `pnpm exec @lightdash-tools/mcp`.
 - Stdio: `lightdash-mcp stdio --profile <id>` only — no default; `http` mounts all profiles.

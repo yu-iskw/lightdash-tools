@@ -1,6 +1,7 @@
 /**
  * Shared typed operation catalog (ADR-0013 / ADR-0006).
  * Single source of truth for HTTP, CLI, and MCP exposure of Lightdash API operations.
+ * MCP mount membership lives in profile-membership.ts (literal tables).
  */
 
 import type { SafetyImpact, ToolAnnotations } from '../safety';
@@ -84,11 +85,6 @@ export type OperationDescriptor = {
    * Defaults to `none` when omitted from `defineOperation` input.
    */
   sensitivity: SensitivityClass;
-  /**
-   * MCP mounts that expose this op when `mcp.taskSupport.exposed` is true (ADR-0006).
-   * Empty when the op is not MCP-exposed (CLI-only / reserved / client-only).
-   */
-  profiles: readonly ProfileId[];
   /** `agent` (default) = may appear on MCP and/or CLI; `client-only` = typed client only. */
   agentExposure: AgentExposure;
   /** Present when the operation is registered (or reserved) as an MCP tool. */
@@ -109,8 +105,6 @@ export type OperationDefinitionInput = Omit<
   agentExposure?: AgentExposure;
   sensitivity?: SensitivityClass;
 };
-
-const VALID_PROFILES = new Set<ProfileId>(PROFILE_IDS);
 
 const VALID_SENSITIVITY = new Set<SensitivityClass>([
   'none',
@@ -150,33 +144,6 @@ function validateIdempotentHint(
   }
 }
 
-function validateProfiles(input: OperationDefinitionInput): void {
-  const { id, profiles, mcp } = input;
-  const mcpExposed = mcp?.taskSupport.exposed === true;
-
-  if (mcpExposed && profiles.length === 0) {
-    throw new Error(
-      `Operation '${id}' must declare at least one profile when mcp.taskSupport.exposed is true`,
-    );
-  }
-
-  if (new Set(profiles).size !== profiles.length) {
-    throw new Error(`Operation '${id}' has duplicate profiles: ${profiles.join(', ')}`);
-  }
-
-  for (const profile of profiles) {
-    if (!VALID_PROFILES.has(profile)) {
-      throw new Error(`Operation '${id}' has unknown profile '${profile}'`);
-    }
-  }
-
-  if (!mcpExposed && profiles.length > 0) {
-    throw new Error(
-      `Operation '${id}' must use empty profiles when not MCP-exposed (got ${profiles.join(', ')})`,
-    );
-  }
-}
-
 function validateClientOnlyOperation(input: OperationDefinitionInput): OperationDescriptor {
   if (input.mcp !== undefined || input.cli !== undefined) {
     throw new Error(
@@ -210,6 +177,7 @@ function validateAgentMcp(input: OperationDefinitionInput): void {
 /**
  * Defines a typed operation descriptor with catalog consistency checks (ADR-0013).
  * Agent ops require at least one of `mcp` or `cli`. Client-only ops omit both.
+ * MCP mount membership is declared in profile-membership.ts, not on the descriptor.
  */
 export function defineOperation(input: OperationDefinitionInput): OperationDescriptor {
   assertNonEmpty(input.id, 'id');
@@ -220,8 +188,6 @@ export function defineOperation(input: OperationDefinitionInput): OperationDescr
   if (!VALID_SENSITIVITY.has(sensitivity)) {
     throw new Error(`Operation '${input.id}' has unknown sensitivity '${String(sensitivity)}'`);
   }
-
-  validateProfiles(input);
 
   const agentExposure = input.agentExposure ?? 'agent';
   if (agentExposure === 'client-only') {

@@ -6,10 +6,8 @@ import { READ_ONLY_DEFAULT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor } from './types';
+import type { OperationDescriptor } from './types';
 
-const PROFILE_SEMANTIC: ProfileId = 'semantic-layer';
-const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
 const API_V1 = '/api/v1';
 
 const listProjects = defineOperation({
@@ -24,7 +22,6 @@ const listProjects = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects list' },
-  profiles: [PROFILE_SEMANTIC],
 });
 
 const getProject = defineOperation({
@@ -39,7 +36,6 @@ const getProject = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects get' },
-  profiles: [PROFILE_SEMANTIC, 'content-reader', 'content-developer', PROFILE_DATA_ANALYST],
 });
 
 const listExplores = defineOperation({
@@ -54,7 +50,6 @@ const listExplores = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores list' },
-  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getExplore = defineOperation({
@@ -69,7 +64,6 @@ const getExplore = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores get' },
-  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const listDimensions = defineOperation({
@@ -84,7 +78,6 @@ const listDimensions = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores dimensions' },
-  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getFieldLineage = defineOperation({
@@ -99,7 +92,6 @@ const getFieldLineage = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects explores lineage' },
-  profiles: [PROFILE_SEMANTIC],
 });
 
 const listMetrics = defineOperation({
@@ -114,7 +106,6 @@ const listMetrics = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'metrics list' },
-  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 const getMetric = defineOperation({
@@ -132,7 +123,6 @@ const getMetric = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'metrics get' },
-  profiles: [PROFILE_SEMANTIC],
 });
 
 const compileQuery = defineOperation({
@@ -150,7 +140,6 @@ const compileQuery = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'query compile' },
-  profiles: [PROFILE_SEMANTIC, PROFILE_DATA_ANALYST],
 });
 
 /** Semantic-layer operations registered in the shared operation catalog. */

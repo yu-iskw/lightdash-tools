@@ -5,11 +5,7 @@ import { READ_ONLY_DEFAULT, READ_ONLY_TRANSIENT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor } from './types';
-
-const PROFILE_CONTENT_READER: ProfileId = 'content-reader';
-const PROFILE_CONTENT_DEVELOPER: ProfileId = 'content-developer';
-const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
+import type { OperationDescriptor } from './types';
 
 const op_search_content = defineOperation({
   id: 'content-reader.content.search',
@@ -23,7 +19,6 @@ const op_search_content = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'content search' },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_list_spaces = defineOperation({
@@ -38,7 +33,6 @@ const op_list_spaces = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects spaces list' },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_space = defineOperation({
@@ -53,7 +47,6 @@ const op_get_space = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'projects spaces get' },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_dashboard = defineOperation({
@@ -67,7 +60,6 @@ const op_get_dashboard = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_chart = defineOperation({
@@ -81,7 +73,6 @@ const op_get_chart = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_list_project_parameters = defineOperation({
@@ -95,7 +86,6 @@ const op_list_project_parameters = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_get_project_parameters = defineOperation({
@@ -109,7 +99,6 @@ const op_get_project_parameters = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_explain_content = defineOperation({
@@ -123,7 +112,6 @@ const op_explain_content = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_run_chart = defineOperation({
@@ -137,7 +125,6 @@ const op_run_chart = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_export_chart_image = defineOperation({
@@ -151,7 +138,6 @@ const op_export_chart_image = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_run_dashboard_tile = defineOperation({
@@ -165,7 +151,6 @@ const op_run_dashboard_tile = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER],
 });
 
 const op_get_query_result = defineOperation({
@@ -179,7 +164,6 @@ const op_get_query_result = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_DATA_ANALYST],
 });
 
 const op_cancel_query = defineOperation({
@@ -193,7 +177,6 @@ const op_cancel_query = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_READER, PROFILE_DATA_ANALYST],
 });
 
 export const CONTENT_READER_OPERATIONS: readonly OperationDescriptor[] = [

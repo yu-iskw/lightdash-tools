@@ -25,7 +25,6 @@ const membersList = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users list' },
-  profiles: [],
 });
 
 const membersGet = defineOperation({
@@ -40,7 +39,6 @@ const membersGet = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'users get' },
-  profiles: [],
 });
 
 const membersDelete = defineOperation({
@@ -51,7 +49,6 @@ const membersDelete = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'delete_member',
-  profiles: [],
 });
 
 /** Organization member operations registered in the shared operation catalog. */

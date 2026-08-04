@@ -20,7 +20,6 @@ const baseDescriptor = {
   },
   cli: { commandPath: 'test op' },
   agentExposure: 'agent' as const,
-  profiles: ['semantic-layer' as const],
 };
 
 describe('defineOperation', () => {
@@ -50,55 +49,18 @@ describe('defineOperation', () => {
   it('allows agent ops with cli only', () => {
     const { mcp: _mcp, ...rest } = baseDescriptor;
     void _mcp;
-    expect(defineOperation({ ...rest, profiles: [] }).mcp).toBeUndefined();
+    expect(defineOperation(rest).mcp).toBeUndefined();
   });
 
   it('rejects agent ops with neither mcp nor cli', () => {
     const { mcp: _mcp, cli: _cli, ...rest } = baseDescriptor;
     void _mcp;
     void _cli;
-    expect(() => defineOperation({ ...rest, profiles: [] })).toThrow(/require mcp and\/or cli/);
+    expect(() => defineOperation(rest)).toThrow(/require mcp and\/or cli/);
   });
 
   it('rejects empty id', () => {
     expect(() => defineOperation({ ...baseDescriptor, id: '  ' })).toThrow(/id/);
-  });
-
-  it('rejects unknown profile', () => {
-    expect(() =>
-      defineOperation({
-        ...baseDescriptor,
-        profiles: ['unknown-profile' as 'semantic-layer'],
-      }),
-    ).toThrow(/unknown profile/);
-  });
-
-  it('rejects empty profiles when MCP-exposed', () => {
-    expect(() => defineOperation({ ...baseDescriptor, profiles: [] })).toThrow(
-      /at least one profile/,
-    );
-  });
-
-  it('rejects duplicate profiles', () => {
-    expect(() =>
-      defineOperation({
-        ...baseDescriptor,
-        profiles: ['semantic-layer', 'semantic-layer'],
-      }),
-    ).toThrow(/duplicate profiles/);
-  });
-
-  it('rejects non-empty profiles when not MCP-exposed', () => {
-    expect(() =>
-      defineOperation({
-        ...baseDescriptor,
-        mcp: {
-          ...baseDescriptor.mcp,
-          taskSupport: { exposed: false, taskEligible: false },
-        },
-        profiles: ['semantic-layer'],
-      }),
-    ).toThrow(/empty profiles/);
   });
 
   it('allows read operation with idempotentHint false (transient execution)', () => {
@@ -129,7 +91,6 @@ describe('defineOperation', () => {
       authorization: { safetyImpact: 'write-destructive' },
       agentExposure: 'client-only',
       bannedMcpToolName: 'delete_test',
-      profiles: [],
     });
     expect(op.agentExposure).toBe('client-only');
     expect(op.bannedMcpToolName).toBe('delete_test');

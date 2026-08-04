@@ -6,9 +6,7 @@ import { READ_ONLY_TRANSIENT } from '../safety';
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor } from './types';
-
-const PROFILE_DATA_ANALYST: ProfileId = 'data-analyst';
+import type { OperationDescriptor } from './types';
 
 const op_run_metric_query = defineOperation({
   id: 'data-analyst.query.metric-query.run',
@@ -21,7 +19,6 @@ const op_run_metric_query = defineOperation({
     annotations: READ_ONLY_TRANSIENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_DATA_ANALYST],
 });
 
 export const DATA_ANALYST_OPERATIONS: readonly OperationDescriptor[] = [op_run_metric_query];

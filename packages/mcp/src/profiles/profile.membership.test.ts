@@ -2,6 +2,7 @@ import {
   listExposedMcpToolNames,
   listMcpToolNamesByProfile,
   listOperations,
+  listProfilesForMcpToolName,
   PROFILE_IDS,
 } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
@@ -19,13 +20,13 @@ describe('profile catalog membership', () => {
     }
   });
 
-  it('every exposed MCP tool is tagged with at least one serving profile', () => {
+  it('every exposed MCP tool is mounted on at least one serving profile', () => {
     const exposed = new Set(listExposedMcpToolNames());
     for (const operation of listOperations()) {
       if (operation.mcp?.taskSupport.exposed !== true) {
         continue;
       }
-      expect(operation.profiles.length).toBeGreaterThan(0);
+      expect(listProfilesForMcpToolName(operation.mcp.toolName).length).toBeGreaterThan(0);
       expect(exposed.has(operation.mcp.toolName)).toBe(true);
     }
   });
@@ -35,7 +36,7 @@ describe('profile catalog membership', () => {
       for (const toolName of listMcpToolNamesByProfile(id)) {
         const op = listOperations().find((o) => o.mcp?.toolName === toolName);
         expect(op?.mcp?.taskSupport.exposed).toBe(true);
-        expect(op?.profiles).toContain(id);
+        expect(listProfilesForMcpToolName(toolName)).toContain(id);
       }
     }
   });

@@ -7,6 +7,7 @@ import { CONTENT_GOVERNANCE_OPERATIONS } from './content-governance';
 import { CONTENT_READER_OPERATIONS } from './content-reader';
 import { DATA_ANALYST_OPERATIONS } from './data-analyst';
 import { ORGANIZATION_AUDIT_OPERATIONS } from './organization-audit';
+import { listProfilesForMcpToolName } from './profile-membership';
 import {
   getOperation,
   getOperationsByProfile,
@@ -98,11 +99,8 @@ describe('operation registry', () => {
       if (operation.agentExposure === 'agent') {
         expect(operation.mcp !== undefined || operation.cli !== undefined).toBe(true);
       }
-      const mcpExposed = operation.mcp?.taskSupport.exposed === true;
-      if (mcpExposed) {
-        expect(operation.profiles.length).toBeGreaterThan(0);
-      } else {
-        expect(operation.profiles).toEqual([]);
+      if (operation.mcp?.taskSupport.exposed === true) {
+        expect(listProfilesForMcpToolName(operation.mcp.toolName).length).toBeGreaterThan(0);
       }
       expect(
         operation.http.path.startsWith('/api/v1/') || operation.http.path.startsWith('/api/v2/'),
@@ -131,7 +129,8 @@ describe('operation registry', () => {
       const operations = getOperationsByProfile(profile);
       expect(operations.length).toBeGreaterThan(0);
       for (const operation of operations) {
-        expect(operation.profiles).toContain(profile);
+        expect(operation.mcp?.toolName).toBeDefined();
+        expect(listProfilesForMcpToolName(operation.mcp!.toolName)).toContain(profile);
       }
     }
   });
@@ -148,8 +147,9 @@ describe('operation registry', () => {
   });
 
   it('maps exposed ai-agent-ops tools to ai-agent-ops profile only', () => {
-    expect(getOperation('ai-agents.project.agents.list')?.profiles).toEqual(['ai-agent-ops']);
-    expect(getOperation('ai-agents.project.agents.create')?.profiles).toEqual([]);
+    expect(listProfilesForMcpToolName('list_project_agents')).toEqual(['ai-agent-ops']);
+    expect(getOperation('ai-agents.project.agents.create')?.mcp?.taskSupport.exposed).toBe(false);
+    expect(listProfilesForMcpToolName('create_project_agent')).toEqual([]);
   });
 
   it('documents multi-step workflow for thread start', () => {
@@ -181,7 +181,6 @@ describe('operation registry', () => {
     expect(operation?.cli).toBeUndefined();
     expect(operation?.bannedMcpToolName).toBe('delete_member');
     expect(operation?.http.path).toBe('/api/v1/org/user/{userUuid}');
-    expect(operation?.profiles).toEqual([]);
   });
 
   it('excludes client-only operations from profile discovery catalogs', () => {
@@ -222,7 +221,6 @@ describe('operation registry', () => {
         },
         cli: { commandPath: 'test' },
         agentExposure: 'agent',
-        profiles: ['semantic-layer'],
       }),
     ).toThrow(/authorization\.safetyImpact/);
   });

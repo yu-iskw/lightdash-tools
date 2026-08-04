@@ -3,7 +3,7 @@
  * (ADR-0015 / ADR-0017). Permanent purge and chart/SQL promote stay off MCP.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
+import { CONTENT_GOVERNANCE_MCP_TOOLS } from '@lightdash-tools/common';
 
 import { registerContentGovernancePrompts } from './prompts.js';
 import { registerContentGovernancePlaybook } from './resources/playbooks.js';
@@ -16,7 +16,7 @@ export const contentGovernanceProfile: ProfileDefinition = {
   id: 'content-governance',
   path: CONTENT_GOVERNANCE_PROFILE_PATH,
   serverName: 'lightdash-mcp-gov',
-  mcpToolNames: listMcpToolNamesByProfile('content-governance'),
+  mcpToolNames: CONTENT_GOVERNANCE_MCP_TOOLS,
   registerPrompts: (server) => {
     registerContentGovernancePrompts(server);
   },

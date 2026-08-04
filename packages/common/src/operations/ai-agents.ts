@@ -12,14 +12,12 @@ import {
 
 import { defineOperation } from './types';
 
-import type { OperationDescriptor, ProfileId, SafetyImpact } from './types';
+import type { OperationDescriptor, SafetyImpact } from './types';
 
 const IMPACT_READ: SafetyImpact = 'read';
 const IMPACT_WRITE_NONDESTRUCTIVE: SafetyImpact = 'write-nondestructive';
 const IMPACT_WRITE_DESTRUCTIVE: SafetyImpact = 'write-destructive';
 const IMPACT_EXTERNAL: SafetyImpact = 'external-side-effect';
-
-const PROFILE_AI_AGENT_OPS: ProfileId = 'ai-agent-ops';
 
 const API_V1 = '/api/v1';
 const PROJECT_AGENTS_PATH = `${API_V1}/projects/{projectUuid}/aiAgents`;
@@ -37,7 +35,6 @@ const adminListAgents = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents list' },
-  profiles: [],
 });
 
 const adminListThreads = defineOperation({
@@ -52,7 +49,6 @@ const adminListThreads = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents threads' },
-  profiles: [],
 });
 
 const adminSettingsGet = defineOperation({
@@ -67,7 +63,6 @@ const adminSettingsGet = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents settings get' },
-  profiles: [],
 });
 
 const adminSettingsUpdate = defineOperation({
@@ -82,7 +77,6 @@ const adminSettingsUpdate = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'ai-agents settings update' },
-  profiles: [],
 });
 
 const projectAgentsList = defineOperation({
@@ -97,7 +91,6 @@ const projectAgentsList = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents list' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const projectAgentsGet = defineOperation({
@@ -112,7 +105,6 @@ const projectAgentsGet = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents get' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const projectAgentsCreate = defineOperation({
@@ -127,7 +119,6 @@ const projectAgentsCreate = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents create' },
-  profiles: [],
 });
 
 const projectAgentsUpdate = defineOperation({
@@ -142,7 +133,6 @@ const projectAgentsUpdate = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents update' },
-  profiles: [],
 });
 
 const projectAgentsDelete = defineOperation({
@@ -157,7 +147,6 @@ const projectAgentsDelete = defineOperation({
     taskSupport: { exposed: false, taskEligible: false },
   },
   cli: { commandPath: 'agents delete' },
-  profiles: [],
 });
 
 const PROJECT_AGENT_THREADS_PATH = `${PROJECT_AGENT_PATH}/threads`;
@@ -177,7 +166,6 @@ const threadsList = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents threads list' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_THREAD_PATH = `${PROJECT_AGENT_THREADS_PATH}/{threadUuid}`;
@@ -197,7 +185,6 @@ const threadsGet = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents threads get' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_THREAD_MESSAGES_PATH = `${PROJECT_AGENT_THREAD_PATH}/messages`;
@@ -236,7 +223,6 @@ const threadsStart = defineOperation({
     taskSupport: { exposed: false, taskEligible: true },
   },
   cli: { commandPath: 'agents threads start' },
-  profiles: [],
 });
 
 const threadsContinue = defineOperation({
@@ -266,7 +252,6 @@ const threadsContinue = defineOperation({
     taskSupport: { exposed: false, taskEligible: true },
   },
   cli: { commandPath: 'agents threads continue' },
-  profiles: [],
 });
 
 const PROJECT_AGENT_EVALUATIONS_PATH = `${PROJECT_AGENT_PATH}/evaluations`;
@@ -286,7 +271,6 @@ const evaluationsList = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals list' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_EVALUATION_PATH = `${PROJECT_AGENT_EVALUATIONS_PATH}/{evalUuid}`;
@@ -306,7 +290,6 @@ const evaluationsGet = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals get' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsCreate = defineOperation({
@@ -324,7 +307,6 @@ const evaluationsCreate = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals create' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsUpdate = defineOperation({
@@ -342,7 +324,6 @@ const evaluationsUpdate = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals update' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsAppend = defineOperation({
@@ -360,7 +341,6 @@ const evaluationsAppend = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals append' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsDelete = defineOperation({
@@ -378,7 +358,6 @@ const evaluationsDelete = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals delete' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsRun = defineOperation({
@@ -396,7 +375,6 @@ const evaluationsRun = defineOperation({
     taskSupport: { exposed: true, taskEligible: true },
   },
   cli: { commandPath: 'agents evals run' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const PROJECT_AGENT_EVALUATION_RUNS_PATH = `${PROJECT_AGENT_EVALUATION_PATH}/runs`;
@@ -416,7 +394,6 @@ const evaluationsRunsList = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals runs' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluationsRunResultsGet = defineOperation({
@@ -434,7 +411,6 @@ const evaluationsRunResultsGet = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents evals run-results' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const evaluateAgentReadiness = defineOperation({
@@ -452,7 +428,6 @@ const evaluateAgentReadiness = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents readiness evaluate' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const getAgentSuggestions = defineOperation({
@@ -470,7 +445,6 @@ const getAgentSuggestions = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents suggestions' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const getAgentModels = defineOperation({
@@ -488,7 +462,6 @@ const getAgentModels = defineOperation({
     taskSupport: { exposed: true, taskEligible: false },
   },
   cli: { commandPath: 'agents models' },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 const getExploreAccessSummary = defineOperation({
@@ -505,7 +478,6 @@ const getExploreAccessSummary = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_AI_AGENT_OPS],
 });
 
 /** All registered P0 AI agent operations. */

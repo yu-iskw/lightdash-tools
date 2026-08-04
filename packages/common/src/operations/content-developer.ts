@@ -9,9 +9,8 @@ import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE } from '../sa
 
 import { defineOperation } from './types';
 
-import type { ProfileId, OperationDescriptor, SafetyImpact } from './types';
+import type { OperationDescriptor, SafetyImpact } from './types';
 
-const PROFILE_CONTENT_DEVELOPER: ProfileId = 'content-developer';
 const API_V1 = '/api/v1';
 const API_V2 = '/api/v2';
 const WRITE_NONDESTRUCTIVE_IMPACT: SafetyImpact = 'write-nondestructive';
@@ -42,7 +41,6 @@ const op_preview_chart_changes = defineOperation({
       summary: PREVIEW_DIFF_SUMMARY,
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_preview_dashboard_changes = defineOperation({
@@ -71,7 +69,6 @@ const op_preview_dashboard_changes = defineOperation({
       summary: PREVIEW_DIFF_SUMMARY,
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_preview_content_move = defineOperation({
@@ -93,7 +90,6 @@ const op_preview_content_move = defineOperation({
       summary: PREVIEW_DIFF_SUMMARY,
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_get_chart_as_code = defineOperation({
@@ -108,7 +104,6 @@ const op_get_chart_as_code = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_validate_chart = defineOperation({
@@ -122,7 +117,6 @@ const op_validate_chart = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_validate_dashboard = defineOperation({
@@ -139,7 +133,6 @@ const op_validate_dashboard = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_compare_chart_versions = defineOperation({
@@ -166,7 +159,6 @@ const op_compare_chart_versions = defineOperation({
       summary: 'Fetch each compared version',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_compare_dashboard_versions = defineOperation({
@@ -197,7 +189,6 @@ const op_compare_dashboard_versions = defineOperation({
       summary: 'Fetch each compared version',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_confirm_preview = defineOperation({
@@ -212,7 +203,6 @@ const op_confirm_preview = defineOperation({
     annotations: READ_ONLY_DEFAULT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_create_chart = defineOperation({
@@ -226,7 +216,6 @@ const op_create_chart = defineOperation({
     annotations: WRITE_IDEMPOTENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_update_chart = defineOperation({
@@ -240,7 +229,6 @@ const op_update_chart = defineOperation({
     annotations: WRITE_IDEMPOTENT,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_duplicate_chart = defineOperation({
@@ -266,7 +254,6 @@ const op_duplicate_chart = defineOperation({
       summary: 'Upsert the duplicate under a new slug',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_create_dashboard = defineOperation({
@@ -280,7 +267,6 @@ const op_create_dashboard = defineOperation({
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_update_dashboard = defineOperation({
@@ -297,7 +283,6 @@ const op_update_dashboard = defineOperation({
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_duplicate_dashboard = defineOperation({
@@ -318,7 +303,6 @@ const op_duplicate_dashboard = defineOperation({
       summary: 'Create a dashboard duplicated from an existing one',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_add_dashboard_tile = defineOperation({
@@ -347,7 +331,6 @@ const op_add_dashboard_tile = defineOperation({
       summary: 'Write the full tile array back with the new tile appended',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_move_dashboard_tile = defineOperation({
@@ -376,7 +359,6 @@ const op_move_dashboard_tile = defineOperation({
       summary: 'Write the full tile array back with updated tile position',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_remove_dashboard_tile = defineOperation({
@@ -405,7 +387,6 @@ const op_remove_dashboard_tile = defineOperation({
       summary: 'Write the full tile array back with the tile removed',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_resize_dashboard_tile = defineOperation({
@@ -434,7 +415,6 @@ const op_resize_dashboard_tile = defineOperation({
       summary: 'Write the full tile array back with the updated tile size',
     },
   ],
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 const op_create_space = defineOperation({
@@ -446,7 +426,6 @@ const op_create_space = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'create_space',
-  profiles: [],
 });
 
 const op_update_space = defineOperation({
@@ -458,7 +437,6 @@ const op_update_space = defineOperation({
   sensitivity: 'none',
   agentExposure: 'client-only',
   bannedMcpToolName: 'update_space',
-  profiles: [],
 });
 
 const op_move_content = defineOperation({
@@ -472,7 +450,6 @@ const op_move_content = defineOperation({
     annotations: WRITE_NONDESTRUCTIVE,
     taskSupport: { exposed: true, taskEligible: false },
   },
-  profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
 export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [

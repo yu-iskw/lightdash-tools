@@ -13,7 +13,6 @@ const chartsList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts list' },
-  profiles: [],
 });
 
 const chartsCodeList = defineOperation({
@@ -23,7 +22,6 @@ const chartsCodeList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts code list' },
-  profiles: [],
 });
 
 const chartsCodeUpsert = defineOperation({
@@ -33,7 +31,6 @@ const chartsCodeUpsert = defineOperation({
   authorization: { safetyImpact: 'write-nondestructive' },
   sensitivity: 'none',
   cli: { commandPath: 'projects charts code upsert' },
-  profiles: [],
 });
 
 const dashboardsList = defineOperation({
@@ -43,7 +40,6 @@ const dashboardsList = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects dashboards list' },
-  profiles: [],
 });
 
 const validateRun = defineOperation({
@@ -53,7 +49,6 @@ const validateRun = defineOperation({
   authorization: { safetyImpact: 'write-nondestructive' },
   sensitivity: 'none',
   cli: { commandPath: 'projects validate run' },
-  profiles: [],
 });
 
 const validateResults = defineOperation({
@@ -63,7 +58,6 @@ const validateResults = defineOperation({
   authorization: { safetyImpact: 'read' },
   sensitivity: 'none',
   cli: { commandPath: 'projects validate results' },
-  profiles: [],
 });
 
 export const CLI_CONTENT_OPERATIONS: readonly OperationDescriptor[] = [

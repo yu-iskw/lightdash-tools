@@ -27,6 +27,18 @@ export { SEMANTIC_LAYER_OPERATIONS } from './semantic-layer';
 export { USER_OPERATIONS } from './users';
 
 export {
+  AI_AGENT_OPS_MCP_TOOLS,
+  CONTENT_DEVELOPER_MCP_TOOLS,
+  CONTENT_GOVERNANCE_MCP_TOOLS,
+  CONTENT_READER_MCP_TOOLS,
+  DATA_ANALYST_MCP_TOOLS,
+  MCP_TOOLS_BY_PROFILE,
+  ORGANIZATION_AUDIT_MCP_TOOLS,
+  SEMANTIC_LAYER_MCP_TOOLS,
+  listProfilesForMcpToolName,
+} from './profile-membership';
+
+export {
   getOperation,
   getOperationByMcpToolName,
   getOperationsByProfile,
