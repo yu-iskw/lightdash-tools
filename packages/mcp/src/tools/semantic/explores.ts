@@ -1,5 +1,5 @@
 /**
- * MCP tools: explores (list, get, dimensions, lineage) — shared catalog.
+ * MCP tools: explores (list, get, dimensions, lineage).
  */
 
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   flattenExploreDimensions,
@@ -183,3 +184,9 @@ export function registerGetFieldLineage(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listExploresTool = defineTool('list_explores', registerListExplores);
+export const getExploreTool = defineTool('get_explore', registerGetExplore);
+export const listDimensionsTool = defineTool('list_dimensions', registerListDimensions);
+export const getFieldLineageTool = defineTool('get_field_lineage', registerGetFieldLineage);

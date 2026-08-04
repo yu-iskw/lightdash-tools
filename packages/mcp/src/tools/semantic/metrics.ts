@@ -1,5 +1,5 @@
 /**
- * MCP tools: metrics (list, get) — shared catalog.
+ * MCP tools: metrics (list, get).
  */
 
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -90,3 +91,7 @@ export function registerGetMetric(server: McpServer, contextProvider: McpContext
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listMetricsTool = defineTool('list_metrics', registerListMetrics);
+export const getMetricTool = defineTool('get_metric', registerGetMetric);

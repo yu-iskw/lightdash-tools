@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { getServerProfile } from '../audit/server-profile.js';
 import { getDefaultProfile } from '../profiles/index.js';
-import { registerToolsByIds } from '../tools/registry.js';
+import { registerTools } from '../tools/registry.js';
 
 import { registerCapabilities } from './capabilities.js';
 
@@ -12,7 +12,7 @@ vi.mock('../tools/registry.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../tools/registry.js')>();
   return {
     ...actual,
-    registerToolsByIds: vi.fn(),
+    registerTools: vi.fn(),
   };
 });
 
@@ -37,18 +37,14 @@ describe('registerCapabilities', () => {
     server = new McpServer({ name: 'test', version: '0.0.0' });
     registerPromptSpy = vi.spyOn(server, 'registerPrompt');
     registerResourceSpy = vi.spyOn(server, 'registerResource');
-    vi.mocked(registerToolsByIds).mockClear();
+    vi.mocked(registerTools).mockClear();
   });
 
-  it('registers catalog tools and prompts/resources for the profile', () => {
+  it('registers profile tools and prompts/resources', () => {
     const profile = getDefaultProfile();
     registerCapabilities(server, mockContextProvider, { profile });
     expect(getServerProfile(server)).toBe(profile.id);
-    expect(registerToolsByIds).toHaveBeenCalledWith(
-      server,
-      mockContextProvider,
-      profile.mcpToolNames,
-    );
+    expect(registerTools).toHaveBeenCalledWith(server, mockContextProvider, profile.tools);
     expect(registerPromptSpy).toHaveBeenCalled();
     expect(registerResourceSpy).toHaveBeenCalled();
   });

@@ -4,8 +4,6 @@ Date: 2026-08-01
 
 ## Status
 
-Accepted
-
 Amends [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
 
 Relates [2. Monorepo packages](0002-monorepo-packages-client-common-cli-mcp.md)
@@ -15,6 +13,8 @@ Relates [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared
 Relates [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
 Amended by [21. MCP mount membership via literal profile tables](0021-mcp-mount-membership-via-literal-profile-tables.md) (mount membership storage)
+
+Superceded by [22. MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
 
 ## Context
 

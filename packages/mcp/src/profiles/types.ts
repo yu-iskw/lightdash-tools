@@ -1,7 +1,8 @@
 /**
- * Profile packaging types (tools from the operation catalog, ADR-0006).
+ * Profile packaging types — tools are ToolModules imported by each profile.
  */
 
+import type { ToolModule } from '../tools/types.js';
 import type { ProfileId } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -17,11 +18,9 @@ export type ProfileDefinition = {
    */
   serverName?: string;
   /**
-   * Exposed MCP tool names (sans `lightdash_` prefix) for this mount.
-   * Bind a named export from packages/common/src/operations/profile-membership.ts
-   * (membership SSOT). Do not hand-edit a parallel list in the MCP package.
+   * Mounted tools for this profile (import ToolModules; array order is tools/list order).
    */
-  mcpToolNames: readonly string[];
+  tools: readonly ToolModule[];
   registerPrompts: (server: McpServer) => void;
   registerResources: (server: McpServer) => void;
 };

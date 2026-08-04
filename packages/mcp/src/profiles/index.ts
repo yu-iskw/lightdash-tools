@@ -72,3 +72,8 @@ export function parseProfileId(value: string): ProfileId | undefined {
 export function getProfileServerName(profile: ProfileDefinition): string {
   return profile.serverName ?? `lightdash-mcp-${profile.id}`;
 }
+
+/** Short tool ids mounted on a profile (sans `lightdash_` prefix). */
+export function listToolIds(profile: ProfileDefinition): string[] {
+  return profile.tools.map((tool) => tool.id);
+}

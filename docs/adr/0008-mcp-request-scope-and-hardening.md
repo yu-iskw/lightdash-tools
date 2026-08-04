@@ -12,7 +12,7 @@ Amended by [12. MCP content-reader profile saved-content execution boundary](001
 
 ## Context
 
-Process-level `LIGHTDASH_TOOLS_SAFETY_MODE` and dry-run were designed for a broad MCP catalog. Profiles ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)) fix the tool set from the operation catalog; they are not a process tool filter. Those CLI knobs became no-ops or overlapped HTTP project pinning, and suggested more protection than they provided. Opaque OAuth tokens cannot be authorized via local JWT scope checks ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)).
+Process-level `LIGHTDASH_TOOLS_SAFETY_MODE` and dry-run were designed for a broad MCP catalog. Profiles ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)) fix the tool set via `tools: ToolModule[]` imports ([ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)); they are not a process tool filter. Those CLI knobs became no-ops or overlapped HTTP project pinning, and suggested more protection than they provided. Opaque OAuth tokens cannot be authorized via local JWT scope checks ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)).
 
 Operators still need a **deployment-level ceiling** of which Lightdash projects an MCP process may touch (shared HTTP / Cloud Run), distinct from a per-request pin. That ceiling is the **same** env as the CLI project allowlist: `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
 
@@ -22,7 +22,7 @@ Operators still need a **deployment-level ceiling** of which Lightdash projects 
 
 MCP security layers:
 
-1. **Capability** — catalog `profiles` membership via `listMcpToolNamesByProfile` at `registerCapabilities` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). No MCP env or flag filters which tools register.
+1. **Capability** — profile `tools: ToolModule[]` at `registerCapabilities` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md), [ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)). No MCP env or flag filters which tools register.
 2. **Who** — auth mode + Lightdash API RBAC (PAT / shared-key / OAuth broker).
 3. **Where (project scope)** — resolved then constrained by an optional shared process ceiling:
    - **HTTP pin (all profiles):** optional `X-Lightdash-Project` → ALS → `governance.pinnedProjectUuid`. Mismatched tool `projectUuid` args are blocked; pinned `list_projects` returns the pinned project only. Pin always wins when set (within the ceiling below).
@@ -36,7 +36,7 @@ MCP security layers:
 
 ```mermaid
 flowchart TD
-  catalog["catalog profiles + listMcpToolNamesByProfile"] --> reg[registerToolSafe]
+  profileTools["profile.tools ToolModules"] --> reg[registerToolSafe]
   reg --> audit[audit]
   audit --> allowlist[LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS]
   allowlist --> pin[X-Lightdash-Project pin]

@@ -12,6 +12,7 @@ import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -121,3 +122,13 @@ export function registerGetProjectParameters(
       }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listProjectParametersTool = defineTool(
+  'list_project_parameters',
+  registerListProjectParameters,
+);
+export const getProjectParametersTool = defineTool(
+  'get_project_parameters',
+  registerGetProjectParameters,
+);

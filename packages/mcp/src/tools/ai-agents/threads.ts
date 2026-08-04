@@ -3,6 +3,7 @@
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   agentUuidField,
@@ -92,3 +93,7 @@ export function registerGetAgentThread(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listAgentThreadsTool = defineTool('list_agent_threads', registerListAgentThreads);
+export const getAgentThreadTool = defineTool('get_agent_thread', registerGetAgentThread);

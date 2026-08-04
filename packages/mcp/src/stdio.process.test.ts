@@ -5,7 +5,6 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import path from 'node:path';
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import {
   CLIENT_CAPABILITIES_META_KEY,
   CLIENT_INFO_META_KEY,
@@ -13,6 +12,7 @@ import {
 } from '@modelcontextprotocol/server';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { getProfile } from './profiles/index.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 /** Vitest runs from the monorepo root (`vitest.config.ts`). */
@@ -20,7 +20,7 @@ const repoRoot = process.cwd();
 const binPath = path.join(repoRoot, 'packages/mcp/dist/bin.js');
 
 const INIT_TIMEOUT_MS = 5_000;
-const SEMANTIC_LAYER_TOOL_COUNT = listMcpToolNamesByProfile('semantic-layer').length;
+const SEMANTIC_LAYER_TOOL_COUNT = getProfile('semantic-layer').tools.length;
 
 interface JsonRpcMessage {
   jsonrpc?: string;

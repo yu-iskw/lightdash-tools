@@ -14,6 +14,7 @@ import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { classifyChartSource } from '../query/chart-source.js';
 import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -285,3 +286,8 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
       ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const searchContentTool = defineTool('search_content', registerSearchContent);
+export const getDashboardTool = defineTool('get_dashboard', registerGetDashboard);
+export const getChartTool = defineTool('get_chart', registerGetChart);

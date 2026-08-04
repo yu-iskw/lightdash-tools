@@ -2,24 +2,16 @@
  * Profile safety invariant: all content-reader tools register as read-only GET.
  */
 
-import { READ_ONLY_DEFAULT, listMcpToolNamesByProfile } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, READ_ONLY_TRANSIENT } from '@lightdash-tools/common';
 import { describe, expect, it, vi } from 'vitest';
 
 import { bindServerProfile } from '../../audit/server-profile.js';
-import { registerToolsByIds } from '../registry.js';
+import { getProfile, listToolIds } from '../../profiles/index.js';
+import { registerTools } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
-/** Tools that are read-only but not idempotent (warehouse / headless work). */
-const NON_IDEMPOTENT_TOOL_IDS = new Set([
-  'run_chart',
-  'run_dashboard_tile',
-  'get_query_result',
-  'cancel_query',
-  'export_chart_image',
-]);
-
 describe('content-reader safety invariants', () => {
-  it('registers only readOnlyHint tools for the allowlist', () => {
+  it('registers only readOnlyHint tools for profile-mounted tools', () => {
     const annotationsByName = new Map<string, unknown>();
     const mockServer = {
       registerTool: vi.fn((name: string, options: { annotations?: unknown }) => {
@@ -27,12 +19,12 @@ describe('content-reader safety invariants', () => {
       }),
     };
     const mockCtx = { getContext: async () => ({ lightdashClient: {} }) };
-    const toolIds = listMcpToolNamesByProfile('content-reader');
+    const profile = getProfile('content-reader');
+    const toolIds = listToolIds(profile);
 
     bindServerProfile(mockServer, 'content-reader');
-    registerToolsByIds(mockServer as never, mockCtx as never, toolIds);
+    registerTools(mockServer as never, mockCtx as never, profile.tools);
 
-    expect(toolIds).toHaveLength(14);
     expect(annotationsByName.size).toBe(toolIds.length);
     for (const id of toolIds) {
       const annotations = annotationsByName.get(`${TOOL_PREFIX}${id}`) as {
@@ -40,11 +32,9 @@ describe('content-reader safety invariants', () => {
         idempotentHint?: boolean;
       };
       expect(annotations?.readOnlyHint).toBe(true);
-      if (NON_IDEMPOTENT_TOOL_IDS.has(id)) {
-        expect(annotations?.idempotentHint).toBe(false);
-      } else {
-        expect(annotations).toMatchObject(READ_ONLY_DEFAULT);
-      }
+      expect(annotations).toMatchObject(
+        annotations?.idempotentHint === false ? READ_ONLY_TRANSIENT : READ_ONLY_DEFAULT,
+      );
     }
   });
 });

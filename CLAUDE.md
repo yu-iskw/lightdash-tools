@@ -77,6 +77,6 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
-- [2026-08-04]: MCP mount membership is literal `as const` arrays in `packages/common/src/operations/profile-membership.ts` (ADR-0021). Profile `mcpToolNames` binds those exports for IDE Go-to-Definition; do not put `profiles` tags back on operations.
+- [2026-08-04]: MCP mounts are profile-owned `ToolModule` imports (ADR-0022). Export `defineTool` / `defineToolVariant` beside handlers; profiles import those modules; `registry.ts` is denylist + `registerTools` only — not a second catalog.
 - [2026-08-04]: MCP stdio is transport-first — `lightdash-mcp stdio --profile <id>` (required); bare invoke fails closed; `http` for Streamable HTTP.
 - [2026-08-04]: `AGENTS.md` Common Gotchas is capped at ≤30 lines (pointer hub + traps). Profile/ADR essays belong in `docs/adr` and `docs/profiles`; replace obsolete bullets instead of appending forever.

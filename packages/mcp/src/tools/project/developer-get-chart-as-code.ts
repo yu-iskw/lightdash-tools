@@ -10,6 +10,7 @@ import { DISCOVERY_SAFETY, registerContentDeveloperTool } from '../../policy/con
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { developerContext, wrapDeveloperHandler } from './developer-content-shared.js';
 
@@ -56,3 +57,6 @@ export function registerGetChartAsCode(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const getChartAsCodeTool = defineTool('get_chart_as_code', registerGetChartAsCode);

@@ -13,6 +13,7 @@ import { registerOrgAuditTool } from '../lib/register-org-audit.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashApi } from '@lightdash-tools/common';
@@ -304,3 +305,15 @@ export function registerGetProjectUserActivity(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listContentTool = defineTool('list_content', registerListContent);
+export const getDashboardMetaTool = defineTool('get_dashboard_meta', registerGetDashboardMeta);
+export const listValidationResultsTool = defineTool(
+  'list_validation_results',
+  registerListValidationResults,
+);
+export const getProjectUserActivityTool = defineTool(
+  'get_project_user_activity',
+  registerGetProjectUserActivity,
+);

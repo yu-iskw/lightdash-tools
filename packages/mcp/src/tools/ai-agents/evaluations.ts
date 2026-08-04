@@ -6,6 +6,7 @@ import { WRITE_DESTRUCTIVE, WRITE_NONDESTRUCTIVE, WRITE_OPEN_WORLD } from '@ligh
 import { z } from 'zod';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   agentUuidField,
@@ -391,3 +392,41 @@ export function registerGetAgentEvalRunResults(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listAgentEvaluationsTool = defineTool(
+  'list_agent_evaluations',
+  registerListAgentEvaluations,
+);
+export const getAgentEvaluationTool = defineTool(
+  'get_agent_evaluation',
+  registerGetAgentEvaluation,
+);
+export const createAgentEvaluationTool = defineTool(
+  'create_agent_evaluation',
+  registerCreateAgentEvaluation,
+);
+export const updateAgentEvaluationTool = defineTool(
+  'update_agent_evaluation',
+  registerUpdateAgentEvaluation,
+);
+export const appendAgentEvaluationPromptsTool = defineTool(
+  'append_agent_evaluation_prompts',
+  registerAppendAgentEvaluationPrompts,
+);
+export const deleteAgentEvaluationTool = defineTool(
+  'delete_agent_evaluation',
+  registerDeleteAgentEvaluation,
+);
+export const runAgentEvaluationTool = defineTool(
+  'run_agent_evaluation',
+  registerRunAgentEvaluation,
+);
+export const listAgentEvaluationRunsTool = defineTool(
+  'list_agent_evaluation_runs',
+  registerListAgentEvaluationRuns,
+);
+export const getAgentEvalRunResultsTool = defineTool(
+  'get_agent_eval_run_results',
+  registerGetAgentEvalRunResults,
+);

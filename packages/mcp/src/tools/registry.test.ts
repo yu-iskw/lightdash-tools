@@ -1,10 +1,9 @@
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { bindServerProfile } from '../audit/server-profile.js';
-import { getDefaultProfile } from '../profiles/index.js';
+import { getDefaultProfile, listToolIds } from '../profiles/index.js';
 
-import { registerToolsByIds } from './registry.js';
+import { registerTools } from './registry.js';
 import { TOOL_PREFIX } from './shared.js';
 
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
@@ -18,7 +17,7 @@ vi.mock('@lightdash-tools/common', async (importOriginal) => {
   };
 });
 
-describe('registerToolsByIds', () => {
+describe('registerTools', () => {
   const registeredTools: Array<{ name: string; description: string }> = [];
   const mockServer = {
     registerTool: vi.fn((name: string, options: { description: string }) => {
@@ -32,29 +31,18 @@ describe('registerToolsByIds', () => {
     mockServer.registerTool.mockClear();
   });
 
-  it('registers only the profile catalog tools with lightdash_ prefix', () => {
+  it('registers only the profile tools with lightdash_ prefix', () => {
     const mockContextProvider = { getContext: async () => ({ lightdashClient: {} }) };
     const profile = getDefaultProfile();
-    const toolIds = listMcpToolNamesByProfile(profile.id);
+    const toolIds = listToolIds(profile);
 
     bindServerProfile(mockServer, profile.id);
-    registerToolsByIds(mockServer as never, mockContextProvider as never, toolIds);
+    registerTools(mockServer as never, mockContextProvider as never, profile.tools);
 
     expect(registeredTools).toHaveLength(toolIds.length);
     expect(registeredTools.every((t) => t.name.startsWith(TOOL_PREFIX))).toBe(true);
 
     const names = registeredTools.map((t) => t.name);
     expect(names).toEqual(toolIds.map((id) => `${TOOL_PREFIX}${id}`));
-  });
-
-  it('covers every registry tool id via some profile membership', async () => {
-    const { PROFILES } = await import('../profiles/index.js');
-    const { toolRegistry } = await import('./registry.js');
-    const covered = new Set(
-      Object.keys(PROFILES).flatMap((id) => listMcpToolNamesByProfile(id as keyof typeof PROFILES)),
-    );
-    for (const id of Object.keys(toolRegistry)) {
-      expect(covered.has(id), `uncovered tool ${id}`).toBe(true);
-    }
   });
 });

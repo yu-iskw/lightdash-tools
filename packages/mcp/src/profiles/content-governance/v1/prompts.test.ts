@@ -2,18 +2,16 @@
  * Content-governance prompt/playbook invariants.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
+
+import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
 import { CONTENT_GOVERNANCE_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('content-governance prompts/playbook', () => {
   it('playbooks reference only registered tool short ids', () => {
     const md = getAllPlaybookMarkdown();
-    for (const id of listMcpToolNamesByProfile('content-governance')) {
-      expect(md.includes(id) || md.includes(`lightdash_${id}`)).toBe(true);
-    }
-    expect(md).not.toMatch(/\bldt__/);
+    expectPlaybookCoversProfileTools('content-governance', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_GOVERNANCE_HARD_BANS.toLowerCase()).toContain('permanently purge');
   });

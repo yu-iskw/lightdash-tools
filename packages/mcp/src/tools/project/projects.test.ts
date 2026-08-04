@@ -6,7 +6,12 @@ import { resetAvailableProjectsCache } from '../../governance/available-projects
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
 import { CREDENTIALS_OMITTED_WARNING } from '../lib/redaction.js';
 
-import { registerGetProject, registerListProjects } from './projects.js';
+import {
+  getProjectAnalystTool,
+  getProjectReaderTool,
+  getProjectTool,
+  registerListProjects,
+} from './projects.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 
@@ -140,7 +145,7 @@ describe('registerListProjects', () => {
   });
 });
 
-describe('registerGetProject', () => {
+describe('get_project ToolModules', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
@@ -160,7 +165,7 @@ describe('registerGetProject', () => {
 
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'semantic-layer');
-    registerGetProject(mockServer as never, mockContext(listProjects, getProject));
+    getProjectTool.register(mockServer as never, mockContext(listProjects, getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
     const result = await handler({ projectUuid: PINNED });
@@ -184,7 +189,7 @@ describe('registerGetProject', () => {
     const getProject = vi.fn();
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'semantic-layer');
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    getProjectTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
     expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
 
@@ -201,7 +206,7 @@ describe('registerGetProject', () => {
     });
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'content-reader');
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    getProjectReaderTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
     expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
 
@@ -225,7 +230,7 @@ describe('registerGetProject', () => {
     const getProject = vi.fn();
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'content-reader');
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    getProjectReaderTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
     const result = await handler({});
     expect(result.isError).toBe(true);
@@ -240,7 +245,7 @@ describe('registerGetProject', () => {
     });
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'data-analyst');
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    getProjectAnalystTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
     const result = await handler({ projectUuid: PINNED });

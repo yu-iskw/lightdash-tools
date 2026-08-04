@@ -17,7 +17,7 @@ Include an ADR only if **all** are true:
 
 Feature "support X API" notes, superseded-only history, and process/skill records are **not** ADRs.
 
-Vocabulary: living product term is **profile**. The MCP protocol uses Host / Client / Server and Tools / Prompts / Resources — it does not define “persona” or “profile.” Mount membership is literal profile tables + `listMcpToolNamesByProfile` ([ADR-0021](0021-mcp-mount-membership-via-literal-profile-tables.md)).
+Vocabulary: living product term is **profile**. The MCP protocol uses Host / Client / Server and Tools / Prompts / Resources — it does not define “persona” or “profile.” Mount membership is each profile’s `tools: ToolModule[]` imports ([ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)).
 
 ## Table of contents
 
@@ -40,6 +40,7 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 17. [MCP ai-agent-ops profile thin API boundary](0018-mcp-ai-agent-ops-profile-thin-api-boundary.md)
 18. [MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 19. [MCP data-analyst profile ad-hoc metric-query boundary](0020-mcp-data-analyst-profile-ad-hoc-metric-query-boundary.md)
-20. [MCP mount membership via literal profile tables](0021-mcp-mount-membership-via-literal-profile-tables.md)
+20. [MCP mount membership via literal profile tables](0021-mcp-mount-membership-via-literal-profile-tables.md) (superseded by 0022)
+21. [MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

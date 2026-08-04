@@ -25,10 +25,10 @@ Safety modes gate **reversible** destructive ops at runtime. They do **not** rep
 - **Add `--fields` or field masks to list calls when supported.** Lightdash API responses can be large. Limit response size to protect the agent's context window.
 - Prefer list operations that return minimal fields when only identifiers are needed.
 
-## Schema Introspection
+## Surface Discovery
 
-- Run `lightdash-ai schema list` to see available resources.
-- Run `lightdash-ai schema get <resource>` (e.g. `cli.charts.list`, `ai-agents.admin.settings.get`) for machine-readable path, method, and params.
+- CLI: use Commander `--help` on the relevant command group (e.g. `lightdash-ai agents --help`).
+- MCP: connect a serving profile and call `tools/list` ([ADR-0022](../adr/0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)).
 
 ## Input Validation
 

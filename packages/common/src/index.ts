@@ -14,8 +14,11 @@ export * from './input-validation';
 // Export argument / descriptor validation
 export * from './argument-validation';
 
-// Export shared typed operation catalog (ADR-0013)
-export * from './operations';
+// MCP serving profile ids (shared with audit typing)
+export * from './profile-ids';
+
+// Irrecoverable MCP tool denylist
+export * from './agent-safe';
 
 // Export AgentOps bundle and gate types
 export * from './agentops/types';

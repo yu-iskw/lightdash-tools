@@ -1,10 +1,10 @@
 /**
- * Register tools / prompts / resources for a profile.
+ * Registers MCP capabilities for a profile.
  */
 
 import { bindServerProfile } from '../audit/server-profile.js';
 import { getDefaultProfile } from '../profiles/index.js';
-import { registerToolsByIds } from '../tools/registry.js';
+import { registerTools } from '../tools/registry.js';
 
 import type { McpContextProvider } from './request-context.js';
 import type { ProfileDefinition } from '../profiles/types.js';
@@ -17,7 +17,7 @@ export type RegisterCapabilitiesOptions = {
 
 /**
  * Registers MCP capabilities for the given profile.
- * Tools come from profile.mcpToolNames (catalog projection, ADR-0006).
+ * Tools come from profile.tools (ToolModule imports).
  */
 export function registerCapabilities(
   server: McpServer,
@@ -26,7 +26,7 @@ export function registerCapabilities(
 ): void {
   const profile = options?.profile ?? getDefaultProfile();
   bindServerProfile(server, profile.id);
-  registerToolsByIds(server, contextProvider, profile.mcpToolNames);
+  registerTools(server, contextProvider, profile.tools);
   profile.registerPrompts(server);
   profile.registerResources(server);
 }

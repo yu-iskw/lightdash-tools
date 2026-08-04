@@ -2,18 +2,16 @@
  * AI agent-ops prompt/playbook invariants.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
+
+import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
 import { AI_AGENT_OPS_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('ai-agent-ops prompts/playbook', () => {
   it('playbook references only registered tool short ids', () => {
     const md = getAllPlaybookMarkdown();
-    for (const id of listMcpToolNamesByProfile('ai-agent-ops')) {
-      expect(md.includes(id) || md.includes(`lightdash_${id}`)).toBe(true);
-    }
-    expect(md).not.toMatch(/\bldt__/);
+    expectPlaybookCoversProfileTools('ai-agent-ops', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(AI_AGENT_OPS_HARD_BANS.toLowerCase()).toContain('recommend');
   });

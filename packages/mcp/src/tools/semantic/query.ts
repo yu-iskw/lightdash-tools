@@ -1,5 +1,5 @@
 /**
- * MCP tools: query (compile only) — shared catalog.
+ * MCP tools: query (compile only).
  */
 
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { extractCompiledSql, isEmptySelectSql } from './explore-helpers.js';
 import { exploreIdField } from './schema-fields.js';
@@ -82,3 +83,6 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const compileQueryTool = defineTool('compile_query', registerCompileQuery);

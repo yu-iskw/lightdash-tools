@@ -4,11 +4,11 @@ Date: 2026-08-04
 
 ## Status
 
-Accepted
-
 Amends [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-registry-fixed-paths.md) (mount membership direction only)
 
 Amends [13. Operation catalog as sole agent-surface SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md) (membership storage, not catalog role)
+
+Superceded by [22. MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
 
 ## Context
 

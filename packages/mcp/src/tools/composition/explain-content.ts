@@ -13,6 +13,7 @@ import { detectChartType } from '../project/reader-content.js';
 import { classifyChartSource } from '../query/chart-source.js';
 import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -144,3 +145,6 @@ export function registerExplainContent(
     /* eslint-enable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
   );
 }
+
+// ToolModule exports (profile mounts)
+export const explainContentTool = defineTool('explain_content', registerExplainContent);

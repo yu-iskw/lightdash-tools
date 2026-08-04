@@ -7,7 +7,7 @@
  *   3. Input validation        — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
  *   4. Raw handler             — the actual tool implementation.
  *
- * Capability surface is the catalog profile membership (ADR-0006), not process safety mode.
+ * Capability surface is the profile's tools array, not process safety mode.
  */
 
 import {
@@ -266,7 +266,7 @@ export function registerToolSafe(
 
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
-  // profileId is fixed at registration (bindServerProfile before registerToolsByIds).
+  // profileId is fixed at registration (bindServerProfile before registerTools).
   const profileId =
     typeof server === 'object' && server !== null ? getServerProfile(server) : undefined;
   const auditedInner = finalHandler;

@@ -3,6 +3,7 @@
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { agentUuidField, optionalProjectUuidField, withAgentOpsScope } from './helpers.js';
 
@@ -59,3 +60,7 @@ export function registerGetProjectAgent(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listProjectAgentsTool = defineTool('list_project_agents', registerListProjectAgents);
+export const getProjectAgentTool = defineTool('get_project_agent', registerGetProjectAgent);

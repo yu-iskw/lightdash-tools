@@ -38,6 +38,7 @@ import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   MOVE_CHART_SOURCES,
@@ -81,12 +82,6 @@ import type { PreviewResourceKind } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { components, UpsertChartAsCodeBody } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-export {
-  registerPreviewChartChanges,
-  registerPreviewContentMove,
-  registerPreviewDashboardChanges,
-} from './developer-content-preview.js';
 
 type CreateDashboardBody =
   components['schemas']['CreateDashboard'] | components['schemas']['DuplicateDashboardParams'];
@@ -946,3 +941,32 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
     }),
   );
 }
+
+export const validateChartTool = defineTool('validate_chart', registerValidateChart);
+export const validateDashboardTool = defineTool('validate_dashboard', registerValidateDashboard);
+export const confirmPreviewTool = defineTool('confirm_preview', registerConfirmPreview);
+export const compareChartVersionsTool = defineTool(
+  'compare_chart_versions',
+  registerCompareChartVersions,
+);
+export const compareDashboardVersionsTool = defineTool(
+  'compare_dashboard_versions',
+  registerCompareDashboardVersions,
+);
+export const createChartTool = defineTool('create_chart', registerCreateChart);
+export const updateChartTool = defineTool('update_chart', registerUpdateChart);
+export const duplicateChartTool = defineTool('duplicate_chart', registerDuplicateChart);
+export const createDashboardTool = defineTool('create_dashboard', registerCreateDashboard);
+export const updateDashboardTool = defineTool('update_dashboard', registerUpdateDashboard);
+export const duplicateDashboardTool = defineTool('duplicate_dashboard', registerDuplicateDashboard);
+export const addDashboardTileTool = defineTool('add_dashboard_tile', registerAddDashboardTile);
+export const moveDashboardTileTool = defineTool('move_dashboard_tile', registerMoveDashboardTile);
+export const removeDashboardTileTool = defineTool(
+  'remove_dashboard_tile',
+  registerRemoveDashboardTile,
+);
+export const resizeDashboardTileTool = defineTool(
+  'resize_dashboard_tile',
+  registerResizeDashboardTile,
+);
+export const moveContentTool = defineTool('move_content', registerMoveContent);

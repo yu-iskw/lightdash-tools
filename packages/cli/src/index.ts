@@ -22,7 +22,6 @@ import { registerProjectRoleAssignmentsCommand } from './commands/project-role-a
 import { registerProjectsCommand } from './commands/projects';
 import { registerQueryCommand } from './commands/query';
 import { registerSchedulersCommand } from './commands/schedulers';
-import { registerSchemaCommand } from './commands/schema';
 import { registerSpaceAccessCommand } from './commands/space-access';
 import { registerSpacesCommand } from './commands/spaces';
 import { registerTagsCommand } from './commands/tags';
@@ -72,7 +71,6 @@ registerMetricsCommand(program);
 registerSchedulersCommand(program);
 registerTagsCommand(program);
 registerContentCommand(program);
-registerSchemaCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

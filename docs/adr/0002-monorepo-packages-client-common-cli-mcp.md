@@ -14,7 +14,7 @@ Consumers need typed Lightdash API access, a human/agent CLI, and an MCP server 
 
 We structure the monorepo as pnpm workspace packages under the `@lightdash-tools` scope:
 
-1. **`@lightdash-tools/common`** — Shared domain types (from OpenAPI), operation catalog, audit helpers, and other cross-cutting libraries. Must not depend on `client`.
+1. **`@lightdash-tools/common`** — Shared domain types (from OpenAPI), profile ids, audit helpers, safety helpers, and other cross-cutting libraries. Must not depend on `client`.
 2. **`@lightdash-tools/client`** — Typed HTTP client for the Lightdash API (`api-key` / bearer). Sole API transport for CLI and MCP.
 3. **`@lightdash-tools/cli`** — Commander.js CLI with a single entrypoint and modular commands; wraps actions with safety guardrails (see [ADR-0005](0005-cli-safety-stack.md)).
 4. **`@lightdash-tools/mcp`** — MCP server with a shared tool registry and **profile** mounts (see [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).

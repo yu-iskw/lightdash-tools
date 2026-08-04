@@ -2,18 +2,16 @@
  * Organization-audit prompt/playbook invariants.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
+
+import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
 import { getAllPlaybookMarkdown, ORGANIZATION_AUDIT_HARD_BANS } from './resources/playbooks.js';
 
 describe('organization-audit prompts/playbook', () => {
   it('playbook references only registered tool short ids', () => {
     const md = getAllPlaybookMarkdown();
-    for (const id of listMcpToolNamesByProfile('organization-audit')) {
-      expect(md.includes(id) || md.includes(`lightdash_${id}`)).toBe(true);
-    }
-    expect(md).not.toMatch(/\bldt__/);
+    expectPlaybookCoversProfileTools('organization-audit', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(ORGANIZATION_AUDIT_HARD_BANS.toLowerCase()).toContain('compliance');
   });

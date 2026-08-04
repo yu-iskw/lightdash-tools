@@ -21,7 +21,7 @@ Provide a repeatable, documented workflow for building MCP servers with the offi
 - [ ] **Step 3: Implementation patterns**
   - [ ] Use [references/typescript-sdk-cheatsheet.md](references/typescript-sdk-cheatsheet.md) for McpServer, transport, registerTool (with Zod inputSchema), and registerResource.
   - [ ] Consider **tool annotations** (title, readOnlyHint, destructiveHint, idempotentHint, openWorldHint) so clients can present tools and users can approve them; see cheatsheet “Tool annotations” and [MCP Tool annotations](https://modelcontextprotocol.io/legacy/concepts/tools#tool-annotations).
-  - [ ] For **reversible** destructive tools, set **destructiveHint: true**; clients should prompt for confirmation. Irrecoverable operations must not be MCP tools (ADR-0004: register as `client-only` in `packages/common/src/operations/`).
+  - [ ] For **reversible** destructive tools, set **destructiveHint: true**; clients should prompt for confirmation. Irrecoverable operations must not be MCP tools (ADR-0004: extend `IRRECOVERABLE_TOOL_DENYLIST`).
   - [ ] For **Stdio**: Use only `console.error` (or stderr) for logging; never `console.log` (stdout corrupts JSON-RPC).
   - [ ] Optionally copy from [assets/templates/server-stdio.ts](assets/templates/server-stdio.ts) or [assets/templates/server-http.ts](assets/templates/server-http.ts).
 - [ ] **Step 4: Testing**
