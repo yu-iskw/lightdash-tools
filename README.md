@@ -41,7 +41,7 @@ Add a server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project). S
 }
 ```
 
-Omit the profile argument for `semantic-layer` (default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
+Pass an explicit profile in `args` (required — there is no default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
 
 ## HTTP MCP
 

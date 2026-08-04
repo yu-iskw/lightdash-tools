@@ -54,7 +54,7 @@ Use Cloudflare quick tunnel so Cursor’s post-callback Mozilla GETs to PRM/AS m
 3. Start (or recreate) MCP so it picks up `.env`:
 
    ```bash
-   docker compose -f docker-compose.dev.yml --profile semantic-layer up --build -d
+   docker compose -f docker-compose.dev.yml up --build -d
    ```
 
 4. Register in Lightdash:

@@ -22,7 +22,7 @@ Existing profiles leave a gap:
 
 Lightdash documents Explore execution as the v2 async metric-query API (`POST /api/v2/projects/{projectUuid}/query/metric-query`). The v1 sync `…/explores/{exploreId}/runQuery` path is deprecated. `@lightdash-tools/client` already wraps `runMetricQuery`; MCP and CLI do not expose it.
 
-Putting ad-hoc metric-query on `content-reader` would collapse the saved-content boundary. Expanding `semantic-layer` to execute would change the default stdio profile’s “compile never run” contract for every host already connected to `/semantic-layer/v1/mcp`.
+Putting ad-hoc metric-query on `content-reader` would collapse the saved-content boundary. Expanding `semantic-layer` to execute would change that profile’s “compile never run” contract for every host already connected to `/semantic-layer/v1/mcp`.
 
 ## Decision
 

@@ -5,6 +5,8 @@
 
 export const ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST = 'LIGHTDASH_TOOLS_MCP_HTTP_HOST';
 export const ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT = 'LIGHTDASH_TOOLS_MCP_HTTP_PORT';
+/** Platform listen port (Cloud Run / many PaaS). Used only when dedicated MCP port env is unset. */
+export const ENV_PLATFORM_PORT = 'PORT';
 export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_URL';
 /** Rejected at config load — MCP path is profile-owned (see profiles/). */
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
@@ -40,8 +42,6 @@ export const ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH =
   'LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH';
 export const ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL =
   'LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL';
-/** Obsolete stdio selector (renamed to LIGHTDASH_TOOLS_MCP_STDIO_PROFILE). */
-export const ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA = 'LIGHTDASH_TOOLS_MCP_STDIO_PERSONA';
 
 /** Legacy aliases (deprecated). */
 export const ENV_MCP_HTTP_PORT = 'MCP_HTTP_PORT';

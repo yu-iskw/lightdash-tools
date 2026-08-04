@@ -25,7 +25,7 @@ export { CONTENT_DEVELOPER_PROFILE_PATH } from './content-developer/v1/index.js'
 export { CONTENT_GOVERNANCE_PROFILE_PATH } from './content-governance/v1/index.js';
 export { DATA_ANALYST_PROFILE_PATH } from './data-analyst/v1/index.js';
 
-/** Default stdio profile (backward compatible). */
+/** HTTP root / PRM anchor profile (not a stdio default). */
 export const DEFAULT_PROFILE_ID: ProfileId = 'semantic-layer';
 
 export const PROFILES: Record<ProfileId, ProfileDefinition> = {

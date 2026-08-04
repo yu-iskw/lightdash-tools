@@ -25,16 +25,21 @@ URI: `lightdash://playbooks/semantic-layer/compose-compile`
 
 `metrics` may be `[]`. Every string in `dimensions` / `metrics` / `sorts[].fieldId` must appear in prior tool output.
 
+MCP `compile_query` always sets `exploreName` from the tool `exploreId` (path is authoritative) and defaults missing `tableCalculations` to `[]`. Keep the full skeleton for other OpenAPI-required keys (`filters`, `sorts`, `limit`, …) and for CLI/JSON callers. Prefer SELECT aliases / metric `compiledSql` over metric **name/label** when they disagree.
+
 ## Field IDs — failure modes
 
-| Symptom                                                              | Cause                                                                                             | Fix                                                                    |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `unknown field id` / hard error                                      | Short names or typos                                                                              | Use full `fieldId` from `list_dimensions` / `{exploreId}_{metricName}` |
-| Server `isError` + empty SELECT                                      | Upstream accepted bad ids with **zero** columns                                                   | Replace with real fieldIds; re-compile once                            |
-| SQL “succeeds” but a requested dim/metric is **missing** from SELECT | Invented or wrong fieldId (e.g. non-existent `*_session_day`) while another field still projected | Re-check against `list_dimensions` / metrics map; re-compile           |
-| `Metric not found` on `get_metric`                                   | `tableName` was warehouse label                                                                   | Use full explore id                                                    |
+| Symptom                                                              | Cause                                                                                             | Fix                                                                     |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `unknown field id` / hard error                                      | Short names or typos                                                                              | Use full `fieldId` from `list_dimensions` / `{exploreId}_{metricName}`  |
+| Server `isError` + empty SELECT                                      | Upstream accepted bad ids with **zero** columns                                                   | Replace with real fieldIds; re-compile once                             |
+| SQL “succeeds” but a requested dim/metric is **missing** from SELECT | Invented or wrong fieldId (e.g. non-existent `*_session_day`) while another field still projected | Re-check against `list_dimensions` / metrics map; re-compile            |
+| `UPSTREAM_VALIDATION` / `'tableCalculations' is required`            | Body omitted `tableCalculations` (pre-harden / non-MCP clients)                                   | MCP defaults to `[]`; pass `tableCalculations: []` explicitly if needed |
+| `UPSTREAM_VALIDATION` / `'exploreName' is required`                  | Body omitted `exploreName` (pre-harden / non-MCP clients) or wrong exploreId                      | Pass locked `exploreId`; MCP fills `exploreName` — re-compile once      |
+| `Metric not found` on `get_metric`                                   | `tableName` was warehouse label                                                                   | Use full explore id                                                     |
+| Lineage works with short name but compile fails                      | `get_field_lineage` accepts short names; `compile_query` does not                                 | Always copy full `fieldId` into `metricQuery`                           |
 
-Compiled SQL may include **extra related metrics** the semantic layer pulls in — OK if every **requested** fieldId still appears as a SELECT alias.
+Compiled SQL may include **extra related metrics** the semantic layer pulls in — OK if every **requested** fieldId still appears as a SELECT alias. Prefer SELECT aliases / metric `compiledSql` over metric **name/label** when they disagree (e.g. a metric named `num_unique_order_ids` that actually `COUNT(DISTINCT customer_id)`).
 
 ## Verify after every compile (mandatory)
 
@@ -54,7 +59,8 @@ When the user asks for N insights on one table/explore:
 
 ## Debug checklist
 
-- Empty SELECT / unknown field id / missing alias → fix fieldIds from `list_dimensions` + explore-local metrics; re-compile (≤2 retries).
+- Unknown field id / short names / empty SELECT / missing SELECT alias → fix fieldIds from `list_dimensions` + explore-local metrics; re-compile (≤2 retries). Prefer SELECT aliases / `compiledSql` over metric name/label.
+- Other OpenAPI-required keys still failing (`filters`, `sorts`, `limit`, …) → copy the skeleton; MCP already fills `exploreName` and missing `tableCalculations`.
 - Wrong explore → re-disambiguate (`schemaName`; exact `label` or `name` `__{table}`; skip empty schema / eda unless asked).
 - Catalog empty / metric not found → `get_explore` `tables[baseTable].metrics`; compile as `{exploreId}_{metricName}`.
 - Stop after a good verified compile or a clear blocker.

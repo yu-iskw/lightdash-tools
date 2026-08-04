@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/common",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Shared utilities and types for Lightdash AI.",
   "keywords": [],
   "repository": {

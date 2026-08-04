@@ -22,7 +22,7 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
     {
       title: 'Compile query',
       description:
-        'Compile a metric query for an explore without executing it. Empty SELECT (no columns) is returned as an error — use fieldId `{table}_{name}`, not short names. projectUuid optional when X-Lightdash-Project is set.',
+        'Compile a metric query for an explore without executing it. Sets metricQuery.exploreName from exploreId (authoritative) and defaults missing tableCalculations to []. Empty SELECT (no columns) is returned as an error — use fieldId `{table}_{name}`, not short names. projectUuid optional when X-Lightdash-Project is set.',
       inputSchema: {
         projectUuid: optionalProjectUuidField(),
         exploreId: exploreIdField(),
@@ -46,10 +46,18 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
         }) => {
           try {
             const scope = resolveProjectScope({ projectUuid });
+            // Path exploreId is authoritative; OpenAPI MetricQuery requires exploreName + tableCalculations.
+            const body = {
+              ...metricQuery,
+              tableCalculations: Array.isArray(metricQuery.tableCalculations)
+                ? metricQuery.tableCalculations
+                : [],
+              exploreName: exploreId,
+            };
             const result = await c.v1.query.compileQuery(
               scope.projectUuid,
               exploreId,
-              metricQuery as never,
+              body as never,
             );
             const sql = extractCompiledSql(result);
             if (sql && isEmptySelectSql(sql)) {

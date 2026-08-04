@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.12.1] - 2026-08-04
+
+### Features
+
+- Honor Cloud Run PORT for MCP HTTP listen when LIGHTDASH_TOOLS_MCP_HTTP_PORT is unset
+- BREAKING: MCP stdio no longer defaults to semantic-layer; pass a profile subcommand (or stdio <profile>).
+- BREAKING: remove deprecated lightdash-mcp serve-http alias; use http.
+
 ## [0.12.0] - 2026-08-04
 
 ### Bug Fixes
@@ -11,7 +19,7 @@
 ### Features
 
 - Add data-analyst MCP persona for unsaved Explore metric queries (run_metric_query).
-- BREAKING: MCP packaging uses profile (not persona): catalog profiles are tool-membership SSOT; envelope context.profile; LIGHTDASH_TOOLS_MCP_STDIO_PROFILE (stdio subcommand); drop semantic-discovery/org-audit-readonly and granular CLI profile tags.
+- BREAKING: MCP packaging uses profile (not persona): catalog profiles are tool-membership SSOT; envelope context.profile; stdio profile subcommand; drop semantic-discovery/org-audit-readonly and granular CLI profile tags.
 
 ### Bug Fixes
 

@@ -8,7 +8,7 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 | Profile              | Use when                                 | HTTP path                    | Stdio                | Catalog                                                          |
 | :------------------- | :--------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
-| `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | **default**          | —                                                                |
+| `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | `semantic-layer`     | —                                                                |
 | `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/profiles/organization-audit/inventory.md) |
 | `content-reader`     | Discover and run saved content           | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/profiles/content-reader/inventory.md)     |
 | `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/profiles/content-developer/inventory.md)  |
@@ -23,8 +23,9 @@ Tool names are prefixed with `lightdash_`. MCP display names are shortened where
 ### Stdio (local)
 
 ```bash
-npx @lightdash-tools/mcp                 # semantic-layer (default)
+npx @lightdash-tools/mcp semantic-layer  # required: pick a profile
 npx @lightdash-tools/mcp content-reader  # other profiles by name
+# pnpm one-shot: pnpm dlx @lightdash-tools/mcp <profile>
 ```
 
 Required env: `LIGHTDASH_URL`, `LIGHTDASH_API_KEY`. Logs go to **stderr**; stdout is JSON-RPC only ([stdio transport](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)).
@@ -46,7 +47,7 @@ Example Cursor / Claude Desktop config:
 }
 ```
 
-Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp [profile]`.
+Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp <profile>` (or `lightdash-mcp stdio <profile>`).
 
 ### Streamable HTTP (remote)
 
@@ -58,12 +59,12 @@ export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
 npx @lightdash-tools/mcp http
 ```
 
-Profile MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`).
+Profile MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`). On Cloud Run / containers, when that env is unset, the platform `PORT` is used.
 
 - Hosted OAuth (Cursor URL-only): [docs/operators/cursor-claude.md](../../docs/operators/cursor-claude.md)
 - Operator guide: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md)
 
-Local Compose smoke: `docker compose -f docker-compose.dev.yml --profile semantic-layer up --build` → `http://localhost:8080/semantic-layer/v1/mcp`.
+Local Compose smoke: `docker compose -f docker-compose.dev.yml up --build` → `http://localhost:8080/semantic-layer/v1/mcp`.
 
 ## Configuration
 

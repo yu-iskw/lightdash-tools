@@ -1,9 +1,11 @@
+#!/usr/bin/env node
 import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
-const program = new Command();
+import { parseProfileId } from './profiles/index.js';
+import { PACKAGE_VERSION } from './server/version.js';
 
-const DEFAULT_STDIO_PROFILE: ProfileId = 'semantic-layer';
+const program = new Command();
 
 const PROFILE_STDIO_DESCRIPTIONS = new Map<ProfileId, string>([
   ['semantic-layer', 'Run semantic-layer profile on stdio'],
@@ -38,29 +40,46 @@ function profileStdioDescription(profileId: ProfileId): string {
   return description;
 }
 
-function runStdio(profileId?: ProfileId): void {
-  if (profileId) {
-    process.env.LIGHTDASH_TOOLS_MCP_STDIO_PROFILE = profileId;
-  }
-  void import('./index.js');
+function runStdio(profileId: ProfileId): void {
+  void import('./index.js').then((m) => {
+    m.startStdio(profileId);
+  });
 }
 
 function runHttp(): void {
   void import('./http.js');
 }
 
+const profileList = PROFILE_IDS.join(', ');
+
 program
   .name('lightdash-mcp')
   .description(
-    `MCP server for Lightdash (${PROFILE_IDS.join(', ')}). Default stdio profile is ${DEFAULT_STDIO_PROFILE}.`,
+    `MCP server for Lightdash (${profileList}). Stdio requires an explicit profile subcommand or \`stdio <profile>\`.`,
   )
-  .version('0.12.0');
+  .version(PACKAGE_VERSION)
+  .showHelpAfterError()
+  .action(() => {
+    console.error(
+      `Stdio profile required. Pass a profile subcommand (e.g. lightdash-mcp semantic-layer) or \`stdio <profile>\`. Profiles: ${profileList}. Or use \`http\` for Streamable HTTP.`,
+    );
+    // Stdio MCP requires stdout for JSON-RPC only — help must go to stderr.
+    program.outputHelp({ error: true });
+    process.exitCode = 1;
+  });
 
 program
-  .command('stdio', { isDefault: true })
-  .description(`Run MCP server on stdio with the default ${DEFAULT_STDIO_PROFILE} profile`)
-  .action(() => {
-    runStdio(DEFAULT_STDIO_PROFILE);
+  .command('stdio')
+  .description('Run MCP server on stdio with an explicit profile')
+  .argument('<profile>', `Profile id (${profileList})`)
+  .action((profileArg: string) => {
+    const id = parseProfileId(profileArg);
+    if (!id) {
+      console.error(`Invalid profile '${profileArg}'. Expected one of: ${profileList}.`);
+      process.exitCode = 1;
+      return;
+    }
+    runStdio(id);
   });
 
 for (const profileId of PROFILE_IDS) {
@@ -76,14 +95,6 @@ program
   .command('http')
   .description('Run MCP server over Streamable HTTP (all fixed profile paths)')
   .action(() => {
-    runHttp();
-  });
-
-program
-  .command('serve-http')
-  .description('Deprecated alias for `http`')
-  .action(() => {
-    console.warn('Warning: `serve-http` is deprecated; use `lightdash-mcp http`.');
     runHttp();
   });
 

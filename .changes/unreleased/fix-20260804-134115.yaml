@@ -1,0 +1,3 @@
+kind: fix
+body: 'BREAKING: MCP stdio profile is CLI-only (lightdash-mcp <profile> or stdio <profile>); no env-based profile selection.'
+time: 2026-08-04T13:41:15.160598+09:00

@@ -15,6 +15,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
+  ENV_PLATFORM_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
@@ -70,6 +71,8 @@ function readNumberEnv(
   primary: string,
   aliases: Array<{ name: string; newName: string }>,
   defaultValue: number,
+  /** Silent fallback (e.g. Cloud Run `PORT`); read only when primary/aliases unset. */
+  silentFallback?: string,
 ): number {
   const primaryValue = readEnv(primary, env);
   if (primaryValue !== undefined) {
@@ -80,6 +83,12 @@ function readNumberEnv(
     if (aliasValue !== undefined) {
       warnDeprecatedAlias(alias.name, alias.newName);
       return parsePositiveIntegerEnv(alias.name, aliasValue);
+    }
+  }
+  if (silentFallback !== undefined) {
+    const fallbackValue = readEnv(silentFallback, env);
+    if (fallbackValue !== undefined) {
+      return parsePositiveIntegerEnv(silentFallback, fallbackValue);
     }
   }
   return defaultValue;
@@ -412,6 +421,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
         { name: ENV_MCP_SERVER_PORT, newName: ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT },
       ],
       3100,
+      ENV_PLATFORM_PORT,
     ),
     publicUrl,
     mcpPath,
