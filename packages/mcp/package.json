@@ -30,7 +30,7 @@
     "@modelcontextprotocol/node": "2.0.0",
     "@modelcontextprotocol/server": "2.0.0",
     "commander": "^15.0.0",
-    "hono": "^4.12.32",
+    "hono": "^4.13.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
