@@ -1,3 +1,0 @@
-kind: refactor
-body: Replace operations catalog with profile-owned ToolModules; remove CLI schema introspection.
-time: 2026-08-04T14:27:42.987002+09:00

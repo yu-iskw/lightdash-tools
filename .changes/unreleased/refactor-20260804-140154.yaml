@@ -1,3 +1,0 @@
-kind: refactor
-body: MCP mount membership uses literal per-profile tool tables in common for IDE-traceable SSOT.
-time: 2026-08-04T14:01:54.149838+09:00

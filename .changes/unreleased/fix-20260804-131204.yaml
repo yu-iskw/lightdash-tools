@@ -1,3 +1,0 @@
-kind: fix
-body: MCP compile_query sets metricQuery.exploreName from exploreId; clarify semantic-layer playbooks for joins and compiledSql trust.
-time: 2026-08-04T13:12:04.270988+09:00
