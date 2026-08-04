@@ -12,6 +12,7 @@ import { registerOrgAuditTool } from '../lib/register-org-audit.js';
 import { allowedEmailDomainsField, projectUuidField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
@@ -176,3 +177,10 @@ export function registerGetScheduler(server: McpServer, contextProvider: McpCont
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listProjectSchedulersTool = defineTool(
+  'list_project_schedulers',
+  registerListProjectSchedulers,
+);
+export const getSchedulerTool = defineTool('get_scheduler', registerGetScheduler);

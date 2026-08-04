@@ -15,6 +15,7 @@ import { classifyChartSource } from '../query/chart-source.js';
 import { FilterOverrideError, applyFilterValueOverrides } from '../query/filter-overrides.js';
 import { codedErrorResult, isCoverageComplete } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { detectChartType } from './reader-content.js';
 
@@ -335,3 +336,7 @@ export function registerRunDashboardTile(
     /* eslint-enable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
   );
 }
+
+// ToolModule exports (profile mounts)
+export const runChartTool = defineTool('run_chart', registerRunChart);
+export const runDashboardTileTool = defineTool('run_dashboard_tile', registerRunDashboardTile);

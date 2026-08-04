@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/mcp",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, content-developer, content-governance, and ai-agent-ops profiles.",
   "keywords": [],
   "repository": {
@@ -20,8 +20,8 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc && for p in semantic-layer organization-audit content-reader content-developer content-governance ai-agent-ops data-analyst; do mkdir -p dist/profiles/$p/v1/resources/playbooks && cp -R src/profiles/$p/v1/resources/playbooks/. dist/profiles/$p/v1/resources/playbooks/; done",
-    "start": "node dist/index.js",
-    "start:http": "node dist/http.js",
+    "start:http": "node dist/bin.js http",
+    "start:stdio": "node dist/bin.js stdio --profile semantic-layer",
     "test": "pnpm --dir ../.. exec vitest run packages/mcp/src"
   },
   "dependencies": {

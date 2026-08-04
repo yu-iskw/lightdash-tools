@@ -10,6 +10,7 @@ import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { clampWaitMs } from '../../policy/result-limits.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { findQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.js';
 import {
@@ -153,3 +154,7 @@ export function registerCancelQuery(server: McpServer, contextProvider: McpConte
       ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const getQueryResultTool = defineTool('get_query_result', registerGetQueryResult);
+export const cancelQueryTool = defineTool('cancel_query', registerCancelQuery);

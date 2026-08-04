@@ -2,18 +2,17 @@
  * Content-developer prompt/playbook invariants.
  */
 
-import { listMcpToolNamesByProfile } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
+
+import { getProfile, listToolIds } from '../../index.js';
+import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
 import { CONTENT_DEVELOPER_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('content-developer prompts/playbook', () => {
   it('playbooks reference only registered tool short ids', () => {
     const md = getAllPlaybookMarkdown();
-    for (const id of listMcpToolNamesByProfile('content-developer')) {
-      expect(md.includes(id) || md.includes(`lightdash_${id}`)).toBe(true);
-    }
-    expect(md).not.toMatch(/\bldt__/);
+    expectPlaybookCoversProfileTools('content-developer', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('terraform');
   });
@@ -29,9 +28,10 @@ describe('content-developer prompts/playbook', () => {
     expect(md).toContain('chart-types');
     expect(md).not.toMatch(/`create_space`/);
     expect(md).not.toMatch(/`update_space`/);
-    expect(listMcpToolNamesByProfile('content-developer')).not.toContain('create_space');
-    expect(listMcpToolNamesByProfile('content-developer')).not.toContain('update_space');
-    expect(listMcpToolNamesByProfile('content-developer')).toContain('get_chart_as_code');
+    const toolIds = listToolIds(getProfile('content-developer'));
+    expect(toolIds).not.toContain('create_space');
+    expect(toolIds).not.toContain('update_space');
+    expect(toolIds).toContain('get_chart_as_code');
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('dashboardslug');
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('skinny');
   });

@@ -6,24 +6,24 @@ End-user install and configuration live in [README.md](./README.md).
 
 ## Package layout
 
-| Edit…                                                 | Path                                                                                                                    |
-| :---------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
-| Shared tools / registry                               | `src/tools/` (`registry.ts`, domain modules)                                                                            |
-| Profile (path, prompts, playbook; tools from catalog) | `src/profiles/<id>/`                                                                                                    |
-| Destructive confirmation (form elicitation / MRTR)    | `src/destructive/`                                                                                                      |
-| HTTP transport (sessionless)                          | `src/transports/`                                                                                                       |
-| HTTP auth / OAuth broker (in-memory pending)          | `src/auth/`                                                                                                             |
-| Runtime client + guardrail env                        | `src/config/runtime.ts`                                                                                                 |
-| HTTP env / loader                                     | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
-| OAuth broker (in-memory pending)                      | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
-| Audit logging helpers                                 | `src/audit/`                                                                                                            |
-| Entrypoints                                           | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
+| Edit…                                              | Path                                                                                                                    |
+| :------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- |
+| Shared tools / registry                            | `src/tools/` (`registry.ts`, domain modules)                                                                            |
+| Profile (path, tools imports, prompts, playbook)   | `src/profiles/<id>/`                                                                                                    |
+| Destructive confirmation (form elicitation / MRTR) | `src/destructive/`                                                                                                      |
+| HTTP transport (sessionless)                       | `src/transports/`                                                                                                       |
+| HTTP auth / OAuth broker (in-memory pending)       | `src/auth/`                                                                                                             |
+| Runtime client + guardrail env                     | `src/config/runtime.ts`                                                                                                 |
+| HTTP env / loader                                  | `src/config/env.ts`, `src/config/load-mcp-config.ts`                                                                    |
+| OAuth broker (in-memory pending)                   | `src/auth/oauth-broker/` ([ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Audit logging helpers                              | `src/audit/`                                                                                                            |
+| Entrypoints                                        | `src/bin.ts`, `src/index.ts` (stdio), `src/http.ts`                                                                     |
 
 Prompts and resources are **profile-owned** (e.g. `src/profiles/semantic-layer/v1/`). There is no package-level `src/prompts/` or `src/resources/`.
 
 ## Architecture overview
 
-One package ships multiple **profiles**. Shared tools live under `src/tools/`; each profile derives tools from the operation catalog, prompts, playbooks, and a fixed HTTP path ([ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md)). Registration goes through `registerToolsByIds` → `registerToolSafe` → `@lightdash-tools/client`.
+One package ships multiple **profiles**. Shared tools live under `src/tools/` as `ToolModule`s; each profile imports the modules it mounts, plus prompts, playbooks, and a fixed HTTP path ([ADR-0006](../../docs/adr/0006-mcp-profiles-shared-registry-fixed-paths.md), [ADR-0022](../../docs/adr/0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)). Registration goes through `registerTools` → `registerToolSafe` → `@lightdash-tools/client`.
 
 ```mermaid
 flowchart TB
@@ -43,9 +43,9 @@ flowchart TB
   end
 
   subgraph mcpCore [MCPCore]
-    Profile[ProfileDefinition_toolIds]
+    Profile[ProfileDefinition_tools]
     Cap[capabilities.ts]
-    Registry[registerToolsByIds]
+    Registry[registerTools]
     Safe[registerToolSafe]
   end
 
@@ -95,7 +95,7 @@ sequenceDiagram
   end
 ```
 
-Capability surface is the profile `toolIds` list — not CLI `SAFETY_MODE` / dry-run.
+Capability surface is the profile `tools` array — not CLI `SAFETY_MODE` / dry-run.
 
 ## Sequence diagrams
 
@@ -163,12 +163,12 @@ sequenceDiagram
 
 ## Extension points
 
-| Change                      | Where                                                            |
-| :-------------------------- | :--------------------------------------------------------------- |
-| New shared tool             | `packages/common/src/operations/` + `src/tools/` + `registry.ts` |
-| New profile                 | `src/profiles/<id>/v1/` + ADR                                    |
-| Auth / OAuth                | `src/auth/`                                                      |
-| Preview / destructive gates | `src/policy/`, `src/destructive/`                                |
+| Change                      | Where                                                                               |
+| :-------------------------- | :---------------------------------------------------------------------------------- |
+| New shared tool             | `src/tools/` handler + `defineTool` export in that file + append to profile `tools` |
+| New profile                 | `src/profiles/<id>/v1/` + ADR                                                       |
+| Auth / OAuth                | `src/auth/`                                                                         |
+| Preview / destructive gates | `src/policy/`, `src/destructive/`                                                   |
 
 ## Testing
 

@@ -37,7 +37,7 @@ Remember: `databaseName` may differ from the Lightdash project’s usual warehou
 
 1. `list_explores` → disambiguate → lock `exploreId` (= explore `name`).
 2. `list_dimensions` (default `baseTableOnly=true`). Set `baseTableOnly=false` only if you need joined-table fields (payload grows a lot).
-3. Metrics: **`get_explore` → `tables[baseTable].metrics` only** (see below). Do not dump the explore JSON.
+3. Metrics: **`get_explore` → `tables[baseTable].metrics` only** (see below). Ignore join metrics; do not dump the explore JSON.
 4. Stop at a shortlist unless the user asked to compile.
 
 ## Metrics: catalog vs explore-local (critical)
@@ -53,11 +53,12 @@ Remember: `databaseName` may differ from the Lightdash project’s usual warehou
 
 Rules:
 
-1. Once the explore is known, prefer **`get_explore` → `tables[baseTable].metrics`** for the local menu (names + labels only). Ignore other keys under `tables` (joins).
+1. Once the explore is known, prefer **`get_explore` → `tables[baseTable].metrics`** for the local menu (names + labels only). Ignore join **metrics** under other `tables` keys; do not dump the explore JSON.
 2. Optional catalog: at most **one** `list_metrics` page. Keep rows where `tableName` **equals the full explore id**.
-3. `get_metric` `tableName` must be the full explore id. Short labels → “Metric not found”. Call only when definition/SQL is needed; summarize — payloads include huge `availableTimeDimensions` from joins.
+3. `get_metric` `tableName` must be the full explore id. Short labels → “Metric not found”. Call only when definition/SQL is needed; summarize — payloads include huge `availableTimeDimensions` from joins. Prefer `compiledSql` over name/label when they disagree.
 4. Compile metric ids as `{exploreId}_{metricName}` (same pattern as dimension `fieldId` from `list_dimensions`).
 5. Dimension-only (`metrics: []`) is valid for volume-by-time; for “insights” prefer real explore metrics when available.
+6. Joined **dimension** `fieldId`s (e.g. `customers_*` on an `orders` explore) are valid when `list_dimensions` with `baseTableOnly=false` returns them — use only those copied ids.
 
 ## Dimension shortlist (large explores)
 

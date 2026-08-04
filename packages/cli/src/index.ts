@@ -22,7 +22,6 @@ import { registerProjectRoleAssignmentsCommand } from './commands/project-role-a
 import { registerProjectsCommand } from './commands/projects';
 import { registerQueryCommand } from './commands/query';
 import { registerSchedulersCommand } from './commands/schedulers';
-import { registerSchemaCommand } from './commands/schema';
 import { registerSpaceAccessCommand } from './commands/space-access';
 import { registerSpacesCommand } from './commands/spaces';
 import { registerTagsCommand } from './commands/tags';
@@ -36,7 +35,7 @@ const program = new Command();
 program
   .name('lightdash-ai')
   .description('CLI for Lightdash AI')
-  .version('0.12.0')
+  .version('0.13.0')
   .option(
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',
@@ -72,7 +71,6 @@ registerMetricsCommand(program);
 registerSchedulersCommand(program);
 registerTagsCommand(program);
 registerContentCommand(program);
-registerSchemaCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

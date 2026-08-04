@@ -22,11 +22,11 @@ Existing profiles leave a gap:
 
 Lightdash documents Explore execution as the v2 async metric-query API (`POST /api/v2/projects/{projectUuid}/query/metric-query`). The v1 sync `…/explores/{exploreId}/runQuery` path is deprecated. `@lightdash-tools/client` already wraps `runMetricQuery`; MCP and CLI do not expose it.
 
-Putting ad-hoc metric-query on `content-reader` would collapse the saved-content boundary. Expanding `semantic-layer` to execute would change the default stdio profile’s “compile never run” contract for every host already connected to `/semantic-layer/v1/mcp`.
+Putting ad-hoc metric-query on `content-reader` would collapse the saved-content boundary. Expanding `semantic-layer` to execute would change that profile’s “compile never run” contract for every host already connected to `/semantic-layer/v1/mcp`.
 
 ## Decision
 
-1. Ship a separate **`data-analyst`** profile at fixed path `/data-analyst/v1/mcp` with MCP server display name **`lightdash-mcp-analyst`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp data-analyst`.
+1. Ship a separate **`data-analyst`** profile at fixed path `/data-analyst/v1/mcp` with MCP server display name **`lightdash-mcp-analyst`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp stdio --profile data-analyst`.
 2. **v1 surface:** `get_project`, `list_explores`, `get_explore`, `list_dimensions`, `list_metrics`, `compile_query` (optional pre-flight), **`run_metric_query`** (`POST …/query/metric-query`), `get_query_result`, `cancel_query`.
 3. Safety dimensions for `run_metric_query`:
    - `mutability`: `transient` (async `queryUuid` only; no content mutations)

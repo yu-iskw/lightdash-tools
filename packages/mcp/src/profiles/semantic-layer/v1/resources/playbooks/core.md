@@ -31,15 +31,15 @@ Record when a budget stopped you.
 
 ## Allowed tools (`lightdash_` prefix)
 
-| Tool                            | Use for                                                                                       |
-| ------------------------------- | --------------------------------------------------------------------------------------------- |
-| `list_projects` / `get_project` | Confirm UUID ↔ name. Credentials never returned (`REDACTED` warning is normal).               |
-| `list_explores`                 | Summaries only. **Always** pass `search` + `limit`.                                           |
-| `list_dimensions`               | Compact `{ name, label, table, type, fieldId }`. Default = base table only.                   |
-| `get_explore`                   | **Preferred** metric menu: `tables[baseTable].metrics` names/labels only. Ignore join tables. |
-| `list_metrics` / `get_metric`   | Optional catalog / definition dig. Filter `tableName === exploreId`.                          |
-| `compile_query`                 | Compile only — never “run”.                                                                   |
-| `get_field_lineage`             | Optional provenance; summarize, don’t dump.                                                   |
+| Tool                            | Use for                                                                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `list_projects` / `get_project` | Confirm UUID ↔ name. Credentials never returned (`REDACTED` warning is normal).                                                                                           |
+| `list_explores`                 | Summaries only. **Always** pass `search` + `limit`.                                                                                                                       |
+| `list_dimensions`               | Compact `{ name, label, table, type, fieldId }`. Default = base table only.                                                                                               |
+| `get_explore`                   | **Preferred** metric menu: `tables[baseTable].metrics` names/labels only. Ignore join **metrics**; joined dims via `list_dimensions` (`baseTableOnly=false`) when needed. |
+| `list_metrics` / `get_metric`   | Optional catalog / definition dig. Filter `tableName === exploreId`.                                                                                                      |
+| `compile_query`                 | Compile only — never “run”. Sets `exploreName` from `exploreId`; defaults missing `tableCalculations` to `[]`. Prefer compiled SQL aliases over metric labels.            |
+| `get_field_lineage`             | Optional provenance; summarize, don’t dump.                                                                                                                               |
 
 ## Project scope (critical)
 

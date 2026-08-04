@@ -1,10 +1,9 @@
 services:
   mcp:
-    profiles: [semantic-layer]
     build:
       context: .
       dockerfile: packages/mcp/Dockerfile
-    command: [node, dist/bin.js, http]
+    command: [http]
     ports:
       # cloudflared quick tunnel: `cloudflared tunnel --url http://127.0.0.1:3100`
       - 3100:8080

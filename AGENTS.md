@@ -153,16 +153,16 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Build before ESLint (`dist/` resolves); prefer root `pnpm exec vitest run <files>` over per-package `test:fast`.
 - Changie: `kindFormat: '### {{.Kind}}'`; fragments use kind keys (`feat`/`fix`), not Keep-a-Changelog labels.
 - `pnpm -r version` needs a clean tree — bump `packages/*/package.json` versions directly if dirty.
-- Agent surface SSOT: `packages/common/src/operations/` (ADR-0013); irrecoverable ops stay `client-only` (ADR-0004).
-- MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` / catalog membership (ADR-0006).
+- Agent surface: MCP profiles own mounts via `tools: ToolModule[]` imports (ADR-0022); irrecoverable tool ids stay on `IRRECOVERABLE_TOOL_DENYLIST` (ADR-0004).
+- MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` + profile `tools` array.
 - Guardrails return `_lightdashBlocked`; upstream failures are coded `UPSTREAM_*` / `RATE_LIMITED`, not blocked markers.
-- Env: `LIGHTDASH_TOOLS_*`; shared allowlist `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`; obsolete allowlist names fail closed.
-- Obsolete stdio env: reject `LIGHTDASH_TOOLS_MCP_STDIO_PERSONA` fail-closed and use `LIGHTDASH_TOOLS_MCP_STDIO_PROFILE` (or explicit `lightdash-mcp <profile>` subcommand).
+- Env: `LIGHTDASH_TOOLS_*`; shared allowlist `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`; obsolete allowlist names fail closed. MCP HTTP listen: `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, else platform `PORT` (Cloud Run), else `3100`. Launch via `npx`/`pnpm dlx`/`lightdash-mcp` — not `pnpm exec @lightdash-tools/mcp`.
+- Stdio: `lightdash-mcp stdio --profile <id>` only — no default; `http` mounts all profiles.
 - Audit: `initAuditLog()` once at startup; unset `LIGHTDASH_TOOLS_AUDIT_LOG` → JSON audit on stderr (Cloud Run).
 - Stateless MCP HTTP (ADR-0019): no SessionStore/Redis; obsolete store/redis env fail closed; OAuth broker is in-memory (sticky `/oauth/*`).
 - Content-developer: do not edit proposed body after preview (hash mismatch ≠ TTL); see ADR-0014/0019.
 - OpenAPI lists are wrapped (`results.data.<key>`); pin in `config/lightdash-openapi-ref.txt` — never hand-edit generated types.
-- MCP tests are CJS under `tsc` — no `import.meta`; pin `LIGHTDASH_TOOLS_MCP_STDIO_PROFILE` in stdio smoke child env.
+- MCP tests are CJS under `tsc` — no `import.meta`; stdio smoke spawns `dist/bin.js` with an explicit profile arg.
 - Knip: keep type-barrel `ignoreIssues`; delete unused intermediate re-exports rather than broaden ignores.
 - GPG: agent commit/rebase can hang on pinentry; rebase may ignore `commit.gpgsign=false` — finish with `git commit --no-gpg-sign`.
 - Profile depth, inventories, and binding why → [`docs/adr`](docs/adr) + [`docs/profiles`](docs/profiles) (not here).

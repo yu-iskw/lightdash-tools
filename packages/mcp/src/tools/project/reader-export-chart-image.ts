@@ -18,6 +18,7 @@ import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { classifyChartSource } from '../query/chart-source.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { imageToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { detectChartType } from './reader-content.js';
 
@@ -106,3 +107,6 @@ export function registerExportChartImage(
       ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const exportChartImageTool = defineTool('export_chart_image', registerExportChartImage);

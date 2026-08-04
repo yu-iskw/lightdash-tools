@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/common",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Shared utilities and types for Lightdash AI.",
   "keywords": [],
   "repository": {
@@ -14,8 +14,6 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "check:client-coverage": "node ../../scripts/check-client-operation-coverage.mjs",
-    "generate:operation-registry": "node ../../scripts/generate-operation-registry.mjs",
     "generate:types": "node ../../scripts/openapi-types-url.mjs | xargs -I{} openapi-typescript {} -o src/types/generated/openapi-types.ts && node ../../scripts/fix-openapi-duplicate-operations.mjs && prettier --write src/types/generated/openapi-types.ts"
   },
   "dependencies": {

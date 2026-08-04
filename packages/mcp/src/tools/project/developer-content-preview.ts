@@ -17,6 +17,7 @@ import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   MOVE_CHART_SOURCES,
@@ -428,3 +429,17 @@ export function registerPreviewContentMove(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const previewChartChangesTool = defineTool(
+  'preview_chart_changes',
+  registerPreviewChartChanges,
+);
+export const previewDashboardChangesTool = defineTool(
+  'preview_dashboard_changes',
+  registerPreviewDashboardChanges,
+);
+export const previewContentMoveTool = defineTool(
+  'preview_content_move',
+  registerPreviewContentMove,
+);

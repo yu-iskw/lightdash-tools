@@ -29,7 +29,7 @@ on every gated `tools/call` (including MRTR retries). There is no process-local 
 
 ## How to verify a host
 
-1. Point the host at `/content-governance/v1/mcp` (or `lightdash-mcp content-governance` for stdio).
+1. Point the host at `/content-governance/v1/mcp` (or `lightdash-mcp stdio --profile content-governance` for stdio).
 2. Soft-delete: call `lightdash_delete_chart` with a real project + chart id and **without** pre-filled confirmation.
 3. Promote: optionally call `lightdash_get_dashboard_promote_diff`, then `lightdash_promote_dashboard` without pre-filled confirmation.
 4. Expect a form prompt (decision + typed resource name), not an immediate mutating API call.

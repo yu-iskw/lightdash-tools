@@ -4,8 +4,6 @@ Date: 2026-08-01
 
 ## Status
 
-Accepted
-
 Amends [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposure-mcp-cli-vs-client-only.md)
 
 Relates [2. Monorepo packages](0002-monorepo-packages-client-common-cli-mcp.md)
@@ -14,11 +12,15 @@ Relates [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared
 
 Relates [11. MCP tool response sensitivity classes](0011-mcp-tool-response-sensitivity-classes.md)
 
+Amended by [21. MCP mount membership via literal profile tables](0021-mcp-mount-membership-via-literal-profile-tables.md) (mount membership storage)
+
+Superceded by [22. MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
+
 ## Context
 
 Agent exposure metadata lived in three places: `packages/common/src/operations/` (partial), CLI `LEGACY_SCHEMA_REGISTRY`, and MCP `tools/registry.ts` plus hand-maintained profile tool allowlists. Dual maintenance caused drift (CLI schema keys ≠ catalog ids; MCP tool ids ≠ operation `mcp.toolName` for admin surfaces). OpenAPI remains the type SSOT via pinned swagger → `openapi-typescript`; it must not become the agent product catalog (full API exposure is unsafe).
 
-Former ADR-0021 (profile packaging / catalog tool-membership) is absorbed into [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md): catalog `profiles` is mount membership SSOT, and registration derives tools via `listMcpToolNamesByProfile`.
+Mount membership for MCP profiles is literal tables in common ([ADR-0021](0021-mcp-mount-membership-via-literal-profile-tables.md)); registration derives tools via `listMcpToolNamesByProfile`.
 
 ### Alternatives considered
 
@@ -39,7 +41,7 @@ Former ADR-0021 (profile packaging / catalog tool-membership) is absorbed into [
    - `mcp.taskSupport.exposed` gates real MCP registration; reserved/`exposed: false` names must not be advertised as live tools by schema introspection.
    - `client-only` ops omit `mcp` / `cli`; use optional `bannedMcpToolName` for the irrecoverable denylist.
    - Serving profiles match MCP mounts (`semantic-layer`, `organization-audit`, `content-reader`, …); see [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md).
-4. **Profiles derive tool membership from the catalog** (`listMcpToolNamesByProfile`, [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)) — not hand-maintained allowlists. Handlers stay in MCP; registration/CI require a catalog hit. (ADR-0006 absorbed former ADR-0021.)
+4. **Mount membership** is literal profile tables in common (`listMcpToolNamesByProfile`, [ADR-0021](0021-mcp-mount-membership-via-literal-profile-tables.md)) — not hand-maintained MCP allowlists and not `profiles` tags on each op. Handlers stay in MCP; registration/CI require a catalog hit for each listed tool name.
 5. **OpenAPI pipeline unchanged** (pin → generate types in `common`). Client stays axios + Bottleneck; coverage gates link catalog `http.path` to client methods.
 6. **Runtime policy unchanged:** CLI `wrapAction` ([ADR-0005](0005-cli-safety-stack.md)); MCP `registerToolSafe` ([ADR-0008](0008-mcp-request-scope-and-hardening.md)). Catalog is build/CI policy, not a substitute for those stacks.
 

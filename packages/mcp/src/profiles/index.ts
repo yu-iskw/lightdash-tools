@@ -25,7 +25,7 @@ export { CONTENT_DEVELOPER_PROFILE_PATH } from './content-developer/v1/index.js'
 export { CONTENT_GOVERNANCE_PROFILE_PATH } from './content-governance/v1/index.js';
 export { DATA_ANALYST_PROFILE_PATH } from './data-analyst/v1/index.js';
 
-/** Default stdio profile (backward compatible). */
+/** HTTP root / PRM anchor profile (not a stdio default). */
 export const DEFAULT_PROFILE_ID: ProfileId = 'semantic-layer';
 
 export const PROFILES: Record<ProfileId, ProfileDefinition> = {
@@ -71,4 +71,9 @@ export function parseProfileId(value: string): ProfileId | undefined {
 /** MCP server display name for a profile. */
 export function getProfileServerName(profile: ProfileDefinition): string {
   return profile.serverName ?? `lightdash-mcp-${profile.id}`;
+}
+
+/** Short tool ids mounted on a profile (sans `lightdash_` prefix). */
+export function listToolIds(profile: ProfileDefinition): string[] {
+  return profile.tools.map((tool) => tool.id);
 }

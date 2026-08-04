@@ -11,6 +11,7 @@ import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -156,3 +157,7 @@ export function registerGetSpace(server: McpServer, contextProvider: McpContextP
       ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listSpacesTool = defineTool('list_spaces', registerListSpaces);
+export const getSpaceTool = defineTool('get_space', registerGetSpace);

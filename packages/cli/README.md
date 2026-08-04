@@ -161,15 +161,14 @@ lightdash-ai ai-agents list
 lightdash-ai ai-agents threads --page 1 --page-size 10
 ```
 
-#### Schema Introspection (Agent-Friendly)
+#### Discovery
 
 ```bash
-# List all introspectable resources
-lightdash-ai schema list
+# CLI command help (Commander)
+lightdash-ai agents --help
+lightdash-ai ai-agents --help
 
-# Get schema for a resource (path, method, params)
-lightdash-ai schema get cli.charts.list
-lightdash-ai schema get ai-agents.admin.settings.update
+# MCP: connect a profile and call tools/list (e.g. ai-agent-ops)
 ```
 
 ### Global Options

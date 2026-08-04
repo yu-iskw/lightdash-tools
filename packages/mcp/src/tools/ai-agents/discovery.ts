@@ -5,6 +5,7 @@
 import { z } from 'zod';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { agentUuidField, optionalProjectUuidField, withAgentOpsScope } from './helpers.js';
 
@@ -133,3 +134,18 @@ export function registerGetExploreAccessSummary(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const evaluateAgentReadinessTool = defineTool(
+  'evaluate_agent_readiness',
+  registerEvaluateAgentReadiness,
+);
+export const getAgentSuggestionsTool = defineTool(
+  'get_agent_suggestions',
+  registerGetAgentSuggestions,
+);
+export const getAgentModelsTool = defineTool('get_agent_models', registerGetAgentModels);
+export const getExploreAccessSummaryTool = defineTool(
+  'get_explore_access_summary',
+  registerGetExploreAccessSummary,
+);

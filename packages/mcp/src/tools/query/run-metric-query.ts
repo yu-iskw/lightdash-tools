@@ -10,6 +10,7 @@ import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { runBoundedSavedQuery } from './bounded-saved-query.js';
 import {
@@ -119,3 +120,6 @@ export function registerRunMetricQuery(
       }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const runMetricQueryTool = defineTool('run_metric_query', registerRunMetricQuery);

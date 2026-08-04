@@ -10,7 +10,6 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
-  ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
@@ -35,6 +34,7 @@ function clearMcpEnv(): void {
   }
   delete process.env.LIGHTDASH_URL;
   delete process.env.LIGHTDASH_API_KEY;
+  delete process.env.PORT;
 }
 
 function setOAuthCreds(): void {
@@ -59,6 +59,47 @@ describe('loadMcpHttpConfig', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
     process.env.MCP_HTTP_PORT = '3100';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3200);
+  });
+
+  it('uses platform PORT when dedicated MCP port env is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(8080);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('prefers LIGHTDASH_TOOLS_MCP_HTTP_PORT over platform PORT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3200);
+  });
+
+  it('prefers obsolete MCP_HTTP_PORT over platform PORT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.MCP_HTTP_PORT = '3300';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3300);
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('ignores invalid platform PORT when dedicated MCP port is set', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
+    process.env.PORT = 'not-a-port';
     process.env.NODE_ENV = 'development';
 
     const config = loadMcpHttpConfig();
@@ -181,14 +222,6 @@ describe('loadMcpHttpConfig', () => {
     process.env[ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV] = '1';
 
     expect(() => loadMcpHttpConfig()).toThrow(/is removed/);
-  });
-
-  it('rejects obsolete STDIO_PERSONA env', () => {
-    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
-    process.env.NODE_ENV = 'development';
-    process.env[ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA] = 'semantic-layer';
-
-    expect(() => loadMcpHttpConfig()).toThrow(/STDIO_PROFILE/);
   });
 
   it('rejects non-HTTPS public URL in OAuth mode', () => {

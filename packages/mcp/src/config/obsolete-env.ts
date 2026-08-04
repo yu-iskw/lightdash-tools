@@ -14,7 +14,6 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
-  ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA,
   ENV_LIGHTDASH_TOOLS_MCP_STORE,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
@@ -31,7 +30,6 @@ const OBSOLETE_ENV_VARS = [
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
   ENV_LIGHTDASH_TOOLS_MCP_STORE,
   ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA,
 ] as const;
 
 function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
@@ -50,11 +48,6 @@ export function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv = process.env):
           `${name} is removed (ADR-0019). ` +
             `MCP HTTP is now stateless (sessionless) and has no Redis ephemeral store. ` +
             `Remove this variable from your environment.`,
-        );
-      }
-      if (name === ENV_LIGHTDASH_TOOLS_MCP_STDIO_PERSONA) {
-        throw new Error(
-          `${name} is removed. Use LIGHTDASH_TOOLS_MCP_STDIO_PROFILE or a stdio subcommand (for example: lightdash-mcp semantic-layer).`,
         );
       }
       throw new Error(

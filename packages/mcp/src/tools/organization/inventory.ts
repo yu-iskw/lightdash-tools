@@ -21,6 +21,7 @@ import {
   projectUuidField,
 } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { resolveSessionOrganization } from './binding.js';
 
@@ -296,3 +297,10 @@ export function registerListOrgProjects(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const getOrgProfileTool = defineTool('get_org_profile', registerGetOrgProfile);
+export const listOrgMembersTool = defineTool('list_org_members', registerListOrgMembers);
+export const getOrgMemberTool = defineTool('get_org_member', registerGetOrgMember);
+export const listOrgGroupsTool = defineTool('list_org_groups', registerListOrgGroups);
+export const listOrgProjectsTool = defineTool('list_org_projects', registerListOrgProjects);

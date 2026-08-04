@@ -10,7 +10,7 @@
 import { randomUUID } from 'node:crypto';
 import { createWriteStream, type WriteStream } from 'node:fs';
 
-import type { ProfileId } from './operations/types';
+import type { ProfileId } from './profile-ids';
 
 export type AuditStatus =
   | 'blocked'

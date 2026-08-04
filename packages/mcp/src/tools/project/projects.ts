@@ -1,8 +1,7 @@
 /**
- * MCP tools: projects (list, get) — shared catalog entries.
+ * MCP tools: projects (list, get).
  */
 
-import { requireServerProfile } from '../../audit/server-profile.js';
 import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
@@ -16,9 +15,10 @@ import {
   wrapTool,
   READ_ONLY_DEFAULT,
 } from '../shared.js';
+import { defineTool, defineToolVariant } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { ProfileId } from '@lightdash-tools/common';
+import type { ToolModule } from '../types.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const READER_CAPABILITIES = {
@@ -50,21 +50,13 @@ type ScopedGetProjectConfig = {
   capabilities: Readonly<Record<string, boolean>>;
 };
 
-const SCOPED_GET_PROJECT_BY_PROFILE: Readonly<Partial<Record<ProfileId, ScopedGetProjectConfig>>> =
-  {
-    'content-reader': {
-      capabilitiesKey: 'readerCapabilities',
-      capabilities: READER_CAPABILITIES,
-    },
-    'content-developer': {
-      capabilitiesKey: 'developerCapabilities',
-      capabilities: DEVELOPER_CAPABILITIES,
-    },
-    'data-analyst': {
-      capabilitiesKey: 'analystCapabilities',
-      capabilities: ANALYST_CAPABILITIES,
-    },
-  };
+const GET_PROJECT_TOOL_OPTIONS = {
+  title: 'Get project',
+  description:
+    'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides). projectUuid is optional when X-Lightdash-Project is set.',
+  inputSchema: { projectUuid: projectUuidField().optional() },
+  annotations: READ_ONLY_DEFAULT,
+} as const;
 
 export function registerListProjects(server: McpServer, contextProvider: McpContextProvider): void {
   registerToolSafe(
@@ -91,17 +83,6 @@ export function registerListProjects(server: McpServer, contextProvider: McpCont
   );
 }
 
-export function registerGetProject(server: McpServer, contextProvider: McpContextProvider): void {
-  const profileId = requireServerProfile(server, 'get_project');
-  // eslint-disable-next-line security/detect-object-injection -- profileId from requireServerProfile
-  const scoped = SCOPED_GET_PROJECT_BY_PROFILE[profileId];
-  if (scoped) {
-    registerScopedGetProject(server, contextProvider, scoped);
-    return;
-  }
-  registerPinAwareGetProject(server, contextProvider);
-}
-
 /** Project-scope-aware get_project (pin → tool arg → PROJECT_SCOPE_REQUIRED). */
 function registerScopedGetProject(
   server: McpServer,
@@ -112,13 +93,7 @@ function registerScopedGetProject(
   registerToolSafe(
     server,
     'get_project',
-    {
-      title: 'Get project',
-      description:
-        'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides). projectUuid is optional when X-Lightdash-Project is set.',
-      inputSchema: { projectUuid: projectUuidField().optional() },
-      annotations: READ_ONLY_DEFAULT,
-    },
+    GET_PROJECT_TOOL_OPTIONS,
     wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid?: string }) => {
       try {
         const scope = resolveProjectScope({ projectUuid });
@@ -147,13 +122,7 @@ function registerPinAwareGetProject(server: McpServer, contextProvider: McpConte
   registerToolSafe(
     server,
     'get_project',
-    {
-      title: 'Get project',
-      description:
-        'Get project metadata by UUID (no warehouse/dbt credentials or contact overrides). projectUuid is optional when X-Lightdash-Project is set.',
-      inputSchema: { projectUuid: projectUuidField().optional() },
-      annotations: READ_ONLY_DEFAULT,
-    },
+    GET_PROJECT_TOOL_OPTIONS,
     wrapTool(contextProvider, (c) => async ({ projectUuid }: { projectUuid?: string }) => {
       const pinned = getPinnedProjectUuid();
       const resolved = projectUuid ?? pinned;
@@ -170,3 +139,30 @@ function registerPinAwareGetProject(server: McpServer, contextProvider: McpConte
     }),
   );
 }
+
+function getProjectModule(register: ToolModule['register']): ToolModule {
+  return defineToolVariant('get_project', register);
+}
+
+function scopedGetProjectVariant(config: ScopedGetProjectConfig): ToolModule {
+  return getProjectModule((server, contextProvider) => {
+    registerScopedGetProject(server, contextProvider, config);
+  });
+}
+
+// ToolModule exports (profile mounts)
+export const listProjectsTool = defineTool('list_projects', registerListProjects);
+/** Pin-aware get_project (semantic-layer and other non-scoped mounts). */
+export const getProjectTool = getProjectModule(registerPinAwareGetProject);
+export const getProjectReaderTool = scopedGetProjectVariant({
+  capabilitiesKey: 'readerCapabilities',
+  capabilities: READER_CAPABILITIES,
+});
+export const getProjectDeveloperTool = scopedGetProjectVariant({
+  capabilitiesKey: 'developerCapabilities',
+  capabilities: DEVELOPER_CAPABILITIES,
+});
+export const getProjectAnalystTool = scopedGetProjectVariant({
+  capabilitiesKey: 'analystCapabilities',
+  capabilities: ANALYST_CAPABILITIES,
+});

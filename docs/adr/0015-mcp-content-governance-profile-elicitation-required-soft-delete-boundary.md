@@ -24,7 +24,7 @@ MCP 2026-07-28 multi-round-trip requests (MRTR) let a tool return `InputRequired
 
 ## Decision
 
-1. Ship a **`content-governance`** profile at fixed path `/content-governance/v1/mcp` with MCP server display name **`lightdash-mcp-gov`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp content-governance`.
+1. Ship a **`content-governance`** profile at fixed path `/content-governance/v1/mcp` with MCP server display name **`lightdash-mcp-gov`**. Tool membership from catalog `profiles` via `listMcpToolNamesByProfile` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)). Stdio: `lightdash-mcp stdio --profile content-governance`.
 2. **Soft-delete on MCP:** `delete_chart` and `delete_dashboard` via the v2 project saved-chart / dashboard DELETE endpoints. Permanent purge, space delete, and org-level deletes remain **client-only / never-expose**. Dashboard promote is also on this profile ([ADR-0017](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)); it is not limited to soft-delete alone.
 3. **Elicitation-required confirmation:** every destructive/release write uses a shared elicitation-gated mutation framework that:
    - fails closed when the client lacks form elicitation capability;

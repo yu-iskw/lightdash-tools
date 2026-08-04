@@ -11,6 +11,7 @@ import { isNotFoundError } from '../lib/api-errors.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, registerToolSafe, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -74,3 +75,9 @@ export function registerGetDashboardPromoteDiff(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const getDashboardPromoteDiffTool = defineTool(
+  'get_dashboard_promote_diff',
+  registerGetDashboardPromoteDiff,
+);

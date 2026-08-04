@@ -19,6 +19,7 @@ import {
   projectUuidField,
 } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { resolveSessionOrganization } from './binding.js';
 
@@ -306,3 +307,16 @@ export function registerListProjectDirectAccess(
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listOrgRoleAssignmentsTool = defineTool(
+  'list_org_role_assignments',
+  registerListOrgRoleAssignments,
+);
+export const listCustomRolesTool = defineTool('list_custom_roles', registerListCustomRoles);
+export const getCustomRoleTool = defineTool('get_custom_role', registerGetCustomRole);
+export const listProjectRolesTool = defineTool('list_project_roles', registerListProjectRoles);
+export const listProjectDirectAccessTool = defineTool(
+  'list_project_direct_access',
+  registerListProjectDirectAccess,
+);
