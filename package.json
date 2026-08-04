@@ -7,6 +7,8 @@
   "license": "Apache-2.0",
   "author": "yu-iskw",
   "scripts": {
+    "audit:all": "pnpm -r audit",
+    "audit:fix": "pnpm -r audit --fix update",
     "prebuild": "pnpm validate:names",
     "build": "pnpm --recursive build",
     "format": "pnpm exec trunk fmt",
@@ -19,7 +21,7 @@
     "format:trunk-all": "pnpm exec trunk fmt --all",
     "knip": "knip",
     "knip:fix": "knip --fix",
-    "lint": "pnpm exec trunk check && pnpm knip",
+    "lint": "pnpm exec trunk check && pnpm knip && pnpm audit:all",
     "lint:all": "pnpm lint:trunk-all",
     "lint:eslint": "eslint .",
     "lint:local": "pnpm lint:package-json && pnpm lint:prettier && pnpm lint:eslint && pnpm knip",
