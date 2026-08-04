@@ -20,7 +20,7 @@ Tool names are prefixed with `lightdash_`. MCP display names are shortened where
 
 ## Quick start
 
-Commands: `stdio` | `http`. Stdio requires `--profile <id>` (see table). Bare invoke exits with help on stderr.
+Commands: `stdio` | `http`. Stdio requires `--profile <id>` (see table). Bare invoke exits with help on stderr. Run `stdio --help` or `http --help` for a live list of profile ids, HTTP paths, and mounted tools.
 
 ### Stdio (local)
 

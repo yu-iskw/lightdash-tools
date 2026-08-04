@@ -2,6 +2,7 @@
 import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
+import { formatProfilesHelp } from './cli-help.js';
 import { parseProfileId } from './profiles/index.js';
 import { PACKAGE_VERSION } from './server/version.js';
 
@@ -26,6 +27,11 @@ program
   )
   .version(PACKAGE_VERSION)
   .showHelpAfterError()
+  .addHelpText(
+    'after',
+    () =>
+      '\nSee `lightdash-mcp stdio --help` or `lightdash-mcp http --help` for profiles, paths, and tools.\n',
+  )
   .action(() => {
     console.error(
       `Transport required. Use \`lightdash-mcp stdio --profile <id>\` (profiles: ${profileList}) or \`lightdash-mcp http\`.`,
@@ -39,6 +45,7 @@ program
   .command('stdio')
   .description('Run MCP server on stdio')
   .requiredOption('--profile <id>', `Profile id (${profileList})`)
+  .addHelpText('after', formatProfilesHelp)
   .action((opts: { profile: string }) => {
     const id = parseProfileId(opts.profile);
     if (!id) {
@@ -52,6 +59,7 @@ program
 program
   .command('http')
   .description('Run MCP server over Streamable HTTP (all fixed profile paths)')
+  .addHelpText('after', formatProfilesHelp)
   .action(() => {
     runHttp();
   });
