@@ -1,11 +1,7 @@
 import type { ServerContext } from '@modelcontextprotocol/server';
 
 export type OperationPhase =
-  | 'calling-service'
-  | 'completed'
-  | 'preparing'
-  | 'processing-response'
-  | 'waiting';
+  'calling-service' | 'completed' | 'preparing' | 'processing-response' | 'waiting';
 
 export type OperationPhaseEvent = {
   phase: OperationPhase;
@@ -75,9 +71,7 @@ class McpProgressOperationReporter implements OperationReporter {
   }
 }
 
-export function createOperationReporter(
-  context: ServerContext | undefined,
-): OperationReporter {
+export function createOperationReporter(context: ServerContext | undefined): OperationReporter {
   const progressContext = context as ProgressCapableContext | undefined;
   const mcpReq = progressContext?.mcpReq;
   const token = mcpReq?._meta?.progressToken;
