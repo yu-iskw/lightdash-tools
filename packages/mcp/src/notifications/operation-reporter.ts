@@ -1,11 +1,7 @@
 import type { ServerContext } from '@modelcontextprotocol/server';
 
 export type OperationPhase =
-  | 'calling-service'
-  | 'completed'
-  | 'preparing'
-  | 'processing-response'
-  | 'waiting';
+  'calling-service' | 'completed' | 'preparing' | 'processing-response' | 'waiting';
 
 export type OperationPhaseEvent = {
   phase: OperationPhase;
@@ -36,8 +32,8 @@ type ProgressCapableContext = ServerContext & {
     _meta?: {
       progressToken?: ProgressToken;
     };
+    notify?: (notification: ProgressNotification) => Promise<void>;
   };
-  sendNotification?: (notification: ProgressNotification) => Promise<void>;
 };
 
 class NoopOperationReporter implements OperationReporter {
@@ -51,9 +47,7 @@ class McpProgressOperationReporter implements OperationReporter {
 
   constructor(
     private readonly token: ProgressToken,
-    private readonly sendNotification: (
-      notification: ProgressNotification,
-    ) => Promise<void>,
+    private readonly notify: (notification: ProgressNotification) => Promise<void>,
   ) {}
 
   async phase(event: OperationPhaseEvent): Promise<void> {
@@ -70,23 +64,22 @@ class McpProgressOperationReporter implements OperationReporter {
     }
 
     try {
-      await this.sendNotification({ method: 'notifications/progress', params });
+      await this.notify({ method: 'notifications/progress', params });
     } catch {
       // Progress reporting is best-effort and must never fail the tool invocation.
     }
   }
 }
 
-export function createOperationReporter(
-  context: ServerContext | undefined,
-): OperationReporter {
+export function createOperationReporter(context: ServerContext | undefined): OperationReporter {
   const progressContext = context as ProgressCapableContext | undefined;
-  const token = progressContext?.mcpReq?._meta?.progressToken;
-  const sendNotification = progressContext?.sendNotification;
+  const mcpReq = progressContext?.mcpReq;
+  const token = mcpReq?._meta?.progressToken;
+  const notify = mcpReq?.notify;
 
-  if (token === undefined || sendNotification === undefined) {
+  if (token === undefined || notify === undefined) {
     return new NoopOperationReporter();
   }
 
-  return new McpProgressOperationReporter(token, sendNotification.bind(progressContext));
+  return new McpProgressOperationReporter(token, notify.bind(mcpReq));
 }
