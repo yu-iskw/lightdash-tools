@@ -6,8 +6,10 @@ import type { ServerContext } from '@modelcontextprotocol/server';
 
 describe('createOperationReporter', () => {
   it('is a no-op when the client did not provide a progress token', async () => {
-    const sendNotification = vi.fn();
-    const reporter = createOperationReporter({ sendNotification } as unknown as ServerContext);
+    const notify = vi.fn();
+    const reporter = createOperationReporter({
+      mcpReq: { notify },
+    } as unknown as ServerContext);
 
     await reporter.phase({
       phase: 'preparing',
@@ -15,14 +17,27 @@ describe('createOperationReporter', () => {
       message: 'Preparing to list explores',
     });
 
-    expect(sendNotification).not.toHaveBeenCalled();
+    expect(notify).not.toHaveBeenCalled();
+  });
+
+  it('is a no-op when notify is missing even if a progress token is present', async () => {
+    const reporter = createOperationReporter({
+      mcpReq: { _meta: { progressToken: 'progress-1' } },
+    } as unknown as ServerContext);
+
+    await expect(
+      reporter.phase({
+        phase: 'preparing',
+        operation: 'list explores',
+        message: 'Preparing to list explores',
+      }),
+    ).resolves.toBeUndefined();
   });
 
   it('sends monotonic progress notifications for a request-scoped token', async () => {
-    const sendNotification = vi.fn().mockResolvedValue(undefined);
+    const notify = vi.fn().mockResolvedValue(undefined);
     const reporter = createOperationReporter({
-      mcpReq: { _meta: { progressToken: 'progress-1' } },
-      sendNotification,
+      mcpReq: { _meta: { progressToken: 'progress-1' }, notify },
     } as unknown as ServerContext);
 
     await reporter.phase({
@@ -40,7 +55,7 @@ describe('createOperationReporter', () => {
       totalUnits: 4,
     });
 
-    expect(sendNotification).toHaveBeenNthCalledWith(1, {
+    expect(notify).toHaveBeenNthCalledWith(1, {
       method: 'notifications/progress',
       params: {
         progressToken: 'progress-1',
@@ -49,7 +64,7 @@ describe('createOperationReporter', () => {
         message: 'Preparing to list explores',
       },
     });
-    expect(sendNotification).toHaveBeenNthCalledWith(2, {
+    expect(notify).toHaveBeenNthCalledWith(2, {
       method: 'notifications/progress',
       params: {
         progressToken: 'progress-1',
@@ -62,8 +77,10 @@ describe('createOperationReporter', () => {
 
   it('does not fail the operation when notification delivery fails', async () => {
     const reporter = createOperationReporter({
-      mcpReq: { _meta: { progressToken: 7 } },
-      sendNotification: vi.fn().mockRejectedValue(new Error('disconnected')),
+      mcpReq: {
+        _meta: { progressToken: 7 },
+        notify: vi.fn().mockRejectedValue(new Error('disconnected')),
+      },
     } as unknown as ServerContext);
 
     await expect(
