@@ -31,10 +31,10 @@ import { getPinnedProjectUuid } from '../governance/project-pin.js';
 import { createOperationReporter } from '../notifications/operation-reporter.js';
 import { classifyUpstreamError } from '../server/upstream-errors.js';
 
+import type { OperationReporter } from '../notifications/operation-reporter.js';
 import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { AuditStatus, ToolAnnotations } from '@lightdash-tools/common';
-import type { OperationReporter } from '../notifications/operation-reporter.js';
 import type { InputRequiredResult, ServerContext } from '@modelcontextprotocol/server';
 import type { z } from 'zod';
 
