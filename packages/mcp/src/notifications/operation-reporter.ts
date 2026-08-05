@@ -1,11 +1,11 @@
 import type { ServerContext } from '@modelcontextprotocol/server';
 
 export type OperationPhase =
-  | 'preparing'
   | 'calling-service'
-  | 'waiting'
+  | 'completed'
+  | 'preparing'
   | 'processing-response'
-  | 'completed';
+  | 'waiting';
 
 export type OperationPhaseEvent = {
   phase: OperationPhase;
@@ -19,7 +19,7 @@ export interface OperationReporter {
   phase(event: OperationPhaseEvent): Promise<void>;
 }
 
-type ProgressToken = string | number;
+type ProgressToken = number | string;
 
 type ProgressNotification = {
   method: 'notifications/progress';
@@ -51,7 +51,9 @@ class McpProgressOperationReporter implements OperationReporter {
 
   constructor(
     private readonly token: ProgressToken,
-    private readonly sendNotification: (notification: ProgressNotification) => Promise<void>,
+    private readonly sendNotification: (
+      notification: ProgressNotification,
+    ) => Promise<void>,
   ) {}
 
   async phase(event: OperationPhaseEvent): Promise<void> {
