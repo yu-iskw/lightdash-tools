@@ -38,6 +38,7 @@ import {
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 import { assertObsoleteEnvRejected } from './obsolete-env.js';
 import { requirePublicUrl } from './public-url.js';
+import { readEnv } from './read-env.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
@@ -49,13 +50,6 @@ function warnDeprecatedAlias(oldName: string, newName: string): void {
   if (warnedAliases.has(oldName)) return;
   warnedAliases.add(oldName);
   console.warn(`Warning: ${oldName} is deprecated. Use ${newName}.`);
-}
-
-function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
-  // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants in this module
-  const value = env[name];
-  if (value === undefined || value === '') return undefined;
-  return value;
 }
 
 function parsePositiveIntegerEnv(name: string, value: string): number {
