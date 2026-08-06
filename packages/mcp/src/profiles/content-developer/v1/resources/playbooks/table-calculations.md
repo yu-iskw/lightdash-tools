@@ -15,23 +15,24 @@ Docs: [overview](https://docs.lightdash.com/guides/table-calculations) · [formu
 
 1. **`template`** — quick types + `window_function` (OpenAPI `TemplateTableCalculation`).
 2. **`formula`** — portable spreadsheet syntax starting with `=` ([formula docs](https://docs.lightdash.com/guides/formula-table-calculations)); column names match results headers.
-3. **`sql`** — only for `total()` / `row_total()` / `pivot_*`, or when formula cannot express it.
+3. **`sql`** — only for `total()` / `row_total()` / real `pivot_*` helpers (`pivot_offset`, `pivot_index`, `pivot_row`, …), or when formula cannot express it. Never invent names like `pivot_row_total`.
 
 Formula and SQL modes are **not** interconvertible — delete and recreate to switch ([formula FAQ](https://docs.lightdash.com/guides/formula-table-calculations)).
 
 ## Intent → shape
 
-| Intent                                   | Prefer                  | OpenAPI / expression                                                                                                                       |
-| ---------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| % change from previous                   | `template`              | `type: percent_change_from_previous` + `fieldId` + `orderBy`                                                                               |
-| % of previous value                      | `template`              | `type: percent_of_previous_value` + `fieldId` + `orderBy`                                                                                  |
-| % of column total                        | `template`              | `type: percent_of_column_total` + `fieldId`                                                                                                |
-| Rank in column                           | `template`              | `type: rank_in_column` + `fieldId`                                                                                                         |
-| Running total                            | `template`              | `type: running_total` + `fieldId`                                                                                                          |
-| Rolling / moving window                  | `template` or `formula` | `window_function` + `frame`, or `MOVING_AVG` / `MOVING_SUM`                                                                                |
-| Simple ratio / IF / date math            | `formula`               | e.g. `=orders_sum_order_amount / orders_num_unique_order_ids`                                                                              |
-| Grand % of total (correct metric re-agg) | `sql`                   | `${metric} / total(${metric})` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions))        |
-| Pivot row share / cross-column           | `sql`                   | `row_total` / `pivot_*` **only when pivoted** ([pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions)) |
+| Intent                                   | Prefer                  | OpenAPI / expression                                                                                                                                                                 |
+| ---------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| % change from previous                   | `template`              | `type: percent_change_from_previous` + `fieldId` + `orderBy`                                                                                                                         |
+| % of previous value                      | `template`              | `type: percent_of_previous_value` + `fieldId` + `orderBy`                                                                                                                            |
+| % of column total                        | `template`              | `type: percent_of_column_total` + `fieldId`                                                                                                                                          |
+| Rank in column                           | `template`              | `type: rank_in_column` + `fieldId`                                                                                                                                                   |
+| Running total                            | `template`              | `type: running_total` + `fieldId`                                                                                                                                                    |
+| Rolling / moving window                  | `template` or `formula` | `window_function` + `frame`, or `MOVING_AVG` / `MOVING_SUM`                                                                                                                          |
+| Simple ratio / IF / date math            | `formula`               | e.g. `=orders_sum_order_amount / orders_num_unique_order_ids`                                                                                                                        |
+| Grand % of total (correct metric re-agg) | `sql`                   | `${metric} / total(${metric})` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions))                                                  |
+| Pivot row share                          | `sql`                   | `${metric} / row_total(${metric})` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions)) — **not** `pivot_row_total` (does not exist) |
+| Cross-column pivot access                | `sql`                   | `pivot_offset` / `pivot_index` / `pivot_row` / … **only when pivoted** ([pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions))                  |
 
 SQL template guides: [percent change](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/percent-change-from-previous), [percent of previous](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/percent-of-previous-value), [percent of column](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/percent-of-total-column), [percent of group/pivot](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/percent-of-group-pivot-total), [rank](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/rank-in-column), [running total](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/running-total), [rolling window](https://docs.lightdash.com/guides/table-calculations/table-calculation-sql-templates/rolling-window).
 
@@ -86,6 +87,19 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 }
 ```
 
+### SQL (percent of pivot row — requires `pivotConfig`)
+
+```json
+{
+  "name": "amount_pct_of_pivot_row",
+  "displayName": "% of pivot row total",
+  "type": "number",
+  "format": { "type": "percent" },
+  "totalMode": "formula",
+  "sql": "${orders.sum_order_amount} / row_total(${orders.sum_order_amount})"
+}
+```
+
 ## Authoring SOP
 
 1. Clone via `get_chart_as_code` (or `duplicate_chart`) — that returns upsert-shaped `chartConfig` + `metricQuery`. Append to `metricQuery.tableCalculations` (never omit the array — OpenAPI requires it). Use `get_chart` only to inspect existing calc expressions; it does **not** return `chartConfig`.
@@ -98,6 +112,7 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 
 - Do not invent `fieldId`s or results-header column names. Copy them from `get_chart_as_code` / explore seeds — playbook skeletons are examples only.
 - `preview_chart_changes` / `confirm_preview` do **not** prove template `fieldId`s or formula headers exist; inventing IDs can still preview-validate and only fail at query time.
+- Do not invent SQL helpers — use `total()` / `row_total()` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions)) or documented `pivot_*` ([pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions)). There is no `pivot_row_total`.
 - Do not convert formula ↔ sql in place — recreate the calc.
 - Do not use `pivot_*` / `row_total` without a pivoted dimension (`pivotConfig.columns`).
 - Do not author SQL **charts** or open data-analyst / raw SQL execution to “fix” a table calc on this profile.
