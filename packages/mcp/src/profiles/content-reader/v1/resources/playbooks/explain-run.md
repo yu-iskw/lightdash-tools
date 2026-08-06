@@ -14,7 +14,7 @@ URI: `lightdash://playbooks/content-reader/explain-run`
 | Signal                                                      | Action                                                                                         |
 | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Search `source=sql`                                         | Do **not** call `run_chart`; explain metadata only; cite `CONTENT_NOT_EXECUTABLE` / capability |
-| `get_chart` → `chartType=sql` + warnings                    | Same — SQL text is hidden; execution disabled                                                  |
+| `get_chart` → `chartType=sql` + warnings                    | Same — saved SQL **chart** body hidden; execution disabled                                     |
 | Opaque API errors (e.g. “Saved query not found”) on SQL ids | Treat as non-executable; do not retry endlessly                                                |
 | `readerCapabilities.canExecuteSqlCharts=false`              | Hard stop for SQL execution                                                                    |
 

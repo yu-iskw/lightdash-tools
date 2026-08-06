@@ -41,7 +41,7 @@ Semantic as-code only. Prefer clone, not invent.
 1. Prefer **reuse** of an existing chart as a tile when it already fits.
 2. Else `search_content` / `get_space` → pick a **rendering** seed on the same `tableName` (same explore).
 3. `get_chart_as_code` (or `duplicate_chart`) → **keep `chartConfig` structure** (layout + series encode); edit only `name`, `slug`, and `metricQuery` fields that exist on the explore; set `dashboardSlug` = dashboard slug from step 1.
-4. Viz type / encode details: `lightdash://playbooks/content-developer/chart-types`.
+4. Viz type / encode details: `lightdash://playbooks/content-developer/chart-types`. PoP / % of total / rank / windows on `metricQuery.tableCalculations`: `lightdash://playbooks/content-developer/table-calculations`.
 
 Then:
 

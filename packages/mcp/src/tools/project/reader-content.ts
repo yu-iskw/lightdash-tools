@@ -30,6 +30,37 @@ export function detectChartType(chart: Record<string, unknown>): 'semantic' | 's
   return 'unknown';
 }
 
+/** Pass through OpenAPI TableCalculation fields agents need to clone. */
+export function toReaderTableCalculation(tc: unknown): Record<string, unknown> {
+  const row = (tc ?? {}) as Record<string, unknown>;
+  const out: Record<string, unknown> = {
+    name: row.name,
+    displayName: row.displayName,
+  };
+  if (row.type !== undefined) {
+    out.type = row.type;
+  }
+  if (row.format !== undefined) {
+    out.format = row.format;
+  }
+  if (row.totalMode !== undefined) {
+    out.totalMode = row.totalMode;
+  }
+  if (row.index !== undefined) {
+    out.index = row.index;
+  }
+  if (row.formula !== undefined) {
+    out.formula = row.formula;
+  }
+  if (row.sql !== undefined) {
+    out.sql = row.sql;
+  }
+  if (row.template !== undefined) {
+    out.template = row.template;
+  }
+  return out;
+}
+
 /* eslint-disable-next-line sonarjs/cyclomatic-complexity -- chart shape mapping */
 function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
   const metricQuery = (chart.metricQuery ?? {}) as Record<string, unknown>;
@@ -41,10 +72,7 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
     ? (metricQuery.metrics as string[]).map((fieldId) => ({ fieldId }))
     : [];
   const tableCalculations = includeQuery
-    ? ((metricQuery.tableCalculations as unknown[]) ?? []).map((tc) => {
-        const row = tc as { name?: string; displayName?: string };
-        return { name: row.name, displayName: row.displayName };
-      })
+    ? ((metricQuery.tableCalculations as unknown[]) ?? []).map(toReaderTableCalculation)
     : undefined;
   return {
     uuid: chart.uuid,
@@ -239,7 +267,8 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
     'get_chart',
     {
       title: 'Get chart',
-      description: 'Explain a saved chart definition (SQL text hidden)',
+      description:
+        'Explain a saved semantic chart definition (saved SQL chart bodies stay hidden; tableCalculations expressions included when includeQueryDefinition)',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),

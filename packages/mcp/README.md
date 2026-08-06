@@ -79,17 +79,17 @@ Prefer `LIGHTDASH_TOOLS_*` env from the parent process. Avoid plaintext `.env` w
 
 ### Stdio
 
-| Required                             | Optional                                                                                      |
-| :----------------------------------- | :-------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_AUDIT_LOG` (file; else stderr JSON), `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` |
+| Required                             | Optional                                                                                                            |
+| :----------------------------------- | :------------------------------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_URL`, `LIGHTDASH_API_KEY` | `LIGHTDASH_TOOLS_AUDIT_LOG` (file; else stderr JSON), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist) |
 
 Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN`.
 
 ### HTTP OAuth (primary)
 
-| Required                                                                                                                    | Common optional                                                   |
-| :-------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------- |
-| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, `ALLOWED_PROJECT_UUIDS`, token cache TTL |
+| Required                                                                                                                    | Common optional                                                                                         |
+| :-------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), token cache TTL |
 
 On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).
 
@@ -109,6 +109,34 @@ Governance soft-delete needs client form elicitation; missing capability → `EL
 | :--------- | :----------------------------------------------------- |
 | Shared-key | `LIGHTDASH_API_KEY` + `LIGHTDASH_TOOLS_MCP_SHARED_KEY` |
 | Local none | `NODE_ENV=development` (not `production`)              |
+
+### Project allowlist
+
+Optional deployment ceiling shared with the CLI. Unset or empty → unrestricted beyond RBAC, HTTP pin, and tool `projectUuid`. Non-empty → hard allowlist for all profiles.
+
+**Format**
+
+- Comma-separated Lightdash project UUIDs (RFC 4122)
+- Whitespace around commas is ignored
+- No empty segments (double commas are rejected)
+- Invalid UUIDs fail at process startup
+- Input is case-insensitive; values are normalized to lowercase
+
+```bash
+# Single project
+export LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+
+# Multiple (spaces optional)
+export LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS="aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa, bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
+```
+
+**Semantics**
+
+- Ceiling only — not a default project; tools still need `projectUuid` or an HTTP `X-Lightdash-Project` pin
+- When restricted, HTTP pin and every tool `projectUuid` must be in the set
+- `list_projects` returns only allowlisted projects; cross-project promote requires upstream targets in the set
+
+Architecture: [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md).
 
 Obsolete vars (`AUTH_MODE`, `EXPERIMENTAL_*`, `DANGEROUSLY_*`, `INSECURE_DEV`, `MCP_STORE`, `MCP_REDIS_URL`, free-form `MCP_PATH`) are **rejected**. See [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md).
 
@@ -147,7 +175,7 @@ Unsaved Explore-style metric queries (`run_metric_query`) with explore discovery
 - **Off MCP:** irrecoverable admin deletes, permanent content purge, broad org mutations — use `@lightdash-tools/client` or the CLI ([ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
 - **Writes:** only on `content-developer` (preview gate). Soft-delete / promote: only on `content-governance` (form elicitation).
 - **Redaction:** emails masked unless `includeEmail=true`; scheduler destinations redacted unless `revealDestinations=true`; warehouse/dbt connection secrets never on MCP ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)).
-- **Project scope:** optional HTTP pin `X-Lightdash-Project`, else tool `projectUuid`; optional ceiling `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`.
+- **Project scope:** optional HTTP pin `X-Lightdash-Project`, else tool `projectUuid`; optional ceiling [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist).
 
 Profile tool allowlists are the capability surface — not CLI safety-mode.
 

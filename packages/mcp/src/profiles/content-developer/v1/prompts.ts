@@ -32,6 +32,8 @@ const PROJECT_UUID_HINT = '(pass on every tool, or use HTTP pin — else PROJECT
 const TOPIC_DASHBOARDS = 'dashboards' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_DASHBOARD_DESIGN = 'dashboard-design' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_CHART_TYPES = 'chart-types' as const satisfies ContentDeveloperPlaybookTopic;
+const TOPIC_TABLE_CALCULATIONS =
+  'table-calculations' as const satisfies ContentDeveloperPlaybookTopic;
 const DASHBOARD_CHART_TOPIC_IDS = [
   TOPIC_DASHBOARDS,
   TOPIC_DASHBOARD_DESIGN,
@@ -164,10 +166,10 @@ Dashboard slug: ${dashboardSlug ?? '(omit only for intentional space-owned chart
 
 ${CONTENT_DEVELOPER_HARD_BANS}
 
-Follow core + chart-types (clone via get_chart_as_code; preview with top-level slug; keep customDimensions when needed; tile if dashboardSlug set).
+Follow core + chart-types + table-calculations (clone via get_chart_as_code; preview with top-level slug; keep customDimensions when needed; tile if dashboardSlug set).
 When dashboardSlug is set, the chart must serve a **board insight** from the approved Design Spec — do not invent a viz type for its own sake.
 Report UUID/slug from charts[0].data; note this profile cannot run_chart / prove UI render.`,
-        TOPIC_CHART_TYPES,
+        [TOPIC_CHART_TYPES, TOPIC_TABLE_CALCULATIONS],
       ),
   );
 

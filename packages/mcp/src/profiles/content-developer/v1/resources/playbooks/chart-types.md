@@ -4,6 +4,8 @@ URI: `lightdash://playbooks/content-developer/chart-types`
 
 Pick a viz type to **answer an insight question** from the Design Spec Objective. The table below is a **reference map**, not a build order — do not walk every row unless the user explicitly asked for multi-viz / all chart types. Prefer **clone** (`get_chart_as_code` / `duplicate_chart`) over inventing viz configs. Docs: [overview](https://docs.lightdash.com/references/chart-types/overview).
 
+When the insight needs period-over-period, % of total, rank, or running/rolling windows, append `metricQuery.tableCalculations` per `lightdash://playbooks/content-developer/table-calculations` (do not freestyle warehouse `OVER()` SQL).
+
 When the user **does** ask for all types: follow dashboards **Multi-viz batch SOP** (shell → ≤2 concurrent chart creates → one tile update), split the board into a decision-oriented section plus a visualization-validation appendix (see `dashboards` / `dashboard-design`), and check every candidate type against the **semantic fit gate** below before adding it.
 
 ## Semantic fit gate
