@@ -15,3 +15,13 @@ services:
       LIGHTDASH_TOOLS_MCP_HTTP_HOST: 0.0.0.0
       LIGHTDASH_TOOLS_MCP_HTTP_PORT: 8080
       # LIGHTDASH_TOOLS_MCP_PUBLIC_URL comes from .env (ephemeral *.trycloudflare.com host)
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://127.0.0.1:8080/health/live').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
