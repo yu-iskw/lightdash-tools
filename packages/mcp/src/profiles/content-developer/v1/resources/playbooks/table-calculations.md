@@ -29,7 +29,7 @@ Formula and SQL modes are **not** interconvertible — delete and recreate to sw
 | Rank in column                           | `template`              | `type: rank_in_column` + `fieldId`                                                                                                         |
 | Running total                            | `template`              | `type: running_total` + `fieldId`                                                                                                          |
 | Rolling / moving window                  | `template` or `formula` | `window_function` + `frame`, or `MOVING_AVG` / `MOVING_SUM`                                                                                |
-| Simple ratio / IF / date math            | `formula`               | e.g. `=orders_revenue / SUM(orders_revenue)`                                                                                               |
+| Simple ratio / IF / date math            | `formula`               | e.g. `=orders_sum_order_amount / orders_num_unique_order_ids`                                                                              |
 | Grand % of total (correct metric re-agg) | `sql`                   | `${metric} / total(${metric})` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions))        |
 | Pivot row share / cross-column           | `sql`                   | `row_total` / `pivot_*` **only when pivoted** ([pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions)) |
 
@@ -48,15 +48,15 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 
 ```json
 {
-  "name": "revenue_pct_change",
+  "name": "amount_pct_change",
   "displayName": "% change vs previous",
   "type": "number",
   "format": { "type": "percent" },
   "totalMode": "sum_of_rows",
   "template": {
     "type": "percent_change_from_previous",
-    "fieldId": "orders_total_order_amount",
-    "orderBy": [{ "fieldId": "orders_order_date_week", "order": "asc" }]
+    "fieldId": "orders_sum_order_amount",
+    "orderBy": [{ "fieldId": "orders_order_date_month", "order": "asc" }]
   }
 }
 ```
@@ -69,7 +69,7 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
   "displayName": "Average order value",
   "type": "number",
   "totalMode": "formula",
-  "formula": "=orders_total_order_amount / orders_order_count"
+  "formula": "=orders_sum_order_amount / orders_num_unique_order_ids"
 }
 ```
 
@@ -77,12 +77,12 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 
 ```json
 {
-  "name": "revenue_pct_of_total",
+  "name": "amount_pct_of_total",
   "displayName": "% of total",
   "type": "number",
   "format": { "type": "percent" },
   "totalMode": "formula",
-  "sql": "${orders.total_order_amount} / total(${orders.total_order_amount})"
+  "sql": "${orders.sum_order_amount} / total(${orders.sum_order_amount})"
 }
 ```
 
@@ -96,8 +96,9 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 
 ## Hard bans
 
-- Do not invent `fieldId`s or results-header column names.
+- Do not invent `fieldId`s or results-header column names. Copy them from `get_chart_as_code` / explore seeds — playbook skeletons are examples only.
+- `preview_chart_changes` / `confirm_preview` do **not** prove template `fieldId`s or formula headers exist; inventing IDs can still preview-validate and only fail at query time.
 - Do not convert formula ↔ sql in place — recreate the calc.
-- Do not use `pivot_*` / `row_total` without a pivoted dimension.
+- Do not use `pivot_*` / `row_total` without a pivoted dimension (`pivotConfig.columns`).
 - Do not author SQL **charts** or open data-analyst / raw SQL execution to “fix” a table calc on this profile.
 - Do not freestyle warehouse-specific `OVER()` SQL when a `template` or `formula` covers the intent.
