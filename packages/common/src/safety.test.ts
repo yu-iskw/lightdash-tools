@@ -3,10 +3,8 @@ import { describe, it, expect, afterEach } from 'vitest';
 import {
   SafetyMode,
   isAllowed,
-  isOperationAllowed,
   getSafetyModeFromEnv,
   getAllowedProjectUuidsFromEnv,
-  isProjectAllowed,
   areAllProjectsAllowed,
   extractProjectUuids,
   READ_ONLY_DEFAULT,
@@ -14,25 +12,11 @@ import {
   WRITE_NONDESTRUCTIVE,
   WRITE_OPEN_WORLD,
   WRITE_DESTRUCTIVE,
-  type OperationPolicy,
-  type SafetyImpact,
 } from './safety';
 
 const UUID_A = '11111111-1111-1111-1111-111111111111';
 const UUID_B = '22222222-2222-2222-2222-222222222222';
 const UUID_C = '33333333-3333-3333-3333-333333333333';
-
-const ALL_IMPACTS: SafetyImpact[] = [
-  'read',
-  'write-nondestructive',
-  'write-destructive',
-  'credential-sensitive',
-  'external-side-effect',
-];
-
-function policy(impact: SafetyImpact): OperationPolicy {
-  return { impact };
-}
 
 describe('Safety Logic', () => {
   describe('annotation presets', () => {
@@ -133,52 +117,6 @@ describe('Safety Logic', () => {
     });
   });
 
-  describe('isOperationAllowed', () => {
-    it('should allow only read impact in read-only mode', () => {
-      expect(isOperationAllowed(SafetyMode.READ_ONLY, policy('read'))).toBe(true);
-      expect(isOperationAllowed(SafetyMode.READ_ONLY, policy('write-nondestructive'))).toBe(false);
-      expect(isOperationAllowed(SafetyMode.READ_ONLY, policy('write-destructive'))).toBe(false);
-      expect(isOperationAllowed(SafetyMode.READ_ONLY, policy('credential-sensitive'))).toBe(false);
-      expect(isOperationAllowed(SafetyMode.READ_ONLY, policy('external-side-effect'))).toBe(false);
-    });
-
-    it('should allow read, write-nondestructive, and external-side-effect in write-nondestructive mode', () => {
-      expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('read'))).toBe(true);
-      expect(
-        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('write-nondestructive')),
-      ).toBe(true);
-      expect(
-        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('external-side-effect')),
-      ).toBe(true);
-      expect(isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('write-destructive'))).toBe(
-        false,
-      );
-      expect(
-        isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy('credential-sensitive')),
-      ).toBe(false);
-    });
-
-    it('should treat write-idempotent mode the same as write-nondestructive for policy checks', () => {
-      for (const impact of ALL_IMPACTS) {
-        expect(isOperationAllowed(SafetyMode.WRITE_IDEMPOTENT, policy(impact))).toBe(
-          isOperationAllowed(SafetyMode.WRITE_NONDESTRUCTIVE, policy(impact)),
-        );
-      }
-    });
-
-    it('should allow all impacts in write-destructive mode', () => {
-      for (const impact of ALL_IMPACTS) {
-        expect(isOperationAllowed(SafetyMode.WRITE_DESTRUCTIVE, policy(impact))).toBe(true);
-      }
-    });
-
-    it('should fail closed for unknown mode strings', () => {
-      for (const impact of ALL_IMPACTS) {
-        expect(isOperationAllowed('custom-mode', policy(impact))).toBe(false);
-      }
-    });
-  });
-
   describe('getSafetyModeFromEnv', () => {
     const originalEnv = process.env.LIGHTDASH_TOOLS_SAFETY_MODE;
 
@@ -268,20 +206,6 @@ describe('Safety Logic', () => {
       expect(() => getAllowedProjectUuidsFromEnv()).toThrow(
         /LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS/,
       );
-    });
-  });
-
-  describe('isProjectAllowed', () => {
-    it('should allow all projects when allowlist is empty', () => {
-      expect(isProjectAllowed([], 'any-uuid')).toBe(true);
-    });
-
-    it('should allow a project that is in the allowlist', () => {
-      expect(isProjectAllowed(['uuid-a', 'uuid-b'], 'uuid-a')).toBe(true);
-    });
-
-    it('should deny a project that is not in the allowlist', () => {
-      expect(isProjectAllowed(['uuid-a', 'uuid-b'], 'uuid-c')).toBe(false);
     });
   });
 
