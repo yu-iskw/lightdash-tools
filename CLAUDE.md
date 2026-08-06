@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-05]: MCP SDK v2 progress uses `ctx.mcpReq.notify({ method: 'notifications/progress', params })` with `mcpReq._meta.progressToken`; a top-level `sendNotification` on `ServerContext` does not exist and silently no-ops reporters that look for it.
 - [2026-08-04]: MCP mounts are profile-owned `ToolModule` imports (ADR-0022). Export `defineTool` / `defineToolVariant` beside handlers; profiles import those modules; `registry.ts` is denylist + `registerTools` only — not a second catalog.
 - [2026-08-04]: MCP stdio is transport-first — `lightdash-mcp stdio --profile <id>` (required); bare invoke fails closed; `http` for Streamable HTTP.
 - [2026-08-04]: `AGENTS.md` Common Gotchas is capped at ≤30 lines (pointer hub + traps). Profile/ADR essays belong in `docs/adr` and `docs/profiles`; replace obsolete bullets instead of appending forever.

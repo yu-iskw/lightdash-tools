@@ -28,8 +28,10 @@ import {
   runWithMcpClientSessionAsync,
 } from '../governance/mcp-client-session.js';
 import { getPinnedProjectUuid } from '../governance/project-pin.js';
+import { createOperationReporter } from '../notifications/operation-reporter.js';
 import { classifyUpstreamError } from '../server/upstream-errors.js';
 
+import type { OperationReporter } from '../notifications/operation-reporter.js';
 import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { AuditStatus, ToolAnnotations } from '@lightdash-tools/common';
@@ -323,6 +325,8 @@ export function registerToolSafe(
 
 export type ToolExecutionContext = {
   lightdashClient: LightdashClient;
+  /** Request-scoped reporter backed by MCP progress notifications when available. */
+  operationReporter: OperationReporter;
   /** SDK ServerContext when the transport provides it (second registerTool arg). */
   serverContext: ServerContext | undefined;
   sessionId: string;
@@ -348,13 +352,15 @@ export function wrapToolContextual<T>(
       return await runWithMcpClientSessionAsync(sessionId, async () => {
         const context = await contextProvider.getContext(extra);
         const auth = context.auth;
+        const serverContext = asServerContext(extra);
 
         return await runWithToolAuditAuthAsync(
           { tokenHash: auth?.tokenHash, subject: auth?.subject },
           async () => {
             const execution: ToolExecutionContext = {
               lightdashClient: context.lightdashClient,
-              serverContext: asServerContext(extra),
+              operationReporter: createOperationReporter(serverContext),
+              serverContext,
               sessionId,
               subject: auth?.subject ?? 'anonymous',
             };
