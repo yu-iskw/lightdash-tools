@@ -52,11 +52,3 @@ export function createAxiosInstanceV1(config: ResolvedLightdashClientConfig): Ax
 export function createAxiosInstanceV2(config: ResolvedLightdashClientConfig): AxiosInstance {
   return createAxiosInstanceForVersion(config, 'v2');
 }
-
-/**
- * Creates a configured Axios instance for the Lightdash API v1.
- * @deprecated Use `createAxiosInstanceV1` instead. This function is kept for backward compatibility.
- */
-export function createAxiosInstance(config: ResolvedLightdashClientConfig): AxiosInstance {
-  return createAxiosInstanceV1(config);
-}

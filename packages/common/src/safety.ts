@@ -5,17 +5,6 @@ import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, ENV_LIGHTDASH_TOOLS_SAFETY_M
 const ENV_ALLOWED_PROJECTS_REMOVED = 'LIGHTDASH_TOOLS_ALLOWED_PROJECTS';
 
 /**
- * Semantic impact classification for operations (RFC Phase 0).
- * Used by {@link OperationPolicy} and {@link isOperationAllowed}.
- */
-export type SafetyImpact =
-  | 'credential-sensitive'
-  | 'external-side-effect'
-  | 'read'
-  | 'write-destructive'
-  | 'write-nondestructive';
-
-/**
  * Hierarchical safety modes for Lightdash AI tools and CLI.
  */
 export enum SafetyMode {
@@ -36,11 +25,6 @@ export type ToolAnnotations = {
   destructiveHint?: boolean;
   idempotentHint?: boolean;
   openWorldHint?: boolean;
-};
-
-/** Policy describing the semantic impact of an operation. */
-export type OperationPolicy = {
-  impact: SafetyImpact;
 };
 
 /** Preset: read-only, non-destructive, idempotent, closed-world. Use for list/get/compile tools. */
@@ -116,28 +100,6 @@ export function isAllowed(mode: SafetyMode | string, annotations: ToolAnnotation
 }
 
 /**
- * Validates if an operation is allowed in the current safety mode using semantic impact policy.
- * Unknown modes fail closed.
- */
-export function isOperationAllowed(mode: SafetyMode | string, policy: OperationPolicy): boolean {
-  switch (mode) {
-    case SafetyMode.READ_ONLY:
-      return policy.impact === 'read';
-    case SafetyMode.WRITE_NONDESTRUCTIVE:
-    case SafetyMode.WRITE_IDEMPOTENT:
-      return (
-        policy.impact === 'read' ||
-        policy.impact === 'write-nondestructive' ||
-        policy.impact === 'external-side-effect'
-      );
-    case SafetyMode.WRITE_DESTRUCTIVE:
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
  * Resolves safety mode from environment variable.
  * Accepts `write-idempotent` as a deprecated alias for `write-nondestructive`.
  */
@@ -173,15 +135,6 @@ export function getAllowedProjectUuidsFromEnv(): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-/**
- * Returns true if a single projectUuid is permitted by the allowlist.
- * An empty allowlist means all projects are allowed.
- */
-export function isProjectAllowed(allowedUuids: readonly string[], projectUuid: string): boolean {
-  if (allowedUuids.length === 0) return true;
-  return allowedUuids.includes(projectUuid);
 }
 
 /**
