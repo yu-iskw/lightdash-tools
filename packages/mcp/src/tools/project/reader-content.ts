@@ -37,18 +37,26 @@ export function toReaderTableCalculation(tc: unknown): Record<string, unknown> {
     name: row.name,
     displayName: row.displayName,
   };
-  for (const key of [
-    'type',
-    'format',
-    'totalMode',
-    'index',
-    'formula',
-    'sql',
-    'template',
-  ] as const) {
-    if (row[key] !== undefined) {
-      out[key] = row[key];
-    }
+  if (row.type !== undefined) {
+    out.type = row.type;
+  }
+  if (row.format !== undefined) {
+    out.format = row.format;
+  }
+  if (row.totalMode !== undefined) {
+    out.totalMode = row.totalMode;
+  }
+  if (row.index !== undefined) {
+    out.index = row.index;
+  }
+  if (row.formula !== undefined) {
+    out.formula = row.formula;
+  }
+  if (row.sql !== undefined) {
+    out.sql = row.sql;
+  }
+  if (row.template !== undefined) {
+    out.template = row.template;
   }
   return out;
 }
