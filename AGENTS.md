@@ -147,7 +147,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 
 ## Common Gotchas
 
-- Use `pnpm` only (not npm/yarn). Enable Corepack if `pnpm` is missing.
+- Use `pnpm` only (not npm/yarn). Enable Corepack if `pnpm` is missing; run `corepack enable` before `pnpm verify:*`/other scripts that shell out to `pnpm`, because `corepack pnpm <cmd>` alone does not provide the `pnpm` shim for nested calls.
 - Trunk: `@trunkio/launcher` + `pnpm trunk:install`; restricted network → `pnpm lint:eslint` / `format:eslint` / `format:prettier`.
 - pnpm v11: `overrides` live in `pnpm-workspace.yaml`; keep lockfile committed; `packageManager` is `pnpm@11.5.3`.
 - Build before ESLint (`dist/` resolves); prefer root `pnpm exec vitest run <files>` over per-package `test:fast`.
