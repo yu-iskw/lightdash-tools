@@ -7,7 +7,7 @@ import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ContentDeveloperPlaybookTopic =
-  'chart-types' | 'content-move' | 'dashboard-design' | 'dashboards';
+  'chart-types' | 'content-move' | 'dashboard-design' | 'dashboards' | 'table-calculations';
 
 const playbooks = defineProfilePlaybooks<ContentDeveloperPlaybookTopic>({
   profileId: 'content-developer',
@@ -30,7 +30,7 @@ Do not mutate the proposed payload after preview_* (description/name/SQL/metrics
 Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only (validate_chart needs chartUuid).
 Do not reuse a draft previewToken after confirm; re-run preview if the resource drifts (PREVIEW_STALE).
 Do not use subagent-driven-development or multi-task writing-plans solely to click MCP preview/confirm/apply for lab boards (e.g. experiments) — after Design Spec approval, run Batch SOP inline in the same session.
-Do not reveal secrets, warehouse credentials, or hidden SQL.`,
+Do not reveal secrets, warehouse credentials, or saved SQL chart bodies.`,
   coreDescription: 'Hard bans, tools, project scope, preview gate, and apply pitfalls',
   topics: [
     {
@@ -51,6 +51,13 @@ Do not reveal secrets, warehouse credentials, or hidden SQL.`,
       title: 'Content-developer chart-types playbook',
       description: 'Insight-first viz pick; cartesian encode checklist; UI intent → as-code map',
       file: 'chart-types.md',
+    },
+    {
+      id: 'table-calculations',
+      title: 'Content-developer table-calculations playbook',
+      description:
+        'metricQuery.tableCalculations: template → formula → sql; PoP, % of total, rank, windows',
+      file: 'table-calculations.md',
     },
     {
       id: 'content-move',

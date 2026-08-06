@@ -41,17 +41,17 @@ Record budget / pagination / truncation stops in the answer.
 
 ## Allowed tools (`lightdash_*`)
 
-| Tool                                                 | Use for                                                  |
-| ---------------------------------------------------- | -------------------------------------------------------- |
-| `get_project`                                        | Resolve project; read `readerCapabilities` + pin context |
-| `search_content`                                     | Find charts/dashboards/spaces/data apps                  |
-| `list_spaces` / `get_space`                          | Space hierarchy + immediate content                      |
-| `get_dashboard` / `get_chart`                        | Structure / definition (SQL text hidden)                 |
-| `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                  |
-| `explain_content`                                    | Compact metadata explanation                             |
-| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers)                        |
-| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless   |
-| `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid`                             |
+| Tool                                                 | Use for                                                                                                                    |
+| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `get_project`                                        | Resolve project; read `readerCapabilities` + pin context                                                                   |
+| `search_content`                                     | Find charts/dashboards/spaces/data apps                                                                                    |
+| `list_spaces` / `get_space`                          | Space hierarchy + immediate content                                                                                        |
+| `get_dashboard` / `get_chart`                        | Structure / definition (saved SQL **chart** bodies hidden; semantic `tableCalculations` may appear when query is included) |
+| `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                                                                                    |
+| `explain_content`                                    | Compact metadata explanation                                                                                               |
+| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers)                                                                                          |
+| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless                                                                     |
+| `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid`                                                                                               |
 
 ## Phase 0 — Resolve project
 

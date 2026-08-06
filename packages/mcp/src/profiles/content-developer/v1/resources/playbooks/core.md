@@ -28,7 +28,7 @@ this profile does **not** execute queries, compile explores, create spaces, or p
 - Do not reuse a **draft** token after confirm (confirm returns a **new** validated token) or after payload/baseline drift (`PREVIEW_STALE`).
 - Do not unlock with a different resource's preview — `resourceKind` / `resourceKey` must match the preview exactly.
 - Do not treat `validate_chart` / `validate_dashboard` as unlock — saved-UUID health checks only (not UI-render proof).
-- Do not reveal secrets, warehouse credentials, or hidden SQL.
+- Do not reveal secrets, warehouse credentials, or saved SQL **chart** bodies.
 
 ## Default budgets (override when the user expands scope)
 
@@ -46,21 +46,21 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 
 ## Allowed tools (`lightdash_*`)
 
-| Tool                                                                                             | Use for                                                                                          |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `get_project`                                                                                    | Resolve project; read `developerCapabilities` (mutate yes; **execute charts/tiles = false**)     |
-| `search_content`                                                                                 | Find charts/dashboards; prefer short tokens, not marketing phrases                               |
-| `list_spaces` / `get_space`                                                                      | Existing spaces; pick `spaceUuid` / `spaceSlug`                                                  |
-| `get_dashboard` / `get_chart`                                                                    | Metadata. `get_chart` arg is **`chartUuidOrSlug`** (not `chartUuid`). Tiles often omit `x/y/w/h` |
-| `get_chart_as_code`                                                                              | **Clone** upsert-shaped `chartConfig` + `metricQuery` before create/update                       |
-| `preview_chart_changes` / `preview_dashboard_changes` / `preview_content_move`                   | Mint draft `previewToken` + `resourceKey`                                                        |
-| `confirm_preview`                                                                                | Unlock; returns **new** validated token — always pass **`projectUuid`** without HTTP pin         |
-| `create_chart` / `update_chart` / `duplicate_chart`                                              | Semantic as-code writes (after confirm); set `dashboardSlug`                                     |
-| `create_dashboard` / `update_dashboard` / `duplicate_dashboard`                                  | Dashboard shell then tile updates                                                                |
-| `add_dashboard_tile` / `move_dashboard_tile` / `remove_dashboard_tile` / `resize_dashboard_tile` | Tile ops; each needs preview of the **full next tiles array**                                    |
-| `move_content`                                                                                   | Relocate into existing spaces                                                                    |
-| `validate_chart` / `validate_dashboard`                                                          | Optional post-apply health (`chartUuid` / dashboard UUID)                                        |
-| `compare_chart_versions` / `compare_dashboard_versions`                                          | Drift / refactor                                                                                 |
+| Tool                                                                                             | Use for                                                                                                                                                  |
+| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `get_project`                                                                                    | Resolve project; read `developerCapabilities` (mutate yes; **execute charts/tiles = false**)                                                             |
+| `search_content`                                                                                 | Find charts/dashboards; prefer short tokens, not marketing phrases                                                                                       |
+| `list_spaces` / `get_space`                                                                      | Existing spaces; pick `spaceUuid` / `spaceSlug`                                                                                                          |
+| `get_dashboard` / `get_chart`                                                                    | Metadata (+ query fields when included). `get_chart` is inspect-only — no `chartConfig`; use `get_chart_as_code` to clone. Arg is **`chartUuidOrSlug`**. |
+| `get_chart_as_code`                                                                              | **Clone** upsert-shaped `chartConfig` + `metricQuery` before create/update                                                                               |
+| `preview_chart_changes` / `preview_dashboard_changes` / `preview_content_move`                   | Mint draft `previewToken` + `resourceKey`                                                                                                                |
+| `confirm_preview`                                                                                | Unlock; returns **new** validated token — always pass **`projectUuid`** without HTTP pin                                                                 |
+| `create_chart` / `update_chart` / `duplicate_chart`                                              | Semantic as-code writes (after confirm); set `dashboardSlug`                                                                                             |
+| `create_dashboard` / `update_dashboard` / `duplicate_dashboard`                                  | Dashboard shell then tile updates                                                                                                                        |
+| `add_dashboard_tile` / `move_dashboard_tile` / `remove_dashboard_tile` / `resize_dashboard_tile` | Tile ops; each needs preview of the **full next tiles array**                                                                                            |
+| `move_content`                                                                                   | Relocate into existing spaces                                                                                                                            |
+| `validate_chart` / `validate_dashboard`                                                          | Optional post-apply health (`chartUuid` / dashboard UUID)                                                                                                |
+| `compare_chart_versions` / `compare_dashboard_versions`                                          | Drift / refactor                                                                                                                                         |
 
 ## Phase 0 — Resolve project
 
@@ -107,3 +107,4 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 - Tile shape: `{ type: 'saved_chart', x, y, w, h, properties: { savedChartUuid, title? } }` — use the UUID from `create_chart` / `duplicate_chart` (36-column grid; half-width ≈ `w: 18`). Optional `chartSlug` is metadata only; do not omit `savedChartUuid`.
 - `create_chart` response: extract UUID from `charts[0].data.uuid` (not a bare chart object).
 - Viz shapes: `lightdash://playbooks/content-developer/chart-types`.
+- PoP / % of total / rank / running or rolling windows on `metricQuery.tableCalculations`: `lightdash://playbooks/content-developer/table-calculations`.

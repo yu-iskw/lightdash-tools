@@ -26,6 +26,7 @@ describe('content-developer prompts/playbook', () => {
     expect(md).toContain('encode');
     expect(md).toMatch(/xref/);
     expect(md).toContain('chart-types');
+    expect(md).toContain('table-calculations');
     expect(md).not.toMatch(/`create_space`/);
     expect(md).not.toMatch(/`update_space`/);
     const toolIds = listToolIds(getProfile('content-developer'));
@@ -184,6 +185,7 @@ describe('content-developer prompts/playbook', () => {
     const promptArgs: Array<{ name: string; messages: unknown }> = [];
     let publishText = '';
     let authorText = '';
+    let authorUris: Array<string | undefined> = [];
     let refactorText = '';
     const server = {
       registerPrompt: (
@@ -221,13 +223,16 @@ describe('content-developer prompts/playbook', () => {
             goal: 'kpi',
             dashboardSlug: 'my-dash',
           }).messages as Array<{
-            content: { type: string; text?: string };
+            content: { type: string; text?: string; resource?: { uri?: string } };
           }>;
           authorText = messages
             .filter((m) => m.content.type === 'text')
             .map((m) => m.content.text ?? '')
             .join('\n')
             .toLowerCase();
+          authorUris = messages
+            .filter((m) => m.content.type === 'resource')
+            .map((m) => m.content.resource?.uri);
         }
         if (name === 'refactor_dashboard') {
           const messages = handler({
@@ -291,6 +296,9 @@ describe('content-developer prompts/playbook', () => {
     expect(publishText).toMatch(/untiled|leftover/);
     expect(publishText).toContain('content-governance');
     expect(authorText).toContain('board insight');
+    expect(authorText).toContain('table-calculations');
+    expect(authorUris).toContain('lightdash://playbooks/content-developer/chart-types');
+    expect(authorUris).toContain('lightdash://playbooks/content-developer/table-calculations');
     expect(refactorText).toMatch(/approved spec|user request allows/);
     expect(refactorText).not.toMatch(/unless explicitly requested/);
   });
