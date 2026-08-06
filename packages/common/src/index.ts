@@ -1,7 +1,3 @@
-export function greet(name: string): string {
-  return `Hello, ${name}!`;
-}
-
 // Export env var constants
 export * from './env';
 
@@ -11,7 +7,7 @@ export * from './safety';
 // Export input validation
 export * from './input-validation';
 
-// Export argument / descriptor validation
+// Export argument / resource-id validation
 export * from './argument-validation';
 
 // MCP serving profile ids (shared with audit typing)
@@ -24,10 +20,7 @@ export * from './agent-safe';
 export * from './agentops/types';
 export * from './agentops/snapshots';
 export * from './agentops/formatters';
-export {
-  extractProjectUuidsFromToolArgs,
-  hasYamlProjectDocumentArgs,
-} from './agentops/extract-yaml-project';
+export { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
 
 // Export audit logger (shared by MCP and CLI)
 export * from './audit';
