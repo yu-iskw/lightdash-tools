@@ -1,5 +1,7 @@
 # @lightdash-tools
 
+[![SBOM](https://github.com/yu-iskw/lightdash-tools/actions/workflows/sbom.yml/badge.svg)](https://github.com/yu-iskw/lightdash-tools/actions/workflows/sbom.yml)
+
 TypeScript client, CLI, and profile-scoped MCP servers for [Lightdash](https://www.lightdash.com/).
 
 ## Choose your tool
