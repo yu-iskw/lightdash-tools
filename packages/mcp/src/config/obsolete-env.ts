@@ -18,6 +18,7 @@ import {
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
 } from './env.js';
+import { readEnv } from './read-env.js';
 
 const OBSOLETE_ENV_VARS = [
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
@@ -31,13 +32,6 @@ const OBSOLETE_ENV_VARS = [
   ENV_LIGHTDASH_TOOLS_MCP_STORE,
   ENV_LIGHTDASH_TOOLS_MCP_REDIS_URL,
 ] as const;
-
-function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
-  // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants
-  const value = env[name];
-  if (value === undefined || value === '') return undefined;
-  return value;
-}
 
 /** Fail closed when operators still set removed MCP env vars. */
 export function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv = process.env): void {
