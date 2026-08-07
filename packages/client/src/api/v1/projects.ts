@@ -6,7 +6,6 @@ import { BaseApiClient } from '../base-client';
 
 import type { Project, OrganizationProject, SpaceQuery, components } from '@lightdash-tools/common';
 
-/** Results of GET projects/{projectUuid}/content-verification (verified charts + dashboards). */
 export type VerifiedContentListItem = components['schemas']['VerifiedContentListItem'];
 
 export class ProjectsClient extends BaseApiClient {

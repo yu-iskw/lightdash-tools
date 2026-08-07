@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { toReaderTableCalculation, toVerifiedContentSummary } from './reader-content.js';
+import { toReaderTableCalculation } from './reader-content.js';
 
 describe('toReaderTableCalculation', () => {
   it('preserves formula table calculations', () => {
@@ -68,72 +68,6 @@ describe('toReaderTableCalculation', () => {
       displayName: '% of total',
       format: { type: 'percent' },
       sql: '${orders.total_order_amount} / total(${orders.total_order_amount})',
-    });
-  });
-});
-
-describe('toVerifiedContentSummary', () => {
-  it('maps chart items with chartKind and exploreName', () => {
-    expect(
-      toVerifiedContentSummary({
-        contentType: 'chart',
-        uuid: 'c1',
-        contentUuid: 'c1',
-        name: 'Orders',
-        description: 'Count',
-        views: 12,
-        spaceUuid: 's1',
-        spaceName: 'Finance',
-        verifiedAt: '2026-01-01T00:00:00.000Z',
-        verifiedBy: { userUuid: 'u1', firstName: 'Ada', lastName: 'Lovelace' },
-        lastUpdatedAt: null,
-        chartKind: 'vertical_bar',
-        exploreName: 'orders',
-      }),
-    ).toEqual({
-      kind: 'chart',
-      name: 'Orders',
-      uuid: 'c1',
-      contentUuid: 'c1',
-      description: 'Count',
-      views: 12,
-      spaceUuid: 's1',
-      spaceName: 'Finance',
-      verifiedAt: '2026-01-01T00:00:00.000Z',
-      verifiedBy: { userUuid: 'u1', firstName: 'Ada', lastName: 'Lovelace' },
-      lastUpdatedAt: null,
-      chartKind: 'vertical_bar',
-      exploreName: 'orders',
-    });
-  });
-
-  it('maps dashboard items without chart fields', () => {
-    expect(
-      toVerifiedContentSummary({
-        contentType: 'dashboard',
-        uuid: 'd1',
-        contentUuid: 'd1',
-        name: 'Ops',
-        description: null,
-        views: 3,
-        spaceUuid: 's1',
-        spaceName: 'Ops',
-        verifiedAt: '2026-02-01T00:00:00.000Z',
-        verifiedBy: { userUuid: 'u2', firstName: 'Grace', lastName: 'Hopper' },
-        lastUpdatedAt: '2026-02-02T00:00:00.000Z',
-      }),
-    ).toEqual({
-      kind: 'dashboard',
-      name: 'Ops',
-      uuid: 'd1',
-      contentUuid: 'd1',
-      description: null,
-      views: 3,
-      spaceUuid: 's1',
-      spaceName: 'Ops',
-      verifiedAt: '2026-02-01T00:00:00.000Z',
-      verifiedBy: { userUuid: 'u2', firstName: 'Grace', lastName: 'Hopper' },
-      lastUpdatedAt: '2026-02-02T00:00:00.000Z',
     });
   });
 });

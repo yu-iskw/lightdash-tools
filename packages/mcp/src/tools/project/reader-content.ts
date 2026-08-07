@@ -212,34 +212,6 @@ export function registerSearchContent(
   );
 }
 
-/** Compact verified-content row for agent ranking (chart or dashboard). */
-export function toVerifiedContentSummary(item: Record<string, unknown>): Record<string, unknown> {
-  const contentType = String(item.contentType ?? 'unknown');
-  const verifiedBy = asRecord(item.verifiedBy ?? {});
-  const out: Record<string, unknown> = {
-    kind: contentType,
-    name: item.name,
-    uuid: item.uuid,
-    contentUuid: item.contentUuid,
-    description: item.description ?? null,
-    views: item.views,
-    spaceUuid: item.spaceUuid,
-    spaceName: item.spaceName,
-    verifiedAt: item.verifiedAt,
-    verifiedBy: {
-      userUuid: verifiedBy.userUuid,
-      firstName: verifiedBy.firstName,
-      lastName: verifiedBy.lastName,
-    },
-    lastUpdatedAt: item.lastUpdatedAt ?? null,
-  };
-  if (contentType === 'chart') {
-    out.chartKind = item.chartKind ?? null;
-    out.exploreName = item.exploreName ?? null;
-  }
-  return out;
-}
-
 export function registerListVerifiedContent(
   server: McpServer,
   contextProvider: McpContextProvider,
@@ -260,13 +232,10 @@ export function registerListVerifiedContent(
       wrapTool(contextProvider, (c) => async (args: { projectUuid?: string }) => {
         try {
           const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-          const results = await c.v1.projects.listVerifiedContent(scope.projectUuid);
-          const items = (Array.isArray(results) ? results : []).map((row) =>
-            toVerifiedContentSummary(asRecord(row)),
-          );
+          const items = await c.v1.projects.listVerifiedContent(scope.projectUuid);
           return jsonToolResult(
             contentReaderEnvelope(
-              { items, count: items.length },
+              { items },
               {
                 profile,
                 projectUuid: scope.projectUuid,
