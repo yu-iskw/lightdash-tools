@@ -25,6 +25,7 @@ Do not attach dashboard filters whose target.tableName is absent from a tile exp
 Do not treat chart create as done without a dashboard shell and tiles.
 Do not invent fieldIds — clone via get_chart_as_code / get_chart or use semantic-layer.
 Do not invent skinny chartConfig — clone a working as-code body and keep series/layout/encode.
+Do not set chart verified or dashboard preserveVerification unless the user explicitly asks (verify permission required).
 Do not apply a write tool without a confirmed, unexpired HMAC previewToken from the matching preview_* tool (confirm_preview unlocks every write; use the new validated token).
 Do not mutate the proposed payload after preview_* (description/name/SQL/metrics/tiles) — apply must reuse the identical proposed body or PREVIEW_STALE (content hash mismatch); any edit requires a new preview_*.
 Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only (validate_chart needs chartUuid).

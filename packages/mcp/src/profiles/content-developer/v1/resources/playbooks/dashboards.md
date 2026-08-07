@@ -19,7 +19,7 @@ get_project → list_spaces → discover seeds (read-only)
 1. `list_spaces` → existing `spaceUuid` (dashboards) / `spaceSlug` (chart as-code).
 2. `search_content` with **short** tokens (`orders`, space slug). Multi-word brand phrases often return empty — use `get_space`. Short tokens can also return noisy org-wide hits — prefer `get_space` inventory for seeds.
 3. Prefer **reuse** of existing charts as tiles when they already fit.
-4. For new charts: find a **working seed** on the same `tableName`; never invent fieldIds.
+4. For new charts: find a **working seed** on the same `tableName`; never invent fieldIds. For PoP, prefer seeds with `generationType: periodOverPeriod` metrics (see table-calculations).
 5. Dashboard-owned charts (`dashboardSlug` set) **do not** appear as independent space charts in `get_space` / typical search — keep the UUIDs you create, or re-open the dashboard.
 
 ## Create dashboard shell (step 1 — after Design Spec approval)

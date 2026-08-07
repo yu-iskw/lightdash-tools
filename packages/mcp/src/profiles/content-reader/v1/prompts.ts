@@ -52,15 +52,16 @@ ${CONTENT_READER_HARD_BANS}
 
 Project: ${projectUuid ?? '(use HTTP pin or ask for projectUuid — PROJECT_SCOPE_REQUIRED otherwise)'}.
 Content types hint: ${contentTypes ?? '(any)'}.
-Verified only: ${verifiedOnly ?? false} (verification is often null — fall back to pinned + views + description).
+Verified preference: ${verifiedOnly ?? false} (when true, call list_verified_content first — search_content does not filter by verification).
 Space filter: ${spaceUuid ?? '(none)'}.
 
 Procedure:
 1. get_project with projectUuid/pin; record readerCapabilities.
-2. search_content with short tokens (retry Japanese/single keyword / sortBy=views if empty). Use spaceUuids when given. pageSize≤25; ≤2 pages.
-3. Prefer semantic charts (source≠sql). Rank by relevance, views, pinnedList; verification is optional.
-4. Optionally list_spaces / get_space (≤3) to confirm path.
-5. Return ≤5 candidates (name/type/uuid/space/views/source/why). Do not execute unless values were requested.`,
+2. When verifiedOnly is true (or the user asked for trusted/canonical content): call list_verified_content first and prefer those matches.
+3. Else (or when the verified list is empty): search_content with short tokens (retry Japanese/single keyword / sortBy=views if empty). Use spaceUuids when given. pageSize≤25; ≤2 pages.
+4. Prefer semantic charts (source≠sql). Rank: verified first → pinned + views + description.
+5. Optionally list_spaces / get_space (≤3) to confirm path.
+6. Return ≤5 candidates (name/type/uuid/space/views/verified/source/why). Do not execute unless values were requested.`,
         'discover',
       ),
   );
@@ -122,8 +123,8 @@ Execute tiles: ${executeTiles ?? false}; max tiles: ${maximumTiles ?? 5}.
 Procedure:
 1. get_dashboard with includeTiles (+ filters as needed). Use tileUuid (not uuid); skip non-executable/markdown tiles.
 2. Describe purpose, filters, parameters, verification, and tile structure — summarize, do not dump all tiles.
-3. When execution is requested, run_dashboard_tile for ≤max relevant executable tiles; preserve dashboard context; value-only overrides.
-4. Report values/trends/failures with content + query UUIDs. Unexecuted tiles must not support conclusions.`,
+3. When execution is requested, run_dashboard_tile for ≤max relevant executable tiles; preserve dashboard context; value-only overrides. Execution uses saved date-zoom defaults unless the user asks to simulate zoom via dateZoom.
+4. Report values/trends/failures with content + query UUIDs (cite appliedDateZoom when set). Unexecuted tiles must not support conclusions.`,
         TOPIC_EXPLAIN_RUN,
       ),
   );
@@ -149,11 +150,11 @@ ${question}
 ${CONTENT_READER_HARD_BANS}
 
 Project: ${projectUuid ?? PROJECT_UUID_HINT}.
-Prefer verified=${verifiedOnly ?? false} when present; else pinned + views + description.
+Prefer verified=${verifiedOnly ?? false} when set — call list_verified_content first; else search_content (pinned + views + description). search_content does not filter by verification.
 Max executions: ${maximumExecutions ?? 3}.
 
 Procedure:
-1. get_project → search_content (short tokens; retry if empty) → pick best semantic content.
+1. get_project → when verified preferred, list_verified_content first; else search_content (short tokens; retry if empty) → pick best semantic content.
 2. Inspect metadata; execute the smallest number of saved charts/tiles required (≤ max), cache-first.
 3. Skip SQL / non-executable sources. Value-only parameter/filter overrides.
 4. State answer, content used, filter/parameter context, result time/cache, truncation, and limitations.`,

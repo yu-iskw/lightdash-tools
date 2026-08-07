@@ -4,7 +4,9 @@
 
 import { BaseApiClient } from '../base-client';
 
-import type { Project, OrganizationProject, SpaceQuery } from '@lightdash-tools/common';
+import type { Project, OrganizationProject, SpaceQuery, components } from '@lightdash-tools/common';
+
+export type VerifiedContentListItem = components['schemas']['VerifiedContentListItem'];
 
 export class ProjectsClient extends BaseApiClient {
   /** Get a project by UUID. */
@@ -20,5 +22,12 @@ export class ProjectsClient extends BaseApiClient {
   /** List charts in a project. */
   async listChartsInProject(projectUuid: string): Promise<SpaceQuery[]> {
     return this.http.get<SpaceQuery[]>(`/projects/${projectUuid}/charts`);
+  }
+
+  /** List admin-verified charts and dashboards in a project. */
+  async listVerifiedContent(projectUuid: string): Promise<VerifiedContentListItem[]> {
+    return this.http.get<VerifiedContentListItem[]>(
+      `/projects/${projectUuid}/content-verification`,
+    );
   }
 }

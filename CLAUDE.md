@@ -77,6 +77,8 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-07]: content-reader verified discovery is `list_verified_content` → `GET …/content-verification`; `search_content` / OpenAPI v2 content list has no `verifiedOnly` filter — prompt preference flags must call the dedicated tool.
+- [2026-08-07]: PoP on content-developer: prefer cloned metrics with `generationType: periodOverPeriod` from seeds; table calculations remain the fallback when seeds lack native PoP (Explorer “Add period comparison” UI is unavailable on MCP).
 - [2026-08-06]: Pivot row share SQL is `row_total(${metric})` (aggregate), not invented `pivot_row_total` — that name does not exist; `pivot_*` are offset/index/row helpers only. Preview still accepts bad SQL helpers.
 - [2026-08-06]: Content-developer `preview_chart_changes` / `confirm_preview` accept invented `tableCalculations` template `fieldId`s; copy real IDs from `get_chart_as_code` (jaffle: `orders_sum_order_amount`, not playbook-illustrative names). Profile cannot execute queries to verify calc row values.
 - [2026-08-05]: MCP SDK v2 progress uses `ctx.mcpReq.notify({ method: 'notifications/progress', params })` with `mcpReq._meta.progressToken`; a top-level `sendNotification` on `ServerContext` does not exist and silently no-ops reporters that look for it.

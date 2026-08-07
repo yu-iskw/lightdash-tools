@@ -212,6 +212,46 @@ export function registerSearchContent(
   );
 }
 
+export function registerListVerifiedContent(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerContentReaderTool(
+    server,
+    'list_verified_content',
+    {
+      title: 'List verified content',
+      description:
+        'List admin-verified charts and dashboards in the resolved project (prefer these as trusted seeds)',
+      safety: METADATA_SAFETY,
+      inputSchema: {
+        projectUuid: projectUuidField().optional(),
+      },
+    },
+    (profile) =>
+      wrapTool(contextProvider, (c) => async (args: { projectUuid?: string }) => {
+        try {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const items = await c.v1.projects.listVerifiedContent(scope.projectUuid);
+          return jsonToolResult(
+            contentReaderEnvelope(
+              { items },
+              {
+                profile,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+                complete: true,
+                truncated: false,
+              },
+            ),
+          );
+        } catch (err) {
+          return projectScopeErrorResult(err);
+        }
+      }),
+  );
+}
+
 export function registerGetDashboard(server: McpServer, contextProvider: McpContextProvider): void {
   registerContentReaderTool(
     server,
@@ -318,5 +358,9 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
 
 // ToolModule exports (profile mounts)
 export const searchContentTool = defineTool('search_content', registerSearchContent);
+export const listVerifiedContentTool = defineTool(
+  'list_verified_content',
+  registerListVerifiedContent,
+);
 export const getDashboardTool = defineTool('get_dashboard', registerGetDashboard);
 export const getChartTool = defineTool('get_chart', registerGetChart);

@@ -77,8 +77,9 @@ describe('profiles', () => {
 
   it('content-reader membership and server name', () => {
     const profile = getProfile('content-reader');
-    expect(listToolIds(profile)).toHaveLength(14);
+    expect(listToolIds(profile)).toHaveLength(15);
     expect(listToolIds(profile)).toContain('export_chart_image');
+    expect(listToolIds(profile)).toContain('list_verified_content');
     expect(getProfileServerName(profile)).toBe('lightdash-mcp-content');
   });
 
