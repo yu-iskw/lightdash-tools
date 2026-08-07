@@ -11,6 +11,7 @@ import { getProjectReaderTool } from '../../../tools/project/projects.js';
 import {
   getChartTool,
   getDashboardTool,
+  listVerifiedContentTool,
   searchContentTool,
 } from '../../../tools/project/reader-content.js';
 import { runChartTool, runDashboardTileTool } from '../../../tools/project/reader-execution.js';
@@ -32,6 +33,7 @@ export const contentReaderProfile: ProfileDefinition = {
   tools: [
     getProjectReaderTool,
     searchContentTool,
+    listVerifiedContentTool,
     listSpacesTool,
     getSpaceTool,
     getDashboardTool,

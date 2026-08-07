@@ -4,11 +4,22 @@ URI: `lightdash://playbooks/content-developer/table-calculations`
 
 Add chart-local metrics on top of explore dimensions/metrics via `metricQuery.tableCalculations`. Prefer clone (`get_chart_as_code`) then append calcs. This profile **cannot** run queries to verify row values.
 
-Docs: [overview](https://docs.lightdash.com/guides/table-calculations) · [formula](https://docs.lightdash.com/guides/formula-table-calculations) · [SQL templates](https://docs.lightdash.com/guides/table-calculations/sql-templates) · [as-code](https://docs.lightdash.com/guides/developer/dashboards-as-code) · [row](https://docs.lightdash.com/references/table-calculation-functions/row-functions) / [pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions) / [aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions) functions.
+Docs: [overview](https://docs.lightdash.com/guides/table-calculations) · [formula](https://docs.lightdash.com/guides/formula-table-calculations) · [SQL templates](https://docs.lightdash.com/guides/table-calculations/sql-templates) · [as-code](https://docs.lightdash.com/guides/developer/dashboards-as-code) · [period-over-period](https://docs.lightdash.com/guides/period-over-period) · [row](https://docs.lightdash.com/references/table-calculation-functions/row-functions) / [pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions) / [aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions) functions.
 
-## When to use
+## Native PoP metrics (prefer before table calcs)
 
-- Chart-specific PoP, % of total, rank, running total, rolling window, pivot share.
+Period-over-period may already exist on a seed as **system-generated metrics** ([period-over-period guide](https://docs.lightdash.com/guides/period-over-period); OpenAPI `generationType: periodOverPeriod`).
+
+1. `get_chart_as_code` on a rendering seed.
+2. If any metric has `generationType: periodOverPeriod` (plus `baseMetricId` / `timeDimensionId` / `periodOffset` / `granularity` as present), **preserve those metrics verbatim** — do not rebuild them as table calculations.
+3. Else use table calculations below for % change, lag, running totals, etc.
+4. KPI `big_number` with `showComparison` / compare-to-previous-row: keep from seed when present.
+
+**Hard ban:** do not invent PoP metrics by hand. This profile cannot use the Explorer “Add period comparison” UI — only clone as-code bodies.
+
+## When to use table calculations
+
+- Chart-specific PoP (when no native PoP metrics on the seed), % of total, rank, running total, rolling window, pivot share.
 - If the same calc is reused across many boards → put it in **dbt** / the semantic layer instead ([overview](https://docs.lightdash.com/guides/table-calculations)).
 
 ## Preference (playbook policy)
@@ -113,6 +124,7 @@ Field IDs are **illustrative** — copy real `fieldId`s from the explore / seed.
 - Do not invent `fieldId`s or results-header column names. Copy them from `get_chart_as_code` / explore seeds — playbook skeletons are examples only.
 - `preview_chart_changes` / `confirm_preview` do **not** prove template `fieldId`s or formula headers exist; inventing IDs can still preview-validate and only fail at query time.
 - Do not invent SQL helpers — use `total()` / `row_total()` ([aggregate](https://docs.lightdash.com/references/table-calculation-functions/aggregate-functions)) or documented `pivot_*` ([pivot](https://docs.lightdash.com/references/table-calculation-functions/pivot-functions)). There is no `pivot_row_total`.
+- Do not invent native PoP metrics (`generationType: periodOverPeriod`) — clone from a seed or use table calcs instead.
 - Do not convert formula ↔ sql in place — recreate the calc.
 - Do not use `pivot_*` / `row_total` without a pivoted dimension (`pivotConfig.columns`).
 - Do not author SQL **charts** or open data-analyst / raw SQL execution to “fix” a table calc on this profile.

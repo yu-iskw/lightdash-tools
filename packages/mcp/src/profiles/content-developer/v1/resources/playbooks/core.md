@@ -23,6 +23,7 @@ this profile does **not** execute queries, compile explores, create spaces, or p
 - Do not treat chart create as done without a dashboard shell and tiles that reference those charts.
 - Do not invent `fieldId`s. Copy from `get_chart_as_code` / `get_chart` (`includeQueryDefinition`) or semantic-layer.
 - Do not invent skinny `chartConfig` (e.g. `{ series: [{ type: 'bar' }] }` only) — clone a working as-code body and keep series/layout/encode structure.
+- Do not set chart `verified` or dashboard `preserveVerification` unless the user explicitly asks (requires verify permission; edits can drop the badge — [verified content](https://docs.lightdash.com/guides/verified-content)).
 - Do not call a write tool without a validated, unexpired HMAC `previewToken` from the matching `preview_*` then `confirm_preview`.
 - Do not mutate the proposed payload after `preview_*` (no edits to `description`, `name`, SQL, metrics, tiles, or other fields between preview and apply) — apply must reuse the **identical proposed** body or you get `PREVIEW_STALE` (content hash mismatch). Any intentional edit requires a new `preview_*`.
 - Do not reuse a **draft** token after confirm (confirm returns a **new** validated token) or after payload/baseline drift (`PREVIEW_STALE`).
@@ -107,4 +108,4 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 - Tile shape: `{ type: 'saved_chart', x, y, w, h, properties: { savedChartUuid, title? } }` — use the UUID from `create_chart` / `duplicate_chart` (36-column grid; half-width ≈ `w: 18`). Optional `chartSlug` is metadata only; do not omit `savedChartUuid`.
 - `create_chart` response: extract UUID from `charts[0].data.uuid` (not a bare chart object).
 - Viz shapes: `lightdash://playbooks/content-developer/chart-types`.
-- PoP / % of total / rank / running or rolling windows on `metricQuery.tableCalculations`: `lightdash://playbooks/content-developer/table-calculations`.
+- PoP: prefer cloned `generationType: periodOverPeriod` metrics; else % of total / rank / windows via `lightdash://playbooks/content-developer/table-calculations`.

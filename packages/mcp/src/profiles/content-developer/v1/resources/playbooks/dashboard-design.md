@@ -79,7 +79,7 @@ Skip fancy HTML/iframe unless the user asks. Loom / heading tiles: only if reque
 
 ## Filters (optional)
 
-0–3 shared **dimensions**. Prefer **one explore** for all tiles that share dashboard filters. Filters guide: [Using filters](https://docs.lightdash.com/guides/limiting-data-using-filters). Official as-code targeting: [dashboard-reference `tileTargets`](https://github.com/lightdash/lightdash/blob/main/skills/developing-in-lightdash/resources/dashboard-reference.md).
+0–3 shared **dimensions**. Prefer **one explore** for all tiles that share dashboard filters. Filters guide: [Using filters](https://docs.lightdash.com/guides/limiting-data-using-filters). Operator catalog (date windows, `is not` + NULL, etc.): [Filters reference](https://docs.lightdash.com/guides/filters). Official as-code targeting: [dashboard-reference `tileTargets`](https://github.com/lightdash/lightdash/blob/main/skills/developing-in-lightdash/resources/dashboard-reference.md).
 
 - Prefer **empty-value** saved filters so viewers choose ([saved filters](https://docs.lightdash.com/guides/limiting-data-using-filters#adding-saved-filters-to-your-dashboard)).
 - Prefer **clone** `filters` from `get_dashboard` on a working board over inventing rules.
@@ -137,6 +137,16 @@ filters:
 ```
 
 **Apply order:** compose tiles first → if excluding, `get_dashboard` for tile UUIDs → then `preview_dashboard_changes` → `confirm_preview` → `update_dashboard({ dashboard: { filters, tiles?, name?, … } })` (second update is fine when UUIDs were not known on first tile write).
+
+## Date zoom (optional)
+
+When the Objective needs viewers to change time granularity without editing charts ([date zoom](https://docs.lightdash.com/guides/date-zoom)):
+
+1. Plan in the Design Spec (Default zoom + any named controls; which tiles attach).
+2. **Clone** dashboard `config` (`dateZoomConfig`, `defaultDateZoomGranularity`, `dateZoomGranularities`, `isDateZoomDisabled`) from a working board via `get_dashboard` — do not invent tile↔field bindings.
+3. Attach only charts that have a zoomable date/timestamp dimension in results; a chart with no date field cannot join a control.
+4. Optional labels: `${table_field.granularity}` in axis / big-value labels when cloning charts that already use it.
+5. Viewer zoom is temporary in the UI; saved defaults live on the dashboard `config` you upsert.
 
 ## Tabs
 

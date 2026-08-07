@@ -212,6 +212,77 @@ export function registerSearchContent(
   );
 }
 
+/** Compact verified-content row for agent ranking (chart or dashboard). */
+export function toVerifiedContentSummary(item: Record<string, unknown>): Record<string, unknown> {
+  const contentType = String(item.contentType ?? 'unknown');
+  const verifiedBy = asRecord(item.verifiedBy ?? {});
+  const out: Record<string, unknown> = {
+    kind: contentType,
+    name: item.name,
+    uuid: item.uuid,
+    contentUuid: item.contentUuid,
+    description: item.description ?? null,
+    views: item.views,
+    spaceUuid: item.spaceUuid,
+    spaceName: item.spaceName,
+    verifiedAt: item.verifiedAt,
+    verifiedBy: {
+      userUuid: verifiedBy.userUuid,
+      firstName: verifiedBy.firstName,
+      lastName: verifiedBy.lastName,
+    },
+    lastUpdatedAt: item.lastUpdatedAt ?? null,
+  };
+  if (contentType === 'chart') {
+    out.chartKind = item.chartKind ?? null;
+    out.exploreName = item.exploreName ?? null;
+  }
+  return out;
+}
+
+export function registerListVerifiedContent(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerContentReaderTool(
+    server,
+    'list_verified_content',
+    {
+      title: 'List verified content',
+      description:
+        'List admin-verified charts and dashboards in the resolved project (prefer these as trusted seeds)',
+      safety: METADATA_SAFETY,
+      inputSchema: {
+        projectUuid: projectUuidField().optional(),
+      },
+    },
+    (profile) =>
+      wrapTool(contextProvider, (c) => async (args: { projectUuid?: string }) => {
+        try {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const results = await c.v1.projects.listVerifiedContent(scope.projectUuid);
+          const items = (Array.isArray(results) ? results : []).map((row) =>
+            toVerifiedContentSummary(asRecord(row)),
+          );
+          return jsonToolResult(
+            contentReaderEnvelope(
+              { items, count: items.length },
+              {
+                profile,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+                complete: true,
+                truncated: false,
+              },
+            ),
+          );
+        } catch (err) {
+          return projectScopeErrorResult(err);
+        }
+      }),
+  );
+}
+
 export function registerGetDashboard(server: McpServer, contextProvider: McpContextProvider): void {
   registerContentReaderTool(
     server,
@@ -318,5 +389,9 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
 
 // ToolModule exports (profile mounts)
 export const searchContentTool = defineTool('search_content', registerSearchContent);
+export const listVerifiedContentTool = defineTool(
+  'list_verified_content',
+  registerListVerifiedContent,
+);
 export const getDashboardTool = defineTool('get_dashboard', registerGetDashboard);
 export const getChartTool = defineTool('get_chart', registerGetChart);

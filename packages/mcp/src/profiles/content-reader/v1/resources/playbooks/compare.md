@@ -11,7 +11,7 @@ Compare **definitions before values**. Matching titles/labels ≠ same metric, g
 3. Diff checklist:
    - Explore / `tableName`
    - Metrics & dimensions (`fieldId`s)
-   - Filters (targets, operators, windows — e.g. `inThePast` days)
+   - Filters (targets, operators, windows — e.g. `inThePast` days; `in the last` vs completed periods vs `in the current` — [filters reference](https://docs.lightdash.com/guides/filters))
    - Time grain / timezone fields
    - Parameters, sorts, limits, pivots, table calculations
    - Chart `source` / `chartType` (semantic vs SQL)

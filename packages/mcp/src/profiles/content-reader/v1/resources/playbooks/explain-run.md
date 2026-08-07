@@ -36,7 +36,8 @@ Defaults: `useCache=true`, modest `limit` (≤100; summarize ≤20 rows in the a
 1. Pick tiles with `executable=true` and a `chartUuid` (skip markdown / non-chart tiles).
 2. Call `run_dashboard_tile` with dashboard UUID/slug + **`tileUuid`** from `get_dashboard`.
 3. Preserve dashboard context; only pass `filterOverrides` / `parameterOverrides` for **existing** filter ids / known parameter names with **values** (never retarget filters).
-4. Cap tiles per summary (`maximumTiles` / budget ≤5). Unexecuted tiles must not support conclusions.
+4. Optional **date zoom**: pass `dateZoom: { granularity?, xAxisFieldId? }` when the user asks to simulate a zoom ([date zoom](https://docs.lightdash.com/guides/date-zoom)). Otherwise execution uses the dashboard’s saved default granularity. Cite `appliedDateZoom` in the report when present.
+5. Cap tiles per summary (`maximumTiles` / budget ≤5). Unexecuted tiles must not support conclusions.
 
 ## Async handles
 

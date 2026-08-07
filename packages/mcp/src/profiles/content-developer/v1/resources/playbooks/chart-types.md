@@ -4,7 +4,7 @@ URI: `lightdash://playbooks/content-developer/chart-types`
 
 Pick a viz type to **answer an insight question** from the Design Spec Objective. The table below is a **reference map**, not a build order — do not walk every row unless the user explicitly asked for multi-viz / all chart types. Prefer **clone** (`get_chart_as_code` / `duplicate_chart`) over inventing viz configs. Docs: [overview](https://docs.lightdash.com/references/chart-types/overview).
 
-When the insight needs period-over-period, % of total, rank, or running/rolling windows, append `metricQuery.tableCalculations` per `lightdash://playbooks/content-developer/table-calculations` (do not freestyle warehouse `OVER()` SQL).
+When the insight needs period-over-period, % of total, rank, or running/rolling windows: prefer cloned native PoP metrics (`generationType: periodOverPeriod`) from the seed; otherwise append `metricQuery.tableCalculations` per `lightdash://playbooks/content-developer/table-calculations` (do not freestyle warehouse `OVER()` SQL). See [period-over-period](https://docs.lightdash.com/guides/period-over-period).
 
 When the user **does** ask for all types: follow dashboards **Multi-viz batch SOP** (shell → ≤2 concurrent chart creates → one tile update), split the board into a decision-oriented section plus a visualization-validation appendix (see `dashboards` / `dashboard-design`), and check every candidate type against the **semantic fit gate** below before adding it.
 
@@ -133,6 +133,7 @@ chartConfig:
 - Clone `chartConfig` from a rendering seed on the same `tableName`; change series `type` / top-level type only when needed.
 - FieldIds only from seed / `get_chart` / semantic-layer — never invent. this profile has **no** explore/field list tools.
 - Field IDs shown in the YAML examples below (e.g. `orders_status`) are **illustrative**, not guaranteed to exist on any given explore — verify against a seed via `get_chart_as_code` (or `get_chart`) before use.
+- **Custom fields & tooltips (clone-only):** preserve `metricQuery.customDimensions` and cartesian `eChartsConfig.tooltip` from the seed ([custom fields](https://docs.lightdash.com/guides/custom-fields), [custom tooltips](https://docs.lightdash.com/guides/custom-tooltip)). Do not invent new custom SQL dimensions or freestyle tooltip field names. Metrics reused across boards belong in dbt / semantic-layer, not chart-local custom metrics.
 - When cloning charts that use SQL/bin custom dims (e.g. coupon flags), copy `metricQuery.customDimensions` verbatim.
 - Every `metricQuery.dimensions` entry must appear in viz layout / group / sankey source-target / pivot — unused dimensions corrupt GROUP BY (“Results may be incorrect”). **Exception:** a scatter with two metric axes legitimately keeps its grain dimension (e.g. customer id) in `metricQuery.dimensions` to produce one row per entity — `validate_chart` will still flag it as "unused" because the validator only recognizes x/y-axis or group-by references, not grain-only dimensions. That warning is expected on a correct two-metric scatter; do not drop the dimension to silence it.
 - For dashboard work set `dashboardSlug` **and** tile via `update_dashboard` (ownership alone does not place tiles).
