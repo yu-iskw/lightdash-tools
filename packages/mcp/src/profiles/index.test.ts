@@ -83,6 +83,15 @@ describe('profiles', () => {
     expect(getProfileServerName(profile)).toBe('lightdash-mcp-content');
   });
 
+  it('list_verified_content is content-reader only', () => {
+    for (const id of PROFILE_IDS) {
+      if (id === 'content-reader') {
+        continue;
+      }
+      expect(listToolIds(getProfile(id))).not.toContain('list_verified_content');
+    }
+  });
+
   it('content-developer membership and short server name', () => {
     const profile = getProfile('content-developer');
     const tools = listToolIds(profile);

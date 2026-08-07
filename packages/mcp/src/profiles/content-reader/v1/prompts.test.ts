@@ -22,4 +22,11 @@ describe('content-reader prompts/playbook', () => {
     expect(md).toContain('underlying-data');
     expect(md).toContain('sql charts');
   });
+
+  it('prefers list_verified_content when verifiedOnly is set', () => {
+    const md = getAllPlaybookMarkdown().toLowerCase();
+    expect(md).toContain('list_verified_content');
+    expect(md).toMatch(/list_verified_content.*before.*search_content|verified first/);
+    expect(md).toContain('does **not** filter by verification');
+  });
 });
