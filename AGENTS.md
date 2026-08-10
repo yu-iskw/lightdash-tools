@@ -150,7 +150,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Use `pnpm` only (not npm/yarn). Enable Corepack if `pnpm` is missing.
 - Corepack: if you invoke commands via `corepack pnpm ...`, run `corepack enable` before repo scripts that shell out to nested `pnpm` (for example `pnpm build`), or those nested calls fail with `pnpm: not found`.
 - Trunk: `@trunkio/launcher` + `pnpm trunk:install`; restricted network → `pnpm lint:eslint` / `format:eslint` / `format:prettier`.
-- pnpm v11: `overrides` live in `pnpm-workspace.yaml`; keep lockfile committed; `packageManager` is `pnpm@11.5.3`.
+- pnpm v11: `overrides` live in `pnpm-workspace.yaml`; keep lockfile committed; `packageManager` is `pnpm@11.5.3`. Use exact pins (or `~`) for security bumps — `>=x.y.z` can pull the next major.
 - Build before ESLint (`dist/` resolves); prefer root `pnpm exec vitest run <files>` over per-package `test:fast`.
 - Changie: `kindFormat: '### {{.Kind}}'`; fragments use kind keys (`feat`/`fix`), not Keep-a-Changelog labels.
 - `pnpm -r version` needs a clean tree — bump `packages/*/package.json` versions directly if dirty.

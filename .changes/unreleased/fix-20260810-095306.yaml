@@ -1,0 +1,3 @@
+kind: fix
+body: Bump js-yaml to 4.3.1 and nanoid to 3.3.17 to remediate High SBOM findings (GHSA-5p4m-2wfm-xmqj, GHSA-2v37-7h3g-55p8).
+time: 2026-08-10T09:53:06.502972+09:00
