@@ -152,7 +152,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Trunk: `@trunkio/launcher` + `pnpm trunk:install`; restricted network → `pnpm lint:eslint` / `format:eslint` / `format:prettier`.
 - pnpm v11: `overrides` live in `pnpm-workspace.yaml`; keep lockfile committed; `packageManager` is `pnpm@11.5.3`. Use exact pins (or `~`) for security bumps — `>=x.y.z` can pull the next major.
 - Build before ESLint (`dist/` resolves); prefer root `pnpm exec vitest run <files>` over per-package `test:fast`.
-- Changie: `kindFormat: '### {{.Kind}}'`; fragments use kind keys (`feat`/`fix`), not Keep-a-Changelog labels.
+- Changie: `kindFormat: '### {{.Kind}}'`; fragments use kind keys (`feat`/`fix`), not Keep-a-Changelog labels. After `changie merge`, Trunk/Prettier reformats CHANGELOG.md (`*` → `-`, blank lines).
 - `pnpm -r version` needs a clean tree — bump `packages/*/package.json` versions directly if dirty.
 - Agent surface: MCP profiles own mounts via `tools: ToolModule[]` imports (ADR-0022); irrecoverable tool ids stay on `IRRECOVERABLE_TOOL_DENYLIST` (ADR-0004).
 - MCP: `registerToolSafe()` only; CLI: `wrapAction()`; serving profile via `bindServerProfile` + profile `tools` array.
