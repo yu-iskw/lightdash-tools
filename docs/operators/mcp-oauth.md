@@ -43,6 +43,9 @@ npx @lightdash-tools/mcp http
 Verify:
 
 ```bash
+curl -fsS "https://lightdash-mcp.example.com/health/live"
+# {"status":"ok"} — unauthenticated process probe (not OAuth)
+
 curl -s "https://lightdash-mcp.example.com/.well-known/oauth-protected-resource" | jq .
 # authorization_servers: ["https://lightdash-mcp.example.com"]
 
@@ -99,14 +102,15 @@ CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `DRY_RUN`. Share
 
 ## Broker routes
 
-| Path                                      | Purpose                                                       |
-| :---------------------------------------- | :------------------------------------------------------------ |
-| `/oauth/authorize`                        | Start client OAuth; redirect to Lightdash with fixed callback |
-| `/oauth/callback`                         | Lightdash redirect; exchange code with client secret          |
-| `/oauth/token`                            | Client token exchange (PKCE)                                  |
-| `/oauth/register`                         | Thin DCR stub (public client)                                 |
-| `/.well-known/oauth-authorization-server` | Broker AS metadata                                            |
-| `/.well-known/oauth-protected-resource`   | PRM (`authorization_servers` = `PUBLIC_URL`)                  |
+| Path                                      | Purpose                                                                      |
+| :---------------------------------------- | :--------------------------------------------------------------------------- |
+| `/oauth/authorize`                        | Start client OAuth; redirect to Lightdash with fixed callback                |
+| `/oauth/callback`                         | Lightdash redirect; exchange code with client secret                         |
+| `/oauth/token`                            | Client token exchange (PKCE)                                                 |
+| `/oauth/register`                         | Thin DCR stub (public client)                                                |
+| `/.well-known/oauth-authorization-server` | Broker AS metadata                                                           |
+| `/.well-known/oauth-protected-resource`   | PRM (`authorization_servers` = `PUBLIC_URL`)                                 |
+| `/health/live`, `/health/ready`           | Unauthenticated process probes (not OAuth; see [cloud-run.md](cloud-run.md)) |
 
 ## Related
 
