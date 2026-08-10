@@ -1,0 +1,3 @@
+kind: feat
+body: 'MCP HTTP: optional LIGHTDASH_TOOLS_MCP_PROFILES allowlist to mount a subset of fixed profile paths.'
+time: 2026-08-10T08:57:35.884372+09:00

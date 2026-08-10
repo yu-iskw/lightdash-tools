@@ -10,6 +10,8 @@ export const ENV_PLATFORM_PORT = 'PORT';
 export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_URL';
 /** Rejected at config load — MCP path is profile-owned (see profiles/). */
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
+/** Optional HTTP mount allowlist (comma-separated ProfileIds). Unset/empty → all. Stdio ignores. */
+export const ENV_LIGHTDASH_TOOLS_MCP_PROFILES = 'LIGHTDASH_TOOLS_MCP_PROFILES';
 /** Rejected — auth mode is inferred from credentials (ADR-0007). */
 export const ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE = 'LIGHTDASH_TOOLS_MCP_AUTH_MODE';
 export const ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY = 'LIGHTDASH_TOOLS_MCP_SHARED_KEY';

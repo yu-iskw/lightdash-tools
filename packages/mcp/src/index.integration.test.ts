@@ -6,10 +6,9 @@ import { describe, it, expect } from 'vitest';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { validateLightdashAccessToken } from './auth/resource-server/lightdash-token-validation.js';
 import { getClient } from './config/runtime.js';
+import { makeTestMcpHttpConfig } from './config/test-mcp-http-config.js';
 import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared';
-
-import type { McpHttpConfig } from './config/load-mcp-config.js';
 
 const hasCredentials = !!process.env.LIGHTDASH_API_KEY && !!process.env.LIGHTDASH_URL;
 const hasOAuthToken =
@@ -67,20 +66,10 @@ describe.runIf(hasOAuthToken)('MCP Integration (OAuth access token)', () => {
   it('validates live OAuth bearer token against Lightdash via GET /api/v1/user', async () => {
     const lightdashUrl = process.env.LIGHTDASH_URL!.replace(/\/$/, '');
     const accessToken = process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN!;
-    const config: McpHttpConfig = {
+    const config = makeTestMcpHttpConfig({
       lightdashUrl,
-      host: '127.0.0.1',
-      port: 3100,
-      publicUrl: 'https://mcp.example.com',
-      mcpPath: '/semantic-layer/v1/mcp',
-      authMode: 'lightdash-oauth',
-      allowedOrigins: [],
       maxBodyBytes: 1024 * 1024,
-      requiredScopes: ['mcp:read'],
-      scopesSupported: ['mcp:read', 'mcp:write'],
-      validateToken: true,
-      tokenValidationCacheTtlMs: 30_000,
-    };
+    });
 
     const user = await validateLightdashAccessToken(config, accessToken);
 

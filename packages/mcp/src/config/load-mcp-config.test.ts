@@ -1,11 +1,19 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  CONTENT_DEVELOPER_PROFILE_PATH,
+  CONTENT_READER_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../profiles/index.js';
+
+import { UNRESTRICTED_ENABLED_PROFILES } from './enabled-profiles.js';
+import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
+  ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
@@ -254,6 +262,55 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.validateToken).toBe(false);
+  });
+
+  it('keeps default mcpPath when MCP_PROFILES is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.enabledProfiles).toEqual(UNRESTRICTED_ENABLED_PROFILES);
+    expect(config.mcpPath).toBe(SEMANTIC_LAYER_PROFILE_PATH);
+  });
+
+  it('keeps semantic-layer mcpPath when that id is in the allowlist', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'semantic-layer, content-reader';
+
+    const config = loadMcpHttpConfig();
+    expect(config.enabledProfiles.restricted).toBe(true);
+    expect(config.mcpPath).toBe(SEMANTIC_LAYER_PROFILE_PATH);
+  });
+
+  it('uses first PROFILE_IDS-enabled mcpPath when semantic-layer is omitted', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader,content-developer';
+
+    const config = loadMcpHttpConfig();
+    expect(config.mcpPath).toBe(CONTENT_DEVELOPER_PROFILE_PATH);
+  });
+
+  it('rejects unknown MCP_PROFILES ids and empty segments', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'not-a-profile';
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PROFILES);
+
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader,';
+    expect(() => loadMcpHttpConfig()).toThrow(/empty segments/);
+  });
+
+  it('still strips disabled profile suffixes from PUBLIC_URL', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
+      'https://mcp.example.com/content-governance/v1/mcp';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('https://mcp.example.com');
+    expect(config.mcpPath).toBe(CONTENT_READER_PROFILE_PATH);
   });
 
   it('rejects LIGHTDASH_TOOLS_MCP_PATH', () => {

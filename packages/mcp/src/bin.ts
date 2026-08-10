@@ -58,7 +58,7 @@ program
 
 program
   .command('http')
-  .description('Run MCP server over Streamable HTTP (all fixed profile paths)')
+  .description('Run MCP server over Streamable HTTP (fixed profile paths)')
   .addHelpText('after', formatProfilesHelp)
   .action(() => {
     runHttp();

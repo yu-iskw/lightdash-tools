@@ -42,5 +42,7 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 19. [MCP data-analyst profile ad-hoc metric-query boundary](0020-mcp-data-analyst-profile-ad-hoc-metric-query-boundary.md)
 20. [MCP mount membership via literal profile tables](0021-mcp-mount-membership-via-literal-profile-tables.md) (superseded by 0022)
 21. [MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
+22. [Request-scoped MCP operation notifications](0023-request-scoped-mcp-operation-notifications.md)
+23. [MCP HTTP profile mount allowlist via env](0024-mcp-http-profile-mount-allowlist-via-env.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

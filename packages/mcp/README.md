@@ -55,7 +55,7 @@ Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp 
 
 ### Streamable HTTP (remote)
 
-`http` mounts **every** fixed path from the profile table (no `--profile`); clients pick the path in the URL.
+`http` mounts every fixed path from the profile table by default (no `--profile`); clients pick the path in the URL. Optionally restrict mounts with `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset or empty → all).
 
 ```bash
 export LIGHTDASH_URL="https://app.lightdash.cloud"
@@ -87,9 +87,9 @@ Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `
 
 ### HTTP OAuth (primary)
 
-| Required                                                                                                                    | Common optional                                                                                         |
-| :-------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ |
-| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), token cache TTL |
+| Required                                                                                                                    | Common optional                                                                                                                                               |
+| :-------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist), token cache TTL |
 
 On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).
 
@@ -97,9 +97,9 @@ Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect 
 
 ### Content-developer / content-governance signing
 
-| Required (non-test)                     | Notes                                                                                           |
-| :-------------------------------------- | :---------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC `previewToken` / `requestState` (fail closed if unset; not encryption) |
+| Required (non-test)                     | Notes                                                                                                                                                                                                     |
+| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC `previewToken` / `requestState` (fail closed if unset; not encryption). Required only when `content-developer` or `content-governance` is mounted (including unrestricted HTTP). |
 
 Governance soft-delete needs client form elicitation; missing capability → `ELICITATION_REQUIRED`.
 
@@ -109,6 +109,23 @@ Governance soft-delete needs client form elicitation; missing capability → `EL
 | :--------- | :----------------------------------------------------- |
 | Shared-key | `LIGHTDASH_API_KEY` + `LIGHTDASH_TOOLS_MCP_SHARED_KEY` |
 | Local none | `NODE_ENV=development` (not `production`)              |
+
+### Profile allowlist
+
+Optional HTTP-only mount ceiling. Unset or empty → all seven shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
+
+**Format**
+
+- Comma-separated profile ids from the table above (`semantic-layer`, `content-reader`, …)
+- Whitespace around commas is ignored
+- No empty segments (double commas are rejected)
+- Unknown ids fail at process startup
+
+```bash
+export LIGHTDASH_TOOLS_MCP_PROFILES="content-reader,content-developer"
+```
+
+Architecture: [ADR-0024](../../docs/adr/0024-mcp-http-profile-mount-allowlist-via-env.md).
 
 ### Project allowlist
 
