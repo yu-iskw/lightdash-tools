@@ -68,10 +68,19 @@ npx @lightdash-tools/mcp http
 
 Profile MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`). On Cloud Run / containers, when that env is unset, the platform `PORT` is used.
 
+HTTP process probes (unauthenticated, not MCP tools; always mounted even when `LIGHTDASH_TOOLS_MCP_PROFILES` restricts profile paths). Stdio has no health paths.
+
+| Path                | Typical use                            | Success                       | Failure                           |
+| :------------------ | :------------------------------------- | :---------------------------- | :-------------------------------- |
+| `GET /health/live`  | Liveness / Compose / Cloud Run startup | `200` `{ "status": "ok" }`    | process down                      |
+| `GET /health/ready` | Readiness (shared-key / local `none`)  | `200` `{ "status": "ready" }` | `503` `{ "status": "not ready" }` |
+
+`/health/ready` only checks that a Lightdash API client can be constructed when the process uses an API key. Hosted OAuth mode does not require a key, so ready ≈ live — it does **not** ping upstream Lightdash. Probe recipe: [cloud-run.md](../../docs/operators/cloud-run.md).
+
 - Hosted OAuth (Cursor URL-only): [docs/operators/cursor-claude.md](../../docs/operators/cursor-claude.md)
 - Operator guide: [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md)
 
-Local Compose smoke: `docker compose -f docker-compose.dev.yml up --build` → `http://localhost:8080/semantic-layer/v1/mcp`.
+Local Compose smoke: `docker compose -f docker-compose.dev.yml up --build` → `http://localhost:8080/semantic-layer/v1/mcp` (Compose healthcheck is `GET /health/live`).
 
 ## Configuration
 
@@ -215,20 +224,11 @@ When a tool handler throws (for example a Lightdash HTTP/API failure), MCP retur
 
 Intentional API upgrades still go through the pinned OpenAPI sync (`config/lightdash-openapi-ref.txt`). This layer only makes runtime drift fail safely and legibly.
 
-## Migration from `@lightdash-tools/semantic-layer-mcp`
-
-| Removed / old                                 | Use instead                               |
-| :-------------------------------------------- | :---------------------------------------- |
-| `@lightdash-tools/semantic-layer-mcp`         | `@lightdash-tools/mcp`                    |
-| Binary `lightdash-semantic-layer-mcp`         | `lightdash-mcp`                           |
-| HTTP `/mcp` (old)                             | `/semantic-layer/v1/mcp`                  |
-| Unprefixed tool names                         | `lightdash_*`                             |
-| `lightdash-mcp <profile>` / `stdio <profile>` | `lightdash-mcp stdio --profile <profile>` |
-
 ## Further reading
 
 - Architecture / contributing — [CONTRIBUTING.md](./CONTRIBUTING.md)
 - OAuth operator guide — [docs/operators/mcp-oauth.md](../../docs/operators/mcp-oauth.md)
+- Cloud Run — [docs/operators/cloud-run.md](../../docs/operators/cloud-run.md)
 - Cursor hosted OAuth — [docs/operators/cursor-claude.md](../../docs/operators/cursor-claude.md)
 - Architecture decisions — [docs/adr/](../../docs/adr/)
 - MCP transports — [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports)

@@ -1,0 +1,3 @@
+kind: docs
+body: Document MCP HTTP health probes (/health/live, /health/ready) in the package README and Cloud Run operator guide.
+time: 2026-08-10T11:19:19.772527+09:00

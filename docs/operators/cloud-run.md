@@ -23,6 +23,31 @@ ENV LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 CMD ["node", "packages/mcp/dist/bin.js", "http"]
 ```
 
+## Health probes
+
+Unauthenticated HTTP probes (always mounted, including when `LIGHTDASH_TOOLS_MCP_PROFILES` restricts MCP paths). They are not MCP tools and do not require OAuth. Prefer **`GET /health/live`** for Cloud Run [startup and liveness](https://docs.cloud.google.com/run/docs/configuring/healthchecks) — same path Compose uses. Contract: [packages/mcp/README.md](../../packages/mcp/README.md).
+
+| Path            | When to use        | Success                       | Notes                                                                                      |
+| :-------------- | :----------------- | :---------------------------- | :----------------------------------------------------------------------------------------- |
+| `/health/live`  | startup + liveness | `200` `{ "status": "ok" }`    | Process is listening                                                                       |
+| `/health/ready` | optional readiness | `200` `{ "status": "ready" }` | `503` if an API-key client cannot be constructed; hosted OAuth has no key, so ready ≈ live |
+
+```bash
+curl -fsS http://127.0.0.1:8080/health/live
+```
+
+Example deploy flags (container port `8080`):
+
+```bash
+gcloud run deploy lightdash-mcp \
+  --image=gcr.io/PROJECT_ID/lightdash-mcp \
+  --port=8080 \
+  --startup-probe=httpGet.path=/health/live,httpGet.port=8080,periodSeconds=10,timeoutSeconds=1,failureThreshold=3 \
+  --liveness-probe=httpGet.path=/health/live,httpGet.port=8080,periodSeconds=10,timeoutSeconds=1,failureThreshold=3
+```
+
+Do not treat `/health/ready` as an upstream Lightdash dependency check in hosted OAuth mode.
+
 ## Cloud Run environment variables
 
 ```bash
@@ -119,3 +144,4 @@ gcloud run deploy lightdash-mcp \
 - [ ] Audit sink / retention configured if compliance requires >30 days
 - [ ] `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` set when the service must not see the whole org
 - [ ] `LIGHTDASH_TOOLS_MCP_PROFILES` set when the service must not mount every persona
+- [ ] Startup / liveness probe is `GET /health/live` on the container port

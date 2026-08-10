@@ -51,7 +51,7 @@ Use Cloudflare quick tunnel so Cursor’s post-callback Mozilla GETs to PRM/AS m
 
 2. Copy the printed `https://*.trycloudflare.com` URL into gitignored `.env` as `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, and into `.cursor/mcp.json` as the MCP `url` host (`…/semantic-layer/v1/mcp`).
 
-3. Start (or recreate) MCP so it picks up `.env`. Wait for `healthy` in `docker compose -f docker-compose.dev.yml ps` before relying on the tunnel:
+3. Start (or recreate) MCP so it picks up `.env`. Wait for `healthy` in `docker compose -f docker-compose.dev.yml ps` (Compose probes `GET /health/live`) before relying on the tunnel:
 
    ```bash
    docker compose -f docker-compose.dev.yml up --build -d
