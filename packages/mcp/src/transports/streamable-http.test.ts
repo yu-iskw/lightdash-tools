@@ -5,6 +5,7 @@ import {
   getAuthorizationServerMetadataUrl,
 } from '../auth/resource-server/oauth-protected-resource.js';
 import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
+import { parseEnabledProfiles } from '../config/enabled-profiles.js';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
@@ -139,6 +140,26 @@ describe('streamable HTTP OAuth metadata', () => {
     await expect(createStreamableHttpServer(makeTestMcpHttpConfig({ port: 0 }))).rejects.toThrow(
       /LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY/,
     );
+
+    if (savedVitest !== undefined) {
+      process.env.VITEST = savedVitest;
+    }
+  });
+
+  it('allows HTTP startup without request-state key when write profiles are disabled', async () => {
+    const savedVitest = process.env.VITEST;
+    delete process.env.VITEST;
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY];
+
+    const handle = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+    expect(handle.port).toBeGreaterThan(0);
+    await handle.close();
 
     if (savedVitest !== undefined) {
       process.env.VITEST = savedVitest;

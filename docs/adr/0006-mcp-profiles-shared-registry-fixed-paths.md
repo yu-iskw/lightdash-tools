@@ -6,7 +6,7 @@ Date: 2026-08-04
 
 Accepted
 
-Amended by profile boundary ADRs (0010, 0012, 0014, 0015, 0017, 0018, 0020). Mount membership superseded by profile-owned ToolModules ([ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md); former catalog/membership ADRs 0013/0021). Stdio has no default (2026-08-04): bare invoke fails closed; use `lightdash-mcp stdio --profile <id>` or `http`.
+Amended by profile boundary ADRs (0010, 0012, 0014, 0015, 0017, 0018, 0020) and [24. MCP HTTP profile mount allowlist via env](0024-mcp-http-profile-mount-allowlist-via-env.md). Mount membership superseded by profile-owned ToolModules ([ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md); former catalog/membership ADRs 0013/0021). Stdio has no default (2026-08-04): bare invoke fails closed; use `lightdash-mcp stdio --profile <id>` or `http`.
 
 ## Context
 

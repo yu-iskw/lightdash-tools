@@ -12,12 +12,18 @@ import {
 import { getDefaultProfile, listProfilePaths } from '../profiles/index.js';
 
 import {
+  parseEnabledProfiles,
+  resolveRootMcpPath,
+  type EnabledProfilesPolicy,
+} from './enabled-profiles.js';
+import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
   ENV_PLATFORM_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
+  ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
@@ -178,6 +184,8 @@ export interface McpHttpConfig {
   port: number;
   publicUrl?: string;
   mcpPath: string;
+  /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
+  enabledProfiles: EnabledProfilesPolicy;
   authMode: McpAuthMode;
   sharedKey?: SecretString;
   /** Server-held Lightdash OAuth application client id (broker mode). */
@@ -387,7 +395,8 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
-  const mcpPath = getDefaultProfile().path;
+  const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
+  const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
 
@@ -419,6 +428,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     ),
     publicUrl,
     mcpPath,
+    enabledProfiles,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     ...resolveOAuthCredentials(authMode, oauthClientId, oauthClientSecretRaw),

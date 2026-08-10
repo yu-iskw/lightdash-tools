@@ -10,7 +10,7 @@ const TEST_FALLBACK_KEY = 'lightdash-tools-dev-request-state-key!!';
 export const PREVIEW_TOKEN_KEY_PURPOSE = 'content-developer preview tokens are enabled';
 export const DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE =
   'content-governance destructive tools are enabled';
-/** HTTP ships all profiles; preview + destructive elicitation share one signing key. */
+/** Preview + destructive elicitation share one signing key when write profiles are mounted. */
 export const HTTP_SIGNED_STATE_KEY_PURPOSE =
   'HTTP MCP exposes content-developer preview tokens and content-governance destructive tools';
 

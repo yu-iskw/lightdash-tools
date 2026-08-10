@@ -1,3 +1,4 @@
+import { isProfileEnabled } from '../../config/enabled-profiles.js';
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../../config/env.js';
 import { normalizeMcpPath } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
@@ -56,16 +57,13 @@ export function getProtectedResourceMetadataPathUrl(
 
 /**
  * Resolves the profile MCP path for a PRM well-known request.
- * Root PRM maps to the default profile (`config.mcpPath`); path-specific PRM
- * is served only for shipped profile paths.
+ * Root PRM maps to `config.mcpPath`; path-specific PRM is served only for
+ * enabled shipped profile paths (ADR-0024).
  */
 export function resolveProtectedResourceMcpPath(
   path: string,
   config: McpHttpConfig,
 ): string | undefined {
-  if (!path.startsWith(OAUTH_PROTECTED_RESOURCE_ROOT)) {
-    return undefined;
-  }
   if (path === OAUTH_PROTECTED_RESOURCE_ROOT) {
     return config.mcpPath;
   }
@@ -74,7 +72,11 @@ export function resolveProtectedResourceMcpPath(
     return undefined;
   }
   const resourcePath = `/${path.slice(prefix.length)}`;
-  return getProfileByPath(resourcePath)?.path;
+  const profile = getProfileByPath(resourcePath);
+  if (!profile || !isProfileEnabled(config.enabledProfiles, profile.id)) {
+    return undefined;
+  }
+  return profile.path;
 }
 
 /** Well-known OAuth Authorization Server Metadata URL for an AS origin. */

@@ -5,6 +5,8 @@ import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { getAuthorizationServerMetadataUrl } from './auth/resource-server/oauth-protected-resource.js';
+import { parseEnabledProfiles } from './config/enabled-profiles.js';
+import { makeTestMcpHttpConfig } from './config/test-mcp-http-config.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
 
 import type { McpHttpConfig } from './config/load-mcp-config.js';
@@ -152,23 +154,18 @@ async function startMockLightdashServer(): Promise<MockLightdashServer> {
   };
 }
 
-function baseOAuthConfig(lightdashUrl: string): McpHttpConfig {
-  return {
+function baseOAuthConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig>): McpHttpConfig {
+  return makeTestMcpHttpConfig({
     lightdashUrl,
-    host: '127.0.0.1',
     port: 0,
     publicUrl: 'http://127.0.0.1:0',
-    mcpPath: '/semantic-layer/v1/mcp',
-    authMode: 'lightdash-oauth',
     oauthClientId: 'test-client-id',
     oauthClientSecret: new SecretString('test-client-secret'),
-    allowedOrigins: [],
     maxBodyBytes: 1024 * 1024,
     requiredScopes: [],
     scopesSupported: [],
-    validateToken: true,
-    tokenValidationCacheTtlMs: 30_000,
-  };
+    ...overrides,
+  });
 }
 
 async function postMcp(
@@ -662,6 +659,60 @@ describe('MCP HTTP transport (sessionless)', () => {
   });
 });
 
+describe('MCP HTTP profile mount allowlist', () => {
+  let mockLightdash: MockLightdashServer;
+  let mcpServer: McpHttpServer;
+
+  beforeEach(async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockLightdash = await startMockLightdashServer();
+    mcpServer = await createStreamableHttpServer(
+      baseOAuthConfig(mockLightdash.baseUrl, {
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+  });
+
+  afterEach(async () => {
+    await mcpServer.close();
+    await mockLightdash.close();
+    vi.restoreAllMocks();
+  });
+
+  it('404s disabled profile MCP paths and their path-specific PRM', async () => {
+    const mcpResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+    expect(mcpResponse.status).toBe(404);
+
+    const prmResponse = await fetch(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/semantic-layer/v1/mcp`,
+    );
+    expect(prmResponse.status).toBe(404);
+  });
+
+  it('keeps enabled profile MCP and PRM reachable', async () => {
+    const mcpResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
+      token: TOKEN_A,
+      path: '/content-reader/v1/mcp',
+    });
+    expect(mcpResponse.status).toBe(200);
+
+    const prmResponse = await fetch(
+      `${mcpServer.baseUrl}/.well-known/oauth-protected-resource/content-reader/v1/mcp`,
+    );
+    expect(prmResponse.status).toBe(200);
+    const metadata = (await prmResponse.json()) as { resource: string };
+    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/content-reader/v1/mcp`);
+  });
+
+  it('serves root PRM for the first enabled profile path', async () => {
+    const response = await fetch(`${mcpServer.baseUrl}/.well-known/oauth-protected-resource`);
+    expect(response.status).toBe(200);
+    const metadata = (await response.json()) as { resource: string };
+    expect(metadata.resource).toBe(`${mcpServer.baseUrl}/content-reader/v1/mcp`);
+  });
+});
+
 describe('MCP HTTP shared-key integration', () => {
   let mcpServer: McpHttpServer;
   const originalEnv = { ...process.env };
@@ -672,20 +723,18 @@ describe('MCP HTTP shared-key integration', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env.LIGHTDASH_API_KEY = 'ldpat_test_key';
 
-    mcpServer = await createStreamableHttpServer({
-      lightdashUrl: 'https://app.lightdash.cloud',
-      host: '127.0.0.1',
-      port: 0,
-      mcpPath: '/semantic-layer/v1/mcp',
-      authMode: 'shared-key',
-      sharedKey: new SecretString('shared-secret'),
-      allowedOrigins: [],
-      maxBodyBytes: 1024 * 1024,
-      requiredScopes: [],
-      scopesSupported: ['mcp:read'],
-      validateToken: false,
-      tokenValidationCacheTtlMs: 30_000,
-    });
+    mcpServer = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        publicUrl: undefined,
+        authMode: 'shared-key',
+        sharedKey: new SecretString('shared-secret'),
+        maxBodyBytes: 1024 * 1024,
+        requiredScopes: [],
+        scopesSupported: ['mcp:read'],
+        validateToken: false,
+      }),
+    );
   });
 
   afterEach(async () => {

@@ -1,5 +1,6 @@
 /**
- * Shipped MCP profiles (path → definition). No PROFILE/PATH env knobs (ADR-0006).
+ * Shipped MCP profiles (path → definition). No free-form PATH env (ADR-0006).
+ * HTTP may filter mounts via LIGHTDASH_TOOLS_MCP_PROFILES (ADR-0024); catalog stays complete.
  */
 
 import { PROFILE_IDS } from '@lightdash-tools/common';

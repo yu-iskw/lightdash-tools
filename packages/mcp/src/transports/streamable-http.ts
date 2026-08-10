@@ -30,6 +30,11 @@ import {
 import { authenticateSharedKey } from '../auth/resource-server/shared-key-middleware.js';
 import { hashToken } from '../auth/token-hash.js';
 import {
+  isProfileEnabled,
+  listEnabledProfilePaths,
+  requiresSignedStateKey,
+} from '../config/enabled-profiles.js';
+import {
   getOAuthCallbackUrl,
   loadMcpHttpConfig,
   requiresLightdashApiKey,
@@ -46,7 +51,7 @@ import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
 } from '../governance/project-pin.js';
-import { getProfileByPath, listProfilePaths } from '../profiles/index.js';
+import { getProfileByPath } from '../profiles/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
@@ -279,7 +284,9 @@ export async function createStreamableHttpServer(
 
   warnIgnoredCliGuardrailEnvVars();
   validateAvailableProjectsConfig();
-  assertHttpSignedStateKeyConfigured();
+  if (requiresSignedStateKey(inputConfig.enabledProfiles)) {
+    assertHttpSignedStateKeyConfigured();
+  }
   initAuditLog(getAuditLogPath());
 
   let httpConfig = inputConfig;
@@ -329,7 +336,7 @@ export async function createStreamableHttpServer(
 export function startStreamableHttpServer(config?: McpHttpConfig): void {
   void createStreamableHttpServer(config)
     .then(({ baseUrl, config: httpConfig }) => {
-      const paths = listProfilePaths()
+      const paths = listEnabledProfilePaths(httpConfig.enabledProfiles)
         .map((p) => `${baseUrl}${p}`)
         .join(', ');
       console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
@@ -444,7 +451,7 @@ async function handleHttpRequest(
   }
 
   const profile = getProfileByPath(path);
-  if (!profile) {
+  if (!profile || !isProfileEnabled(config.enabledProfiles, profile.id)) {
     sendJson(res, 404, { error: 'Not Found' });
     return;
   }
