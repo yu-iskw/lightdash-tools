@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-10]: OpenAPI sync is pin-first: write a release commit SHA to `config/lightdash-openapi-ref.txt`, then `pnpm --filter @lightdash-tools/common generate:types` — skills that implied always-from-`main` were wrong.
 - [2026-08-10]: After `changie merge`, Trunk/Prettier rewrites CHANGELOG.md (`*` bullets → `-`, blank lines around headings). Format before claiming lint clean.
 - [2026-08-10]: pnpm `overrides` with `>=x.y.z` can jump majors (`js-yaml` 4→5, `nanoid` 3→6). Pin exact patched lines (4.3.1 / 3.3.17) for SBOM High CVEs.
 - [2026-08-10]: HTTP `LIGHTDASH_TOOLS_MCP_PROFILES` is a mount allowlist (unset = all seven paths); stdio still requires `--profile` and ignores this env. Disabled paths and their RFC 9728 PRM 404.

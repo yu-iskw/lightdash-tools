@@ -164,7 +164,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Stateless MCP HTTP (ADR-0019): no SessionStore/Redis; obsolete store/redis env fail closed; OAuth broker is in-memory (sticky `/oauth/*`).
 - Content-developer: do not edit proposed body after preview (hash mismatch ≠ TTL); see ADR-0014/0019. Table-calc `fieldId`s must come from `get_chart_as_code` — preview/confirm do not prove they exist. Prefer cloned `generationType: periodOverPeriod` metrics over inventing PoP; do not set `verified` / `preserveVerification` unless the user asks.
 - content-reader: prefer `list_verified_content` (GET `…/content-verification`) for trusted seeds; `search_content` has no `verifiedOnly` filter.
-- OpenAPI lists are wrapped (`results.data.<key>`); pin in `config/lightdash-openapi-ref.txt` — never hand-edit generated types.
+- OpenAPI lists are wrapped (`results.data.<key>`); bump `config/lightdash-openapi-ref.txt` (40-char commit SHA for releases) before `generate:types` — never hand-edit generated types.
 - MCP tests are CJS under `tsc` — no `import.meta`; stdio smoke spawns `dist/bin.js` with an explicit profile arg.
 - Knip: keep type-barrel `ignoreIssues`; delete unused intermediate re-exports rather than broaden ignores.
 - GPG: agent commit/rebase can hang on pinentry; rebase may ignore `commit.gpgsign=false` — finish with `git commit --no-gpg-sign`.
