@@ -169,4 +169,4 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - Knip: keep type-barrel `ignoreIssues`; delete unused intermediate re-exports rather than broaden ignores.
 - GPG: agent commit/rebase can hang on pinentry; rebase may ignore `commit.gpgsign=false` — finish with `git commit --no-gpg-sign`.
 - Profile depth, inventories, and binding why → [`docs/adr`](docs/adr) + [`docs/profiles`](docs/profiles) (not here).
-- **Visualization package:** `@lightdash-tools/visualization` is pure (no `client`/`mcp`); Zod 4 `z.record(enumKey, …)` requires all enum keys — use explicit optional object keys for partial role maps.
+- **Visualization package:** `@lightdash-tools/visualization` is pure (no `client`/`mcp`); Zod 4 `z.record(enumKey, …)` requires all enum keys — use explicit optional object keys for partial role maps. Custom Chart `metricQuery` must clamp `limit` and emit value-role `sorts` matching display rank order when LVS omits `query.sorts`.
