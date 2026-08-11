@@ -408,8 +408,7 @@ export function loadMcpHttpConfig(
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
-  const promptContextPolicy =
-    options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
+  const promptContextPolicy = options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
