@@ -56,5 +56,8 @@ flowchart LR
 
 - ADR-0002’s four-package inventory is extended; validate-names / knip / verify gates must recognize `packages/visualization`.
 - Visualization logic is independently testable with fixture datasets (no live Lightdash).
-- Risk: a growing LVS becomes a competing chart language — mitigated by keeping LVS high-level, limiting MVP to two templates, and delegating conventional charts to Vega-Lite only on the Custom Chart target.
+- Risk: a growing LVS becomes a competing chart language — mitigated by keeping LVS a **semantic intent/template layer**, not a general visualization grammar. LVS MUST NOT grow into a parallel model of arbitrary marks, axes/scales, Vega transforms, layer/concat/repeat/facet composition, or detailed encoding channels; those belong in target/internal grammars such as Vega-Lite.
+- LVS query is a **supported subset** aligned with [ADR-0020](0020-mcp-data-analyst-profile-ad-hoc-metric-query-boundary.md) (`dimensions` / `metrics` / `filters` / `sorts` / `limit`). Full Lightdash `MetricQuery` evolution (pivots, timezone, table calculations, custom fields) stays behind adapters — LVS MUST NOT become a complete parallel MetricQuery schema.
+- Before adding a third template, refactor toward `Template.prepare` → target compilers (SVG/HTML/Custom Chart) so templates do not accumulate `compileX` methods. Capability sets should become target-owned as interactive targets land.
 - Risk: Custom Chart upsert still needs caller-supplied `name` / `slug` / `spaceSlug` / `version`; the package emits `chartConfig` + aligned `metricQuery` only.
+- Generated Custom Chart Vega-Lite `$schema` is pinned to the version verified against the Lightdash Custom Chart runtime (currently v5), not automatically upgraded to upstream latest.

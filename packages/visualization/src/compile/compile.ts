@@ -10,7 +10,7 @@ import { negotiateCapabilities } from './capability';
 import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
 import type { CompileTarget } from './capability';
-import type { VisualizationSpecV1 } from '../spec/types';
+import type { FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
 import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
 
 const DATASET_HARD_LIMIT_MULTIPLIER = 5;
@@ -36,6 +36,26 @@ export interface CompileVisualizationResult {
   html?: string;
   customChart?: CustomChartCompileResult;
   validatedSpec: VisualizationSpecV1;
+}
+
+/** Bound role fields must appear in the LVS query so live Custom Chart re-query returns them. */
+function assertRolesInQuery(boundRoles: FieldRoleMap, spec: VisualizationSpecV1): void {
+  const queryFields = new Set([...spec.data.query.dimensions, ...spec.data.query.metrics]);
+  for (const [role, fieldId] of Object.entries(boundRoles) as Array<[string, string | undefined]>) {
+    if (!fieldId) continue;
+    if (!queryFields.has(fieldId)) {
+      throw new VisualizationError(
+        'INVALID_SPEC',
+        `Role "${role}" field "${fieldId}" must appear in data.query.dimensions or data.query.metrics`,
+        {
+          role,
+          fieldId,
+          dimensions: spec.data.query.dimensions,
+          metrics: spec.data.query.metrics,
+        },
+      );
+    }
+  }
 }
 
 export function compileVisualization(input: CompileVisualizationInput): CompileVisualizationResult {
@@ -70,6 +90,7 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   });
 
   const boundRoles = bindRoles(spec.data.roles, input.dataset, template.requirements);
+  assertRolesInQuery(boundRoles, spec);
   const ctx = { spec, dataset: input.dataset, boundRoles };
 
   const warnings: VisualizationWarning[] = [...capability.warnings];

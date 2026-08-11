@@ -130,7 +130,8 @@ function buildBars(
   const emphasizedIndex = findEmphasizedIndex(rows, emphasisField, emphasisMode);
 
   return rows.map((row, index) => {
-    const raw = asNumber(row[valueField]) ?? 0;
+    const cell = row[valueField];
+    const numeric = asNumber(cell) ?? 0;
     const label = toDisplayString(row[categoryField]);
     if (label.length > 40) {
       warnings.push({
@@ -138,7 +139,7 @@ function buildBars(
         message: `Long category label may overflow layout: ${label.slice(0, 40)}…`,
       });
     }
-    if (row[valueField] === null || row[valueField] === undefined) {
+    if (cell === null || cell === undefined) {
       warnings.push({
         code: 'NULL_VALUES',
         message: `Null value for category ${label}`,
@@ -148,12 +149,13 @@ function buildBars(
       kind: 'bar' as const,
       id: `bar-${index}`,
       label,
-      valueLabel: formatValue(raw, valueCol?.format),
+      // Format the original cell so null/missing stays "—" (not "$0").
+      valueLabel: formatValue(cell, valueCol?.format),
       secondaryLabel:
         secondaryField !== undefined
           ? formatValue(row[secondaryField], secondaryCol?.format)
           : undefined,
-      ratio: Math.abs(raw) / maxAbs,
+      ratio: Math.abs(numeric) / maxAbs,
       emphasized: index === emphasizedIndex,
     };
   });
@@ -255,7 +257,7 @@ export const rankedCardsTemplate: VisualizationTemplate = {
     return toCustomChartResult({
       vegaSpec,
       metricQuery: buildAlignedMetricQuery(context.spec, {
-        rowCount: prepared.rows.length,
+        presentationLimit: rankedCardsOptions(context.spec)?.maxRows ?? 20,
         valueField: prepared.valueField,
         sortDescending,
       }),

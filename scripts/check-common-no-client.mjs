@@ -84,21 +84,22 @@ scanForbiddenImports(COMMON_DIR, '@lightdash-tools/common', [
 
 if (fs.existsSync(VISUALIZATION_DIR)) {
   forbidPackageDeps(VISUALIZATION_DIR, 'packages/visualization', [CLIENT_PKG, MCP_PKG]);
+  // Match package root, subpaths, and relative escapes into client/mcp trees.
   scanForbiddenImports(VISUALIZATION_DIR, '@lightdash-tools/visualization', [
     {
-      re: /(?:from|import)\s+['"](@lightdash-tools\/client)['"]/g,
+      re: /(?:from|import)\s+['"](@lightdash-tools\/client(?:\/[^'"]*)?|[\w./-]*\/client(?:\/[^'"]*)?)['"]/g,
       label: '@lightdash-tools/client',
     },
     {
-      re: /(?:from|import)\s+['"](@lightdash-tools\/mcp)['"]/g,
+      re: /(?:from|import)\s+['"](@lightdash-tools\/mcp(?:\/[^'"]*)?|[\w./-]*\/mcp(?:\/[^'"]*)?)['"]/g,
       label: '@lightdash-tools/mcp',
     },
     {
-      re: /require\s*\(\s*['"](@lightdash-tools\/client)['"]\s*\)/g,
+      re: /require\s*\(\s*['"](@lightdash-tools\/client(?:\/[^'"]*)?|[\w./-]*\/client(?:\/[^'"]*)?)['"]\s*\)/g,
       label: '@lightdash-tools/client',
     },
     {
-      re: /require\s*\(\s*['"](@lightdash-tools\/mcp)['"]\s*\)/g,
+      re: /require\s*\(\s*['"](@lightdash-tools\/mcp(?:\/[^'"]*)?|[\w./-]*\/mcp(?:\/[^'"]*)?)['"]\s*\)/g,
       label: '@lightdash-tools/mcp',
     },
   ]);

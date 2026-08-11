@@ -271,6 +271,86 @@ describe('compileVisualization', () => {
     expect(degraded.warnings.some((w) => w.code === 'CAPABILITY_DEGRADED')).toBe(true);
   });
 
+  it('labels null ranked values as missing instead of zero', () => {
+    const nullDataset = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: [
+        { orders_region: 'APAC', orders_total_revenue: null, orders_revenue_yoy: 0.1 },
+        { orders_region: 'EMEA', orders_total_revenue: 100, orders_revenue_yoy: 0.1 },
+      ],
+    });
+    const result = compileVisualization({
+      spec: { ...rankedSpec, interaction: undefined, emphasis: { mode: 'none' as const } },
+      dataset: nullDataset,
+      target: 'svg',
+      strict: false,
+    });
+    expect(result.warnings.some((w) => w.code === 'NULL_VALUES')).toBe(true);
+    expect(result.svg).toContain('—');
+    expect(result.svg).not.toMatch(/\$0(\.00)?/);
+  });
+
+  it('rejects role fields missing from the LVS query', () => {
+    expect(() =>
+      compileVisualization({
+        spec: {
+          ...rankedSpec,
+          data: {
+            ...rankedSpec.data,
+            query: {
+              dimensions: ['orders_region'],
+              metrics: ['orders_total_revenue'],
+            },
+            roles: {
+              category: 'orders_region',
+              value: 'orders_total_revenue',
+              secondaryValue: 'orders_revenue_yoy',
+            },
+          },
+        },
+        dataset: rankingDataset,
+        target: 'svg',
+        strict: false,
+      }),
+    ).toThrow(/must appear in data\.query/);
+  });
+
+  it('uses presentation maxRows for Custom Chart limit even when fixture is shorter', () => {
+    const shortRows = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: [
+        { orders_region: 'APAC', orders_total_revenue: 10, orders_revenue_yoy: 0.1 },
+        { orders_region: 'EMEA', orders_total_revenue: 5, orders_revenue_yoy: 0.1 },
+      ],
+    });
+    const result = compileVisualization({
+      spec: {
+        ...rankedSpec,
+        data: {
+          ...rankedSpec.data,
+          query: {
+            ...rankedSpec.data.query,
+            limit: 500,
+          },
+        },
+        visual: {
+          type: 'template' as const,
+          template: 'ranked-cards' as const,
+          options: { maxRows: 10 },
+        },
+        emphasis: { mode: 'none' as const },
+        interaction: undefined,
+      },
+      dataset: shortRows,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    expect(result.customChart?.metricQuery.limit).toBe(10);
+    expect(
+      (result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }).data.values,
+    ).toHaveLength(2);
+  });
+
   it('compiles ranked-cards to Custom Chart golden shape', () => {
     const result = compileVisualization({
       spec: rankedSpec,

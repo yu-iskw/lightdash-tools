@@ -139,6 +139,22 @@ packages/visualization/src/
 - Semantic-field-aware via roles
 - No executable callbacks / embedded JS in the document
 
+### Negative scope (LVS is not Vega-Lite Lite)
+
+LVS is a **semantic intent/template language**. It MUST NOT become the canonical representation for arbitrary:
+
+- marks, axes, or scales;
+- Vega transforms;
+- layer / concat / repeat / facet grammar;
+- detailed encoding channels;
+- general statistical visualization composition.
+
+Those belong in target/internal grammars (primarily Vega-Lite for Custom Charts). Agents should author LVS stories (`intent` + `roles` + `template`), not large Vega-Lite specs.
+
+### Query ownership
+
+`data.query` is a **supported subset** aligned with ADR-0020 (`dimensions`, `metrics`, `filters.{dimensions,metrics}`, `sorts`, `limit`). Bound role fieldIds MUST appear in `dimensions ∪ metrics`. Full Lightdash `MetricQuery` surface (pivots, timezone, table calculations, custom fields) evolves behind adapters — LVS MUST NOT grow into a parallel complete MetricQuery schema. Emitted Custom Chart `metricQuery` may add empty `tableCalculations: []` and clamp `limit` to an explicit presentation policy (`options.maxRows`), not merely the observed fixture row count.
+
 ### Example
 
 ```yaml
@@ -174,9 +190,11 @@ accessibility:
 - `version: "1"`
 - `data.source.type: metricQuery` + `explore`
 - `data.query` mirrors ADR-0020 inputs (`dimensions`, `metrics`, optional `filters.{dimensions,metrics}`, `sorts`, `limit`)
-- `data.roles` partial map of field roles → fieldIds
+- `data.roles` partial map of field roles → fieldIds (each bound field MUST be in the query)
 - `visual`: template only on governed compile (`vegaLite` rejected in MVP)
 - `capabilities.required` / `capabilities.preferred` optional
+- `interaction` is **experimental / non-stable** until an interactive target (most likely MCP Apps) exists; MVP targets advertise an empty capability set so interaction requests degrade or fail-strict rather than claiming support
+- Theme reference may name `lightdash` only in MVP
 - `intent.message` is **display-only**; compilers MUST NOT distort values to make it true
 
 ### Intent enum (MVP)
@@ -212,6 +230,8 @@ Production bar for each template: null handling, long labels, cardinality warnin
 
 Templates emit internal layout nodes (`text`, `bar`, `card`, `group`, …) consumed by SVG/HTML. This is an implementation detail, not a stable public language. Custom Chart path emits Vega-Lite separately.
 
+**Next structural step (before template #3):** introduce `Template.prepare` → target compilers so templates do not accumulate `compileCustomChart` / `compileMcpApp` / … methods. Capability negotiation stays first-class; future targets should own their capability sets on the adapter that compiles them.
+
 ---
 
 ## 11. Capability negotiation (MVP matrix)
@@ -242,7 +262,7 @@ chartConfig: {
 }
 ```
 
-Compile also returns aligned `metricQuery` from LVS `data.query` + `exploreName` from `data.source.explore`.
+Compile also returns aligned `metricQuery` from LVS `data.query` + `exploreName` from `data.source.explore`, with `tableCalculations: []` and `limit` clamped to the template presentation policy (`maxRows`).
 
 Full upsert still requires caller/seed fields: `name`, `slug`, `spaceSlug`, `version`, `tableName`, etc. The package does **not** invent skinny as-code documents for persistence.
 
@@ -250,6 +270,7 @@ Full upsert still requires caller/seed fields: `name`, `slug`, `spaceSlug`, `ver
 
 - Deny external Vega-Lite `data.url` (and nested data sources) — `EXTERNAL_RESOURCE_BLOCKED`. Row field ids named `url` inside `data.values` are allowed.
 - Ban `visual.type: vegaLite` on governed compile paths in MVP
+- Vega-Lite `$schema` pin tracks the **verified Lightdash Custom Chart runtime** (currently v5), not upstream latest (`verified runtime compatibility > latest Vega-Lite version`)
 
 ---
 
@@ -263,7 +284,7 @@ Deterministic node ordering; escaped text/attributes; no external resources; no 
 
 Self-contained file. Default: **do not** embed dataset rows. `--embed-data` embeds JSON and prints a sensitivity warning.
 
-Trusted bundle JS (selection highlighting) is allowed; data-driven JS from LVS is not.
+Trusted static JS in the HTML shell is allowed; data-driven JS from LVS is not. MVP does not claim local selection/tooltip capabilities until wired end-to-end.
 
 ---
 
