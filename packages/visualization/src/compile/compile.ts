@@ -3,21 +3,22 @@
  */
 
 import { VisualizationError } from '../errors';
-import { bindRoles } from './bind';
-import { negotiateCapabilities } from './capability';
 import { validateVisualizationSpec } from '../spec/validate';
+import { compileCustomChart } from '../targets/custom-chart/compile';
+import { renderHtml } from '../targets/html/render';
+import { renderSvg } from '../targets/svg/render';
 import { getTemplate } from '../templates/registry';
 import { resolveTheme } from '../theme/lightdash';
-import { renderSvg } from '../targets/svg/render';
-import { renderHtml } from '../targets/html/render';
-import { compileCustomChart } from '../targets/custom-chart/compile';
 
-import type { VisualizationWarning } from '../errors';
+import { bindRoles } from './bind';
+import { negotiateCapabilities } from './capability';
+
 import type { VisualizationDataset } from '../data/dataset';
-import type { VisualizationSpecV1 } from '../spec/types';
+import type { VisualizationWarning } from '../errors';
 import type { CompileTarget } from './capability';
-import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
 import type { LayoutDocument } from '../layout/types';
+import type { VisualizationSpecV1 } from '../spec/types';
+import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
 
 export interface CompileVisualizationInput {
   spec: unknown;
@@ -129,7 +130,10 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
       break;
     default: {
       const _exhaustive: never = input.target;
-      throw new VisualizationError('UNSUPPORTED_TARGET', `Unsupported target: ${String(_exhaustive)}`);
+      throw new VisualizationError(
+        'UNSUPPORTED_TARGET',
+        `Unsupported target: ${String(_exhaustive)}`,
+      );
     }
   }
 

@@ -2,18 +2,13 @@
  * Template contracts and registry.
  */
 
-import type { VisualizationDataset } from '../data/dataset';
-import type { LayoutDocument } from '../layout/types';
 import type { TemplateRoleRequirements } from '../compile/bind';
 import type { CompileTarget } from '../compile/capability';
-import type {
-  MetricHeroOptions,
-  RankedCardsOptions,
-  VisualizationIntentType,
-  VisualizationSpecV1,
-} from '../spec/types';
-import type { VisualizationTheme } from '../theme/lightdash';
+import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
+import type { LayoutDocument } from '../layout/types';
+import type { VisualizationIntentType, VisualizationSpecV1 } from '../spec/types';
+import type { VisualizationTheme } from '../theme/lightdash';
 
 export type TemplateId = 'metric-hero' | 'ranked-cards';
 
@@ -41,5 +36,3 @@ export interface VisualizationTemplate {
   maxRows: number;
   compile(context: TemplateCompileContext): TemplateCompileOutput;
 }
-
-export type TemplateOptions = MetricHeroOptions | RankedCardsOptions | undefined;

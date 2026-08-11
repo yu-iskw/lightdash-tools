@@ -2,11 +2,75 @@
  * metric-hero template — single headline KPI (+ optional secondary).
  */
 
-import { formatValue } from '../format/number';
 import { toDisplayString } from '../format/escape';
+import { formatValue } from '../format/number';
 
-import type { VisualizationTemplate, TemplateCompileContext } from './contracts';
+import type { VisualizationWarning } from '../errors';
+import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 import type { LayoutNode } from '../layout/types';
+
+function buildMetricHeroChildren(context: TemplateCompileContext): {
+  children: LayoutNode[];
+  title: string;
+  warnings: VisualizationWarning[];
+} {
+  const warnings: VisualizationWarning[] = [];
+  const row = context.dataset.rows[0] ?? {};
+  const valueField = context.boundRoles.value!;
+  const secondaryField = context.boundRoles.secondaryValue;
+  const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
+  const secondaryCol = secondaryField
+    ? context.dataset.columns.find((c) => c.fieldId === secondaryField)
+    : undefined;
+
+  if (context.dataset.rows.length > 1) {
+    warnings.push({
+      code: 'DATA_TRUNCATED',
+      message: 'metric-hero uses the first row only',
+      details: { rowCount: context.dataset.rows.length },
+    });
+  }
+
+  const title =
+    context.spec.accessibility?.title ??
+    context.spec.metadata?.title ??
+    valueCol?.label ??
+    'Metric';
+  const message = context.spec.intent?.message;
+  const primary = formatValue(row[valueField], valueCol?.format);
+
+  const children: LayoutNode[] = [
+    { kind: 'text', id: 'title', text: title, role: 'title' },
+    { kind: 'text', id: 'kpi', text: primary, role: 'kpi' },
+    {
+      kind: 'text',
+      id: 'kpi-label',
+      text: valueCol?.label ?? toDisplayString(valueField),
+      role: 'label',
+    },
+  ];
+
+  if (secondaryField) {
+    children.push({
+      kind: 'text',
+      id: 'secondary',
+      text: formatValue(row[secondaryField], secondaryCol?.format),
+      role: 'body',
+    });
+    children.push({
+      kind: 'text',
+      id: 'secondary-label',
+      text: secondaryCol?.label ?? toDisplayString(secondaryField),
+      role: 'muted',
+    });
+  }
+
+  if (message) {
+    children.push({ kind: 'text', id: 'message', text: message, role: 'subtitle' });
+  }
+
+  return { children, title, warnings };
+}
 
 export const metricHeroTemplate: VisualizationTemplate = {
   id: 'metric-hero',
@@ -22,84 +86,12 @@ export const metricHeroTemplate: VisualizationTemplate = {
   supportedTargets: ['svg', 'standalone-html'],
   maxRows: 1,
   compile(context: TemplateCompileContext) {
-    const warnings = [];
-    const row = context.dataset.rows[0] ?? {};
-    const valueField = context.boundRoles.value!;
-    const secondaryField = context.boundRoles.secondaryValue;
-    const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
-    const secondaryCol = secondaryField
-      ? context.dataset.columns.find((c) => c.fieldId === secondaryField)
-      : undefined;
-
-    if (context.dataset.rows.length > 1) {
-      warnings.push({
-        code: 'DATA_TRUNCATED' as const,
-        message: 'metric-hero uses the first row only',
-        details: { rowCount: context.dataset.rows.length },
-      });
-    }
-
-    const title =
-      context.spec.accessibility?.title ??
-      context.spec.metadata?.title ??
-      valueCol?.label ??
-      'Metric';
-    const message = context.spec.intent?.message;
-    const primary = formatValue(row[valueField], valueCol?.format);
-    const secondary =
-      secondaryField !== undefined
-        ? formatValue(row[secondaryField], secondaryCol?.format)
-        : undefined;
-
-    const children: LayoutNode[] = [
-      {
-        kind: 'text' as const,
-        id: 'title',
-        text: title,
-        role: 'title' as const,
-      },
-      {
-        kind: 'text' as const,
-        id: 'kpi',
-        text: primary,
-        role: 'kpi' as const,
-      },
-      {
-        kind: 'text' as const,
-        id: 'kpi-label',
-        text: valueCol?.label ?? toDisplayString(valueField),
-        role: 'label' as const,
-      },
-    ];
-
-    if (secondary !== undefined && secondaryField) {
-      children.push({
-        kind: 'text' as const,
-        id: 'secondary',
-        text: secondary,
-        role: 'body' as const,
-      });
-      children.push({
-        kind: 'text' as const,
-        id: 'secondary-label',
-        text: secondaryCol?.label ?? toDisplayString(secondaryField),
-        role: 'muted' as const,
-      });
-    }
-
-    if (message) {
-      children.push({
-        kind: 'text' as const,
-        id: 'message',
-        text: message,
-        role: 'subtitle' as const,
-      });
-    }
-
+    const { children, title, warnings } = buildMetricHeroChildren(context);
+    const hasSecondary = Boolean(context.boundRoles.secondaryValue);
     return {
       layout: {
         width: 480,
-        height: secondary ? 220 : 180,
+        height: hasSecondary ? 220 : 180,
         title,
         description: context.spec.accessibility?.description ?? context.spec.metadata?.description,
         root: {
@@ -107,13 +99,7 @@ export const metricHeroTemplate: VisualizationTemplate = {
           id: 'root',
           direction: 'column',
           gap: 8,
-          children: [
-            {
-              kind: 'card',
-              id: 'hero-card',
-              children,
-            },
-          ],
+          children: [{ kind: 'card', id: 'hero-card', children }],
         },
       },
       warnings,

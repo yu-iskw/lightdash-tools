@@ -2,12 +2,7 @@
  * Internal layout nodes for SVG/HTML renderers (not a public IR).
  */
 
-export type LayoutNode =
-  | LayoutGroup
-  | LayoutText
-  | LayoutBar
-  | LayoutSpacer
-  | LayoutCard;
+export type LayoutNode = LayoutBar | LayoutCard | LayoutGroup | LayoutSpacer | LayoutText;
 
 export interface LayoutGroup {
   kind: 'group';
@@ -21,7 +16,7 @@ export interface LayoutText {
   kind: 'text';
   id: string;
   text: string;
-  role: 'title' | 'subtitle' | 'kpi' | 'label' | 'muted' | 'body';
+  role: 'body' | 'kpi' | 'label' | 'muted' | 'subtitle' | 'title';
 }
 
 export interface LayoutBar {

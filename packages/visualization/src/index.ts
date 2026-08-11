@@ -23,7 +23,11 @@ export type {
 export { createDataset } from './data/dataset';
 
 export { VisualizationError } from './errors';
-export type { VisualizationErrorCode, VisualizationWarning, VisualizationWarningCode } from './errors';
+export type {
+  VisualizationErrorCode,
+  VisualizationWarning,
+  VisualizationWarningCode,
+} from './errors';
 
 export type { CompileTarget } from './compile/capability';
 export { capabilitiesForTarget, negotiateCapabilities } from './compile/capability';

@@ -14,6 +14,34 @@ export interface TemplateRecommendation {
   missingRoles: string[];
 }
 
+function scoreMetricHero(
+  rowCount: number,
+  numericCount: number,
+): Pick<TemplateRecommendation, 'missingRoles' | 'reasons' | 'score'> {
+  if (rowCount <= 1 && numericCount >= 1) {
+    return { score: 50, reasons: ['Single-row quantitative dataset'], missingRoles: [] };
+  }
+  return { score: 0, reasons: [], missingRoles: ['value'] };
+}
+
+function scoreRankedCards(
+  rowCount: number,
+  numericCount: number,
+  stringCount: number,
+): Pick<TemplateRecommendation, 'missingRoles' | 'reasons' | 'score'> {
+  if (stringCount >= 1 && numericCount >= 1 && rowCount >= 2) {
+    return {
+      score: 50,
+      reasons: ['Categorical + quantitative multi-row dataset'],
+      missingRoles: [],
+    };
+  }
+  const missingRoles: string[] = [];
+  if (stringCount < 1) missingRoles.push('category');
+  if (numericCount < 1) missingRoles.push('value');
+  return { score: 0, reasons: [], missingRoles };
+}
+
 export function recommendVisualization(input: {
   dataset: VisualizationDataset;
   intent?: VisualizationIntentType;
@@ -21,44 +49,27 @@ export function recommendVisualization(input: {
   const numericCols = input.dataset.columns.filter((c) => c.dataType === 'number');
   const stringCols = input.dataset.columns.filter((c) => c.dataType === 'string');
   const rowCount = input.dataset.rows.length;
-  const results: TemplateRecommendation[] = [];
 
-  for (const template of listTemplates()) {
-    const reasons: string[] = [];
-    let score = 0;
-    const missingRoles: string[] = [];
-
-    if (input.intent && template.intents.includes(input.intent)) {
-      score += 40;
-      reasons.push(`Matches intent ${input.intent}`);
-    }
-
-    if (template.id === 'metric-hero') {
-      if (rowCount <= 1 && numericCols.length >= 1) {
-        score += 50;
-        reasons.push('Single-row quantitative dataset');
-      } else {
-        missingRoles.push('value');
+  return listTemplates()
+    .map((template) => {
+      let score = 0;
+      const reasons: string[] = [];
+      if (input.intent && template.intents.includes(input.intent)) {
+        score += 40;
+        reasons.push(`Matches intent ${input.intent}`);
       }
-    }
 
-    if (template.id === 'ranked-cards') {
-      if (stringCols.length >= 1 && numericCols.length >= 1 && rowCount >= 2) {
-        score += 50;
-        reasons.push('Categorical + quantitative multi-row dataset');
-      } else {
-        if (stringCols.length < 1) missingRoles.push('category');
-        if (numericCols.length < 1) missingRoles.push('value');
-      }
-    }
+      const shape =
+        template.id === 'metric-hero'
+          ? scoreMetricHero(rowCount, numericCols.length)
+          : scoreRankedCards(rowCount, numericCols.length, stringCols.length);
 
-    results.push({
-      templateId: template.id,
-      score,
-      reasons,
-      missingRoles,
-    });
-  }
-
-  return results.sort((a, b) => b.score - a.score);
+      return {
+        templateId: template.id,
+        score: score + shape.score,
+        reasons: [...reasons, ...shape.reasons],
+        missingRoles: shape.missingRoles,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
 }

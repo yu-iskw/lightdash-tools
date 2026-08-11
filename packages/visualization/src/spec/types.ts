@@ -4,7 +4,7 @@
 
 export const LVS_VERSION = '1' as const;
 
-export type VisualizationIntentType = 'overview' | 'rank' | 'executive-summary';
+export type VisualizationIntentType = 'executive-summary' | 'overview' | 'rank';
 
 export interface VisualizationMetadata {
   title?: string;
@@ -41,12 +41,7 @@ export interface VisualizationMetricQuery {
   limit?: number;
 }
 
-export type FieldRole =
-  | 'category'
-  | 'value'
-  | 'secondaryValue'
-  | 'label'
-  | 'description';
+export type FieldRole = 'category' | 'description' | 'label' | 'secondaryValue' | 'value';
 
 export type FieldRoleMap = Partial<Record<FieldRole, string>>;
 
@@ -93,7 +88,7 @@ export interface VisualizationEmphasis {
   field?: string;
 }
 
-export type VisualizationActionType = 'filter' | 'rerunQuery' | 'inspect' | 'openContent';
+export type VisualizationActionType = 'filter' | 'inspect' | 'openContent' | 'rerunQuery';
 
 export interface VisualizationActionBinding {
   trigger: 'selection';
@@ -106,7 +101,7 @@ export interface VisualizationActionBinding {
 export interface VisualizationInteraction {
   tooltip?: boolean;
   selection?: {
-    type: 'single' | 'multiple';
+    type: 'multiple' | 'single';
     field: string;
   };
   actions?: VisualizationActionBinding[];
@@ -114,7 +109,7 @@ export interface VisualizationInteraction {
 
 export interface ThemeReference {
   name?: 'lightdash';
-  appearance?: 'light' | 'dark' | 'system';
+  appearance?: 'dark' | 'light' | 'system';
 }
 
 export interface AccessibilitySpec {
@@ -123,18 +118,18 @@ export interface AccessibilitySpec {
 }
 
 export type VisualizationCapability =
-  | 'tooltip'
-  | 'selection'
-  | 'multiSelection'
-  | 'filter'
-  | 'rerunQuery'
-  | 'inspect'
-  | 'openContent'
+  | 'animation'
   | 'crossFilter'
   | 'drillDown'
-  | 'underlyingData'
-  | 'animation'
-  | 'responsiveLayout';
+  | 'filter'
+  | 'inspect'
+  | 'multiSelection'
+  | 'openContent'
+  | 'rerunQuery'
+  | 'responsiveLayout'
+  | 'selection'
+  | 'tooltip'
+  | 'underlyingData';
 
 export interface VisualizationCapabilitiesSpec {
   required?: VisualizationCapability[];

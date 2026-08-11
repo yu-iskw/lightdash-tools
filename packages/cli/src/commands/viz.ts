@@ -15,8 +15,8 @@ import {
 import { parseJsonOrYaml, readFileOrStdin } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
-import type { Command } from 'commander';
 import type { VisualizationDataset } from '@lightdash-tools/visualization';
+import type { Command } from 'commander';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -30,7 +30,9 @@ function loadDataset(path: string): VisualizationDataset {
   return createDataset({
     columns: raw.columns as VisualizationDataset['columns'],
     rows: raw.rows as VisualizationDataset['rows'],
-    provenance: isRecord(raw.provenance) ? (raw.provenance as VisualizationDataset['provenance']) : undefined,
+    provenance: isRecord(raw.provenance)
+      ? (raw.provenance as VisualizationDataset['provenance'])
+      : undefined,
     truncated: typeof raw.truncated === 'boolean' ? raw.truncated : undefined,
     warnings: Array.isArray(raw.warnings) ? (raw.warnings as string[]) : undefined,
   });
@@ -43,7 +45,9 @@ async function loadSpec(file?: string): Promise<unknown> {
 
 function printError(error: unknown): never {
   if (error instanceof VisualizationError) {
-    console.error(JSON.stringify({ code: error.code, message: error.message, details: error.details }, null, 2));
+    console.error(
+      JSON.stringify({ code: error.code, message: error.message, details: error.details }, null, 2),
+    );
     process.exit(1);
   }
   console.error(error instanceof Error ? error.message : String(error));
@@ -67,7 +71,9 @@ export function registerVizCommand(program: Command): void {
         try {
           const raw = await loadSpec(options.file);
           const spec = validateVisualizationSpec(raw);
-          console.log(JSON.stringify({ ok: true, version: spec.version, template: spec.visual }, null, 2));
+          console.log(
+            JSON.stringify({ ok: true, version: spec.version, template: spec.visual }, null, 2),
+          );
         } catch (error) {
           printError(error);
         }
@@ -174,7 +180,13 @@ export function registerVizCommand(program: Command): void {
             }
             if (options.output) {
               writeFileSync(options.output, body, 'utf-8');
-              console.log(JSON.stringify({ ok: true, output: options.output, warnings: result.warnings }, null, 2));
+              console.log(
+                JSON.stringify(
+                  { ok: true, output: options.output, warnings: result.warnings },
+                  null,
+                  2,
+                ),
+              );
             } else {
               process.stdout.write(body);
             }

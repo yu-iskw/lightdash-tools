@@ -3,30 +3,26 @@
  */
 
 export type VisualizationErrorCode =
-  | 'INVALID_SPEC'
-  | 'UNSUPPORTED_SPEC_VERSION'
-  | 'UNKNOWN_TEMPLATE'
-  | 'MISSING_REQUIRED_ROLE'
-  | 'INCOMPATIBLE_FIELD_TYPE'
-  | 'UNKNOWN_FIELD'
-  | 'INVALID_INTERACTION'
-  | 'UNSUPPORTED_TARGET'
-  | 'UNSUPPORTED_REQUIRED_CAPABILITY'
-  | 'TEMPLATE_TARGET_UNSUPPORTED'
   | 'DATASET_TOO_LARGE'
-  | 'INVALID_VEGA_LITE'
   | 'EXTERNAL_RESOURCE_BLOCKED'
+  | 'INCOMPATIBLE_FIELD_TYPE'
+  | 'INVALID_INTERACTION'
+  | 'INVALID_SPEC'
+  | 'INVALID_VEGA_LITE'
+  | 'MISSING_REQUIRED_ROLE'
+  | 'TEMPLATE_TARGET_UNSUPPORTED'
+  | 'UNKNOWN_FIELD'
+  | 'UNKNOWN_TEMPLATE'
+  | 'UNSUPPORTED_REQUIRED_CAPABILITY'
+  | 'UNSUPPORTED_SPEC_VERSION'
+  | 'UNSUPPORTED_TARGET'
   | 'VEGA_LITE_ESCAPE_HATCH_BANNED';
 
 export class VisualizationError extends Error {
   readonly code: VisualizationErrorCode;
   readonly details?: Record<string, unknown>;
 
-  constructor(
-    code: VisualizationErrorCode,
-    message: string,
-    details?: Record<string, unknown>,
-  ) {
+  constructor(code: VisualizationErrorCode, message: string, details?: Record<string, unknown>) {
     super(message);
     this.name = 'VisualizationError';
     this.code = code;

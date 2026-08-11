@@ -6,8 +6,8 @@ import { escapeHtml } from '../../format/escape';
 import { resolveTheme } from '../../theme/lightdash';
 import { renderSvg } from '../svg/render';
 
-import type { LayoutDocument, LayoutNode } from '../../layout/types';
 import type { VisualizationDataset } from '../../data/dataset';
+import type { LayoutDocument, LayoutNode } from '../../layout/types';
 
 function collectInteractiveMeta(root: LayoutNode): { hasBars: boolean } {
   let hasBars = false;

@@ -1,13 +1,34 @@
 {
   "columns": [
-    { "fieldId": "orders_region", "label": "Region", "semanticType": "dimension", "dataType": "string" },
-    { "fieldId": "orders_total_revenue", "label": "Revenue", "semanticType": "metric", "dataType": "number", "format": { "type": "currency", "currency": "USD" } },
-    { "fieldId": "orders_revenue_yoy", "label": "YoY", "semanticType": "metric", "dataType": "number", "format": { "type": "percent" } }
+    {
+      "fieldId": "orders_region",
+      "label": "Region",
+      "semanticType": "dimension",
+      "dataType": "string"
+    },
+    {
+      "fieldId": "orders_total_revenue",
+      "label": "Revenue",
+      "semanticType": "metric",
+      "dataType": "number",
+      "format": { "type": "currency", "currency": "USD" }
+    },
+    {
+      "fieldId": "orders_revenue_yoy",
+      "label": "YoY",
+      "semanticType": "metric",
+      "dataType": "number",
+      "format": { "type": "percent" }
+    }
   ],
   "rows": [
     { "orders_region": "APAC", "orders_total_revenue": 8400000, "orders_revenue_yoy": 0.31 },
     { "orders_region": "EMEA", "orders_total_revenue": 6100000, "orders_revenue_yoy": 0.12 },
-    { "orders_region": "North America", "orders_total_revenue": 5200000, "orders_revenue_yoy": 0.08 },
+    {
+      "orders_region": "North America",
+      "orders_total_revenue": 5200000,
+      "orders_revenue_yoy": 0.08
+    },
     { "orders_region": "LATAM", "orders_total_revenue": 2100000, "orders_revenue_yoy": 0.04 }
   ]
 }

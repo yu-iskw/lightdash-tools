@@ -6,11 +6,17 @@ import { toDisplayString } from './escape';
 
 import type { FieldFormat } from '../data/dataset';
 
-export function formatValue(
-  value: unknown,
-  format?: FieldFormat,
-  locale = 'en-US',
-): string {
+function formatCompact(value: number, locale: string): string {
+  if (Math.abs(value) >= 1_000_000) {
+    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value / 1_000_000)}M`;
+  }
+  if (Math.abs(value) >= 1_000) {
+    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value / 1_000)}K`;
+  }
+  return new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(value);
+}
+
+export function formatValue(value: unknown, format?: FieldFormat, locale = 'en-US'): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return toDisplayString(value);
@@ -33,12 +39,9 @@ export function formatValue(
     }).format(value);
   }
 
-  if (Math.abs(value) >= 1_000_000) {
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value / 1_000_000)}M`;
-  }
-  if (Math.abs(value) >= 1_000) {
-    return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value / 1_000)}K`;
+  if (format?.type === 'number') {
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value);
   }
 
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value);
+  return formatCompact(value, locale);
 }

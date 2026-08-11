@@ -8,7 +8,10 @@ import { resolveTheme } from '../../theme/lightdash';
 import type { LayoutDocument, LayoutNode } from '../../layout/types';
 import type { VisualizationTheme } from '../../theme/lightdash';
 
-function textStyle(role: string, theme: VisualizationTheme): { size: number; weight: number; fill: string } {
+function textStyle(
+  role: string,
+  theme: VisualizationTheme,
+): { size: number; weight: number; fill: string } {
   switch (role) {
     case 'title':
       return { size: theme.typography.titleSize, weight: 700, fill: theme.palette.text };

@@ -3,17 +3,12 @@
  */
 
 export type VisualizationDataType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'date'
-  | 'timestamp'
-  | 'unknown';
+  'boolean' | 'date' | 'number' | 'string' | 'timestamp' | 'unknown';
 
 export type VisualizationSemanticType = 'dimension' | 'metric' | 'unknown';
 
 export interface FieldFormat {
-  type?: 'number' | 'currency' | 'percent' | 'string';
+  type?: 'currency' | 'number' | 'percent' | 'string';
   currency?: string;
   maximumFractionDigits?: number;
 }

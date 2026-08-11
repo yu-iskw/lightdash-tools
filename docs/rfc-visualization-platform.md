@@ -73,13 +73,13 @@ Vega-Lite remains the Custom Chart wire format, not the public agent-facing gram
 
 ## 4. ADR conflicts resolved
 
-| Constraint | Resolution |
-| --- | --- |
-| ADR-0002 four packages | **ADR-0026** adds `@lightdash-tools/visualization` |
+| Constraint                                                | Resolution                                                             |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- |
+| ADR-0002 four packages                                    | **ADR-0026** adds `@lightdash-tools/visualization`                     |
 | ADR-0014 preview gate / no warehouse on content-developer | Compile is pure; persistence tools deferred; no queryCapability change |
-| ADR-0020 no underlying-data / drill-down on data-analyst | Capability matrix MVP marks these **No**; MCP App deferred |
-| content-developer Custom viz playbook | Unchanged in MVP (no `compile_custom_chart` tool yet) |
-| CLI `preview` naming vs ADR-0014 | CLI uses `viz render`, not `preview` |
+| ADR-0020 no underlying-data / drill-down on data-analyst  | Capability matrix MVP marks these **No**; MCP App deferred             |
+| content-developer Custom viz playbook                     | Unchanged in MVP (no `compile_custom_chart` tool yet)                  |
+| CLI `preview` naming vs ADR-0014                          | CLI uses `viz render`, not `preview`                                   |
 
 ---
 
@@ -142,7 +142,7 @@ packages/visualization/src/
 ### Example
 
 ```yaml
-version: "1"
+version: '1'
 metadata:
   title: Revenue health
 intent:
@@ -199,10 +199,10 @@ Renderers consume `VisualizationDataset` (`columns[]`, `rows[]`, optional proven
 
 ## 9. Templates (MVP = 2)
 
-| Template | Targets | Purpose |
-| --- | --- | --- |
-| `metric-hero` | svg, standalone-html | One headline KPI (+ optional secondary) |
-| `ranked-cards` | svg, standalone-html, lightdash-custom-chart | Categorical ranking bars |
+| Template       | Targets                                      | Purpose                                 |
+| -------------- | -------------------------------------------- | --------------------------------------- |
+| `metric-hero`  | svg, standalone-html                         | One headline KPI (+ optional secondary) |
+| `ranked-cards` | svg, standalone-html, lightdash-custom-chart | Categorical ranking bars                |
 
 Production bar for each template: null handling, long labels, cardinality warnings, XSS fixtures, golden snapshots.
 
@@ -216,14 +216,14 @@ Templates emit internal layout nodes (`text`, `bar`, `card`, `group`, …) consu
 
 ## 11. Capability negotiation (MVP matrix)
 
-| Capability | SVG | Standalone HTML | Custom Chart |
-| --- | :---: | :---: | :---: |
-| Tooltip | No | Local only | Partial |
-| Selection | No | Local only | No |
-| Rerun semantic query | No | No | No |
-| Drill-down | No | No | No |
-| Underlying data | No | No | No |
-| Responsive layout | Static | Yes | Container-dependent |
+| Capability           |  SVG   | Standalone HTML |    Custom Chart     |
+| -------------------- | :----: | :-------------: | :-----------------: |
+| Tooltip              |   No   |   Local only    |       Partial       |
+| Selection            |   No   |   Local only    |         No          |
+| Rerun semantic query |   No   |       No        |         No          |
+| Drill-down           |   No   |       No        |         No          |
+| Underlying data      |   No   |       No        |         No          |
+| Responsive layout    | Static |       Yes       | Container-dependent |
 
 Unsupported **required** capabilities fail in strict mode; preferred produce `CAPABILITY_DEGRADED` warnings.
 
@@ -316,14 +316,14 @@ Visual regression / a11y CI tooling deferred.
 
 ## 17. Phased roadmap
 
-| Phase | Scope | Status |
-| --- | --- | --- |
+| Phase       | Scope                                                                                            | Status        |
+| ----------- | ------------------------------------------------------------------------------------------------ | ------------- |
 | **0 / MVP** | Package + 2 templates + SVG/HTML + Custom Chart compile + CLI validate/compile/render + ADR-0026 | **This ship** |
-| 1 | More templates, richer HTML interactions (still no credentials) | Deferred |
-| 2 | Connected CLI convenience (client + viz) | Deferred |
-| 3 | MCP App + `visualize_metric_query` (separate ADR; pin ext-apps APIs; follow-up arg allowlist) | Deferred |
-| 4 | content-developer compile helper + playbook update + seed policy | Deferred |
-| 5 | Data Apps adapter after stable public automation contract | Deferred |
+| 1           | More templates, richer HTML interactions (still no credentials)                                  | Deferred      |
+| 2           | Connected CLI convenience (client + viz)                                                         | Deferred      |
+| 3           | MCP App + `visualize_metric_query` (separate ADR; pin ext-apps APIs; follow-up arg allowlist)    | Deferred      |
+| 4           | content-developer compile helper + playbook update + seed policy                                 | Deferred      |
+| 5           | Data Apps adapter after stable public automation contract                                        | Deferred      |
 
 ---
 

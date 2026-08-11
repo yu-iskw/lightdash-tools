@@ -30,7 +30,7 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 
 ## RFCs
 
-| Doc | Purpose |
-| --- | --- |
-| [rfc-visualization-platform.md](rfc-visualization-platform.md) | LVS visualization package (SVG / HTML / Custom Chart) |
-| [rfc-token-efficient-mcp-prompts.md](rfc-token-efficient-mcp-prompts.md) | Progressive-disclosure MCP prompt context |
+| Doc                                                                      | Purpose                                               |
+| ------------------------------------------------------------------------ | ----------------------------------------------------- |
+| [rfc-visualization-platform.md](rfc-visualization-platform.md)           | LVS visualization package (SVG / HTML / Custom Chart) |
+| [rfc-token-efficient-mcp-prompts.md](rfc-token-efficient-mcp-prompts.md) | Progressive-disclosure MCP prompt context             |

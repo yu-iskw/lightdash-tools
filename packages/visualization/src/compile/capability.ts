@@ -11,7 +11,7 @@ import type {
   VisualizationInteraction,
 } from '../spec/types';
 
-export type CompileTarget = 'svg' | 'standalone-html' | 'lightdash-custom-chart';
+export type CompileTarget = 'lightdash-custom-chart' | 'standalone-html' | 'svg';
 
 const TARGET_CAPABILITIES: Record<CompileTarget, ReadonlySet<VisualizationCapability>> = {
   svg: new Set(['responsiveLayout']),
@@ -51,6 +51,38 @@ function collectRequestedCapabilities(
   };
 }
 
+function recordCapability(input: {
+  cap: VisualizationCapability;
+  supportedSet: ReadonlySet<VisualizationCapability>;
+  supported: VisualizationCapability[];
+  degraded: VisualizationCapability[];
+  warnings: VisualizationWarning[];
+  target: CompileTarget;
+  required: boolean;
+  strict: boolean;
+}): void {
+  const { cap, supportedSet, supported, degraded, warnings, target, required, strict } = input;
+  if (supportedSet.has(cap)) {
+    supported.push(cap);
+    return;
+  }
+  if (required && strict) {
+    throw new VisualizationError(
+      'UNSUPPORTED_REQUIRED_CAPABILITY',
+      `Required capability "${cap}" is not supported by target "${target}"`,
+      { capability: cap, target },
+    );
+  }
+  degraded.push(cap);
+  warnings.push({
+    code: 'CAPABILITY_DEGRADED',
+    message: required
+      ? `Required capability "${cap}" unavailable on ${target} (non-strict)`
+      : `Preferred capability "${cap}" unavailable on ${target}`,
+    details: { capability: cap, target },
+  });
+}
+
 export function negotiateCapabilities(input: {
   target: CompileTarget;
   interaction?: VisualizationInteraction;
@@ -66,39 +98,33 @@ export function negotiateCapabilities(input: {
   const warnings: VisualizationWarning[] = [];
   const degraded: VisualizationCapability[] = [];
   const supported: VisualizationCapability[] = [];
+  const strict = input.strict !== false;
 
   for (const cap of required) {
-    if (!supportedSet.has(cap)) {
-      if (input.strict !== false) {
-        throw new VisualizationError(
-          'UNSUPPORTED_REQUIRED_CAPABILITY',
-          `Required capability "${cap}" is not supported by target "${input.target}"`,
-          { capability: cap, target: input.target },
-        );
-      }
-      degraded.push(cap);
-      warnings.push({
-        code: 'CAPABILITY_DEGRADED',
-        message: `Required capability "${cap}" unavailable on ${input.target} (non-strict)`,
-        details: { capability: cap, target: input.target },
-      });
-    } else {
-      supported.push(cap);
-    }
+    recordCapability({
+      cap,
+      supportedSet,
+      supported,
+      degraded,
+      warnings,
+      target: input.target,
+      required: true,
+      strict,
+    });
   }
 
   for (const cap of preferred) {
     if (required.includes(cap)) continue;
-    if (!supportedSet.has(cap)) {
-      degraded.push(cap);
-      warnings.push({
-        code: 'CAPABILITY_DEGRADED',
-        message: `Preferred capability "${cap}" unavailable on ${input.target}`,
-        details: { capability: cap, target: input.target },
-      });
-    } else {
-      supported.push(cap);
-    }
+    recordCapability({
+      cap,
+      supportedSet,
+      supported,
+      degraded,
+      warnings,
+      target: input.target,
+      required: false,
+      strict,
+    });
   }
 
   return { supported, degraded, warnings };

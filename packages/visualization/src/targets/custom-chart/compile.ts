@@ -5,8 +5,8 @@
 import { VisualizationError } from '../../errors';
 
 import type { VisualizationDataset } from '../../data/dataset';
-import type { VisualizationSpecV1 } from '../../spec/types';
 import type { VisualizationWarning } from '../../errors';
+import type { VisualizationSpecV1 } from '../../spec/types';
 
 export interface CustomChartCompileResult {
   chartConfig: {
@@ -50,7 +50,8 @@ function rankedCardsVegaLite(
 
   const vega: Record<string, unknown> = {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
-    description: spec.accessibility?.description ?? spec.metadata?.description ?? spec.metadata?.title,
+    description:
+      spec.accessibility?.description ?? spec.metadata?.description ?? spec.metadata?.title,
     data: { values },
     mark: { type: 'bar', tooltip: true },
     encoding: {
