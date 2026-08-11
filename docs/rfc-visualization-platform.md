@@ -383,8 +383,8 @@ Adopt this narrowed MVP. Proceed to later phases only after this package demonst
 ## 22. References
 
 - ADR-0002, ADR-0014, ADR-0020, ADR-0026
-- Custom Charts: https://docs.lightdash.com/references/chart-types/custom-charts
-- MCP Apps (future): https://modelcontextprotocol.io/extensions/apps/overview
+- Custom Charts chart type (Lightdash product docs)
+- MCP Apps extension (future; Model Context Protocol docs)
 - Bounded metric query: `packages/mcp/src/tools/query/run-metric-query.ts`
 - Package implementation: `packages/visualization/`
 - CLI: `packages/cli/src/commands/viz.ts`

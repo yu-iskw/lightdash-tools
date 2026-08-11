@@ -261,10 +261,18 @@ export default [
       'max-depth': 'off',
     },
   },
+  // Visualization templates index rows/columns by bound field ids (trusted LVS roles).
+  {
+    files: ['packages/visualization/**/*.ts'],
+    rules: {
+      'security/detect-object-injection': 'off',
+    },
+  },
   {
     files: [
       'packages/cli/src/commands/charts.ts',
       'packages/cli/src/commands/query.ts',
+      'packages/cli/src/commands/viz.ts',
       'packages/common/src/audit.ts',
     ],
     rules: {
