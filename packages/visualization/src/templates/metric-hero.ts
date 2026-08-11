@@ -79,7 +79,6 @@ export const metricHeroTemplate: VisualizationTemplate = {
   requirements: {
     value: { required: true, dataTypes: ['number'] },
     secondaryValue: { required: false, dataTypes: ['number'] },
-    label: { required: false, dataTypes: ['string'] },
   },
   supportedTargets: ['svg', 'standalone-html'],
   maxRows: 1,

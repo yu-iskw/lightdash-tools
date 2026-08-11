@@ -13,10 +13,14 @@ import type {
 
 export type CompileTarget = 'lightdash-custom-chart' | 'standalone-html' | 'svg';
 
+/**
+ * Only advertise capabilities the MVP renderers actually implement.
+ * Tooltip/selection/responsiveLayout are deferred until wired end-to-end.
+ */
 const TARGET_CAPABILITIES: Record<CompileTarget, ReadonlySet<VisualizationCapability>> = {
-  svg: new Set(['responsiveLayout']),
-  'standalone-html': new Set(['tooltip', 'selection', 'responsiveLayout']),
-  'lightdash-custom-chart': new Set(['tooltip', 'responsiveLayout']),
+  svg: new Set(),
+  'standalone-html': new Set(),
+  'lightdash-custom-chart': new Set(),
 };
 
 export function capabilitiesForTarget(target: CompileTarget): ReadonlySet<VisualizationCapability> {

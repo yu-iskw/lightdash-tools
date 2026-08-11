@@ -1,7 +1,3 @@
-/**
- * @lightdash-tools/visualization public API.
- */
-
 export { LVS_VERSION } from './spec/types';
 export type {
   VisualizationSpecV1,
@@ -40,11 +36,4 @@ export type { TemplateId, VisualizationTemplate } from './templates/contracts';
 export { recommendVisualization } from './recommend/recommend';
 export type { TemplateRecommendation } from './recommend/recommend';
 
-export { renderSvg } from './targets/svg/render';
-export { renderHtml } from './targets/html/render';
-export { compileCustomChart } from './targets/custom-chart/compile';
 export type { CustomChartCompileResult } from './targets/custom-chart/compile';
-
-export { resolveTheme, LIGHTDASH_THEME } from './theme/lightdash';
-export { escapeHtml, escapeXml, toDisplayString } from './format/escape';
-export { formatValue } from './format/number';

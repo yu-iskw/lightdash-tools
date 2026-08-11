@@ -4,6 +4,8 @@ import { formatValue } from '../format/number';
 
 import type { VisualizationWarning } from '../errors';
 import type { LayoutBar, LayoutNode } from '../layout/types';
+import type { FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
+import type { VisualizationDataset } from '../data/dataset';
 import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 
 function asNumber(value: unknown): number | null {
@@ -45,14 +47,70 @@ function findEmphasizedIndex(
   return emphasizedIndex;
 }
 
+/** Shared prep for layout + Custom Chart so targets see the same ordered/truncated rows. */
+export function prepareRankedCardsData(input: {
+  spec: VisualizationSpecV1;
+  dataset: VisualizationDataset;
+  boundRoles: FieldRoleMap;
+}): {
+  rows: Array<Record<string, unknown>>;
+  categoryField: string;
+  valueField: string;
+  secondaryField?: string;
+  title: string;
+  message: string | undefined;
+  warnings: VisualizationWarning[];
+} {
+  const warnings: VisualizationWarning[] = [];
+  const options =
+    input.spec.visual.type === 'template' && input.spec.visual.template === 'ranked-cards'
+      ? input.spec.visual.options
+      : undefined;
+
+  const maxRows = options?.maxRows ?? 20;
+  const sortDescending = options?.sortDescending !== false;
+  const valueField = requireBoundRole(input.boundRoles, 'value');
+  const categoryField = requireBoundRole(input.boundRoles, 'category');
+  const secondaryField = input.boundRoles.secondaryValue;
+  const valueCol = input.dataset.columns.find((c) => c.fieldId === valueField);
+  const categoryCol = input.dataset.columns.find((c) => c.fieldId === categoryField);
+
+  let rows = sortRows(input.dataset.rows, valueField, sortDescending);
+  if (rows.length > maxRows) {
+    warnings.push({
+      code: 'DATA_TRUNCATED',
+      message: `ranked-cards truncated to ${maxRows} rows`,
+      details: { rowCount: rows.length, maxRows },
+    });
+    rows = rows.slice(0, maxRows);
+  }
+  if (rows.length > 12) {
+    warnings.push({
+      code: 'HIGH_CARDINALITY',
+      message: 'High category cardinality may reduce readability',
+      details: { rowCount: rows.length },
+    });
+  }
+
+  return {
+    rows,
+    categoryField,
+    valueField,
+    secondaryField,
+    title:
+      input.spec.accessibility?.title ??
+      input.spec.metadata?.title ??
+      `${categoryCol?.label ?? 'Category'} by ${valueCol?.label ?? 'value'}`,
+    message: input.spec.intent?.message,
+    warnings,
+  };
+}
+
 function buildBars(
   context: TemplateCompileContext,
-  rows: Array<Record<string, unknown>>,
-  warnings: VisualizationWarning[],
+  prepared: ReturnType<typeof prepareRankedCardsData>,
 ): LayoutBar[] {
-  const categoryField = requireBoundRole(context.boundRoles, 'category');
-  const valueField = requireBoundRole(context.boundRoles, 'value');
-  const secondaryField = context.boundRoles.secondaryValue;
+  const { rows, categoryField, valueField, secondaryField, warnings } = prepared;
   const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
   const secondaryCol = secondaryField
     ? context.dataset.columns.find((c) => c.fieldId === secondaryField)
@@ -94,53 +152,6 @@ function buildBars(
   });
 }
 
-function prepareRankedRows(
-  context: TemplateCompileContext,
-  warnings: VisualizationWarning[],
-): {
-  rows: Array<Record<string, unknown>>;
-  title: string;
-  message: string | undefined;
-} {
-  const options =
-    context.spec.visual.type === 'template' && context.spec.visual.template === 'ranked-cards'
-      ? context.spec.visual.options
-      : undefined;
-
-  const maxRows = options?.maxRows ?? 20;
-  const sortDescending = options?.sortDescending !== false;
-  const valueField = requireBoundRole(context.boundRoles, 'value');
-  const categoryField = requireBoundRole(context.boundRoles, 'category');
-  const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
-  const categoryCol = context.dataset.columns.find((c) => c.fieldId === categoryField);
-
-  let rows = sortRows(context.dataset.rows, valueField, sortDescending);
-  if (rows.length > maxRows) {
-    warnings.push({
-      code: 'DATA_TRUNCATED',
-      message: `ranked-cards truncated to ${maxRows} rows`,
-      details: { rowCount: rows.length, maxRows },
-    });
-    rows = rows.slice(0, maxRows);
-  }
-  if (rows.length > 12) {
-    warnings.push({
-      code: 'HIGH_CARDINALITY',
-      message: 'High category cardinality may reduce readability',
-      details: { rowCount: rows.length },
-    });
-  }
-
-  return {
-    rows,
-    title:
-      context.spec.accessibility?.title ??
-      context.spec.metadata?.title ??
-      `${categoryCol?.label ?? 'Category'} by ${valueCol?.label ?? 'value'}`,
-    message: context.spec.intent?.message,
-  };
-}
-
 export const rankedCardsTemplate: VisualizationTemplate = {
   id: 'ranked-cards',
   version: '1.0.0',
@@ -155,24 +166,25 @@ export const rankedCardsTemplate: VisualizationTemplate = {
   supportedTargets: ['svg', 'standalone-html', 'lightdash-custom-chart'],
   maxRows: 20,
   compile(context: TemplateCompileContext) {
-    const warnings: VisualizationWarning[] = [];
-    const { rows, title, message } = prepareRankedRows(context, warnings);
-    const bars = buildBars(context, rows, warnings);
-    const children: LayoutNode[] = [{ kind: 'text', id: 'title', text: title, role: 'title' }];
-    if (message) {
-      children.push({ kind: 'text', id: 'message', text: message, role: 'subtitle' });
+    const prepared = prepareRankedCardsData(context);
+    const bars = buildBars(context, prepared);
+    const children: LayoutNode[] = [
+      { kind: 'text', id: 'title', text: prepared.title, role: 'title' },
+    ];
+    if (prepared.message) {
+      children.push({ kind: 'text', id: 'message', text: prepared.message, role: 'subtitle' });
     }
     children.push(...bars);
 
     return {
       layout: {
         width: 640,
-        height: Math.max(72 + bars.length * 36 + (message ? 24 : 0), 160),
-        title,
+        height: Math.max(72 + bars.length * 36 + (prepared.message ? 24 : 0), 160),
+        title: prepared.title,
         description: context.spec.accessibility?.description ?? context.spec.metadata?.description,
         root: { kind: 'group', id: 'root', direction: 'column', gap: 10, children },
       },
-      warnings,
+      warnings: prepared.warnings,
     };
   },
 };

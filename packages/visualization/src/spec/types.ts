@@ -67,16 +67,8 @@ export type TemplateVisualization =
       options?: RankedCardsOptions;
     };
 
-/**
- * Vega-Lite escape hatch exists in the type space for future CLI-only use,
- * but governed compile targets reject it in MVP (see compileVisualization).
- */
-export interface VegaLiteVisualization {
-  type: 'vegaLite';
-  spec: Record<string, unknown>;
-}
-
-export type VisualizationDefinition = TemplateVisualization | VegaLiteVisualization;
+/** MVP visual definition is template-only (vegaLite escape hatch deferred). */
+export type VisualizationDefinition = TemplateVisualization;
 
 export interface VisualizationEmphasis {
   mode: 'max' | 'min' | 'none';

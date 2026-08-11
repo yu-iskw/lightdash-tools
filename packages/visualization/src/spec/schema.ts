@@ -69,13 +69,6 @@ const templateVisualizationSchema = z.discriminatedUnion('template', [
     .strict(),
 ]);
 
-const vegaLiteVisualizationSchema = z
-  .object({
-    type: z.literal('vegaLite'),
-    spec: z.record(z.string(), z.unknown()),
-  })
-  .strict();
-
 const capabilitySchema = z.enum([
   'tooltip',
   'selection',
@@ -121,7 +114,7 @@ export const visualizationSpecV1Schema = z
         roles: rolesSchema,
       })
       .strict(),
-    visual: z.union([templateVisualizationSchema, vegaLiteVisualizationSchema]),
+    visual: templateVisualizationSchema,
     emphasis: z
       .object({
         mode: z.enum(['max', 'min', 'none']),

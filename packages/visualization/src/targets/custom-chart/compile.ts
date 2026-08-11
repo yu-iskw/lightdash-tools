@@ -1,5 +1,6 @@
-import { requireBoundRole } from '../../compile/bind';
 import { VisualizationError } from '../../errors';
+import { LIGHTDASH_THEME } from '../../theme/lightdash';
+import { prepareRankedCardsData } from '../../templates/ranked-cards';
 
 import type { VisualizationDataset } from '../../data/dataset';
 import type { VisualizationWarning } from '../../errors';
@@ -23,13 +24,25 @@ export interface CustomChartCompileResult {
   warnings: VisualizationWarning[];
 }
 
-function assertNoExternalResources(spec: Record<string, unknown>): void {
-  const json = JSON.stringify(spec);
-  if (/"url"\s*:/.test(json)) {
-    throw new VisualizationError(
-      'EXTERNAL_RESOURCE_BLOCKED',
-      'Vega-Lite specs must not reference external URLs in governed Custom Chart compile',
-    );
+function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
+  const stack: unknown[] = [spec];
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || typeof current !== 'object') continue;
+    if (Array.isArray(current)) {
+      stack.push(...current);
+      continue;
+    }
+    const record = current as Record<string, unknown>;
+    if (typeof record.url === 'string') {
+      throw new VisualizationError(
+        'EXTERNAL_RESOURCE_BLOCKED',
+        'Vega-Lite specs must not reference external URLs in governed Custom Chart compile',
+      );
+    }
+    for (const value of Object.values(record)) {
+      if (value && typeof value === 'object') stack.push(value);
+    }
   }
 }
 
@@ -37,12 +50,11 @@ function rankedCardsVegaLite(
   spec: VisualizationSpecV1,
   dataset: VisualizationDataset,
   boundRoles: FieldRoleMap,
-): Record<string, unknown> {
-  const category = requireBoundRole(boundRoles, 'category');
-  const value = requireBoundRole(boundRoles, 'value');
-  const values = dataset.rows.map((row) => ({
-    [category]: row[category],
-    [value]: row[value],
+): { vega: Record<string, unknown>; warnings: VisualizationWarning[] } {
+  const prepared = prepareRankedCardsData({ spec, dataset, boundRoles });
+  const values = prepared.rows.map((row) => ({
+    [prepared.categoryField]: row[prepared.categoryField],
+    [prepared.valueField]: row[prepared.valueField],
   }));
 
   const vega: Record<string, unknown> = {
@@ -50,27 +62,31 @@ function rankedCardsVegaLite(
     description:
       spec.accessibility?.description ?? spec.metadata?.description ?? spec.metadata?.title,
     data: { values },
-    mark: { type: 'bar', tooltip: true },
+    mark: { type: 'bar' },
     encoding: {
       y: {
-        field: category,
+        field: prepared.categoryField,
         type: 'nominal',
         sort: '-x',
-        title: dataset.columns.find((c) => c.fieldId === category)?.label ?? category,
+        title:
+          dataset.columns.find((c) => c.fieldId === prepared.categoryField)?.label ??
+          prepared.categoryField,
       },
       x: {
-        field: value,
+        field: prepared.valueField,
         type: 'quantitative',
-        title: dataset.columns.find((c) => c.fieldId === value)?.label ?? value,
+        title:
+          dataset.columns.find((c) => c.fieldId === prepared.valueField)?.label ??
+          prepared.valueField,
       },
-      color: { value: '#0e7c86' },
+      color: { value: LIGHTDASH_THEME.palette.bar },
     },
     config: {
       view: { stroke: null },
     },
   };
-  assertNoExternalResources(vega);
-  return vega;
+  assertNoExternalDataUrls(vega);
+  return { vega, warnings: prepared.warnings };
 }
 
 export function compileCustomChart(input: {
@@ -79,13 +95,6 @@ export function compileCustomChart(input: {
   boundRoles: FieldRoleMap;
   templateId: string;
 }): CustomChartCompileResult {
-  if (input.spec.visual.type !== 'template') {
-    throw new VisualizationError(
-      'VEGA_LITE_ESCAPE_HATCH_BANNED',
-      'Governed Custom Chart compile rejects type: vegaLite in MVP; use a supported template',
-    );
-  }
-
   if (input.templateId !== 'ranked-cards') {
     throw new VisualizationError(
       'TEMPLATE_TARGET_UNSUPPORTED',
@@ -94,12 +103,12 @@ export function compileCustomChart(input: {
     );
   }
 
-  const vegaSpec = rankedCardsVegaLite(input.spec, input.dataset, input.boundRoles);
+  const { vega, warnings } = rankedCardsVegaLite(input.spec, input.dataset, input.boundRoles);
   const q = input.spec.data.query;
   return {
     chartConfig: {
       type: 'custom',
-      config: { spec: vegaSpec },
+      config: { spec: vega },
     },
     metricQuery: {
       exploreName: input.spec.data.source.explore,
@@ -109,6 +118,6 @@ export function compileCustomChart(input: {
       sorts: q.sorts ?? [],
       limit: q.limit,
     },
-    warnings: [],
+    warnings,
   };
 }

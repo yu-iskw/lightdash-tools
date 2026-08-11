@@ -194,7 +194,7 @@ describe('compileVisualization', () => {
     expect(result.html).not.toContain('id="lvs-data"');
   });
 
-  it('embeds dataset rows only when embedData is true', () => {
+  it('embeds dataset rows as parseable JSON when embedData is true', () => {
     const result = compileVisualization({
       spec: rankedSpec,
       dataset: rankingDataset,
@@ -203,6 +203,72 @@ describe('compileVisualization', () => {
     });
     expect(result.html).toContain('id="lvs-data"');
     expect(result.html).toContain('Protect it according to data sensitivity');
+    const match = result.html?.match(
+      /<script type="application\/json" id="lvs-data">([\s\S]*?)<\/script>/,
+    );
+    expect(match?.[1]).toBeDefined();
+    const parsed = JSON.parse(match![1]!) as { rows: unknown[] };
+    expect(parsed.rows).toHaveLength(4);
+  });
+
+  it('script-escapes </script> in embedded dataset JSON', () => {
+    const evilDataset = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: [
+        {
+          orders_region: '</script><script>alert(1)</script>',
+          orders_total_revenue: 1,
+          orders_revenue_yoy: 0.1,
+        },
+      ],
+    });
+    const result = compileVisualization({
+      spec: rankedSpec,
+      dataset: evilDataset,
+      target: 'standalone-html',
+      embedData: true,
+    });
+    expect(result.html).toContain('\\u003c/script>');
+    expect(result.html).not.toMatch(/id="lvs-data">[\s\S]*?<\/script><script>/);
+    const match = result.html?.match(
+      /<script type="application\/json" id="lvs-data">([\s\S]*?)<\/script>/,
+    );
+    const parsed = JSON.parse(match![1]!) as { rows: Array<Record<string, unknown>> };
+    expect(parsed.rows[0]?.orders_region).toBe('</script><script>alert(1)</script>');
+  });
+
+  it('does not emit selection UI for HTML (capability not implemented)', () => {
+    const result = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'standalone-html',
+      strict: false,
+    });
+    expect(result.html).not.toContain("querySelectorAll('[data-bar]')");
+    expect(result.html).not.toContain('.selected');
+  });
+
+  it('fails required capability in strict mode and degrades when non-strict', () => {
+    const withRequired = {
+      ...rankedSpec,
+      capabilities: { required: ['tooltip' as const] },
+    };
+    expect(() =>
+      compileVisualization({
+        spec: withRequired,
+        dataset: rankingDataset,
+        target: 'svg',
+      }),
+    ).toThrow(/Required capability "tooltip"/);
+
+    const degraded = compileVisualization({
+      spec: withRequired,
+      dataset: rankingDataset,
+      target: 'svg',
+      strict: false,
+    });
+    expect(degraded.capability.degraded).toContain('tooltip');
+    expect(degraded.warnings.some((w) => w.code === 'CAPABILITY_DEGRADED')).toBe(true);
   });
 
   it('compiles ranked-cards to Custom Chart golden shape', () => {
@@ -231,8 +297,50 @@ describe('compileVisualization', () => {
         }),
       }),
     );
-    const json = JSON.stringify(result.customChart?.chartConfig.config.spec);
-    expect(json).not.toMatch(/"url"\s*:/);
+    const values = (
+      result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }
+    ).data.values;
+    expect(values).toHaveLength(4);
+    // Field named `url` in row values must not trip the external-URL walk.
+    expect(JSON.stringify(result.customChart?.chartConfig.config.spec)).not.toMatch(/"url"\s*:/);
+  });
+
+  it('truncates Custom Chart rows consistently with SVG bar count', () => {
+    const manyRows = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: Array.from({ length: 25 }, (_, i) => ({
+        orders_region: `R${i}`,
+        orders_total_revenue: 100 - i,
+        orders_revenue_yoy: 0.01,
+      })),
+    });
+    const truncatedSpec = {
+      ...rankedSpec,
+      visual: {
+        type: 'template' as const,
+        template: 'ranked-cards' as const,
+        options: { maxRows: 5 },
+      },
+    };
+    const svg = compileVisualization({
+      spec: truncatedSpec,
+      dataset: manyRows,
+      target: 'svg',
+      strict: false,
+    });
+    const custom = compileVisualization({
+      spec: truncatedSpec,
+      dataset: manyRows,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    const barCount = (svg.svg?.match(/id="bar-\d+"/g) ?? []).length;
+    const values = (
+      custom.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }
+    ).data.values;
+    expect(values).toHaveLength(5);
+    expect(barCount).toBe(5);
+    expect(custom.warnings.filter((w) => w.code === 'DATA_TRUNCATED')).toHaveLength(1);
   });
 
   it('rejects metric-hero for Custom Chart target', () => {
@@ -245,17 +353,13 @@ describe('compileVisualization', () => {
     ).toThrow(/does not support target/);
   });
 
-  it('bans vegaLite escape hatch on governed compile', () => {
+  it('rejects vegaLite visual at schema validation', () => {
     expect(() =>
-      compileVisualization({
-        spec: {
-          ...rankedSpec,
-          visual: { type: 'vegaLite', spec: { data: { url: 'https://evil.example/data.json' } } },
-        },
-        dataset: rankingDataset,
-        target: 'svg',
+      validateVisualizationSpec({
+        ...rankedSpec,
+        visual: { type: 'vegaLite', spec: { data: { url: 'https://evil.example/data.json' } } },
       }),
-    ).toThrow(/vegaLite is banned/);
+    ).toThrow(VisualizationError);
   });
 
   it('fails missing required roles', () => {

@@ -11,7 +11,6 @@ export interface TemplateCompileContext {
   spec: VisualizationSpecV1;
   dataset: VisualizationDataset;
   boundRoles: FieldRoleMap;
-  target: CompileTarget;
 }
 
 export interface TemplateCompileOutput {

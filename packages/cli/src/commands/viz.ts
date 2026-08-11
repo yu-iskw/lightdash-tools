@@ -129,6 +129,8 @@ export function registerVizCommand(program: Command): void {
     .option('--format <format>', 'Output format: svg | html', 'svg')
     .option('-o, --output <path>', 'Output file path')
     .option('--embed-data', 'HTML only: embed dataset rows (sensitive)', false)
+    .option('--strict', 'Fail on unsupported required capabilities', true)
+    .option('--no-strict', 'Warn instead of failing on required capability gaps')
     .action(
       wrapAction(
         READ_ONLY_DEFAULT,
@@ -138,6 +140,7 @@ export function registerVizCommand(program: Command): void {
           format: string;
           output?: string;
           embedData?: boolean;
+          strict?: boolean;
         }) => {
           await runVizAction(async () => {
             const raw = await readParsedInput({ file: options.file });
@@ -151,7 +154,7 @@ export function registerVizCommand(program: Command): void {
               dataset,
               target,
               embedData: options.embedData === true,
-              strict: false,
+              strict: options.strict,
             });
             const body = options.format === 'html' ? result.html : result.svg;
             if (!body) {

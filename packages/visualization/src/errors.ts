@@ -13,8 +13,7 @@ export type VisualizationErrorCode =
   | 'UNKNOWN_TEMPLATE'
   | 'UNSUPPORTED_REQUIRED_CAPABILITY'
   | 'UNSUPPORTED_SPEC_VERSION'
-  | 'UNSUPPORTED_TARGET'
-  | 'VEGA_LITE_ESCAPE_HATCH_BANNED';
+  | 'UNSUPPORTED_TARGET';
 
 export class VisualizationError extends Error {
   readonly code: VisualizationErrorCode;
