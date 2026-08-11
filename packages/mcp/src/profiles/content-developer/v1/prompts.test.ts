@@ -14,13 +14,21 @@ import {
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
   getAllPlaybookMarkdown,
 } from './resources/playbooks.js';
+import { CONTENT_DEVELOPER_INVARIANTS } from './invariants.js';
 
 describe('content-developer prompts/playbook', () => {
-  it('playbooks reference only registered tool short ids', () => {
-    const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('content-developer', md);
-    expect(md.toLowerCase()).toContain('hard bans');
-    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('terraform');
+  it('keeps structured invariants and core.md Hard bans in sync (count + key phrases)', () => {
+    const core = CONTENT_DEVELOPER_CORE_PLAYBOOK.getMarkdown();
+    const hardBansSection = core.split('## Hard bans')[1]?.split('\n## ')[0] ?? '';
+    const coreBullets = hardBansSection
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('- Do not'));
+    expect(coreBullets).toHaveLength(CONTENT_DEVELOPER_INVARIANTS.length);
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('resourcekind');
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('subagent-driven-development');
+    expect(hardBansSection.toLowerCase()).toContain('subagent-driven-development');
+    expect(hardBansSection.toLowerCase()).toContain('resourcekind');
   });
 
   it('forbids space create/update and orphan chart publish', () => {
@@ -283,6 +291,33 @@ describe('content-developer prompts/playbook', () => {
       playbookTopicUri('content-developer', 'recovery/preview-stale'),
     );
     expect(createCompactText).not.toContain('## hard bans');
+
+    let moveCompactText = '';
+    const moveCompactServer = {
+      registerPrompt: (
+        name: string,
+        _meta: unknown,
+        handler: (args: Record<string, unknown>) => { messages: unknown },
+      ) => {
+        if (name !== 'move_content') return;
+        const messages = handler({ goal: 'x' }).messages as Array<{
+          content: { type: string; text?: string };
+        }>;
+        moveCompactText = messages
+          .filter((m) => m.content.type === 'text')
+          .map((m) => m.content.text ?? '')
+          .join('\n')
+          .toLowerCase();
+      },
+    };
+    registerContentDeveloperPrompts(moveCompactServer as never, { promptContextPolicy: 'compact' });
+    expect(moveCompactText).toContain(
+      playbookTopicUri('content-developer', 'recovery/preview-stale'),
+    );
+    expect(moveCompactText).toContain(
+      playbookTopicUri('content-developer', 'recovery/preview-required'),
+    );
+
     expect(names).not.toContain('build_chart');
     expect(names).not.toContain('design_dashboard');
     expect(names).toContain('author_chart');

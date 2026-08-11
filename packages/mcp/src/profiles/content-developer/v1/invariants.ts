@@ -86,6 +86,11 @@ export const CONTENT_DEVELOPER_INVARIANTS = [
       'Do not mutate the proposed payload after preview_* (description/name/SQL/metrics/tiles) — apply must reuse the identical proposed body or PREVIEW_STALE (content hash mismatch); any edit requires a new preview_*.',
   },
   {
+    id: 'preview-kind-key-match',
+    short:
+      "Do not unlock with a different resource's preview — resourceKind / resourceKey must match the preview exactly.",
+  },
+  {
     id: 'validate-not-unlock',
     short:
       'Do not treat validate_chart / validate_dashboard as a preview unlock — they are saved-UUID health checks only (validate_chart needs chartUuid).',

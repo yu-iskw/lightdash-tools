@@ -189,6 +189,7 @@ Follow core + content-move playbooks. Target spaces must already exist.
 Report moved items and target space.`,
         invariantIds,
         requiredTopics: [TOPIC_CONTENT_MOVE],
+        recoveryTopics: WRITE_RECOVERY_TOPICS,
       }),
   );
 
