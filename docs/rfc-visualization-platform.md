@@ -216,16 +216,16 @@ Templates emit internal layout nodes (`text`, `bar`, `card`, `group`, …) consu
 
 ## 11. Capability negotiation (MVP matrix)
 
-| Capability           |  SVG   | Standalone HTML |    Custom Chart     |
-| -------------------- | :----: | :-------------: | :-----------------: |
-| Tooltip              |   No   |   Local only    |       Partial       |
-| Selection            |   No   |   Local only    |         No          |
-| Rerun semantic query |   No   |       No        |         No          |
-| Drill-down           |   No   |       No        |         No          |
-| Underlying data      |   No   |       No        |         No          |
-| Responsive layout    | Static |       Yes       | Container-dependent |
+| Capability           | SVG | Standalone HTML | Custom Chart |
+| -------------------- | :-: | :-------------: | :----------: |
+| Tooltip              | No  |       No        |      No      |
+| Selection            | No  |       No        |      No      |
+| Rerun semantic query | No  |       No        |      No      |
+| Drill-down           | No  |       No        |      No      |
+| Underlying data      | No  |       No        |      No      |
+| Responsive layout    | No  |       No        |      No      |
 
-Unsupported **required** capabilities fail in strict mode; preferred produce `CAPABILITY_DEGRADED` warnings.
+MVP renderers advertise an empty capability set. Unsupported **required** capabilities fail in strict mode; preferred produce `CAPABILITY_DEGRADED` warnings. (Local HTML selection/tooltip and Vega tooltips are deferred until wired end-to-end.)
 
 ---
 
@@ -248,7 +248,7 @@ Full upsert still requires caller/seed fields: `name`, `slug`, `spaceSlug`, `ver
 
 ### Security
 
-- Deny external `url` references in produced Vega-Lite (`EXTERNAL_RESOURCE_BLOCKED`)
+- Deny external Vega-Lite `data.url` (and nested data sources) — `EXTERNAL_RESOURCE_BLOCKED`. Row field ids named `url` inside `data.values` are allowed.
 - Ban `visual.type: vegaLite` on governed compile paths in MVP
 
 ---

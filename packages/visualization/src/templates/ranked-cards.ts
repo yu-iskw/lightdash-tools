@@ -128,7 +128,7 @@ function buildBars(
     if (label.length > 40) {
       warnings.push({
         code: 'LONG_LABELS',
-        message: `Long category label truncated visually: ${label.slice(0, 40)}…`,
+        message: `Long category label may overflow layout: ${label.slice(0, 40)}…`,
       });
     }
     if (row[valueField] === null || row[valueField] === undefined) {

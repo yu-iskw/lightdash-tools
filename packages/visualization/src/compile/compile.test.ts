@@ -294,14 +294,67 @@ describe('compileVisualization', () => {
           exploreName: 'orders',
           dimensions: ['orders_region'],
           metrics: ['orders_total_revenue', 'orders_revenue_yoy'],
+          tableCalculations: [],
+          limit: expect.any(Number),
         }),
       }),
     );
     const values = (result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } })
       .data.values;
     expect(values).toHaveLength(4);
-    // Field named `url` in row values must not trip the external-URL walk.
-    expect(JSON.stringify(result.customChart?.chartConfig.config.spec)).not.toMatch(/"url"\s*:/);
+    expect(result.warnings.some((w) => w.code === 'UNSUPPORTED_OPTION_IGNORED')).toBe(true);
+  });
+
+  it('allows field id url inside Custom Chart data.values', () => {
+    const urlFieldDataset = parseVisualizationDataset({
+      columns: [
+        {
+          fieldId: 'url',
+          label: 'URL',
+          semanticType: 'dimension',
+          dataType: 'string',
+        },
+        {
+          fieldId: 'orders_total_revenue',
+          label: 'Revenue',
+          semanticType: 'metric',
+          dataType: 'number',
+        },
+      ],
+      rows: [
+        { url: 'https://example.com/a', orders_total_revenue: 10 },
+        { url: 'https://example.com/b', orders_total_revenue: 5 },
+      ],
+    });
+    const urlSpec = {
+      ...rankedSpec,
+      data: {
+        source: { type: 'metricQuery' as const, explore: 'orders' },
+        query: {
+          dimensions: ['url'],
+          metrics: ['orders_total_revenue'],
+        },
+        roles: {
+          category: 'url',
+          value: 'orders_total_revenue',
+        },
+      },
+      emphasis: { mode: 'none' as const },
+      interaction: undefined,
+    };
+    const result = compileVisualization({
+      spec: urlSpec,
+      dataset: urlFieldDataset,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    expect(result.customChart?.chartConfig.config.spec).toBeDefined();
+    const values = (
+      result.customChart?.chartConfig.config.spec as {
+        data: { values: Array<Record<string, unknown>> };
+      }
+    ).data.values;
+    expect(values[0]?.url).toBe('https://example.com/a');
   });
 
   it('truncates Custom Chart rows consistently with SVG bar count', () => {

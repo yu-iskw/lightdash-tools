@@ -51,10 +51,15 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   }
 
   if (input.dataset.rows.length > template.maxRows * DATASET_HARD_LIMIT_MULTIPLIER) {
+    const hardLimit = template.maxRows * DATASET_HARD_LIMIT_MULTIPLIER;
     throw new VisualizationError(
       'DATASET_TOO_LARGE',
-      `Dataset has ${input.dataset.rows.length} rows; template "${template.id}" max guidance is ${template.maxRows}`,
-      { rowCount: input.dataset.rows.length, maxRows: template.maxRows },
+      `Dataset has ${input.dataset.rows.length} rows; hard limit is ${hardLimit} (${DATASET_HARD_LIMIT_MULTIPLIER}× template maxRows ${template.maxRows})`,
+      {
+        rowCount: input.dataset.rows.length,
+        maxRows: template.maxRows,
+        hardLimit,
+      },
     );
   }
 

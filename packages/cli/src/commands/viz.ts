@@ -7,12 +7,12 @@ import {
   isCompileTarget,
   parseVisualizationDataset,
   validateVisualizationSpec,
+  type CompileTarget,
 } from '@lightdash-tools/visualization';
 
 import { readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
-import type { CompileTarget } from '@lightdash-tools/visualization';
 import type { Command } from 'commander';
 
 function printError(error: unknown): never {
@@ -35,6 +35,15 @@ async function loadSpecAndDataset(options: { file?: string; dataset: string }) {
   const raw = await readParsedInput({ file: options.file });
   const dataset = await loadDataset(options.dataset);
   return { raw, dataset };
+}
+
+function requireCompileTarget(value: string): CompileTarget {
+  if (!isCompileTarget(value)) {
+    throw new VisualizationError('UNSUPPORTED_TARGET', `Unsupported target: ${value}`, {
+      target: value,
+    });
+  }
+  return value;
 }
 
 /**
@@ -88,14 +97,10 @@ export function registerVizCommand(program: Command): void {
         }) => {
           try {
             const { raw, dataset } = await loadSpecAndDataset(options);
-            if (!isCompileTarget(options.target)) {
-              throw new Error(`Unsupported target: ${options.target}`);
-            }
-            const target: CompileTarget = options.target;
             const result = compileVisualization({
               spec: raw,
               dataset,
-              target,
+              target: requireCompileTarget(options.target),
               embedData: options.embedData === true,
               strict: options.strict,
             });
@@ -145,10 +150,13 @@ export function registerVizCommand(program: Command): void {
           try {
             const { raw, dataset } = await loadSpecAndDataset(options);
             if (options.format !== 'svg' && options.format !== 'html') {
-              throw new Error(`Unsupported format: ${options.format}`);
+              throw new VisualizationError(
+                'UNSUPPORTED_TARGET',
+                `Unsupported format: ${options.format}`,
+                { format: options.format },
+              );
             }
-            const target: CompileTarget =
-              options.format === 'html' ? 'standalone-html' : 'svg';
+            const target: CompileTarget = options.format === 'html' ? 'standalone-html' : 'svg';
             const result = compileVisualization({
               spec: raw,
               dataset,
@@ -164,11 +172,7 @@ export function registerVizCommand(program: Command): void {
               const safePath = validateSafeOutputDir(options.output);
               writeFileSync(safePath, body, 'utf-8');
               console.log(
-                JSON.stringify(
-                  { ok: true, output: safePath, warnings: result.warnings },
-                  null,
-                  2,
-                ),
+                JSON.stringify({ ok: true, output: safePath, warnings: result.warnings }, null, 2),
               );
             } else {
               process.stdout.write(body);
