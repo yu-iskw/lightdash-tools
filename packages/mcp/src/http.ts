@@ -14,10 +14,11 @@ export type StartHttpOptions = {
 
 /** Start Streamable HTTP MCP (optional resolved prompt-context policy from CLI). */
 export async function startHttp(options?: StartHttpOptions): Promise<void> {
-  const config = loadMcpHttpConfig();
-  await startStreamableHttpServer(
+  const config = loadMcpHttpConfig(
+    process.env,
     options?.promptContextPolicy !== undefined
-      ? { ...config, promptContextPolicy: options.promptContextPolicy }
-      : config,
+      ? { promptContextPolicy: options.promptContextPolicy }
+      : undefined,
   );
+  await startStreamableHttpServer(config);
 }

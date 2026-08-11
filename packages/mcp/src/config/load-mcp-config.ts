@@ -366,7 +366,16 @@ function resolveOAuthCredentials(
   };
 }
 
-export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
+/**
+ * Load Streamable HTTP MCP config from env.
+ * When `options.promptContextPolicy` is set (CLI path), that value wins and
+ * `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT` is not re-resolved — so invalid env
+ * cannot fail a start that already resolved a valid CLI policy.
+ */
+export function loadMcpHttpConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  options?: { promptContextPolicy?: PromptContextPolicy },
+): McpHttpConfig {
   const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL, env);
   if (!lightdashUrlRaw) {
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
@@ -399,7 +408,8 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
-  const promptContextPolicy = resolvePromptContextPolicy({ env });
+  const promptContextPolicy =
+    options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);

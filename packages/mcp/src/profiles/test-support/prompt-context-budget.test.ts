@@ -1,22 +1,19 @@
 /**
  * Cross-profile prompt-context budget gates (deterministic; RFC).
+ * Specs come from production builders — not abbreviated stubs.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
-  CONTENT_DEVELOPER_INVARIANTS,
-} from '../content-developer/v1/invariants.js';
+import { CONTENT_DEVELOPER_INVARIANTS } from '../content-developer/v1/invariants.js';
+import { buildCreateDashboardPromptSpec } from '../content-developer/v1/prompt-specs.js';
 import {
   CONTENT_DEVELOPER_CORE_PLAYBOOK,
   CONTENT_DEVELOPER_TOPIC_META,
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
 } from '../content-developer/v1/resources/playbooks.js';
-import {
-  CONTENT_READER_DEFAULT_INVARIANT_IDS,
-  CONTENT_READER_INVARIANTS,
-} from '../content-reader/v1/invariants.js';
+import { CONTENT_READER_INVARIANTS } from '../content-reader/v1/invariants.js';
+import { buildFindContentPromptSpec } from '../content-reader/v1/prompt-specs.js';
 import {
   CONTENT_READER_CORE_PLAYBOOK,
   CONTENT_READER_TOPIC_META,
@@ -51,11 +48,11 @@ const SCENARIOS: Scenario[] = [
     core: CONTENT_READER_CORE_PLAYBOOK,
     topics: CONTENT_READER_TOPIC_PLAYBOOKS,
     topicMeta: CONTENT_READER_TOPIC_META,
-    spec: {
-      task: `Find the most relevant Lightdash content for:\n\nrevenue by region\n\nProject: pin.\nVerified preference: false.\n\nWorkflow:\nresolve → search → rank → ≤5.`,
-      invariantIds: CONTENT_READER_DEFAULT_INVARIANT_IDS,
-      requiredTopics: ['discover'],
-    },
+    spec: buildFindContentPromptSpec({
+      question: 'revenue by region',
+      projectUuid: 'pin',
+      verifiedOnly: false,
+    }),
   },
   {
     profile: 'content-developer',
@@ -64,17 +61,10 @@ const SCENARIOS: Scenario[] = [
     core: CONTENT_DEVELOPER_CORE_PLAYBOOK,
     topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
     topicMeta: CONTENT_DEVELOPER_TOPIC_META,
-    spec: {
-      task: `Create a new dashboard for:\n\nexecutive revenue overview\n\nProject: pin.\n\nWorkflow:\nDesign Spec → approval → preview → confirm → apply.`,
-      invariantIds: CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
-      requiredTopics: ['dashboards', 'dashboard-design', 'chart-types'],
-      recoveryTopics: [
-        {
-          topic: 'recovery/preview-stale',
-          when: 'PREVIEW_STALE',
-        },
-      ],
-    },
+    spec: buildCreateDashboardPromptSpec({
+      goal: 'executive revenue overview',
+      projectUuid: 'pin',
+    }),
   },
 ];
 

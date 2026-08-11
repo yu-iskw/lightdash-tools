@@ -12,6 +12,7 @@ import {
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
+import { buildFindContentPromptSpec } from './prompt-specs.js';
 import {
   CONTENT_READER_CORE_PLAYBOOK,
   CONTENT_READER_TOPIC_META,
@@ -22,7 +23,6 @@ import type { RegisterPromptsOptions } from '../../types.js';
 import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const TOPIC_DISCOVER = 'discover' as const satisfies ContentReaderPlaybookTopic;
 const TOPIC_COMPARE = 'compare' as const satisfies ContentReaderPlaybookTopic;
 const TOPIC_EXPLAIN_RUN = 'explain-run' as const satisfies ContentReaderPlaybookTopic;
 const bindPromptContext = bindProfilePromptContext({
@@ -53,22 +53,15 @@ export function registerContentReaderPrompts(
       },
     },
     ({ projectUuid, question, contentTypes, verifiedOnly, spaceUuid }) =>
-      promptContext({
-        task: `Find the most relevant Lightdash content for:
-
-${question}
-
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
-Content types hint: ${contentTypes ?? '(any)'}.
-Verified preference: ${verifiedOnly ?? false} (when true, call list_verified_content first — search_content does not filter by verification).
-Space filter: ${spaceUuid ?? '(none)'}.
-
-Workflow:
-resolve project → verified-first when requested → search → rank → return ≤5 candidates.
-Do not execute unless values were requested.`,
-        invariantIds,
-        requiredTopics: [TOPIC_DISCOVER],
-      }),
+      promptContext(
+        buildFindContentPromptSpec({
+          projectUuid,
+          question,
+          contentTypes,
+          verifiedOnly,
+          spaceUuid,
+        }),
+      ),
   );
 
   server.registerPrompt(

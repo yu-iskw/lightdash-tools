@@ -19,6 +19,12 @@ import {
   CONTENT_DEVELOPER_INVARIANTS,
 } from './invariants.js';
 import {
+  buildCreateDashboardPromptSpec,
+  DASHBOARD_CHART_TOPIC_IDS,
+  DESIGN_SPEC_STOP,
+  WRITE_RECOVERY_TOPICS,
+} from './prompt-specs.js';
+import {
   CONTENT_DEVELOPER_CORE_PLAYBOOK,
   CONTENT_DEVELOPER_TOPIC_META,
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
@@ -34,24 +40,8 @@ const TOPIC_CHART_TYPES = 'chart-types' as const satisfies ContentDeveloperPlayb
 const TOPIC_TABLE_CALCULATIONS =
   'table-calculations' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_CONTENT_MOVE = 'content-move' as const satisfies ContentDeveloperPlaybookTopic;
-const DASHBOARD_CHART_TOPIC_IDS = [
-  TOPIC_DASHBOARDS,
-  TOPIC_DASHBOARD_DESIGN,
-  TOPIC_CHART_TYPES,
-] as const;
 const DASHBOARD_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_DASHBOARD_DESIGN] as const;
 const DASHBOARD_PUBLISH_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_CHART_TYPES] as const;
-
-/** Manifest `when` comes from TOPIC_META.useWhen (optional `when` on entries). */
-const WRITE_RECOVERY_TOPICS = [
-  { topic: 'recovery/preview-stale' as const satisfies ContentDeveloperPlaybookTopic },
-  { topic: 'recovery/preview-required' as const satisfies ContentDeveloperPlaybookTopic },
-  { topic: 'recovery/dashboard-diff' as const satisfies ContentDeveloperPlaybookTopic },
-] as const;
-
-/** Thin stop gate — Phase Design / Objective detail lives in dashboard-design playbook. */
-const DESIGN_SPEC_STOP =
-  'Emit a Design Spec (dashboard-design Phase Design: Objective + tiles with tableName citing insights + filter apply/exclude plan), then **stop until the user proceeds / approves / amends** before any preview_* or write. If the user already gave an explicit all-chart-types (or multi-viz) checklist + goal + projectUuid, a one-line Objective restatement is enough — treat that as approval after restating once. Always pass projectUuid on confirm_preview and apply when there is no HTTP pin.';
 
 const bindPromptContext = bindProfilePromptContext({
   invariants: CONTENT_DEVELOPER_INVARIANTS,
@@ -81,25 +71,9 @@ export function registerContentDeveloperPrompts(
       },
     },
     ({ goal, projectUuid, spaceUuid, chartReferences }) =>
-      promptContext({
-        task: `Create a new dashboard for this goal:
-
-${goal}
-
-Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
-
-Target existing space: ${spaceUuid ?? '(resolve with lightdash_list_spaces / lightdash_get_space — never create a space)'}.
-Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_space / short search_content, then get_chart_as_code)'}.
-
-1. If the goal is vague on audience / decisions / what to understand: ask **2–4 clarifying questions** before a Spec (do not invent a viz-type checklist).
-2. Read-only discovery only (project/space/seeds).
-3. ${DESIGN_SPEC_STOP} Multi-viz / all chart types only if the user explicitly asked (see dashboards + chart-types playbooks). For explicit all-types work, keep primary insights decision-oriented and place redundant required forms in a labeled validation appendix; never weaken semantic field requirements.
-4. After approval: follow playbooks (preview→confirm→apply; reuse the **exact** preview payload on apply — do not tidy description/name between confirm and create).
-5. Report dashboard UUID/slug, tiles, filters, chart UUIDs — reject space-only orphans or untiled dashboard-owned charts.`,
-        invariantIds,
-        requiredTopics: DASHBOARD_CHART_TOPIC_IDS,
-        recoveryTopics: WRITE_RECOVERY_TOPICS,
-      }),
+      promptContext(
+        buildCreateDashboardPromptSpec({ goal, projectUuid, spaceUuid, chartReferences }),
+      ),
   );
 
   server.registerPrompt(
