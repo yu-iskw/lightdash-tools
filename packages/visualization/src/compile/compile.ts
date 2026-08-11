@@ -13,7 +13,6 @@ import type { VisualizationWarning } from '../errors';
 import type { CompileTarget } from './capability';
 import type { FieldRole, FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
 import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
-import type { VisualizationTemplate } from '../templates/contracts';
 
 const DATASET_HARD_LIMIT_MULTIPLIER = 5;
 
@@ -38,17 +37,6 @@ export interface CompileVisualizationResult {
   html?: string;
   customChart?: CustomChartCompileResult;
   validatedSpec: VisualizationSpecV1;
-}
-
-/** Presentation top-N: template default, overridden by ranked-cards options.maxRows when set. */
-function resolvePresentationMaxRows(
-  spec: VisualizationSpecV1,
-  template: VisualizationTemplate,
-): number {
-  if (spec.visual.type === 'template' && spec.visual.template === 'ranked-cards') {
-    return resolveRankedCardsMaxRows(spec, template.maxRows);
-  }
-  return template.maxRows;
 }
 
 /** Bound role fields must appear in the LVS query so live Custom Chart re-query returns them. */
@@ -84,7 +72,8 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
     );
   }
 
-  const presentationMaxRows = resolvePresentationMaxRows(spec, template);
+  // Ranked-cards options.maxRows when present; otherwise template.maxRows (incl. metric-hero).
+  const presentationMaxRows = resolveRankedCardsMaxRows(spec, template.maxRows);
   if (input.dataset.rows.length > presentationMaxRows * DATASET_HARD_LIMIT_MULTIPLIER) {
     const hardLimit = presentationMaxRows * DATASET_HARD_LIMIT_MULTIPLIER;
     throw new VisualizationError(
