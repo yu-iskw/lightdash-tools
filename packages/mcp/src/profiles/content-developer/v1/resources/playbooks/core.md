@@ -29,6 +29,7 @@ this profile does **not** execute queries, compile explores, create spaces, or p
 - Do not reuse a **draft** token after confirm (confirm returns a **new** validated token) or after payload/baseline drift (`PREVIEW_STALE`).
 - Do not unlock with a different resource's preview — `resourceKind` / `resourceKey` must match the preview exactly.
 - Do not treat `validate_chart` / `validate_dashboard` as unlock — saved-UUID health checks only (not UI-render proof).
+- Do not use subagent-driven-development or multi-task writing-plans solely to click MCP preview/confirm/apply for lab boards (e.g. experiments) — after Design Spec approval, run Batch SOP inline in the same session.
 - Do not reveal secrets, warehouse credentials, or saved SQL **chart** bodies.
 
 ## Default budgets (override when the user expands scope)

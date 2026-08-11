@@ -73,7 +73,10 @@ function createProcessMcpHttpHandler(): McpHttpHandler {
       if (!store) {
         throw new Error('MCP request factory context is missing');
       }
-      return createLightdashMcpServer(store.contextProvider, { profile: store.profile });
+      return createLightdashMcpServer(store.contextProvider, {
+        profile: store.profile,
+        promptContextPolicy: store.promptContextPolicy,
+      });
     },
     { legacy: 'stateless', onerror: reportMcpHttpError },
   );
@@ -263,8 +266,13 @@ async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
   const contextProvider = createContextProviderForRequest(config, req);
   const auditAuth = getOAuthAuditContext(req);
 
-  await runWithMcpPostFactoryAsync({ contextProvider, profile }, () =>
-    runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
+  await runWithMcpPostFactoryAsync(
+    {
+      contextProvider,
+      profile,
+      promptContextPolicy: config.promptContextPolicy,
+    },
+    () => runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
   );
 }
 
@@ -339,7 +347,9 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
       const paths = listEnabledProfilePaths(httpConfig.enabledProfiles)
         .map((p) => `${baseUrl}${p}`)
         .join(', ');
-      console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
+      console.error(
+        `Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode}; prompt-context=${httpConfig.promptContextPolicy})`,
+      );
       if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
         console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
         console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);

@@ -13,6 +13,7 @@ import {
   VALIDATE_SAFETY,
   WRITE_SAFETY,
   assertContentDeveloperSafe,
+  developerCodedErrorResult,
   developerErrorResult,
 } from './content-developer.js';
 import { PreviewLedgerError } from './preview-ledger.js';
@@ -72,10 +73,51 @@ describe('developerErrorResult', () => {
     expect(first?.type).toBe('text');
     if (first?.type === 'text') {
       expect(first.text).toContain('PREVIEW_STALE');
+      const parsed = JSON.parse(first.text) as {
+        error: { code: string; message: string; recovery?: string; playbookUri?: string };
+      };
+      expect(parsed.error.recovery).toMatch(/preview_\*/);
+      expect(parsed.error.playbookUri).toBe(
+        'lightdash://playbooks/content-developer/recovery/preview-stale',
+      );
     }
   });
 
   it('rethrows unrelated errors', () => {
     expect(() => developerErrorResult(new Error('boom'))).toThrow('boom');
+  });
+});
+
+describe('developerCodedErrorResult', () => {
+  it('attaches recovery extras for direct PREVIEW_STALE returns', () => {
+    const result = developerCodedErrorResult('PREVIEW_STALE', 'source chart drifted');
+    expect(result.isError).toBe(true);
+    const first = result.content[0];
+    expect(first?.type).toBe('text');
+    if (first?.type === 'text') {
+      const parsed = JSON.parse(first.text) as {
+        error: { code: string; message: string; recovery?: string; playbookUri?: string };
+      };
+      expect(parsed.error.code).toBe('PREVIEW_STALE');
+      expect(parsed.error.message).toBe('source chart drifted');
+      expect(parsed.error.recovery).toMatch(/preview_\*/);
+      expect(parsed.error.playbookUri).toBe(
+        'lightdash://playbooks/content-developer/recovery/preview-stale',
+      );
+    }
+  });
+
+  it('leaves non-preview codes without recovery extras', () => {
+    const result = developerCodedErrorResult('CONTENT_NOT_FOUND', 'missing');
+    const first = result.content[0];
+    expect(first?.type).toBe('text');
+    if (first?.type === 'text') {
+      const parsed = JSON.parse(first.text) as {
+        error: { code: string; recovery?: string; playbookUri?: string };
+      };
+      expect(parsed.error.code).toBe('CONTENT_NOT_FOUND');
+      expect(parsed.error.recovery).toBeUndefined();
+      expect(parsed.error.playbookUri).toBeUndefined();
+    }
   });
 });

@@ -1,26 +1,41 @@
 /**
- * MCP prompts for ai-agent-ops workflows (ADR-0018).
+ * MCP prompts for ai-agent-ops workflows (progressive-disclosure context).
  */
 
-/* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration */
+/* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
-import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
+import { AI_AGENT_OPS_DEFAULT_INVARIANT_IDS, AI_AGENT_OPS_INVARIANTS } from './invariants.js';
 import {
   AI_AGENT_OPS_CORE_PLAYBOOK,
-  AI_AGENT_OPS_HARD_BANS,
+  AI_AGENT_OPS_TOPIC_META,
   AI_AGENT_OPS_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
+import type { RegisterPromptsOptions } from '../../types.js';
+import type { AiAgentOpsPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const userMessages = createPromptPlaybookEmbedder({
+const TOPIC_EVALUATION = 'evaluation' as const satisfies AiAgentOpsPlaybookTopic;
+const TOPIC_LOOP_ENGINEERING = 'loop-engineering' as const satisfies AiAgentOpsPlaybookTopic;
+const TOPIC_RELEASE_GATE = 'release-gate' as const satisfies AiAgentOpsPlaybookTopic;
+
+const bindPromptContext = bindProfilePromptContext({
+  invariants: AI_AGENT_OPS_INVARIANTS,
   core: AI_AGENT_OPS_CORE_PLAYBOOK,
   topics: AI_AGENT_OPS_TOPIC_PLAYBOOKS,
+  topicMeta: AI_AGENT_OPS_TOPIC_META,
 });
 
-export function registerAiAgentOpsPrompts(server: McpServer): void {
+export function registerAiAgentOpsPrompts(
+  server: McpServer,
+  options?: RegisterPromptsOptions,
+): void {
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
+  const invariantIds = AI_AGENT_OPS_DEFAULT_INVARIANT_IDS;
+
   server.registerPrompt(
     'audit_project_ai_agent',
     {
@@ -31,10 +46,8 @@ export function registerAiAgentOpsPrompts(server: McpServer): void {
       },
     },
     ({ agentUuid }) =>
-      userMessages(
-        `Audit the selected project-level Lightdash AI agent.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Audit the selected project-level Lightdash AI agent.
 
 Agent: ${agentUuid ?? '(list_project_agents then select)'}
 
@@ -45,7 +58,9 @@ Procedure (primitives only):
 4. List evaluations and recent runs; note coverage gaps.
 5. Distinguish API facts, readiness signals, evaluation evidence, assumptions, and unknowns.
 6. Do not mutate the agent or claim compliance.`,
-      ),
+        invariantIds,
+        requiredTopics: [],
+      }),
   );
 
   server.registerPrompt(
@@ -58,16 +73,15 @@ Procedure (primitives only):
       },
     },
     ({ agentUuid }) =>
-      userMessages(
-        `Design or update an offline evaluation suite for agent ${agentUuid ?? '(select after list)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Design or update an offline evaluation suite for agent ${agentUuid ?? '(select after list)'}.
 
 Inspect agent configuration first. Prefer create/update/append_agent_evaluation tools.
 Include common questions, ambiguity, access/refusal, and must-pass cases.
 Prefer deterministic expected responses. Do not invent local Git dataset MCP tools.`,
-        'evaluation',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_EVALUATION],
+      }),
   );
 
   server.registerPrompt(
@@ -81,16 +95,15 @@ Prefer deterministic expected responses. Do not invent local Git dataset MCP too
       },
     },
     ({ agentUuid, evalUuid }) =>
-      userMessages(
-        `Run a baseline evaluation for agent ${agentUuid ?? '(select)'} suite ${evalUuid ?? '(select)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Run a baseline evaluation for agent ${agentUuid ?? '(select)'} suite ${evalUuid ?? '(select)'}.
 
 Use run_agent_evaluation then poll list_agent_evaluation_runs and get_agent_eval_run_results.
 Never silently substitute evaluate_agent_readiness for an evaluation run.
 Report run UUID, status, limitations, and hard failures from the product results.`,
-        'evaluation',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_EVALUATION],
+      }),
   );
 
   server.registerPrompt(
@@ -103,16 +116,15 @@ Report run UUID, status, limitations, and hard failures from the product results
       },
     },
     ({ runUuid }) =>
-      userMessages(
-        `Investigate evaluation failures for run ${runUuid ?? '(from get_agent_eval_run_results)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Investigate evaluation failures for run ${runUuid ?? '(from get_agent_eval_run_results)'}.
 
 There is no lightdash_analyze_* tool. Fetch run results, cluster by root cause in the conversation,
 cite evidence, separate confirmed causes from hypotheses, and recommend the narrowest intervention.
 Prefer metadata fixes before instruction patches.`,
-        'loop-engineering',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_LOOP_ENGINEERING],
+      }),
   );
 
   server.registerPrompt(
@@ -126,17 +138,16 @@ Prefer metadata fixes before instruction patches.`,
       },
     },
     ({ agentUuid, maxIterations }) =>
-      userMessages(
-        `Guide a bounded loop-engineering workflow for agent ${agentUuid ?? '(select)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Guide a bounded loop-engineering workflow for agent ${agentUuid ?? '(select)'}.
 
 Max iterations: ${maxIterations ?? '3'}.
 Use MCP for inspect/eval runs; CLI agentops for bundle apply and gates; other profiles for semantic/content when available.
 Implementation changes happen outside agent CRUD on this server.
 Stop when gates pass, no safe intervention remains, or the budget is exhausted.`,
-        'loop-engineering',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_LOOP_ENGINEERING],
+      }),
   );
 
   server.registerPrompt(
@@ -149,14 +160,14 @@ Stop when gates pass, no safe intervention remains, or the budget is exhausted.`
       },
     },
     ({ agentUuid }) =>
-      userMessages(
-        `Review access and scope for agent ${agentUuid ?? '(select)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Review access and scope for agent ${agentUuid ?? '(select)'}.
 
 Use get_project_agent and get_explore_access_summary. Note unexpectedly broad/narrow tags,
 data-access inconsistencies, and self-improvement risk. Do not mutate access.`,
-      ),
+        invariantIds,
+        requiredTopics: [],
+      }),
   );
 
   server.registerPrompt(
@@ -169,14 +180,14 @@ data-access inconsistencies, and self-improvement risk. Do not mutate access.`,
       },
     },
     ({ agentUuid }) =>
-      userMessages(
-        `Assess self-improvement configuration for agent ${agentUuid ?? '(select)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Assess self-improvement configuration for agent ${agentUuid ?? '(select)'}.
 
 Consider access breadth, data access, evaluation coverage, release gates, and rollback readiness.
 Do not approve or apply proposals.`,
-      ),
+        invariantIds,
+        requiredTopics: [],
+      }),
   );
 
   server.registerPrompt(
@@ -190,15 +201,14 @@ Do not approve or apply proposals.`,
       },
     },
     ({ baselineRunUuid, candidateRunUuid }) =>
-      userMessages(
-        `Compare baseline run ${baselineRunUuid ?? '(uuid)'} vs candidate ${candidateRunUuid ?? '(uuid)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Compare baseline run ${baselineRunUuid ?? '(uuid)'} vs candidate ${candidateRunUuid ?? '(uuid)'}.
 
 Fetch both via get_agent_eval_run_results. Check suite/agent/mode comparability before ranking.
 Hard failures beat average scores. Never prefer a candidate with a critical regression.`,
-        'evaluation',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_EVALUATION],
+      }),
   );
 
   server.registerPrompt(
@@ -212,15 +222,14 @@ Hard failures beat average scores. Never prefer a candidate with a critical regr
       },
     },
     ({ agentUuid, runUuid }) =>
-      userMessages(
-        `Prepare a release recommendation for agent ${agentUuid ?? '(select)'} using run ${runUuid ?? '(select)'}.
-
-${AI_AGENT_OPS_HARD_BANS}
+      promptContext({
+        task: `Prepare a release recommendation for agent ${agentUuid ?? '(select)'} using run ${runUuid ?? '(select)'}.
 
 Require MCP run results plus CLI agentops evaluate-gate evidence when available.
 Return PASS, CONDITIONAL, or FAIL with risks and rollback notes. Do not deploy.`,
-        'release-gate',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_RELEASE_GATE],
+      }),
   );
 }
 

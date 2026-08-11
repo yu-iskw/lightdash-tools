@@ -12,6 +12,11 @@ export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_UR
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
 /** Optional HTTP mount allowlist (comma-separated ProfileIds). Unset/empty → all. Stdio ignores. */
 export const ENV_LIGHTDASH_TOOLS_MCP_PROFILES = 'LIGHTDASH_TOOLS_MCP_PROFILES';
+/**
+ * Prompt playbook embedding policy: `compact` | `compatible` | `embedded`.
+ * Unset → package default (`compact`). Stdio `--prompt-context` overrides.
+ */
+export const ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT';
 /** Rejected — auth mode is inferred from credentials (ADR-0007). */
 export const ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE = 'LIGHTDASH_TOOLS_MCP_AUTH_MODE';
 export const ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY = 'LIGHTDASH_TOOLS_MCP_SHARED_KEY';

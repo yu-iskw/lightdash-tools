@@ -2,11 +2,17 @@
  * Profile packaging types — tools are ToolModules imported by each profile.
  */
 
+import type { PromptContextPolicy } from '../config/prompt-context-policy.js';
 import type { ToolModule } from '../tools/types.js';
 import type { ProfileId } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type { ProfileId };
+
+export type RegisterPromptsOptions = {
+  /** Progressive-disclosure playbook embedding policy. */
+  promptContextPolicy?: PromptContextPolicy;
+};
 
 export type ProfileDefinition = {
   id: ProfileId;
@@ -21,6 +27,6 @@ export type ProfileDefinition = {
    * Mounted tools for this profile (import ToolModules; array order is tools/list order).
    */
   tools: readonly ToolModule[];
-  registerPrompts: (server: McpServer) => void;
+  registerPrompts: (server: McpServer, options?: RegisterPromptsOptions) => void;
   registerResources: (server: McpServer) => void;
 };

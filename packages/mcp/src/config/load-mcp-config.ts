@@ -43,6 +43,7 @@ import {
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 import { assertObsoleteEnvRejected } from './obsolete-env.js';
+import { resolvePromptContextPolicy, type PromptContextPolicy } from './prompt-context-policy.js';
 import { requirePublicUrl } from './public-url.js';
 import { readEnv } from './read-env.js';
 
@@ -186,6 +187,8 @@ export interface McpHttpConfig {
   mcpPath: string;
   /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
   enabledProfiles: EnabledProfilesPolicy;
+  /** Progressive-disclosure prompt embedding policy (default compact). */
+  promptContextPolicy: PromptContextPolicy;
   authMode: McpAuthMode;
   sharedKey?: SecretString;
   /** Server-held Lightdash OAuth application client id (broker mode). */
@@ -363,7 +366,16 @@ function resolveOAuthCredentials(
   };
 }
 
-export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
+/**
+ * Load Streamable HTTP MCP config from env.
+ * When `options.promptContextPolicy` is set (CLI path), that value wins and
+ * `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT` is not re-resolved — so invalid env
+ * cannot fail a start that already resolved a valid CLI policy.
+ */
+export function loadMcpHttpConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  options?: { promptContextPolicy?: PromptContextPolicy },
+): McpHttpConfig {
   const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL, env);
   if (!lightdashUrlRaw) {
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
@@ -396,6 +408,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
+  const promptContextPolicy = options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
@@ -429,6 +442,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     publicUrl,
     mcpPath,
     enabledProfiles,
+    promptContextPolicy,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     ...resolveOAuthCredentials(authMode, oauthClientId, oauthClientSecretRaw),

@@ -159,7 +159,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - MCP progress (SDK v2): emit via `ctx.mcpReq.notify` when `mcpReq._meta.progressToken` is set — there is no top-level `sendNotification` on `ServerContext` (ADR-0023).
 - Guardrails return `_lightdashBlocked`; upstream failures are coded `UPSTREAM_*` / `RATE_LIMITED`, not blocked markers.
 - Env: `LIGHTDASH_TOOLS_*`; shared allowlist `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`; obsolete allowlist names fail closed. MCP HTTP listen: `LIGHTDASH_TOOLS_MCP_HTTP_PORT`, else platform `PORT` (Cloud Run), else `3100`. Launch via `npx`/`pnpm dlx`/`lightdash-mcp` — not `pnpm exec @lightdash-tools/mcp`.
-- Stdio: `lightdash-mcp stdio --profile <id>` only — no default; `http` mounts all profiles unless `LIGHTDASH_TOOLS_MCP_PROFILES` is set (comma-separated ids; unset = all).
+- Stdio: `lightdash-mcp stdio --profile <id>` only — no default; `http` mounts all profiles unless `LIGHTDASH_TOOLS_MCP_PROFILES` is set (comma-separated ids; unset = all). Prompt context default `compact`; override with `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT` / `--prompt-context` (`compatible`|`embedded`; ADR-0025).
 - Audit: `initAuditLog()` once at startup; unset `LIGHTDASH_TOOLS_AUDIT_LOG` → JSON audit on stderr (Cloud Run).
 - Stateless MCP HTTP (ADR-0019): no SessionStore/Redis; obsolete store/redis env fail closed; OAuth broker is in-memory (sticky `/oauth/*`).
 - Content-developer: do not edit proposed body after preview (hash mismatch ≠ TTL); see ADR-0014/0019. Table-calc `fieldId`s must come from `get_chart_as_code` — preview/confirm do not prove they exist. Prefer cloned `generationType: periodOverPeriod` metrics over inventing PoP; do not set `verified` / `preserveVerification` unless the user asks.

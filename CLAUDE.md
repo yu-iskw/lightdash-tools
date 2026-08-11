@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-11]: MCP prompts default to progressive-disclosure `compact` (ADR-0025 / RFC); roll back with `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT=embedded`. Invariants live in per-profile `invariants.ts` — do not paste HARD_BANS into prompt task text.
 - [2026-08-10]: OpenAPI sync is pin-first: write a release commit SHA to `config/lightdash-openapi-ref.txt`, then `pnpm --filter @lightdash-tools/common generate:types` — skills that implied always-from-`main` were wrong.
 - [2026-08-10]: After `changie merge`, Trunk/Prettier rewrites CHANGELOG.md (`*` bullets → `-`, blank lines around headings). Format before claiming lint clean.
 - [2026-08-10]: pnpm `overrides` with `>=x.y.z` can jump majors (`js-yaml` 4→5, `nanoid` 3→6). Pin exact patched lines (4.3.1 / 3.3.17) for SBOM High CVEs.

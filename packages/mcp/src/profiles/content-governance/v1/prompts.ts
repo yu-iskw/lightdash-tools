@@ -1,25 +1,26 @@
 /**
- * MCP prompts for content-governance soft-delete and dashboard promote workflows.
+ * MCP prompts for content-governance soft-delete and dashboard promote workflows
+ * (progressive-disclosure context).
  */
 
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
+  CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS,
+  CONTENT_GOVERNANCE_INVARIANTS,
+} from './invariants.js';
+import {
   CONTENT_GOVERNANCE_CORE_PLAYBOOK,
-  CONTENT_GOVERNANCE_HARD_BANS,
+  CONTENT_GOVERNANCE_TOPIC_META,
   CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
+import type { RegisterPromptsOptions } from '../../types.js';
 import type { ContentGovernancePlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-const userMessages = createPromptPlaybookEmbedder({
-  core: CONTENT_GOVERNANCE_CORE_PLAYBOOK,
-  topics: CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS,
-});
 
 const TOPIC_CHARTS = 'charts' as const satisfies ContentGovernancePlaybookTopic;
 const TOPIC_DASHBOARDS = 'dashboards' as const satisfies ContentGovernancePlaybookTopic;
@@ -37,7 +38,20 @@ and confirmationText equal to the exact dashboard name. Never invent confirmatio
 If the client lacks form elicitation, expect ELICITATION_REQUIRED and stop.
 If the dashboard or promoteDiff drifts after binding, expect RESOURCE_CHANGED and re-invoke.`;
 
-export function registerContentGovernancePrompts(server: McpServer): void {
+const bindPromptContext = bindProfilePromptContext({
+  invariants: CONTENT_GOVERNANCE_INVARIANTS,
+  core: CONTENT_GOVERNANCE_CORE_PLAYBOOK,
+  topics: CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS,
+  topicMeta: CONTENT_GOVERNANCE_TOPIC_META,
+});
+
+export function registerContentGovernancePrompts(
+  server: McpServer,
+  options?: RegisterPromptsOptions,
+): void {
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
+  const invariantIds = CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS;
+
   server.registerPrompt(
     'delete_chart',
     {
@@ -50,10 +64,8 @@ export function registerContentGovernancePrompts(server: McpServer): void {
       },
     },
     ({ chartUuidOrSlug, reason }) =>
-      userMessages(
-        `Soft-delete the Lightdash chart ${chartUuidOrSlug}.
-
-${CONTENT_GOVERNANCE_HARD_BANS}
+      promptContext({
+        task: `Soft-delete the Lightdash chart ${chartUuidOrSlug}.
 
 ${DELETE_ELICITATION_RULES}
 
@@ -63,8 +75,9 @@ lightdash_delete_chart with chartUuidOrSlug.
 Complete human form fields: decision (confirm_delete | do_not_delete) and confirmationText
 (exact chart name). Report the deletion receipt or that nothing was deleted if declined/cancelled.
 Do not permanently purge.`,
-        TOPIC_CHARTS,
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_CHARTS],
+      }),
   );
 
   server.registerPrompt(
@@ -79,10 +92,8 @@ Do not permanently purge.`,
       },
     },
     ({ dashboardUuidOrSlug, reason }) =>
-      userMessages(
-        `Soft-delete the Lightdash dashboard ${dashboardUuidOrSlug}.
-
-${CONTENT_GOVERNANCE_HARD_BANS}
+      promptContext({
+        task: `Soft-delete the Lightdash dashboard ${dashboardUuidOrSlug}.
 
 ${DELETE_ELICITATION_RULES}
 
@@ -92,8 +103,9 @@ lightdash_delete_dashboard with dashboardUuidOrSlug.
 Complete human form fields: decision (confirm_delete | do_not_delete) and confirmationText
 (exact dashboard name). Report the deletion receipt or that nothing was deleted if declined/cancelled.
 Do not permanently purge, delete spaces, or bulk-delete.`,
-        TOPIC_DASHBOARDS,
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_DASHBOARDS],
+      }),
   );
 
   server.registerPrompt(
@@ -108,10 +120,8 @@ Do not permanently purge, delete spaces, or bulk-delete.`,
       },
     },
     ({ dashboardUuidOrSlug, reason }) =>
-      userMessages(
-        `Promote the Lightdash dashboard ${dashboardUuidOrSlug} to its configured upstream project.
-
-${CONTENT_GOVERNANCE_HARD_BANS}
+      promptContext({
+        task: `Promote the Lightdash dashboard ${dashboardUuidOrSlug} to its configured upstream project.
 
 ${PROMOTE_ELICITATION_RULES}
 
@@ -121,8 +131,9 @@ lightdash_promote_dashboard with dashboardUuidOrSlug.
 Complete human form fields: decision (confirm_promote | do_not_promote) and confirmationText
 (exact dashboard name). Report the promotion receipt or that nothing was promoted if declined/cancelled.
 Do not promote charts or SQL charts via MCP.`,
-        TOPIC_DASHBOARDS,
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_DASHBOARDS],
+      }),
   );
 }
 

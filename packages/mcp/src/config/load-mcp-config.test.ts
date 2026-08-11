@@ -63,6 +63,30 @@ afterEach(() => {
 });
 
 describe('loadMcpHttpConfig', () => {
+  it('defaults promptContextPolicy to compact and accepts overrides', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    expect(loadMcpHttpConfig().promptContextPolicy).toBe('compact');
+
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'embedded';
+    expect(loadMcpHttpConfig().promptContextPolicy).toBe('embedded');
+  });
+
+  it('fails closed on invalid LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'uri-only';
+    expect(() => loadMcpHttpConfig()).toThrow(/LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT/);
+  });
+
+  it('uses explicit promptContextPolicy and skips invalid env resolve', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'uri-only';
+    const config = loadMcpHttpConfig(process.env, { promptContextPolicy: 'compact' });
+    expect(config.promptContextPolicy).toBe('compact');
+  });
+
   it('prefers LIGHTDASH_TOOLS_MCP_HTTP_PORT over MCP_HTTP_PORT', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';

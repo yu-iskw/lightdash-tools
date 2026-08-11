@@ -44,5 +44,6 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 21. [MCP profile-owned ToolModules replace operations catalog](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)
 22. [Request-scoped MCP operation notifications](0023-request-scoped-mcp-operation-notifications.md)
 23. [MCP HTTP profile mount allowlist via env](0024-mcp-http-profile-mount-allowlist-via-env.md)
+24. [MCP progressive-disclosure prompt context policies](0025-mcp-progressive-disclosure-prompt-context-policies.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

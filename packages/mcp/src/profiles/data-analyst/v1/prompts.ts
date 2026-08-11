@@ -1,27 +1,43 @@
 /**
- * MCP prompts for data-analyst workflows.
+ * MCP prompts for data-analyst workflows (progressive-disclosure context).
  */
 
 /* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
-import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
-import { createPromptPlaybookEmbedder } from '../../lib/playbook-resources.js';
+import {
+  formatPromptProjectUuidLine,
+  optionalProjectUuidField,
+} from '../../../tools/lib/schema-fields.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
+import { DATA_ANALYST_DEFAULT_INVARIANT_IDS, DATA_ANALYST_INVARIANTS } from './invariants.js';
 import {
   DATA_ANALYST_CORE_PLAYBOOK,
-  DATA_ANALYST_HARD_BANS,
+  DATA_ANALYST_TOPIC_META,
   DATA_ANALYST_TOPIC_PLAYBOOKS,
 } from './resources/playbooks.js';
 
+import type { RegisterPromptsOptions } from '../../types.js';
+import type { DataAnalystPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const userMessages = createPromptPlaybookEmbedder({
+const TOPIC_EXPLORE = 'explore' as const satisfies DataAnalystPlaybookTopic;
+
+const bindPromptContext = bindProfilePromptContext({
+  invariants: DATA_ANALYST_INVARIANTS,
   core: DATA_ANALYST_CORE_PLAYBOOK,
   topics: DATA_ANALYST_TOPIC_PLAYBOOKS,
+  topicMeta: DATA_ANALYST_TOPIC_META,
 });
 
-export function registerDataAnalystPrompts(server: McpServer): void {
+export function registerDataAnalystPrompts(
+  server: McpServer,
+  options?: RegisterPromptsOptions,
+): void {
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
+  const invariantIds = DATA_ANALYST_DEFAULT_INVARIANT_IDS;
+
   server.registerPrompt(
     'explore_data',
     {
@@ -35,14 +51,12 @@ export function registerDataAnalystPrompts(server: McpServer): void {
       },
     },
     ({ projectUuid, question, exploreHint }) =>
-      userMessages(
-        `Answer this data question by exploring the semantic layer and running unsaved metric queries:
+      promptContext({
+        task: `Answer this data question by exploring the semantic layer and running unsaved metric queries:
 
 ${question}
 
-${DATA_ANALYST_HARD_BANS}
-
-Project: ${projectUuid ?? '(use HTTP pin or ask for projectUuid — PROJECT_SCOPE_REQUIRED otherwise)'}.
+${formatPromptProjectUuidLine(projectUuid)}
 Explore hint: ${exploreHint ?? '(discover with list_explores search+limit)'}.
 
 Procedure:
@@ -51,8 +65,9 @@ Procedure:
 3. Copy fieldIds from list_dimensions / list_metrics (or get_explore base-table metrics). Never invent fieldIds.
 4. Optional compile_query; then run_metric_query with small limit. Poll get_query_result if needed.
 5. Iterate filters/fields. Do not save charts unless the user asks.`,
-        'explore',
-      ),
+        invariantIds,
+        requiredTopics: [TOPIC_EXPLORE],
+      }),
   );
 }
 

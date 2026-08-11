@@ -5,9 +5,16 @@
 import { describe, expect, it } from 'vitest';
 
 import { getProfile, listToolIds } from '../../index.js';
+import { playbookTopicUri } from '../../lib/playbook-resources.js';
 import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
-import { CONTENT_DEVELOPER_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
+import { CONTENT_DEVELOPER_INVARIANTS } from './invariants.js';
+import {
+  CONTENT_DEVELOPER_CORE_PLAYBOOK,
+  CONTENT_DEVELOPER_HARD_BANS,
+  CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
+  getAllPlaybookMarkdown,
+} from './resources/playbooks.js';
 
 describe('content-developer prompts/playbook', () => {
   it('playbooks reference only registered tool short ids', () => {
@@ -15,6 +22,20 @@ describe('content-developer prompts/playbook', () => {
     expectPlaybookCoversProfileTools('content-developer', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('terraform');
+  });
+
+  it('keeps structured invariants and core.md Hard bans in sync (count + key phrases)', () => {
+    const core = CONTENT_DEVELOPER_CORE_PLAYBOOK.getMarkdown();
+    const hardBansSection = core.split('## Hard bans')[1]?.split('\n## ')[0] ?? '';
+    const coreBullets = hardBansSection
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('- Do not'));
+    expect(coreBullets).toHaveLength(CONTENT_DEVELOPER_INVARIANTS.length);
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('resourcekind');
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('subagent-driven-development');
+    expect(hardBansSection.toLowerCase()).toContain('subagent-driven-development');
+    expect(hardBansSection.toLowerCase()).toContain('resourcekind');
   });
 
   it('forbids space create/update and orphan chart publish', () => {
@@ -187,6 +208,7 @@ describe('content-developer prompts/playbook', () => {
     let authorText = '';
     let authorUris: Array<string | undefined> = [];
     let refactorText = '';
+    let createCompactText = '';
     const server = {
       registerPrompt: (
         name: string,
@@ -248,7 +270,61 @@ describe('content-developer prompts/playbook', () => {
         }
       },
     };
-    registerContentDeveloperPrompts(server as never);
+    // embedded keeps legacy resource URI assertions; compact is the package default.
+    registerContentDeveloperPrompts(server as never, { promptContextPolicy: 'embedded' });
+
+    const compactServer = {
+      registerPrompt: (
+        name: string,
+        _meta: unknown,
+        handler: (args: Record<string, unknown>) => { messages: unknown },
+      ) => {
+        if (name !== 'create_dashboard') return;
+        const messages = handler({ goal: 'x' }).messages as Array<{
+          content: { type: string; text?: string };
+        }>;
+        createCompactText = messages
+          .filter((m) => m.content.type === 'text')
+          .map((m) => m.content.text ?? '')
+          .join('\n')
+          .toLowerCase();
+        expect(messages.every((m) => m.content.type === 'text')).toBe(true);
+      },
+    };
+    registerContentDeveloperPrompts(compactServer as never, { promptContextPolicy: 'compact' });
+    expect(createCompactText).toContain('critical invariants:');
+    expect(createCompactText).toContain('previewtoken');
+    expect(createCompactText).toContain(
+      playbookTopicUri('content-developer', 'recovery/preview-stale'),
+    );
+    expect(createCompactText).not.toContain('## hard bans');
+
+    let moveCompactText = '';
+    const moveCompactServer = {
+      registerPrompt: (
+        name: string,
+        _meta: unknown,
+        handler: (args: Record<string, unknown>) => { messages: unknown },
+      ) => {
+        if (name !== 'move_content') return;
+        const messages = handler({ goal: 'x' }).messages as Array<{
+          content: { type: string; text?: string };
+        }>;
+        moveCompactText = messages
+          .filter((m) => m.content.type === 'text')
+          .map((m) => m.content.text ?? '')
+          .join('\n')
+          .toLowerCase();
+      },
+    };
+    registerContentDeveloperPrompts(moveCompactServer as never, { promptContextPolicy: 'compact' });
+    expect(moveCompactText).toContain(
+      playbookTopicUri('content-developer', 'recovery/preview-stale'),
+    );
+    expect(moveCompactText).toContain(
+      playbookTopicUri('content-developer', 'recovery/preview-required'),
+    );
+
     expect(names).not.toContain('build_chart');
     expect(names).not.toContain('design_dashboard');
     expect(names).toContain('author_chart');
@@ -269,19 +345,21 @@ describe('content-developer prompts/playbook', () => {
         .toLowerCase();
       expect(text).toContain('design spec');
       expect(text).toMatch(/stop until the user proceeds|proceeds \/ approves/);
+      expect(text).toContain('critical invariants:');
+      expect(text).toContain('previewtoken');
 
       const uris = typed
         .filter((m) => m.content.type === 'resource')
         .map((m) => m.content.resource?.uri);
-      expect(uris).toContain('lightdash://playbooks/content-developer/core');
-      expect(uris).toContain('lightdash://playbooks/content-developer/dashboards');
-      expect(uris).toContain('lightdash://playbooks/content-developer/dashboard-design');
+      expect(uris).toContain(CONTENT_DEVELOPER_CORE_PLAYBOOK.uri);
+      expect(uris).toContain(CONTENT_DEVELOPER_TOPIC_PLAYBOOKS.dashboards.uri);
+      expect(uris).toContain(CONTENT_DEVELOPER_TOPIC_PLAYBOOKS['dashboard-design'].uri);
       if (name === 'create_dashboard' || name === 'improve_dashboard') {
         expect(text).toContain('objective');
         expect(text).toMatch(/clarif/);
         expect(text).toMatch(/only if the user explicitly asked/);
         expect(text).toMatch(/tablename|filter apply\/exclude|apply\/exclude/);
-        expect(uris).toContain('lightdash://playbooks/content-developer/chart-types');
+        expect(uris).toContain(CONTENT_DEVELOPER_TOPIC_PLAYBOOKS['chart-types'].uri);
       }
       if (name === 'improve_dashboard') {
         expect(text).toMatch(/keep \/ drop \/ rename|professionalize/);
@@ -297,8 +375,8 @@ describe('content-developer prompts/playbook', () => {
     expect(publishText).toContain('content-governance');
     expect(authorText).toContain('board insight');
     expect(authorText).toContain('table-calculations');
-    expect(authorUris).toContain('lightdash://playbooks/content-developer/chart-types');
-    expect(authorUris).toContain('lightdash://playbooks/content-developer/table-calculations');
+    expect(authorUris).toContain(CONTENT_DEVELOPER_TOPIC_PLAYBOOKS['chart-types'].uri);
+    expect(authorUris).toContain(CONTENT_DEVELOPER_TOPIC_PLAYBOOKS['table-calculations'].uri);
     expect(refactorText).toMatch(/approved spec|user request allows/);
     expect(refactorText).not.toMatch(/unless explicitly requested/);
   });

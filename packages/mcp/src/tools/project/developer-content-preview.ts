@@ -10,7 +10,11 @@
 import { z } from 'zod';
 
 import { resolveProjectScope } from '../../governance/project-scope.js';
-import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
+import {
+  PREVIEW_SAFETY,
+  developerCodedErrorResult,
+  registerContentDeveloperTool,
+} from '../../policy/content-developer.js';
 import { mintDraftPreviewToken, uniqueResourceKeys } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
@@ -394,7 +398,7 @@ export function registerPreviewContentMove(
         isNotFound: isNotFoundError,
       });
       if (resolved.kind === 'error') {
-        return codedErrorResult(resolved.error.code, resolved.error.message);
+        return developerCodedErrorResult(resolved.error.code, resolved.error.message);
       }
       const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
