@@ -6,15 +6,14 @@ import { describe, expect, it } from 'vitest';
 
 import { getProfile, listToolIds } from '../../index.js';
 import { playbookTopicUri } from '../../lib/playbook-resources.js';
-import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
+import { CONTENT_DEVELOPER_INVARIANTS } from './invariants.js';
 import {
   CONTENT_DEVELOPER_CORE_PLAYBOOK,
   CONTENT_DEVELOPER_HARD_BANS,
   CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
   getAllPlaybookMarkdown,
 } from './resources/playbooks.js';
-import { CONTENT_DEVELOPER_INVARIANTS } from './invariants.js';
 
 describe('content-developer prompts/playbook', () => {
   it('keeps structured invariants and core.md Hard bans in sync (count + key phrases)', () => {
