@@ -6,8 +6,8 @@
 import { z } from 'zod';
 
 import {
+  formatPromptProjectUuidLine,
   optionalProjectUuidField,
-  PROMPT_PROJECT_UUID_HINT,
 } from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
@@ -56,7 +56,7 @@ export function registerDataAnalystPrompts(
 
 ${question}
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 Explore hint: ${exploreHint ?? '(discover with list_explores search+limit)'}.
 
 Procedure:

@@ -76,13 +76,10 @@ function topicWhenEntries<TopicId extends string>(
   topicMeta: Readonly<Record<TopicId, PromptTopicMeta>>,
 ): { topic: TopicId; when: string; uri: string }[] {
   return list.map((entry) => {
-    // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
     const meta = topicMeta[entry.topic];
     return {
       topic: entry.topic,
       when: entry.when ?? meta.useWhen ?? meta.description,
-      // Topic ids come from prompt constants (typed Record keys).
-      // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
       uri: topics[entry.topic].uri,
     };
   });

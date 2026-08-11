@@ -19,7 +19,12 @@ import {
 } from './resources/playbooks.js';
 
 import type { RegisterPromptsOptions } from '../../types.js';
+import type { OrganizationAuditPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+const TOPIC_ACCESS = 'access' as const satisfies OrganizationAuditPlaybookTopic;
+const TOPIC_CONTENT = 'content' as const satisfies OrganizationAuditPlaybookTopic;
+const TOPIC_DELIVERIES = 'deliveries' as const satisfies OrganizationAuditPlaybookTopic;
 
 const bindPromptContext = bindProfilePromptContext({
   invariants: ORGANIZATION_AUDIT_INVARIANTS,
@@ -103,7 +108,7 @@ Mandatory tool order per project: lightdash_list_project_roles → lightdash_lis
 Also use lightdash_list_org_members, lightdash_list_org_groups, lightdash_list_org_role_assignments, lightdash_list_custom_roles as needed.
 Empty direct_access ≠ no access. Truncation / INCOMPLETE_EFFECTIVE_ACCESS warnings must appear in the report.`,
         invariantIds,
-        requiredTopics: ['access'],
+        requiredTopics: [TOPIC_ACCESS],
       }),
   );
 
@@ -131,7 +136,7 @@ Projects: ${projectUuids ?? '(sample ≤3; always pass projectUuids into list_co
 Use lightdash_list_content (sortBy views or last_updated_at), lightdash_list_validation_results, and lightdash_get_project_user_activity (summarize role counts + top views only). Optional lightdash_get_dashboard_meta.
 Join in the conversation — no server-side audit crawler. Do not recommend deletion for low/zero views.`,
         invariantIds,
-        requiredTopics: ['content'],
+        requiredTopics: [TOPIC_CONTENT],
       }),
   );
 
@@ -158,7 +163,7 @@ Allowed email domains: ${allowedEmailDomains ?? '(none)'}.
 Use lightdash_list_project_schedulers (destinations redacted by default) and lightdash_get_scheduler when needed.
 Report enabled and disabled schedules. External destinations (if revealed) are review signals, not automatic violations.`,
         invariantIds,
-        requiredTopics: ['deliveries'],
+        requiredTopics: [TOPIC_DELIVERIES],
       }),
   );
 

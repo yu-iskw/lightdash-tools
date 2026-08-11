@@ -3,14 +3,14 @@
  * Shared by registerContentReaderPrompts and budget gates.
  */
 
-import { PROMPT_PROJECT_UUID_HINT } from '../../../tools/lib/schema-fields.js';
+import { formatPromptProjectUuidLine } from '../../../tools/lib/schema-fields.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS } from './invariants.js';
 
 import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { PromptContextSpec } from '../../lib/prompt-context.js';
 
-const TOPIC_DISCOVER = 'discover' as const satisfies ContentReaderPlaybookTopic;
+export const TOPIC_DISCOVER = 'discover' as const satisfies ContentReaderPlaybookTopic;
 
 export type FindContentPromptArgs = {
   question: string;
@@ -32,7 +32,7 @@ export function buildFindContentPromptSpec(
 
 ${question}
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 Content types hint: ${contentTypes ?? '(any)'}.
 Verified preference: ${verifiedOnly ?? false} (when true, call list_verified_content first — search_content does not filter by verification).
 Space filter: ${spaceUuid ?? '(none)'}.

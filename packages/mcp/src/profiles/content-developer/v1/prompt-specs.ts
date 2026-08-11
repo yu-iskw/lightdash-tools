@@ -3,7 +3,7 @@
  * Shared by registerContentDeveloperPrompts and budget gates.
  */
 
-import { PROMPT_PROJECT_UUID_HINT } from '../../../tools/lib/schema-fields.js';
+import { formatPromptProjectUuidLine } from '../../../tools/lib/schema-fields.js';
 
 import { CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS } from './invariants.js';
 
@@ -20,6 +20,12 @@ export const DASHBOARD_CHART_TOPIC_IDS = [
   TOPIC_DASHBOARD_DESIGN,
   TOPIC_CHART_TYPES,
 ] as const;
+
+/** Topics for refactor (shell + design). */
+export const DASHBOARD_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_DASHBOARD_DESIGN] as const;
+
+/** Topics for publish (shell + viz). */
+export const DASHBOARD_PUBLISH_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_CHART_TYPES] as const;
 
 /** Manifest `when` comes from TOPIC_META.useWhen (optional `when` on entries). */
 export const WRITE_RECOVERY_TOPICS = [
@@ -51,7 +57,7 @@ export function buildCreateDashboardPromptSpec(
 
 ${goal}
 
-Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 
 Target existing space: ${spaceUuid ?? '(resolve with lightdash_list_spaces / lightdash_get_space — never create a space)'}.
 Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_space / short search_content, then get_chart_as_code)'}.

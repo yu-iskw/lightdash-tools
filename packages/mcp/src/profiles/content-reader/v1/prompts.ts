@@ -6,13 +6,13 @@
 import { z } from 'zod';
 
 import {
+  formatPromptProjectUuidLine,
   optionalProjectUuidField,
-  PROMPT_PROJECT_UUID_HINT,
 } from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
-import { buildFindContentPromptSpec } from './prompt-specs.js';
+import { buildFindContentPromptSpec, TOPIC_DISCOVER } from './prompt-specs.js';
 import {
   CONTENT_READER_CORE_PLAYBOOK,
   CONTENT_READER_TOPIC_META,
@@ -79,7 +79,7 @@ export function registerContentReaderPrompts(
       promptContext({
         task: `Explain the saved chart ${chartUuidOrSlug}.
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 includeLatestValues=${includeLatestValues ?? false}.
 
 Workflow:
@@ -107,7 +107,7 @@ Skip SQL charts for execution. Separate explicit metadata from inference.`,
       promptContext({
         task: `Summarize dashboard ${dashboardUuidOrSlug}.
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 Focus: ${focus ?? '(general summary)'}.
 Execute tiles: ${executeTiles ?? false}; max tiles: ${maximumTiles ?? 5}.
 
@@ -137,14 +137,14 @@ Unexecuted tiles must not support conclusions.`,
 
 ${question}
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 Prefer verified=${verifiedOnly ?? false} when set — call list_verified_content first; else search_content.
 Max executions: ${maximumExecutions ?? 3}.
 
 Workflow:
 discover → inspect → minimal bounded execution → answer with coverage/limitations.`,
         invariantIds,
-        requiredTopics: [TOPIC_EXPLAIN_RUN],
+        requiredTopics: [TOPIC_DISCOVER, TOPIC_EXPLAIN_RUN],
       }),
   );
 
@@ -168,7 +168,7 @@ ${contentReferences}
 Question:
 ${comparisonQuestion}
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 
 Workflow:
 resolve both sides → diff definitions before values → execute only when needed (≤2).`,
@@ -197,7 +197,7 @@ First: ${firstContent}
 Second: ${secondContent}
 Difference: ${observedDifference}
 
-Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
+${formatPromptProjectUuidLine(projectUuid)}
 
 Workflow:
 checklist definitions (metrics, filters, grains, parameters, cache) → execute only when needed.
