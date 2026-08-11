@@ -13,6 +13,16 @@ import type {
 
 export type CompileTarget = 'lightdash-custom-chart' | 'standalone-html' | 'svg';
 
+export const COMPILE_TARGETS = [
+  'svg',
+  'standalone-html',
+  'lightdash-custom-chart',
+] as const satisfies readonly CompileTarget[];
+
+export function isCompileTarget(value: string): value is CompileTarget {
+  return (COMPILE_TARGETS as readonly string[]).includes(value);
+}
+
 /**
  * Only advertise capabilities the MVP renderers actually implement.
  * Tooltip/selection/responsiveLayout are deferred until wired end-to-end.

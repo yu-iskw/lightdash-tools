@@ -26,7 +26,12 @@ export type {
 } from './errors';
 
 export type { CompileTarget } from './compile/capability';
-export { capabilitiesForTarget, negotiateCapabilities } from './compile/capability';
+export {
+  COMPILE_TARGETS,
+  capabilitiesForTarget,
+  isCompileTarget,
+  negotiateCapabilities,
+} from './compile/capability';
 export { compileVisualization } from './compile/compile';
 export type { CompileVisualizationInput, CompileVisualizationResult } from './compile/compile';
 

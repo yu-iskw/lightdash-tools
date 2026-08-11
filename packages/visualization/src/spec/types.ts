@@ -41,7 +41,7 @@ export interface VisualizationMetricQuery {
   limit?: number;
 }
 
-export type FieldRole = 'category' | 'description' | 'label' | 'secondaryValue' | 'value';
+export type FieldRole = 'category' | 'secondaryValue' | 'value';
 
 export type FieldRoleMap = Partial<Record<FieldRole, string>>;
 

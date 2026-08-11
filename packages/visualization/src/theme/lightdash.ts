@@ -60,7 +60,3 @@ export const LIGHTDASH_THEME: VisualizationTheme = {
     barMuted: '#c5d0d3',
   },
 };
-
-export function resolveTheme(): VisualizationTheme {
-  return LIGHTDASH_THEME;
-}

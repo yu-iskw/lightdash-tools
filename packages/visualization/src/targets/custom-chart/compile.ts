@@ -24,8 +24,8 @@ export interface CustomChartCompileResult {
   warnings: VisualizationWarning[];
 }
 
-function pushChildObjects(stack: unknown[], values: unknown[]): void {
-  for (const value of values) {
+function enqueueObjectChildren(stack: unknown[], record: Record<string, unknown>): void {
+  for (const value of Object.values(record)) {
     if (value && typeof value === 'object') stack.push(value);
   }
 }
@@ -46,7 +46,7 @@ function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
         'Vega-Lite specs must not reference external URLs in governed Custom Chart compile',
       );
     }
-    pushChildObjects(stack, Object.values(record));
+    enqueueObjectChildren(stack, record);
   }
 }
 

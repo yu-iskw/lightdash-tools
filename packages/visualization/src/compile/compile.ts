@@ -87,16 +87,7 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   };
 
   switch (input.target) {
-    case 'svg': {
-      const compiled = template.compile({
-        spec,
-        dataset: input.dataset,
-        boundRoles,
-      });
-      warnings.push(...compiled.warnings);
-      result.svg = renderSvg(compiled.layout);
-      break;
-    }
+    case 'svg':
     case 'standalone-html': {
       const compiled = template.compile({
         spec,
@@ -104,10 +95,14 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
         boundRoles,
       });
       warnings.push(...compiled.warnings);
-      result.html = renderHtml(compiled.layout, {
-        embedData: input.embedData === true,
-        dataset: input.dataset,
-      });
+      if (input.target === 'svg') {
+        result.svg = renderSvg(compiled.layout);
+      } else {
+        result.html = renderHtml(compiled.layout, {
+          embedData: input.embedData === true,
+          dataset: input.dataset,
+        });
+      }
       break;
     }
     case 'lightdash-custom-chart': {

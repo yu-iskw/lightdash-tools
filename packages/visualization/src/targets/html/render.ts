@@ -3,7 +3,7 @@
  */
 
 import { escapeHtml } from '../../format/escape';
-import { resolveTheme } from '../../theme/lightdash';
+import { LIGHTDASH_THEME } from '../../theme/lightdash';
 import { renderSvg } from '../svg/render';
 
 import type { VisualizationDataset } from '../../data/dataset';
@@ -23,7 +23,7 @@ function embedDatasetScript(dataset: VisualizationDataset): string {
 }
 
 export function renderHtml(layout: LayoutDocument, options: RenderHtmlOptions = {}): string {
-  const theme = resolveTheme();
+  const theme = LIGHTDASH_THEME;
   const svg = renderSvg(layout);
   const embedData = options.embedData === true;
   const dataBlock = embedData && options.dataset ? embedDatasetScript(options.dataset) : '';

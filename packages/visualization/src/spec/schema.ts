@@ -38,8 +38,6 @@ const rolesSchema = z
     category: z.string().min(1).optional(),
     value: z.string().min(1).optional(),
     secondaryValue: z.string().min(1).optional(),
-    label: z.string().min(1).optional(),
-    description: z.string().min(1).optional(),
   })
   .strict()
   .refine((roles) => Object.values(roles).some((v) => typeof v === 'string'), {

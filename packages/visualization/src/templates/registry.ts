@@ -18,13 +18,12 @@ export function listTemplates(): VisualizationTemplate[] {
   return Object.values(TEMPLATES);
 }
 
-export function getTemplate(id: string): VisualizationTemplate {
-  const template = TEMPLATES[id as TemplateId];
-  if (!template) {
+export function getTemplate(id: TemplateId | string): VisualizationTemplate {
+  if (!(id in TEMPLATES)) {
     throw new VisualizationError('UNKNOWN_TEMPLATE', `Unknown template "${id}"`, {
       templateId: id,
       known: Object.keys(TEMPLATES),
     });
   }
-  return template;
+  return TEMPLATES[id as TemplateId];
 }

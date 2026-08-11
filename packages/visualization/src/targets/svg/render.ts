@@ -3,7 +3,7 @@
  */
 
 import { escapeXml } from '../../format/escape';
-import { resolveTheme } from '../../theme/lightdash';
+import { LIGHTDASH_THEME } from '../../theme/lightdash';
 
 import type { LayoutDocument, LayoutNode } from '../../layout/types';
 import type { VisualizationTheme } from '../../theme/lightdash';
@@ -99,7 +99,7 @@ function renderNode(node: LayoutNode, state: RenderState, x: number): void {
 }
 
 export function renderSvg(layout: LayoutDocument): string {
-  const theme = resolveTheme();
+  const theme = LIGHTDASH_THEME;
   const state: RenderState = {
     y: theme.spacing.padding,
     parts: [],
