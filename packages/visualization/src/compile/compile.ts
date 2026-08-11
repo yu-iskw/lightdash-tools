@@ -10,9 +10,9 @@ import { negotiateCapabilities } from './capability';
 
 import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
+import type { CompileTarget } from './capability';
 import type { VisualizationSpecV1 } from '../spec/types';
 import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
-import type { CompileTarget } from './capability';
 
 const DATASET_HARD_LIMIT_MULTIPLIER = 5;
 

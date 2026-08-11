@@ -1,11 +1,10 @@
+import { requireBoundRole } from '../compile/bind';
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
 
-import { requireBoundRole } from '../compile/bind';
-
 import type { VisualizationWarning } from '../errors';
-import type { LayoutNode } from '../layout/types';
 import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
+import type { LayoutNode } from '../layout/types';
 
 function buildMetricHeroChildren(context: TemplateCompileContext): {
   children: LayoutNode[];

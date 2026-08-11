@@ -2,11 +2,11 @@ import { requireBoundRole } from '../compile/bind';
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
 
+import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
+import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 import type { LayoutBar, LayoutNode } from '../layout/types';
 import type { FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
-import type { VisualizationDataset } from '../data/dataset';
-import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 
 function asNumber(value: unknown): number | null {
   if (typeof value === 'number' && !Number.isNaN(value)) return value;

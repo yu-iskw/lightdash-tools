@@ -1,6 +1,6 @@
 import { VisualizationError } from '../../errors';
-import { LIGHTDASH_THEME } from '../../theme/lightdash';
 import { prepareRankedCardsData } from '../../templates/ranked-cards';
+import { LIGHTDASH_THEME } from '../../theme/lightdash';
 
 import type { VisualizationDataset } from '../../data/dataset';
 import type { VisualizationWarning } from '../../errors';
@@ -24,6 +24,12 @@ export interface CustomChartCompileResult {
   warnings: VisualizationWarning[];
 }
 
+function pushChildObjects(stack: unknown[], values: unknown[]): void {
+  for (const value of values) {
+    if (value && typeof value === 'object') stack.push(value);
+  }
+}
+
 function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
   const stack: unknown[] = [spec];
   while (stack.length > 0) {
@@ -40,9 +46,7 @@ function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
         'Vega-Lite specs must not reference external URLs in governed Custom Chart compile',
       );
     }
-    for (const value of Object.values(record)) {
-      if (value && typeof value === 'object') stack.push(value);
-    }
+    pushChildObjects(stack, Object.values(record));
   }
 }
 
