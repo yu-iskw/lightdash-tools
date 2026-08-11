@@ -140,11 +140,11 @@ Architecture: [ADR-0024](../../docs/adr/0024-mcp-http-profile-mount-allowlist-vi
 
 Controls how much playbook markdown is embedded into `prompts/get` (progressive disclosure; [ADR-0025](../../docs/adr/0025-mcp-progressive-disclosure-prompt-context-policies.md)).
 
-| Value | Behavior |
-| :---- | :------- |
+| Value               | Behavior                                            |
+| :------------------ | :-------------------------------------------------- |
 | `compact` (default) | Task + critical invariants + resource manifest only |
-| `compatible` | Also embeds required topic playbooks |
-| `embedded` | Legacy: embeds core + required topics (rollback) |
+| `compatible`        | Also embeds required topic playbooks                |
+| `embedded`          | Legacy: embeds core + required topics (rollback)    |
 
 ```bash
 export LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT=compatible

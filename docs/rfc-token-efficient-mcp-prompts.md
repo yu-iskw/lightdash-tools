@@ -43,33 +43,33 @@ This revision rejects pure URI-only as the universal default, rejects client-nam
 
 ### 2.2 Findings against the live codebase
 
-| Finding | Impact |
-| --- | --- |
-| content-developer, not content-reader, is the cost crisis (~11k vs ~2.5k tokens) | Architecture pilots on reader; **all profiles migrate in this change set**; developer gets recovery split |
-| SDK 2.0.0 already types `annotations` + `cacheHint` | Use them; do not defer as “unknown SDK support” |
-| Prompt messages use single content object per message; embedded `type: 'resource'` with full `text` | compact = text-only messages; compatible/embedded keep standard embedded resources |
-| `resource_link` exists in SDK but is unused and unproven across hosts | **Not used in v1** |
-| Error envelope is `{ error: { code, message } }` only | Optional `recovery` + `playbookUri` are additive; must not break parsers that only read `code`/`message` |
-| No OTEL in MCP package | **CI report + char metrics only** for v1; no OTEL dependency |
-| `registerPrompt` is eslint-deprecated in-repo | Do not migrate registration API in this work |
-| Index playbooks are registered but never embedded | Good discovery surface; keep |
-| HARD_BANS are duplicated into every prompt **and** core embed | Invariant capsule replaces prompt paste; HARD_BANS become generated projections |
-| Live multi-client LLM behavioral eval suite does not exist | Acceptance = **deterministic** unit/snapshot/budget + protocol integration tests |
+| Finding                                                                                             | Impact                                                                                                    |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| content-developer, not content-reader, is the cost crisis (~11k vs ~2.5k tokens)                    | Architecture pilots on reader; **all profiles migrate in this change set**; developer gets recovery split |
+| SDK 2.0.0 already types `annotations` + `cacheHint`                                                 | Use them; do not defer as “unknown SDK support”                                                           |
+| Prompt messages use single content object per message; embedded `type: 'resource'` with full `text` | compact = text-only messages; compatible/embedded keep standard embedded resources                        |
+| `resource_link` exists in SDK but is unused and unproven across hosts                               | **Not used in v1**                                                                                        |
+| Error envelope is `{ error: { code, message } }` only                                               | Optional `recovery` + `playbookUri` are additive; must not break parsers that only read `code`/`message`  |
+| No OTEL in MCP package                                                                              | **CI report + char metrics only** for v1; no OTEL dependency                                              |
+| `registerPrompt` is eslint-deprecated in-repo                                                       | Do not migrate registration API in this work                                                              |
+| Index playbooks are registered but never embedded                                                   | Good discovery surface; keep                                                                              |
+| HARD_BANS are duplicated into every prompt **and** core embed                                       | Invariant capsule replaces prompt paste; HARD_BANS become generated projections                           |
+| Live multi-client LLM behavioral eval suite does not exist                                          | Acceptance = **deterministic** unit/snapshot/budget + protocol integration tests                          |
 
 ### 2.3 Revised decisions (closed open questions)
 
-| # | Question | Decision |
-| --- | --- | --- |
-| 1 | Eventual default? | **`compact`** (this implementation ships it) |
-| 2 | Official client matrix? | Documented smoke checklist outside CI; CI is protocol-level |
-| 3 | SDK cache/annotations? | **Yes** on 2.0.0 — enable on static playbooks |
-| 4 | Token estimation? | UTF-8 bytes + `approxTokens = ceil(chars / 4)`; no tokenizer dependency |
-| 5 | Resource size? | Populate from raw UTF-8 byte length of markdown when emitting reports; optional description hint |
-| 6 | `playbookUri` on errors? | Optional additive fields `recovery` + `playbookUri` on structured error object |
-| 7 | Remove prose after server enforcement? | Keep eager invariant short-forms; do not delete enforcement |
-| 8 | Index format? | Keep markdown index; composer renders typed metadata into prompt manifest |
-| 9 | Custom MCP extension? | Deferred |
-| 10 | How long keep `embedded`? | At least one minor release / deprecation cycle; env rollback forever until removed in a later ADR |
+| #   | Question                               | Decision                                                                                          |
+| --- | -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| 1   | Eventual default?                      | **`compact`** (this implementation ships it)                                                      |
+| 2   | Official client matrix?                | Documented smoke checklist outside CI; CI is protocol-level                                       |
+| 3   | SDK cache/annotations?                 | **Yes** on 2.0.0 — enable on static playbooks                                                     |
+| 4   | Token estimation?                      | UTF-8 bytes + `approxTokens = ceil(chars / 4)`; no tokenizer dependency                           |
+| 5   | Resource size?                         | Populate from raw UTF-8 byte length of markdown when emitting reports; optional description hint  |
+| 6   | `playbookUri` on errors?               | Optional additive fields `recovery` + `playbookUri` on structured error object                    |
+| 7   | Remove prose after server enforcement? | Keep eager invariant short-forms; do not delete enforcement                                       |
+| 8   | Index format?                          | Keep markdown index; composer renders typed metadata into prompt manifest                         |
+| 9   | Custom MCP extension?                  | Deferred                                                                                          |
+| 10  | How long keep `embedded`?              | At least one minor release / deprecation cycle; env rollback forever until removed in a later ADR |
 
 ### 2.4 Scoring revision
 
@@ -116,11 +116,11 @@ flowchart TD
 
 ### 4.1 Policies
 
-| Policy | Includes | Embeds |
-| --- | --- | --- |
-| `compact` (default) | task + invariants + manifest | none |
-| `compatible` | task + invariants + manifest | `requiredTopics` only |
-| `embedded` | task (+ optional invariant capsule) | core + required + prompt-selected topics (legacy parity) |
+| Policy              | Includes                            | Embeds                                                   |
+| ------------------- | ----------------------------------- | -------------------------------------------------------- |
+| `compact` (default) | task + invariants + manifest        | none                                                     |
+| `compatible`        | task + invariants + manifest        | `requiredTopics` only                                    |
+| `embedded`          | task (+ optional invariant capsule) | core + required + prompt-selected topics (legacy parity) |
 
 Precedence:
 
@@ -210,15 +210,15 @@ Provider-neutral metrics per rendered prompt scenario × policy:
 
 Initial guardrails (exceptions allowed with explicit test opt-out comment):
 
-| Artifact | Target |
-| --- | --- |
-| task capsule | ≤ 400 approx tokens |
-| invariant capsule | ≤ 300 |
-| manifest | ≤ 200 |
-| compact `prompts/get` typical | ≤ 900 |
-| compact `prompts/get` maximum | ≤ 1500 |
-| specialized topic resource | ≤ 4000 chars≈1000 tokens preferred; large existing topics grandfathered until split |
-| median compact vs embedded reduction | ≥ 40% across registered scenarios |
+| Artifact                             | Target                                                                              |
+| ------------------------------------ | ----------------------------------------------------------------------------------- |
+| task capsule                         | ≤ 400 approx tokens                                                                 |
+| invariant capsule                    | ≤ 300                                                                               |
+| manifest                             | ≤ 200                                                                               |
+| compact `prompts/get` typical        | ≤ 900                                                                               |
+| compact `prompts/get` maximum        | ≤ 1500                                                                              |
+| specialized topic resource           | ≤ 4000 chars≈1000 tokens preferred; large existing topics grandfathered until split |
+| median compact vs embedded reduction | ≥ 40% across registered scenarios                                                   |
 
 content-developer topic files already exceed “specialized ≤ 1500 tokens”; **do not fail CI on historical topic file size** in v1 — fail on **compact prompt total** and on **growth** of compact totals.
 
@@ -237,13 +237,13 @@ content-developer topic files already exceed “specialized ≤ 1500 tokens”; 
 
 ## 7. Migration (this change set)
 
-| Step | Work |
-| --- | --- |
-| 0 | Revised RFC (this doc) + measurement helpers |
-| 1 | Shared composer, policy env/CLI, annotations/cacheHint |
-| 2 | Migrate all seven profiles; content-developer recovery resources |
-| 3 | Budget + protocol tests; **default `compact`** |
-| 4 | ADR + changelog; keep `embedded` rollback |
+| Step | Work                                                             |
+| ---- | ---------------------------------------------------------------- |
+| 0    | Revised RFC (this doc) + measurement helpers                     |
+| 1    | Shared composer, policy env/CLI, annotations/cacheHint           |
+| 2    | Migrate all seven profiles; content-developer recovery resources |
+| 3    | Budget + protocol tests; **default `compact`**                   |
+| 4    | ADR + changelog; keep `embedded` rollback                        |
 
 Order within step 2: content-reader → ai-agent-ops → content-developer → remaining (semantic-layer, organization-audit, content-governance, data-analyst).
 

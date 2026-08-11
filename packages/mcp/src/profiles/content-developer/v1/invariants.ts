@@ -19,8 +19,7 @@ export const CONTENT_DEVELOPER_INVARIANTS = [
   {
     id: 'no-hard-delete-promote',
     severity: 'critical',
-    short:
-      'Do not hard-delete, rollback, or promote content (use content-governance for promote).',
+    short: 'Do not hard-delete, rollback, or promote content (use content-governance for promote).',
   },
   {
     id: 'no-org-admin',

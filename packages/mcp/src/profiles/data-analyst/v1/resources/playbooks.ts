@@ -3,7 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-
 import { DATA_ANALYST_HARD_BANS } from '../invariants.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';

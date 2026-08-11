@@ -12,10 +12,7 @@ import {
 import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
 import { createPromptContextComposer } from '../../lib/prompt-context.js';
 
-import {
-  DATA_ANALYST_DEFAULT_INVARIANT_IDS,
-  DATA_ANALYST_INVARIANTS,
-} from './invariants.js';
+import { DATA_ANALYST_DEFAULT_INVARIANT_IDS, DATA_ANALYST_INVARIANTS } from './invariants.js';
 import {
   DATA_ANALYST_CORE_PLAYBOOK,
   DATA_ANALYST_TOPIC_META,

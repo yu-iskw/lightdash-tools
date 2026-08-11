@@ -5,11 +5,14 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  createPromptContextComposer,
-  measurePromptMessages,
-  approxTokensFromChars,
-} from '../lib/prompt-context.js';
-
+  CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
+  CONTENT_DEVELOPER_INVARIANTS,
+} from '../content-developer/v1/invariants.js';
+import {
+  CONTENT_DEVELOPER_CORE_PLAYBOOK,
+  CONTENT_DEVELOPER_TOPIC_META,
+  CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
+} from '../content-developer/v1/resources/playbooks.js';
 import {
   CONTENT_READER_DEFAULT_INVARIANT_IDS,
   CONTENT_READER_INVARIANTS,
@@ -20,19 +23,15 @@ import {
   CONTENT_READER_TOPIC_PLAYBOOKS,
 } from '../content-reader/v1/resources/playbooks.js';
 import {
-  CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
-  CONTENT_DEVELOPER_INVARIANTS,
-} from '../content-developer/v1/invariants.js';
-import {
-  CONTENT_DEVELOPER_CORE_PLAYBOOK,
-  CONTENT_DEVELOPER_TOPIC_META,
-  CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
-} from '../content-developer/v1/resources/playbooks.js';
+  createPromptContextComposer,
+  measurePromptMessages,
+  approxTokensFromChars,
+} from '../lib/prompt-context.js';
 
 import type { PromptContextPolicy } from '../../config/prompt-context-policy.js';
+import type { EmbeddedPlaybook } from '../lib/playbook-resources.js';
 import type { PromptContextSpec } from '../lib/prompt-context.js';
 import type { PromptInvariant } from '../lib/prompt-invariants.js';
-import type { EmbeddedPlaybook } from '../lib/playbook-resources.js';
 
 type Scenario = {
   profile: string;

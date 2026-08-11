@@ -4,13 +4,10 @@
 
 import { describe, expect, it } from 'vitest';
 
-import {
-  createPromptContextComposer,
-  measurePromptMessages,
-} from './prompt-context.js';
+import { createPromptContextComposer, measurePromptMessages } from './prompt-context.js';
 
-import type { PromptInvariant } from './prompt-invariants.js';
 import type { EmbeddedPlaybook } from './playbook-resources.js';
+import type { PromptInvariant } from './prompt-invariants.js';
 
 const INVARIANTS = [
   { id: 'no-mutation', severity: 'critical', short: 'Do not mutate resources.' },
@@ -99,11 +96,9 @@ describe('createPromptContextComposer', () => {
       requiredTopics: ['discover'],
     });
     expect(messages).toHaveLength(3);
-    expect(messages.map((m) => (m.content.type === 'resource' ? m.content.resource.uri : 'text'))).toEqual([
-      'text',
-      'lightdash://playbooks/test/core',
-      'lightdash://playbooks/test/discover',
-    ]);
+    expect(
+      messages.map((m) => (m.content.type === 'resource' ? m.content.resource.uri : 'text')),
+    ).toEqual(['text', 'lightdash://playbooks/test/core', 'lightdash://playbooks/test/discover']);
   });
 
   it('throws on unknown invariant or topic', () => {
@@ -114,9 +109,9 @@ describe('createPromptContextComposer', () => {
       topics,
       topicMeta,
     });
-    expect(() =>
-      compose({ task: 'x', invariantIds: ['missing'], requiredTopics: [] }),
-    ).toThrow(/Unknown prompt invariant/);
+    expect(() => compose({ task: 'x', invariantIds: ['missing'], requiredTopics: [] })).toThrow(
+      /Unknown prompt invariant/,
+    );
     expect(() =>
       compose({
         task: 'x',

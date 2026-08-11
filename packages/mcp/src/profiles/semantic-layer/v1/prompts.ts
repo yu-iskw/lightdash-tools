@@ -12,10 +12,7 @@ import { projectUuidField } from '../../../tools/lib/schema-fields.js';
 import { exploreIdField } from '../../../tools/semantic/schema-fields.js';
 import { createPromptContextComposer } from '../../lib/prompt-context.js';
 
-import {
-  SEMANTIC_LAYER_DEFAULT_INVARIANT_IDS,
-  SEMANTIC_LAYER_INVARIANTS,
-} from './invariants.js';
+import { SEMANTIC_LAYER_DEFAULT_INVARIANT_IDS, SEMANTIC_LAYER_INVARIANTS } from './invariants.js';
 import {
   SEMANTIC_LAYER_CORE_PLAYBOOK,
   SEMANTIC_LAYER_TOPIC_META,

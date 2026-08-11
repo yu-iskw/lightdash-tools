@@ -44,10 +44,7 @@ import {
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 import { assertObsoleteEnvRejected } from './obsolete-env.js';
-import {
-  parsePromptContextPolicy,
-  type PromptContextPolicy,
-} from './prompt-context-policy.js';
+import { parsePromptContextPolicy, type PromptContextPolicy } from './prompt-context-policy.js';
 import { requirePublicUrl } from './public-url.js';
 import { readEnv } from './read-env.js';
 

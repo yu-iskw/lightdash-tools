@@ -273,7 +273,9 @@ describe('content-developer prompts/playbook', () => {
     registerContentDeveloperPrompts(compactServer as never, { promptContextPolicy: 'compact' });
     expect(createCompactText).toContain('critical invariants:');
     expect(createCompactText).toContain('previewtoken');
-    expect(createCompactText).toContain('lightdash://playbooks/content-developer/recovery/preview-stale');
+    expect(createCompactText).toContain(
+      'lightdash://playbooks/content-developer/recovery/preview-stale',
+    );
     expect(createCompactText).not.toContain('## hard bans');
     expect(names).not.toContain('build_chart');
     expect(names).not.toContain('design_dashboard');

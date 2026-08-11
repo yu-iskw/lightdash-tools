@@ -44,15 +44,12 @@ export function startStdio(profileId: ProfileId, options?: StartStdioOptions): v
     const profile = getProfile(profileId);
     const contextProvider = new EnvContextProvider();
 
-    serveStdio(
-      () => createLightdashMcpServer(contextProvider, { profile, promptContextPolicy }),
-      {
-        legacy: 'serve',
-        onerror: (error) => {
-          console.error('MCP stdio error:', error);
-        },
+    serveStdio(() => createLightdashMcpServer(contextProvider, { profile, promptContextPolicy }), {
+      legacy: 'serve',
+      onerror: (error) => {
+        console.error('MCP stdio error:', error);
       },
-    );
+    });
     console.error(
       `Lightdash MCP server (${profile.id}) running on stdio (prompt-context=${promptContextPolicy})`,
     );

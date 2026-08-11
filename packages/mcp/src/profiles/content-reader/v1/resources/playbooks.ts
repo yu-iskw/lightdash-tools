@@ -3,7 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-
 import { CONTENT_READER_HARD_BANS } from '../invariants.js';
 
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -21,7 +20,8 @@ const playbooks = defineProfilePlaybooks<ContentReaderPlaybookTopic>({
       title: 'Content-reader discover playbook',
       description: 'Intent classification and content discovery',
       file: 'discover.md',
-      useWhen: 'Search results are weak, verified-only behavior matters, or discovery needs fallback',
+      useWhen:
+        'Search results are weak, verified-only behavior matters, or discovery needs fallback',
       priority: 0.8,
     },
     {

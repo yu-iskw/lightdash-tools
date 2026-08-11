@@ -12,10 +12,7 @@ import {
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
 import { createPromptContextComposer } from '../../lib/prompt-context.js';
 
-import {
-  CONTENT_READER_DEFAULT_INVARIANT_IDS,
-  CONTENT_READER_INVARIANTS,
-} from './invariants.js';
+import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
 import {
   CONTENT_READER_CORE_PLAYBOOK,
   CONTENT_READER_TOPIC_META,

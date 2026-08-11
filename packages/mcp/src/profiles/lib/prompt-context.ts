@@ -8,8 +8,8 @@ import {
   type PromptInvariant,
 } from './prompt-invariants.js';
 
-import type { PromptContextPolicy } from '../../config/prompt-context-policy.js';
 import type { EmbeddedPlaybook } from './playbook-resources.js';
+import type { PromptContextPolicy } from '../../config/prompt-context-policy.js';
 
 export type PromptTopicMeta = {
   description: string;
@@ -37,7 +37,7 @@ type PromptResourceContent = {
 
 export type PromptUserMessage = {
   role: 'user';
-  content: PromptTextContent | PromptResourceContent;
+  content: PromptResourceContent | PromptTextContent;
 };
 
 function embedResource(playbook: EmbeddedPlaybook): PromptResourceContent {
@@ -96,13 +96,11 @@ function buildManifestText<TopicId extends string>(options: {
   });
 
   const conditionalEntries = conditionalTopics.map((entry) => {
-    // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
     const playbook = topics[entry.topic];
     return { topic: entry.topic, when: entry.when, uri: playbook.uri };
   });
 
   const recoveryEntries = recoveryTopics.map((entry) => {
-    // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
     const playbook = topics[entry.topic];
     return { topic: entry.topic, when: entry.when, uri: playbook.uri };
   });
@@ -131,6 +129,52 @@ function requireTopic<TopicId extends string>(
   return topic;
 }
 
+function assertKnownTopics<TopicId extends string>(
+  topics: Readonly<Record<TopicId, EmbeddedPlaybook>>,
+  requiredTopics: readonly TopicId[],
+  conditionalTopics: readonly { topic: TopicId; when: string }[],
+  recoveryTopics: readonly { topic: TopicId; when: string }[],
+): void {
+  for (const id of requiredTopics) {
+    requireTopic(topics, id);
+  }
+  for (const entry of conditionalTopics) {
+    requireTopic(topics, entry.topic);
+  }
+  for (const entry of recoveryTopics) {
+    requireTopic(topics, entry.topic);
+  }
+}
+
+function buildComposerText(options: {
+  task: string;
+  invariantText: string;
+  manifestText: string;
+  includeManifest: boolean;
+}): string {
+  const parts = [options.task.trim()];
+  if (options.invariantText) {
+    parts.push(options.invariantText);
+  }
+  if (options.includeManifest && options.manifestText) {
+    parts.push(options.manifestText);
+  }
+  return parts.filter((p) => p.length > 0).join('\n\n');
+}
+
+function appendTopicResources<TopicId extends string>(
+  messages: PromptUserMessage[],
+  topics: Readonly<Record<TopicId, EmbeddedPlaybook>>,
+  requiredTopics: readonly TopicId[],
+): void {
+  for (const id of requiredTopics) {
+    messages.push({
+      role: 'user',
+      content: embedResource(requireTopic(topics, id)),
+    });
+  }
+}
+
 /**
  * Build a prompts/get composer for a profile under a fixed context policy.
  */
@@ -147,35 +191,21 @@ export function createPromptContextComposer<TopicId extends string>(options: {
     const requiredTopics = uniqueTopicIds(spec.requiredTopics ?? []);
     const conditionalTopics = spec.conditionalTopics ?? [];
     const recoveryTopics = spec.recoveryTopics ?? [];
-
-    for (const id of requiredTopics) {
-      requireTopic(topics, id);
-    }
-    for (const entry of conditionalTopics) {
-      requireTopic(topics, entry.topic);
-    }
-    for (const entry of recoveryTopics) {
-      requireTopic(topics, entry.topic);
-    }
+    assertKnownTopics(topics, requiredTopics, conditionalTopics, recoveryTopics);
 
     const selectedInvariants = resolveInvariants(invariants, spec.invariantIds);
-    const invariantText = formatInvariantCapsule(selectedInvariants);
-    const manifestText = buildManifestText({
-      requiredTopics,
-      conditionalTopics,
-      recoveryTopics,
-      topics,
-      topicMeta,
+    const text = buildComposerText({
+      task: spec.task,
+      invariantText: formatInvariantCapsule(selectedInvariants),
+      manifestText: buildManifestText({
+        requiredTopics,
+        conditionalTopics,
+        recoveryTopics,
+        topics,
+        topicMeta,
+      }),
+      includeManifest: policy !== 'embedded',
     });
-
-    const textParts = [spec.task.trim()];
-    if (invariantText) {
-      textParts.push(invariantText);
-    }
-    if (manifestText && policy !== 'embedded') {
-      textParts.push(manifestText);
-    }
-    const text = textParts.filter((p) => p.length > 0).join('\n\n');
 
     const messages: PromptUserMessage[] = [
       {
@@ -184,32 +214,25 @@ export function createPromptContextComposer<TopicId extends string>(options: {
       },
     ];
 
-    if (policy === 'compact') {
-      return { messages };
-    }
-
-    if (policy === 'compatible') {
-      for (const id of requiredTopics) {
+    switch (policy) {
+      case 'compact':
+        return { messages };
+      case 'compatible':
+        appendTopicResources(messages, topics, requiredTopics);
+        return { messages };
+      case 'embedded':
+        // Legacy parity: core + required topics (caller lists former embed set as required)
         messages.push({
           role: 'user',
-          content: embedResource(requireTopic(topics, id)),
+          content: embedResource(core),
         });
+        appendTopicResources(messages, topics, requiredTopics);
+        return { messages };
+      default: {
+        const _exhaustive: never = policy;
+        return _exhaustive;
       }
-      return { messages };
     }
-
-    // embedded — legacy parity: core + required topics (caller lists former embed set as required)
-    messages.push({
-      role: 'user',
-      content: embedResource(core),
-    });
-    for (const id of requiredTopics) {
-      messages.push({
-        role: 'user',
-        content: embedResource(requireTopic(topics, id)),
-      });
-    }
-    return { messages };
   };
 }
 
@@ -228,8 +251,29 @@ export type PromptContextMetrics = {
   embeddedResourceCount: number;
 };
 
+function measureTextSections(text: string): {
+  taskChars: number;
+  invariantChars: number;
+  manifestChars: number;
+} {
+  const invIdx = text.indexOf('Critical invariants:');
+  const manIdx = text.indexOf('Detailed resources:');
+  const invariantChars =
+    invIdx >= 0 ? Math.max(0, (manIdx >= 0 ? manIdx : text.length) - invIdx) : 0;
+  const manifestChars = manIdx >= 0 ? text.length - manIdx : 0;
+  return { taskChars: text.length, invariantChars, manifestChars };
+}
+
+function messageCharLength(message: PromptUserMessage): number {
+  return message.content.type === 'text'
+    ? message.content.text.length
+    : message.content.resource.text.length;
+}
+
 /** Measure rendered prompt messages (provider-neutral). */
-export function measurePromptMessages(messages: readonly PromptUserMessage[]): PromptContextMetrics {
+export function measurePromptMessages(
+  messages: readonly PromptUserMessage[],
+): PromptContextMetrics {
   let taskChars = 0;
   let invariantChars = 0;
   let manifestChars = 0;
@@ -238,29 +282,17 @@ export function measurePromptMessages(messages: readonly PromptUserMessage[]): P
 
   for (const message of messages) {
     if (message.content.type === 'text') {
-      const text = message.content.text;
-      taskChars += text.length;
-      const invIdx = text.indexOf('Critical invariants:');
-      const manIdx = text.indexOf('Detailed resources:');
-      if (invIdx >= 0) {
-        const end = manIdx >= 0 ? manIdx : text.length;
-        invariantChars += Math.max(0, end - invIdx);
-      }
-      if (manIdx >= 0) {
-        manifestChars += text.length - manIdx;
-      }
-    } else {
-      embeddedResourceCount += 1;
-      embeddedResourceChars += message.content.resource.text.length;
+      const measured = measureTextSections(message.content.text);
+      taskChars += measured.taskChars;
+      invariantChars += measured.invariantChars;
+      manifestChars += measured.manifestChars;
+      continue;
     }
+    embeddedResourceCount += 1;
+    embeddedResourceChars += message.content.resource.text.length;
   }
 
-  const totalChars = messages.reduce((sum, message) => {
-    if (message.content.type === 'text') {
-      return sum + message.content.text.length;
-    }
-    return sum + message.content.resource.text.length;
-  }, 0);
+  const totalChars = messages.reduce((sum, message) => sum + messageCharLength(message), 0);
 
   return {
     taskChars,

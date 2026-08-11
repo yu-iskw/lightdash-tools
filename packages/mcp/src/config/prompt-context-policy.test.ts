@@ -24,7 +24,9 @@ describe('parsePromptContextPolicy', () => {
   });
 
   it('fails closed on unknown values', () => {
-    expect(() => parsePromptContextPolicy('uri-only')).toThrow(/LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT/);
+    expect(() => parsePromptContextPolicy('uri-only')).toThrow(
+      /LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT/,
+    );
   });
 });
 

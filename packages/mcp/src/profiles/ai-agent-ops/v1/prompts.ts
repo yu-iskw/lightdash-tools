@@ -11,10 +11,7 @@ import {
 } from '../../../config/prompt-context-policy.js';
 import { createPromptContextComposer } from '../../lib/prompt-context.js';
 
-import {
-  AI_AGENT_OPS_DEFAULT_INVARIANT_IDS,
-  AI_AGENT_OPS_INVARIANTS,
-} from './invariants.js';
+import { AI_AGENT_OPS_DEFAULT_INVARIANT_IDS, AI_AGENT_OPS_INVARIANTS } from './invariants.js';
 import {
   AI_AGENT_OPS_CORE_PLAYBOOK,
   AI_AGENT_OPS_TOPIC_META,
