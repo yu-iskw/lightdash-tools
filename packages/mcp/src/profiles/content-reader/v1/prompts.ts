@@ -5,7 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches organization-audit prompt registration pattern */
 import { z } from 'zod';
 
-import { projectUuidField } from '../../../tools/lib/schema-fields.js';
+import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
@@ -20,8 +20,6 @@ import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const TOPIC_EXPLAIN_RUN = 'explain-run' as const satisfies ContentReaderPlaybookTopic;
-
-const optionalProjectUuid = projectUuidField().optional();
 
 const PROJECT_UUID_HINT = '(pin or projectUuid required)';
 
@@ -45,7 +43,7 @@ export function registerContentReaderPrompts(
       title: 'Find content',
       description: 'Find the most relevant saved Lightdash content in the current project',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         question: z.string(),
         contentTypes: z.string().optional(),
         verifiedOnly: z.boolean().optional(),
@@ -77,7 +75,7 @@ Do not execute unless values were requested.`,
       title: 'Explain chart',
       description: 'Explain a saved chart from metadata (optional bounded execution)',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         chartUuidOrSlug: z.string(),
         includeLatestValues: z.boolean().optional(),
       },
@@ -103,7 +101,7 @@ Skip SQL charts for execution. Separate explicit metadata from inference.`,
       title: 'Summarize dashboard',
       description: 'Summarize a dashboard with optional bounded tile execution',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         dashboardUuidOrSlug: z.string(),
         executeTiles: z.boolean().optional(),
         maximumTiles: z.number().optional(),
@@ -132,7 +130,7 @@ Unexecuted tiles must not support conclusions.`,
       title: 'Answer from content',
       description: 'Answer a question using existing saved Lightdash content only',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         question: z.string(),
         verifiedOnly: z.boolean().optional(),
         maximumExecutions: z.number().optional(),
@@ -161,7 +159,7 @@ discover → inspect → minimal bounded execution → answer with coverage/limi
       title: 'Compare content',
       description: 'Compare saved content definitions and optionally values',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         contentReferences: z.string(),
         comparisonQuestion: z.string(),
       },
@@ -190,7 +188,7 @@ resolve both sides → diff definitions before values → execute only when need
       title: 'Investigate result difference',
       description: 'Investigate why two content resources differ',
       argsSchema: {
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         firstContent: z.string(),
         secondContent: z.string(),
         observedDifference: z.string(),

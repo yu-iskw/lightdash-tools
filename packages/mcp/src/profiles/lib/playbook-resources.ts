@@ -83,6 +83,8 @@ function registerMarkdownPlaybooks(
 export type EmbeddedPlaybook = {
   uri: string;
   mimeType?: string;
+  /** Short description for manifests (core playbook). */
+  description?: string;
   getMarkdown: () => string;
 };
 
@@ -152,7 +154,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
   } = options;
 
   const indexUri = `lightdash://playbooks/${profileId}`;
-  const coreUri = `lightdash://playbooks/${profileId}/core`;
+  const coreUri = playbookTopicUri(profileId, 'core');
   const namePrefix = profileId.split('-').join('_');
 
   const load = (relativePath: string): string => loadPlaybookMarkdown(moduleDir, relativePath);
@@ -181,6 +183,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
 
   const CORE_PLAYBOOK: EmbeddedPlaybook = {
     uri: coreUri,
+    description: coreDescription,
     getMarkdown: getCorePlaybookMarkdown,
   };
 
@@ -191,33 +194,35 @@ export function defineProfilePlaybooks<TopicId extends string>(
       ...topicMarkdownGetters.map((g) => g()),
     ].join('\n');
 
+  const resourceSpecs: PlaybookResourceSpec[] = [
+    {
+      name: `${namePrefix}_playbook_index`,
+      uri: indexUri,
+      title: indexTitle,
+      description: indexDescription,
+      getMarkdown: getIndexPlaybookMarkdown,
+      priority: 0.85,
+    },
+    {
+      name: `${namePrefix}_playbook_core`,
+      uri: coreUri,
+      title: coreTitle,
+      description: coreDescription,
+      getMarkdown: getCorePlaybookMarkdown,
+      priority: 0.95,
+    },
+    ...topics.map((topic) => ({
+      name: `${namePrefix}_playbook_${String(topic.id).split('/').join('_').split('-').join('_')}`,
+      uri: topicUris[topic.id],
+      title: topic.title,
+      description: topic.description,
+      getMarkdown: topicPlaybooks[topic.id].getMarkdown,
+      priority: topic.priority ?? (String(topic.id).startsWith('recovery/') ? 0.35 : 0.7),
+    })),
+  ];
+
   const registerPlaybooks = (server: McpServer): void => {
-    registerMarkdownPlaybooks(server, [
-      {
-        name: `${namePrefix}_playbook_index`,
-        uri: indexUri,
-        title: indexTitle,
-        description: indexDescription,
-        getMarkdown: getIndexPlaybookMarkdown,
-        priority: 0.85,
-      },
-      {
-        name: `${namePrefix}_playbook_core`,
-        uri: coreUri,
-        title: coreTitle,
-        description: coreDescription,
-        getMarkdown: getCorePlaybookMarkdown,
-        priority: 0.95,
-      },
-      ...topics.map((topic) => ({
-        name: `${namePrefix}_playbook_${String(topic.id).split('/').join('_').split('-').join('_')}`,
-        uri: topicUris[topic.id],
-        title: topic.title,
-        description: topic.description,
-        getMarkdown: topicPlaybooks[topic.id].getMarkdown,
-        priority: topic.priority ?? (String(topic.id).startsWith('recovery/') ? 0.35 : 0.7),
-      })),
-    ]);
+    registerMarkdownPlaybooks(server, resourceSpecs);
   };
 
   return {

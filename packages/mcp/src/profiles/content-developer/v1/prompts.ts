@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import { projectUuidField } from '../../../tools/lib/schema-fields.js';
+import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
@@ -24,8 +24,6 @@ import {
 import type { RegisterPromptsOptions } from '../../types.js';
 import type { ContentDeveloperPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
-
-const optionalProjectUuid = projectUuidField().optional();
 
 const PROJECT_UUID_HINT = '(pass on every tool, or use HTTP pin — else PROJECT_SCOPE_REQUIRED)';
 
@@ -83,7 +81,7 @@ export function registerContentDeveloperPrompts(
         'Clarify Objective → Design Spec (await approval) → shell → dashboardSlug charts → tiles / filters',
       argsSchema: {
         goal: z.string(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         spaceUuid: z.string().optional(),
         chartReferences: z.string().optional(),
       },
@@ -119,7 +117,7 @@ Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_spa
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         improvementGoal: z.string(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
       },
     },
     ({ dashboardUuidOrSlug, improvementGoal, projectUuid }) =>
@@ -150,7 +148,7 @@ Report what changed (tiles, filters, chart UUIDs), any untiled dashboard-owned l
       argsSchema: {
         dashboardUuidOrSlug: z.string(),
         concern: z.string().optional(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
       },
     },
     ({ dashboardUuidOrSlug, concern, projectUuid }) =>
@@ -177,7 +175,7 @@ Concern: ${concern ?? '(general cleanup)'}.
         'Clone a working seed chart (cartesian encode intact); optional dashboardSlug scoping',
       argsSchema: {
         goal: z.string(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         seedChartUuidOrSlug: z.string().optional(),
         dashboardSlug: z.string().optional(),
       },
@@ -208,7 +206,7 @@ Report UUID/slug from charts[0].data; note this profile cannot run_chart / prove
       description: 'Move charts/dashboards into an existing space (no space create/update)',
       argsSchema: {
         goal: z.string(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
         spaceReferences: z.string().optional(),
       },
     },
@@ -235,7 +233,7 @@ Report moved items and target space.`,
       description: 'Validate dashboard-scoped authored content before treating it as done',
       argsSchema: {
         contentReferences: z.string(),
-        projectUuid: optionalProjectUuid,
+        projectUuid: optionalProjectUuidField(),
       },
     },
     ({ contentReferences, projectUuid }) =>

@@ -114,21 +114,21 @@ export function registerContentDeveloperTool(
 }
 
 /** Additive recovery hints for content-developer preview errors. */
+const PREVIEW_RECOVERY_EXTRAS: Partial<Record<string, ToolErrorExtras>> = {
+  PREVIEW_STALE: {
+    recovery:
+      'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
+    playbookUri: playbookTopicUri('content-developer', 'recovery/preview-stale'),
+  },
+  PREVIEW_REQUIRED: {
+    recovery: 'Call the matching preview_* tool, then confirm_preview before apply.',
+    playbookUri: playbookTopicUri('content-developer', 'recovery/preview-required'),
+  },
+};
+
 function recoveryExtrasForPreviewCode(code: string): ToolErrorExtras | undefined {
-  if (code === 'PREVIEW_STALE') {
-    return {
-      recovery:
-        'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
-      playbookUri: playbookTopicUri('content-developer', 'recovery/preview-stale'),
-    };
-  }
-  if (code === 'PREVIEW_REQUIRED') {
-    return {
-      recovery: 'Call the matching preview_* tool, then confirm_preview before apply.',
-      playbookUri: playbookTopicUri('content-developer', 'recovery/preview-required'),
-    };
-  }
-  return undefined;
+  // eslint-disable-next-line security/detect-object-injection -- keys from PreviewLedgerError codes
+  return PREVIEW_RECOVERY_EXTRAS[code];
 }
 
 /** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */

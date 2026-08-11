@@ -101,13 +101,13 @@ function buildManifestText<TopicId extends string>(options: {
     const playbook = topics[topic];
     return {
       topic,
-      when: meta?.useWhen ?? meta?.description ?? String(topic),
+      when: meta.useWhen ?? meta.description,
       uri: playbook.uri,
     };
   });
 
   const parts = [
-    `- ${core.uri} — Budgets, tool catalog, and operating rules`,
+    `- ${core.uri} — ${core.description ?? 'Profile core playbook'}`,
     formatManifestSection('Required detailed resources:', requiredEntries),
     formatManifestSection(
       'Conditional detailed resources:',
@@ -240,8 +240,20 @@ export function bindProfilePromptContext<TopicId extends string>(deps: {
 }): (
   policy?: PromptContextPolicy,
 ) => (spec: PromptContextSpec<TopicId>) => { messages: PromptUserMessage[] } {
-  return (policy = DEFAULT_PROMPT_CONTEXT_POLICY) =>
-    createPromptContextComposer({ policy, ...deps });
+  assertUniqueInvariantIds(deps.invariants);
+  const composers = new Map<
+    PromptContextPolicy,
+    (spec: PromptContextSpec<TopicId>) => { messages: PromptUserMessage[] }
+  >();
+  return (policy = DEFAULT_PROMPT_CONTEXT_POLICY) => {
+    const cached = composers.get(policy);
+    if (cached) {
+      return cached;
+    }
+    const composer = createPromptContextComposer({ policy, ...deps });
+    composers.set(policy, composer);
+    return composer;
+  };
 }
 
 /** Approx token estimate: ceil(chars / 4). */

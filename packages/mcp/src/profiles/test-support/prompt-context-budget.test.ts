@@ -23,7 +23,7 @@ import {
   CONTENT_READER_TOPIC_PLAYBOOKS,
 } from '../content-reader/v1/resources/playbooks.js';
 import {
-  createPromptContextComposer,
+  bindProfilePromptContext,
   measurePromptMessages,
   approxTokensFromChars,
 } from '../lib/prompt-context.js';
@@ -79,16 +79,15 @@ const SCENARIOS: Scenario[] = [
 ];
 
 function metricsForScenario(scenario: Scenario) {
+  const bind = bindProfilePromptContext({
+    invariants: scenario.invariants,
+    core: scenario.core,
+    topics: scenario.topics,
+    topicMeta: scenario.topicMeta,
+  });
   const byPolicy = {} as Record<PromptContextPolicy, ReturnType<typeof measurePromptMessages>>;
   for (const policy of ['compact', 'compatible', 'embedded'] as const) {
-    const compose = createPromptContextComposer({
-      policy,
-      invariants: scenario.invariants,
-      core: scenario.core,
-      topics: scenario.topics,
-      topicMeta: scenario.topicMeta,
-    });
-    byPolicy[policy] = measurePromptMessages(compose(scenario.spec).messages);
+    byPolicy[policy] = measurePromptMessages(bind(policy)(scenario.spec).messages);
   }
   return byPolicy;
 }
