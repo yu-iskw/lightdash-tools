@@ -107,7 +107,11 @@ export function prepareRankedCardsData(input: {
   const warnings: VisualizationWarning[] = [];
   const options = rankedCardsOptions(input.spec);
 
-  const maxRows = resolveRankedCardsMaxRows(input.spec);
+  const configuredMaxRows = resolveRankedCardsMaxRows(input.spec);
+  const queryLimit = input.spec.data.query.limit;
+  // Same top-N for SVG/HTML prep and Custom Chart metricQuery (honor query.limit when tighter).
+  const maxRows =
+    typeof queryLimit === 'number' ? Math.min(configuredMaxRows, queryLimit) : configuredMaxRows;
   const valueField = requireBoundRole(input.boundRoles, 'value');
   const categoryField = requireBoundRole(input.boundRoles, 'category');
   const secondaryField = input.boundRoles.secondaryValue;

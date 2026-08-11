@@ -351,6 +351,44 @@ describe('compileVisualization', () => {
     ).toHaveLength(2);
   });
 
+  it('truncates prep to query.limit when tighter than options.maxRows', () => {
+    const manyRows = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: Array.from({ length: 8 }, (_, i) => ({
+        orders_region: `R${i}`,
+        orders_total_revenue: 100 - i,
+        orders_revenue_yoy: 0.01,
+      })),
+    });
+    const result = compileVisualization({
+      spec: {
+        ...rankedSpec,
+        data: {
+          ...rankedSpec.data,
+          query: {
+            ...rankedSpec.data.query,
+            limit: 3,
+          },
+        },
+        visual: {
+          type: 'template' as const,
+          template: 'ranked-cards' as const,
+          options: { maxRows: 10 },
+        },
+        emphasis: { mode: 'none' as const },
+        interaction: undefined,
+      },
+      dataset: manyRows,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    expect(result.customChart?.metricQuery.limit).toBe(3);
+    expect(
+      (result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }).data.values,
+    ).toHaveLength(3);
+    expect(result.warnings.some((w) => w.code === 'DATA_TRUNCATED')).toBe(true);
+  });
+
   it('scales dataset hard limit from options.maxRows, not frozen template.maxRows', () => {
     const wide = parseVisualizationDataset({
       columns: rankingDataset.columns,
