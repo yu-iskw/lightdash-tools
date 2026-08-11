@@ -111,40 +111,7 @@ visualization  →  client | mcp            (FORBIDDEN)
 
 ### 5.1 Components
 
-```mermaid
-flowchart TB
-    subgraph Inputs
-      YAML["LVS YAML/JSON"]
-      DS["VisualizationDataset"]
-    end
-
-    subgraph Viz["@lightdash-tools/visualization"]
-      Zod["spec/ Zod"]
-      Reg["templates/ registry"]
-      Cap["capability negotiator"]
-      Lay["layout/ internal nodes"]
-      TSvg["targets/svg"]
-      THtml["targets/html"]
-      TVega["targets/vega-lite"]
-    end
-
-    subgraph Adapters
-      CLI["@lightdash-tools/cli viz *"]
-    end
-
-    YAML --> Zod
-    DS --> Reg
-    Zod --> Reg
-    Reg --> Cap
-    Cap --> Lay
-    Cap --> TVega
-    Lay --> TSvg
-    Lay --> THtml
-    CLI --> Zod
-    CLI --> TSvg
-    CLI --> THtml
-    CLI --> TVega
-```
+Pure package: Zod validate → template registry → capability negotiate → internal layout (svg/html) and/or Vega-Lite emitter (Custom Chart). Sole MVP adapter: CLI `viz *`.
 
 ### 5.2 Dependency direction
 
@@ -189,60 +156,21 @@ flowchart TB
 
 ```text
 packages/visualization/
-├── package.json
-├── tsconfig.json
-├── fixtures/
-│   ├── metric-hero/
-│   │   ├── spec.yaml
-│   │   ├── dataset.json
-│   │   ├── expected.svg
-│   │   └── expected.custom-chart.json
-│   └── ranked-cards/
-│       ├── spec.yaml
-│       ├── dataset.json
-│       ├── expected.svg
-│       └── expected.custom-chart.json
+├── fixtures/{metric-hero,ranked-cards}/   # spec, dataset, expected.svg, expected.custom-chart.json
 └── src/
     ├── index.ts
-    ├── spec/
-    │   ├── types.ts
-    │   ├── schema.ts          # Zod
-    │   ├── version.ts
-    │   └── validate.ts
-    ├── data/
-    │   ├── dataset.ts
-    │   ├── normalize.ts
-    │   └── profile.ts
-    ├── templates/
-    │   ├── registry.ts
-    │   ├── contracts.ts
-    │   ├── metric-hero.ts
-    │   ├── ranked-cards.ts
-    │   └── options/           # per-template Zod
-    │       ├── metric-hero.ts
-    │       └── ranked-cards.ts
-    ├── layout/
-    │   ├── types.ts
-    │   └── build.ts
-    ├── compile/
-    │   ├── compile.ts
-    │   ├── bind.ts
-    │   ├── capability.ts
-    │   └── warnings.ts
-    ├── targets/
-    │   ├── capabilities.ts
-    │   ├── svg/
-    │   ├── html/
-    │   └── vega-lite/         # Custom Chart only
-    ├── theme/
-    │   └── lightdash.ts       # single theme
+    ├── spec/          # types, Zod schema, version, validate
+    ├── data/          # dataset, normalize, profile
+    ├── templates/     # registry, contracts, metric-hero, ranked-cards, options/*
+    ├── layout/        # internal nodes (not public IR)
+    ├── compile/       # compile, bind, capability, warnings
+    ├── targets/       # svg/, html/, vega-lite/ (Custom Chart only)
+    ├── theme/lightdash.ts
     ├── format/
-    └── security/
-        ├── escape.ts
-        └── vega-policy.ts
+    └── security/      # escape, vega-policy
 ```
 
-No `recommend/` beyond a trivial helper (see §10). No `apps/`, no MCP mounts.
+No `recommend/` product, no `apps/`, no MCP mounts. Trivial suggest helper optional (§9.1).
 
 ---
 
@@ -276,61 +204,35 @@ export interface VisualizationSpecV1 {
 
 ```yaml
 version: "1"
-
 metadata:
   title: Revenue by region
-  description: Regions ranked by total revenue
-
 intent:
   type: rank
-  audience: executive
   message: APAC leads on revenue
-
 data:
-  source:
-    type: metricQuery
-    explore: orders
+  source: { type: metricQuery, explore: orders }
   query:
-    dimensions:
-      - orders_region
-    metrics:
-      - orders_total_revenue
-      - orders_revenue_yoy
-    filters:
-      dimensions: {}
-      metrics: {}
-    sorts:
-      - fieldId: orders_total_revenue
-        descending: true
+    dimensions: [orders_region]
+    metrics: [orders_total_revenue, orders_revenue_yoy]
+    filters: { dimensions: {}, metrics: {} }
+    sorts: [{ fieldId: orders_total_revenue, descending: true }]
     limit: 20
   roles:
     category: orders_region
     value: orders_total_revenue
     secondaryValue: orders_revenue_yoy
-
 visual:
   type: template
   template: ranked-cards
-  options:
-    maxItems: 10
-    showRank: true
-
-emphasis:
-  mode: max
-  field: orders_total_revenue
-
+  options: { maxItems: 10, showRank: true }
+emphasis: { mode: max, field: orders_total_revenue }
 interaction:
   tooltip: true
-  selection:
-    type: single
-    field: orders_region
-
-theme:
-  name: lightdash
-
+  selection: { type: single, field: orders_region }
+theme: { name: lightdash }
 accessibility:
   title: Revenue by region
-  description: Regions ranked by total revenue with year-over-year growth
+  description: Regions ranked by total revenue with YoY growth
 ```
 
 ### 7.4 Intent (MVP enum)
@@ -709,40 +611,13 @@ Package MUST include at least one golden `expected.custom-chart.json` per templa
 
 Namespace: `lightdash-tools viz …`
 
-```bash
-lightdash-tools viz validate visualization.yaml
-
-lightdash-tools viz compile visualization.yaml \
-  --dataset result.json \
-  --target lightdash-custom-chart \
-  --output chart-fragment.json
-
-lightdash-tools viz render visualization.yaml \
-  --dataset result.json \
-  --format svg \
-  --output visualization.svg
-
-lightdash-tools viz render visualization.yaml \
-  --dataset result.json \
-  --format html \
-  --output visualization.html
-
-lightdash-tools viz render visualization.yaml \
-  --dataset result.json \
-  --format html \
-  --embed-data \
-  --output visualization.embedded.html
-```
-
 | Command | Role |
 | --- | --- |
-| `viz validate` | Zod + role checks (dataset optional for schema-only) |
-| `viz compile` | Emit target artifact (`svg` path via render; primarily Custom Chart JSON) |
-| `viz render` | Write `svg` or `html` |
+| `viz validate <spec>` | Zod + role checks (dataset optional for schema-only) |
+| `viz compile <spec> --dataset … --target lightdash-custom-chart -o …` | Emit Custom Chart fragment JSON |
+| `viz render <spec> --dataset … --format svg\|html [-o …] [--embed-data]` | Write SVG/HTML |
 
-**Forbidden name:** `viz preview` (ADR-0014 collision).
-
-Connected fetch-via-client convenience commands are out of MVP.
+**Forbidden name:** `viz preview` (ADR-0014 collision). Embed-data default off. Connected client-fetch commands are out of MVP.
 
 ---
 
@@ -934,32 +809,14 @@ Open questions **closed**: Q1 (SVG primitives / VL for Custom Chart), Q3 (Custom
 
 ## 21. Future work (not MVP acceptance)
 
-- MCP App `ui://lightdash-tools/visualization/v1` + `visualize_metric_query`
-- `recommend_visualization` / `compile_custom_chart`
-- Template catalog growth; optional public layout IR if cross-target need is proven
-- Themes beyond `lightdash`
-- Data Apps adapter after supported public contracts
-- OpenTelemetry spans (`lightdash_tools.visualization.*`) without row payloads
-- Connected CLI that fetches datasets via `@lightdash-tools/client`
+MCP App `ui://` + `visualize_metric_query`; `recommend_visualization` / `compile_custom_chart`; more templates; optional public layout IR; themes beyond `lightdash`; Data Apps after supported public contracts; OTel spans without row payloads; connected CLI via `@lightdash-tools/client`.
 
 ---
 
 ## 22. References
 
-### Lightdash
-
 - Custom Charts: https://docs.lightdash.com/references/chart-types/custom-charts
-- OpenAPI `CustomVisConfig` in `packages/common/src/types/generated/openapi-types.ts`
-- Dashboards as code: https://docs.lightdash.com/guides/developer/dashboards-as-code
-
-### `lightdash-tools`
-
-- ADR-0002 monorepo packages (amended by ADR-0026)
-- ADR-0014 content-developer preview gate
-- ADR-0020 data-analyst metric-query boundary
-- `packages/mcp/src/tools/query/run-metric-query.ts` (filter shape)
-- Repository: https://github.com/yu-iskw/lightdash-tools
-
-### Inspiration (ideas only)
-
-- AntV Infographic: https://github.com/antvis/Infographic
+- OpenAPI `CustomVisConfig`: `packages/common/src/types/generated/openapi-types.ts`
+- ADR-0002 (amended by ADR-0026), ADR-0014, ADR-0020
+- Filter shape: `packages/mcp/src/tools/query/run-metric-query.ts`
+- Inspiration (ideas only): https://github.com/antvis/Infographic
