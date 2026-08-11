@@ -3,6 +3,16 @@
  */
 
 import {
+  DEFAULT_PROMPT_CONTEXT_POLICY,
+  type PromptContextPolicy,
+} from '../../config/prompt-context-policy.js';
+
+import {
+  PLAYBOOK_MIME,
+  type EmbeddedPlaybook,
+  type PromptTopicMeta,
+} from './playbook-resources.js';
+import {
   formatInvariantCapsule,
   invariantIndex,
   assertUniqueInvariantIds,
@@ -10,16 +20,7 @@ import {
   INVARIANT_CAPSULE_HEADER,
   type PromptInvariant,
 } from './prompt-invariants.js';
-import {
-  PLAYBOOK_MIME,
-  type EmbeddedPlaybook,
-  type PromptTopicMeta,
-} from './playbook-resources.js';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../config/prompt-context-policy.js';
 
 export type { PromptTopicMeta };
 
@@ -79,7 +80,7 @@ function topicWhenEntries<TopicId extends string>(
   return list.map((entry) => ({
     topic: entry.topic,
     when: entry.when,
-    // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
+    // Topic ids come from prompt constants (typed Record keys).
     uri: topics[entry.topic].uri,
   }));
 }

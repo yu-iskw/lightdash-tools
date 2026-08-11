@@ -3,6 +3,7 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
+
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type DataAnalystPlaybookTopic = 'explore';
