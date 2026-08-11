@@ -4,7 +4,6 @@
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
-import { playbookTopicUri } from '../../profiles/lib/playbook-resources.js';
 import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
@@ -33,26 +32,12 @@ const BLOCKED_POLICY_CODES = new Set([
   'CHART_SLUG_EXISTS',
 ]);
 
-const PREVIEW_STALE_PLAYBOOK_URI = playbookTopicUri('content-developer', 'recovery/preview-stale');
-
-/** Additive recovery hints for known coded errors (does not change code/message). */
-function recoveryExtrasForCode(code: string): ToolErrorExtras | undefined {
-  if (code === 'PREVIEW_STALE') {
-    return {
-      recovery:
-        'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
-      playbookUri: PREVIEW_STALE_PLAYBOOK_URI,
-    };
-  }
-  return undefined;
-}
-
 export function codedErrorResult(
   code: string,
   message: string,
   extras?: ToolErrorExtras,
 ): TextContent {
-  const result = toolErrorResult(code, message, extras ?? recoveryExtrasForCode(code));
+  const result = toolErrorResult(code, message, extras);
   if (BLOCKED_POLICY_CODES.has(code)) {
     return withLightdashBlockedMarker(result);
   }

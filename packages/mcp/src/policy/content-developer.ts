@@ -7,12 +7,13 @@
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
+import { playbookTopicUri } from '../profiles/lib/playbook-resources.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
 import { registerToolSafe } from '../tools/shared.js';
 
 import { PreviewLedgerError } from './preview-ledger.js';
 
-import type { ToolHandler, ToolOptions, TextContent } from '../tools/shared.js';
+import type { ToolHandler, ToolOptions, TextContent, ToolErrorExtras } from '../tools/shared.js';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -112,10 +113,28 @@ export function registerContentDeveloperTool(
   registerToolSafe(server, shortName, { ...options, annotations }, handler);
 }
 
+/** Additive recovery hints for content-developer preview errors. */
+function recoveryExtrasForPreviewCode(code: string): ToolErrorExtras | undefined {
+  if (code === 'PREVIEW_STALE') {
+    return {
+      recovery:
+        'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
+      playbookUri: playbookTopicUri('content-developer', 'recovery/preview-stale'),
+    };
+  }
+  if (code === 'PREVIEW_REQUIRED') {
+    return {
+      recovery: 'Call the matching preview_* tool, then confirm_preview before apply.',
+      playbookUri: playbookTopicUri('content-developer', 'recovery/preview-required'),
+    };
+  }
+  return undefined;
+}
+
 /** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */
 export function developerErrorResult(err: unknown): TextContent {
   if (err instanceof PreviewLedgerError) {
-    return codedErrorResult(err.code, err.message);
+    return codedErrorResult(err.code, err.message, recoveryExtrasForPreviewCode(err.code));
   }
   return projectScopeErrorResult(err);
 }

@@ -5,12 +5,8 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
 import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { DATA_ANALYST_DEFAULT_INVARIANT_IDS, DATA_ANALYST_INVARIANTS } from './invariants.js';
 import {
@@ -22,22 +18,18 @@ import {
 import type { RegisterPromptsOptions } from '../../types.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: DATA_ANALYST_INVARIANTS,
-    core: DATA_ANALYST_CORE_PLAYBOOK,
-    topics: DATA_ANALYST_TOPIC_PLAYBOOKS,
-    topicMeta: DATA_ANALYST_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: DATA_ANALYST_INVARIANTS,
+  core: DATA_ANALYST_CORE_PLAYBOOK,
+  topics: DATA_ANALYST_TOPIC_PLAYBOOKS,
+  topicMeta: DATA_ANALYST_TOPIC_META,
+});
 
 export function registerDataAnalystPrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = DATA_ANALYST_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

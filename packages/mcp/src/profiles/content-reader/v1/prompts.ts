@@ -5,12 +5,8 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches organization-audit prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
 import {
@@ -29,22 +25,18 @@ const optionalProjectUuid = projectUuidField().optional();
 
 const PROJECT_UUID_HINT = '(pin or projectUuid required)';
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: CONTENT_READER_INVARIANTS,
-    core: CONTENT_READER_CORE_PLAYBOOK,
-    topics: CONTENT_READER_TOPIC_PLAYBOOKS,
-    topicMeta: CONTENT_READER_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: CONTENT_READER_INVARIANTS,
+  core: CONTENT_READER_CORE_PLAYBOOK,
+  topics: CONTENT_READER_TOPIC_PLAYBOOKS,
+  topicMeta: CONTENT_READER_TOPIC_META,
+});
 
 export function registerContentReaderPrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = CONTENT_READER_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

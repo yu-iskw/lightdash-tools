@@ -347,7 +347,9 @@ export function startStreamableHttpServer(config?: McpHttpConfig): void {
       const paths = listEnabledProfilePaths(httpConfig.enabledProfiles)
         .map((p) => `${baseUrl}${p}`)
         .join(', ');
-      console.error(`Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode})`);
+      console.error(
+        `Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode}; prompt-context=${httpConfig.promptContextPolicy})`,
+      );
       if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
         console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
         console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);

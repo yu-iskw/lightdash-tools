@@ -5,11 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches semantic-layer prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
   ORGANIZATION_AUDIT_DEFAULT_INVARIANT_IDS,
@@ -24,22 +20,18 @@ import {
 import type { RegisterPromptsOptions } from '../../types.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: ORGANIZATION_AUDIT_INVARIANTS,
-    core: ORGANIZATION_AUDIT_CORE_PLAYBOOK,
-    topics: ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
-    topicMeta: ORGANIZATION_AUDIT_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: ORGANIZATION_AUDIT_INVARIANTS,
+  core: ORGANIZATION_AUDIT_CORE_PLAYBOOK,
+  topics: ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS,
+  topicMeta: ORGANIZATION_AUDIT_TOPIC_META,
+});
 
 export function registerOrganizationAuditPrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = ORGANIZATION_AUDIT_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

@@ -34,25 +34,12 @@ describe('codedErrorResult', () => {
       'QUERY_BUDGET_EXCEEDED',
       'ROW_LIMIT_EXCEEDED',
       'CHART_SLUG_EXISTS',
+      'PREVIEW_STALE',
     ]) {
       const result = codedErrorResult(code, 'denied');
       expect(result.isError).toBe(true);
       expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
     }
-  });
-
-  it('attaches recovery + playbookUri for PREVIEW_STALE', () => {
-    const result = codedErrorResult('PREVIEW_STALE', 'stale');
-    expect(result.structuredContent).toEqual({
-      error: {
-        code: 'PREVIEW_STALE',
-        message: 'stale',
-        recovery:
-          'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
-        playbookUri: 'lightdash://playbooks/content-developer/recovery/preview-stale',
-      },
-    });
-    expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
   });
 });
 

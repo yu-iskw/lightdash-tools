@@ -38,9 +38,9 @@ function runStdio(profileId: ProfileId, promptContext?: string): void {
 function runHttp(promptContext?: string): void {
   const policy = resolvePolicyOrExit(promptContext);
   if (!policy) return;
-  // Resolve early so invalid CLI fails before HTTP boot; HTTP reads env at load.
-  process.env[ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT] = policy;
-  void import('./http.js');
+  void import('./http.js').then((m) => {
+    void m.startHttp({ promptContextPolicy: policy });
+  });
 }
 
 const profileList = PROFILE_IDS.join(', ');

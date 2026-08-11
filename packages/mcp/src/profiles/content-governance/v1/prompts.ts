@@ -6,11 +6,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
   CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS,
@@ -42,22 +38,18 @@ and confirmationText equal to the exact dashboard name. Never invent confirmatio
 If the client lacks form elicitation, expect ELICITATION_REQUIRED and stop.
 If the dashboard or promoteDiff drifts after binding, expect RESOURCE_CHANGED and re-invoke.`;
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: CONTENT_GOVERNANCE_INVARIANTS,
-    core: CONTENT_GOVERNANCE_CORE_PLAYBOOK,
-    topics: CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS,
-    topicMeta: CONTENT_GOVERNANCE_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: CONTENT_GOVERNANCE_INVARIANTS,
+  core: CONTENT_GOVERNANCE_CORE_PLAYBOOK,
+  topics: CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS,
+  topicMeta: CONTENT_GOVERNANCE_TOPIC_META,
+});
 
 export function registerContentGovernancePrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

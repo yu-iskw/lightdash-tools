@@ -8,12 +8,8 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
   CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
@@ -65,22 +61,18 @@ const WRITE_RECOVERY_TOPICS = [
 const DESIGN_SPEC_STOP =
   'Emit a Design Spec (dashboard-design Phase Design: Objective + tiles with tableName citing insights + filter apply/exclude plan), then **stop until the user proceeds / approves / amends** before any preview_* or write. If the user already gave an explicit all-chart-types (or multi-viz) checklist + goal + projectUuid, a one-line Objective restatement is enough — treat that as approval after restating once. Always pass projectUuid on confirm_preview and apply when there is no HTTP pin.';
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: CONTENT_DEVELOPER_INVARIANTS,
-    core: CONTENT_DEVELOPER_CORE_PLAYBOOK,
-    topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
-    topicMeta: CONTENT_DEVELOPER_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: CONTENT_DEVELOPER_INVARIANTS,
+  core: CONTENT_DEVELOPER_CORE_PLAYBOOK,
+  topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
+  topicMeta: CONTENT_DEVELOPER_TOPIC_META,
+});
 
 export function registerContentDeveloperPrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

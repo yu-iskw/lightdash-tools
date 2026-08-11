@@ -16,7 +16,10 @@ import {
   type PromptTopicMeta,
 } from './playbook-resources.js';
 
-import type { PromptContextPolicy } from '../../config/prompt-context-policy.js';
+import {
+  DEFAULT_PROMPT_CONTEXT_POLICY,
+  type PromptContextPolicy,
+} from '../../config/prompt-context-policy.js';
 
 export type { PromptTopicMeta };
 
@@ -82,13 +85,14 @@ function topicWhenEntries<TopicId extends string>(
 }
 
 function buildManifestText<TopicId extends string>(options: {
+  core: EmbeddedPlaybook;
   requiredTopics: readonly TopicId[];
   conditionalTopics: readonly { topic: TopicId; when: string }[];
   recoveryTopics: readonly { topic: TopicId; when: string }[];
   topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
   topicMeta: Readonly<Record<TopicId, PromptTopicMeta>>;
 }): string {
-  const { requiredTopics, conditionalTopics, recoveryTopics, topics, topicMeta } = options;
+  const { core, requiredTopics, conditionalTopics, recoveryTopics, topics, topicMeta } = options;
 
   const requiredEntries = requiredTopics.map((topic) => {
     // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
@@ -103,6 +107,7 @@ function buildManifestText<TopicId extends string>(options: {
   });
 
   const parts = [
+    `- ${core.uri} — Budgets, tool catalog, and operating rules`,
     formatManifestSection('Required detailed resources:', requiredEntries),
     formatManifestSection(
       'Conditional detailed resources:',
@@ -187,6 +192,7 @@ export function createPromptContextComposer<TopicId extends string>(options: {
       invariantText: formatInvariantCapsule(resolveInvariants(byId, spec.invariantIds)),
       manifestText: includeManifest
         ? buildManifestText({
+            core,
             requiredTopics,
             conditionalTopics,
             recoveryTopics,
@@ -223,6 +229,19 @@ export function createPromptContextComposer<TopicId extends string>(options: {
       }
     }
   };
+}
+
+/** Profile-local binder: `const compose = bindProfilePromptContext(deps)(policy)`. */
+export function bindProfilePromptContext<TopicId extends string>(deps: {
+  invariants: readonly PromptInvariant[];
+  core: EmbeddedPlaybook;
+  topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
+  topicMeta: Readonly<Record<TopicId, PromptTopicMeta>>;
+}): (
+  policy?: PromptContextPolicy,
+) => (spec: PromptContextSpec<TopicId>) => { messages: PromptUserMessage[] } {
+  return (policy = DEFAULT_PROMPT_CONTEXT_POLICY) =>
+    createPromptContextComposer({ policy, ...deps });
 }
 
 /** Approx token estimate: ceil(chars / 4). */

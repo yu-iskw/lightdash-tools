@@ -5,11 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
-import {
-  DEFAULT_PROMPT_CONTEXT_POLICY,
-  type PromptContextPolicy,
-} from '../../../config/prompt-context-policy.js';
-import { createPromptContextComposer } from '../../lib/prompt-context.js';
+import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { AI_AGENT_OPS_DEFAULT_INVARIANT_IDS, AI_AGENT_OPS_INVARIANTS } from './invariants.js';
 import {
@@ -26,22 +22,18 @@ const TOPIC_EVALUATION = 'evaluation' as const satisfies AiAgentOpsPlaybookTopic
 const TOPIC_LOOP_ENGINEERING = 'loop-engineering' as const satisfies AiAgentOpsPlaybookTopic;
 const TOPIC_RELEASE_GATE = 'release-gate' as const satisfies AiAgentOpsPlaybookTopic;
 
-function createComposer(policy: PromptContextPolicy) {
-  return createPromptContextComposer({
-    policy,
-    invariants: AI_AGENT_OPS_INVARIANTS,
-    core: AI_AGENT_OPS_CORE_PLAYBOOK,
-    topics: AI_AGENT_OPS_TOPIC_PLAYBOOKS,
-    topicMeta: AI_AGENT_OPS_TOPIC_META,
-  });
-}
+const bindPromptContext = bindProfilePromptContext({
+  invariants: AI_AGENT_OPS_INVARIANTS,
+  core: AI_AGENT_OPS_CORE_PLAYBOOK,
+  topics: AI_AGENT_OPS_TOPIC_PLAYBOOKS,
+  topicMeta: AI_AGENT_OPS_TOPIC_META,
+});
 
 export function registerAiAgentOpsPrompts(
   server: McpServer,
   options?: RegisterPromptsOptions,
 ): void {
-  const policy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
-  const promptContext = createComposer(policy);
+  const promptContext = bindPromptContext(options?.promptContextPolicy);
   const invariantIds = AI_AGENT_OPS_DEFAULT_INVARIANT_IDS;
 
   server.registerPrompt(

@@ -57,6 +57,7 @@ describe('createPromptContextComposer', () => {
     expect(text).toContain('Find content for revenue');
     expect(text).toContain('Critical invariants:');
     expect(text).toContain('Do not mutate resources.');
+    expect(text).toContain('lightdash://playbooks/test/core');
     expect(text).toContain('lightdash://playbooks/test/discover');
     expect(text).not.toContain('long core body');
   });
