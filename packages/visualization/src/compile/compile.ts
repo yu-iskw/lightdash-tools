@@ -2,6 +2,7 @@ import { VisualizationError } from '../errors';
 import { validateVisualizationSpec } from '../spec/validate';
 import { renderHtml } from '../targets/html/render';
 import { renderSvg } from '../targets/svg/render';
+import { resolveRankedCardsMaxRows } from '../templates/ranked-cards';
 import { getTemplate } from '../templates/registry';
 
 import { bindRoles } from './bind';
@@ -39,33 +40,20 @@ export interface CompileVisualizationResult {
   validatedSpec: VisualizationSpecV1;
 }
 
-type CustomChartTemplate = VisualizationTemplate & {
-  compileCustomChart: NonNullable<VisualizationTemplate['compileCustomChart']>;
-};
-
-function hasCustomChartCompiler(template: VisualizationTemplate): template is CustomChartTemplate {
-  return typeof template.compileCustomChart === 'function';
-}
-
 /** Presentation top-N: template default, overridden by ranked-cards options.maxRows when set. */
 function resolvePresentationMaxRows(
   spec: VisualizationSpecV1,
   template: VisualizationTemplate,
 ): number {
-  if (
-    spec.visual.type === 'template' &&
-    spec.visual.template === 'ranked-cards' &&
-    typeof spec.visual.options?.maxRows === 'number'
-  ) {
-    return spec.visual.options.maxRows;
+  if (spec.visual.type === 'template' && spec.visual.template === 'ranked-cards') {
+    return resolveRankedCardsMaxRows(spec, template.maxRows);
   }
   return template.maxRows;
 }
 
 /** Bound role fields must appear in the LVS query so live Custom Chart re-query returns them. */
 function assertRolesInQuery(boundRoles: FieldRoleMap, spec: VisualizationSpecV1): void {
-  const queryFields = new Set(spec.data.query.dimensions);
-  for (const id of spec.data.query.metrics) queryFields.add(id);
+  const queryFields = new Set([...spec.data.query.dimensions, ...spec.data.query.metrics]);
   for (const [role, fieldId] of Object.entries(boundRoles) as Array<
     [FieldRole, string | undefined]
   >) {
@@ -156,14 +144,8 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
       break;
     }
     case 'lightdash-custom-chart': {
-      if (!hasCustomChartCompiler(template)) {
-        throw new VisualizationError(
-          'TEMPLATE_TARGET_UNSUPPORTED',
-          `Template "${template.id}" lists custom-chart support but has no compileCustomChart`,
-          { templateId: template.id, target: input.target },
-        );
-      }
-      result.customChart = template.compileCustomChart(ctx);
+      // Registry asserts supportedTargets ↔ compileCustomChart consistency at load.
+      result.customChart = template.compileCustomChart!(ctx);
       warnings.push(...result.customChart.warnings);
       break;
     }

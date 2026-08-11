@@ -20,6 +20,14 @@ function rankedCardsOptions(spec: VisualizationSpecV1) {
     : undefined;
 }
 
+/** Presentation top-N for ranked-cards (options.maxRows) or the template default. */
+export function resolveRankedCardsMaxRows(
+  spec: VisualizationSpecV1,
+  fallback: number = DEFAULT_RANKED_MAX_ROWS,
+): number {
+  return rankedCardsOptions(spec)?.maxRows ?? fallback;
+}
+
 function asNumber(value: unknown): number | null {
   if (typeof value === 'number' && !Number.isNaN(value)) return value;
   if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
@@ -99,7 +107,7 @@ export function prepareRankedCardsData(input: {
   const warnings: VisualizationWarning[] = [];
   const options = rankedCardsOptions(input.spec);
 
-  const maxRows = options?.maxRows ?? DEFAULT_RANKED_MAX_ROWS;
+  const maxRows = resolveRankedCardsMaxRows(input.spec);
   const valueField = requireBoundRole(input.boundRoles, 'value');
   const categoryField = requireBoundRole(input.boundRoles, 'category');
   const secondaryField = input.boundRoles.secondaryValue;
@@ -163,7 +171,7 @@ function buildBars(
 
   return rows.map((row, index) => {
     const cell = row[valueField];
-    const numeric = values[index] ?? 0;
+    const numeric = values[index];
     const label = toDisplayString(row[categoryField]);
     if (label.length > 40) {
       warnings.push({
