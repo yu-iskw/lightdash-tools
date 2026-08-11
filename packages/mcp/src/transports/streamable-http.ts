@@ -73,7 +73,10 @@ function createProcessMcpHttpHandler(): McpHttpHandler {
       if (!store) {
         throw new Error('MCP request factory context is missing');
       }
-      return createLightdashMcpServer(store.contextProvider, { profile: store.profile });
+      return createLightdashMcpServer(store.contextProvider, {
+        profile: store.profile,
+        promptContextPolicy: store.promptContextPolicy,
+      });
     },
     { legacy: 'stateless', onerror: reportMcpHttpError },
   );
@@ -263,8 +266,13 @@ async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
   const contextProvider = createContextProviderForRequest(config, req);
   const auditAuth = getOAuthAuditContext(req);
 
-  await runWithMcpPostFactoryAsync({ contextProvider, profile }, () =>
-    runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
+  await runWithMcpPostFactoryAsync(
+    {
+      contextProvider,
+      profile,
+      promptContextPolicy: config.promptContextPolicy,
+    },
+    () => runWithToolAuditAuthAsync(auditAuth, () => nodeHandler(req, res, body)),
   );
 }
 

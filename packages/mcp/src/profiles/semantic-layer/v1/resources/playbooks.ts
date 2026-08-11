@@ -4,6 +4,8 @@
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
 
+import { SEMANTIC_LAYER_HARD_BANS } from '../invariants.js';
+
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type SemanticLayerPlaybookTopic = 'compose-compile' | 'explore';
@@ -11,9 +13,7 @@ export type SemanticLayerPlaybookTopic = 'compose-compile' | 'explore';
 const playbooks = defineProfilePlaybooks<SemanticLayerPlaybookTopic>({
   profileId: 'semantic-layer',
   moduleDir: __dirname,
-  /** Shared hard-ban text for prompts (keep in sync with playbooks/core.md Hard bans section). */
-  hardBans:
-    'Do not run metric/SQL/chart queries, use SQL runner, trigger validation jobs, mutate content, switch away from the given projectUuid, invent fieldIds, dump full explore/metric/lineage payloads, or call AI/identity tools. Those are not available on this server.',
+  hardBans: SEMANTIC_LAYER_HARD_BANS,
   coreDescription: 'Hard bans, budgets, allowed tools, project scope, and stop criteria',
   topics: [
     {
@@ -21,23 +21,25 @@ const playbooks = defineProfilePlaybooks<SemanticLayerPlaybookTopic>({
       title: 'Semantic-layer explore playbook',
       description: 'Explore discovery, disambiguation, and field shortlisting',
       file: 'explore.md',
+      useWhen: 'Discovering explores, metrics, and dimensions for a question',
+      priority: 0.8,
     },
     {
       id: 'compose-compile',
       title: 'Semantic-layer compose/compile playbook',
       description: 'Compose metric queries and compile without warehouse execution',
       file: 'compose-compile.md',
+      useWhen: 'Composing or debugging a metric query compile',
+      priority: 0.75,
     },
   ],
 });
 
-export const SEMANTIC_LAYER_CORE_URI = playbooks.URIs.core;
-export const SEMANTIC_LAYER_EXPLORE_URI = playbooks.URIs.topics.explore;
-export const SEMANTIC_LAYER_COMPOSE_COMPILE_URI = playbooks.URIs.topics['compose-compile'];
-export const SEMANTIC_LAYER_HARD_BANS = playbooks.HARD_BANS;
+export { SEMANTIC_LAYER_HARD_BANS };
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const SEMANTIC_LAYER_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const SEMANTIC_LAYER_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;
+export const SEMANTIC_LAYER_TOPIC_META = playbooks.TOPIC_META;
 
 export function registerSemanticLayerPlaybook(server: McpServer): void {
   playbooks.registerPlaybooks(server);

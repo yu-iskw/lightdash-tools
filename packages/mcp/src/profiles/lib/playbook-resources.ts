@@ -11,6 +11,9 @@ import type { McpServer } from '@modelcontextprotocol/server';
 
 export const PLAYBOOK_MIME = 'text/markdown' as const;
 
+/** Long TTL for static shipped playbooks (package deploy changes content). */
+export const STATIC_PLAYBOOK_CACHE_TTL_MS = 86_400_000; // 24h
+
 export type PlaybookResourceSpec = {
   /** MCP resource name (stable id for resources/list). */
   name: string;
@@ -19,6 +22,8 @@ export type PlaybookResourceSpec = {
   title: string;
   description: string;
   getMarkdown: () => string;
+  /** MCP resource priority annotation (0–1). */
+  priority?: number;
 };
 
 const markdownCache = new Map<string, string>();
@@ -45,6 +50,7 @@ function registerMarkdownPlaybooks(
 ): void {
   for (const spec of specs) {
     const markdown = spec.getMarkdown();
+    const priority = spec.priority ?? 0.7;
     server.registerResource(
       spec.name,
       spec.uri,
@@ -52,6 +58,14 @@ function registerMarkdownPlaybooks(
         title: spec.title,
         description: spec.description,
         mimeType: PLAYBOOK_MIME,
+        annotations: {
+          audience: ['assistant'],
+          priority,
+        },
+        cacheHint: {
+          cacheScope: 'public',
+          ttlMs: STATIC_PLAYBOOK_CACHE_TTL_MS,
+        },
       },
       async (uri) => ({
         contents: [
@@ -72,68 +86,16 @@ export type EmbeddedPlaybook = {
   getMarkdown: () => string;
 };
 
-function embedResource(playbook: EmbeddedPlaybook) {
-  return {
-    type: 'resource' as const,
-    resource: {
-      uri: playbook.uri,
-      mimeType: playbook.mimeType ?? PLAYBOOK_MIME,
-      text: playbook.getMarkdown(),
-    },
-  };
-}
-
-type PromptUserMessage = {
-  role: 'user';
-  content: ReturnType<typeof embedResource> | { type: 'text'; text: string };
-};
-
-/**
- * Build prompt message helpers that embed core, and optionally one or more topic
- * playbooks, after the user text message. When `topicId` is omitted, only core is
- * embedded.
- */
-export function createPromptPlaybookEmbedder<TopicId extends string>(options: {
-  core: EmbeddedPlaybook;
-  topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
-}): (text: string, topicId?: TopicId | readonly TopicId[]) => { messages: PromptUserMessage[] } {
-  const { core, topics } = options;
-  return (text: string, topicId?: TopicId | readonly TopicId[]) => {
-    const messages: PromptUserMessage[] = [
-      {
-        role: 'user' as const,
-        content: { type: 'text' as const, text },
-      },
-      {
-        role: 'user' as const,
-        content: embedResource(core),
-      },
-    ];
-    if (topicId === undefined) {
-      return { messages };
-    }
-    const topicIds = typeof topicId === 'string' ? [topicId] : topicId;
-    for (const id of topicIds) {
-      // eslint-disable-next-line security/detect-object-injection -- topic ids from profile prompt constants
-      const topic = topics[id];
-      if (!topic) {
-        throw new Error(`Unknown playbook topic '${id}'`);
-      }
-      messages.push({
-        role: 'user' as const,
-        content: embedResource(topic),
-      });
-    }
-    return { messages };
-  };
-}
-
 export type ProfilePlaybookTopicDef<TopicId extends string = string> = {
   id: TopicId;
   title: string;
   description: string;
   /** Filename under `playbooks/`, e.g. `dashboards.md`. */
   file: string;
+  /** MCP resource priority (default 0.7; recovery ~0.3; core ~0.9). */
+  priority?: number;
+  /** Short "use when" for prompt manifests. */
+  useWhen?: string;
 };
 
 export type DefineProfilePlaybooksOptions<TopicId extends string> = {
@@ -168,6 +130,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
   getAllPlaybookMarkdown: () => string;
   CORE_PLAYBOOK: EmbeddedPlaybook;
   TOPIC_PLAYBOOKS: Readonly<Record<TopicId, EmbeddedPlaybook>>;
+  TOPIC_META: Readonly<Record<TopicId, { description: string; useWhen?: string }>>;
   registerPlaybooks: (server: McpServer) => void;
 } {
   const {
@@ -191,6 +154,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
 
   const topicUris = {} as Record<TopicId, string>;
   const topicPlaybooks = {} as Record<TopicId, EmbeddedPlaybook>;
+  const topicMeta = {} as Record<TopicId, { description: string; useWhen?: string }>;
   const topicMarkdownGetters: Array<() => string> = [];
 
   for (const topic of topics) {
@@ -201,6 +165,10 @@ export function defineProfilePlaybooks<TopicId extends string>(
     topicPlaybooks[topic.id] = {
       uri,
       getMarkdown,
+    };
+    topicMeta[topic.id] = {
+      description: topic.description,
+      useWhen: topic.useWhen,
     };
   }
 
@@ -224,6 +192,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
         title: indexTitle,
         description: indexDescription,
         getMarkdown: getIndexPlaybookMarkdown,
+        priority: 0.85,
       },
       {
         name: `${namePrefix}_playbook_core`,
@@ -231,13 +200,15 @@ export function defineProfilePlaybooks<TopicId extends string>(
         title: coreTitle,
         description: coreDescription,
         getMarkdown: getCorePlaybookMarkdown,
+        priority: 0.95,
       },
       ...topics.map((topic) => ({
-        name: `${namePrefix}_playbook_${String(topic.id).split('-').join('_')}`,
+        name: `${namePrefix}_playbook_${String(topic.id).split('/').join('_').split('-').join('_')}`,
         uri: topicUris[topic.id],
         title: topic.title,
         description: topic.description,
         getMarkdown: topicPlaybooks[topic.id].getMarkdown,
+        priority: topic.priority ?? (String(topic.id).startsWith('recovery/') ? 0.35 : 0.7),
       })),
     ]);
   };
@@ -248,6 +219,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
     getAllPlaybookMarkdown,
     CORE_PLAYBOOK,
     TOPIC_PLAYBOOKS: topicPlaybooks,
+    TOPIC_META: topicMeta,
     registerPlaybooks,
   };
 }

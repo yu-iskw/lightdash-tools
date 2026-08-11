@@ -74,9 +74,29 @@ export function jsonToolResult(data: unknown): TextContent {
   };
 }
 
+/** Optional additive fields on structured tool errors (RFC progressive-disclosure recovery). */
+export type ToolErrorExtras = {
+  recovery?: string;
+  playbookUri?: string;
+};
+
 /** Tool execution error with structured `{ error: { code, message } }` (not policy-blocked). */
-export function toolErrorResult(code: string, message: string): TextContent {
-  return { ...jsonToolResult({ error: { code, message } }), isError: true };
+export function toolErrorResult(
+  code: string,
+  message: string,
+  extras?: ToolErrorExtras,
+): TextContent {
+  const error: { code: string; message: string; recovery?: string; playbookUri?: string } = {
+    code,
+    message,
+  };
+  if (extras?.recovery !== undefined) {
+    error.recovery = extras.recovery;
+  }
+  if (extras?.playbookUri !== undefined) {
+    error.playbookUri = extras.playbookUri;
+  }
+  return { ...jsonToolResult({ error }), isError: true };
 }
 
 /**

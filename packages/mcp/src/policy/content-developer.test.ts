@@ -72,6 +72,13 @@ describe('developerErrorResult', () => {
     expect(first?.type).toBe('text');
     if (first?.type === 'text') {
       expect(first.text).toContain('PREVIEW_STALE');
+      const parsed = JSON.parse(first.text) as {
+        error: { code: string; message: string; recovery?: string; playbookUri?: string };
+      };
+      expect(parsed.error.recovery).toMatch(/preview_\*/);
+      expect(parsed.error.playbookUri).toBe(
+        'lightdash://playbooks/content-developer/recovery/preview-stale',
+      );
     }
   });
 

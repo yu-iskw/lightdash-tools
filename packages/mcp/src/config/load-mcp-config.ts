@@ -24,6 +24,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
+  ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
@@ -43,6 +44,10 @@ import {
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 import { assertObsoleteEnvRejected } from './obsolete-env.js';
+import {
+  parsePromptContextPolicy,
+  type PromptContextPolicy,
+} from './prompt-context-policy.js';
 import { requirePublicUrl } from './public-url.js';
 import { readEnv } from './read-env.js';
 
@@ -186,6 +191,8 @@ export interface McpHttpConfig {
   mcpPath: string;
   /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
   enabledProfiles: EnabledProfilesPolicy;
+  /** Progressive-disclosure prompt embedding policy (default compact). */
+  promptContextPolicy: PromptContextPolicy;
   authMode: McpAuthMode;
   sharedKey?: SecretString;
   /** Server-held Lightdash OAuth application client id (broker mode). */
@@ -396,6 +403,9 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
+  const promptContextPolicy = parsePromptContextPolicy(
+    readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT, env),
+  );
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
@@ -429,6 +439,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
     publicUrl,
     mcpPath,
     enabledProfiles,
+    promptContextPolicy,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     ...resolveOAuthCredentials(authMode, oauthClientId, oauthClientSecretRaw),

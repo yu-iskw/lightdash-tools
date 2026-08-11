@@ -40,6 +40,20 @@ describe('codedErrorResult', () => {
       expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
     }
   });
+
+  it('attaches recovery + playbookUri for PREVIEW_STALE', () => {
+    const result = codedErrorResult('PREVIEW_STALE', 'stale');
+    expect(result.structuredContent).toEqual({
+      error: {
+        code: 'PREVIEW_STALE',
+        message: 'stale',
+        recovery:
+          'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
+        playbookUri: 'lightdash://playbooks/content-developer/recovery/preview-stale',
+      },
+    });
+    expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
+  });
 });
 
 describe('projectScopeErrorResult', () => {

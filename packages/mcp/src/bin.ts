@@ -3,22 +3,47 @@ import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
 import { formatProfilesHelp } from './cli-help.js';
+import {
+  PROMPT_CONTEXT_POLICIES,
+  resolvePromptContextPolicy,
+} from './config/prompt-context-policy.js';
 import { parseProfileId } from './profiles/index.js';
 import { PACKAGE_VERSION } from './server/version.js';
 
 const program = new Command();
 
-function runStdio(profileId: ProfileId): void {
+function runStdio(profileId: ProfileId, promptContext?: string): void {
+  let promptContextPolicy;
+  try {
+    promptContextPolicy = resolvePromptContextPolicy({
+      cli: promptContext,
+      env: process.env,
+    });
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+    process.exitCode = 1;
+    return;
+  }
   void import('./index.js').then((m) => {
-    m.startStdio(profileId);
+    m.startStdio(profileId, { promptContextPolicy });
   });
 }
 
-function runHttp(): void {
+function runHttp(promptContext?: string): void {
+  try {
+    // Resolve early so invalid CLI fails before HTTP boot; HTTP also reads env at load.
+    const policy = resolvePromptContextPolicy({ cli: promptContext, env: process.env });
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = policy;
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+    process.exitCode = 1;
+    return;
+  }
   void import('./http.js');
 }
 
 const profileList = PROFILE_IDS.join(', ');
+const promptContextHelp = `Prompt context policy (${PROMPT_CONTEXT_POLICIES.join('|')}; env: LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)`;
 
 program
   .name('lightdash-mcp')
@@ -45,23 +70,25 @@ program
   .command('stdio')
   .description('Run MCP server on stdio')
   .requiredOption('--profile <id>', `Profile id (${profileList})`)
+  .option('--prompt-context <policy>', promptContextHelp)
   .addHelpText('after', formatProfilesHelp)
-  .action((opts: { profile: string }) => {
+  .action((opts: { profile: string; promptContext?: string }) => {
     const id = parseProfileId(opts.profile);
     if (!id) {
       console.error(`Invalid profile '${opts.profile}'. Expected one of: ${profileList}.`);
       process.exitCode = 1;
       return;
     }
-    runStdio(id);
+    runStdio(id, opts.promptContext);
   });
 
 program
   .command('http')
   .description('Run MCP server over Streamable HTTP (fixed profile paths)')
+  .option('--prompt-context <policy>', promptContextHelp)
   .addHelpText('after', formatProfilesHelp)
-  .action(() => {
-    runHttp();
+  .action((opts: { promptContext?: string }) => {
+    runHttp(opts.promptContext);
   });
 
 program.parse(process.argv);

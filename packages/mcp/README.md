@@ -136,6 +136,25 @@ export LIGHTDASH_TOOLS_MCP_PROFILES="content-reader,content-developer"
 
 Architecture: [ADR-0024](../../docs/adr/0024-mcp-http-profile-mount-allowlist-via-env.md).
 
+### Prompt context policy
+
+Controls how much playbook markdown is embedded into `prompts/get` (progressive disclosure; [ADR-0025](../../docs/adr/0025-mcp-progressive-disclosure-prompt-context-policies.md)).
+
+| Value | Behavior |
+| :---- | :------- |
+| `compact` (default) | Task + critical invariants + resource manifest only |
+| `compatible` | Also embeds required topic playbooks |
+| `embedded` | Legacy: embeds core + required topics (rollback) |
+
+```bash
+export LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT=compatible
+# or
+lightdash-mcp stdio --profile content-reader --prompt-context embedded
+lightdash-mcp http --prompt-context compact
+```
+
+Invalid values fail at startup. Do not infer policy from MCP client names.
+
 ### Project allowlist
 
 Optional deployment ceiling shared with the CLI. Unset or empty → unrestricted beyond RBAC, HTTP pin, and tool `projectUuid`. Non-empty → hard allowlist for all profiles.

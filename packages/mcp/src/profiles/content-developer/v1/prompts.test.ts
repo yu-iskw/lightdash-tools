@@ -187,6 +187,7 @@ describe('content-developer prompts/playbook', () => {
     let authorText = '';
     let authorUris: Array<string | undefined> = [];
     let refactorText = '';
+    let createCompactText = '';
     const server = {
       registerPrompt: (
         name: string,
@@ -248,7 +249,32 @@ describe('content-developer prompts/playbook', () => {
         }
       },
     };
-    registerContentDeveloperPrompts(server as never);
+    // embedded keeps legacy resource URI assertions; compact is the package default.
+    registerContentDeveloperPrompts(server as never, { promptContextPolicy: 'embedded' });
+
+    const compactServer = {
+      registerPrompt: (
+        name: string,
+        _meta: unknown,
+        handler: (args: Record<string, unknown>) => { messages: unknown },
+      ) => {
+        if (name !== 'create_dashboard') return;
+        const messages = handler({ goal: 'x' }).messages as Array<{
+          content: { type: string; text?: string };
+        }>;
+        createCompactText = messages
+          .filter((m) => m.content.type === 'text')
+          .map((m) => m.content.text ?? '')
+          .join('\n')
+          .toLowerCase();
+        expect(messages.every((m) => m.content.type === 'text')).toBe(true);
+      },
+    };
+    registerContentDeveloperPrompts(compactServer as never, { promptContextPolicy: 'compact' });
+    expect(createCompactText).toContain('critical invariants:');
+    expect(createCompactText).toContain('previewtoken');
+    expect(createCompactText).toContain('lightdash://playbooks/content-developer/recovery/preview-stale');
+    expect(createCompactText).not.toContain('## hard bans');
     expect(names).not.toContain('build_chart');
     expect(names).not.toContain('design_dashboard');
     expect(names).toContain('author_chart');
@@ -269,6 +295,8 @@ describe('content-developer prompts/playbook', () => {
         .toLowerCase();
       expect(text).toContain('design spec');
       expect(text).toMatch(/stop until the user proceeds|proceeds \/ approves/);
+      expect(text).toContain('critical invariants:');
+      expect(text).toContain('previewtoken');
 
       const uris = typed
         .filter((m) => m.content.type === 'resource')

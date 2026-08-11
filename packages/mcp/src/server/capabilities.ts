@@ -3,6 +3,10 @@
  */
 
 import { bindServerProfile } from '../audit/server-profile.js';
+import {
+  DEFAULT_PROMPT_CONTEXT_POLICY,
+  type PromptContextPolicy,
+} from '../config/prompt-context-policy.js';
 import { getDefaultProfile } from '../profiles/index.js';
 import { registerTools } from '../tools/registry.js';
 
@@ -13,6 +17,8 @@ import type { McpServer } from '@modelcontextprotocol/server';
 export type RegisterCapabilitiesOptions = {
   /** Profile to register (defaults to {@link getDefaultProfile}). */
   profile?: ProfileDefinition;
+  /** Progressive-disclosure prompt context policy (defaults to package default). */
+  promptContextPolicy?: PromptContextPolicy;
 };
 
 /**
@@ -25,8 +31,9 @@ export function registerCapabilities(
   options?: RegisterCapabilitiesOptions,
 ): void {
   const profile = options?.profile ?? getDefaultProfile();
+  const promptContextPolicy = options?.promptContextPolicy ?? DEFAULT_PROMPT_CONTEXT_POLICY;
   bindServerProfile(server, profile.id);
   registerTools(server, contextProvider, profile.tools);
-  profile.registerPrompts(server);
+  profile.registerPrompts(server, { promptContextPolicy });
   profile.registerResources(server);
 }

@@ -8,7 +8,7 @@ import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
-import type { TextContent } from '../shared.js';
+import type { TextContent, ToolErrorExtras } from '../shared.js';
 
 /** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
 const BLOCKED_POLICY_CODES = new Set([
@@ -32,8 +32,27 @@ const BLOCKED_POLICY_CODES = new Set([
   'CHART_SLUG_EXISTS',
 ]);
 
-export function codedErrorResult(code: string, message: string): TextContent {
-  const result = toolErrorResult(code, message);
+const PREVIEW_STALE_PLAYBOOK_URI =
+  'lightdash://playbooks/content-developer/recovery/preview-stale' as const;
+
+/** Additive recovery hints for known coded errors (does not change code/message). */
+function recoveryExtrasForCode(code: string): ToolErrorExtras | undefined {
+  if (code === 'PREVIEW_STALE') {
+    return {
+      recovery:
+        'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
+      playbookUri: PREVIEW_STALE_PLAYBOOK_URI,
+    };
+  }
+  return undefined;
+}
+
+export function codedErrorResult(
+  code: string,
+  message: string,
+  extras?: ToolErrorExtras,
+): TextContent {
+  const result = toolErrorResult(code, message, extras ?? recoveryExtrasForCode(code));
   if (BLOCKED_POLICY_CODES.has(code)) {
     return withLightdashBlockedMarker(result);
   }

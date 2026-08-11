@@ -6,12 +6,14 @@
 
 import { AsyncLocalStorage } from 'node:async_hooks';
 
+import type { PromptContextPolicy } from '../config/prompt-context-policy.js';
 import type { ProfileDefinition } from '../profiles/types.js';
 import type { McpContextProvider } from '../server/request-context.js';
 
 export type McpPostFactoryStore = {
   contextProvider: McpContextProvider;
   profile: ProfileDefinition;
+  promptContextPolicy?: PromptContextPolicy;
 };
 
 const mcpPostFactoryAls = new AsyncLocalStorage<McpPostFactoryStore>();

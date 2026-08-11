@@ -12,6 +12,7 @@ export function makeTestMcpHttpConfig(overrides?: Partial<McpHttpConfig>): McpHt
     publicUrl: 'https://mcp.example.com',
     mcpPath: resolveRootMcpPath(enabledProfiles),
     enabledProfiles,
+    promptContextPolicy: 'compact',
     authMode: 'lightdash-oauth',
     allowedOrigins: [],
     maxBodyBytes: 1024,

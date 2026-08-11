@@ -15,6 +15,10 @@ import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { assertObsoleteEnvRejected } from './config/obsolete-env.js';
+import {
+  resolvePromptContextPolicy,
+  type PromptContextPolicy,
+} from './config/prompt-context-policy.js';
 import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
 import { validateAvailableProjectsConfig } from './governance/available-projects.js';
 import { getProfile } from './profiles/index.js';
@@ -22,24 +26,36 @@ import { createLightdashMcpServer } from './server/server.js';
 
 import type { ProfileId } from './profiles/types.js';
 
+export type StartStdioOptions = {
+  /** Explicit policy; when omitted, resolve from env (default compact). */
+  promptContextPolicy?: PromptContextPolicy;
+};
+
 /** Start stdio MCP for an explicit profile (CLI-selected). */
-export function startStdio(profileId: ProfileId): void {
+export function startStdio(profileId: ProfileId, options?: StartStdioOptions): void {
   try {
     assertObsoleteEnvRejected(process.env);
     warnIgnoredCliGuardrailEnvVars();
     validateAvailableProjectsConfig();
     initAuditLog(getAuditLogPath());
 
+    const promptContextPolicy =
+      options?.promptContextPolicy ?? resolvePromptContextPolicy({ env: process.env });
     const profile = getProfile(profileId);
     const contextProvider = new EnvContextProvider();
 
-    serveStdio(() => createLightdashMcpServer(contextProvider, { profile }), {
-      legacy: 'serve',
-      onerror: (error) => {
-        console.error('MCP stdio error:', error);
+    serveStdio(
+      () => createLightdashMcpServer(contextProvider, { profile, promptContextPolicy }),
+      {
+        legacy: 'serve',
+        onerror: (error) => {
+          console.error('MCP stdio error:', error);
+        },
       },
-    });
-    console.error(`Lightdash MCP server (${profile.id}) running on stdio`);
+    );
+    console.error(
+      `Lightdash MCP server (${profile.id}) running on stdio (prompt-context=${promptContextPolicy})`,
+    );
   } catch (err) {
     console.error('Fatal:', err);
     process.exit(1);

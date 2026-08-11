@@ -4,6 +4,8 @@
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
 
+import { AI_AGENT_OPS_HARD_BANS } from '../invariants.js';
+
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type AiAgentOpsPlaybookTopic = 'evaluation' | 'loop-engineering' | 'release-gate';
@@ -11,8 +13,7 @@ export type AiAgentOpsPlaybookTopic = 'evaluation' | 'loop-engineering' | 'relea
 const playbooks = defineProfilePlaybooks<AiAgentOpsPlaybookTopic>({
   profileId: 'ai-agent-ops',
   moduleDir: __dirname,
-  hardBans:
-    'Do not create/update/delete agents on this server, start or continue threads, mutate users/roles/semantic models/charts, run local offline scorers, write Git eval artifact stores via MCP, invent recommend_* or analyze_* mega-tools, or claim a CLI promotion gate passed from MCP run results alone. Those capabilities are not available as MCP mega-tools here — use CLI agentops / other profiles / the host.',
+  hardBans: AI_AGENT_OPS_HARD_BANS,
   coreDescription: 'Hard bans, tool catalog, truth labels, and distributed loop rules',
   topics: [
     {
@@ -20,26 +21,33 @@ const playbooks = defineProfilePlaybooks<AiAgentOpsPlaybookTopic>({
       title: 'AI agent-ops evaluation playbook',
       description: 'Product evaluation suites and readiness API usage',
       file: 'evaluation.md',
+      useWhen: 'Designing, running, or comparing product evaluation suites',
+      priority: 0.8,
     },
     {
       id: 'loop-engineering',
       title: 'AI agent-ops loop-engineering playbook',
       description: 'Host-driven improve loop across MCP, CLI, and other profiles',
       file: 'loop-engineering.md',
+      useWhen: 'Investigating failures or running a bounded improve loop',
+      priority: 0.75,
     },
     {
       id: 'release-gate',
       title: 'AI agent-ops release-gate playbook',
       description: 'Promotion decisions via CLI agentops evaluate-gate',
       file: 'release-gate.md',
+      useWhen: 'Preparing a release recommendation or promotion gate',
+      priority: 0.7,
     },
   ],
 });
 
-export const AI_AGENT_OPS_HARD_BANS = playbooks.HARD_BANS;
+export { AI_AGENT_OPS_HARD_BANS };
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const AI_AGENT_OPS_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const AI_AGENT_OPS_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;
+export const AI_AGENT_OPS_TOPIC_META = playbooks.TOPIC_META;
 
 export function registerAiAgentOpsPlaybook(server: McpServer): void {
   playbooks.registerPlaybooks(server);
