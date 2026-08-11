@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-11]: Visualization Custom Chart `metricQuery` must clamp `limit` to truncated display rows and emit value-role `sorts` matching `sortDescending` when LVS omits `query.sorts` — otherwise live re-query top-N diverges from offline SVG/embedded values.
 - [2026-08-11]: Commander 15 passes the `Command` instance as the final action argument; `wrapAction` must skip `arg === this` before `validateResourceIdsInObject` or circular `parent/commands` overflows the stack.
 - [2026-08-11]: Zod 4 `z.record(enumKeySchema, value)` requires every enum key — use explicit optional object fields for partial LVS role maps.
 - [2026-08-11]: MCP prompts default to progressive-disclosure `compact` (ADR-0025 / RFC); roll back with `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT=embedded`. Invariants live in per-profile `invariants.ts` — do not paste HARD_BANS into prompt task text.
