@@ -11,32 +11,26 @@ import {
 export const ORGANIZATION_AUDIT_INVARIANTS = [
   {
     id: 'no-mutation',
-    severity: 'critical',
     short: 'Do not mutate users/groups/roles/content/schedulers.',
   },
   {
     id: 'no-warehouse-query',
-    severity: 'critical',
     short: 'Do not execute warehouse or chart queries.',
   },
   {
     id: 'no-csv-download',
-    severity: 'critical',
     short: 'Do not download user-activity CSV.',
   },
   {
     id: 'no-secrets',
-    severity: 'critical',
     short: 'Do not reveal secrets.',
   },
   {
     id: 'no-unbounded-crawl',
-    severity: 'critical',
     short: 'Do not crawl unbounded org inventories. Prefer core budgets (page/project caps).',
   },
   {
     id: 'no-compliance-claim',
-    severity: 'critical',
     short:
       'Do not claim compliance certification. Those capabilities are not available on this server.',
   },

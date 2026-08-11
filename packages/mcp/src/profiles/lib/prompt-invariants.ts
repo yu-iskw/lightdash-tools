@@ -2,15 +2,10 @@
  * Structured prompt invariants (SSOT for eager safety capsules and HARD_BANS projections).
  */
 
-export type PromptInvariantSeverity = 'critical' | 'important';
-
 export type PromptInvariant = {
   id: string;
-  severity: PromptInvariantSeverity;
   /** One-line rule shown in the invariant capsule / HARD_BANS projection. */
   short: string;
-  detail?: string;
-  tags?: readonly string[];
 };
 
 export const INVARIANT_CAPSULE_HEADER = 'Critical invariants:' as const;

@@ -5,6 +5,7 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches semantic-layer prompt registration pattern */
 import { z } from 'zod';
 
+import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
@@ -168,10 +169,7 @@ Report enabled and disabled schedules. External destinations (if revealed) are r
       description: 'Validate or refute one previously reported finding with minimum extra metadata',
       argsSchema: {
         findingSummary: z.string().describe('The finding claim to investigate'),
-        projectUuid: z
-          .string()
-          .optional()
-          .describe('Project UUID when the finding is project-scoped'),
+        projectUuid: optionalProjectUuidField(),
       },
     },
     ({ findingSummary, projectUuid }) =>

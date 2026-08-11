@@ -5,7 +5,10 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches organization-audit prompt registration pattern */
 import { z } from 'zod';
 
-import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
+import {
+  optionalProjectUuidField,
+  PROMPT_PROJECT_UUID_HINT,
+} from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { CONTENT_READER_DEFAULT_INVARIANT_IDS, CONTENT_READER_INVARIANTS } from './invariants.js';
@@ -19,10 +22,9 @@ import type { RegisterPromptsOptions } from '../../types.js';
 import type { ContentReaderPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
+const TOPIC_DISCOVER = 'discover' as const satisfies ContentReaderPlaybookTopic;
+const TOPIC_COMPARE = 'compare' as const satisfies ContentReaderPlaybookTopic;
 const TOPIC_EXPLAIN_RUN = 'explain-run' as const satisfies ContentReaderPlaybookTopic;
-
-const PROJECT_UUID_HINT = '(pin or projectUuid required)';
-
 const bindPromptContext = bindProfilePromptContext({
   invariants: CONTENT_READER_INVARIANTS,
   core: CONTENT_READER_CORE_PLAYBOOK,
@@ -56,7 +58,7 @@ export function registerContentReaderPrompts(
 
 ${question}
 
-Project: ${projectUuid ?? '(use HTTP pin or ask for projectUuid — PROJECT_SCOPE_REQUIRED otherwise)'}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 Content types hint: ${contentTypes ?? '(any)'}.
 Verified preference: ${verifiedOnly ?? false} (when true, call list_verified_content first — search_content does not filter by verification).
 Space filter: ${spaceUuid ?? '(none)'}.
@@ -65,7 +67,7 @@ Workflow:
 resolve project → verified-first when requested → search → rank → return ≤5 candidates.
 Do not execute unless values were requested.`,
         invariantIds,
-        requiredTopics: ['discover'],
+        requiredTopics: [TOPIC_DISCOVER],
       }),
   );
 
@@ -84,7 +86,7 @@ Do not execute unless values were requested.`,
       promptContext({
         task: `Explain the saved chart ${chartUuidOrSlug}.
 
-Project: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 includeLatestValues=${includeLatestValues ?? false}.
 
 Workflow:
@@ -112,7 +114,7 @@ Skip SQL charts for execution. Separate explicit metadata from inference.`,
       promptContext({
         task: `Summarize dashboard ${dashboardUuidOrSlug}.
 
-Project: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 Focus: ${focus ?? '(general summary)'}.
 Execute tiles: ${executeTiles ?? false}; max tiles: ${maximumTiles ?? 5}.
 
@@ -142,7 +144,7 @@ Unexecuted tiles must not support conclusions.`,
 
 ${question}
 
-Project: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 Prefer verified=${verifiedOnly ?? false} when set — call list_verified_content first; else search_content.
 Max executions: ${maximumExecutions ?? 3}.
 
@@ -173,12 +175,12 @@ ${contentReferences}
 Question:
 ${comparisonQuestion}
 
-Project: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Workflow:
 resolve both sides → diff definitions before values → execute only when needed (≤2).`,
         invariantIds,
-        requiredTopics: ['compare'],
+        requiredTopics: [TOPIC_COMPARE],
       }),
   );
 
@@ -202,13 +204,13 @@ First: ${firstContent}
 Second: ${secondContent}
 Difference: ${observedDifference}
 
-Project: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Workflow:
 checklist definitions (metrics, filters, grains, parameters, cache) → execute only when needed.
 Separate confirmed, plausible, ruled-out, and unresolved causes.`,
         invariantIds,
-        requiredTopics: ['compare'],
+        requiredTopics: [TOPIC_COMPARE],
       }),
   );
 }

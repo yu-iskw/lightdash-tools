@@ -5,7 +5,10 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
 import { z } from 'zod';
 
-import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
+import {
+  optionalProjectUuidField,
+  PROMPT_PROJECT_UUID_HINT,
+} from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import { DATA_ANALYST_DEFAULT_INVARIANT_IDS, DATA_ANALYST_INVARIANTS } from './invariants.js';
@@ -16,7 +19,10 @@ import {
 } from './resources/playbooks.js';
 
 import type { RegisterPromptsOptions } from '../../types.js';
+import type { DataAnalystPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
+
+const TOPIC_EXPLORE = 'explore' as const satisfies DataAnalystPlaybookTopic;
 
 const bindPromptContext = bindProfilePromptContext({
   invariants: DATA_ANALYST_INVARIANTS,
@@ -50,7 +56,7 @@ export function registerDataAnalystPrompts(
 
 ${question}
 
-Project: ${projectUuid ?? '(use HTTP pin or ask for projectUuid — PROJECT_SCOPE_REQUIRED otherwise)'}.
+Project: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 Explore hint: ${exploreHint ?? '(discover with list_explores search+limit)'}.
 
 Procedure:
@@ -60,7 +66,7 @@ Procedure:
 4. Optional compile_query; then run_metric_query with small limit. Poll get_query_result if needed.
 5. Iterate filters/fields. Do not save charts unless the user asks.`,
         invariantIds,
-        requiredTopics: ['explore'],
+        requiredTopics: [TOPIC_EXPLORE],
       }),
   );
 }

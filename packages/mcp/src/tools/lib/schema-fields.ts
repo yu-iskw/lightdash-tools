@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 export const PROJECT_UUID_DESC = 'Project UUID';
 
+/** Prompt-body hint when projectUuid arg is omitted (HTTP pin or PROJECT_SCOPE_REQUIRED). */
+export const PROMPT_PROJECT_UUID_HINT =
+  '(pass on every tool, or use HTTP pin — else PROJECT_SCOPE_REQUIRED)' as const;
+
 export const projectUuidField = (): z.ZodString => z.string().describe(PROJECT_UUID_DESC);
 
 /** Optional projectUuid when HTTP pin (`X-Lightdash-Project`) can resolve scope. */

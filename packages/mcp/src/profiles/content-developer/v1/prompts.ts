@@ -8,7 +8,10 @@
 /* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
-import { optionalProjectUuidField } from '../../../tools/lib/schema-fields.js';
+import {
+  optionalProjectUuidField,
+  PROMPT_PROJECT_UUID_HINT,
+} from '../../../tools/lib/schema-fields.js';
 import { bindProfilePromptContext } from '../../lib/prompt-context.js';
 
 import {
@@ -25,13 +28,12 @@ import type { RegisterPromptsOptions } from '../../types.js';
 import type { ContentDeveloperPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-const PROJECT_UUID_HINT = '(pass on every tool, or use HTTP pin — else PROJECT_SCOPE_REQUIRED)';
-
 const TOPIC_DASHBOARDS = 'dashboards' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_DASHBOARD_DESIGN = 'dashboard-design' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_CHART_TYPES = 'chart-types' as const satisfies ContentDeveloperPlaybookTopic;
 const TOPIC_TABLE_CALCULATIONS =
   'table-calculations' as const satisfies ContentDeveloperPlaybookTopic;
+const TOPIC_CONTENT_MOVE = 'content-move' as const satisfies ContentDeveloperPlaybookTopic;
 const DASHBOARD_CHART_TOPIC_IDS = [
   TOPIC_DASHBOARDS,
   TOPIC_DASHBOARD_DESIGN,
@@ -40,19 +42,11 @@ const DASHBOARD_CHART_TOPIC_IDS = [
 const DASHBOARD_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_DASHBOARD_DESIGN] as const;
 const DASHBOARD_PUBLISH_TOPIC_IDS = [TOPIC_DASHBOARDS, TOPIC_CHART_TYPES] as const;
 
+/** Manifest `when` comes from TOPIC_META.useWhen (optional `when` on entries). */
 const WRITE_RECOVERY_TOPICS = [
-  {
-    topic: 'recovery/preview-stale' as const satisfies ContentDeveloperPlaybookTopic,
-    when: 'After PREVIEW_STALE (hash mismatch or baseline drift)',
-  },
-  {
-    topic: 'recovery/preview-required' as const satisfies ContentDeveloperPlaybookTopic,
-    when: 'After PREVIEW_REQUIRED (missing, invalid, or expired token)',
-  },
-  {
-    topic: 'recovery/dashboard-diff' as const satisfies ContentDeveloperPlaybookTopic,
-    when: 'When interpreting dashboard preview diff.removed noise vs omissions',
-  },
+  { topic: 'recovery/preview-stale' as const satisfies ContentDeveloperPlaybookTopic },
+  { topic: 'recovery/preview-required' as const satisfies ContentDeveloperPlaybookTopic },
+  { topic: 'recovery/dashboard-diff' as const satisfies ContentDeveloperPlaybookTopic },
 ] as const;
 
 /** Thin stop gate — Phase Design / Objective detail lives in dashboard-design playbook. */
@@ -92,7 +86,7 @@ export function registerContentDeveloperPrompts(
 
 ${goal}
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Target existing space: ${spaceUuid ?? '(resolve with lightdash_list_spaces / lightdash_get_space — never create a space)'}.
 Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_space / short search_content, then get_chart_as_code)'}.
@@ -126,7 +120,7 @@ Chart hints: ${chartReferences ?? '(none provided — discover seeds via get_spa
 
 ${improvementGoal}
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 1. Inspect with lightdash_get_dashboard first (tile x/y/w/h may be missing — rebuild layout intentionally).
 2. If the improvement goal is vague on decisions / insights: ask **2–4 clarifying questions** before a Spec delta.
@@ -155,7 +149,7 @@ Report what changed (tiles, filters, chart UUIDs), any untiled dashboard-owned l
       promptContext({
         task: `Refactor dashboard ${dashboardUuidOrSlug}.
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Concern: ${concern ?? '(general cleanup)'}.
 1. Use lightdash_compare_dashboard_versions before proposing changes.
@@ -186,7 +180,7 @@ Concern: ${concern ?? '(general cleanup)'}.
 
 ${goal}
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 Seed chart: ${seedChartUuidOrSlug ?? '(find a rendering seed on the same tableName via search_content / get_space)'}.
 Dashboard slug: ${dashboardSlug ?? '(omit only for intentional space-owned charts; for dashboard work set dashboardSlug to an existing dashboard shell)'}.
 
@@ -216,13 +210,13 @@ Report UUID/slug from charts[0].data; note this profile cannot run_chart / prove
 
 ${goal}
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Space hints: ${spaceReferences ?? '(discover with lightdash_list_spaces)'}.
 Follow core + content-move playbooks. Target spaces must already exist.
 Report moved items and target space.`,
         invariantIds,
-        requiredTopics: ['content-move'],
+        requiredTopics: [TOPIC_CONTENT_MOVE],
       }),
   );
 
@@ -242,7 +236,7 @@ Report moved items and target space.`,
 
 ${contentReferences}
 
-Project UUID: ${projectUuid ?? PROJECT_UUID_HINT}.
+Project UUID: ${projectUuid ?? PROMPT_PROJECT_UUID_HINT}.
 
 Done checklist: markdown/description states the **Objective**; tiles map to approved insight questions; every saved filter matches each tile explore or has explicit tileTargets exclude/remap; dashboardSlug on new charts + tiles present; cartesian encode intact; no invented fieldIds. Report untiled dashboard-owned leftovers (soft-delete via content-governance). Follow playbooks for encode/map/filter detail. UI runtime not verified on this profile.
 Optionally validate_* (schema/health only). Promote is content-governance, not this profile.`,

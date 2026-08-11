@@ -21,8 +21,6 @@ import {
   type PromptInvariant,
 } from './prompt-invariants.js';
 
-export type { PromptTopicMeta };
-
 export const MANIFEST_HEADER = 'Detailed resources:' as const;
 
 export type PromptContextSpec<TopicId extends string> = {
@@ -30,8 +28,8 @@ export type PromptContextSpec<TopicId extends string> = {
   invariantIds: readonly string[];
   /** Embedded under compatible + embedded; listed in compact manifest. */
   requiredTopics?: readonly TopicId[];
-  conditionalTopics?: readonly { topic: TopicId; when: string }[];
-  recoveryTopics?: readonly { topic: TopicId; when: string }[];
+  conditionalTopics?: readonly { topic: TopicId; when?: string }[];
+  recoveryTopics?: readonly { topic: TopicId; when?: string }[];
 };
 
 type PromptTextContent = { type: 'text'; text: string };
@@ -54,7 +52,7 @@ function embedResource(playbook: EmbeddedPlaybook): PromptResourceContent {
     type: 'resource',
     resource: {
       uri: playbook.uri,
-      mimeType: playbook.mimeType ?? PLAYBOOK_MIME,
+      mimeType: PLAYBOOK_MIME,
       text: playbook.getMarkdown(),
     },
   };
@@ -73,22 +71,28 @@ function formatManifestSection<TopicId extends string>(
 }
 
 function topicWhenEntries<TopicId extends string>(
-  list: readonly { topic: TopicId; when: string }[],
+  list: readonly { topic: TopicId; when?: string }[],
   topics: Readonly<Record<TopicId, EmbeddedPlaybook>>,
+  topicMeta: Readonly<Record<TopicId, PromptTopicMeta>>,
 ): { topic: TopicId; when: string; uri: string }[] {
-  return list.map((entry) => ({
-    topic: entry.topic,
-    when: entry.when,
-    // Topic ids come from prompt constants (typed Record keys).
-    uri: topics[entry.topic].uri,
-  }));
+  return list.map((entry) => {
+    // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
+    const meta = topicMeta[entry.topic];
+    return {
+      topic: entry.topic,
+      when: entry.when ?? meta.useWhen ?? meta.description,
+      // Topic ids come from prompt constants (typed Record keys).
+      // eslint-disable-next-line security/detect-object-injection -- topic ids from prompt constants
+      uri: topics[entry.topic].uri,
+    };
+  });
 }
 
 function buildManifestText<TopicId extends string>(options: {
   core: EmbeddedPlaybook;
   requiredTopics: readonly TopicId[];
-  conditionalTopics: readonly { topic: TopicId; when: string }[];
-  recoveryTopics: readonly { topic: TopicId; when: string }[];
+  conditionalTopics: readonly { topic: TopicId; when?: string }[];
+  recoveryTopics: readonly { topic: TopicId; when?: string }[];
   topics: Readonly<Record<TopicId, EmbeddedPlaybook>>;
   topicMeta: Readonly<Record<TopicId, PromptTopicMeta>>;
 }): string {
@@ -111,14 +115,14 @@ function buildManifestText<TopicId extends string>(options: {
     formatManifestSection('Required detailed resources:', requiredEntries),
     formatManifestSection(
       'Conditional detailed resources:',
-      topicWhenEntries(conditionalTopics, topics),
+      topicWhenEntries(conditionalTopics, topics, topicMeta),
     ),
-    formatManifestSection('Recovery resources:', topicWhenEntries(recoveryTopics, topics)),
+    formatManifestSection(
+      'Recovery resources:',
+      topicWhenEntries(recoveryTopics, topics, topicMeta),
+    ),
   ].filter((p) => p.length > 0);
 
-  if (parts.length === 0) {
-    return '';
-  }
   return [MANIFEST_HEADER, ...parts].join('\n\n');
 }
 
@@ -240,7 +244,6 @@ export function bindProfilePromptContext<TopicId extends string>(deps: {
 }): (
   policy?: PromptContextPolicy,
 ) => (spec: PromptContextSpec<TopicId>) => { messages: PromptUserMessage[] } {
-  assertUniqueInvariantIds(deps.invariants);
   const composers = new Map<
     PromptContextPolicy,
     (spec: PromptContextSpec<TopicId>) => { messages: PromptUserMessage[] }

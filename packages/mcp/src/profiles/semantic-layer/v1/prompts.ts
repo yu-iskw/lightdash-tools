@@ -2,6 +2,7 @@
  * MCP prompts for semantic-layer discovery and compile workflows (progressive-disclosure context).
  */
 
+/* eslint-disable @typescript-eslint/no-deprecated -- matches content-reader prompt registration pattern */
 import { z } from 'zod';
 
 import { projectUuidField } from '../../../tools/lib/schema-fields.js';
@@ -19,6 +20,7 @@ import type { RegisterPromptsOptions } from '../../types.js';
 import type { SemanticLayerPlaybookTopic } from './resources/playbooks.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
+const TOPIC_EXPLORE = 'explore' as const satisfies SemanticLayerPlaybookTopic;
 const TOPIC_COMPOSE_COMPILE = 'compose-compile' as const satisfies SemanticLayerPlaybookTopic;
 
 const bindPromptContext = bindProfilePromptContext({
@@ -41,10 +43,10 @@ export function registerSemanticLayerPrompts(
       title: 'Explore semantic layer',
       description:
         'Locate explores, metrics, and dimensions for a question without running warehouse queries',
-      argsSchema: z.object({
+      argsSchema: {
         projectUuid: projectUuidField(),
         question: z.string().optional().describe('Natural-language question or topic'),
-      }),
+      },
     },
     async ({ projectUuid, question }) => {
       const topic = question ? `Question/topic: ${question}.` : '';
@@ -63,7 +65,7 @@ Procedure:
 
 Use only lightdash_* tools.`,
         invariantIds,
-        requiredTopics: ['explore'],
+        requiredTopics: [TOPIC_EXPLORE],
       });
     },
   );
@@ -74,11 +76,11 @@ Use only lightdash_* tools.`,
       title: 'Compose and compile query',
       description:
         'Build a metric query and compile it with lightdash_compile_query; never execute against the warehouse',
-      argsSchema: z.object({
+      argsSchema: {
         projectUuid: projectUuidField(),
         question: z.string().optional().describe('What the query should answer'),
         exploreId: exploreIdField().optional(),
-      }),
+      },
     },
     async ({ projectUuid, question, exploreId }) => {
       const topic = question ? `Goal: ${question}.` : '';
@@ -108,11 +110,11 @@ Procedure:
       title: 'Debug compile errors',
       description:
         'Interpret lightdash_compile_query failures, adjust the metric query, and re-compile',
-      argsSchema: z.object({
+      argsSchema: {
         projectUuid: projectUuidField(),
         exploreId: exploreIdField(),
         errorText: z.string().optional().describe('Compile error text if already known'),
-      }),
+      },
     },
     async ({ projectUuid, exploreId, errorText }) => {
       const err = errorText ? `Known error: ${errorText}` : '';
@@ -135,3 +137,5 @@ Checklist:
     },
   );
 }
+
+/* eslint-enable @typescript-eslint/no-deprecated */

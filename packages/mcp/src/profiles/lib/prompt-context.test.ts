@@ -10,8 +10,8 @@ import type { EmbeddedPlaybook } from './playbook-resources.js';
 import type { PromptInvariant } from './prompt-invariants.js';
 
 const INVARIANTS = [
-  { id: 'no-mutation', severity: 'critical', short: 'Do not mutate resources.' },
-  { id: 'project-scope', severity: 'critical', short: 'Stay inside the resolved project.' },
+  { id: 'no-mutation', short: 'Do not mutate resources.' },
+  { id: 'project-scope', short: 'Stay inside the resolved project.' },
 ] as const satisfies readonly PromptInvariant[];
 
 const core: EmbeddedPlaybook = {
@@ -60,6 +60,26 @@ describe('createPromptContextComposer', () => {
     expect(text).toContain('lightdash://playbooks/test/core');
     expect(text).toContain('lightdash://playbooks/test/discover');
     expect(text).not.toContain('long core body');
+  });
+
+  it('compact recovery topic without when falls back to topicMeta', () => {
+    const compose = createPromptContextComposer({
+      policy: 'compact',
+      invariants: INVARIANTS,
+      core,
+      topics,
+      topicMeta,
+    });
+    const { messages } = compose({
+      task: 'Recover preview',
+      invariantIds: ['no-mutation'],
+      recoveryTopics: [{ topic: 'recovery' }],
+    });
+    expect(messages).toHaveLength(1);
+    if (messages[0]!.content.type !== 'text') return;
+    expect(messages[0]!.content.text).toContain(
+      'lightdash://playbooks/test/recovery/preview-stale — PREVIEW_STALE',
+    );
   });
 
   it('compatible embeds required topics only', () => {

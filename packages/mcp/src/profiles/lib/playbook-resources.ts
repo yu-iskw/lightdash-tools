@@ -82,7 +82,6 @@ function registerMarkdownPlaybooks(
 
 export type EmbeddedPlaybook = {
   uri: string;
-  mimeType?: string;
   /** Short description for manifests (core playbook). */
   description?: string;
   getMarkdown: () => string;
@@ -136,7 +135,6 @@ function titleCaseProfile(profileId: string): string {
 export function defineProfilePlaybooks<TopicId extends string>(
   options: DefineProfilePlaybooksOptions<TopicId>,
 ): {
-  URIs: { index: string; core: string; topics: Readonly<Record<TopicId, string>> };
   getAllPlaybookMarkdown: () => string;
   CORE_PLAYBOOK: EmbeddedPlaybook;
   TOPIC_PLAYBOOKS: Readonly<Record<TopicId, EmbeddedPlaybook>>;
@@ -161,14 +159,12 @@ export function defineProfilePlaybooks<TopicId extends string>(
   const getIndexPlaybookMarkdown = (): string => load('playbooks/index.md');
   const getCorePlaybookMarkdown = (): string => load('playbooks/core.md');
 
-  const topicUris = {} as Record<TopicId, string>;
   const topicPlaybooks = {} as Record<TopicId, EmbeddedPlaybook>;
   const topicMeta = {} as Record<TopicId, PromptTopicMeta>;
   const topicMarkdownGetters: Array<() => string> = [];
 
   for (const topic of topics) {
     const uri = playbookTopicUri(profileId, topic.id);
-    topicUris[topic.id] = uri;
     const getMarkdown = (): string => load(`playbooks/${topic.file}`);
     topicMarkdownGetters.push(getMarkdown);
     topicPlaybooks[topic.id] = {
@@ -213,7 +209,7 @@ export function defineProfilePlaybooks<TopicId extends string>(
     },
     ...topics.map((topic) => ({
       name: `${namePrefix}_playbook_${String(topic.id).split('/').join('_').split('-').join('_')}`,
-      uri: topicUris[topic.id],
+      uri: topicPlaybooks[topic.id].uri,
       title: topic.title,
       description: topic.description,
       getMarkdown: topicPlaybooks[topic.id].getMarkdown,
@@ -226,7 +222,6 @@ export function defineProfilePlaybooks<TopicId extends string>(
   };
 
   return {
-    URIs: { index: indexUri, core: coreUri, topics: topicUris },
     getAllPlaybookMarkdown,
     CORE_PLAYBOOK,
     TOPIC_PLAYBOOKS: topicPlaybooks,

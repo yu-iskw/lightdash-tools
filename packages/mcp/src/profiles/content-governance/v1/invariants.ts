@@ -11,38 +11,31 @@ import {
 export const CONTENT_GOVERNANCE_INVARIANTS = [
   {
     id: 'no-permanent-purge',
-    severity: 'critical',
     short: 'Do not permanently purge soft-deleted content.',
   },
   {
     id: 'no-space-or-bulk-delete',
-    severity: 'critical',
     short: 'Do not delete spaces or perform bulk delete.',
   },
   {
     id: 'elicitation-required',
-    severity: 'critical',
     short:
       'Do not soft-delete or promote without form elicitation (never invent confirmed: true or chat-only approval).',
   },
   {
     id: 'no-bypass-elicitation',
-    severity: 'critical',
     short: 'Do not expose deletes/promote on other profiles or bypass the elicitation gate.',
   },
   {
     id: 'dashboard-first-promote',
-    severity: 'critical',
     short: 'Do not promote charts or SQL charts via MCP (dashboard-first only).',
   },
   {
     id: 'no-restore-or-query',
-    severity: 'critical',
     short: 'Do not restore, author, or execute warehouse queries from this profile.',
   },
   {
     id: 'no-secrets',
-    severity: 'critical',
     short: 'Do not reveal secrets, warehouse credentials, or hidden SQL.',
   },
 ] as const satisfies readonly PromptInvariant[];
