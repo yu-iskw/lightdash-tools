@@ -1,6 +1,10 @@
 import { writeFileSync } from 'node:fs';
 
-import { READ_ONLY_DEFAULT, validateSafeOutputDir } from '@lightdash-tools/common';
+import {
+  READ_ONLY_DEFAULT,
+  WRITE_NONDESTRUCTIVE,
+  validateSafeOutputDir,
+} from '@lightdash-tools/common';
 import {
   VisualizationError,
   compileVisualization,
@@ -138,7 +142,7 @@ export function registerVizCommand(program: Command): void {
     .option('--no-strict', 'Warn instead of failing on required capability gaps')
     .action(
       wrapAction(
-        READ_ONLY_DEFAULT,
+        WRITE_NONDESTRUCTIVE,
         async (options: {
           file?: string;
           dataset: string;
