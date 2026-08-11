@@ -297,9 +297,8 @@ describe('compileVisualization', () => {
         }),
       }),
     );
-    const values = (
-      result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }
-    ).data.values;
+    const values = (result.customChart?.chartConfig.config.spec as { data: { values: unknown[] } })
+      .data.values;
     expect(values).toHaveLength(4);
     // Field named `url` in row values must not trip the external-URL walk.
     expect(JSON.stringify(result.customChart?.chartConfig.config.spec)).not.toMatch(/"url"\s*:/);
@@ -335,9 +334,8 @@ describe('compileVisualization', () => {
       strict: false,
     });
     const barCount = (svg.svg?.match(/id="bar-\d+"/g) ?? []).length;
-    const values = (
-      custom.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }
-    ).data.values;
+    const values = (custom.customChart?.chartConfig.config.spec as { data: { values: unknown[] } })
+      .data.values;
     expect(values).toHaveLength(5);
     expect(barCount).toBe(5);
     expect(custom.warnings.filter((w) => w.code === 'DATA_TRUNCATED')).toHaveLength(1);
