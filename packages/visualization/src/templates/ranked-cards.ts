@@ -10,6 +10,14 @@ import type { TemplateCompileContext, VisualizationTemplate } from './contracts'
 import type { LayoutBar, LayoutNode } from '../layout/types';
 import type { FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
 
+const RANKED_CARDS_ID = 'ranked-cards' as const;
+
+function rankedCardsOptions(spec: VisualizationSpecV1) {
+  return spec.visual.type === 'template' && spec.visual.template === RANKED_CARDS_ID
+    ? spec.visual.options
+    : undefined;
+}
+
 function asNumber(value: unknown): number | null {
   if (typeof value === 'number' && !Number.isNaN(value)) return value;
   if (typeof value === 'string' && value.trim() !== '' && !Number.isNaN(Number(value))) {
