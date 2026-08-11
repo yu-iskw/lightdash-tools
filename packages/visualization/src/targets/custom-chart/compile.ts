@@ -1,10 +1,7 @@
 import { VisualizationError } from '../../errors';
-import { prepareRankedCardsData } from '../../templates/ranked-cards';
-import { LIGHTDASH_THEME } from '../../theme/lightdash';
 
-import type { VisualizationDataset } from '../../data/dataset';
 import type { VisualizationWarning } from '../../errors';
-import type { FieldRoleMap, VisualizationSpecV1 } from '../../spec/types';
+import type { VisualizationSpecV1 } from '../../spec/types';
 
 export interface CustomChartCompileResult {
   chartConfig: {
@@ -49,7 +46,7 @@ function rejectExternalUrl(record: Record<string, unknown>, inValues: boolean): 
 }
 
 /** Block Vega-Lite data.url (and nested data sources), not row field ids named `url`. */
-function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
+export function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
   const stack: WalkFrame[] = [{ value: spec, inValues: false }];
   while (stack.length > 0) {
     const frame = stack.pop();
@@ -66,101 +63,35 @@ function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
   }
 }
 
-function rankedCardsVegaLite(
+/** Align LVS query + explore with OpenAPI MetricQuery required fields. */
+export function buildAlignedMetricQuery(
   spec: VisualizationSpecV1,
-  dataset: VisualizationDataset,
-  boundRoles: FieldRoleMap,
-): { vega: Record<string, unknown>; warnings: VisualizationWarning[]; limit: number } {
-  const prepared = prepareRankedCardsData({ spec, dataset, boundRoles });
-  const warnings = [...prepared.warnings];
-
-  if (prepared.secondaryField !== undefined) {
-    warnings.push({
-      code: 'UNSUPPORTED_OPTION_IGNORED',
-      message: 'Custom Chart compile ignores secondaryValue for ranked-cards (SVG/HTML only)',
-      details: { fieldId: prepared.secondaryField },
-    });
-  }
-  if (spec.emphasis && spec.emphasis.mode !== 'none') {
-    warnings.push({
-      code: 'UNSUPPORTED_OPTION_IGNORED',
-      message:
-        'Custom Chart compile ignores emphasis highlighting for ranked-cards (SVG/HTML only)',
-      details: { mode: spec.emphasis.mode, field: spec.emphasis.field },
-    });
-  }
-
-  const values = prepared.rows.map((row) => ({
-    [prepared.categoryField]: row[prepared.categoryField],
-    [prepared.valueField]: row[prepared.valueField],
-  }));
-
-  const vega: Record<string, unknown> = {
-    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
-    description:
-      spec.accessibility?.description ?? spec.metadata?.description ?? spec.metadata?.title,
-    data: { values },
-    mark: { type: 'bar' },
-    encoding: {
-      y: {
-        field: prepared.categoryField,
-        type: 'nominal',
-        sort: '-x',
-        title:
-          dataset.columns.find((c) => c.fieldId === prepared.categoryField)?.label ??
-          prepared.categoryField,
-      },
-      x: {
-        field: prepared.valueField,
-        type: 'quantitative',
-        title:
-          dataset.columns.find((c) => c.fieldId === prepared.valueField)?.label ??
-          prepared.valueField,
-      },
-      color: { value: LIGHTDASH_THEME.palette.bar },
-    },
-    config: {
-      view: { stroke: null },
-    },
+  limitFallback: number,
+): CustomChartCompileResult['metricQuery'] {
+  const q = spec.data.query;
+  return {
+    exploreName: spec.data.source.explore,
+    dimensions: q.dimensions,
+    metrics: q.metrics,
+    filters: q.filters ?? {},
+    sorts: q.sorts ?? [],
+    limit: q.limit ?? limitFallback,
+    tableCalculations: [],
   };
-  assertNoExternalDataUrls(vega);
-  return { vega, warnings, limit: prepared.rows.length };
 }
 
-export function compileCustomChart(input: {
-  spec: VisualizationSpecV1;
-  dataset: VisualizationDataset;
-  boundRoles: FieldRoleMap;
-  templateId: string;
+export function toCustomChartResult(input: {
+  vegaSpec: Record<string, unknown>;
+  metricQuery: CustomChartCompileResult['metricQuery'];
+  warnings: VisualizationWarning[];
 }): CustomChartCompileResult {
-  if (input.templateId !== 'ranked-cards') {
-    throw new VisualizationError(
-      'TEMPLATE_TARGET_UNSUPPORTED',
-      `Template "${input.templateId}" does not support lightdash-custom-chart`,
-      { templateId: input.templateId },
-    );
-  }
-
-  const {
-    vega,
-    warnings,
-    limit: preparedLimit,
-  } = rankedCardsVegaLite(input.spec, input.dataset, input.boundRoles);
-  const q = input.spec.data.query;
+  assertNoExternalDataUrls(input.vegaSpec);
   return {
     chartConfig: {
       type: 'custom',
-      config: { spec: vega },
+      config: { spec: input.vegaSpec },
     },
-    metricQuery: {
-      exploreName: input.spec.data.source.explore,
-      dimensions: q.dimensions,
-      metrics: q.metrics,
-      filters: q.filters ?? {},
-      sorts: q.sorts ?? [],
-      limit: q.limit ?? preparedLimit,
-      tableCalculations: [],
-    },
-    warnings,
+    metricQuery: input.metricQuery,
+    warnings: input.warnings,
   };
 }

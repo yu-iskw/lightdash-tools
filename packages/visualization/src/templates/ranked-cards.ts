@@ -1,6 +1,8 @@
 import { requireBoundRole } from '../compile/bind';
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
+import { buildAlignedMetricQuery, toCustomChartResult } from '../targets/custom-chart/compile';
+import { LIGHTDASH_THEME } from '../theme/lightdash';
 
 import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
@@ -186,5 +188,67 @@ export const rankedCardsTemplate: VisualizationTemplate = {
       },
       warnings: prepared.warnings,
     };
+  },
+  compileCustomChart(context: TemplateCompileContext) {
+    const prepared = prepareRankedCardsData(context);
+    const warnings = [...prepared.warnings];
+
+    if (prepared.secondaryField !== undefined) {
+      warnings.push({
+        code: 'UNSUPPORTED_OPTION_IGNORED',
+        message: 'Custom Chart compile ignores secondaryValue for ranked-cards (SVG/HTML only)',
+        details: { fieldId: prepared.secondaryField },
+      });
+    }
+    if (context.spec.emphasis && context.spec.emphasis.mode !== 'none') {
+      warnings.push({
+        code: 'UNSUPPORTED_OPTION_IGNORED',
+        message:
+          'Custom Chart compile ignores emphasis highlighting for ranked-cards (SVG/HTML only)',
+        details: { mode: context.spec.emphasis.mode, field: context.spec.emphasis.field },
+      });
+    }
+
+    const values = prepared.rows.map((row) => ({
+      [prepared.categoryField]: row[prepared.categoryField],
+      [prepared.valueField]: row[prepared.valueField],
+    }));
+
+    const vegaSpec: Record<string, unknown> = {
+      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      description:
+        context.spec.accessibility?.description ??
+        context.spec.metadata?.description ??
+        context.spec.metadata?.title,
+      data: { values },
+      mark: { type: 'bar' },
+      encoding: {
+        y: {
+          field: prepared.categoryField,
+          type: 'nominal',
+          sort: '-x',
+          title:
+            context.dataset.columns.find((c) => c.fieldId === prepared.categoryField)?.label ??
+            prepared.categoryField,
+        },
+        x: {
+          field: prepared.valueField,
+          type: 'quantitative',
+          title:
+            context.dataset.columns.find((c) => c.fieldId === prepared.valueField)?.label ??
+            prepared.valueField,
+        },
+        color: { value: LIGHTDASH_THEME.palette.bar },
+      },
+      config: {
+        view: { stroke: null },
+      },
+    };
+
+    return toCustomChartResult({
+      vegaSpec,
+      metricQuery: buildAlignedMetricQuery(context.spec, prepared.rows.length),
+      warnings,
+    });
   },
 };

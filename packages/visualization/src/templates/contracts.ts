@@ -4,6 +4,7 @@ import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
 import type { LayoutDocument } from '../layout/types';
 import type { FieldRoleMap, VisualizationIntentType, VisualizationSpecV1 } from '../spec/types';
+import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
 
 export type TemplateId = 'metric-hero' | 'ranked-cards';
 
@@ -28,4 +29,6 @@ export interface VisualizationTemplate {
   supportedTargets: CompileTarget[];
   maxRows: number;
   compile(context: TemplateCompileContext): TemplateCompileOutput;
+  /** Optional: templates that support lightdash-custom-chart implement this. */
+  compileCustomChart?(context: TemplateCompileContext): CustomChartCompileResult;
 }

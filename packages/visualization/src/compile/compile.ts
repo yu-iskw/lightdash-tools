@@ -1,6 +1,5 @@
 import { VisualizationError } from '../errors';
 import { validateVisualizationSpec } from '../spec/validate';
-import { compileCustomChart } from '../targets/custom-chart/compile';
 import { renderHtml } from '../targets/html/render';
 import { renderSvg } from '../targets/svg/render';
 import { getTemplate } from '../templates/registry';
@@ -71,6 +70,7 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   });
 
   const boundRoles = bindRoles(spec.data.roles, input.dataset, template.requirements);
+  const ctx = { spec, dataset: input.dataset, boundRoles };
 
   const warnings: VisualizationWarning[] = [...capability.warnings];
   if (input.dataset.truncated) {
@@ -94,11 +94,7 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   switch (input.target) {
     case 'svg':
     case 'standalone-html': {
-      const compiled = template.compile({
-        spec,
-        dataset: input.dataset,
-        boundRoles,
-      });
+      const compiled = template.compile(ctx);
       warnings.push(...compiled.warnings);
       if (input.target === 'svg') {
         result.svg = renderSvg(compiled.layout);
@@ -111,13 +107,14 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
       break;
     }
     case 'lightdash-custom-chart': {
-      // Skip layout compile — Custom Chart uses shared prep directly (no layout needed).
-      result.customChart = compileCustomChart({
-        spec,
-        dataset: input.dataset,
-        boundRoles,
-        templateId: template.id,
-      });
+      if (!template.compileCustomChart) {
+        throw new VisualizationError(
+          'TEMPLATE_TARGET_UNSUPPORTED',
+          `Template "${template.id}" does not support target "lightdash-custom-chart"`,
+          { templateId: template.id, target: input.target },
+        );
+      }
+      result.customChart = template.compileCustomChart(ctx);
       warnings.push(...result.customChart.warnings);
       break;
     }
