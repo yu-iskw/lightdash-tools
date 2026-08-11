@@ -14,6 +14,16 @@ const TEMPLATES: Record<TemplateId, VisualizationTemplate> = {
   'ranked-cards': rankedCardsTemplate,
 };
 
+for (const template of Object.values(TEMPLATES)) {
+  const claimsCustomChart = template.supportedTargets.includes('lightdash-custom-chart');
+  const hasCompiler = typeof template.compileCustomChart === 'function';
+  if (claimsCustomChart !== hasCompiler) {
+    throw new Error(
+      `Template "${template.id}" custom-chart support mismatch (supportedTargets vs compileCustomChart)`,
+    );
+  }
+}
+
 export function listTemplates(): VisualizationTemplate[] {
   return Object.values(TEMPLATES);
 }

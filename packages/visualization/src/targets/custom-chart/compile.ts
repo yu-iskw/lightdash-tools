@@ -73,11 +73,8 @@ export function buildAlignedMetricQuery(
   const presentationLimit = Math.max(1, display.presentationLimit);
   const limit =
     typeof q.limit === 'number' ? Math.min(q.limit, presentationLimit) : presentationLimit;
-  // Prefer author sorts when present; otherwise match ranked display order.
-  const sorts =
-    q.sorts && q.sorts.length > 0
-      ? q.sorts
-      : [{ fieldId: display.valueField, descending: display.sortDescending }];
+  // Display order owns metricQuery sorts (aligned with prepared/embedded rows).
+  const sorts = [{ fieldId: display.valueField, descending: display.sortDescending }];
   return {
     exploreName: spec.data.source.explore,
     dimensions: q.dimensions,

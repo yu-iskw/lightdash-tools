@@ -351,6 +351,93 @@ describe('compileVisualization', () => {
     ).toHaveLength(2);
   });
 
+  it('scales dataset hard limit from options.maxRows, not frozen template.maxRows', () => {
+    const wide = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: Array.from({ length: 101 }, (_, i) => ({
+        orders_region: `R${i}`,
+        orders_total_revenue: 100 - i,
+        orders_revenue_yoy: 0.01,
+      })),
+    });
+    // Default template.maxRows=20 → hard limit 100 would reject 101 rows.
+    expect(() =>
+      compileVisualization({
+        spec: rankedSpec,
+        dataset: wide,
+        target: 'svg',
+        strict: false,
+      }),
+    ).toThrow(/hard limit is 100/);
+    expect(() =>
+      compileVisualization({
+        spec: {
+          ...rankedSpec,
+          visual: {
+            type: 'template' as const,
+            template: 'ranked-cards' as const,
+            options: { maxRows: 50 },
+          },
+        },
+        dataset: wide,
+        target: 'svg',
+        strict: false,
+      }),
+    ).not.toThrow();
+  });
+
+  it('aligns prep and metricQuery sorts from a single value-role query.sort', () => {
+    const result = compileVisualization({
+      spec: {
+        ...rankedSpec,
+        data: {
+          ...rankedSpec.data,
+          query: {
+            ...rankedSpec.data.query,
+            sorts: [{ fieldId: 'orders_total_revenue', descending: false }],
+          },
+        },
+        visual: {
+          type: 'template' as const,
+          template: 'ranked-cards' as const,
+          options: { sortDescending: true, maxRows: 10 },
+        },
+        emphasis: { mode: 'none' as const },
+        interaction: undefined,
+      },
+      dataset: rankingDataset,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    expect(result.customChart?.metricQuery.sorts).toEqual([
+      { fieldId: 'orders_total_revenue', descending: false },
+    ]);
+    const encoding = (
+      result.customChart?.chartConfig.config.spec as { encoding: { y: { sort: string } } }
+    ).encoding;
+    expect(encoding.y.sort).toBe('x');
+  });
+
+  it('rejects ranked-cards query.sorts that are not a single value-role sort', () => {
+    expect(() =>
+      compileVisualization({
+        spec: {
+          ...rankedSpec,
+          data: {
+            ...rankedSpec.data,
+            query: {
+              ...rankedSpec.data.query,
+              sorts: [{ fieldId: 'orders_region', descending: true }],
+            },
+          },
+        },
+        dataset: rankingDataset,
+        target: 'svg',
+        strict: false,
+      }),
+    ).toThrow(/query\.sorts must be a single sort on value role/);
+  });
+
   it('compiles ranked-cards to Custom Chart golden shape', () => {
     const result = compileVisualization({
       spec: rankedSpec,

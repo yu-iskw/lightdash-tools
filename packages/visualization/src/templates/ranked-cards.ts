@@ -1,4 +1,5 @@
 import { requireBoundRole } from '../compile/bind';
+import { VisualizationError } from '../errors';
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
 import { buildAlignedMetricQuery, toCustomChartResult } from '../targets/custom-chart/compile';
@@ -11,6 +12,7 @@ import type { LayoutBar, LayoutNode } from '../layout/types';
 import type { FieldRoleMap, VisualizationSpecV1 } from '../spec/types';
 
 const RANKED_CARDS_ID = 'ranked-cards' as const;
+const DEFAULT_RANKED_MAX_ROWS = 20;
 
 function rankedCardsOptions(spec: VisualizationSpecV1) {
   return spec.visual.type === 'template' && spec.visual.template === RANKED_CARDS_ID
@@ -36,6 +38,27 @@ function sortRows(
     const bv = asNumber(b[valueField]) ?? 0;
     return sortDescending ? bv - av : av - bv;
   });
+}
+
+/**
+ * One sort authority for prep + Custom Chart metricQuery.
+ * Author query.sorts win when present; they must be a single sort on the value role.
+ */
+function resolveSortDescending(
+  spec: VisualizationSpecV1,
+  valueField: string,
+  optionsSortDescending: boolean,
+): boolean {
+  const sorts = spec.data.query.sorts;
+  if (!sorts || sorts.length === 0) return optionsSortDescending;
+  if (sorts.length !== 1 || sorts[0]?.fieldId !== valueField) {
+    throw new VisualizationError(
+      'INVALID_SPEC',
+      `ranked-cards query.sorts must be a single sort on value role "${valueField}"`,
+      { sorts, valueField },
+    );
+  }
+  return sorts[0].descending;
 }
 
 function findEmphasizedIndex(
@@ -67,6 +90,8 @@ export function prepareRankedCardsData(input: {
   categoryField: string;
   valueField: string;
   secondaryField?: string;
+  maxRows: number;
+  sortDescending: boolean;
   title: string;
   message: string | undefined;
   warnings: VisualizationWarning[];
@@ -74,11 +99,15 @@ export function prepareRankedCardsData(input: {
   const warnings: VisualizationWarning[] = [];
   const options = rankedCardsOptions(input.spec);
 
-  const maxRows = options?.maxRows ?? 20;
-  const sortDescending = options?.sortDescending !== false;
+  const maxRows = options?.maxRows ?? DEFAULT_RANKED_MAX_ROWS;
   const valueField = requireBoundRole(input.boundRoles, 'value');
   const categoryField = requireBoundRole(input.boundRoles, 'category');
   const secondaryField = input.boundRoles.secondaryValue;
+  const sortDescending = resolveSortDescending(
+    input.spec,
+    valueField,
+    options?.sortDescending !== false,
+  );
   const valueCol = input.dataset.columns.find((c) => c.fieldId === valueField);
   const categoryCol = input.dataset.columns.find((c) => c.fieldId === categoryField);
 
@@ -104,6 +133,8 @@ export function prepareRankedCardsData(input: {
     categoryField,
     valueField,
     secondaryField,
+    maxRows,
+    sortDescending,
     title:
       input.spec.accessibility?.title ??
       input.spec.metadata?.title ??
@@ -124,14 +155,15 @@ function buildBars(
     : undefined;
 
   const values = rows.map((r) => asNumber(r[valueField]) ?? 0);
-  const maxAbs = Math.max(...values.map((v) => Math.abs(v)), 1);
+  let maxAbs = 1;
+  for (const v of values) maxAbs = Math.max(maxAbs, Math.abs(v));
   const emphasisMode = context.spec.emphasis?.mode ?? 'max';
   const emphasisField = context.spec.emphasis?.field ?? valueField;
   const emphasizedIndex = findEmphasizedIndex(rows, emphasisField, emphasisMode);
 
   return rows.map((row, index) => {
     const cell = row[valueField];
-    const numeric = asNumber(cell) ?? 0;
+    const numeric = values[index] ?? 0;
     const label = toDisplayString(row[categoryField]);
     if (label.length > 40) {
       warnings.push({
@@ -173,7 +205,7 @@ export const rankedCardsTemplate: VisualizationTemplate = {
     secondaryValue: { required: false, dataTypes: ['number'] },
   },
   supportedTargets: ['svg', 'standalone-html', 'lightdash-custom-chart'],
-  maxRows: 20,
+  maxRows: DEFAULT_RANKED_MAX_ROWS,
   compile(context: TemplateCompileContext) {
     const prepared = prepareRankedCardsData(context);
     const bars = buildBars(context, prepared);
@@ -199,7 +231,6 @@ export const rankedCardsTemplate: VisualizationTemplate = {
   compileCustomChart(context: TemplateCompileContext) {
     const prepared = prepareRankedCardsData(context);
     const warnings = [...prepared.warnings];
-    const sortDescending = rankedCardsOptions(context.spec)?.sortDescending !== false;
 
     if (prepared.secondaryField !== undefined) {
       warnings.push({
@@ -235,7 +266,7 @@ export const rankedCardsTemplate: VisualizationTemplate = {
           field: prepared.categoryField,
           type: 'nominal',
           // Match prepareRankedCardsData / SVG order ('-x' = descending by measure).
-          sort: sortDescending ? '-x' : 'x',
+          sort: prepared.sortDescending ? '-x' : 'x',
           title:
             context.dataset.columns.find((c) => c.fieldId === prepared.categoryField)?.label ??
             prepared.categoryField,
@@ -257,9 +288,9 @@ export const rankedCardsTemplate: VisualizationTemplate = {
     return toCustomChartResult({
       vegaSpec,
       metricQuery: buildAlignedMetricQuery(context.spec, {
-        presentationLimit: rankedCardsOptions(context.spec)?.maxRows ?? 20,
+        presentationLimit: prepared.maxRows,
         valueField: prepared.valueField,
-        sortDescending,
+        sortDescending: prepared.sortDescending,
       }),
       warnings,
     });

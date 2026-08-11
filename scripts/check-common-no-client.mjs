@@ -70,40 +70,31 @@ function scanForbiddenImports(dir, pkgLabel, patterns) {
   }
 }
 
-forbidPackageDeps(COMMON_DIR, 'packages/common', [CLIENT_PKG]);
-scanForbiddenImports(COMMON_DIR, '@lightdash-tools/common', [
-  {
-    re: /(?:from|import)\s+['"](@lightdash-tools\/client|[\w./-]*\/client)['"]/g,
-    label: '@lightdash-tools/client',
-  },
-  {
-    re: /require\s*\(\s*['"](@lightdash-tools\/client|[\w./-]*\/client)['"]\s*\)/g,
-    label: '@lightdash-tools/client',
-  },
-]);
-
-if (fs.existsSync(VISUALIZATION_DIR)) {
-  forbidPackageDeps(VISUALIZATION_DIR, 'packages/visualization', [CLIENT_PKG, MCP_PKG]);
-  // Match package root, subpaths, and relative escapes into client/mcp trees.
-  scanForbiddenImports(VISUALIZATION_DIR, '@lightdash-tools/visualization', [
+/** Match package root, subpaths, and relative escapes into a forbidden package tree. */
+function forbiddenModulePatterns(pkgName) {
+  const leaf = pkgName.split('/').pop();
+  const escaped = pkgName.replaceAll('/', '\\/');
+  const moduleExpr = `${escaped}(?:\\/[^'"]*)?|[\\w./-]*\\/${leaf}(?:\\/[^'"]*)?`;
+  return [
     {
-      re: /(?:from|import)\s+['"](@lightdash-tools\/client(?:\/[^'"]*)?|[\w./-]*\/client(?:\/[^'"]*)?)['"]/g,
-      label: '@lightdash-tools/client',
+      re: new RegExp(`(?:from|import)\\s+['"](${moduleExpr})['"]`, 'g'),
+      label: pkgName,
     },
     {
-      re: /(?:from|import)\s+['"](@lightdash-tools\/mcp(?:\/[^'"]*)?|[\w./-]*\/mcp(?:\/[^'"]*)?)['"]/g,
-      label: '@lightdash-tools/mcp',
+      re: new RegExp(`require\\s*\\(\\s*['"](${moduleExpr})['"]\\s*\\)`, 'g'),
+      label: pkgName,
     },
-    {
-      re: /require\s*\(\s*['"](@lightdash-tools\/client(?:\/[^'"]*)?|[\w./-]*\/client(?:\/[^'"]*)?)['"]\s*\)/g,
-      label: '@lightdash-tools/client',
-    },
-    {
-      re: /require\s*\(\s*['"](@lightdash-tools\/mcp(?:\/[^'"]*)?|[\w./-]*\/mcp(?:\/[^'"]*)?)['"]\s*\)/g,
-      label: '@lightdash-tools/mcp',
-    },
-  ]);
+  ];
 }
+
+forbidPackageDeps(COMMON_DIR, 'packages/common', [CLIENT_PKG]);
+scanForbiddenImports(COMMON_DIR, '@lightdash-tools/common', forbiddenModulePatterns(CLIENT_PKG));
+
+forbidPackageDeps(VISUALIZATION_DIR, 'packages/visualization', [CLIENT_PKG, MCP_PKG]);
+scanForbiddenImports(VISUALIZATION_DIR, '@lightdash-tools/visualization', [
+  ...forbiddenModulePatterns(CLIENT_PKG),
+  ...forbiddenModulePatterns(MCP_PKG),
+]);
 
 if (errors.length > 0) {
   errors.forEach((msg) => process.stderr.write(msg + '\n'));
