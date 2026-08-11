@@ -66,16 +66,18 @@ export function assertNoExternalDataUrls(spec: Record<string, unknown>): void {
 /** Align LVS query + explore with OpenAPI MetricQuery required fields. */
 export function buildAlignedMetricQuery(
   spec: VisualizationSpecV1,
-  limitFallback: number,
+  displayRowCount: number,
 ): CustomChartCompileResult['metricQuery'] {
   const q = spec.data.query;
+  // Keep live re-query limit aligned with the embedded/truncated visual row count.
+  const limit = typeof q.limit === 'number' ? Math.min(q.limit, displayRowCount) : displayRowCount;
   return {
     exploreName: spec.data.source.explore,
     dimensions: q.dimensions,
     metrics: q.metrics,
     filters: q.filters ?? {},
     sorts: q.sorts ?? [],
-    limit: q.limit ?? limitFallback,
+    limit,
     tableCalculations: [],
   };
 }

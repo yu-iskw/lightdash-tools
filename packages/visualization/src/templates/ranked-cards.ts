@@ -64,10 +64,7 @@ export function prepareRankedCardsData(input: {
   warnings: VisualizationWarning[];
 } {
   const warnings: VisualizationWarning[] = [];
-  const options =
-    input.spec.visual.type === 'template' && input.spec.visual.template === 'ranked-cards'
-      ? input.spec.visual.options
-      : undefined;
+  const options = rankedCardsOptions(input.spec);
 
   const maxRows = options?.maxRows ?? 20;
   const sortDescending = options?.sortDescending !== false;
@@ -155,7 +152,7 @@ function buildBars(
 }
 
 export const rankedCardsTemplate: VisualizationTemplate = {
-  id: 'ranked-cards',
+  id: RANKED_CARDS_ID,
   version: '1.0.0',
   title: 'Ranked cards',
   description: 'Ranked categorical comparison with value bars',
@@ -192,6 +189,7 @@ export const rankedCardsTemplate: VisualizationTemplate = {
   compileCustomChart(context: TemplateCompileContext) {
     const prepared = prepareRankedCardsData(context);
     const warnings = [...prepared.warnings];
+    const sortDescending = rankedCardsOptions(context.spec)?.sortDescending !== false;
 
     if (prepared.secondaryField !== undefined) {
       warnings.push({
@@ -226,7 +224,8 @@ export const rankedCardsTemplate: VisualizationTemplate = {
         y: {
           field: prepared.categoryField,
           type: 'nominal',
-          sort: '-x',
+          // Match prepareRankedCardsData / SVG order ('-x' = descending by measure).
+          sort: sortDescending ? '-x' : 'x',
           title:
             context.dataset.columns.find((c) => c.fieldId === prepared.categoryField)?.label ??
             prepared.categoryField,

@@ -357,6 +357,50 @@ describe('compileVisualization', () => {
     expect(values[0]?.url).toBe('https://example.com/a');
   });
 
+  it('aligns Custom Chart sort and limit with SVG truncation', () => {
+    const manyRows = parseVisualizationDataset({
+      columns: rankingDataset.columns,
+      rows: [
+        { orders_region: 'low', orders_total_revenue: 1, orders_revenue_yoy: 0.01 },
+        { orders_region: 'mid', orders_total_revenue: 5, orders_revenue_yoy: 0.01 },
+        { orders_region: 'high', orders_total_revenue: 9, orders_revenue_yoy: 0.01 },
+      ],
+    });
+    const ascendingSpec = {
+      ...rankedSpec,
+      data: {
+        ...rankedSpec.data,
+        query: {
+          ...rankedSpec.data.query,
+          limit: 500,
+        },
+      },
+      visual: {
+        type: 'template' as const,
+        template: 'ranked-cards' as const,
+        options: { sortDescending: false, maxRows: 2 },
+      },
+      emphasis: { mode: 'none' as const },
+    };
+    const custom = compileVisualization({
+      spec: ascendingSpec,
+      dataset: manyRows,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    const encoding = (
+      custom.customChart?.chartConfig.config.spec as {
+        encoding: { y: { sort: string } };
+        data: { values: Array<Record<string, unknown>> };
+      }
+    ).encoding;
+    expect(encoding.y.sort).toBe('x');
+    expect(custom.customChart?.metricQuery.limit).toBe(2);
+    expect(
+      (custom.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }).data.values,
+    ).toHaveLength(2);
+  });
+
   it('truncates Custom Chart rows consistently with SVG bar count', () => {
     const manyRows = parseVisualizationDataset({
       columns: rankingDataset.columns,
