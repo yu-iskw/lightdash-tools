@@ -396,6 +396,9 @@ describe('compileVisualization', () => {
     ).encoding;
     expect(encoding.y.sort).toBe('x');
     expect(custom.customChart?.metricQuery.limit).toBe(2);
+    expect(custom.customChart?.metricQuery.sorts).toEqual([
+      { fieldId: 'orders_total_revenue', descending: false },
+    ]);
     expect(
       (custom.customChart?.chartConfig.config.spec as { data: { values: unknown[] } }).data.values,
     ).toHaveLength(2);

@@ -254,7 +254,11 @@ export const rankedCardsTemplate: VisualizationTemplate = {
 
     return toCustomChartResult({
       vegaSpec,
-      metricQuery: buildAlignedMetricQuery(context.spec, prepared.rows.length),
+      metricQuery: buildAlignedMetricQuery(context.spec, {
+        rowCount: prepared.rows.length,
+        valueField: prepared.valueField,
+        sortDescending,
+      }),
       warnings,
     });
   },
