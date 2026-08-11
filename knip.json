@@ -69,6 +69,10 @@
     "packages/mcp": {
       "entry": ["src/**/*.test.ts"],
       "project": ["src/**/*.ts"]
+    },
+    "packages/visualization": {
+      "entry": ["src/**/*.test.ts"],
+      "project": ["src/**/*.ts"]
     }
   }
 }

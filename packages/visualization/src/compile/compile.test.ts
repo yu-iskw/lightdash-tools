@@ -1,0 +1,299 @@
+/**
+ * Golden + unit tests for LVS compile / render.
+ */
+
+import { describe, expect, it } from 'vitest';
+
+import {
+  VisualizationError,
+  compileVisualization,
+  createDataset,
+  recommendVisualization,
+  validateVisualizationSpec,
+} from '../index';
+
+const rankingDataset = createDataset({
+  columns: [
+    {
+      fieldId: 'orders_region',
+      label: 'Region',
+      semanticType: 'dimension',
+      dataType: 'string',
+    },
+    {
+      fieldId: 'orders_total_revenue',
+      label: 'Revenue',
+      semanticType: 'metric',
+      dataType: 'number',
+      format: { type: 'currency', currency: 'USD' },
+    },
+    {
+      fieldId: 'orders_revenue_yoy',
+      label: 'YoY',
+      semanticType: 'metric',
+      dataType: 'number',
+      format: { type: 'percent', maximumFractionDigits: 1 },
+    },
+  ],
+  rows: [
+    { orders_region: 'APAC', orders_total_revenue: 8_400_000, orders_revenue_yoy: 0.31 },
+    { orders_region: 'EMEA', orders_total_revenue: 6_100_000, orders_revenue_yoy: 0.12 },
+    {
+      orders_region: 'North America',
+      orders_total_revenue: 5_200_000,
+      orders_revenue_yoy: 0.08,
+    },
+    { orders_region: 'LATAM', orders_total_revenue: 2_100_000, orders_revenue_yoy: 0.04 },
+  ],
+});
+
+const kpiDataset = createDataset({
+  columns: [
+    {
+      fieldId: 'orders_total_revenue',
+      label: 'Revenue',
+      semanticType: 'metric',
+      dataType: 'number',
+      format: { type: 'currency', currency: 'USD' },
+    },
+    {
+      fieldId: 'orders_revenue_yoy',
+      label: 'YoY',
+      semanticType: 'metric',
+      dataType: 'number',
+      format: { type: 'percent' },
+    },
+  ],
+  rows: [{ orders_total_revenue: 23_400_000, orders_revenue_yoy: 0.175 }],
+});
+
+const rankedSpec = {
+  version: '1' as const,
+  metadata: { title: 'Revenue health' },
+  intent: { type: 'rank' as const, message: 'APAC is the strongest growth region' },
+  data: {
+    source: { type: 'metricQuery' as const, explore: 'orders' },
+    query: {
+      dimensions: ['orders_region'],
+      metrics: ['orders_total_revenue', 'orders_revenue_yoy'],
+    },
+    roles: {
+      category: 'orders_region',
+      value: 'orders_total_revenue',
+      secondaryValue: 'orders_revenue_yoy',
+    },
+  },
+  visual: { type: 'template' as const, template: 'ranked-cards' as const },
+  emphasis: { mode: 'max' as const, field: 'orders_revenue_yoy' },
+  interaction: {
+    tooltip: true,
+    selection: { type: 'single' as const, field: 'orders_region' },
+    actions: [{ trigger: 'selection' as const, action: { type: 'rerunQuery' as const } }],
+  },
+  accessibility: {
+    title: 'Revenue by region',
+    description: 'Regions ranked by total revenue',
+  },
+};
+
+const kpiSpec = {
+  version: '1' as const,
+  metadata: { title: 'Total revenue' },
+  intent: { type: 'overview' as const },
+  data: {
+    source: { type: 'metricQuery' as const, explore: 'orders' },
+    query: {
+      dimensions: [],
+      metrics: ['orders_total_revenue', 'orders_revenue_yoy'],
+    },
+    roles: {
+      value: 'orders_total_revenue',
+      secondaryValue: 'orders_revenue_yoy',
+    },
+  },
+  visual: { type: 'template' as const, template: 'metric-hero' as const },
+};
+
+describe('validateVisualizationSpec', () => {
+  it('accepts a valid ranked-cards document', () => {
+    const spec = validateVisualizationSpec(rankedSpec);
+    expect(spec.version).toBe('1');
+    expect(spec.visual.type).toBe('template');
+  });
+
+  it('rejects unsupported versions', () => {
+    expect(() => validateVisualizationSpec({ ...rankedSpec, version: '2' })).toThrow(
+      VisualizationError,
+    );
+  });
+
+  it('rejects empty roles', () => {
+    expect(() =>
+      validateVisualizationSpec({
+        ...rankedSpec,
+        data: { ...rankedSpec.data, roles: {} },
+      }),
+    ).toThrow(VisualizationError);
+  });
+});
+
+describe('compileVisualization', () => {
+  it('renders deterministic SVG for ranked-cards', () => {
+    const a = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'svg',
+    });
+    const b = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'svg',
+    });
+    expect(a.svg).toBeDefined();
+    expect(a.svg).toBe(b.svg);
+    expect(a.svg).toContain('<svg');
+    expect(a.svg).toContain('APAC');
+    expect(a.warnings.some((w) => w.code === 'CAPABILITY_DEGRADED')).toBe(true);
+  });
+
+  it('escapes XSS payload values in SVG and HTML', () => {
+    const xssDataset = createDataset({
+      columns: rankingDataset.columns,
+      rows: [
+        {
+          orders_region: '<img src=x onerror=alert(1)>',
+          orders_total_revenue: 1,
+          orders_revenue_yoy: 0.1,
+        },
+      ],
+    });
+    const svgResult = compileVisualization({
+      spec: rankedSpec,
+      dataset: xssDataset,
+      target: 'svg',
+    });
+    expect(svgResult.svg).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(svgResult.svg).not.toContain('<img src=x onerror=alert(1)>');
+
+    const htmlResult = compileVisualization({
+      spec: rankedSpec,
+      dataset: xssDataset,
+      target: 'standalone-html',
+    });
+    expect(htmlResult.html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+    expect(htmlResult.html).not.toContain('<img src=x onerror=alert(1)>');
+  });
+
+  it('does not embed dataset rows in HTML by default', () => {
+    const result = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'standalone-html',
+    });
+    expect(result.html).toBeDefined();
+    expect(result.html).not.toContain('id="lvs-data"');
+  });
+
+  it('embeds dataset rows only when embedData is true', () => {
+    const result = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'standalone-html',
+      embedData: true,
+    });
+    expect(result.html).toContain('id="lvs-data"');
+    expect(result.html).toContain('Protect it according to data sensitivity');
+  });
+
+  it('compiles ranked-cards to Custom Chart golden shape', () => {
+    const result = compileVisualization({
+      spec: rankedSpec,
+      dataset: rankingDataset,
+      target: 'lightdash-custom-chart',
+      strict: false,
+    });
+    expect(result.customChart).toEqual(
+      expect.objectContaining({
+        chartConfig: {
+          type: 'custom',
+          config: {
+            spec: expect.objectContaining({
+              $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+              mark: expect.objectContaining({ type: 'bar' }),
+              data: expect.objectContaining({ values: expect.any(Array) }),
+            }),
+          },
+        },
+        metricQuery: expect.objectContaining({
+          exploreName: 'orders',
+          dimensions: ['orders_region'],
+          metrics: ['orders_total_revenue', 'orders_revenue_yoy'],
+        }),
+      }),
+    );
+    const json = JSON.stringify(result.customChart?.chartConfig.config.spec);
+    expect(json).not.toMatch(/"url"\s*:/);
+  });
+
+  it('rejects metric-hero for Custom Chart target', () => {
+    expect(() =>
+      compileVisualization({
+        spec: kpiSpec,
+        dataset: kpiDataset,
+        target: 'lightdash-custom-chart',
+      }),
+    ).toThrow(/does not support target/);
+  });
+
+  it('bans vegaLite escape hatch on governed compile', () => {
+    expect(() =>
+      compileVisualization({
+        spec: {
+          ...rankedSpec,
+          visual: { type: 'vegaLite', spec: { data: { url: 'https://evil.example/data.json' } } },
+        },
+        dataset: rankingDataset,
+        target: 'svg',
+      }),
+    ).toThrow(/vegaLite is banned/);
+  });
+
+  it('fails missing required roles', () => {
+    expect(() =>
+      compileVisualization({
+        spec: {
+          ...rankedSpec,
+          data: {
+            ...rankedSpec.data,
+            roles: { value: 'orders_total_revenue' },
+          },
+        },
+        dataset: rankingDataset,
+        target: 'svg',
+      }),
+    ).toThrow(/requires role "category"/);
+  });
+
+  it('renders metric-hero SVG', () => {
+    const result = compileVisualization({
+      spec: kpiSpec,
+      dataset: kpiDataset,
+      target: 'svg',
+    });
+    expect(result.svg).toContain('Revenue');
+    expect(result.templateId).toBe('metric-hero');
+  });
+});
+
+describe('recommendVisualization', () => {
+  it('prefers ranked-cards for categorical multi-row data', () => {
+    const recs = recommendVisualization({ dataset: rankingDataset, intent: 'rank' });
+    expect(recs[0]?.templateId).toBe('ranked-cards');
+    expect(recs[0]?.score).toBeGreaterThan(0);
+  });
+
+  it('prefers metric-hero for single-row KPI data', () => {
+    const recs = recommendVisualization({ dataset: kpiDataset, intent: 'overview' });
+    expect(recs[0]?.templateId).toBe('metric-hero');
+  });
+});

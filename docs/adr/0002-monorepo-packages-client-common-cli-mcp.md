@@ -6,6 +6,8 @@ Date: 2026-07-31
 
 Accepted
 
+Amended by [26. Add visualization package for LVS multi-target compilers](0026-add-visualization-package-for-lvs-multi-target-compilers.md)
+
 ## Context
 
 Consumers need typed Lightdash API access, a human/agent CLI, and an MCP server without duplicating auth, transport, or domain types. The npm scope should read as tooling for Lightdash, not as the Lightdash product itself.
@@ -20,6 +22,8 @@ We structure the monorepo as pnpm workspace packages under the `@lightdash-tools
 4. **`@lightdash-tools/mcp`** — MCP server with a shared tool registry and **profile** mounts (see [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)).
 
 Workspace package names match `@lightdash-tools/<dirname>`. CLI and MCP depend on `client` and `common`; they do not call Lightdash HTTP directly.
+
+> **Amendment:** [ADR-0026](0026-add-visualization-package-for-lvs-multi-target-compilers.md) adds `@lightdash-tools/visualization` as a fifth package for LVS compilers/renderers. It may depend on `common` but must not depend on `client` or `mcp`.
 
 ## Consequences
 

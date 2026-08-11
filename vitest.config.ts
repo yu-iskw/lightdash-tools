@@ -13,6 +13,10 @@ export default defineConfig({
     alias: {
       '@lightdash-tools/client': path.resolve(rootDir, 'packages/client/src/index.ts'),
       '@lightdash-tools/common': path.resolve(rootDir, 'packages/common/src/index.ts'),
+      '@lightdash-tools/visualization': path.resolve(
+        rootDir,
+        'packages/visualization/src/index.ts',
+      ),
     },
   },
   test: {

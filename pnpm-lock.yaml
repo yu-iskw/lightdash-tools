@@ -85,6 +85,9 @@ importers:
       '@lightdash-tools/common':
         specifier: workspace:*
         version: link:../common
+      '@lightdash-tools/visualization':
+        specifier: workspace:*
+        version: link:../visualization
       commander:
         specifier: ^15.0.0
         version: 15.0.0
@@ -155,6 +158,16 @@ importers:
       '@modelcontextprotocol/client':
         specifier: 2.0.0
         version: 2.0.0
+      '@types/node':
+        specifier: ^25.9.3
+        version: 25.9.3
+
+  packages/visualization:
+    dependencies:
+      zod:
+        specifier: ^4.4.3
+        version: 4.4.3
+    devDependencies:
       '@types/node':
         specifier: ^25.9.3
         version: 25.9.3

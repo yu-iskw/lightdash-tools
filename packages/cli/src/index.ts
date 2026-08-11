@@ -26,6 +26,7 @@ import { registerSpaceAccessCommand } from './commands/space-access';
 import { registerSpacesCommand } from './commands/spaces';
 import { registerTagsCommand } from './commands/tags';
 import { registerUsersCommand } from './commands/users';
+import { registerVizCommand } from './commands/viz';
 
 // Initialise audit log before any command runs (uses LIGHTDASH_TOOLS_AUDIT_LOG env var).
 initAuditLog(process.env.LIGHTDASH_TOOLS_AUDIT_LOG);
@@ -71,6 +72,7 @@ registerMetricsCommand(program);
 registerSchedulersCommand(program);
 registerTagsCommand(program);
 registerContentCommand(program);
+registerVizCommand(program);
 
 // Parse command line arguments
 program.parse(process.argv);

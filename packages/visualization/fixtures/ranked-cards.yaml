@@ -1,0 +1,26 @@
+version: "1"
+metadata:
+  title: Revenue health
+intent:
+  type: rank
+  message: APAC is the strongest growth region
+data:
+  source:
+    type: metricQuery
+    explore: orders
+  query:
+    dimensions: [orders_region]
+    metrics: [orders_total_revenue, orders_revenue_yoy]
+  roles:
+    category: orders_region
+    value: orders_total_revenue
+    secondaryValue: orders_revenue_yoy
+visual:
+  type: template
+  template: ranked-cards
+emphasis:
+  mode: max
+  field: orders_revenue_yoy
+accessibility:
+  title: Revenue by region
+  description: Regions ranked by total revenue

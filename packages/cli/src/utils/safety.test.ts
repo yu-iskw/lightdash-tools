@@ -261,6 +261,22 @@ describe('CLI wrapAction', () => {
     expect(processExitSpy).toHaveBeenCalledWith(1);
   });
 
+  it('should ignore Commander Command instance passed as final action arg', async () => {
+    const cmd = new Command('viz-validate');
+    cmd.option('-f, --file <path>', 'file');
+    cmd.setOptionValueWithSource('safetyMode', SafetyMode.READ_ONLY, 'cli');
+    cmd.setOptionValueWithSource('file', 'spec.yaml', 'cli');
+    // Simulate circular Command graph (parent ↔ commands).
+    const root = new Command('root');
+    root.addCommand(cmd);
+
+    const wrapped = wrapAction(READ_ONLY_DEFAULT, mockAction);
+    await wrapped.call(cmd, { file: 'spec.yaml' }, cmd);
+
+    expect(mockAction).toHaveBeenCalled();
+    expect(processExitSpy).not.toHaveBeenCalled();
+  });
+
   it('should re-throw when the action throws', async () => {
     const failingAction = vi.fn().mockRejectedValue(new Error('action failed'));
     const cmd = new Command();

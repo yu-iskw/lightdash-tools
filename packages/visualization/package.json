@@ -1,29 +1,22 @@
 {
-  "name": "@lightdash-tools/cli",
+  "name": "@lightdash-tools/visualization",
   "version": "0.14.0",
-  "description": "CLI for Lightdash AI.",
+  "description": "Lightdash Visualization Specification (LVS) validators and multi-target compilers.",
   "keywords": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yu-iskw/lightdash-tools.git",
-    "directory": "packages/cli"
+    "directory": "packages/visualization"
   },
   "license": "Apache-2.0",
   "author": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": {
-    "lightdash-tools": "./dist/index.js"
-  },
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "@lightdash-tools/client": "workspace:*",
-    "@lightdash-tools/common": "workspace:*",
-    "@lightdash-tools/visualization": "workspace:*",
-    "commander": "^15.0.0",
-    "yaml": "^2.9.0"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^25.9.3"

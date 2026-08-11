@@ -124,6 +124,9 @@ export function wrapAction<T extends unknown[]>(
     // Do NOT validate bare positional strings—they may be free-form (query, name, etc.).
     try {
       for (const arg of args as unknown[]) {
+        // Commander passes the Command instance as the final action argument; it is
+        // circular (parent/commands) and must not be walked for resource IDs.
+        if (arg === this) continue;
         validateResourceIdsInObject(arg);
       }
       validateResourceIdsInObject(this.opts());

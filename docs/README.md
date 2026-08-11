@@ -27,3 +27,10 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 ## Decisions
 
 - [adr/](adr/) — Architecture Decision Records
+
+## RFCs
+
+| Doc | Purpose |
+| --- | --- |
+| [rfc-visualization-platform.md](rfc-visualization-platform.md) | LVS visualization package (SVG / HTML / Custom Chart) |
+| [rfc-token-efficient-mcp-prompts.md](rfc-token-efficient-mcp-prompts.md) | Progressive-disclosure MCP prompt context |
