@@ -1,13 +1,11 @@
-/**
- * metric-hero template — single headline KPI (+ optional secondary).
- */
-
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
 
+import { requireBoundRole } from '../compile/bind';
+
 import type { VisualizationWarning } from '../errors';
-import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 import type { LayoutNode } from '../layout/types';
+import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 
 function buildMetricHeroChildren(context: TemplateCompileContext): {
   children: LayoutNode[];
@@ -16,7 +14,7 @@ function buildMetricHeroChildren(context: TemplateCompileContext): {
 } {
   const warnings: VisualizationWarning[] = [];
   const row = context.dataset.rows[0] ?? {};
-  const valueField = context.boundRoles.value!;
+  const valueField = requireBoundRole(context.boundRoles, 'value');
   const secondaryField = context.boundRoles.secondaryValue;
   const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
   const secondaryCol = secondaryField

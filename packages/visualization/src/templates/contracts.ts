@@ -1,22 +1,16 @@
-/**
- * Template contracts and registry.
- */
-
 import type { TemplateRoleRequirements } from '../compile/bind';
 import type { CompileTarget } from '../compile/capability';
 import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
 import type { LayoutDocument } from '../layout/types';
-import type { VisualizationIntentType, VisualizationSpecV1 } from '../spec/types';
-import type { VisualizationTheme } from '../theme/lightdash';
+import type { FieldRoleMap, VisualizationIntentType, VisualizationSpecV1 } from '../spec/types';
 
 export type TemplateId = 'metric-hero' | 'ranked-cards';
 
 export interface TemplateCompileContext {
   spec: VisualizationSpecV1;
   dataset: VisualizationDataset;
-  boundRoles: Partial<Record<string, string>>;
-  theme: VisualizationTheme;
+  boundRoles: FieldRoleMap;
   target: CompileTarget;
 }
 

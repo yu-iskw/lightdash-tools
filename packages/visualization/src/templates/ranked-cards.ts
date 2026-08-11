@@ -1,14 +1,10 @@
-/**
- * ranked-cards template — categorical ranking with bars.
- */
-
+import { requireBoundRole } from '../compile/bind';
 import { toDisplayString } from '../format/escape';
 import { formatValue } from '../format/number';
 
 import type { VisualizationWarning } from '../errors';
-import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 import type { LayoutBar, LayoutNode } from '../layout/types';
-import type { RankedCardsOptions } from '../spec/types';
+import type { TemplateCompileContext, VisualizationTemplate } from './contracts';
 
 function asNumber(value: unknown): number | null {
   if (typeof value === 'number' && !Number.isNaN(value)) return value;
@@ -54,8 +50,8 @@ function buildBars(
   rows: Array<Record<string, unknown>>,
   warnings: VisualizationWarning[],
 ): LayoutBar[] {
-  const categoryField = context.boundRoles.category!;
-  const valueField = context.boundRoles.value!;
+  const categoryField = requireBoundRole(context.boundRoles, 'category');
+  const valueField = requireBoundRole(context.boundRoles, 'value');
   const secondaryField = context.boundRoles.secondaryValue;
   const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
   const secondaryCol = secondaryField
@@ -106,16 +102,15 @@ function prepareRankedRows(
   title: string;
   message: string | undefined;
 } {
-  const options = (
+  const options =
     context.spec.visual.type === 'template' && context.spec.visual.template === 'ranked-cards'
       ? context.spec.visual.options
-      : undefined
-  ) as RankedCardsOptions | undefined;
+      : undefined;
 
   const maxRows = options?.maxRows ?? 20;
   const sortDescending = options?.sortDescending !== false;
-  const valueField = context.boundRoles.value!;
-  const categoryField = context.boundRoles.category!;
+  const valueField = requireBoundRole(context.boundRoles, 'value');
+  const categoryField = requireBoundRole(context.boundRoles, 'category');
   const valueCol = context.dataset.columns.find((c) => c.fieldId === valueField);
   const categoryCol = context.dataset.columns.find((c) => c.fieldId === categoryField);
 

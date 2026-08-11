@@ -7,12 +7,12 @@ import { describe, expect, it } from 'vitest';
 import {
   VisualizationError,
   compileVisualization,
-  createDataset,
+  parseVisualizationDataset,
   recommendVisualization,
   validateVisualizationSpec,
 } from '../index';
 
-const rankingDataset = createDataset({
+const rankingDataset = parseVisualizationDataset({
   columns: [
     {
       fieldId: 'orders_region',
@@ -47,7 +47,7 @@ const rankingDataset = createDataset({
   ],
 });
 
-const kpiDataset = createDataset({
+const kpiDataset = parseVisualizationDataset({
   columns: [
     {
       fieldId: 'orders_total_revenue',
@@ -157,7 +157,7 @@ describe('compileVisualization', () => {
   });
 
   it('escapes XSS payload values in SVG and HTML', () => {
-    const xssDataset = createDataset({
+    const xssDataset = parseVisualizationDataset({
       columns: rankingDataset.columns,
       rows: [
         {

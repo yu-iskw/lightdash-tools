@@ -1,12 +1,9 @@
-/**
- * Custom Chart (Vega-Lite) compile for supported templates.
- */
-
+import { requireBoundRole } from '../../compile/bind';
 import { VisualizationError } from '../../errors';
 
 import type { VisualizationDataset } from '../../data/dataset';
 import type { VisualizationWarning } from '../../errors';
-import type { VisualizationSpecV1 } from '../../spec/types';
+import type { FieldRoleMap, VisualizationSpecV1 } from '../../spec/types';
 
 export interface CustomChartCompileResult {
   chartConfig: {
@@ -39,10 +36,10 @@ function assertNoExternalResources(spec: Record<string, unknown>): void {
 function rankedCardsVegaLite(
   spec: VisualizationSpecV1,
   dataset: VisualizationDataset,
-  boundRoles: Partial<Record<string, string>>,
+  boundRoles: FieldRoleMap,
 ): Record<string, unknown> {
-  const category = boundRoles.category!;
-  const value = boundRoles.value!;
+  const category = requireBoundRole(boundRoles, 'category');
+  const value = requireBoundRole(boundRoles, 'value');
   const values = dataset.rows.map((row) => ({
     [category]: row[category],
     [value]: row[value],
@@ -79,7 +76,7 @@ function rankedCardsVegaLite(
 export function compileCustomChart(input: {
   spec: VisualizationSpecV1;
   dataset: VisualizationDataset;
-  boundRoles: Partial<Record<string, string>>;
+  boundRoles: FieldRoleMap;
   templateId: string;
 }): CustomChartCompileResult {
   if (input.spec.visual.type !== 'template') {
@@ -89,27 +86,15 @@ export function compileCustomChart(input: {
     );
   }
 
-  let vegaSpec: Record<string, unknown>;
-  const warnings: VisualizationWarning[] = [];
-
-  switch (input.templateId) {
-    case 'ranked-cards':
-      vegaSpec = rankedCardsVegaLite(input.spec, input.dataset, input.boundRoles);
-      break;
-    case 'metric-hero':
-      throw new VisualizationError(
-        'TEMPLATE_TARGET_UNSUPPORTED',
-        'metric-hero does not support lightdash-custom-chart in MVP',
-        { templateId: input.templateId },
-      );
-    default:
-      throw new VisualizationError(
-        'TEMPLATE_TARGET_UNSUPPORTED',
-        `Template "${input.templateId}" does not support lightdash-custom-chart`,
-        { templateId: input.templateId },
-      );
+  if (input.templateId !== 'ranked-cards') {
+    throw new VisualizationError(
+      'TEMPLATE_TARGET_UNSUPPORTED',
+      `Template "${input.templateId}" does not support lightdash-custom-chart`,
+      { templateId: input.templateId },
+    );
   }
 
+  const vegaSpec = rankedCardsVegaLite(input.spec, input.dataset, input.boundRoles);
   const q = input.spec.data.query;
   return {
     chartConfig: {
@@ -124,6 +109,6 @@ export function compileCustomChart(input: {
       sorts: q.sorts ?? [],
       limit: q.limit,
     },
-    warnings,
+    warnings: [],
   };
 }

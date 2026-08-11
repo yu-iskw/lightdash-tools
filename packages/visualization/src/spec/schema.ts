@@ -46,12 +46,6 @@ const rolesSchema = z
     message: 'At least one field role binding is required',
   });
 
-const metricHeroOptionsSchema = z
-  .object({
-    showSecondary: z.boolean().optional(),
-  })
-  .strict();
-
 const rankedCardsOptionsSchema = z
   .object({
     maxRows: z.number().int().positive().max(50).optional(),
@@ -64,7 +58,6 @@ const templateVisualizationSchema = z.discriminatedUnion('template', [
     .object({
       type: z.literal('template'),
       template: z.literal('metric-hero'),
-      options: metricHeroOptionsSchema.optional(),
     })
     .strict(),
   z

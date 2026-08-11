@@ -51,10 +51,6 @@ export interface VisualizationDataBinding {
   roles: FieldRoleMap;
 }
 
-export interface MetricHeroOptions {
-  showSecondary?: boolean;
-}
-
 export interface RankedCardsOptions {
   maxRows?: number;
   sortDescending?: boolean;
@@ -64,7 +60,6 @@ export type TemplateVisualization =
   | {
       type: 'template';
       template: 'metric-hero';
-      options?: MetricHeroOptions;
     }
   | {
       type: 'template';

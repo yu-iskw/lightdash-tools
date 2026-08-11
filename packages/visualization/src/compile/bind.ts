@@ -1,7 +1,3 @@
-/**
- * Role binding validation against dataset columns.
- */
-
 import { VisualizationError } from '../errors';
 
 import type {
@@ -52,13 +48,23 @@ function requireColumn(
   return column;
 }
 
+export function requireBoundRole(bound: FieldRoleMap, role: FieldRole): string {
+  const fieldId = bound[role];
+  if (!fieldId) {
+    throw new VisualizationError('MISSING_REQUIRED_ROLE', `Template requires role "${role}"`, {
+      role,
+    });
+  }
+  return fieldId;
+}
+
 export function bindRoles(
   roles: FieldRoleMap,
   dataset: VisualizationDataset,
   requirements: TemplateRoleRequirements,
-): Record<FieldRole, string> {
+): FieldRoleMap {
   const columnById = new Map(dataset.columns.map((c) => [c.fieldId, c]));
-  const bound: Partial<Record<FieldRole, string>> = {};
+  const bound: FieldRoleMap = {};
 
   for (const [role, req] of Object.entries(requirements) as Array<
     [FieldRole, { required: boolean; dataTypes: RoleTypeRequirement }]
@@ -77,11 +83,11 @@ export function bindRoles(
     bound[role] = fieldId;
   }
 
-  for (const [role, fieldId] of Object.entries(roles) as Array<[FieldRole, string]>) {
-    if (bound[role] || fieldId === undefined) continue;
+  for (const [role, fieldId] of Object.entries(roles) as Array<[FieldRole, string | undefined]>) {
+    if (!fieldId || bound[role]) continue;
     requireColumn(columnById, role, fieldId);
     bound[role] = fieldId;
   }
 
-  return bound as Record<FieldRole, string>;
+  return bound;
 }

@@ -1,24 +1,19 @@
-/**
- * Public compilation entrypoint.
- */
-
 import { VisualizationError } from '../errors';
 import { validateVisualizationSpec } from '../spec/validate';
 import { compileCustomChart } from '../targets/custom-chart/compile';
 import { renderHtml } from '../targets/html/render';
 import { renderSvg } from '../targets/svg/render';
 import { getTemplate } from '../templates/registry';
-import { resolveTheme } from '../theme/lightdash';
 
 import { bindRoles } from './bind';
 import { negotiateCapabilities } from './capability';
 
 import type { VisualizationDataset } from '../data/dataset';
 import type { VisualizationWarning } from '../errors';
-import type { CompileTarget } from './capability';
 import type { LayoutDocument } from '../layout/types';
 import type { VisualizationSpecV1 } from '../spec/types';
 import type { CustomChartCompileResult } from '../targets/custom-chart/compile';
+import type { CompileTarget } from './capability';
 
 export interface CompileVisualizationInput {
   spec: unknown;
@@ -79,12 +74,10 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
   });
 
   const boundRoles = bindRoles(spec.data.roles, input.dataset, template.requirements);
-  const theme = resolveTheme();
   const compiled = template.compile({
     spec,
     dataset: input.dataset,
     boundRoles,
-    theme,
     target: input.target,
   });
 
@@ -117,7 +110,6 @@ export function compileVisualization(input: CompileVisualizationInput): CompileV
         embedData: input.embedData === true,
         dataset: input.dataset,
       });
-      result.svg = renderSvg(compiled.layout);
       break;
     case 'lightdash-custom-chart':
       result.customChart = compileCustomChart({

@@ -9,16 +9,12 @@ import { renderSvg } from '../svg/render';
 import type { VisualizationDataset } from '../../data/dataset';
 import type { LayoutDocument, LayoutNode } from '../../layout/types';
 
-function collectInteractiveMeta(root: LayoutNode): { hasBars: boolean } {
-  let hasBars = false;
-  const walk = (node: LayoutNode): void => {
-    if (node.kind === 'bar') hasBars = true;
-    if (node.kind === 'group' || node.kind === 'card') {
-      for (const child of node.children) walk(child);
-    }
-  };
-  walk(root);
-  return { hasBars };
+function layoutHasBars(root: LayoutNode): boolean {
+  if (root.kind === 'bar') return true;
+  if (root.kind === 'group' || root.kind === 'card') {
+    return root.children.some((child) => layoutHasBars(child));
+  }
+  return false;
 }
 
 export interface RenderHtmlOptions {
@@ -30,7 +26,7 @@ export interface RenderHtmlOptions {
 export function renderHtml(layout: LayoutDocument, options: RenderHtmlOptions = {}): string {
   const theme = resolveTheme();
   const svg = renderSvg(layout);
-  const { hasBars } = collectInteractiveMeta(layout.root);
+  const hasBars = layoutHasBars(layout.root);
   const embedData = options.embedData === true;
   const dataBlock =
     embedData && options.dataset

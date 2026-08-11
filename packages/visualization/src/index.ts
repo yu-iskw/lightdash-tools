@@ -20,7 +20,7 @@ export type {
   VisualizationRow,
   DatasetProvenance,
 } from './data/dataset';
-export { createDataset } from './data/dataset';
+export { parseVisualizationDataset, visualizationDatasetSchema } from './data/dataset';
 
 export { VisualizationError } from './errors';
 export type {

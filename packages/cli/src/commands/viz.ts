@@ -1,47 +1,17 @@
-/**
- * CLI: offline visualization validate / compile / render.
- */
-
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import {
   VisualizationError,
   compileVisualization,
-  createDataset,
+  parseVisualizationDataset,
   validateVisualizationSpec,
 } from '@lightdash-tools/visualization';
 
-import { parseJsonOrYaml, readFileOrStdin } from '../utils/file-input';
+import { readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
-import type { VisualizationDataset } from '@lightdash-tools/visualization';
 import type { Command } from 'commander';
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function loadDataset(path: string): VisualizationDataset {
-  const raw = parseJsonOrYaml(readFileSync(path, 'utf-8'));
-  if (!isRecord(raw) || !Array.isArray(raw.columns) || !Array.isArray(raw.rows)) {
-    throw new Error('Dataset must be a JSON/YAML object with columns[] and rows[]');
-  }
-  return createDataset({
-    columns: raw.columns as VisualizationDataset['columns'],
-    rows: raw.rows as VisualizationDataset['rows'],
-    provenance: isRecord(raw.provenance)
-      ? (raw.provenance as VisualizationDataset['provenance'])
-      : undefined,
-    truncated: typeof raw.truncated === 'boolean' ? raw.truncated : undefined,
-    warnings: Array.isArray(raw.warnings) ? (raw.warnings as string[]) : undefined,
-  });
-}
-
-async function loadSpec(file?: string): Promise<unknown> {
-  const content = await readFileOrStdin({ file });
-  return parseJsonOrYaml(content);
-}
 
 function printError(error: unknown): never {
   if (error instanceof VisualizationError) {
@@ -52,6 +22,19 @@ function printError(error: unknown): never {
   }
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
+}
+
+async function runVizAction(action: () => Promise<void>): Promise<void> {
+  try {
+    await action();
+  } catch (error) {
+    printError(error);
+  }
+}
+
+async function loadDataset(path: string) {
+  const raw = await readParsedInput({ file: path });
+  return parseVisualizationDataset(raw);
 }
 
 /**
@@ -68,15 +51,13 @@ export function registerVizCommand(program: Command): void {
     .option('-f, --file <path>', 'LVS file path (YAML or JSON)')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (options: { file?: string }) => {
-        try {
-          const raw = await loadSpec(options.file);
+        await runVizAction(async () => {
+          const raw = await readParsedInput({ file: options.file });
           const spec = validateVisualizationSpec(raw);
           console.log(
             JSON.stringify({ ok: true, version: spec.version, template: spec.visual }, null, 2),
           );
-        } catch (error) {
-          printError(error);
-        }
+        });
       }),
     );
 
@@ -103,9 +84,9 @@ export function registerVizCommand(program: Command): void {
           embedData?: boolean;
           strict?: boolean;
         }) => {
-          try {
-            const raw = await loadSpec(options.file);
-            const dataset = loadDataset(options.dataset);
+          await runVizAction(async () => {
+            const raw = await readParsedInput({ file: options.file });
+            const dataset = await loadDataset(options.dataset);
             if (
               options.target !== 'svg' &&
               options.target !== 'standalone-html' &&
@@ -135,9 +116,7 @@ export function registerVizCommand(program: Command): void {
                 2,
               ),
             );
-          } catch (error) {
-            printError(error);
-          }
+          });
         },
       ),
     );
@@ -160,13 +139,13 @@ export function registerVizCommand(program: Command): void {
           output?: string;
           embedData?: boolean;
         }) => {
-          try {
-            const raw = await loadSpec(options.file);
-            const dataset = loadDataset(options.dataset);
-            const target = options.format === 'html' ? 'standalone-html' : 'svg';
+          await runVizAction(async () => {
+            const raw = await readParsedInput({ file: options.file });
+            const dataset = await loadDataset(options.dataset);
             if (options.format !== 'svg' && options.format !== 'html') {
               throw new Error(`Unsupported format: ${options.format}`);
             }
+            const target = options.format === 'html' ? 'standalone-html' : 'svg';
             const result = compileVisualization({
               spec: raw,
               dataset,
@@ -190,9 +169,7 @@ export function registerVizCommand(program: Command): void {
             } else {
               process.stdout.write(body);
             }
-          } catch (error) {
-            printError(error);
-          }
+          });
         },
       ),
     );

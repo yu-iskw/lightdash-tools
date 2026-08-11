@@ -42,7 +42,8 @@ function collectRequestedCapabilities(
     if (interaction.selection.type === 'multiple') preferred.add('multiSelection');
   }
   for (const binding of interaction?.actions ?? []) {
-    preferred.add(binding.action.type as VisualizationCapability);
+    const actionCap: VisualizationCapability = binding.action.type;
+    preferred.add(actionCap);
   }
 
   return {
