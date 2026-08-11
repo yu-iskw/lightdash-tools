@@ -131,10 +131,18 @@ function recoveryExtrasForPreviewCode(code: string): ToolErrorExtras | undefined
   return PREVIEW_RECOVERY_EXTRAS[code];
 }
 
+/**
+ * Coded tool error for content-developer paths that return preview codes without
+ * throwing PreviewLedgerError (adds recovery extras when the code is known).
+ */
+export function developerCodedErrorResult(code: string, message: string): TextContent {
+  return codedErrorResult(code, message, recoveryExtrasForPreviewCode(code));
+}
+
 /** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */
 export function developerErrorResult(err: unknown): TextContent {
   if (err instanceof PreviewLedgerError) {
-    return codedErrorResult(err.code, err.message, recoveryExtrasForPreviewCode(err.code));
+    return developerCodedErrorResult(err.code, err.message);
   }
   return projectScopeErrorResult(err);
 }

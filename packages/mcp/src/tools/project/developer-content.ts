@@ -26,6 +26,7 @@ import {
   COMPARE_SAFETY,
   VALIDATE_SAFETY,
   WRITE_SAFETY,
+  developerCodedErrorResult,
   registerContentDeveloperTool,
 } from '../../policy/content-developer.js';
 import {
@@ -456,7 +457,7 @@ export function registerDuplicateChart(
       }
       const sourceBaseline = baselineFromResource(sourceRecordAfter);
       if (sourceBaselineBefore?.updatedAt !== sourceBaseline?.updatedAt) {
-        return codedErrorResult(
+        return developerCodedErrorResult(
           'PREVIEW_STALE',
           `Source chart '${args.sourceChartUuidOrSlug}' changed while reading as-code; re-run preview -> confirm`,
         );
@@ -902,7 +903,7 @@ export function registerMoveContent(server: McpServer, contextProvider: McpConte
         isNotFound: isNotFoundError,
       });
       if (resolved.kind === 'error') {
-        return codedErrorResult(resolved.error.code, resolved.error.message);
+        return developerCodedErrorResult(resolved.error.code, resolved.error.message);
       }
       const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
