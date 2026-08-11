@@ -21,7 +21,6 @@ import {
   type PromptInvariant,
 } from './prompt-invariants.js';
 
-
 export type { PromptTopicMeta };
 
 export const MANIFEST_HEADER = 'Detailed resources:' as const;
