@@ -3,47 +3,48 @@ import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 
 import { formatProfilesHelp } from './cli-help.js';
+import { ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT } from './config/env.js';
 import {
   PROMPT_CONTEXT_POLICIES,
   resolvePromptContextPolicy,
+  type PromptContextPolicy,
 } from './config/prompt-context-policy.js';
 import { parseProfileId } from './profiles/index.js';
 import { PACKAGE_VERSION } from './server/version.js';
 
 const program = new Command();
 
-function runStdio(profileId: ProfileId, promptContext?: string): void {
-  let promptContextPolicy;
+function resolvePolicyOrExit(cli?: string): PromptContextPolicy | undefined {
   try {
-    promptContextPolicy = resolvePromptContextPolicy({
-      cli: promptContext,
+    return resolvePromptContextPolicy({
+      cli,
       env: process.env,
     });
   } catch (err) {
     console.error(err instanceof Error ? err.message : err);
     process.exitCode = 1;
-    return;
+    return undefined;
   }
+}
+
+function runStdio(profileId: ProfileId, promptContext?: string): void {
+  const promptContextPolicy = resolvePolicyOrExit(promptContext);
+  if (!promptContextPolicy) return;
   void import('./index.js').then((m) => {
     m.startStdio(profileId, { promptContextPolicy });
   });
 }
 
 function runHttp(promptContext?: string): void {
-  try {
-    // Resolve early so invalid CLI fails before HTTP boot; HTTP also reads env at load.
-    const policy = resolvePromptContextPolicy({ cli: promptContext, env: process.env });
-    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = policy;
-  } catch (err) {
-    console.error(err instanceof Error ? err.message : err);
-    process.exitCode = 1;
-    return;
-  }
+  const policy = resolvePolicyOrExit(promptContext);
+  if (!policy) return;
+  // Resolve early so invalid CLI fails before HTTP boot; HTTP reads env at load.
+  process.env[ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT] = policy;
   void import('./http.js');
 }
 
 const profileList = PROFILE_IDS.join(', ');
-const promptContextHelp = `Prompt context policy (${PROMPT_CONTEXT_POLICIES.join('|')}; env: LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)`;
+const promptContextHelp = `Prompt context policy (${PROMPT_CONTEXT_POLICIES.join('|')}; env: ${ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT})`;
 
 program
   .name('lightdash-mcp')

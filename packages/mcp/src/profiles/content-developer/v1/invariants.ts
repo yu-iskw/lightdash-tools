@@ -2,7 +2,11 @@
  * Content-developer structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const CONTENT_DEVELOPER_INVARIANTS = [
   {
@@ -124,7 +128,6 @@ export const CONTENT_DEVELOPER_INVARIANTS = [
 
 export const CONTENT_DEVELOPER_HARD_BANS = formatHardBansProjection(CONTENT_DEVELOPER_INVARIANTS);
 
-/** All critical invariants — eager in every policy (compact has no core embed). */
-export const CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS = CONTENT_DEVELOPER_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as ReadonlyArray<(typeof CONTENT_DEVELOPER_INVARIANTS)[number]['id']>;
+export const CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS = allInvariantIds(
+  CONTENT_DEVELOPER_INVARIANTS,
+);

@@ -24,7 +24,6 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
-  ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
@@ -44,7 +43,7 @@ import {
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
 import { assertObsoleteEnvRejected } from './obsolete-env.js';
-import { parsePromptContextPolicy, type PromptContextPolicy } from './prompt-context-policy.js';
+import { resolvePromptContextPolicy, type PromptContextPolicy } from './prompt-context-policy.js';
 import { requirePublicUrl } from './public-url.js';
 import { readEnv } from './read-env.js';
 
@@ -400,9 +399,7 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
-  const promptContextPolicy = parsePromptContextPolicy(
-    readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT, env),
-  );
+  const promptContextPolicy = resolvePromptContextPolicy({ env });
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);

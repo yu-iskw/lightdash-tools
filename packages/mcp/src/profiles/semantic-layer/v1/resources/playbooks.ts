@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { SEMANTIC_LAYER_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type SemanticLayerPlaybookTopic = 'compose-compile' | 'explore';
@@ -12,7 +10,6 @@ export type SemanticLayerPlaybookTopic = 'compose-compile' | 'explore';
 const playbooks = defineProfilePlaybooks<SemanticLayerPlaybookTopic>({
   profileId: 'semantic-layer',
   moduleDir: __dirname,
-  hardBans: SEMANTIC_LAYER_HARD_BANS,
   coreDescription: 'Hard bans, budgets, allowed tools, project scope, and stop criteria',
   topics: [
     {
@@ -34,7 +31,7 @@ const playbooks = defineProfilePlaybooks<SemanticLayerPlaybookTopic>({
   ],
 });
 
-export { SEMANTIC_LAYER_HARD_BANS };
+export { SEMANTIC_LAYER_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const SEMANTIC_LAYER_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const SEMANTIC_LAYER_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

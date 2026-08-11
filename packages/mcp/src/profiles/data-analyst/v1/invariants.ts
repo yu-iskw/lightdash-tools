@@ -2,7 +2,11 @@
  * Data-analyst structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const DATA_ANALYST_INVARIANTS = [
   {
@@ -34,6 +38,4 @@ export const DATA_ANALYST_INVARIANTS = [
 
 export const DATA_ANALYST_HARD_BANS = formatHardBansProjection(DATA_ANALYST_INVARIANTS);
 
-export const DATA_ANALYST_DEFAULT_INVARIANT_IDS = DATA_ANALYST_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as readonly (typeof DATA_ANALYST_INVARIANTS)[number]['id'][];
+export const DATA_ANALYST_DEFAULT_INVARIANT_IDS = allInvariantIds(DATA_ANALYST_INVARIANTS);

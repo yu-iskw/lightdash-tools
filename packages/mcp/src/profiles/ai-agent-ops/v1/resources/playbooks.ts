@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { AI_AGENT_OPS_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type AiAgentOpsPlaybookTopic = 'evaluation' | 'loop-engineering' | 'release-gate';
@@ -12,7 +10,6 @@ export type AiAgentOpsPlaybookTopic = 'evaluation' | 'loop-engineering' | 'relea
 const playbooks = defineProfilePlaybooks<AiAgentOpsPlaybookTopic>({
   profileId: 'ai-agent-ops',
   moduleDir: __dirname,
-  hardBans: AI_AGENT_OPS_HARD_BANS,
   coreDescription: 'Hard bans, tool catalog, truth labels, and distributed loop rules',
   topics: [
     {
@@ -42,7 +39,7 @@ const playbooks = defineProfilePlaybooks<AiAgentOpsPlaybookTopic>({
   ],
 });
 
-export { AI_AGENT_OPS_HARD_BANS };
+export { AI_AGENT_OPS_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const AI_AGENT_OPS_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const AI_AGENT_OPS_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

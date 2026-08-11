@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { ORGANIZATION_AUDIT_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type OrganizationAuditPlaybookTopic = 'access' | 'content' | 'deliveries';
@@ -12,7 +10,6 @@ export type OrganizationAuditPlaybookTopic = 'access' | 'content' | 'deliveries'
 const playbooks = defineProfilePlaybooks<OrganizationAuditPlaybookTopic>({
   profileId: 'organization-audit',
   moduleDir: __dirname,
-  hardBans: ORGANIZATION_AUDIT_HARD_BANS,
   coreDescription: 'Hard bans, tool catalog, scope, and report rules',
   topics: [
     {
@@ -42,7 +39,7 @@ const playbooks = defineProfilePlaybooks<OrganizationAuditPlaybookTopic>({
   ],
 });
 
-export { ORGANIZATION_AUDIT_HARD_BANS };
+export { ORGANIZATION_AUDIT_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const ORGANIZATION_AUDIT_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const ORGANIZATION_AUDIT_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

@@ -13,6 +13,8 @@ export type PromptInvariant = {
   tags?: readonly string[];
 };
 
+export const INVARIANT_CAPSULE_HEADER = 'Critical invariants:' as const;
+
 /** Assert unique invariant ids (throws on duplicates). */
 export function assertUniqueInvariantIds(invariants: readonly PromptInvariant[]): void {
   const seen = new Set<string>();
@@ -24,12 +26,17 @@ export function assertUniqueInvariantIds(invariants: readonly PromptInvariant[])
   }
 }
 
+/** Typed id list for a catalog (avoids per-profile `as unknown as` casts). */
+export function allInvariantIds<T extends PromptInvariant>(
+  catalog: readonly T[],
+): ReadonlyArray<T['id']> {
+  return catalog.map((inv) => inv.id);
+}
+
 export function resolveInvariants(
-  catalog: readonly PromptInvariant[],
+  byId: ReadonlyMap<string, PromptInvariant>,
   ids: readonly string[],
 ): PromptInvariant[] {
-  assertUniqueInvariantIds(catalog);
-  const byId = new Map(catalog.map((inv) => [inv.id, inv]));
   const resolved: PromptInvariant[] = [];
   for (const id of ids) {
     const inv = byId.get(id);
@@ -41,19 +48,23 @@ export function resolveInvariants(
   return resolved;
 }
 
+/** Build a lookup map once (call after assertUniqueInvariantIds). */
+export function invariantIndex(
+  catalog: readonly PromptInvariant[],
+): ReadonlyMap<string, PromptInvariant> {
+  return new Map(catalog.map((inv) => [inv.id, inv]));
+}
+
 /** Compact eager capsule for prompts/get text. */
 export function formatInvariantCapsule(invariants: readonly PromptInvariant[]): string {
   if (invariants.length === 0) {
     return '';
   }
   const lines = invariants.map((inv) => `- ${inv.short}`);
-  return ['Critical invariants:', ...lines].join('\n');
+  return [INVARIANT_CAPSULE_HEADER, ...lines].join('\n');
 }
 
-/**
- * Legacy multi-line HARD_BANS string (one ban per line, no header).
- * Prefer invariants whose `short` is already an imperative ban sentence.
- */
+/** Legacy multi-line HARD_BANS string (one ban per line, no header). */
 export function formatHardBansProjection(invariants: readonly PromptInvariant[]): string {
   return invariants.map((inv) => inv.short).join('\n');
 }

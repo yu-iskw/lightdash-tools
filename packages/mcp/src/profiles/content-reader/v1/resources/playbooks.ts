@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { CONTENT_READER_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ContentReaderPlaybookTopic = 'compare' | 'discover' | 'explain-run';
@@ -12,7 +10,6 @@ export type ContentReaderPlaybookTopic = 'compare' | 'discover' | 'explain-run';
 const playbooks = defineProfilePlaybooks<ContentReaderPlaybookTopic>({
   profileId: 'content-reader',
   moduleDir: __dirname,
-  hardBans: CONTENT_READER_HARD_BANS,
   coreDescription: 'Hard bans, budgets, tools, project scope, and coverage semantics',
   topics: [
     {
@@ -43,7 +40,7 @@ const playbooks = defineProfilePlaybooks<ContentReaderPlaybookTopic>({
   ],
 });
 
-export { CONTENT_READER_HARD_BANS };
+export { CONTENT_READER_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const CONTENT_READER_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const CONTENT_READER_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

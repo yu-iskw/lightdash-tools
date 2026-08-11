@@ -29,7 +29,7 @@ import {
 } from '../lib/prompt-context.js';
 
 import type { PromptContextPolicy } from '../../config/prompt-context-policy.js';
-import type { EmbeddedPlaybook } from '../lib/playbook-resources.js';
+import type { EmbeddedPlaybook, PromptTopicMeta } from '../lib/playbook-resources.js';
 import type { PromptContextSpec } from '../lib/prompt-context.js';
 import type { PromptInvariant } from '../lib/prompt-invariants.js';
 
@@ -37,10 +37,9 @@ type Scenario = {
   profile: string;
   prompt: string;
   invariants: readonly PromptInvariant[];
-  invariantIds: readonly string[];
   core: EmbeddedPlaybook;
   topics: Readonly<Record<string, EmbeddedPlaybook>>;
-  topicMeta: Readonly<Record<string, { description: string; useWhen?: string }>>;
+  topicMeta: Readonly<Record<string, PromptTopicMeta>>;
   spec: PromptContextSpec<string>;
 };
 
@@ -49,7 +48,6 @@ const SCENARIOS: Scenario[] = [
     profile: 'content-reader',
     prompt: 'find_content',
     invariants: CONTENT_READER_INVARIANTS,
-    invariantIds: CONTENT_READER_DEFAULT_INVARIANT_IDS,
     core: CONTENT_READER_CORE_PLAYBOOK,
     topics: CONTENT_READER_TOPIC_PLAYBOOKS,
     topicMeta: CONTENT_READER_TOPIC_META,
@@ -63,7 +61,6 @@ const SCENARIOS: Scenario[] = [
     profile: 'content-developer',
     prompt: 'create_dashboard',
     invariants: CONTENT_DEVELOPER_INVARIANTS,
-    invariantIds: CONTENT_DEVELOPER_DEFAULT_INVARIANT_IDS,
     core: CONTENT_DEVELOPER_CORE_PLAYBOOK,
     topics: CONTENT_DEVELOPER_TOPIC_PLAYBOOKS,
     topicMeta: CONTENT_DEVELOPER_TOPIC_META,
@@ -81,22 +78,25 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
-function render(policy: PromptContextPolicy, scenario: Scenario) {
-  const compose = createPromptContextComposer({
-    policy,
-    invariants: scenario.invariants,
-    core: scenario.core,
-    topics: scenario.topics,
-    topicMeta: scenario.topicMeta,
-  });
-  return measurePromptMessages(compose(scenario.spec).messages);
+function metricsForScenario(scenario: Scenario) {
+  const byPolicy = {} as Record<PromptContextPolicy, ReturnType<typeof measurePromptMessages>>;
+  for (const policy of ['compact', 'compatible', 'embedded'] as const) {
+    const compose = createPromptContextComposer({
+      policy,
+      invariants: scenario.invariants,
+      core: scenario.core,
+      topics: scenario.topics,
+      topicMeta: scenario.topicMeta,
+    });
+    byPolicy[policy] = measurePromptMessages(compose(scenario.spec).messages);
+  }
+  return byPolicy;
 }
 
 describe('prompt context budgets', () => {
   for (const scenario of SCENARIOS) {
     it(`${scenario.profile}/${scenario.prompt}: compact has no embeds and beats embedded by ≥40%`, () => {
-      const compact = render('compact', scenario);
-      const embedded = render('embedded', scenario);
+      const { compact, embedded } = metricsForScenario(scenario);
       expect(compact.embeddedResourceCount).toBe(0);
       expect(embedded.embeddedResourceCount).toBeGreaterThan(0);
       const reduction = 1 - compact.totalChars / embedded.totalChars;
@@ -105,9 +105,9 @@ describe('prompt context budgets', () => {
     });
 
     it(`${scenario.profile}/${scenario.prompt}: compatible embeds only required topics`, () => {
-      const compatible = render('compatible', scenario);
+      const { compatible, embedded } = metricsForScenario(scenario);
       expect(compatible.embeddedResourceCount).toBe(scenario.spec.requiredTopics?.length ?? 0);
-      expect(compatible.totalChars).toBeLessThan(render('embedded', scenario).totalChars);
+      expect(compatible.totalChars).toBeLessThan(embedded.totalChars);
     });
   }
 });

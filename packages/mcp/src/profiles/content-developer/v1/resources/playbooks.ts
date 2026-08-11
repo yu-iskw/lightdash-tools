@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { CONTENT_DEVELOPER_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ContentDeveloperPlaybookTopic =
@@ -20,7 +18,6 @@ export type ContentDeveloperPlaybookTopic =
 const playbooks = defineProfilePlaybooks<ContentDeveloperPlaybookTopic>({
   profileId: 'content-developer',
   moduleDir: __dirname,
-  hardBans: CONTENT_DEVELOPER_HARD_BANS,
   coreDescription: 'Hard bans, tools, project scope, preview gate, and apply pitfalls',
   topics: [
     {
@@ -92,7 +89,7 @@ const playbooks = defineProfilePlaybooks<ContentDeveloperPlaybookTopic>({
   ],
 });
 
-export { CONTENT_DEVELOPER_HARD_BANS };
+export { CONTENT_DEVELOPER_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const CONTENT_DEVELOPER_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const CONTENT_DEVELOPER_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

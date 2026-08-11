@@ -86,6 +86,16 @@ export type EmbeddedPlaybook = {
   getMarkdown: () => string;
 };
 
+export type PromptTopicMeta = {
+  description: string;
+  useWhen?: string;
+};
+
+/** Canonical playbook topic URI (shared by registration and tool recovery hints). */
+export function playbookTopicUri(profileId: ProfileId, topicId: string): string {
+  return `lightdash://playbooks/${profileId}/${topicId}`;
+}
+
 export type ProfilePlaybookTopicDef<TopicId extends string = string> = {
   id: TopicId;
   title: string;
@@ -101,7 +111,6 @@ export type ProfilePlaybookTopicDef<TopicId extends string = string> = {
 export type DefineProfilePlaybooksOptions<TopicId extends string> = {
   profileId: ProfileId;
   moduleDir: string;
-  hardBans: string;
   topics: readonly ProfilePlaybookTopicDef<TopicId>[];
   indexTitle?: string;
   indexDescription?: string;
@@ -126,17 +135,15 @@ export function defineProfilePlaybooks<TopicId extends string>(
   options: DefineProfilePlaybooksOptions<TopicId>,
 ): {
   URIs: { index: string; core: string; topics: Readonly<Record<TopicId, string>> };
-  HARD_BANS: string;
   getAllPlaybookMarkdown: () => string;
   CORE_PLAYBOOK: EmbeddedPlaybook;
   TOPIC_PLAYBOOKS: Readonly<Record<TopicId, EmbeddedPlaybook>>;
-  TOPIC_META: Readonly<Record<TopicId, { description: string; useWhen?: string }>>;
+  TOPIC_META: Readonly<Record<TopicId, PromptTopicMeta>>;
   registerPlaybooks: (server: McpServer) => void;
 } {
   const {
     profileId,
     moduleDir,
-    hardBans,
     topics,
     indexTitle = `${titleCaseProfile(profileId)} playbooks`,
     indexDescription = `Index of ${profileId} workflow playbooks (core + topics)`,
@@ -154,11 +161,11 @@ export function defineProfilePlaybooks<TopicId extends string>(
 
   const topicUris = {} as Record<TopicId, string>;
   const topicPlaybooks = {} as Record<TopicId, EmbeddedPlaybook>;
-  const topicMeta = {} as Record<TopicId, { description: string; useWhen?: string }>;
+  const topicMeta = {} as Record<TopicId, PromptTopicMeta>;
   const topicMarkdownGetters: Array<() => string> = [];
 
   for (const topic of topics) {
-    const uri = `lightdash://playbooks/${profileId}/${topic.id}`;
+    const uri = playbookTopicUri(profileId, topic.id);
     topicUris[topic.id] = uri;
     const getMarkdown = (): string => load(`playbooks/${topic.file}`);
     topicMarkdownGetters.push(getMarkdown);
@@ -215,7 +222,6 @@ export function defineProfilePlaybooks<TopicId extends string>(
 
   return {
     URIs: { index: indexUri, core: coreUri, topics: topicUris },
-    HARD_BANS: hardBans,
     getAllPlaybookMarkdown,
     CORE_PLAYBOOK,
     TOPIC_PLAYBOOKS: topicPlaybooks,

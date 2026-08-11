@@ -2,7 +2,11 @@
  * Organization-audit structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const ORGANIZATION_AUDIT_INVARIANTS = [
   {
@@ -40,6 +44,6 @@ export const ORGANIZATION_AUDIT_INVARIANTS = [
 
 export const ORGANIZATION_AUDIT_HARD_BANS = formatHardBansProjection(ORGANIZATION_AUDIT_INVARIANTS);
 
-export const ORGANIZATION_AUDIT_DEFAULT_INVARIANT_IDS = ORGANIZATION_AUDIT_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as readonly (typeof ORGANIZATION_AUDIT_INVARIANTS)[number]['id'][];
+export const ORGANIZATION_AUDIT_DEFAULT_INVARIANT_IDS = allInvariantIds(
+  ORGANIZATION_AUDIT_INVARIANTS,
+);

@@ -4,6 +4,7 @@
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
+import { playbookTopicUri } from '../../profiles/lib/playbook-resources.js';
 import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
@@ -32,8 +33,7 @@ const BLOCKED_POLICY_CODES = new Set([
   'CHART_SLUG_EXISTS',
 ]);
 
-const PREVIEW_STALE_PLAYBOOK_URI =
-  'lightdash://playbooks/content-developer/recovery/preview-stale' as const;
+const PREVIEW_STALE_PLAYBOOK_URI = playbookTopicUri('content-developer', 'recovery/preview-stale');
 
 /** Additive recovery hints for known coded errors (does not change code/message). */
 function recoveryExtrasForCode(code: string): ToolErrorExtras | undefined {

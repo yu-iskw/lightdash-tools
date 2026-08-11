@@ -2,7 +2,11 @@
  * Semantic-layer structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const SEMANTIC_LAYER_INVARIANTS = [
   {
@@ -44,6 +48,4 @@ export const SEMANTIC_LAYER_INVARIANTS = [
 
 export const SEMANTIC_LAYER_HARD_BANS = formatHardBansProjection(SEMANTIC_LAYER_INVARIANTS);
 
-export const SEMANTIC_LAYER_DEFAULT_INVARIANT_IDS = SEMANTIC_LAYER_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as readonly (typeof SEMANTIC_LAYER_INVARIANTS)[number]['id'][];
+export const SEMANTIC_LAYER_DEFAULT_INVARIANT_IDS = allInvariantIds(SEMANTIC_LAYER_INVARIANTS);

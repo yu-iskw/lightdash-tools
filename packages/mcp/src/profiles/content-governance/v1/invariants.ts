@@ -2,7 +2,11 @@
  * Content-governance structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const CONTENT_GOVERNANCE_INVARIANTS = [
   {
@@ -45,6 +49,6 @@ export const CONTENT_GOVERNANCE_INVARIANTS = [
 
 export const CONTENT_GOVERNANCE_HARD_BANS = formatHardBansProjection(CONTENT_GOVERNANCE_INVARIANTS);
 
-export const CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS = CONTENT_GOVERNANCE_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as readonly (typeof CONTENT_GOVERNANCE_INVARIANTS)[number]['id'][];
+export const CONTENT_GOVERNANCE_DEFAULT_INVARIANT_IDS = allInvariantIds(
+  CONTENT_GOVERNANCE_INVARIANTS,
+);

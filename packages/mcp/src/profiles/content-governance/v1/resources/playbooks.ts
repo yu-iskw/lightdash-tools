@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { CONTENT_GOVERNANCE_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type ContentGovernancePlaybookTopic = 'charts' | 'dashboards';
@@ -12,7 +10,6 @@ export type ContentGovernancePlaybookTopic = 'charts' | 'dashboards';
 const playbooks = defineProfilePlaybooks<ContentGovernancePlaybookTopic>({
   profileId: 'content-governance',
   moduleDir: __dirname,
-  hardBans: CONTENT_GOVERNANCE_HARD_BANS,
   coreDescription: 'Hard bans, elicitation SOP, tools, and project scope',
   topics: [
     {
@@ -34,7 +31,7 @@ const playbooks = defineProfilePlaybooks<ContentGovernancePlaybookTopic>({
   ],
 });
 
-export { CONTENT_GOVERNANCE_HARD_BANS };
+export { CONTENT_GOVERNANCE_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const CONTENT_GOVERNANCE_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const CONTENT_GOVERNANCE_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

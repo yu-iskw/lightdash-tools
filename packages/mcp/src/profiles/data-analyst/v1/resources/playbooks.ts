@@ -3,8 +3,6 @@
  */
 
 import { defineProfilePlaybooks } from '../../../lib/playbook-resources.js';
-import { DATA_ANALYST_HARD_BANS } from '../invariants.js';
-
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export type DataAnalystPlaybookTopic = 'explore';
@@ -12,7 +10,6 @@ export type DataAnalystPlaybookTopic = 'explore';
 const playbooks = defineProfilePlaybooks<DataAnalystPlaybookTopic>({
   profileId: 'data-analyst',
   moduleDir: __dirname,
-  hardBans: DATA_ANALYST_HARD_BANS,
   coreDescription: 'Hard bans, budgets, tools, and project scope',
   topics: [
     {
@@ -26,7 +23,7 @@ const playbooks = defineProfilePlaybooks<DataAnalystPlaybookTopic>({
   ],
 });
 
-export { DATA_ANALYST_HARD_BANS };
+export { DATA_ANALYST_HARD_BANS } from '../invariants.js';
 export const getAllPlaybookMarkdown = playbooks.getAllPlaybookMarkdown;
 export const DATA_ANALYST_CORE_PLAYBOOK = playbooks.CORE_PLAYBOOK;
 export const DATA_ANALYST_TOPIC_PLAYBOOKS = playbooks.TOPIC_PLAYBOOKS;

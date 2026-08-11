@@ -2,7 +2,11 @@
  * AI agent-ops structured prompt invariants (SSOT for capsules + HARD_BANS projection).
  */
 
-import { formatHardBansProjection, type PromptInvariant } from '../../lib/prompt-invariants.js';
+import {
+  allInvariantIds,
+  formatHardBansProjection,
+  type PromptInvariant,
+} from '../../lib/prompt-invariants.js';
 
 export const AI_AGENT_OPS_INVARIANTS = [
   {
@@ -45,6 +49,4 @@ export const AI_AGENT_OPS_INVARIANTS = [
 
 export const AI_AGENT_OPS_HARD_BANS = formatHardBansProjection(AI_AGENT_OPS_INVARIANTS);
 
-export const AI_AGENT_OPS_DEFAULT_INVARIANT_IDS = AI_AGENT_OPS_INVARIANTS.map(
-  (inv) => inv.id,
-) as unknown as readonly (typeof AI_AGENT_OPS_INVARIANTS)[number]['id'][];
+export const AI_AGENT_OPS_DEFAULT_INVARIANT_IDS = allInvariantIds(AI_AGENT_OPS_INVARIANTS);
