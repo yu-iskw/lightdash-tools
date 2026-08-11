@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getProfile, listToolIds } from '../../index.js';
 import { playbookTopicUri } from '../../lib/playbook-resources.js';
+import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
 import { CONTENT_DEVELOPER_INVARIANTS } from './invariants.js';
 import {
@@ -16,6 +17,13 @@ import {
 } from './resources/playbooks.js';
 
 describe('content-developer prompts/playbook', () => {
+  it('playbooks reference only registered tool short ids', () => {
+    const md = getAllPlaybookMarkdown();
+    expectPlaybookCoversProfileTools('content-developer', md);
+    expect(md.toLowerCase()).toContain('hard bans');
+    expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('terraform');
+  });
+
   it('keeps structured invariants and core.md Hard bans in sync (count + key phrases)', () => {
     const core = CONTENT_DEVELOPER_CORE_PLAYBOOK.getMarkdown();
     const hardBansSection = core.split('## Hard bans')[1]?.split('\n## ')[0] ?? '';
