@@ -1,0 +1,3 @@
+kind: chore
+body: CI build and unit tests on Node 22, 24, and 26; engines.node floor is >=22 while .node-version stays 26.3.0.
+time: 2026-08-14T10:16:55.010089+09:00

@@ -49,7 +49,7 @@ export function registerUsersCommand(program: Command): void {
     .option('--search <query>', 'Search query')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as ListUsersCliOptions;
+        const options = this.opts();
         try {
           await listUsers(getClient(), options);
         } catch (error) {

@@ -218,7 +218,7 @@ describe('oauth broker helpers', () => {
     );
 
     expect(fetchMock).toHaveBeenCalledOnce();
-    const init = fetchMock.mock.calls[0]![1] as RequestInit;
+    const init = fetchMock.mock.calls[0][1] as RequestInit;
     const headers = init.headers as Record<string, string>;
     expect(headers['Proxy-Authorization']).toBe('Bearer proxy-token');
   });

@@ -124,13 +124,13 @@ export class AiAgentsThreadsClient extends BaseApiClient {
       bodyOrOptions !== undefined && typeof bodyOrOptions === 'object' && 'prompt' in bodyOrOptions;
 
     if (hasPromptBody) {
-      const body = bodyOrOptions as GenerateAgentThreadBody;
+      const body = bodyOrOptions;
       const options = maybeOptions;
       await this.createAgentThreadMessage(projectUuid, agentUuid, threadUuid, body, options);
       return this.generateAgentThreadResponse(projectUuid, agentUuid, threadUuid, options);
     }
 
-    const options = (hasPromptBody ? maybeOptions : bodyOrOptions) as RequestOptions | undefined;
+    const options = hasPromptBody ? maybeOptions : bodyOrOptions;
     return this.http.post<GenerateAgentThreadResult>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/generate`,
       undefined,

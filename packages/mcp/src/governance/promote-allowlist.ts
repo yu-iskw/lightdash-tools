@@ -38,7 +38,7 @@ export function extractPromoteDiffProjectUuids(diff: DashboardPromoteDiffResults
   collectFromRows(diff.spaces, uuids);
   collectFromRows(diff.sqlCharts, uuids);
   // PromotedApp has no projectUuid in OpenAPI; walk defensively for future fields.
-  collectFromRows(diff.dataApps as { data: unknown }[] | undefined, uuids);
+  collectFromRows(diff.dataApps, uuids);
   return [...uuids];
 }
 

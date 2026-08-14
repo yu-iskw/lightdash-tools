@@ -13,6 +13,13 @@ import { getClient } from '../utils/client';
 import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 /**
@@ -29,7 +36,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const { project } = this.opts() as { project: string };
+        const project = requireOptString(commandOpts(this), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getUserAgentPreferences(project);
@@ -53,12 +60,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .option('--stdin', 'Read preferences JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async function (this: Command) {
-        const options = this.opts() as {
-          project: string;
-          defaultAgent?: string;
-          file?: string;
-          stdin?: boolean;
-        };
+        const options = commandOpts(this);
         let body: AiAgentUserPreferences;
         if (hasExplicitFileInput(options)) {
           const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
@@ -98,7 +100,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(WRITE_DESTRUCTIVE, async function (this: Command) {
-        const { project } = this.opts() as { project: string };
+        const project = requireOptString(commandOpts(this), 'project');
         try {
           const client = getClient();
           await client.v1.aiAgents.deleteUserAgentPreferences(project);
@@ -119,7 +121,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getAgentSuggestions(project, agentUuid);
@@ -140,7 +142,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getAgentModelOptions(project, agentUuid);
@@ -163,7 +165,7 @@ export function registerAgentsDiscoveryCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.evaluateAgentReadiness(project, agentUuid);

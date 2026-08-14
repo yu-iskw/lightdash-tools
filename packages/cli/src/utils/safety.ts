@@ -19,7 +19,7 @@ import type { Command } from 'commander';
  * CLI --safety-mode takes priority over LIGHTDASH_TOOLS_SAFETY_MODE.
  */
 export function getSafetyMode(cmd: Command): SafetyMode {
-  const options = cmd.optsWithGlobals() as { safetyMode?: string };
+  const options = cmd.optsWithGlobals();
   if (options.safetyMode && Object.values(SafetyMode).includes(options.safetyMode as SafetyMode)) {
     return options.safetyMode as SafetyMode;
   }
@@ -34,7 +34,7 @@ export function isDryRun(cmd: Command): boolean {
   while (root.parent) {
     root = root.parent;
   }
-  const options = root.opts() as { dryRun?: boolean };
+  const options = root.opts();
   if (options.dryRun === true) return true;
   const v = process.env.LIGHTDASH_TOOLS_DRY_RUN;
   return v === '1' || v === 'true' || v === 'yes';
@@ -50,7 +50,7 @@ export function getAllowedProjects(cmd: Command): string[] {
   while (root.parent) {
     root = root.parent;
   }
-  const options = root.opts() as { projects?: string };
+  const options = root.opts();
   const raw = options.projects;
   if (raw) {
     return raw

@@ -8,6 +8,13 @@ import { getClient } from '../utils/client';
 import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 /**
@@ -20,7 +27,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const { project } = this.opts() as { project: string };
+        const project = requireOptString(commandOpts(this), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.listAgents(project);
@@ -41,7 +48,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getAgent(project, agentUuid);
@@ -67,14 +74,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .option('--stdin', 'Read agent JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async function (this: Command) {
-        const options = this.opts() as {
-          project: string;
-          name?: string;
-          description?: string;
-          instruction?: string;
-          file?: string;
-          stdin?: boolean;
-        };
+        const options = commandOpts(this);
         try {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.createAgent>[1];
@@ -125,14 +125,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .option('--stdin', 'Read agent patch JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, cmd: Command) => {
-        const options = cmd.opts() as {
-          project: string;
-          name?: string;
-          description?: string;
-          instruction?: string;
-          file?: string;
-          stdin?: boolean;
-        };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.updateAgent>[2];
@@ -176,7 +169,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(WRITE_DESTRUCTIVE, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           await client.v1.aiAgents.deleteAgent(project, agentUuid);

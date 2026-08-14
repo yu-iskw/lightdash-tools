@@ -7,6 +7,13 @@ import { READ_ONLY_DEFAULT, WRITE_OPEN_WORLD } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 /**
@@ -21,7 +28,7 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.listAgentThreads(project, agentUuid);
@@ -42,7 +49,7 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, threadUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getAgentThread(project, agentUuid, threadUuid);
@@ -60,7 +67,7 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
   const startThreadHandler = wrapAction(
     WRITE_OPEN_WORLD,
     async (agentUuid: string, cmd: Command) => {
-      const options = cmd.opts() as { project: string; prompt: string };
+      const options = commandOpts(cmd);
       try {
         const client = getClient();
         const { thread, result } = await client.v1.aiAgents.startConversation(
@@ -94,7 +101,7 @@ export function registerAgentsThreadCommands(agentsCmd: Command): void {
     .requiredOption('--prompt <text>', 'User prompt')
     .action(
       wrapAction(WRITE_OPEN_WORLD, async (agentUuid: string, threadUuid: string, cmd: Command) => {
-        const options = cmd.opts() as { project: string; prompt: string };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.continueConversation(

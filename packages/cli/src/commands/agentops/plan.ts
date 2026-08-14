@@ -14,6 +14,13 @@ import { assertAllowedProject, wrapAction } from '../../utils/safety';
 
 import { fetchBundleCurrentState } from './state';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../../utils/command-opts';
 import type { Command } from 'commander';
 
 export function registerAgentopsPlanCommand(agentopsCmd: Command): void {
@@ -25,7 +32,7 @@ export function registerAgentopsPlanCommand(agentopsCmd: Command): void {
     .option('--output <format>', 'Output format: json', 'json')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as { file?: string; stdin?: boolean; output?: string };
+        const options = commandOpts(this);
         if (options.output !== 'json') {
           console.error(
             `Error: unsupported --output '${options.output}'. Only 'json' is supported.`,

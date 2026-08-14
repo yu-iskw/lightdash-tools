@@ -52,7 +52,7 @@ describe('registerGetChartAsCode', () => {
 
     registerContentDeveloperToolMock.mockImplementation(
       (_server: unknown, _name: unknown, _meta: unknown, wrapped: typeof handler) => {
-        handler = wrapped as typeof handler;
+        handler = wrapped;
       },
     );
 
@@ -81,7 +81,7 @@ describe('registerGetChartAsCode', () => {
 
     registerContentDeveloperToolMock.mockImplementation(
       (_server: unknown, _name: unknown, _meta: unknown, wrapped: typeof handler) => {
-        handler = wrapped as typeof handler;
+        handler = wrapped;
       },
     );
 

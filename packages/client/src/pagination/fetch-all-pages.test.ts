@@ -34,7 +34,7 @@ describe('fetchAllPages', () => {
   it('returns single page when no pagination', async () => {
     const fetchPage = vi.fn().mockResolvedValueOnce({
       data: [{ x: 'a' }],
-    } as KnexPage<{ x: string }>);
+    });
 
     const result = await fetchAllPages<{ x: string }>({ fetchPage });
 
@@ -56,7 +56,7 @@ describe('fetchAllPages', () => {
   });
 
   it('returns empty array when first page has no data and no pagination', async () => {
-    const fetchPage = vi.fn().mockResolvedValueOnce({ data: [] } as KnexPage<unknown>);
+    const fetchPage = vi.fn().mockResolvedValueOnce({ data: [] });
 
     const result = await fetchAllPages({ fetchPage });
 

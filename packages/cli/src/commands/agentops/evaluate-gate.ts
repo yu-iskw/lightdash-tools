@@ -18,6 +18,13 @@ import { getClient } from '../../utils/client';
 import { readExplicitFileOrStdin } from '../../utils/file-input';
 import { assertAllowedProject, wrapAction } from '../../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../../utils/command-opts';
 import type { Command } from 'commander';
 
 function parsePositiveSeconds(value: string, flag: string): number {
@@ -50,14 +57,7 @@ export function registerAgentopsEvaluateGateCommand(agentopsCmd: Command): void 
     .option('--output <format>', 'Output format: json, junit, markdown', 'json')
     .action(
       wrapAction(WRITE_OPEN_WORLD, async function (this: Command) {
-        const options = this.opts() as {
-          file?: string;
-          stdin?: boolean;
-          wait?: boolean;
-          timeout?: number;
-          pollInterval?: number;
-          output?: string;
-        };
+        const options = commandOpts(this);
 
         const output = options.output ?? 'json';
         if (!['json', 'junit', 'markdown'].includes(output)) {

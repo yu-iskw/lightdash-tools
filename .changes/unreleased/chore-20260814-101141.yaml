@@ -1,0 +1,3 @@
+kind: chore
+body: Require Node 26.3.0 (.node-version, MCP image ARG, engines, Trunk runtime).
+time: 2026-08-14T10:11:41.644375+09:00

@@ -4,24 +4,13 @@ Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker. OAuth m
 
 ## Dockerfile
 
-Build from the monorepo root (prefer `packages/mcp/Dockerfile`). Example:
+Build from the monorepo root with [`packages/mcp/Dockerfile`](../../packages/mcp/Dockerfile) (do not maintain a second inline image here — it drifts from `pnpm deploy` + non-root runtime):
 
-```dockerfile
-FROM node:24-slim
-
-WORKDIR /app
-
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY packages ./packages
-
-RUN corepack enable && pnpm install --frozen-lockfile && pnpm build
-
-ENV NODE_ENV=production
-ENV LIGHTDASH_TOOLS_MCP_HTTP_HOST=0.0.0.0
-ENV LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
-
-CMD ["node", "packages/mcp/dist/bin.js", "http"]
+```bash
+docker build -f packages/mcp/Dockerfile -t lightdash-mcp:local .
 ```
+
+Image `ENTRYPOINT` is `lightdash-mcp`. Cloud Run / Compose must pass `http`. Bind defaults to `0.0.0.0`; listen port is `LIGHTDASH_TOOLS_MCP_HTTP_PORT` or the platform `PORT` (Cloud Run sets `8080`). Stdio: `docker run -i lightdash-mcp:local stdio --profile <id>`.
 
 ## Health probes
 

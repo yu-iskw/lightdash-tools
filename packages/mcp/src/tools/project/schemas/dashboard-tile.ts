@@ -57,5 +57,5 @@ export function parseDashboardTile(input: unknown): PayloadParseResult<Record<st
       message: `Invalid dashboard tile: ${formatZodIssues(parsed.error)}`,
     };
   }
-  return { ok: true, data: parsed.data as Record<string, unknown> };
+  return { ok: true, data: parsed.data };
 }

@@ -1,0 +1,3 @@
+kind: refactor
+body: 'Tighten the MCP image: pin Node to .node-version, copy only the MCP build graph, and point Cloud Run docs at packages/mcp/Dockerfile.'
+time: 2026-08-14T09:59:01.453765+09:00

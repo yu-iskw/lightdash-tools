@@ -17,7 +17,7 @@ export async function mapWithConcurrency<T, R>(
       next += 1;
       if (index >= items.length) return;
       // eslint-disable-next-line security/detect-object-injection -- index from counter
-      results[index] = await mapper(items[index] as T, index);
+      results[index] = await mapper(items[index], index);
     }
   }
 

@@ -26,10 +26,10 @@ function elicitationSupportsForm(elicitation: ElicitationCapability): boolean {
  */
 export function supportsFormElicitation(
   serverContext: ServerContext | undefined,
-  initializeCapabilities?: ClientCapabilities | undefined,
+  initializeCapabilities?: ClientCapabilities,
 ): boolean {
   if (serverContext?.mcpReq) {
-    const envelope = serverContext.mcpReq.envelope as Record<PropertyKey, unknown> | undefined;
+    const envelope = serverContext.mcpReq.envelope;
     const fromEnvelope =
       envelope === undefined
         ? undefined

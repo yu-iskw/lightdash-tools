@@ -114,7 +114,7 @@ describe('HTTP transport helpers', () => {
   describe('body size rejection', () => {
     it('rejects payloads larger than MCP_MAX_BODY_BYTES', async () => {
       const req = new EventEmitter() as IncomingMessage;
-      req.destroy = () => req.removeAllListeners() as unknown as IncomingMessage;
+      req.destroy = () => req.removeAllListeners();
       const res = createMockResponse();
       const maxBytes = 16;
 

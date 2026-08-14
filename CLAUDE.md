@@ -77,10 +77,12 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-14]: CI `build.yml` / `test.yml` matrix Node 22, 24, and 26 (`knip` only on 26). `engines.node` is `>=22`; `.node-version`, Docker, Trunk, and publish stay on 26.3.0.
+- [2026-08-14]: GHSA-2v37-7h3g-55p8 now requires nanoid >=3.3.18; keep an exact `3.3.18` override — do not use `>=` (that still jumps to nanoid 6).
 - [2026-08-11]: MCP prompts default to progressive-disclosure `compact` (ADR-0025 / RFC); roll back with `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT=embedded`. Invariants live in per-profile `invariants.ts` — do not paste HARD_BANS into prompt task text.
 - [2026-08-10]: OpenAPI sync is pin-first: write a release commit SHA to `config/lightdash-openapi-ref.txt`, then `pnpm --filter @lightdash-tools/common generate:types` — skills that implied always-from-`main` were wrong.
 - [2026-08-10]: After `changie merge`, Trunk/Prettier rewrites CHANGELOG.md (`*` bullets → `-`, blank lines around headings). Format before claiming lint clean.
-- [2026-08-10]: pnpm `overrides` with `>=x.y.z` can jump majors (`js-yaml` 4→5, `nanoid` 3→6). Pin exact patched lines (4.3.1 / 3.3.17) for SBOM High CVEs.
+- [2026-08-10]: pnpm `overrides` with `>=x.y.z` can jump majors (`js-yaml` 4→5, `nanoid` 3→6). Pin exact patched lines (4.3.1 / 3.3.18) for SBOM High CVEs.
 - [2026-08-10]: HTTP `LIGHTDASH_TOOLS_MCP_PROFILES` is a mount allowlist (unset = all seven paths); stdio still requires `--profile` and ignores this env. Disabled paths and their RFC 9728 PRM 404.
 - [2026-08-07]: content-reader verified discovery is `list_verified_content` → `GET …/content-verification`; `search_content` / OpenAPI v2 content list has no `verifiedOnly` filter — prompt preference flags must call the dedicated tool.
 - [2026-08-07]: PoP on content-developer: prefer cloned metrics with `generationType: periodOverPeriod` from seeds; table calculations remain the fallback when seeds lack native PoP (Explorer “Add period comparison” UI is unavailable on MCP).

@@ -7,6 +7,13 @@ import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_DESTRUCTIVE } from '@lightda
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 /**
@@ -46,7 +53,7 @@ export function registerProjectRoleAssignmentsCommand(program: Command): void {
     .requiredOption('--role-id <roleId>', 'Role ID to assign')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (projectUuid: string, userUuid: string, cmd: Command) => {
-        const opts = cmd.opts() as { roleId: string };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           const result = await client.v2.projectRoleAssignments.upsertUserAssignment(
@@ -71,7 +78,7 @@ export function registerProjectRoleAssignmentsCommand(program: Command): void {
     .requiredOption('--role-id <roleId>', 'Role ID to assign')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (projectUuid: string, groupId: string, cmd: Command) => {
-        const opts = cmd.opts() as { roleId: string };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           const result = await client.v2.projectRoleAssignments.upsertGroupAssignment(

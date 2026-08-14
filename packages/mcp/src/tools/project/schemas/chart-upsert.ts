@@ -65,5 +65,5 @@ export function parseChartUpsertBody(input: unknown): PayloadParseResult<Record<
       message: `Invalid chart upsert body: ${formatZodIssues(parsed.error)}`,
     };
   }
-  return { ok: true, data: parsed.data as Record<string, unknown> };
+  return { ok: true, data: parsed.data };
 }

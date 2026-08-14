@@ -147,7 +147,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 
 ## Common Gotchas
 
-- Use `pnpm` only (not npm/yarn). Enable Corepack if `pnpm` is missing.
+- Use `pnpm` only (not npm/yarn). Enable Corepack if `pnpm` is missing. `engines.node` is `>=22`; local/Docker/Trunk/publish stay on `.node-version` (26.3.0). CI `build.yml` / `test.yml` matrix Node 22, 24, and 26 (`knip` only on 26).
 - Corepack: if you invoke commands via `corepack pnpm ...`, run `corepack enable` before repo scripts that shell out to nested `pnpm` (for example `pnpm build`), or those nested calls fail with `pnpm: not found`.
 - Trunk: `@trunkio/launcher` + `pnpm trunk:install`; restricted network → `pnpm lint:eslint` / `format:eslint` / `format:prettier`.
 - pnpm v11: `overrides` live in `pnpm-workspace.yaml`; keep lockfile committed; `packageManager` is `pnpm@11.5.3`. Use exact pins (or `~`) for security bumps — `>=x.y.z` can pull the next major.

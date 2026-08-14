@@ -6,8 +6,12 @@
 **/coverage
 **/.trunk
 **/.cursor
+**/.claude
+**/.github
 **/dist
 **/*.md
+**/*.test.ts
+**/*.integration.test.ts
 # Profile playbooks are loaded from disk at runtime (not inlined by tsc).
 !packages/mcp/src/profiles/*/v1/resources/playbooks/
 !packages/mcp/src/profiles/*/v1/resources/playbooks/**

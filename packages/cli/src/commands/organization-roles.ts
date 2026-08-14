@@ -7,6 +7,13 @@ import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 /**
@@ -28,7 +35,7 @@ export function registerOrganizationRolesCommand(program: Command): void {
     .option('--role-type-filter <value>', 'Filter by role type')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as { load?: string; roleTypeFilter?: string };
+        const options = commandOpts(this);
         try {
           const client = getClient();
           const org = await client.v1.organizations.getCurrentOrganization();
@@ -100,7 +107,7 @@ export function registerOrganizationRolesCommand(program: Command): void {
     .requiredOption('--role-id <roleId>', 'Role ID to assign')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (userUuid: string, cmd: Command) => {
-        const options = cmd.opts() as { roleId: string };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           const org = await client.v1.organizations.getCurrentOrganization();

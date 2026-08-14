@@ -30,7 +30,7 @@ export class ExploresClient extends BaseApiClient {
   /** Get lineage for a specific field in an explore. */
   async getFieldLineage(projectUuid: string, exploreId: string, fieldId: string): Promise<unknown> {
     const explore = await this.getExplore(projectUuid, exploreId);
-    for (const table of Object.values(explore.tables) as LightdashApi.Explores.CompiledTable[]) {
+    for (const table of Object.values(explore.tables)) {
       // Table maps are keyed by short field name; also accept `{table}_{name}` fieldIds.
       if (table.dimensions[fieldId] || table.metrics[fieldId]) {
         return table.lineageGraph;

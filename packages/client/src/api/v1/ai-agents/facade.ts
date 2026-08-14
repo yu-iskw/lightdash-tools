@@ -260,7 +260,7 @@ export class AiAgentsClient extends BaseApiClient {
       projectUuid,
       agentUuid,
       threadUuid,
-      bodyOrOptions as RequestOptions | undefined,
+      bodyOrOptions,
     );
   }
 

@@ -27,7 +27,7 @@ export function rejectForbiddenKeys(
       message: 'Payload must be a JSON object',
     };
   }
-  const keys = Object.keys(input as Record<string, unknown>);
+  const keys = Object.keys(input);
   const hit = keys.find((key) => forbidden.includes(key));
   if (hit != null) {
     return {

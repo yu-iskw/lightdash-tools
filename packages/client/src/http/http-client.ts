@@ -124,7 +124,7 @@ function readApiErrorPayload(data: unknown): ApiErrorPayload['error'] | undefine
   if (data === null || typeof data !== 'object' || !('error' in data)) {
     return undefined;
   }
-  const error = (data as { error: unknown }).error;
+  const error = data.error;
   if (error === null || typeof error !== 'object') {
     return undefined;
   }
@@ -156,7 +156,7 @@ export class HttpClient {
 
     const data = response.data;
     if (data !== null && typeof data === 'object') {
-      const envelope = data as ApiEnvelope<T>;
+      const envelope = data;
       if (isApiSuccessEnvelope(envelope)) {
         return envelope.results;
       }

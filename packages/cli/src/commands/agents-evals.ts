@@ -13,6 +13,13 @@ import { getClient } from '../utils/client';
 import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { Command } from 'commander';
 
 function extractPrompts(parsed: unknown): unknown[] {
@@ -20,7 +27,7 @@ function extractPrompts(parsed: unknown): unknown[] {
     return parsed;
   }
   if (parsed != null && typeof parsed === 'object' && 'prompts' in parsed) {
-    const prompts = (parsed as { prompts: unknown }).prompts;
+    const prompts = parsed.prompts;
     if (!Array.isArray(prompts)) {
       throw new Error('prompts field must be an array');
     }
@@ -43,7 +50,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.listEvaluations(project, agentUuid);
@@ -64,7 +71,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getEvaluation(project, agentUuid, evalUuid);
@@ -93,14 +100,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .option('--stdin', 'Read evaluation JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_NONDESTRUCTIVE, async (agentUuid: string, cmd: Command) => {
-        const options = cmd.opts() as {
-          project: string;
-          title?: string;
-          description?: string;
-          prompts?: string;
-          file?: string;
-          stdin?: boolean;
-        };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.createEvaluation>[2];
@@ -151,14 +151,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .option('--stdin', 'Read evaluation patch JSON/YAML from stdin')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const options = cmd.opts() as {
-          project: string;
-          title?: string;
-          description?: string;
-          prompts?: string;
-          file?: string;
-          stdin?: boolean;
-        };
+        const options = commandOpts(cmd);
         try {
           const client = getClient();
           let body: Parameters<typeof client.v1.aiAgents.updateEvaluation>[3];
@@ -169,7 +162,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
               console.error('Error: evaluation patch input must be a JSON/YAML object');
               process.exit(1);
             }
-            body = parsed as Parameters<typeof client.v1.aiAgents.updateEvaluation>[3];
+            body = parsed;
           } else {
             const patch: Record<string, unknown> = {};
             if (options.title != null) patch['title'] = options.title;
@@ -181,7 +174,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
               );
               process.exit(1);
             }
-            body = patch as Parameters<typeof client.v1.aiAgents.updateEvaluation>[3];
+            body = patch;
           }
 
           const result = await client.v1.aiAgents.updateEvaluation(
@@ -212,12 +205,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
       wrapAction(
         WRITE_NONDESTRUCTIVE,
         async (agentUuid: string, evalUuid: string, cmd: Command) => {
-          const options = cmd.opts() as {
-            project: string;
-            prompts?: string;
-            file?: string;
-            stdin?: boolean;
-          };
+          const options = commandOpts(cmd);
           try {
             const client = getClient();
             let prompts: unknown[];
@@ -258,7 +246,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(WRITE_DESTRUCTIVE, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           await client.v1.aiAgents.deleteEvaluation(project, agentUuid, evalUuid);
@@ -281,7 +269,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
       wrapAction(
         WRITE_NONDESTRUCTIVE,
         async (agentUuid: string, evalUuid: string, cmd: Command) => {
-          const { project } = cmd.opts() as { project: string };
+          const project = requireOptString(commandOpts(cmd), 'project');
           try {
             const client = getClient();
             const result = await client.v1.aiAgents.runEvaluation(project, agentUuid, evalUuid);
@@ -303,7 +291,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
     .requiredOption('--project <uuid>', 'Project UUID')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async (agentUuid: string, evalUuid: string, cmd: Command) => {
-        const { project } = cmd.opts() as { project: string };
+        const project = requireOptString(commandOpts(cmd), 'project');
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.listAllEvaluationRuns(
@@ -330,7 +318,7 @@ export function registerAgentsEvalCommands(agentsCmd: Command): void {
       wrapAction(
         READ_ONLY_DEFAULT,
         async (agentUuid: string, evalUuid: string, runUuid: string, cmd: Command) => {
-          const { project } = cmd.opts() as { project: string };
+          const project = requireOptString(commandOpts(cmd), 'project');
           try {
             const client = getClient();
             const result = await client.v1.aiAgents.getEvaluationRunResults(

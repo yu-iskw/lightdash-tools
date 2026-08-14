@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Main entry point for Lightdash AI CLI.
  */

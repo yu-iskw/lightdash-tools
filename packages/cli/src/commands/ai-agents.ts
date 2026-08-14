@@ -38,7 +38,7 @@ function buildAdminThreadsParams(
       options.sort != null ? (options.sort as GetAdminThreadsParams['sortField']) : undefined,
     sortDirection:
       options.sortDirection != null ? (options.sortDirection as 'asc' | 'desc') : undefined,
-  }) as GetAdminThreadsParams | undefined;
+  });
 }
 
 /**
@@ -90,7 +90,7 @@ export function registerAiAgentsCommand(program: Command): void {
     .option('--sort-direction <dir>', 'Sort direction: asc | desc')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as AdminThreadsCliOptions;
+        const options = this.opts();
         try {
           const client = getClient();
           const result = await client.v1.aiAgents.getAdminThreads(buildAdminThreadsParams(options));
@@ -134,7 +134,7 @@ export function registerAiAgentsCommand(program: Command): void {
     .option('--ai-agents-visible <bool>', 'Show/hide AI agents feature (true|false)')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async function (this: Command) {
-        const options = this.opts() as { aiAgentsVisible?: string };
+        const options = this.opts();
         const body: Partial<UpdateAiOrganizationSettings> = {};
         if (options.aiAgentsVisible != null) {
           if (options.aiAgentsVisible !== 'true' && options.aiAgentsVisible !== 'false') {
@@ -151,9 +151,7 @@ export function registerAiAgentsCommand(program: Command): void {
         }
         try {
           const client = getClient();
-          const result = await client.v1.aiAgents.updateAiOrganizationSettings(
-            body as UpdateAiOrganizationSettings,
-          );
+          const result = await client.v1.aiAgents.updateAiOrganizationSettings(body);
           console.log(JSON.stringify(result, null, 2));
         } catch (error) {
           console.error(

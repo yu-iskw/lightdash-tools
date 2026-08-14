@@ -8,6 +8,13 @@ import { pickDefined } from '../utils/cli-params';
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../utils/command-opts';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { Command } from 'commander';
 
@@ -56,7 +63,7 @@ export function registerGroupsCommand(program: Command): void {
     )
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as ListGroupsCliOptions;
+        const options = commandOpts(this);
         try {
           await listGroups(getClient(), options);
         } catch (error) {
@@ -113,7 +120,7 @@ export function registerGroupsCommand(program: Command): void {
     .option('--name <name>', 'New name for the group')
     .action(
       wrapAction(WRITE_IDEMPOTENT, async (groupUuid: string, cmd: Command) => {
-        const options = cmd.opts() as { name?: string };
+        const options = commandOpts(cmd);
         if (!options.name) {
           console.error('Error: --name is required for update');
           process.exit(1);

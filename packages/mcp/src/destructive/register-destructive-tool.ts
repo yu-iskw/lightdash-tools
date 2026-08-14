@@ -306,7 +306,7 @@ function requireFormElicitation(
 ): ToolResult | undefined {
   // 2026: per-request envelope; 2025: initialize-declared caps via Server.
   // eslint-disable-next-line @typescript-eslint/no-deprecated -- 2025-era fallback; envelope preferred in capability.ts
-  const initializeCaps = server.server.getClientCapabilities() as ClientCapabilities | undefined;
+  const initializeCaps = server.server.getClientCapabilities();
   if (!supportsFormElicitation(serverContext, initializeCaps)) {
     return elicitationRequiredResult(
       labels.elicitationRequiredMessage,

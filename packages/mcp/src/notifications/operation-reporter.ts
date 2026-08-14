@@ -72,7 +72,7 @@ class McpProgressOperationReporter implements OperationReporter {
 }
 
 export function createOperationReporter(context: ServerContext | undefined): OperationReporter {
-  const progressContext = context as ProgressCapableContext | undefined;
+  const progressContext = context;
   const mcpReq = progressContext?.mcpReq;
   const token = mcpReq?._meta?.progressToken;
   const notify = mcpReq?.notify;

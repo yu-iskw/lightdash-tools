@@ -517,11 +517,11 @@ export function detectBundleDrift(
 // ─── Gate policy evaluation ────────────────────────────────────────────────────
 
 export function getLightdashAiAgentBundleJsonSchema(): Record<string, unknown> {
-  return z.toJSONSchema(lightdashAiAgentBundleSchema) as Record<string, unknown>;
+  return z.toJSONSchema(lightdashAiAgentBundleSchema);
 }
 
 export function getLightdashAiEvaluationGateJsonSchema(): Record<string, unknown> {
-  return z.toJSONSchema(lightdashAiEvaluationGateSchema) as Record<string, unknown>;
+  return z.toJSONSchema(lightdashAiEvaluationGateSchema);
 }
 
 export function evaluateGatePolicy(policy: GatePolicy, run: GateRunSnapshot): GatePolicyEvaluation {

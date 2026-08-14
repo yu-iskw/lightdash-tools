@@ -290,11 +290,7 @@ describe('AiAgentsClient', () => {
       'a1',
       { prompt: 'Hello' },
       {
-        threadBody: threadBodyWithPrompt as Parameters<typeof client.startConversation>[3] extends {
-          threadBody?: infer T;
-        }
-          ? T
-          : never,
+        threadBody: threadBodyWithPrompt,
       },
     );
     expect(mockHttp.post).toHaveBeenNthCalledWith(

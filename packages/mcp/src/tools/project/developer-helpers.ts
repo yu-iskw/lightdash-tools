@@ -432,7 +432,7 @@ async function resolveMoveItems(
   const resolvedItems: MoveContentManifestItem[] = [];
   for (let index = 0; index < itemUuids.length; index += 1) {
     // eslint-disable-next-line security/detect-object-injection -- index bound by itemUuids.length
-    const uuid = itemUuids[index]!;
+    const uuid = itemUuids[index];
     // eslint-disable-next-line security/detect-object-injection -- index bound by Promise.all result
     const summary = summaries[index];
     if (!summary) {

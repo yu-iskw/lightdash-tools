@@ -100,7 +100,7 @@ function buildPromoteSpec(): DestructiveOperationSpec<ScopedDestructiveArgs, Pro
     operationId: 'content-governance.dashboards.promote',
     resourceType: 'dashboard',
     async resolveTarget(args, ctx) {
-      const client = ctx.lightdashClient as LightdashClient;
+      const client = ctx.lightdashClient;
       const [dashboard, promoteDiff, project] = await Promise.all([
         client.v2.dashboards.getDashboard(args.projectUuid, args.resourceId),
         client.v1.dashboards.getDashboardPromoteDiff(args.resourceId, {

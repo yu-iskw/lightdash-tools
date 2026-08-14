@@ -1,0 +1,3 @@
+kind: chore
+body: Pin nanoid to 3.3.18 to close GHSA-2v37-7h3g-55p8 without jumping to nanoid 6.
+time: 2026-08-14T10:03:03.87786+09:00

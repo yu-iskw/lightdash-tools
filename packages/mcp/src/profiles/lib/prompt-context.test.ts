@@ -51,9 +51,9 @@ describe('createPromptContextComposer', () => {
       recoveryTopics: [{ topic: 'recovery', when: 'After PREVIEW_STALE' }],
     });
     expect(messages).toHaveLength(1);
-    expect(messages[0]!.content.type).toBe('text');
-    if (messages[0]!.content.type !== 'text') return;
-    const text = messages[0]!.content.text;
+    expect(messages[0].content.type).toBe('text');
+    if (messages[0].content.type !== 'text') return;
+    const text = messages[0].content.text;
     expect(text).toContain('Find content for revenue');
     expect(text).toContain('Critical invariants:');
     expect(text).toContain('Do not mutate resources.');
@@ -76,8 +76,8 @@ describe('createPromptContextComposer', () => {
       recoveryTopics: [{ topic: 'recovery' }],
     });
     expect(messages).toHaveLength(1);
-    if (messages[0]!.content.type !== 'text') return;
-    expect(messages[0]!.content.text).toContain(
+    if (messages[0].content.type !== 'text') return;
+    expect(messages[0].content.text).toContain(
       'lightdash://playbooks/test/recovery/preview-stale — PREVIEW_STALE',
     );
   });
@@ -97,10 +97,10 @@ describe('createPromptContextComposer', () => {
       conditionalTopics: [{ topic: 'recovery', when: 'rare' }],
     });
     expect(messages).toHaveLength(2);
-    expect(messages[1]!.content.type).toBe('resource');
-    if (messages[1]!.content.type !== 'resource') return;
-    expect(messages[1]!.content.resource.uri).toBe('lightdash://playbooks/test/discover');
-    expect(messages[1]!.content.resource.text).toContain('discover body');
+    expect(messages[1].content.type).toBe('resource');
+    if (messages[1].content.type !== 'resource') return;
+    expect(messages[1].content.resource.uri).toBe('lightdash://playbooks/test/discover');
+    expect(messages[1].content.resource.text).toContain('discover body');
   });
 
   it('embedded embeds core and required topics', () => {

@@ -1,0 +1,3 @@
+kind: chore
+body: Bump ESLint, TypeScript-ESLint, knip, Vite, and related lint-tool patch/minor versions.
+time: 2026-08-14T10:01:26.458256+09:00

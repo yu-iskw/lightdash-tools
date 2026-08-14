@@ -5,7 +5,7 @@ Thanks for your interest in contributing. This guide covers the basics; for the 
 ## Prerequisites
 
 - [pnpm](https://pnpm.io/)
-- Node.js (see [.node-version](.node-version))
+- Node.js (develop on the pin in [.node-version](.node-version); CI build and unit tests also run on Node 22 and 24)
 - [Trunk](https://trunk.io/) (for linting and formatting)
 
 ## Setup

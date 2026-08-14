@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
 

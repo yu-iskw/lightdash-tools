@@ -35,7 +35,7 @@ function rowFromResultRow(row: unknown): Record<string, unknown> {
   }
   const out: Record<string, unknown> = {};
   for (const [key, cell] of Object.entries(row as Record<string, unknown>)) {
-    if (cell && typeof cell === 'object' && 'value' in (cell as object)) {
+    if (cell && typeof cell === 'object' && 'value' in cell) {
       const typed = cell as { value?: { raw?: unknown; formatted?: unknown } };
       // eslint-disable-next-line security/detect-object-injection -- Object.entries keys
       out[key] = truncateCell(typed.value?.formatted ?? typed.value?.raw ?? typed.value);

@@ -14,6 +14,13 @@ import { assertAllowedProject, wrapAction } from '../../utils/safety';
 
 import { fetchBundleCurrentState } from './state';
 
+import {
+  commandOpts,
+  fileInputFromOpts,
+  optNumber,
+  optString,
+  requireOptString,
+} from '../../utils/command-opts';
 import type { Command } from 'commander';
 
 export function registerAgentopsDriftCommand(agentopsCmd: Command): void {
@@ -24,7 +31,7 @@ export function registerAgentopsDriftCommand(agentopsCmd: Command): void {
     .option('--stdin', 'Read bundle YAML from stdin')
     .action(
       wrapAction(READ_ONLY_DEFAULT, async function (this: Command) {
-        const options = this.opts() as { file?: string; stdin?: boolean };
+        const options = commandOpts(this);
         try {
           const content = await readExplicitFileOrStdin({
             file: options.file,

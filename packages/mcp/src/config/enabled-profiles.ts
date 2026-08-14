@@ -68,5 +68,5 @@ export function resolveRootMcpPath(policy: EnabledProfilesPolicy): string {
   if (!policy.restricted || policy.ids.has(DEFAULT_PROFILE_ID)) {
     return getDefaultProfile().path;
   }
-  return listEnabledProfilePaths(policy)[0]!;
+  return listEnabledProfilePaths(policy)[0];
 }
