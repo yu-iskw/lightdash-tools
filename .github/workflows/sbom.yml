@@ -20,7 +20,12 @@ name: SBOM
 on:
   push:
     branches: [main]
-  pull_request:
+    paths:
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - "packages/**/package.json"
+      - .github/workflows/sbom.yml
   schedule:
     - cron: 17 3 * * 1
   workflow_dispatch:
@@ -84,28 +89,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-
           jq -r '
             .matches[]
-            | select(
-                .vulnerability.severity == "High"
-                or .vulnerability.severity == "Critical"
-              )
-            | [
-                .vulnerability.severity,
-                .vulnerability.id,
-                (.artifact.name + "@" + .artifact.version),
-                ((.vulnerability.fix.versions // []) | join(","))
-              ]
+            | select(.vulnerability.severity == "High" or .vulnerability.severity == "Critical")
+            | [.vulnerability.severity, .vulnerability.id, (.artifact.name + "@" + .artifact.version), ((.vulnerability.fix.versions // []) | join(","))]
             | @tsv
           ' grype-report.json | sort -u | tee high-critical-vulnerabilities.tsv
-
           finding_count="$(wc -l < high-critical-vulnerabilities.tsv)"
           if ((finding_count > 0)); then
             echo "Found ${finding_count} unique High/Critical vulnerability matches."
             exit 1
           fi
-
           echo "No High or Critical vulnerabilities found."
 
       - name: Upload vulnerability report
