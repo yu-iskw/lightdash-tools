@@ -4,6 +4,7 @@ import { SecretString } from '@lightdash-tools/client';
 import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { mintMcpAccessToken } from './auth/oauth-broker/mcp-access-token.js';
 import { getAuthorizationServerMetadataUrl } from './auth/resource-server/oauth-protected-resource.js';
 import { parseEnabledProfiles } from './config/enabled-profiles.js';
 import { makeTestMcpHttpConfig } from './config/test-mcp-http-config.js';
@@ -12,6 +13,8 @@ import { createStreamableHttpServer } from './transports/streamable-http.js';
 import type { McpHttpConfig } from './config/load-mcp-config.js';
 import type { AddressInfo } from 'node:net';
 
+// These constants model downstream Lightdash credentials only. MCP clients never send
+// them directly after ADR-0026; tests wrap them in broker-issued MCP access tokens.
 const TOKEN_A = scopedAccessToken('mcp:read mcp:write', 'token-a');
 const TOKEN_B = scopedAccessToken('mcp:read mcp:write', 'token-b');
 const TOKEN_READ_ONLY = scopedAccessToken('mcp:read', 'token-read-only');
@@ -168,6 +171,21 @@ function baseOAuthConfig(lightdashUrl: string, overrides?: Partial<McpHttpConfig
   });
 }
 
+function brokerAccessToken(
+  mcpBaseUrl: string,
+  lightdashAccessToken: string,
+  options: { path?: string; scope?: string } = {},
+): string {
+  const path = options.path ?? '/semantic-layer/v1/mcp';
+  return mintMcpAccessToken(baseOAuthConfig('https://lightdash.invalid'), {
+    lightdashAccessToken,
+    clientId: 'integration-test-client',
+    resource: `${mcpBaseUrl}${path}`,
+    scope: options.scope,
+    expiresAtMs: Date.now() + 60_000,
+  }).accessToken;
+}
+
 async function postMcp(
   baseUrl: string,
   body: unknown,
@@ -240,13 +258,16 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(response.headers.get('www-authenticate')).toContain('invalid_token');
   });
 
-  it('handles initialize with valid OAuth bearer and validates upstream Authorization', async () => {
-    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+  it('handles initialize with an MCP bearer and validates the downstream Lightdash bearer', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A);
+    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: mcpToken });
 
     expect(response.status).toBe(200);
-    // Sessionless: no session-id header is set
+    // Sessionless: no session-id header is set.
     expect(response.headers.get('mcp-session-id')).toBeFalsy();
+    expect(mcpToken).not.toBe(TOKEN_A);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
+    expect(mockLightdash.authorizationHeaders).not.toContain(`Bearer ${mcpToken}`);
   });
 
   it('returns 401 before parsing malformed JSON when OAuth token is missing', async () => {
@@ -273,12 +294,13 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
   });
 
   it('returns 400 for malformed JSON only after successful OAuth authentication', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A);
     const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
-        Authorization: `Bearer ${TOKEN_A}`,
+        Authorization: `Bearer ${mcpToken}`,
       },
       body: '{not-json',
     });
@@ -385,18 +407,23 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     expect(wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
   });
 
-  it('maps token-a and token-b to distinct authenticated users upstream', async () => {
-    const responseA = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
-    const responseB = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_B });
+  it('maps two MCP tokens to distinct authenticated users upstream', async () => {
+    const mcpTokenA = brokerAccessToken(mcpServer.baseUrl, TOKEN_A);
+    const mcpTokenB = brokerAccessToken(mcpServer.baseUrl, TOKEN_B);
+    const responseA = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: mcpTokenA });
+    const responseB = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: mcpTokenB });
 
     expect(responseA.status).toBe(200);
     expect(responseB.status).toBe(200);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_B}`);
+    expect(mockLightdash.authorizationHeaders).not.toContain(`Bearer ${mcpTokenA}`);
+    expect(mockLightdash.authorizationHeaders).not.toContain(`Bearer ${mcpTokenB}`);
   });
 
   it('accepts form-elicitation caps from per-request _meta on content-governance tools/call', async () => {
     const governancePath = '/content-governance/v1/mcp';
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A, { path: governancePath });
     const call = await postMcp(
       mcpServer.baseUrl,
       {
@@ -414,7 +441,7 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
         },
         id: 2,
       },
-      { token: TOKEN_A, path: governancePath },
+      { token: mcpToken, path: governancePath },
     );
     expect(call.status).toBe(200);
     const text = parseSseOrJsonToolText(await call.text());
@@ -441,7 +468,8 @@ describe('MCP HTTP OAuth integration (RFC §16.3 matrix)', () => {
     });
 
     try {
-      const response = await postMcp(downServer.baseUrl, INITIALIZE_BODY, { token: TOKEN_A });
+      const mcpToken = brokerAccessToken(downServer.baseUrl, TOKEN_A);
+      const response = await postMcp(downServer.baseUrl, INITIALIZE_BODY, { token: mcpToken });
       expect(response.status).toBe(503);
       expect(await response.json()).toEqual({
         error: 'temporarily_unavailable',
@@ -501,42 +529,50 @@ describe('MCP HTTP OAuth integration (continued)', () => {
     expect(asMetadata.registration_endpoint).toBe(`${mcpServer.baseUrl}/oauth/register`);
   });
 
-  it('handles initialize with opaque OAuth bearer when endpoint scopes are unset', async () => {
-    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: OPAQUE_TOKEN_A });
+  it('handles initialize when the downstream Lightdash credential is opaque', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, OPAQUE_TOKEN_A);
+    const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, { token: mcpToken });
 
     expect(response.status).toBe(200);
     expect(response.headers.get('mcp-session-id')).toBeFalsy();
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${OPAQUE_TOKEN_A}`);
+    expect(mockLightdash.authorizationHeaders).not.toContain(`Bearer ${mcpToken}`);
   });
 
-  it('accepts TOKEN_READ_ONLY (mcp:read scope) on initialize', async () => {
+  it('accepts an MCP token carrying mcp:read scope on initialize', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_READ_ONLY, { scope: 'mcp:read' });
     const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
-      token: TOKEN_READ_ONLY,
+      token: mcpToken,
     });
 
     expect(response.status).toBe(200);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_READ_ONLY}`);
   });
 
-  it('accepts TOKEN_A (mcp:read mcp:write scope) on initialize', async () => {
+  it('accepts an MCP token carrying mcp:read mcp:write scope on initialize', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A, {
+      scope: 'mcp:read mcp:write',
+    });
     const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
-      token: TOKEN_A,
+      token: mcpToken,
     });
 
     expect(response.status).toBe(200);
     expect(mockLightdash.authorizationHeaders).toContain(`Bearer ${TOKEN_A}`);
   });
 
-  it('forwards bearer token to Lightdash on initialize for opaque credentials', async () => {
+  it('forwards only the decrypted downstream bearer to Lightdash', async () => {
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, OPAQUE_TOKEN_A);
     const response = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
-      token: OPAQUE_TOKEN_A,
+      token: mcpToken,
     });
 
     expect(response.status).toBe(200);
-    const userHeaders = mockLightdash.authorizationHeaders.filter(
-      (h) => h === `Bearer ${OPAQUE_TOKEN_A}`,
+    const downstreamHeaders = mockLightdash.authorizationHeaders.filter(
+      (header) => header === `Bearer ${OPAQUE_TOKEN_A}`,
     );
-    expect(userHeaders.length).toBeGreaterThan(0);
+    expect(downstreamHeaders.length).toBeGreaterThan(0);
+    expect(mockLightdash.authorizationHeaders).not.toContain(`Bearer ${mcpToken}`);
   });
 });
 
@@ -620,13 +656,14 @@ describe('MCP HTTP transport (sessionless)', () => {
       ...INITIALIZE_BODY,
       params: { ...INITIALIZE_BODY.params, padding: 'x'.repeat(1024) },
     });
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A);
 
     const response = await fetch(`${mcpServer.baseUrl}/semantic-layer/v1/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json, text/event-stream',
-        Authorization: `Bearer ${TOKEN_A}`,
+        Authorization: `Bearer ${mcpToken}`,
       },
       body: hugeBody,
     });
@@ -691,9 +728,11 @@ describe('MCP HTTP profile mount allowlist', () => {
   });
 
   it('keeps enabled profile MCP and PRM reachable', async () => {
+    const contentReaderPath = '/content-reader/v1/mcp';
+    const mcpToken = brokerAccessToken(mcpServer.baseUrl, TOKEN_A, { path: contentReaderPath });
     const mcpResponse = await postMcp(mcpServer.baseUrl, INITIALIZE_BODY, {
-      token: TOKEN_A,
-      path: '/content-reader/v1/mcp',
+      token: mcpToken,
+      path: contentReaderPath,
     });
     expect(mcpResponse.status).toBe(200);
 

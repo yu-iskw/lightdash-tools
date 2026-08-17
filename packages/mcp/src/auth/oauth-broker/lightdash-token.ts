@@ -72,16 +72,17 @@ export async function exchangeLightdashAuthorizationCode(
 }
 
 /**
- * Builds the Lightdash authorize URL for the server-held confidential client.
- * Client PKCE is enforced between MCP client and broker only — do not forward
- * the client's code_challenge upstream (token exchange uses client_secret).
+ * Builds the downstream Lightdash authorize URL for the server-held confidential client.
+ *
+ * Client PKCE, MCP scopes, and RFC 8707 `resource` are properties of the MCP client→broker
+ * authorization leg. They must not be forwarded blindly to Lightdash: the downstream
+ * authorization leg has a different client and protected resource. The broker state is the
+ * only client-flow correlation value propagated upstream.
  */
 export function buildLightdashAuthorizeUrl(
   config: McpHttpConfig,
   params: {
     state: string;
-    scope?: string;
-    resource?: string;
   },
 ): string {
   if (!config.oauthClientId) {
@@ -93,12 +94,5 @@ export function buildLightdashAuthorizeUrl(
   url.searchParams.set('client_id', config.oauthClientId);
   url.searchParams.set('redirect_uri', getOAuthCallbackUrl(config));
   url.searchParams.set('state', params.state);
-  if (params.scope) {
-    url.searchParams.set('scope', params.scope);
-  }
-  // Forward resource when Lightdash supports RFC 8707; harmless if ignored.
-  if (params.resource) {
-    url.searchParams.set('resource', params.resource);
-  }
   return url.toString();
 }

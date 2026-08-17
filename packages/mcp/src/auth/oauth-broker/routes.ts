@@ -1,3 +1,4 @@
+import { listEnabledProfilePaths } from '../../config/enabled-profiles.js';
 import {
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
@@ -6,6 +7,7 @@ import {
   OAUTH_TOKEN_PATH,
 } from '../../config/env.js';
 import { isLocalHttpOrigin } from '../../config/normalize-url.js';
+import { requirePublicUrl } from '../../config/public-url.js';
 import { parseJsonBody, readBody } from '../../transports/http-body.js';
 import { sendJson } from '../../transports/http-response.js';
 
@@ -14,6 +16,7 @@ import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
+import { mintMcpAccessToken } from './mcp-access-token.js';
 import { InMemoryOAuthBrokerStore } from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 
@@ -118,6 +121,13 @@ function isAllowedClientRedirectUri(redirectUri: string): boolean {
   }
 }
 
+function isAllowedMcpResource(config: McpHttpConfig, resource: string): boolean {
+  const publicUrl = requirePublicUrl(config, 'OAuth resource validation');
+  return listEnabledProfilePaths(config.enabledProfiles).some(
+    (profilePath) => resource === `${publicUrl}${profilePath}`,
+  );
+}
+
 type AuthorizeParseFail = { ok: false; status: number; body: Record<string, string> };
 
 async function parseRegisteredClientRedirect(
@@ -176,6 +186,7 @@ async function parseRegisteredClientRedirect(
 
 async function parseAuthorizeRequest(
   query: URLSearchParams,
+  config: McpHttpConfig,
   store: OAuthBrokerStore,
 ): Promise<
   | AuthorizeParseFail
@@ -186,7 +197,7 @@ async function parseAuthorizeRequest(
         redirectUri: string;
         clientState?: string;
         codeChallenge: string;
-        resource?: string;
+        resource: string;
         scope?: string;
       };
     }
@@ -221,6 +232,29 @@ async function parseAuthorizeRequest(
     };
   }
 
+  const resources = query.getAll('resource');
+  if (resources.length !== 1 || resources[0]!.length === 0) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'invalid_request',
+        error_description: 'Exactly one MCP resource parameter is required',
+      },
+    };
+  }
+  const resource = resources[0]!;
+  if (!isAllowedMcpResource(config, resource)) {
+    return {
+      ok: false,
+      status: 400,
+      body: {
+        error: 'invalid_target',
+        error_description: 'resource must identify an enabled MCP profile endpoint',
+      },
+    };
+  }
+
   return {
     ok: true,
     value: {
@@ -228,7 +262,7 @@ async function parseAuthorizeRequest(
       redirectUri: registered.redirectUri,
       clientState: query.get('state') ?? undefined,
       codeChallenge,
-      resource: query.get('resource') ?? undefined,
+      resource,
       scope: query.get('scope') ?? undefined,
     },
   };
@@ -245,7 +279,7 @@ async function handleAuthorize(
     return;
   }
 
-  const parsed = await parseAuthorizeRequest(readQuery(req), store);
+  const parsed = await parseAuthorizeRequest(readQuery(req), config, store);
   if (!parsed.ok) {
     sendJson(res, parsed.status, parsed.body);
     return;
@@ -258,6 +292,7 @@ async function handleAuthorize(
     clientState,
     codeChallenge,
     codeChallengeMethod: 'S256',
+    resource,
     scope,
   });
   if (!pending) {
@@ -265,14 +300,9 @@ async function handleAuthorize(
     return;
   }
 
-  redirect(
-    res,
-    buildLightdashAuthorizeUrl(config, {
-      state: pending.brokerState,
-      scope,
-      resource,
-    }),
-  );
+  // The MCP resource/scope belong to the client→broker leg. Do not forward them
+  // to Lightdash, whose OAuth client and protected resource are distinct.
+  redirect(res, buildLightdashAuthorizeUrl(config, { state: pending.brokerState }));
 }
 
 function redirectToClient(
@@ -331,12 +361,13 @@ async function handleCallback(
 
   try {
     const tokens = await exchangeLightdashAuthorizationCode(config, code);
-    // Do not persist/return refresh_token: broker only supports authorization_code.
+    // The downstream credential remains server-side. The later MCP token endpoint
+    // wraps it in an authenticated-encrypted, resource-bound broker token.
+    // Refresh tokens are deliberately neither persisted nor returned.
     const issued = await store.issueCode(pending, {
       accessToken: tokens.access_token,
       expiresIn: tokens.expires_in,
       tokenType: tokens.token_type,
-      scope: tokens.scope,
     });
     if (!issued) {
       redirectToClient(res, pending.redirectUri, {
@@ -364,12 +395,16 @@ type TokenGrantError = {
   body: { error: string; error_description: string };
 };
 
-async function validateTokenGrant(
-  params: URLSearchParams,
-  store: OAuthBrokerStore,
-): Promise<TokenGrantError | { issued: IssuedAuthorizationCode }> {
-  const grantType = params.get('grant_type');
-  if (grantType !== 'authorization_code') {
+type TokenGrantRequest = {
+  code: string;
+  redirectUri: string;
+  clientId: string;
+  codeVerifier: string | undefined;
+  resource: string;
+};
+
+function parseTokenGrantRequest(params: URLSearchParams): TokenGrantError | TokenGrantRequest {
+  if (params.get('grant_type') !== 'authorization_code') {
     return {
       status: 400,
       body: {
@@ -383,20 +418,44 @@ async function validateTokenGrant(
   const redirectUri = params.get('redirect_uri');
   const clientId = params.get('client_id');
   const codeVerifier = params.get('code_verifier') ?? undefined;
+  const resources = params.getAll('resource');
+  const resource = resources.length === 1 ? resources[0] : undefined;
 
-  if (!code || !redirectUri || !clientId) {
+  if (!code || !redirectUri || !clientId || !resource) {
     return {
       status: 400,
       body: {
         error: 'invalid_request',
-        error_description: 'code, redirect_uri, and client_id are required',
+        error_description: 'code, redirect_uri, client_id, and exactly one resource are required',
       },
     };
   }
 
-  // Atomic take first (multi-instance safe). Restore on validation failure so a
-  // bad verifier / redirect does not permanently burn a one-time code.
-  const candidate = await store.takeCode(code);
+  return { code, redirectUri, clientId, codeVerifier, resource };
+}
+
+async function restoreInvalidGrant(
+  store: OAuthBrokerStore,
+  candidate: IssuedAuthorizationCode,
+  description: string,
+): Promise<TokenGrantError> {
+  await store.restoreCode(candidate);
+  return {
+    status: 400,
+    body: { error: 'invalid_grant', error_description: description },
+  };
+}
+
+async function validateTokenGrant(
+  params: URLSearchParams,
+  store: OAuthBrokerStore,
+): Promise<TokenGrantError | { issued: IssuedAuthorizationCode }> {
+  const request = parseTokenGrantRequest(params);
+  if ('status' in request) return request;
+
+  // Atomic take first. Restore on validation failure so a bad verifier / redirect /
+  // resource does not permanently burn a one-time code.
+  const candidate = await store.takeCode(request.code);
   if (!candidate) {
     return {
       status: 400,
@@ -404,28 +463,20 @@ async function validateTokenGrant(
     };
   }
 
-  if (candidate.redirectUri !== redirectUri) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'redirect_uri mismatch' },
-    };
+  if (candidate.redirectUri !== request.redirectUri) {
+    return restoreInvalidGrant(store, candidate, 'redirect_uri mismatch');
   }
 
-  if (candidate.clientId !== clientId) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'client_id mismatch' },
-    };
+  if (candidate.clientId !== request.clientId) {
+    return restoreInvalidGrant(store, candidate, 'client_id mismatch');
   }
 
-  if (!verifyPkce(codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'PKCE verification failed' },
-    };
+  if (candidate.resource !== request.resource) {
+    return restoreInvalidGrant(store, candidate, 'resource mismatch');
+  }
+
+  if (!verifyPkce(request.codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
+    return restoreInvalidGrant(store, candidate, 'PKCE verification failed');
   }
 
   return { issued: candidate };
@@ -452,12 +503,29 @@ async function handleToken(
   }
 
   const { issued } = grant;
-  sendJson(res, 200, {
-    access_token: issued.accessToken,
-    token_type: issued.tokenType,
-    expires_in: issued.expiresIn ?? 3600,
-    scope: issued.scope,
-  });
+  const upstreamLifetimeSeconds = issued.expiresIn ?? 3600;
+  const expiresAtMs = issued.createdAt + upstreamLifetimeSeconds * 1000;
+
+  try {
+    const minted = mintMcpAccessToken(config, {
+      lightdashAccessToken: issued.accessToken,
+      clientId: issued.clientId,
+      resource: issued.resource,
+      scope: issued.scope,
+      expiresAtMs,
+    });
+    sendJson(res, 200, {
+      access_token: minted.accessToken,
+      token_type: 'Bearer',
+      expires_in: minted.expiresIn,
+      scope: issued.scope,
+    });
+  } catch {
+    sendJson(res, 400, {
+      error: 'invalid_grant',
+      error_description: 'Upstream Lightdash credential expired before broker token issuance',
+    });
+  }
 }
 
 async function handleRegister(
@@ -532,7 +600,8 @@ export function isOAuthBrokerPath(path: string): boolean {
 
 /**
  * Creates the OAuth broker request handler for co-located AS façade routes.
- * Pending state is process-local (InMemoryOAuthBrokerStore); sticky `/oauth/*` for multi-instance.
+ * Pending authorization/code state is process-local, so `/oauth/*` still needs
+ * sticky routing or one replica. Issued MCP access tokens are self-contained.
  */
 export function createOAuthBroker(
   config: McpHttpConfig,
