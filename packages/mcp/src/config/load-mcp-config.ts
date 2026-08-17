@@ -260,16 +260,16 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
   }
 
   console.warn(
-    'Note: hosted OAuth uses a server-held Lightdash confidential client (OAuth broker). ' +
-      'Token validation confirms Lightdash user identity via GET /api/v1/user; ' +
-      'opaque Lightdash tokens are not fully resource/audience-bound until upstream supports it. ' +
+    'Note: hosted OAuth uses a dual-leg broker with a server-held Lightdash confidential client. ' +
+      'MCP clients receive resource-bound broker tokens; delegated Lightdash access tokens remain ' +
+      'encrypted inside the broker token and are recovered only server-side for upstream calls. ' +
       `Register redirect URI ${getOAuthCallbackUrl(config)} in Lightdash.`,
   );
 
   if (!config.validateToken) {
     console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
-        'Use only for local development.',
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — broker-issued MCP tokens are still authenticated and audience-bound, ` +
+        'but downstream Lightdash user/token validation is skipped. Use only for local development.',
     );
   }
 
