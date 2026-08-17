@@ -6,6 +6,8 @@ Date: 2026-08-17
 
 Accepted
 
+Amends [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
+
 ## Context
 
 The hosted HTTP MCP server is both:
@@ -74,19 +76,20 @@ After `/oauth/token` succeeds, MCP access tokens are self-contained and authenti
 - Cross-profile token replay is rejected before contacting Lightdash.
 - MCP scope and downstream Lightdash scope cannot be confused.
 - The fix preserves stateless profile request handling and does not reintroduce Redis.
-- Key distribution does not require another deployment secret because replicas already share the Lightdash confidential-client secret; key derivation is domain-separated from its OAuth use.
+- Key distribution does not require another deployment secret because replicas already share the Lightdash confidential-client secret; key derivation is domain-separated from its OAuth use. That coupling is **accepted for v1**.
 
 ### Negative / residual risks
 
 - Self-contained bearer tokens do not provide per-token server-side revocation. They stop working on expiry, downstream credential revocation, or OAuth client-secret rotation. A future shared opaque-token store could add fine-grained MCP revocation if required.
-- Compromise of the MCP server process or its OAuth client secret can expose/decrypt delegated Lightdash credentials. This is inherent in the server-side delegation role and reinforces the need for secret-manager-backed configuration, least privilege, audit logging, and short token lifetimes.
+- Compromise of the MCP server process or its OAuth client secret can expose/decrypt delegated Lightdash credentials (and all outstanding MCP tokens). This is inherent in the server-side delegation role and reinforces the need for secret-manager-backed configuration, least privilege, audit logging, and short token lifetimes. A dedicated MCP token encryption secret (separate from the Lightdash OAuth client secret) would reduce blast radius and should be introduced by a future superseding ADR if operators need independent rotation.
+- MCP scopes sealed into the broker token are still taken from the client authorize request and checked against configured `requiredScopes`; they are not yet a broker-owned grant/consent boundary. Scope minimization and step-up remain future work.
 - The in-memory DCR/authorization-code handshake is still process-local. This ADR deliberately does not introduce a distributed authorization state store.
-- This decision separates token audiences; it does not by itself implement every MCP proxy-server control such as a richer per-client consent UI. Those controls are evaluated independently.
+- This decision closes token passthrough and MCP audience binding. It does **not** implement MCP proxy per-client consent before the static Lightdash OAuth redirect (confused-deputy class). That control is evaluated independently.
 
 ## References
 
 - [MCP Authorization specification (2026-07-28)](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
-- [MCP Security Best Practices — Token Passthrough](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices)
+- [MCP Security Best Practices — Token Passthrough / Confused Deputy](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices)
 - [RFC 8707 — Resource Indicators for OAuth 2.0](https://www.rfc-editor.org/rfc/rfc8707)
-- ADR-0007 — MCP HTTP transport, OAuth broker, SDK v2
-- ADR-0019 — MCP stateless protocol core without Redis ephemeral store
+- [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
+- [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
