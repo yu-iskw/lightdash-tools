@@ -102,7 +102,7 @@ importers:
         specifier: workspace:*
         version: link:../common
       axios:
-        specifier: ^1.19.0
+        specifier: '>=1.18.0'
         version: 1.19.0(supports-color@10.2.2)
       bottleneck:
         specifier: ^2.19.5
