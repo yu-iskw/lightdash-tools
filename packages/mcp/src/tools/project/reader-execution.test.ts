@@ -246,6 +246,40 @@ describe('registerRunChart opaque SQL', () => {
     const warnings = (body.warnings as Array<{ code: string }>) ?? [];
     expect(warnings.some((w) => w.code === 'SQL_BODY_REDACTED')).toBe(true);
   });
+
+  it('returns UPSTREAM_NOT_FOUND with recovery extras when sql-chart execute 404s', async () => {
+    resolveChartSourceMock.mockResolvedValue({
+      class: 'sql',
+      uuid: 'missing-sql',
+      slug: 'gone',
+      name: 'Gone',
+    });
+    runBoundedSavedQueryMock.mockRejectedValue(
+      new LightdashApiError(
+        404,
+        { name: 'NotFoundError', statusCode: 404, message: 'Saved query not found' },
+        {},
+      ),
+    );
+
+    const handler = captureHandler({
+      v2: {
+        charts: { getSavedChart: vi.fn() },
+        query: { runSqlChartQuery: vi.fn(), runChartQuery: vi.fn() },
+      },
+    });
+    const result = await handler({ chartUuidOrSlug: 'missing-sql' });
+    expect((result as { isError?: boolean }).isError).toBe(true);
+    const body = parseToolJson(result);
+    const error = body.error as {
+      code: string;
+      recovery?: string;
+      playbookUri?: string;
+    };
+    expect(error.code).toBe('UPSTREAM_NOT_FOUND');
+    expect(error.recovery).toMatch(/run_dashboard_tile/);
+    expect(error.playbookUri).toBe('lightdash://playbooks/content-reader/explain-run');
+  });
 });
 
 describe('registerRunDashboardTile opaque SQL', () => {

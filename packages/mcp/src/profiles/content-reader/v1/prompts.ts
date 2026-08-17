@@ -112,7 +112,7 @@ Focus: ${focus ?? '(general summary)'}.
 Execute tiles: ${executeTiles ?? false}; max tiles: ${maximumTiles ?? 5}.
 
 Workflow:
-get_dashboard → summarize structure → optional bounded run_dashboard_tile.
+get_dashboard → summarize structure → optional bounded tile runs via each executable tile's run handle (lightdash_run_dashboard_tile + tileUuid). Do not pass chartUuid / savedSqlUuid to run_chart for dashboard tiles.
 Unexecuted tiles must not support conclusions.`,
         invariantIds,
         requiredTopics: [TOPIC_EXPLAIN_RUN],

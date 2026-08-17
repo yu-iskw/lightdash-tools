@@ -8,6 +8,7 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { clampRowLimit } from '../../policy/result-limits.js';
+import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
@@ -22,6 +23,7 @@ import {
   codedErrorResult,
   isCoverageComplete,
   readerExecutionErrorResult,
+  savedChartNotFoundErrorResult,
   sqlExecutionRedactedWarning,
 } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
@@ -258,11 +260,13 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
     {
       title: 'Run chart',
       description:
-        'Execute one existing saved chart (semantic or opaque saved SQL). Cache-first, bounded rows. SQL text is never returned.',
+        'Execute one standalone saved chart (semantic or opaque saved SQL). Cache-first, bounded rows; SQL text is never returned. For dashboard tiles, copy tile.run / call lightdash_run_dashboard_tile with tileUuid — do not pass a SQL tile savedSqlUuid here. Standalone SQL charts: prefer chartSlug.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        chartUuidOrSlug: uuidOrSlugField('Chart UUID or slug'),
+        chartUuidOrSlug: uuidOrSlugField(
+          'Standalone chart UUID or slug — not a dashboard tile chartUuid / savedSqlUuid',
+        ),
         parameters: z.record(z.string(), z.unknown()).optional(),
         limit: z.number().int().positive().optional(),
         pivotResults: z.boolean().optional(),
@@ -288,6 +292,11 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
             try {
               return await handleRunChart({ client: c, profile, ...args });
             } catch (err) {
+              if (isNotFoundError(err)) {
+                return savedChartNotFoundErrorResult(
+                  err instanceof Error ? err.message : 'Saved chart not found',
+                );
+              }
               return readerExecutionErrorResult(err);
             }
           },
@@ -502,7 +511,7 @@ export function registerRunDashboardTile(
     {
       title: 'Run dashboard tile',
       description:
-        'Execute one dashboard tile in dashboard context (semantic saved charts or opaque SQL tiles). SQL text is never returned.',
+        'Execute one dashboard tile in dashboard filter/date-zoom context (semantic saved charts or opaque SQL tiles). Copy run.arguments from get_dashboard tiles. SQL text is never returned. Date zoom applies to semantic tiles.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),

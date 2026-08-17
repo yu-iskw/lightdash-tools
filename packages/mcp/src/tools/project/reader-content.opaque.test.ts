@@ -185,6 +185,40 @@ describe('registerGetChart opaque SQL', () => {
     expect(JSON.stringify(result)).not.toContain('run_chart');
   });
 
+  it('returns UPSTREAM_NOT_FOUND with recovery when content-reader load throws 404', async () => {
+    resolveChartSourceMock.mockRejectedValue(
+      new LightdashApiError(
+        404,
+        { name: 'NotFoundError', statusCode: 404, message: 'Saved query not found' },
+        {},
+      ),
+    );
+    (wrapToolMock as { __client?: unknown }).__client = {
+      v2: { charts: { getSavedChart: vi.fn() } },
+    };
+    let handler: ((args: Record<string, unknown>) => Promise<unknown>) | undefined;
+    registerContentReaderToolMock.mockImplementation(
+      (
+        _server: unknown,
+        _name: unknown,
+        _meta: unknown,
+        createHandler: (profile: string) => typeof handler,
+      ) => {
+        handler = createHandler('content-reader');
+      },
+    );
+    registerGetChart({} as never, {} as never);
+
+    const result = await handler!({ chartUuidOrSlug: 'missing-chart' });
+    expect((result as { isError?: boolean }).isError).toBe(true);
+    const body = JSON.parse((result as { content: Array<{ text: string }> }).content[0].text) as {
+      error: { code: string; recovery?: string; playbookUri?: string };
+    };
+    expect(body.error.code).toBe('UPSTREAM_NOT_FOUND');
+    expect(body.error.recovery).toMatch(/run_dashboard_tile/);
+    expect(body.error.playbookUri).toBe('lightdash://playbooks/content-reader/explain-run');
+  });
+
   it('does not advertise run_chart on content-developer opaque SQL metadata', async () => {
     const getSavedChart = vi.fn();
     resolveChartSourceMock.mockResolvedValue({

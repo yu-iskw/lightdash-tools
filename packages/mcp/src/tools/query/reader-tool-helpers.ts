@@ -5,6 +5,7 @@
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
 import { ResultLimitError } from '../../policy/result-limits.js';
+import { playbookTopicUri } from '../../profiles/lib/playbook-resources.js';
 import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import { FilterOverrideError } from './filter-overrides.js';
@@ -62,6 +63,17 @@ export function codedErrorResult(
     return withLightdashBlockedMarker(result);
   }
   return result;
+}
+
+/** ADR-0025 recovery when a chart id is missing (often a dashboard SQL tile UUID). */
+const SAVED_CHART_NOT_FOUND_EXTRAS: ToolErrorExtras = {
+  recovery:
+    "If this id came from a dashboard tile, call lightdash_run_dashboard_tile with that tile's tileUuid (copy tile.run). For a standalone SQL chart, pass chartSlug — not a tile savedSqlUuid.",
+  playbookUri: playbookTopicUri('content-reader', 'explain-run'),
+};
+
+export function savedChartNotFoundErrorResult(message: string): TextContent {
+  return codedErrorResult('UPSTREAM_NOT_FOUND', message, SAVED_CHART_NOT_FOUND_EXTRAS);
 }
 
 /** Map ProjectScopeError to a tool error result; rethrow anything else. */
