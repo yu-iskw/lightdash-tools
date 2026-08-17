@@ -2,15 +2,15 @@
  * Result limits, timeouts, and execution budgets for content-reader.
  */
 
-export const DEFAULT_ROW_LIMIT = 100;
-export const HARD_ROW_MAXIMUM = 1000;
+export const DEFAULT_ROW_LIMIT = 2000;
+export const HARD_ROW_MAXIMUM = 50000;
 export const DEFAULT_WAIT_MS = 20_000;
 export const MAX_WAIT_MS = 30_000;
-export const MAX_CELL_CHARS = 2_000;
+export const MAX_CELL_CHARS = 5_000;
 export const DEFAULT_QUERY_LEDGER_TTL_MS = 30 * 60_000;
-export const MAX_CONCURRENT_QUERIES_PER_SESSION = 2;
-export const MAX_CONCURRENT_QUERIES_PER_USER = 5;
-export const QUERY_BUDGET_MAX = 20;
+export const MAX_CONCURRENT_QUERIES_PER_SESSION = 5;
+export const MAX_CONCURRENT_QUERIES_PER_USER = 10;
+export const QUERY_BUDGET_MAX = 500;
 export const QUERY_BUDGET_WINDOW_MS = 10 * 60_000;
 
 export class ResultLimitError extends Error {
