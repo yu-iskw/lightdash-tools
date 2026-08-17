@@ -35,22 +35,29 @@ function deriveEncryptionKey(config: McpHttpConfig): Buffer {
   return createHmac('sha256', config.oauthClientSecret.expose()).update(KEY_CONTEXT).digest();
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.length > 0;
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isSafeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value);
+}
+
 function isPayload(value: unknown): value is McpAccessTokenPayload {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
   return (
     record.v === 1 &&
-    typeof record.lightdashAccessToken === 'string' &&
-    record.lightdashAccessToken.length > 0 &&
-    typeof record.clientId === 'string' &&
-    record.clientId.length > 0 &&
-    typeof record.resource === 'string' &&
-    record.resource.length > 0 &&
-    (record.scope === undefined || typeof record.scope === 'string') &&
-    typeof record.iat === 'number' &&
-    Number.isSafeInteger(record.iat) &&
-    typeof record.exp === 'number' &&
-    Number.isSafeInteger(record.exp)
+    isNonEmptyString(record.lightdashAccessToken) &&
+    isNonEmptyString(record.clientId) &&
+    isNonEmptyString(record.resource) &&
+    isOptionalString(record.scope) &&
+    isSafeInteger(record.iat) &&
+    isSafeInteger(record.exp)
   );
 }
 
