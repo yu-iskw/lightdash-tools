@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { toReaderTableCalculation } from './reader-content.js';
+import { toReaderSearchItem, toReaderTableCalculation } from './reader-content.js';
 
 describe('toReaderTableCalculation', () => {
   it('preserves formula table calculations', () => {
@@ -68,6 +68,25 @@ describe('toReaderTableCalculation', () => {
       displayName: '% of total',
       format: { type: 'percent' },
       sql: '${orders.total_order_amount} / total(${orders.total_order_amount})',
+    });
+  });
+});
+
+describe('toReaderSearchItem', () => {
+  it('omits space membership access lists', () => {
+    expect(
+      toReaderSearchItem({
+        contentType: 'space',
+        uuid: 'space-1',
+        name: 'アプリ',
+        access: ['user-a', 'user-b'],
+        dashboardCount: 4,
+      }),
+    ).toEqual({
+      contentType: 'space',
+      uuid: 'space-1',
+      name: 'アプリ',
+      dashboardCount: 4,
     });
   });
 });

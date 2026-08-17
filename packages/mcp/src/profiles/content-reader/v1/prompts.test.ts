@@ -20,6 +20,7 @@ describe('content-reader prompts/playbook', () => {
     const md = getAllPlaybookMarkdown().toLowerCase();
     expect(md).toContain('do not mutate');
     expect(md).toContain('underlying-data');
-    expect(md).toContain('sql charts');
+    expect(md).toContain('sql runner');
+    expect(md).toContain('opaque');
   });
 });

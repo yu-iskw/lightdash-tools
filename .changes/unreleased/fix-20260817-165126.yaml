@@ -1,0 +1,3 @@
+kind: fix
+body: 'content-reader: opaque SQL fallback when search misses chart UUIDs; strip space membership lists from search_content'
+time: 2026-08-17T16:51:26.924135+09:00

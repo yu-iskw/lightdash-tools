@@ -22,8 +22,9 @@ export const CONTENT_READER_INVARIANTS = [
     short: 'Do not download or bulk-export results.',
   },
   {
-    id: 'no-sql-chart-execution',
-    short: 'Do not execute saved SQL charts (disabled by default on content-reader).',
+    id: 'no-sql-body-or-runner',
+    short:
+      'Do not read saved SQL chart bodies or use SQL Runner; opaque saved SQL chart results via run_chart / run_dashboard_tile only.',
   },
   {
     id: 'no-override-semantics',

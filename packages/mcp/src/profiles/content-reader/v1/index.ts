@@ -15,7 +15,6 @@ import {
   searchContentTool,
 } from '../../../tools/project/reader-content.js';
 import { runChartTool, runDashboardTileTool } from '../../../tools/project/reader-execution.js';
-import { exportChartImageTool } from '../../../tools/project/reader-export-chart-image.js';
 import { getSpaceTool, listSpacesTool } from '../../../tools/project/spaces.js';
 import { cancelQueryTool, getQueryResultTool } from '../../../tools/query/lifecycle.js';
 
@@ -42,7 +41,6 @@ export const contentReaderProfile: ProfileDefinition = {
     getProjectParametersTool,
     explainContentTool,
     runChartTool,
-    exportChartImageTool,
     runDashboardTileTool,
     getQueryResultTool,
     cancelQueryTool,

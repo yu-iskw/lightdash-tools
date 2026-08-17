@@ -5,7 +5,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_ROW_LIMIT,
   HARD_ROW_MAXIMUM,
+  MAX_CONCURRENT_QUERIES_PER_SESSION,
+  MAX_CONCURRENT_QUERIES_PER_USER,
   ResultLimitError,
   acquireQueryBudget,
   clampRowLimit,
@@ -20,7 +23,7 @@ describe('result-limits', () => {
   });
 
   it('clamps default and rejects over hard max', () => {
-    expect(clampRowLimit()).toBe(100);
+    expect(clampRowLimit()).toBe(DEFAULT_ROW_LIMIT);
     expect(clampRowLimit(50)).toBe(50);
     expect(() => clampRowLimit(HARD_ROW_MAXIMUM + 1)).toThrow(ResultLimitError);
   });
@@ -31,15 +34,17 @@ describe('result-limits', () => {
   });
 
   it('enforces session concurrent limit when no user key', () => {
-    acquireQueryBudget('s1');
-    acquireQueryBudget('s1');
+    for (let i = 0; i < MAX_CONCURRENT_QUERIES_PER_SESSION; i += 1) {
+      acquireQueryBudget('s1');
+    }
     expect(() => acquireQueryBudget('s1')).toThrow(/RATE_LIMITED|concurrent/);
-    releaseQueryBudget('s1');
-    releaseQueryBudget('s1');
+    for (let i = 0; i < MAX_CONCURRENT_QUERIES_PER_SESSION; i += 1) {
+      releaseQueryBudget('s1');
+    }
   });
 
   it('uses only user budgets when userKey is set (sessionless HTTP)', () => {
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < MAX_CONCURRENT_QUERIES_PER_USER; i += 1) {
       acquireQueryBudget('process:shared', 'user-a');
     }
     expect(() => acquireQueryBudget('process:shared', 'user-a')).toThrow(

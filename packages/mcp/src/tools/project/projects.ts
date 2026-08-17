@@ -24,7 +24,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 const READER_CAPABILITIES = {
   canDiscoverContent: true,
   canExecuteSavedCharts: true,
-  canExecuteSqlCharts: false,
+  canExecuteSqlCharts: true,
   canExecuteDashboardTiles: true,
 } as const;
 

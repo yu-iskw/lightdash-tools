@@ -9,10 +9,10 @@ Discover, explain, and **optionally execute** saved Lightdash charts/dashboards 
 ## Hard bans
 
 - Do not mutate Lightdash resources (create/update/delete/move/promote).
-- Do not execute arbitrary metric queries, raw SQL, SQL runner, or underlying-data downloads.
+- Do not execute arbitrary metric queries, raw SQL, SQL runner (`query/sql`), or underlying-data downloads.
 - Do not bulk-export or page endlessly through result sets.
-- Do not execute saved SQL charts (`source=sql` / `chartType=sql`); default capability is off (`canExecuteSqlCharts=false`).
-- Do not override filter **targets/operators**, required-filter behavior, fields, metrics, dimensions, SQL, table calculations, or sorts — only allowed **value** overrides on existing filter ids / known parameters.
+- Do not read saved SQL chart **bodies**; opaque execution via `run_chart` / `run_dashboard_tile` is allowed (`canExecuteSqlCharts=true`, ADR-0027).
+- Do not override filter **targets/operators**, required-filter behavior, fields, metrics, dimensions, SQL, table calculations, or sorts — only allowed **value** overrides on existing filter ids / known parameters (non-empty values enable disabled filters).
 - Do not execute content outside the resolved project.
 - Do not present truncated / incomplete coverage as a full answer.
 - Do not claim metric equivalence from matching labels alone.
@@ -27,7 +27,6 @@ Discover, explain, and **optionally execute** saved Lightdash charts/dashboards 
 | Spaces deep-dived (`get_space`)                 | **≤3**                                                                |
 | Charts / dashboards fully inspected             | **≤5** metadata fetches                                               |
 | Executions (`run_chart` / `run_dashboard_tile`) | **≤3** total; dashboard tiles **≤5** when summarizing                 |
-| Chart image exports (`export_chart_image`)      | **≤3** (prefer when the user needs to **see** the viz)                |
 | Result rows kept in the answer                  | **≤20** (even if more returned)                                       |
 | `get_query_result` polls                        | only while status is non-terminal; then stop                          |
 
@@ -44,14 +43,13 @@ Record budget / pagination / truncation stops in the answer.
 | Tool                                                 | Use for                                                                                                                    |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `get_project`                                        | Resolve project; read `readerCapabilities` + pin context                                                                   |
-| `search_content`                                     | Find charts/dashboards/spaces/data apps                                                                                    |
+| `search_content`                                     | Find charts/dashboards/spaces/data apps (name/slug; UUIDs usually miss; space membership lists omitted)                    |
 | `list_verified_content`                              | List admin-verified charts/dashboards (prefer as trusted seeds)                                                            |
 | `list_spaces` / `get_space`                          | Space hierarchy + immediate content                                                                                        |
 | `get_dashboard` / `get_chart`                        | Structure / definition (saved SQL **chart** bodies hidden; semantic `tableCalculations` may appear when query is included) |
 | `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                                                                                    |
 | `explain_content`                                    | Compact metadata explanation                                                                                               |
-| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers)                                                                                          |
-| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless                                                                     |
+| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers; semantic + opaque SQL)                                                                   |
 | `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid`                                                                                               |
 
 ## Phase 0 — Resolve project

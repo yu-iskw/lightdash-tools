@@ -83,8 +83,8 @@ ${formatPromptProjectUuidLine(projectUuid)}
 includeLatestValues=${includeLatestValues ?? false}.
 
 Workflow:
-get_project → get_chart / explain_content → optional bounded run_chart / export_chart_image.
-Skip SQL charts for execution. Separate explicit metadata from inference.`,
+get_project → get_chart / explain_content → optional bounded run_chart.
+Opaque SQL charts may be executed for rows; never expect SQL text. Separate explicit metadata from inference.`,
         invariantIds,
         requiredTopics: [TOPIC_EXPLAIN_RUN],
       }),

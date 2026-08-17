@@ -12,6 +12,7 @@ export type ContentReaderWarningCode =
   | 'QUERY_RUNNING'
   | 'QUERY_TIMEOUT'
   | 'REDACTED'
+  | 'SQL_BODY_REDACTED'
   | 'SQL_EXECUTION_DISABLED'
   | 'STALE_CONTENT'
   | 'TRUNCATED'

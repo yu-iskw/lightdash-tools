@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
+import { ResultLimitError } from '../../policy/result-limits.js';
 
+import { FilterOverrideError } from './filter-overrides.js';
 import {
   codedErrorResult,
   isCoverageComplete,
   projectScopeErrorResult,
+  readerExecutionErrorResult,
 } from './reader-tool-helpers.js';
 
 describe('codedErrorResult', () => {
@@ -50,6 +53,33 @@ describe('projectScopeErrorResult', () => {
     );
     expect(result.isError).toBe(true);
     expect((result as { _lightdashBlocked?: boolean })._lightdashBlocked).toBe(true);
+  });
+});
+
+describe('readerExecutionErrorResult', () => {
+  it('maps ProjectScopeError, ResultLimitError, and FilterOverrideError', () => {
+    const scope = readerExecutionErrorResult(
+      new ProjectScopeError('PROJECT_SCOPE_REQUIRED', 'need project'),
+    );
+    expect(scope.structuredContent).toEqual({
+      error: { code: 'PROJECT_SCOPE_REQUIRED', message: 'need project' },
+    });
+
+    const limit = readerExecutionErrorResult(
+      new ResultLimitError('ROW_LIMIT_EXCEEDED', 'too many'),
+    );
+    expect(limit.structuredContent).toEqual({
+      error: { code: 'ROW_LIMIT_EXCEEDED', message: 'too many' },
+    });
+
+    const filter = readerExecutionErrorResult(new FilterOverrideError('bad filter'));
+    expect(filter.structuredContent).toEqual({
+      error: { code: 'INVALID_FILTER_OVERRIDE', message: 'bad filter' },
+    });
+  });
+
+  it('rethrows unexpected errors', () => {
+    expect(() => readerExecutionErrorResult(new Error('nope'))).toThrow('nope');
   });
 });
 

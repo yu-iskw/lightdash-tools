@@ -11,12 +11,14 @@ URI: `lightdash://playbooks/content-reader/explain-run`
 
 ## SQL vs semantic (critical)
 
-| Signal                                                      | Action                                                                                         |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Search `source=sql`                                         | Do **not** call `run_chart`; explain metadata only; cite `CONTENT_NOT_EXECUTABLE` / capability |
-| `get_chart` → `chartType=sql` + warnings                    | Same — saved SQL **chart** body hidden; execution disabled                                     |
-| Opaque API errors (e.g. “Saved query not found”) on SQL ids | Treat as non-executable; do not retry endlessly                                                |
-| `readerCapabilities.canExecuteSqlCharts=false`              | Hard stop for SQL execution                                                                    |
+| Signal                                                          | Action                                                                                                 |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Search `source=sql` (name/slug; **UUIDs usually miss**)         | Opaque path: `run_chart` / SQL dashboard tiles for **results**; never expect SQL text from `get_chart` |
+| Dashboard tile `type=sql_chart`                                 | Prefer `run_dashboard_tile` (uses tile type + `chartSlug` / `savedSqlUuid`; does not depend on search) |
+| `get_chart` → `chartType=sql` + `SQL_BODY_REDACTED`             | Metadata only; execute via `run_chart` for bounded rows (ADR-0027)                                     |
+| Semantic GET 404 (`Saved query not found`) on a chart UUID/slug | Treat as opaque saved SQL and continue (`run_chart` / `get_chart`); do not stop                        |
+| `readerCapabilities.canExecuteSqlCharts=false`                  | Unexpected on current content-reader — cite capability and stop                                        |
+| SQL Runner / raw `query/sql`                                    | Hard ban — never available on this profile                                                             |
 
 ## Decide whether to execute
 
@@ -24,19 +26,17 @@ Execute only for values, trends, rankings, summaries, comparisons, or discrepanc
 
 Defaults: `useCache=true`, modest `limit` (≤100; summarize ≤20 rows in the answer), prefer `waitForResults=true` for single charts.
 
-## Chart images (see the viz)
+## Chart images
 
-- Use `export_chart_image` when the user needs to **see** the rendered chart (layout, series, labels), not raw numbers.
-- Prefer `run_chart` when they need values/aggregates.
-- Export relies on Lightdash headless browser; self-hosted instances without Browserless will fail — report the API error; do not invent a screenshot.
-- Budget ≤3 image exports per turn.
+- `export_chart_image` is **not mounted**. Use `run_chart` / `run_dashboard_tile` for values and summarize series in text.
+- Do not invent screenshots or claim a PNG was rendered.
 
 ## Dashboard tile execution
 
-1. Pick tiles with `executable=true` and a `chartUuid` (skip markdown / non-chart tiles).
+1. Pick tiles with `executable=true` (semantic `saved_chart` or opaque `sql_chart`) and skip markdown / non-chart tiles.
 2. Call `run_dashboard_tile` with dashboard UUID/slug + **`tileUuid`** from `get_dashboard`.
-3. Preserve dashboard context; only pass `filterOverrides` / `parameterOverrides` for **existing** filter ids / known parameter names with **values** (never retarget filters).
-4. Optional **date zoom**: pass `dateZoom: { granularity?, xAxisFieldId? }` when the user asks to simulate a zoom ([date zoom](https://docs.lightdash.com/guides/date-zoom)). Otherwise execution uses the dashboard’s saved default granularity. Cite `appliedDateZoom` in the report when present.
+3. Preserve dashboard context; only pass `filterOverrides` / `parameterOverrides` for **existing** filter ids / known parameter names with **values** (never retarget filters). Non-empty override `values` **enable** a previously disabled filter (`disabled: false`). Cite `appliedDashboardFilters` after the run.
+4. Optional **date zoom**: pass `dateZoom: { granularity?, xAxisFieldId? }` when the user asks to simulate a zoom ([date zoom](https://docs.lightdash.com/guides/date-zoom)). Otherwise execution uses the dashboard’s saved default granularity. Cite `appliedDateZoom` in the report when present. (Date zoom applies to semantic tiles; SQL tiles may ignore it.)
 5. Cap tiles per summary (`maximumTiles` / budget ≤5). Unexecuted tiles must not support conclusions.
 
 ## Async handles

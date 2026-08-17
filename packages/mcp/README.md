@@ -197,7 +197,7 @@ Read-only inventory, access, content health, usage, and schedulers. No mutations
 
 ### `content-reader`
 
-Project-scoped discovery, metadata, bounded `run_chart` / `run_dashboard_tile`, and `export_chart_image` (PNG). SQL charts off by default. Project: `X-Lightdash-Project` or tool `projectUuid`. Server name: `lightdash-mcp-content`.
+Project-scoped discovery, metadata, and bounded `run_chart` / `run_dashboard_tile` (semantic + opaque saved SQL). No chart PNG export tool. Project: `X-Lightdash-Project` or tool `projectUuid`. Server name: `lightdash-mcp-content`.
 
 ### `content-developer`
 
