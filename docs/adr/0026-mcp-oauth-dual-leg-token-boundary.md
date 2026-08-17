@@ -43,17 +43,17 @@ Lightdash API
 - The MCP authorization request MUST contain exactly one `resource` identifying an enabled profile endpoint on the configured MCP public URL.
 - The broker binds that resource to its pending authorization state and one-time authorization code.
 - The MCP token request MUST contain the same `resource`; a mismatch fails with `invalid_grant`.
-- The broker MUST NOT return the downstream Lightdash access token to the MCP client.
+- The broker MUST NOT return the downstream Lightdash access token to the MCP client in plaintext or reusable bearer form.
 - `/oauth/token` mints a short-lived `ldmcp1.*` bearer token issued by lightdash-tools.
 - The token is authenticated-encrypted with AES-256-GCM. A purpose-specific encryption key is derived from the server-held Lightdash OAuth client secret; every replica already needs that secret.
-- The encrypted payload binds the MCP client ID, exact MCP resource URI, MCP scope, issuance/expiry timestamps, and the server-held downstream credential.
+- The encrypted payload binds the MCP client ID, exact MCP resource URI, MCP scope, issuance/expiry timestamps, and the downstream Lightdash credential. Only the MCP server can recover that credential from the broker token.
 - The MCP resource server decrypts and authenticates the token and requires an exact resource match before any Lightdash network request.
 - Raw Lightdash bearer tokens, malformed tokens, expired tokens, tampered tokens, and tokens issued for another profile are rejected locally with HTTP 401.
 
 ### Broker -> Lightdash leg
 
 - The server-held Lightdash OAuth client ID/secret are used for the downstream authorization-code exchange.
-- The resulting Lightdash access token remains server-side.
+- The resulting Lightdash access token is never returned to the MCP client in plaintext or directly reusable form; it is recoverable only server-side from the authenticated-encrypted broker token.
 - Client PKCE, MCP `resource`, and MCP scopes are not forwarded to Lightdash. They belong to a different OAuth leg and have different semantics.
 - Lightdash user identity and RBAC continue to be validated/enforced with the delegated downstream credential.
 - A Lightdash `refresh_token`, if returned, is not persisted or exposed; expiration requires a new interactive authorization flow.
