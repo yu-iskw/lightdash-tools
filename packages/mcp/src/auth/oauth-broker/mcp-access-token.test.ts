@@ -66,7 +66,13 @@ describe('MCP broker access token', () => {
       NOW,
     );
 
-    const tampered = `${accessToken.slice(0, -1)}${accessToken.endsWith('A') ? 'B' : 'A'}`;
+    // Mutate the first Base64URL character of the authentication-tag segment. Changing
+    // the final character can alter only unused padding bits and still decode to identical bytes.
+    const parts = accessToken.split('.');
+    const tag = parts[3]!;
+    parts[3] = `${tag[0] === 'A' ? 'B' : 'A'}${tag.slice(1)}`;
+    const tampered = parts.join('.');
+
     expect(verifyMcpAccessToken(config, tampered, RESOURCE, NOW)).toBeUndefined();
     expect(verifyMcpAccessToken(config, accessToken, RESOURCE, NOW + 2_000)).toBeUndefined();
   });
