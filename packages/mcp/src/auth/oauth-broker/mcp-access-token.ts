@@ -135,7 +135,9 @@ export function verifyMcpAccessToken(
     const decipher = createDecipheriv('aes-256-gcm', deriveEncryptionKey(config), iv);
     decipher.setAAD(AAD);
     decipher.setAuthTag(tag);
-    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8');
+    const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString(
+      'utf8',
+    );
     const parsed = JSON.parse(plaintext) as unknown;
     if (!isPayload(parsed)) return undefined;
 
