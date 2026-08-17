@@ -274,10 +274,7 @@ describe('oauth broker DCR + authorize binding', () => {
 
     const badRes = mockRes();
     await broker.handle(
-      mockReq(
-        'GET',
-        authorizeUrl(registered.client_id, 'https://attacker.example/cb', challenge),
-      ),
+      mockReq('GET', authorizeUrl(registered.client_id, 'https://attacker.example/cb', challenge)),
       badRes,
       '/oauth/authorize',
     );
@@ -290,10 +287,7 @@ describe('oauth broker DCR + authorize binding', () => {
     const challenge = createHash('sha256').update('verifier').digest('base64url');
     const res = mockRes();
     await broker.handle(
-      mockReq(
-        'GET',
-        authorizeUrl('unknown', 'https://app.example/cb', challenge),
-      ),
+      mockReq('GET', authorizeUrl('unknown', 'https://app.example/cb', challenge)),
       res,
       '/oauth/authorize',
     );
