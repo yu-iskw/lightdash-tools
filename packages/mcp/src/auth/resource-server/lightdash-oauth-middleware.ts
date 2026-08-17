@@ -58,10 +58,7 @@ function parseBrokerScopes(scope: string | undefined): string[] | undefined {
   return scopes.length > 0 ? scopes : undefined;
 }
 
-function invalidMcpTokenFailure(
-  resourceMetadataUrl: string,
-  scope: string,
-): OAuthAuthFailure {
+function invalidMcpTokenFailure(resourceMetadataUrl: string, scope: string): OAuthAuthFailure {
   const description = 'Invalid, expired, or wrong-audience MCP access token';
   return {
     ok: false,
@@ -102,10 +99,7 @@ export async function authenticateLightdashOAuth(
   }
 
   const scopes = parseBrokerScopes(brokerToken.scope);
-  if (
-    config.requiredScopes.length > 0 &&
-    !hasRequiredScopes(scopes ?? [], config.requiredScopes)
-  ) {
+  if (config.requiredScopes.length > 0 && !hasRequiredScopes(scopes ?? [], config.requiredScopes)) {
     const missingScopes = config.requiredScopes.filter(
       (requiredScope) => !(scopes ?? []).includes(requiredScope),
     );
