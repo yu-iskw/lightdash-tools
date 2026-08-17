@@ -85,8 +85,8 @@ After `/oauth/token` succeeds, MCP access tokens are self-contained and authenti
 
 ## References
 
-- MCP Authorization specification (2026-07-28): https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization
-- MCP Security Best Practices — Token Passthrough: https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices
-- RFC 8707 — Resource Indicators for OAuth 2.0: https://www.rfc-editor.org/rfc/rfc8707
+- [MCP Authorization specification (2026-07-28)](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization)
+- [MCP Security Best Practices — Token Passthrough](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices)
+- [RFC 8707 — Resource Indicators for OAuth 2.0](https://www.rfc-editor.org/rfc/rfc8707)
 - ADR-0007 — MCP HTTP transport, OAuth broker, SDK v2
 - ADR-0019 — MCP stateless protocol core without Redis ephemeral store
