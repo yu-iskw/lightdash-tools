@@ -31,8 +31,8 @@ export function buildOAuthProtectedResourceMetadata(
 
   // Broker mode: authorization_servers is the MCP host (PUBLIC_URL). Clients discover
   // AS metadata at {PUBLIC_URL}/.well-known/oauth-authorization-server and never need
-  // the Lightdash client secret. Identity validation remains GET /api/v1/user until
-  // upstream tokens are resource-bound.
+  // the Lightdash client secret. The broker issues its own access token bound to this
+  // exact resource; the downstream Lightdash credential remains a separate OAuth leg.
   return {
     resource: `${publicUrl}${path}`,
     authorization_servers: [publicUrl],
