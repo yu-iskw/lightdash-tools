@@ -2,7 +2,8 @@
  * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0019).
  *
  * All values are JSON-serializable. Backend: in-memory only — process-local.
- * Multi-instance OAuth needs sticky `/oauth/*` or a single replica until signed-state/CIMD.
+ * Multi-instance OAuth authorization/code exchange needs sticky `/oauth/*` or a single replica.
+ * Issued MCP access tokens are self-contained and do not depend on this store after exchange.
  */
 
 import { randomBytes } from 'node:crypto';
@@ -18,6 +19,9 @@ export interface PendingAuthorization {
   clientState?: string;
   codeChallenge: string;
   codeChallengeMethod: string;
+  /** Exact RFC 8707 MCP protected-resource URI requested by the client. */
+  resource: string;
+  /** MCP authorization scope. This is not a downstream Lightdash scope. */
   scope?: string;
   createdAt: number;
 }
@@ -28,9 +32,13 @@ export interface IssuedAuthorizationCode {
   redirectUri: string;
   codeChallenge: string;
   codeChallengeMethod: string;
+  /** Server-held downstream Lightdash access token; never return it directly to MCP clients. */
   accessToken: string;
   expiresIn?: number;
   tokenType: string;
+  /** Exact RFC 8707 MCP protected-resource URI bound during authorization. */
+  resource: string;
+  /** MCP authorization scope. */
   scope?: string;
   createdAt: number;
 }
@@ -78,7 +86,6 @@ export interface OAuthBrokerStore {
       accessToken: string;
       expiresIn?: number;
       tokenType?: string;
-      scope?: string;
     },
   ): Promise<IssuedAuthorizationCode | undefined>;
   /** Atomic get+delete for one-time code consume. */
@@ -177,7 +184,6 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
       accessToken: string;
       expiresIn?: number;
       tokenType?: string;
-      scope?: string;
     },
   ): Promise<IssuedAuthorizationCode | undefined> {
     this.cleanup();
@@ -193,7 +199,8 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
       accessToken: tokens.accessToken,
       expiresIn: tokens.expiresIn,
       tokenType: tokens.tokenType ?? 'Bearer',
-      scope: tokens.scope ?? pending.scope,
+      resource: pending.resource,
+      scope: pending.scope,
       createdAt: Date.now(),
     };
     this.codes.set(issued.code, issued);
