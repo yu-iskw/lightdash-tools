@@ -395,12 +395,16 @@ type TokenGrantError = {
   body: { error: string; error_description: string };
 };
 
-async function validateTokenGrant(
-  params: URLSearchParams,
-  store: OAuthBrokerStore,
-): Promise<TokenGrantError | { issued: IssuedAuthorizationCode }> {
-  const grantType = params.get('grant_type');
-  if (grantType !== 'authorization_code') {
+type TokenGrantRequest = {
+  code: string;
+  redirectUri: string;
+  clientId: string;
+  codeVerifier: string | undefined;
+  resource: string;
+};
+
+function parseTokenGrantRequest(params: URLSearchParams): TokenGrantError | TokenGrantRequest {
+  if (params.get('grant_type') !== 'authorization_code') {
     return {
       status: 400,
       body: {
@@ -427,9 +431,31 @@ async function validateTokenGrant(
     };
   }
 
+  return { code, redirectUri, clientId, codeVerifier, resource };
+}
+
+async function restoreInvalidGrant(
+  store: OAuthBrokerStore,
+  candidate: IssuedAuthorizationCode,
+  description: string,
+): Promise<TokenGrantError> {
+  await store.restoreCode(candidate);
+  return {
+    status: 400,
+    body: { error: 'invalid_grant', error_description: description },
+  };
+}
+
+async function validateTokenGrant(
+  params: URLSearchParams,
+  store: OAuthBrokerStore,
+): Promise<TokenGrantError | { issued: IssuedAuthorizationCode }> {
+  const request = parseTokenGrantRequest(params);
+  if ('status' in request) return request;
+
   // Atomic take first. Restore on validation failure so a bad verifier / redirect /
   // resource does not permanently burn a one-time code.
-  const candidate = await store.takeCode(code);
+  const candidate = await store.takeCode(request.code);
   if (!candidate) {
     return {
       status: 400,
@@ -437,36 +463,20 @@ async function validateTokenGrant(
     };
   }
 
-  if (candidate.redirectUri !== redirectUri) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'redirect_uri mismatch' },
-    };
+  if (candidate.redirectUri !== request.redirectUri) {
+    return restoreInvalidGrant(store, candidate, 'redirect_uri mismatch');
   }
 
-  if (candidate.clientId !== clientId) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'client_id mismatch' },
-    };
+  if (candidate.clientId !== request.clientId) {
+    return restoreInvalidGrant(store, candidate, 'client_id mismatch');
   }
 
-  if (candidate.resource !== resource) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'resource mismatch' },
-    };
+  if (candidate.resource !== request.resource) {
+    return restoreInvalidGrant(store, candidate, 'resource mismatch');
   }
 
-  if (!verifyPkce(codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
-    await store.restoreCode(candidate);
-    return {
-      status: 400,
-      body: { error: 'invalid_grant', error_description: 'PKCE verification failed' },
-    };
+  if (!verifyPkce(request.codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
+    return restoreInvalidGrant(store, candidate, 'PKCE verification failed');
   }
 
   return { issued: candidate };
