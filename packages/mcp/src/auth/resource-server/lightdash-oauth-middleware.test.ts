@@ -32,12 +32,14 @@ function resourceFor(path: string): string {
   return `https://mcp.example.com${path}`;
 }
 
-function mcpToken(options: {
-  path?: string;
-  scope?: string;
-  lightdashAccessToken?: string;
-  expiresAtMs?: number;
-} = {}): string {
+function mcpToken(
+  options: {
+    path?: string;
+    scope?: string;
+    lightdashAccessToken?: string;
+    expiresAtMs?: number;
+  } = {},
+): string {
   const path = options.path ?? SEMANTIC_LAYER_PROFILE_PATH;
   return mintMcpAccessToken(baseConfig, {
     lightdashAccessToken: options.lightdashAccessToken ?? 'ld-upstream-token',
