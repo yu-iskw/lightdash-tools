@@ -52,17 +52,5 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build packages
         run: pnpm build
-      - name: Print OAuth formatting diff
-        run: |
-          pnpm exec prettier --write \
-            packages/mcp/src/auth/oauth-broker/mcp-access-token.ts \
-            packages/mcp/src/auth/oauth-broker/routes.test.ts \
-            packages/mcp/src/auth/resource-server/lightdash-oauth-middleware.ts \
-            packages/mcp/src/auth/resource-server/lightdash-oauth-middleware.test.ts
-          git diff -- \
-            packages/mcp/src/auth/oauth-broker/mcp-access-token.ts \
-            packages/mcp/src/auth/oauth-broker/routes.test.ts \
-            packages/mcp/src/auth/resource-server/lightdash-oauth-middleware.ts \
-            packages/mcp/src/auth/resource-server/lightdash-oauth-middleware.test.ts
       - name: Trunk Check
         uses: trunk-io/trunk-action@75699af9e26881e564e9d832ef7dc3af25ec031b # v1.2.4
