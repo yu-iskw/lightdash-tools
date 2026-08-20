@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { agentUuidField, optionalProjectUuidField, withAgentOpsScope } from './helpers.js';
+import { agentUuidField, optionalProjectUuidField, withAiAgentProjectScope } from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -38,7 +38,7 @@ export function registerEvaluateAgentReadiness(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.evaluateAgentReadiness(scope.projectUuid, agentUuid),
             mode: 'project_readiness_api',
             limitations: [READINESS_LIMITATION],
@@ -67,7 +67,7 @@ export function registerGetAgentSuggestions(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgentSuggestions(scope.projectUuid, agentUuid),
           })),
     ),
@@ -94,7 +94,7 @@ export function registerGetAgentModels(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgentModelOptions(scope.projectUuid, agentUuid),
           })),
     ),
@@ -126,7 +126,7 @@ export function registerGetExploreAccessSummary(
       contextProvider,
       (c) =>
         async ({ projectUuid, tags }: { projectUuid?: string; tags?: string[] | null }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getExploreAccessSummary(scope.projectUuid, {
               tags: tags === undefined ? null : tags,
             }),

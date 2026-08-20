@@ -3,6 +3,7 @@
  */
 
 export const PROFILE_IDS = [
+  'ai-agent-chat',
   'ai-agent-ops',
   'content-developer',
   'content-governance',

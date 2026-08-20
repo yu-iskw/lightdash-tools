@@ -7,6 +7,7 @@ import { PROFILE_IDS } from '@lightdash-tools/common';
 
 import { normalizeMcpPath } from '../config/normalize-url.js';
 
+import { aiAgentChatProfile } from './ai-agent-chat/v1/index.js';
 import { aiAgentOpsProfile } from './ai-agent-ops/v1/index.js';
 import { contentDeveloperProfile } from './content-developer/v1/index.js';
 import { contentGovernanceProfile } from './content-governance/v1/index.js';
@@ -18,6 +19,7 @@ import { semanticLayerProfile } from './semantic-layer/v1/index.js';
 import type { ProfileDefinition, ProfileId } from './types.js';
 
 export type { ProfileDefinition, ProfileId } from './types.js';
+export { AI_AGENT_CHAT_PROFILE_PATH } from './ai-agent-chat/v1/index.js';
 export { AI_AGENT_OPS_PROFILE_PATH } from './ai-agent-ops/v1/index.js';
 export { SEMANTIC_LAYER_PROFILE_PATH } from './semantic-layer/v1/index.js';
 export { ORGANIZATION_AUDIT_PROFILE_PATH } from './organization-audit/v1/index.js';
@@ -35,6 +37,7 @@ export const PROFILES: Record<ProfileId, ProfileDefinition> = {
   'content-reader': contentReaderProfile,
   'content-developer': contentDeveloperProfile,
   'content-governance': contentGovernanceProfile,
+  'ai-agent-chat': aiAgentChatProfile,
   'ai-agent-ops': aiAgentOpsProfile,
   'data-analyst': dataAnalystProfile,
 };

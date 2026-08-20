@@ -1,6 +1,6 @@
 # [@lightdash-tools/mcp](https://www.npmjs.com/package/@lightdash-tools/mcp) <!-- markdown-link-check-disable-line -->
 
-MCP server for Lightdash with **profile-scoped** surfaces. One package, seven profiles: explore/compile, org audit, saved-content reads, chart/dashboard authoring, soft-delete governance, AI-agent ops, and ad-hoc Explore queries. Uses [`@lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client) for API access. <!-- markdown-link-check-disable-line -->
+MCP server for Lightdash with **profile-scoped** surfaces. One package, eight profiles: explore/compile, org audit, saved-content reads, chart/dashboard authoring, soft-delete governance, AI-agent ops, AI-agent chat, and ad-hoc Explore queries. Uses [`@lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client) for API access. <!-- markdown-link-check-disable-line -->
 
 Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
@@ -14,6 +14,7 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 | `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/profiles/content-developer/inventory.md)  |
 | `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/profiles/content-governance/inventory.md) |
 | `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/profiles/ai-agent-ops/inventory.md)       |
+| `ai-agent-chat`      | Use existing AI Agents as the current user | `/ai-agent-chat/v1/mcp`    | `ai-agent-chat`      | [inventory](../../docs/profiles/ai-agent-chat/inventory.md)      |
 | `data-analyst`       | Unsaved Explore metric queries           | `/data-analyst/v1/mcp`       | `data-analyst`       | [inventory](../../docs/profiles/data-analyst/inventory.md)       |
 
 Tool names are prefixed with `lightdash_`. MCP display names are shortened where needed for client length limits (e.g. `lightdash-mcp-content`).
@@ -131,7 +132,7 @@ Governance soft-delete needs client form elicitation; missing capability → `EL
 
 ### Profile allowlist
 
-Optional HTTP-only mount ceiling. Unset or empty → all seven shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
+Optional HTTP-only mount ceiling. Unset or empty → all eight shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
 
 **Format**
 
@@ -221,6 +222,10 @@ Soft-delete charts/dashboards and elicitation-gated dashboard promote. Permanent
 
 Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/profiles/ai-agent-ops/loop.md](../../docs/profiles/ai-agent-ops/loop.md).
 
+### `ai-agent-chat`
+
+Use existing Lightdash AI Agents as the authenticated Lightdash user. Supports accessible-agent discovery and the user's own conversation flow (`create_agent_thread` → `create_agent_thread_message` → `generate_agent_response`). The profile does not expose AI-agent administration, evaluations, SQL mode, or Lightdash content mutation. The selected Lightdash AI Agent may still use tools configured for that agent. Server name: `lightdash-mcp-aichat`. Inventory: [docs/profiles/ai-agent-chat/inventory.md](../../docs/profiles/ai-agent-chat/inventory.md). Hosted viewer deployments should set `LIGHTDASH_TOOLS_MCP_PROFILES=ai-agent-chat` plus a project UUID ceiling.
+
 ### `data-analyst`
 
 Unsaved Explore-style metric queries (`run_metric_query`) with explore discovery and optional `compile_query`. Bounded rows; no chart save. Server name: `lightdash-mcp-analyst`.
@@ -228,7 +233,7 @@ Unsaved Explore-style metric queries (`run_metric_query`) with explore discovery
 ## Safety
 
 - **Off MCP:** irrecoverable admin deletes, permanent content purge, broad org mutations — use `@lightdash-tools/client` or the CLI ([ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
-- **Writes:** only on `content-developer` (preview gate). Soft-delete / promote: only on `content-governance` (form elicitation).
+- **Writes:** `content-developer` (preview gate). Soft-delete / promote: `content-governance` (form elicitation). `ai-agent-chat` creates threads/messages and triggers open-world managed-agent generation (nested agent tools stay Lightdash-governed).
 - **Redaction:** emails masked unless `includeEmail=true`; scheduler destinations redacted unless `revealDestinations=true`; warehouse/dbt connection secrets never on MCP ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)).
 - **Project scope:** optional HTTP pin `X-Lightdash-Project`, else tool `projectUuid`; optional ceiling [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist).
 

@@ -6,6 +6,8 @@ Date: 2026-08-03
 
 Accepted
 
+Related to [29. MCP ai-agent-chat profile conversation boundary](0029-mcp-ai-agent-chat-profile-conversation-boundary.md)
+
 ## Context
 
 Coding agents need to inspect Lightdash AI agents, run product evaluations, and drive improvement loops. An earlier RFC draft placed offline datasets, scorers, runners, failure clustering, and promotion reports **inside** `@lightdash-tools/mcp`. That conflicts with:

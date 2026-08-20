@@ -1,5 +1,5 @@
 /**
- * Shared helpers for ai-agent-ops MCP tools (ADR-0018).
+ * Shared helpers for AI-agent MCP tools (ai-agent-ops and ai-agent-chat).
  */
 
 import { z } from 'zod';
@@ -78,7 +78,7 @@ type ProjectScopedBody = Record<string, unknown> & { data: unknown };
  * Resolve project scope, run the handler, and attach standard context.
  * Maps ProjectScopeError to a blocked tool result; other errors rethrow for wrapTool.
  */
-export async function withAgentOpsScope(
+export async function withAiAgentProjectScope(
   projectUuid: string | undefined,
   run: (scope: ResolvedProjectScope) => Promise<ProjectScopedBody>,
 ): Promise<TextContent> {

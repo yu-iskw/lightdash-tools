@@ -1,11 +1,11 @@
 /**
- * Project AI agent inventory tools (ai-agent-ops profile).
+ * Project AI agent inventory tools (ai-agent-ops and ai-agent-chat profiles).
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { agentUuidField, optionalProjectUuidField, withAgentOpsScope } from './helpers.js';
+import { agentUuidField, optionalProjectUuidField, withAiAgentProjectScope } from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -27,7 +27,7 @@ export function registerListProjectAgents(
       contextProvider,
       (c) =>
         async ({ projectUuid }: { projectUuid?: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.listAgents(scope.projectUuid),
           })),
     ),
@@ -54,7 +54,7 @@ export function registerGetProjectAgent(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: { projectUuid?: string; agentUuid: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgent(scope.projectUuid, agentUuid),
           })),
     ),

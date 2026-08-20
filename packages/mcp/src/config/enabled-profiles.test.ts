@@ -2,6 +2,7 @@ import { PROFILE_IDS } from '@lightdash-tools/common';
 import { describe, expect, it } from 'vitest';
 
 import {
+  AI_AGENT_CHAT_PROFILE_PATH,
   CONTENT_DEVELOPER_PROFILE_PATH,
   CONTENT_READER_PROFILE_PATH,
   getProfile,
@@ -48,6 +49,7 @@ describe('isProfileEnabled / requiresSignedStateKey / resolveRootMcpPath', () =>
   it('treats unrestricted as all profiles enabled', () => {
     expect(isProfileEnabled(UNRESTRICTED_ENABLED_PROFILES, 'content-governance')).toBe(true);
     expect(isProfileEnabled(UNRESTRICTED_ENABLED_PROFILES, 'data-analyst')).toBe(true);
+    expect(isProfileEnabled(UNRESTRICTED_ENABLED_PROFILES, 'ai-agent-chat')).toBe(true);
     expect(requiresSignedStateKey(UNRESTRICTED_ENABLED_PROFILES)).toBe(true);
   });
 
@@ -64,6 +66,7 @@ describe('isProfileEnabled / requiresSignedStateKey / resolveRootMcpPath', () =>
     expect(requiresSignedStateKey(parseEnabledProfiles('content-reader,content-developer'))).toBe(
       true,
     );
+    expect(requiresSignedStateKey(parseEnabledProfiles('ai-agent-chat'))).toBe(false);
   });
 
   it('uses semantic-layer mcpPath when unrestricted or when that id is listed', () => {
@@ -83,6 +86,13 @@ describe('isProfileEnabled / requiresSignedStateKey / resolveRootMcpPath', () =>
     expect(PROFILE_IDS.indexOf('content-developer')).toBeLessThan(
       PROFILE_IDS.indexOf('content-reader'),
     );
+  });
+
+  it('anchors root PRM on ai-agent-chat when it is the first enabled PROFILE_IDS id', () => {
+    expect(resolveRootMcpPath(parseEnabledProfiles('ai-agent-chat,ai-agent-ops'))).toBe(
+      AI_AGENT_CHAT_PROFILE_PATH,
+    );
+    expect(PROFILE_IDS.indexOf('ai-agent-chat')).toBeLessThan(PROFILE_IDS.indexOf('ai-agent-ops'));
   });
 
   it('lists shipped paths when unrestricted and only enabled paths when restricted', () => {

@@ -17,7 +17,7 @@ import {
   redactEvalRunResults,
   redactEvaluationPayload,
   runUuidField,
-  withAgentOpsScope,
+  withAiAgentProjectScope,
 } from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -50,7 +50,7 @@ export function registerListAgentEvaluations(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid }: ScopeArgs) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.listEvaluations(scope.projectUuid, agentUuid),
           })),
     ),
@@ -85,7 +85,7 @@ export function registerGetAgentEvaluation(
           evalUuid,
           includePromptText,
         }: ScopeArgs & { evalUuid: string; includePromptText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const evaluation = await c.v1.aiAgents.getEvaluation(
               scope.projectUuid,
               agentUuid,
@@ -133,7 +133,7 @@ export function registerCreateAgentEvaluation(
           prompts: CreateEvaluationBody['prompts'];
           includePromptText?: boolean;
         }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const evaluation = await c.v1.aiAgents.createEvaluation(scope.projectUuid, agentUuid, {
               title,
               description,
@@ -184,7 +184,7 @@ export function registerUpdateAgentEvaluation(
           prompts?: UpdateEvaluationBody['prompts'];
           includePromptText?: boolean;
         }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const evaluation = await c.v1.aiAgents.updateEvaluation(
               scope.projectUuid,
               agentUuid,
@@ -230,7 +230,7 @@ export function registerAppendAgentEvaluationPrompts(
           prompts: AppendEvaluationBody['prompts'];
           includePromptText?: boolean;
         }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const evaluation = await c.v1.aiAgents.appendToEvaluation(
               scope.projectUuid,
               agentUuid,
@@ -264,7 +264,7 @@ export function registerDeleteAgentEvaluation(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid, evalUuid }: ScopeArgs & { evalUuid: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             await c.v1.aiAgents.deleteEvaluation(scope.projectUuid, agentUuid, evalUuid);
             return { data: { deleted: true, evalUuid } };
           }),
@@ -294,7 +294,7 @@ export function registerRunAgentEvaluation(
       contextProvider,
       (c) =>
         async ({ projectUuid, agentUuid, evalUuid }: ScopeArgs & { evalUuid: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.runEvaluation(scope.projectUuid, agentUuid, evalUuid),
             mode: 'lightdash_agent_evaluation_run',
             limitations: [
@@ -334,7 +334,7 @@ export function registerListAgentEvaluationRuns(
           page,
           pageSize,
         }: ScopeArgs & { evalUuid: string; page?: number; pageSize?: number }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.listEvaluationRuns(scope.projectUuid, agentUuid, evalUuid, {
               page,
               pageSize,
@@ -374,7 +374,7 @@ export function registerGetAgentEvalRunResults(
           runUuid,
           includePromptText,
         }: ScopeArgs & { evalUuid: string; runUuid: string; includePromptText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const run = await c.v1.aiAgents.getEvaluationRunResults(
               scope.projectUuid,
               agentUuid,

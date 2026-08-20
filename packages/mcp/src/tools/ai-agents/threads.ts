@@ -1,5 +1,5 @@
 /**
- * AI agent thread read tools (ai-agent-ops profile).
+ * AI agent thread read tools (ai-agent-ops and ai-agent-chat profiles).
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
@@ -12,7 +12,7 @@ import {
   redactThreadMessages,
   redactThreadSummaries,
   threadUuidField,
-  withAgentOpsScope,
+  withAiAgentProjectScope,
 } from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -46,7 +46,7 @@ export function registerListAgentThreads(
           agentUuid,
           includeMessageText,
         }: AgentScopeArgs & { includeMessageText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const threads = await c.v1.aiAgents.listAgentThreads(scope.projectUuid, agentUuid);
             return redactThreadSummaries(threads, includeMessageText === true);
           }),
@@ -82,7 +82,7 @@ export function registerGetAgentThread(
           threadUuid,
           includeMessageText,
         }: AgentScopeArgs & { threadUuid: string; includeMessageText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const thread = await c.v1.aiAgents.getAgentThread(
               scope.projectUuid,
               agentUuid,
