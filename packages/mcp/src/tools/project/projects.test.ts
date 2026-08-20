@@ -218,7 +218,7 @@ describe('get_project ToolModules', () => {
     expect(body.data.readerCapabilities).toEqual({
       canDiscoverContent: true,
       canExecuteSavedCharts: true,
-      canExecuteSqlCharts: false,
+      canExecuteSqlCharts: true,
       canExecuteDashboardTiles: true,
     });
     expect(body.context.projectUuid).toBe(PINNED);

@@ -4,11 +4,32 @@
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
+import { ResultLimitError } from '../../policy/result-limits.js';
+import { playbookTopicUri } from '../../profiles/lib/playbook-resources.js';
 import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
+
+import { FilterOverrideError } from './filter-overrides.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
 import type { TextContent, ToolErrorExtras } from '../shared.js';
+
+export const SQL_DEFINITION_BODY_REDACTED: ContentReaderWarning = {
+  code: 'SQL_BODY_REDACTED',
+  message: 'Saved SQL chart definition body is not returned on content-reader',
+};
+
+export function sqlExecutionRedactedWarning(
+  scope: 'chart' | 'dashboard_tile',
+): ContentReaderWarning {
+  return {
+    code: 'SQL_BODY_REDACTED',
+    message:
+      scope === 'dashboard_tile'
+        ? 'Dashboard SQL tile executed opaquely; SQL text is not returned'
+        : 'Saved SQL chart executed opaquely; SQL text is not returned',
+  };
+}
 
 /** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
 const BLOCKED_POLICY_CODES = new Set([
@@ -44,9 +65,32 @@ export function codedErrorResult(
   return result;
 }
 
+/** ADR-0025 recovery when a chart id is missing (often a dashboard SQL tile UUID). */
+const SAVED_CHART_NOT_FOUND_EXTRAS: ToolErrorExtras = {
+  recovery:
+    "If this id came from a dashboard tile, call lightdash_run_dashboard_tile with that tile's tileUuid (copy tile.run). For a standalone SQL chart, pass chartSlug — not a tile savedSqlUuid.",
+  playbookUri: playbookTopicUri('content-reader', 'explain-run'),
+};
+
+export function savedChartNotFoundErrorResult(message: string): TextContent {
+  return codedErrorResult('UPSTREAM_NOT_FOUND', message, SAVED_CHART_NOT_FOUND_EXTRAS);
+}
+
 /** Map ProjectScopeError to a tool error result; rethrow anything else. */
 export function projectScopeErrorResult(err: unknown): TextContent {
   if (err instanceof ProjectScopeError) {
+    return codedErrorResult(err.code, err.message);
+  }
+  throw err;
+}
+
+/** Map content-reader execution policy errors; rethrow anything else. */
+export function readerExecutionErrorResult(err: unknown): TextContent {
+  if (
+    err instanceof ProjectScopeError ||
+    err instanceof ResultLimitError ||
+    err instanceof FilterOverrideError
+  ) {
     return codedErrorResult(err.code, err.message);
   }
   throw err;

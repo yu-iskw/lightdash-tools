@@ -2,18 +2,24 @@
  * Content-reader discovery/metadata tools: search, dashboard, chart.
  */
 
-import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
+import { CONTENT_SORT_BY_COLUMNS, type ProfileId } from '@lightdash-tools/common';
 import { z } from 'zod';
 
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
+import { isNotFoundError } from '../lib/api-errors.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
-import { classifyChartSource } from '../query/chart-source.js';
-import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
-import { jsonToolResult, wrapTool } from '../shared.js';
+import { loadSavedChartOrOpaqueSql } from '../query/load-saved-chart.js';
+import {
+  SQL_DEFINITION_BODY_REDACTED,
+  codedErrorResult,
+  projectScopeErrorResult,
+  savedChartNotFoundErrorResult,
+} from '../query/reader-tool-helpers.js';
+import { TOOL_PREFIX, jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -92,30 +98,64 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
     verification: chart.verification,
     updatedAt: chart.updatedAt,
     warnings:
-      chartType === 'sql' ? ['SQL text is hidden; SQL chart execution is disabled by default'] : [],
+      chartType === 'sql'
+        ? ['SQL text is hidden; run_chart executes results opaquely (ADR-0027)']
+        : [],
   };
+}
+
+/** Drop space membership lists (ADR-0011); list_spaces already returns booleans only. */
+export function toReaderSearchItem(item: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'access'));
+}
+
+/**
+ * Map one dashboard tile for content-reader agents.
+ * SQL tiles keep `savedSqlUuid` but never alias it as `chartUuid` (use `run` / run_dashboard_tile).
+ */
+export function mapReaderDashboardTile(
+  tile: Record<string, unknown>,
+  dashboardUuid: string,
+): Record<string, unknown> {
+  const props = (tile.properties ?? {}) as Record<string, unknown>;
+  const type = typeof tile.type === 'string' ? tile.type : 'unknown';
+  const executable = type === 'saved_chart' || type === 'sql_chart';
+  const tileUuid = tile.uuid;
+  const mapped: Record<string, unknown> = {
+    tileUuid,
+    tabUuid: tile.tabUuid,
+    type,
+    title: props.title ?? props.chartName,
+    chartSlug: props.chartSlug,
+    chartName: props.chartName,
+    chartKind: props.chartKind,
+    executable,
+  };
+  if (type === 'sql_chart') {
+    mapped.savedSqlUuid = props.savedSqlUuid;
+  } else if (type === 'saved_chart') {
+    const chartUuid = props.savedChartUuid ?? props.chartUuid;
+    if (chartUuid !== undefined && chartUuid !== null) {
+      mapped.chartUuid = chartUuid;
+    }
+  }
+  if (executable) {
+    mapped.run = {
+      tool: `${TOOL_PREFIX}run_dashboard_tile`,
+      arguments: {
+        dashboardUuidOrSlug: dashboardUuid,
+        tileUuid,
+      },
+    };
+  }
+  return mapped;
 }
 
 function toReaderDashboard(dashboard: Record<string, unknown>, includeTiles: boolean) {
   const tilesRaw = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
+  const dashboardUuid = String(dashboard.uuid ?? '');
   const tiles = includeTiles
-    ? tilesRaw.map((tile) => {
-        const t = tile as Record<string, unknown>;
-        const props = (t.properties ?? {}) as Record<string, unknown>;
-        const type = typeof t.type === 'string' ? t.type : 'unknown';
-        const executable = type === 'saved_chart';
-        return {
-          tileUuid: t.uuid,
-          tabUuid: t.tabUuid,
-          type,
-          title: props.title ?? props.chartName,
-          chartUuid: props.savedChartUuid ?? props.chartUuid,
-          chartSlug: props.chartSlug,
-          chartName: props.chartName,
-          chartKind: props.chartKind,
-          executable,
-        };
-      })
+    ? tilesRaw.map((tile) => mapReaderDashboardTile(tile as Record<string, unknown>, dashboardUuid))
     : undefined;
   return {
     uuid: dashboard.uuid,
@@ -194,7 +234,10 @@ export function registerSearchContent(
               );
               return jsonToolResult(
                 contentReaderEnvelope(
-                  { items: data, pagination: { returned: data.length, ...pagination, complete } },
+                  {
+                    items: data.map((item) => toReaderSearchItem(item)),
+                    pagination: { returned: data.length, ...pagination, complete },
+                  },
                   {
                     profile,
                     projectUuid: scope.projectUuid,
@@ -258,7 +301,8 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
     'get_dashboard',
     {
       title: 'Get dashboard',
-      description: 'Inspect dashboard structure before tile execution',
+      description:
+        'Inspect dashboard structure before tile execution. Executable tiles include a copy-paste run handle (lightdash_run_dashboard_tile). Do not pass SQL tile savedSqlUuid to run_chart — use tile.run or run_dashboard_tile with tileUuid.',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -301,6 +345,37 @@ export function registerGetDashboard(server: McpServer, contextProvider: McpCont
   );
 }
 
+function opaqueSqlChartResult(
+  profile: ProfileId,
+  scope: { projectUuid: string; projectPinned: boolean },
+  match: { uuid?: string; slug?: string; name?: string },
+  chartUuidOrSlug: string,
+) {
+  return jsonToolResult(
+    contentReaderEnvelope(
+      {
+        uuid: match.uuid ?? chartUuidOrSlug,
+        slug: match.slug ?? chartUuidOrSlug,
+        name: match.name,
+        description: null,
+        chartType: 'sql' as const,
+        parameters: {},
+        warnings: [
+          profile === 'content-reader'
+            ? 'SQL text is hidden; use run_chart for opaque bounded results (ADR-0027)'
+            : 'SQL text is hidden; saved SQL chart bodies are not returned',
+        ],
+      },
+      {
+        profile,
+        projectUuid: scope.projectUuid,
+        projectPinned: scope.projectPinned,
+        warnings: [SQL_DEFINITION_BODY_REDACTED],
+      },
+    ),
+  );
+}
+
 export function registerGetChart(server: McpServer, contextProvider: McpContextProvider): void {
   registerContentReaderTool(
     server,
@@ -308,11 +383,13 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
     {
       title: 'Get chart',
       description:
-        'Explain a saved semantic chart definition (saved SQL chart bodies stay hidden; tableCalculations expressions included when includeQueryDefinition)',
+        'Explain a saved semantic chart definition (saved SQL chart bodies stay hidden; tableCalculations expressions included when includeQueryDefinition). Standalone chart UUID/slug only — not a dashboard tile savedSqlUuid.',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        chartUuidOrSlug: uuidOrSlugField('Chart UUID or slug'),
+        chartUuidOrSlug: uuidOrSlugField(
+          'Standalone chart UUID or slug — not a dashboard tile chartUuid / savedSqlUuid',
+        ),
         includeQueryDefinition: z.boolean().optional(),
       },
     },
@@ -327,28 +404,39 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-              const preClass = await classifyChartSource(
+              const loaded = await loadSavedChartOrOpaqueSql(
                 c,
                 scope.projectUuid,
                 args.chartUuidOrSlug,
+                { notFoundAsSql: profile === 'content-reader' },
               );
-              if (preClass === 'sql') {
-                return codedErrorResult(
-                  'CONTENT_NOT_EXECUTABLE',
-                  'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
-                );
+              if (loaded.kind === 'sql') {
+                return opaqueSqlChartResult(profile, scope, loaded.match, args.chartUuidOrSlug);
               }
-              const chart = asRecord(
-                await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),
-              );
               return jsonToolResult(
-                contentReaderEnvelope(toReaderChart(chart, args.includeQueryDefinition !== false), {
-                  profile,
-                  projectUuid: scope.projectUuid,
-                  projectPinned: scope.projectPinned,
-                }),
+                contentReaderEnvelope(
+                  toReaderChart(loaded.chart, args.includeQueryDefinition !== false),
+                  {
+                    profile,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                  },
+                ),
               );
             } catch (err) {
+              if (isNotFoundError(err)) {
+                if (profile === 'content-reader') {
+                  return savedChartNotFoundErrorResult(
+                    err instanceof Error
+                      ? err.message
+                      : `Chart '${args.chartUuidOrSlug}' was not found`,
+                  );
+                }
+                return codedErrorResult(
+                  'CONTENT_NOT_FOUND',
+                  `Chart '${args.chartUuidOrSlug}' was not found`,
+                );
+              }
               return projectScopeErrorResult(err);
             }
           },

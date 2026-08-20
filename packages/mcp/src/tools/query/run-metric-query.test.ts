@@ -110,7 +110,7 @@ describe('registerRunMetricQuery', () => {
       exploreName: 'orders',
       dimensions: [],
       metrics: ['orders_order_count'],
-      limit: 50_000,
+      limit: 50_001,
     });
     expect(result.isError).toBe(true);
     expect(JSON.stringify(result)).toContain('ROW_LIMIT_EXCEEDED');

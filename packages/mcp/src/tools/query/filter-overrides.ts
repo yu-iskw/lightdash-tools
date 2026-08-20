@@ -78,7 +78,9 @@ function patchGroup(
     return {
       ...filter,
       values: override.values,
-      disabled: filter.required === true ? false : filter.disabled,
+      // Enable when required, or when the agent supplies non-empty override values
+      // (optional dashboard filters are often saved disabled with empty values).
+      disabled: filter.required === true || override.values.length > 0 ? false : filter.disabled,
     };
   });
 }

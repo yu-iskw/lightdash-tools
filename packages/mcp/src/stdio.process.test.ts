@@ -268,11 +268,11 @@ describe('stdio process smoke', () => {
       'stdio-process-smoke',
     );
     expect(serverName).toBe('lightdash-mcp-content');
-    expect(tools).toHaveLength(15);
+    expect(tools).toHaveLength(14);
     expect(tools.some((t) => t.name === 'lightdash_search_content')).toBe(true);
     expect(tools.some((t) => t.name === 'lightdash_list_verified_content')).toBe(true);
     expect(tools.some((t) => t.name === 'lightdash_run_chart')).toBe(true);
-    expect(tools.some((t) => t.name === 'lightdash_export_chart_image')).toBe(true);
+    expect(tools.some((t) => t.name === 'lightdash_export_chart_image')).toBe(false);
 
     killChild(child);
     child = undefined;

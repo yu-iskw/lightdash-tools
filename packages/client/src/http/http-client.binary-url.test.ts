@@ -85,4 +85,58 @@ describe('HttpClient.getBytes', () => {
       /must not downgrade HTTPS to HTTP/,
     );
   });
+
+  it('follows one safe redirect hop and returns bytes', async () => {
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47]);
+    const getImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 302,
+        data: new ArrayBuffer(0),
+        headers: { location: 'https://app.lightdash.com/export/final.png' },
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        data: png,
+        headers: { 'content-type': 'image/png' },
+      });
+    const client = makeClient(getImpl);
+
+    const result = await client.getBytes('https://app.lightdash.com/export/chart.png');
+    expect(result.mimeType).toBe('image/png');
+    expect(result.bytes.equals(png)).toBe(true);
+    expect(getImpl).toHaveBeenCalledTimes(2);
+    expect(getImpl.mock.calls[1][0]).toBe('https://app.lightdash.com/export/final.png');
+  });
+
+  it('refuses a second redirect hop', async () => {
+    const getImpl = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 302,
+        data: new ArrayBuffer(0),
+        headers: { location: 'https://app.lightdash.com/hop1.png' },
+      })
+      .mockResolvedValueOnce({
+        status: 301,
+        data: new ArrayBuffer(0),
+        headers: { location: 'https://app.lightdash.com/hop2.png' },
+      });
+    const client = makeClient(getImpl);
+    await expect(client.getBytes('https://app.lightdash.com/chart.png')).rejects.toThrow(
+      /second redirect/,
+    );
+  });
+
+  it('rejects redirect Location to a blocked host', async () => {
+    const getImpl = vi.fn().mockResolvedValue({
+      status: 302,
+      data: new ArrayBuffer(0),
+      headers: { location: 'https://127.0.0.1/secret.png' },
+    });
+    const client = makeClient(getImpl);
+    await expect(client.getBytes('https://app.lightdash.com/chart.png')).rejects.toThrow(
+      /not allowed/,
+    );
+  });
 });

@@ -134,6 +134,28 @@ function readApiErrorPayload(data: unknown): ApiErrorPayload['error'] | undefine
   return error as ApiErrorPayload['error'];
 }
 
+function readLocationHeader(headers: AxiosResponse['headers']): string | undefined {
+  const locationHeader = headers.location;
+  const location = Array.isArray(locationHeader) ? locationHeader[0] : locationHeader;
+  return typeof location === 'string' && location.length > 0 ? location : undefined;
+}
+
+function isRedirectStatus(status: number): boolean {
+  return status >= 300 && status < 400;
+}
+
+function resolveRedirectUrl(location: string, requestUrl: string, baseUrl: string): string {
+  return new URL(location, /^https?:\/\//i.test(requestUrl) ? requestUrl : baseUrl).href;
+}
+
+function mimeTypeFromHeaders(headers: AxiosResponse['headers']): string {
+  const rawType = headers['content-type'];
+  if (typeof rawType !== 'string') {
+    return 'application/octet-stream';
+  }
+  return rawType.split(';')[0]?.trim() ?? 'application/octet-stream';
+}
+
 /**
  * HTTP client that wraps Axios with rate limiting and retry.
  */
@@ -206,54 +228,94 @@ export class HttpClient {
     return this.request<T>('DELETE', url, config);
   }
 
-  /**
-   * Fetch raw bytes (no ApiSuccess envelope unwrap). Relative URLs use the
-   * authenticated API client; absolute URLs on a different host (e.g. signed S3)
-   * are fetched without Lightdash Authorization. Cross-host fetches require https,
-   * disallow private/link-local hosts, and follow no redirects.
-   */
-  async getBytes(url: string, options?: GetBytesOptions): Promise<GetBytesResult> {
-    const maxBytes = options?.maxBytes ?? DEFAULT_BINARY_MAX_BYTES;
-    const timeout = options?.timeout ?? this.config.timeout ?? DEFAULT_TIMEOUT;
-    assertSafeBinaryFetchUrl(url, this.config.baseUrl);
-    const binaryConfig: AxiosRequestConfig = {
-      responseType: 'arraybuffer',
-      timeout,
-      maxContentLength: maxBytes,
-      maxBodyLength: maxBytes,
-      maxRedirects: 0,
-    };
-
+  private async fetchBinaryOnce(
+    targetUrl: string,
+    binaryConfig: AxiosRequestConfig,
+    maxBytes: number,
+  ): Promise<AxiosResponse<ArrayBuffer>> {
+    assertSafeBinaryFetchUrl(targetUrl, this.config.baseUrl);
     const doRequest = (): Promise<AxiosResponse<ArrayBuffer>> => {
-      if (/^https?:\/\//i.test(url)) {
-        const targetHost = new URL(url).host;
+      if (/^https?:\/\//i.test(targetUrl)) {
+        const targetHost = new URL(targetUrl).host;
         const baseHost = new URL(this.config.baseUrl).host;
         if (targetHost !== baseHost) {
-          return axios.get<ArrayBuffer>(url, binaryConfig);
+          return axios.get<ArrayBuffer>(targetUrl, binaryConfig);
         }
       }
-      return this.axiosInstance.get<ArrayBuffer>(url, binaryConfig);
+      return this.axiosInstance.get<ArrayBuffer>(targetUrl, binaryConfig);
     };
-
-    let response: AxiosResponse<ArrayBuffer>;
     try {
       // No retries: binary bodies can be multi-MiB; a 5xx would re-download the payload.
-      response = await this.rateLimiter.schedule(doRequest);
+      return await this.rateLimiter.schedule(doRequest);
     } catch (err) {
       if (isAxiosMaxContentLengthError(err)) {
         throw new BinarySizeLimitError(maxBytes);
       }
       throw err;
     }
+  }
+
+  private async followSingleBinaryRedirect(
+    response: AxiosResponse<ArrayBuffer>,
+    requestUrl: string,
+    binaryConfig: AxiosRequestConfig,
+    maxBytes: number,
+  ): Promise<AxiosResponse<ArrayBuffer>> {
+    if (!isRedirectStatus(response.status)) {
+      return response;
+    }
+    const location = readLocationHeader(response.headers);
+    if (!location) {
+      throw new NetworkError(
+        `Binary download redirected (${response.status}) without a Location header`,
+        new Error(`HTTP ${response.status}`),
+      );
+    }
+    const nextUrl = resolveRedirectUrl(location, requestUrl, this.config.baseUrl);
+    const next = await this.fetchBinaryOnce(nextUrl, binaryConfig, maxBytes);
+    if (isRedirectStatus(next.status)) {
+      throw new NetworkError(
+        `Binary download refused a second redirect (${next.status}); only one hop is allowed`,
+        new Error(`HTTP ${next.status}`),
+      );
+    }
+    return next;
+  }
+
+  /**
+   * Fetch raw bytes (no ApiSuccess envelope unwrap). Relative URLs use the
+   * authenticated API client; absolute URLs on a different host (e.g. signed S3)
+   * are fetched without Lightdash Authorization. Cross-host fetches require https
+   * and disallow private/link-local hosts. At most one redirect hop is followed
+   * after re-validating the Location URL (SSRF-safe).
+   */
+  async getBytes(url: string, options?: GetBytesOptions): Promise<GetBytesResult> {
+    const maxBytes = options?.maxBytes ?? DEFAULT_BINARY_MAX_BYTES;
+    const timeout = options?.timeout ?? this.config.timeout ?? DEFAULT_TIMEOUT;
+    const binaryConfig: AxiosRequestConfig = {
+      responseType: 'arraybuffer',
+      timeout,
+      maxContentLength: maxBytes,
+      maxBodyLength: maxBytes,
+      maxRedirects: 0,
+      // Treat 3xx as success so we can inspect Location ourselves.
+      validateStatus: (status) =>
+        (status >= 200 && status < 300) || (status >= 300 && status < 400),
+    };
+
+    const first = await this.fetchBinaryOnce(url, binaryConfig, maxBytes);
+    const response = await this.followSingleBinaryRedirect(first, url, binaryConfig, maxBytes);
+    if (response.status < 200 || response.status >= 300) {
+      throw new NetworkError(
+        `Binary download failed with HTTP ${response.status}`,
+        new Error(`HTTP ${response.status}`),
+      );
+    }
+
     const bytes = Buffer.from(response.data);
     if (bytes.byteLength > maxBytes) {
       throw new BinarySizeLimitError(maxBytes, bytes.byteLength);
     }
-    const rawType = response.headers['content-type'];
-    const mimeType =
-      typeof rawType === 'string'
-        ? (rawType.split(';')[0]?.trim() ?? 'application/octet-stream')
-        : 'application/octet-stream';
-    return { bytes, mimeType };
+    return { bytes, mimeType: mimeTypeFromHeaders(response.headers) };
   }
 }

@@ -100,25 +100,6 @@ export function toolErrorResult(
 }
 
 /**
- * MCP ImageContent + metadata text. structuredContent holds meta only (no base64).
- * Spec: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
- */
-export function imageToolResult(args: {
-  meta: Record<string, unknown>;
-  imageBase64: string;
-  mimeType?: string;
-}): TextContent {
-  const mimeType = args.mimeType ?? 'image/png';
-  return {
-    content: [
-      { type: 'text', text: JSON.stringify(args.meta, null, 2) },
-      { type: 'image', data: args.imageBase64, mimeType },
-    ],
-    structuredContent: toStructuredContent(args.meta),
-  };
-}
-
-/**
  * When a handler returns JSON text only, attach structuredContent for MCP clients.
  */
 function enrichStructuredContent(result: TextContent): TextContent {
