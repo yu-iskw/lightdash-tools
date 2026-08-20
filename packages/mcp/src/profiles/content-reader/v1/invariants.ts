@@ -23,7 +23,8 @@ export const CONTENT_READER_INVARIANTS = [
   },
   {
     id: 'no-sql-chart-execution',
-    short: 'Do not execute saved SQL charts (disabled by default on content-reader).',
+    short:
+      'Do not execute ad-hoc SQL or standalone SQL charts; saved dashboard SQL tiles are allowed.',
   },
   {
     id: 'no-override-semantics',

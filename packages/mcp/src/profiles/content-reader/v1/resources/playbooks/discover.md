@@ -19,7 +19,7 @@ When the user asks for trusted / canonical / verified content, or the prompt set
 1. Prefer **short, high-signal tokens** that appear in titles (product names, Japanese KPI words). Multi-word English phrases often return **zero** hits even when related content exists.
 2. If the first query is empty, try: alternate language tokens, a single keyword, `spaceUuids` / `parentSpaceUuid`, or browse with `sortBy=views` + `sortDirection=desc` (optional empty/`query` omitted) and then refine.
 3. Always set `pageSize` (≤25). Prefer `contentTypes` when the user asked for charts vs dashboards.
-4. Read `source` on chart hits: `dbt_explore` (or similar semantic) vs `sql`. Treat `sql` as **not executable** on this profile.
+4. Read `source` on chart hits: `dbt_explore` (or similar semantic) vs `sql`. Treat `sql` as **not executable via `run_chart`**. Dashboard `sql_chart` tiles are executable via `run_dashboard_tile` when `canExecuteDashboardSqlTiles=true`.
 5. Ranking heuristics when relevance ties (after verified preference above):
    - Higher `views` / pinned (`pinnedList` non-null)
    - Richer description / clearer name match

@@ -6,6 +6,7 @@ import type { ProfileId } from '@lightdash-tools/common';
 
 export type ContentReaderWarningCode =
   | 'CACHE_STALE'
+  | 'DATE_ZOOM_IGNORED'
   | 'FILTER_IGNORED'
   | 'PARAMETER_DEFAULTED'
   | 'PARTIAL_RESULT'
@@ -13,6 +14,7 @@ export type ContentReaderWarningCode =
   | 'QUERY_TIMEOUT'
   | 'REDACTED'
   | 'SQL_EXECUTION_DISABLED'
+  | 'SQL_RESULT_MAY_BE_ROW_LEVEL'
   | 'STALE_CONTENT'
   | 'TRUNCATED'
   | 'UNSUPPORTED_TILE'

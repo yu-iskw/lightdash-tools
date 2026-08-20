@@ -26,7 +26,7 @@ type DashboardFilterLike = {
   disabled?: boolean;
 };
 
-type DashboardFiltersLike = {
+export type DashboardFiltersLike = {
   dimensions?: DashboardFilterLike[];
   metrics?: DashboardFilterLike[];
   tableCalculations?: DashboardFilterLike[];

@@ -1,10 +1,14 @@
 /**
- * Unit tests for get_chart table-calculation pass-through.
+ * Unit tests for get_chart table-calculation pass-through and dashboard tile flags.
  */
 
 import { describe, expect, it } from 'vitest';
 
-import { toReaderTableCalculation } from './reader-content.js';
+import {
+  classifyDashboardTile,
+  toReaderDashboard,
+  toReaderTableCalculation,
+} from './reader-content.js';
 
 describe('toReaderTableCalculation', () => {
   it('preserves formula table calculations', () => {
@@ -69,5 +73,90 @@ describe('toReaderTableCalculation', () => {
       format: { type: 'percent' },
       sql: '${orders.total_order_amount} / total(${orders.total_order_amount})',
     });
+  });
+});
+
+describe('classifyDashboardTile', () => {
+  it('treats saved_chart as executable by type', () => {
+    expect(classifyDashboardTile('saved_chart', {})).toEqual({ kind: 'saved_chart' });
+  });
+
+  it('requires savedSqlUuid for sql_chart', () => {
+    expect(classifyDashboardTile('sql_chart', { savedSqlUuid: 'sql-1' })).toEqual({
+      kind: 'sql_chart',
+      savedSqlUuid: 'sql-1',
+    });
+    expect(classifyDashboardTile('sql_chart', {})).toEqual({
+      kind: 'not_executable',
+      tileType: 'sql_chart',
+      reason: 'missing_saved_sql_uuid',
+    });
+  });
+
+  it('rejects markdown and unknown types', () => {
+    expect(classifyDashboardTile('markdown', {})).toEqual({
+      kind: 'not_executable',
+      tileType: 'markdown',
+      reason: 'unsupported_type',
+    });
+  });
+});
+
+describe('toReaderDashboard', () => {
+  it('marks sql_chart tiles executable when savedSqlUuid is present', () => {
+    const mapped = toReaderDashboard(
+      {
+        uuid: 'aaaa1111-bbbb-4ccc-8ddd-eeeeeeeeeeee',
+        name: 'App',
+        tiles: [
+          {
+            uuid: 'tile-sql',
+            type: 'sql_chart',
+            properties: { savedSqlUuid: 'sql-1', chartName: 'SQL KPI' },
+          },
+          {
+            uuid: 'tile-sql-missing',
+            type: 'sql_chart',
+            properties: { chartName: 'Broken' },
+          },
+          {
+            uuid: 'tile-sem',
+            type: 'saved_chart',
+            properties: { savedChartUuid: 'chart-1', chartName: 'Revenue' },
+          },
+          {
+            uuid: 'tile-md',
+            type: 'markdown',
+            properties: { title: 'Notes' },
+          },
+        ],
+      },
+      true,
+    );
+    expect(mapped.tiles).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tileUuid: 'tile-sql',
+          type: 'sql_chart',
+          savedSqlUuid: 'sql-1',
+          executable: true,
+        }),
+        expect.objectContaining({
+          tileUuid: 'tile-sql-missing',
+          type: 'sql_chart',
+          executable: false,
+        }),
+        expect.objectContaining({
+          tileUuid: 'tile-sem',
+          type: 'saved_chart',
+          executable: true,
+        }),
+        expect.objectContaining({
+          tileUuid: 'tile-md',
+          type: 'markdown',
+          executable: false,
+        }),
+      ]),
+    );
   });
 });

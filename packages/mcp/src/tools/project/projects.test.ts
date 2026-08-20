@@ -220,6 +220,7 @@ describe('get_project ToolModules', () => {
       canExecuteSavedCharts: true,
       canExecuteSqlCharts: false,
       canExecuteDashboardTiles: true,
+      canExecuteDashboardSqlTiles: true,
     });
     expect(body.context.projectUuid).toBe(PINNED);
     expect(getProject).toHaveBeenCalledWith(PINNED);
