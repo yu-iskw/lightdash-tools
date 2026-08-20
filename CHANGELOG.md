@@ -4,12 +4,17 @@
 
 ### Features
 
-- MCP progressive-disclosure prompt context (compact default; compatible/embedded via LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)
 - MCP HTTP OAuth advertises host-aware metadata on extra invoke origins (LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS)
 
 ### Bug Fixes
 
 - Separate MCP-issued OAuth tokens from Lightdash credentials and canonicalize RFC 8707 resource audiences
+
+## [0.16.1] - 2026-08-20
+
+### Features
+
+- MCP progressive-disclosure prompt context (compact default; compatible/embedded via LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)
 
 ### Documentation
 
