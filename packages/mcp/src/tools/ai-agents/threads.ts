@@ -28,6 +28,9 @@ import type { McpServer } from '@modelcontextprotocol/server';
 /** Generation can exceed the client 30s default; keep a bounded timeout. */
 export const GENERATE_AGENT_RESPONSE_TIMEOUT_MS = 180_000;
 
+/** Conversation writes are non-idempotent; do not ride the client 5xx retry loop. */
+const NO_HTTP_RETRIES = { maxRetries: 0 } as const;
+
 export function registerListAgentThreads(
   server: McpServer,
   contextProvider: McpContextProvider,
@@ -124,7 +127,9 @@ export function registerCreateAgentThread(
       (c) =>
         async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
-            data: await c.v1.aiAgents.createAgentThread(scope.projectUuid, agentUuid, {}),
+            data: await c.v1.aiAgents.createAgentThread(scope.projectUuid, agentUuid, {}, {
+              retry: NO_HTTP_RETRIES,
+            }),
           })),
     ),
   );
@@ -164,6 +169,7 @@ export function registerCreateAgentThreadMessage(
               agentUuid,
               threadUuid,
               { prompt },
+              { retry: NO_HTTP_RETRIES },
             ),
           })),
     ),
@@ -197,7 +203,10 @@ export function registerGenerateAgentResponse(
               scope.projectUuid,
               agentUuid,
               threadUuid,
-              { timeoutMs: GENERATE_AGENT_RESPONSE_TIMEOUT_MS },
+              {
+                timeoutMs: GENERATE_AGENT_RESPONSE_TIMEOUT_MS,
+                retry: NO_HTTP_RETRIES,
+              },
             ),
             mode: 'lightdash_ai_agent_generate',
             limitations: [

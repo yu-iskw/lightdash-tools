@@ -1,5 +1,5 @@
 /**
- * AI-agent conversation write / preference MCP tools (ADR-0029).
+ * AI-agent conversation write MCP tools (ADR-0029).
  */
 
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
@@ -10,7 +10,6 @@ import { resetAvailableProjectsCache } from '../../governance/available-projects
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
 import { TOOL_PREFIX } from '../shared.js';
 
-import { registerGetUserAgentPreferences } from './agents.js';
 import { THREAD_PROMPT_MAX_CHARS, threadPromptField } from './helpers.js';
 import {
   mockAiAgentsContext,
@@ -25,8 +24,8 @@ import {
 } from './threads.js';
 
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const actual = await importOriginal<any>();
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports -- vitest importOriginal
+  const actual = await importOriginal<typeof import('@lightdash-tools/common')>();
   return {
     ...actual,
     getSessionId: () => 'test-session',
@@ -55,26 +54,13 @@ describe('threadPromptField', () => {
   });
 });
 
-describe('ai-agent-chat tools', () => {
+describe('ai-agent-chat thread writes', () => {
   afterEach(() => {
     delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
     resetAvailableProjectsCache();
     vi.unstubAllEnvs();
     vi.restoreAllMocks();
     vi.mocked(logAuditEntry).mockClear();
-  });
-
-  it('reads user agent preferences', async () => {
-    const getUserAgentPreferences = vi.fn().mockResolvedValue({ defaultAgentUuid: AGENT });
-    const { handler } = registeredAiAgentTool(
-      registerGetUserAgentPreferences,
-      mockAiAgentsContext({ getUserAgentPreferences }),
-      'get_user_agent_preferences',
-    );
-    const result = await handler({ projectUuid: PROJECT });
-    expect(result.isError).toBeUndefined();
-    expect(getUserAgentPreferences).toHaveBeenCalledWith(PROJECT);
-    expect(parseAiAgentToolBody(result).data).toEqual({ defaultAgentUuid: AGENT });
   });
 
   it('creates a thread with no extra body', async () => {
@@ -86,7 +72,7 @@ describe('ai-agent-chat tools', () => {
     );
     expect(Object.keys(options.inputSchema).sort()).toEqual(['agentUuid', 'projectUuid']);
     const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
-    expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {});
+    expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {}, { retry: { maxRetries: 0 } });
     expect(parseAiAgentToolBody(result).data).toEqual({ uuid: THREAD });
   });
 
@@ -103,23 +89,23 @@ describe('ai-agent-chat tools', () => {
       'prompt',
       'threadUuid',
     ]);
-    expect(options.inputSchema).not.toHaveProperty('allUsers');
-    expect(options.inputSchema).not.toHaveProperty('enableSqlMode');
-    expect(options.inputSchema).not.toHaveProperty('autoApproveSql');
-    expect(options.inputSchema).not.toHaveProperty('toolHints');
     const result = await handler({
       projectUuid: PROJECT,
       agentUuid: AGENT,
       threadUuid: THREAD,
       prompt: 'What is revenue?',
     });
-    expect(createAgentThreadMessage).toHaveBeenCalledWith(PROJECT, AGENT, THREAD, {
-      prompt: 'What is revenue?',
-    });
+    expect(createAgentThreadMessage).toHaveBeenCalledWith(
+      PROJECT,
+      AGENT,
+      THREAD,
+      { prompt: 'What is revenue?' },
+      { retry: { maxRetries: 0 } },
+    );
     expect(parseAiAgentToolBody(result).data).toEqual({ uuid: 'msg-1' });
   });
 
-  it('generates via generateAgentThreadResponse with a bounded timeout', async () => {
+  it('generates via generateAgentThreadResponse with a bounded timeout and no retries', async () => {
     const generateAgentThreadResponse = vi.fn().mockResolvedValue({ response: 'secret answer' });
     const { handler, options } = registeredAiAgentTool(
       registerGenerateAgentResponse,
@@ -131,11 +117,6 @@ describe('ai-agent-chat tools', () => {
       'projectUuid',
       'threadUuid',
     ]);
-    expect(options.inputSchema).not.toHaveProperty('prompt');
-    expect(options.inputSchema).not.toHaveProperty('enableSqlMode');
-    expect(options.inputSchema).not.toHaveProperty('autoApproveSql');
-    expect(options.inputSchema).not.toHaveProperty('toolHints');
-    expect(options.inputSchema).not.toHaveProperty('allUsers');
     const result = await handler({
       projectUuid: PROJECT,
       agentUuid: AGENT,
@@ -143,6 +124,7 @@ describe('ai-agent-chat tools', () => {
     });
     expect(generateAgentThreadResponse).toHaveBeenCalledWith(PROJECT, AGENT, THREAD, {
       timeoutMs: GENERATE_AGENT_RESPONSE_TIMEOUT_MS,
+      retry: { maxRetries: 0 },
     });
     const body = parseAiAgentToolBody(result);
     expect(body.data).toEqual({ response: 'secret answer' });
@@ -151,12 +133,6 @@ describe('ai-agent-chat tools', () => {
   });
 
   it.each([
-    {
-      register: registerGetUserAgentPreferences,
-      id: 'get_user_agent_preferences',
-      args: {},
-      stub: 'getUserAgentPreferences',
-    },
     {
       register: registerCreateAgentThread,
       id: 'create_agent_thread',
@@ -200,7 +176,12 @@ describe('ai-agent-chat tools', () => {
     await runWithProjectPinAsync(PROJECT, async () => {
       const result = await handler({ agentUuid: AGENT });
       expect(result.isError).toBeUndefined();
-      expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {});
+      expect(createAgentThread).toHaveBeenCalledWith(
+        PROJECT,
+        AGENT,
+        {},
+        { retry: { maxRetries: 0 } },
+      );
     });
   });
 
@@ -266,7 +247,9 @@ describe('ai-agent-chat tools', () => {
         projectUuids: [PROJECT],
       }),
     );
-    const entry = vi.mocked(logAuditEntry).mock.calls[0]?.[0] as Record<string, unknown>;
+    const auditCall = vi.mocked(logAuditEntry).mock.calls[0];
+    expect(auditCall).toBeDefined();
+    const [entry] = auditCall;
     expect(JSON.stringify(entry)).not.toContain('super-secret-user-prompt');
     expect(entry).not.toHaveProperty('prompt');
     expect(entry).not.toHaveProperty('args');

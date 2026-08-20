@@ -5,7 +5,7 @@
 
 import axios from 'axios';
 
-import { DEFAULT_TIMEOUT } from '../config';
+import { DEFAULT_TIMEOUT, type ResolvedLightdashClientConfig, type RetryConfig } from '../config';
 import {
   type ApiErrorPayload,
   BinarySizeLimitError,
@@ -19,7 +19,6 @@ import { withRetry } from '../utils/retry';
 import { type RateLimiter } from './rate-limiter';
 import { isApiSuccessEnvelope, type ApiEnvelope } from './unwrap-api-success';
 
-import type { ResolvedLightdashClientConfig } from '../config';
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 
 /** Default max raw bytes for chart PNG downloads (8 MiB). */
@@ -144,7 +143,12 @@ export class HttpClient {
     private readonly config: ResolvedLightdashClientConfig,
   ) {}
 
-  private async request<T>(method: Method, url: string, config?: AxiosRequestConfig): Promise<T> {
+  private async request<T>(
+    method: Method,
+    url: string,
+    config?: AxiosRequestConfig,
+    retry?: RetryConfig,
+  ): Promise<T> {
     const doRequest = () =>
       this.axiosInstance.request<ApiEnvelope<T>>({
         ...config,
@@ -152,7 +156,9 @@ export class HttpClient {
         url,
       });
 
-    const response = await this.rateLimiter.schedule(() => withRetry(doRequest, this.config.retry));
+    const response = await this.rateLimiter.schedule(() =>
+      withRetry(doRequest, retry ?? this.config.retry),
+    );
 
     const data = response.data;
     if (data !== null && typeof data === 'object') {
@@ -186,24 +192,39 @@ export class HttpClient {
     );
   }
 
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('GET', url, config);
+  async get<T>(url: string, config?: AxiosRequestConfig, retry?: RetryConfig): Promise<T> {
+    return this.request<T>('GET', url, config, retry);
   }
 
-  async post<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('POST', url, { ...config, data: body });
+  async post<T>(
+    url: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+    retry?: RetryConfig,
+  ): Promise<T> {
+    return this.request<T>('POST', url, { ...config, data: body }, retry);
   }
 
-  async put<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('PUT', url, { ...config, data: body });
+  async put<T>(
+    url: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+    retry?: RetryConfig,
+  ): Promise<T> {
+    return this.request<T>('PUT', url, { ...config, data: body }, retry);
   }
 
-  async patch<T>(url: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('PATCH', url, { ...config, data: body });
+  async patch<T>(
+    url: string,
+    body?: unknown,
+    config?: AxiosRequestConfig,
+    retry?: RetryConfig,
+  ): Promise<T> {
+    return this.request<T>('PATCH', url, { ...config, data: body }, retry);
   }
 
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>('DELETE', url, config);
+  async delete<T>(url: string, config?: AxiosRequestConfig, retry?: RetryConfig): Promise<T> {
+    return this.request<T>('DELETE', url, config, retry);
   }
 
   /**

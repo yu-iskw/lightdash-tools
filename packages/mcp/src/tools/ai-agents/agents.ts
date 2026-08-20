@@ -76,7 +76,7 @@ export function registerGetUserAgentPreferences(
     {
       title: 'Get user agent preferences',
       description:
-        "Read the current user's per-project default AI agent (null when none is set). Read-only; this profile does not set or delete preferences.",
+        "Read the current user's per-project default AI agent (null when none is set). Does not set or delete preferences.",
       inputSchema: { projectUuid: optionalProjectUuidField() },
       annotations: READ_ONLY_DEFAULT,
     },

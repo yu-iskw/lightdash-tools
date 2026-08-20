@@ -2,7 +2,7 @@
  * Shared test harness for AI-agent MCP tools.
  */
 
-import { expect, vi } from 'vitest';
+import { vi } from 'vitest';
 
 import { TOOL_PREFIX } from '../shared.js';
 
@@ -42,10 +42,12 @@ export function registeredAiAgentTool(
   const call = server.registerTool.mock.calls.find(
     (entry) => entry[0] === `${TOOL_PREFIX}${toolId}`,
   );
-  expect(call).toBeDefined();
+  if (call === undefined) {
+    throw new Error(`Expected ${TOOL_PREFIX}${toolId} to be registered`);
+  }
   return {
-    options: call![1] as { inputSchema: Record<string, unknown> },
-    handler: call![2] as RegisteredAiAgentTool['handler'],
+    options: call[1] as { inputSchema: Record<string, unknown> },
+    handler: call[2] as RegisteredAiAgentTool['handler'],
   };
 }
 

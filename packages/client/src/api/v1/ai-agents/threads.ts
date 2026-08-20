@@ -34,6 +34,22 @@ function toCreateThreadBody(
 }
 
 export class AiAgentsThreadsClient extends BaseApiClient {
+  private postJson<T>(url: string, body: unknown, options?: RequestOptions): Promise<T> {
+    const axiosConfig = toAxiosConfig(options);
+    if (options?.retry === undefined) {
+      return this.http.post<T>(url, body, axiosConfig);
+    }
+    return this.http.post<T>(url, body, axiosConfig, options.retry);
+  }
+
+  private getJson<T>(url: string, options?: RequestOptions): Promise<T> {
+    const axiosConfig = toAxiosConfig(options);
+    if (options?.retry === undefined) {
+      return this.http.get<T>(url, axiosConfig);
+    }
+    return this.http.get<T>(url, axiosConfig, options.retry);
+  }
+
   /** List all threads for an agent (GET /projects/{projectUuid}/aiAgents/{agentUuid}/threads). */
   async listAgentThreads(projectUuid: string, agentUuid: string): Promise<AiAgentThreadSummary[]> {
     return this.http.get<AiAgentThreadSummary[]>(
@@ -52,10 +68,10 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     body?: CreateAgentThreadBody,
     options?: RequestOptions,
   ): Promise<AiAgentThreadSummary> {
-    return this.http.post<AiAgentThreadSummary>(
+    return this.postJson<AiAgentThreadSummary>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads`,
       body ?? {},
-      toAxiosConfig(options),
+      options,
     );
   }
 
@@ -66,9 +82,9 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     threadUuid: string,
     options?: RequestOptions,
   ): Promise<AiAgentThread> {
-    return this.http.get<AiAgentThread>(
+    return this.getJson<AiAgentThread>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}`,
-      toAxiosConfig(options),
+      options,
     );
   }
 
@@ -83,10 +99,10 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     body: GenerateAgentThreadBody,
     options?: RequestOptions,
   ): Promise<CreateAgentThreadMessageResult> {
-    return this.http.post<CreateAgentThreadMessageResult>(
+    return this.postJson<CreateAgentThreadMessageResult>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/messages`,
       body,
-      toAxiosConfig(options),
+      options,
     );
   }
 
@@ -131,10 +147,10 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     }
 
     const options = (hasPromptBody ? maybeOptions : bodyOrOptions) as RequestOptions | undefined;
-    return this.http.post<GenerateAgentThreadResult>(
+    return this.postJson<GenerateAgentThreadResult>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/generate`,
       undefined,
-      toAxiosConfig(options),
+      options,
     );
   }
 
@@ -185,10 +201,10 @@ export class AiAgentsThreadsClient extends BaseApiClient {
     threadUuid: string,
     options?: RequestOptions,
   ): Promise<GenerateThreadTitleResult> {
-    return this.http.post<GenerateThreadTitleResult>(
+    return this.postJson<GenerateThreadTitleResult>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/threads/${threadUuid}/generate-title`,
       undefined,
-      toAxiosConfig(options),
+      options,
     );
   }
 

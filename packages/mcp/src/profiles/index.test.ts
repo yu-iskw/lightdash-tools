@@ -131,15 +131,6 @@ describe('profiles', () => {
       'create_agent_thread_message',
       'generate_agent_response',
     ]);
-    expect(tools).not.toContain('get_project_agent');
-    expect(tools).not.toContain('evaluate_agent_readiness');
-    expect(tools).not.toContain('create_agent_evaluation');
-    expect(tools).not.toContain('update_agent_evaluation');
-    expect(tools).not.toContain('delete_agent_evaluation');
-    expect(tools).not.toContain('run_agent_evaluation');
-    expect(tools).not.toContain('get_agent_eval_run_results');
-    expect(tools).not.toContain('set_user_agent_preferences');
-    expect(tools).not.toContain('delete_user_agent_preferences');
     expect(getProfileServerName(profile)).toBe('lightdash-mcp-aichat');
   });
 

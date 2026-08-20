@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-20]: HttpClient per-request retry is the 4th argument on get/post/put/patch/delete — do not put retry on Axios config. `ai-agent-chat` conversation writes pass `{ maxRetries: 0 }` so a 5xx after generate does not duplicate warehouse/LLM work.
 - [2026-08-20]: Vitest `vitest/valid-expect` forbids `expect(value, message)` — use `it.each` to label table-driven cases.
 - [2026-08-20]: `ai-agent-chat` is a dedicated conversation profile (`/ai-agent-chat/v1/mcp`, server `lightdash-mcp-aichat`): create thread → message → `POST …/generate` (not `/stream`). Do not add generate to `ai-agent-ops`. Do not describe the profile as read-only — nested agent MCP tools stay a Lightdash config boundary (ADR-0029). Tool modules follow `evaluations.ts`: preferences on `agents.ts`, conversation writes on `threads.ts` — not `chat.ts`/`preferences.ts`.
 - [2026-08-20]: content-reader `run_dashboard_tile` executes saved `sql_chart` tiles via `POST …/query/dashboard-sql-chart` (ADR-0028); `run_chart` SQL and `POST …/query/sql` stay off. `dateZoom` is not a field on dashboard-sql-chart — warn `DATE_ZOOM_IGNORED`.

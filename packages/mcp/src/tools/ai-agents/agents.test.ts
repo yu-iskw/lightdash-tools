@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { registerGetProjectAgent, registerListProjectAgents } from './agents.js';
+import {
+  registerGetProjectAgent,
+  registerGetUserAgentPreferences,
+  registerListProjectAgents,
+} from './agents.js';
 import { registerEvaluateAgentReadiness } from './discovery.js';
 import { registerGetAgentEvalRunResults, registerRunAgentEvaluation } from './evaluations.js';
 import {
@@ -229,5 +233,33 @@ describe('ai-agent-ops tools', () => {
     const body = parseAiAgentToolBody(result);
     expect((body.error as { code: string }).code).toBe('PROJECT_SCOPE_REQUIRED');
     expect(getAgent).not.toHaveBeenCalled();
+  });
+
+  it('reads user agent preferences', async () => {
+    const getUserAgentPreferences = vi.fn().mockResolvedValue({ defaultAgentUuid: AGENT });
+    const { handler } = registeredAiAgentTool(
+      registerGetUserAgentPreferences,
+      mockAiAgentsContext({ getUserAgentPreferences }),
+      'get_user_agent_preferences',
+    );
+    const result = await handler({ projectUuid: PROJECT });
+    expect(result.isError).toBeUndefined();
+    expect(getUserAgentPreferences).toHaveBeenCalledWith(PROJECT);
+    expect(parseAiAgentToolBody(result).data).toEqual({ defaultAgentUuid: AGENT });
+  });
+
+  it('surfaces PROJECT_SCOPE_REQUIRED for get_user_agent_preferences when unresolved', async () => {
+    const getUserAgentPreferences = vi.fn();
+    const { handler } = registeredAiAgentTool(
+      registerGetUserAgentPreferences,
+      mockAiAgentsContext({ getUserAgentPreferences }),
+      'get_user_agent_preferences',
+    );
+    const result = await handler({});
+    expect(result.isError).toBe(true);
+    expect((parseAiAgentToolBody(result).error as { code: string }).code).toBe(
+      'PROJECT_SCOPE_REQUIRED',
+    );
+    expect(getUserAgentPreferences).not.toHaveBeenCalled();
   });
 });
