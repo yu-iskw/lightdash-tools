@@ -72,7 +72,12 @@ describe('ai-agent-chat thread writes', () => {
     );
     expect(Object.keys(options.inputSchema).sort()).toEqual(['agentUuid', 'projectUuid']);
     const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
-    expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {}, { retry: { maxRetries: 0 } });
+    expect(createAgentThread).toHaveBeenCalledWith(
+      PROJECT,
+      AGENT,
+      {},
+      { retry: { maxRetries: 0 } },
+    );
     expect(parseAiAgentToolBody(result).data).toEqual({ uuid: THREAD });
   });
 

@@ -127,9 +127,14 @@ export function registerCreateAgentThread(
       (c) =>
         async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
-            data: await c.v1.aiAgents.createAgentThread(scope.projectUuid, agentUuid, {}, {
-              retry: NO_HTTP_RETRIES,
-            }),
+            data: await c.v1.aiAgents.createAgentThread(
+              scope.projectUuid,
+              agentUuid,
+              {},
+              {
+                retry: NO_HTTP_RETRIES,
+              },
+            ),
           })),
     ),
   );

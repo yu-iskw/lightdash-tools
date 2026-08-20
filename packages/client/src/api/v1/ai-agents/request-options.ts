@@ -1,6 +1,5 @@
-import type { AxiosRequestConfig } from 'axios';
-
 import type { RetryConfig } from '../../../config';
+import type { AxiosRequestConfig } from 'axios';
 
 /** Per-request overrides for AI agent thread operations. */
 export interface RequestOptions {

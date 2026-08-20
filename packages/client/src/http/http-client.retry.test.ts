@@ -23,9 +23,9 @@ describe('HttpClient per-request retry argument', () => {
   it('does not retry 5xx when retry.maxRetries is 0', async () => {
     const requestImpl = vi.fn().mockRejectedValue({ response: { status: 500 } });
     const client = makeClient(requestImpl, { maxRetries: 3, retryDelay: 1 });
-    await expect(client.post('/generate', undefined, undefined, { maxRetries: 0 })).rejects.toMatchObject(
-      { response: { status: 500 } },
-    );
+    await expect(
+      client.post('/generate', undefined, undefined, { maxRetries: 0 }),
+    ).rejects.toMatchObject({ response: { status: 500 } });
     expect(requestImpl).toHaveBeenCalledTimes(1);
   });
 
