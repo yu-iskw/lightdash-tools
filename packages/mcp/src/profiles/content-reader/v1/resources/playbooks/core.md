@@ -11,7 +11,7 @@ Discover, explain, and **optionally execute** saved Lightdash charts/dashboards 
 - Do not mutate Lightdash resources (create/update/delete/move/promote).
 - Do not execute arbitrary metric queries, raw SQL, SQL runner, or underlying-data downloads.
 - Do not bulk-export or page endlessly through result sets.
-- Do not execute saved SQL charts (`source=sql` / `chartType=sql`); default capability is off (`canExecuteSqlCharts=false`).
+- Do not execute ad-hoc SQL, SQL runner, or standalone SQL charts (`source=sql` / `chartType=sql`; `canExecuteSqlCharts=false`). Saved dashboard SQL tiles (`sql_chart`, `canExecuteDashboardSqlTiles=true`) may be executed via `run_dashboard_tile`.
 - Do not override filter **targets/operators**, required-filter behavior, fields, metrics, dimensions, SQL, table calculations, or sorts — only allowed **value** overrides on existing filter ids / known parameters.
 - Do not execute content outside the resolved project.
 - Do not present truncated / incomplete coverage as a full answer.
@@ -57,7 +57,7 @@ Record budget / pagination / truncation stops in the answer.
 ## Phase 0 — Resolve project
 
 1. Always pass **`projectUuid`** (or rely on HTTP `X-Lightdash-Project` pin). Without either → `PROJECT_SCOPE_REQUIRED`; stop.
-2. Call `get_project`. Record UUID, name, `context.projectPinned`, and `readerCapabilities` (`canExecuteSavedCharts`, `canExecuteSqlCharts`, `canExecuteDashboardTiles`).
+2. Call `get_project`. Record UUID, name, `context.projectPinned`, and `readerCapabilities` (`canExecuteSavedCharts`, `canExecuteSqlCharts`, `canExecuteDashboardTiles`, `canExecuteDashboardSqlTiles`).
 3. There is **no** org-wide project list on this profile — never invent one.
 
 ## Answer shape

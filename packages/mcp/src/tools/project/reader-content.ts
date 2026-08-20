@@ -103,13 +103,15 @@ function toReaderDashboard(dashboard: Record<string, unknown>, includeTiles: boo
         const t = tile as Record<string, unknown>;
         const props = (t.properties ?? {}) as Record<string, unknown>;
         const type = typeof t.type === 'string' ? t.type : 'unknown';
-        const executable = type === 'saved_chart';
+        const executable =
+          type === 'saved_chart' || (type === 'sql_chart' && Boolean(props.savedSqlUuid));
         return {
           tileUuid: t.uuid,
           tabUuid: t.tabUuid,
           type,
           title: props.title ?? props.chartName,
           chartUuid: props.savedChartUuid ?? props.chartUuid,
+          savedSqlUuid: props.savedSqlUuid,
           chartSlug: props.chartSlug,
           chartName: props.chartName,
           chartKind: props.chartKind,

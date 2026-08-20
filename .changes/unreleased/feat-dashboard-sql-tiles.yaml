@@ -1,0 +1,3 @@
+kind: feat
+body: content-reader executes saved dashboard SQL tiles via query/dashboard-sql-chart (standalone SQL charts remain disabled)
+time: 2026-08-20T09:13:00Z

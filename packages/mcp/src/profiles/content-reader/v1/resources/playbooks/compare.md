@@ -22,7 +22,7 @@ Compare **definitions before values**. Matching titles/labels ≠ same metric, g
 
 Execute **only** if sides are structurally comparable **or** the user asked about value differences. Use equivalent valid context (same overrides if any). Cap at **≤2** executions unless the user expands scope.
 
-Skip execution when either side is SQL / non-executable — report that as a confirmed blocker.
+Skip execution when either side is a **standalone** SQL chart (`run_chart` / `source=sql`) or otherwise non-executable — report that as a confirmed blocker. Dashboard `sql_chart` tiles may be executed via `run_dashboard_tile`.
 
 ## Report causes
 

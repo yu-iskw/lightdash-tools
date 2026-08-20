@@ -1,5 +1,5 @@
 /**
- * Saved-content execution tools for content-reader (semantic only; SQL disabled).
+ * Saved-content execution tools for content-reader (semantic charts + dashboard SQL tiles).
  */
 
 import { z } from 'zod';
@@ -19,15 +19,21 @@ import { defineTool } from '../types.js';
 
 import { detectChartType } from './reader-content.js';
 
+import type { ContentReaderWarning } from '../../policy/envelope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
+import type { TextContent } from '../shared.js';
+import type { LightdashClient } from '@lightdash-tools/client';
 import type {
   ExecuteAsyncDashboardChartRequestParams,
   ExecuteAsyncSavedChartRequestParams,
+  ProfileId,
   components,
 } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 type DateZoom = components['schemas']['DateZoom'];
+type ExecuteAsyncDashboardSqlChartRequestParams =
+  components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams'];
 
 const dateZoomSchema = z
   .object({
@@ -35,6 +41,188 @@ const dateZoomSchema = z
     xAxisFieldId: z.string().optional(),
   })
   .optional();
+
+const SQL_TILE_ROW_LEVEL_WARNING: ContentReaderWarning = {
+  code: 'SQL_RESULT_MAY_BE_ROW_LEVEL',
+  message: 'Dashboard SQL tile results may be grain-level rows, not semantic aggregates',
+};
+
+const DATE_ZOOM_IGNORED_ON_SQL_TILE: ContentReaderWarning = {
+  code: 'DATE_ZOOM_IGNORED',
+  message: 'dateZoom is not a field on dashboard-sql-chart; dashboard default granularity applies',
+};
+
+type DashboardFilterTree = {
+  dimensions?: Array<Record<string, unknown>>;
+  metrics?: Array<Record<string, unknown>>;
+  tableCalculations?: Array<Record<string, unknown>>;
+};
+
+type DashboardTileRunArgs = {
+  client: LightdashClient;
+  profile: ProfileId;
+  projectUuid: string;
+  projectPinned: boolean;
+  dashboard: Record<string, unknown>;
+  tileUuid: string;
+  props: Record<string, unknown>;
+  limit: number;
+  filterOverrides?: Array<{ id: string; values: unknown[] }>;
+  parameterOverrides?: Record<string, unknown>;
+  dateZoom?: DateZoom;
+  waitForResults?: boolean;
+  timeoutMs?: number;
+};
+
+function filterOverrideWarnings(messages: string[]): ContentReaderWarning[] {
+  return messages.map((message) => ({ code: 'FILTER_IGNORED' as const, message }));
+}
+
+function applyDashboardFilters(
+  dashboard: Record<string, unknown>,
+  filterOverrides: Array<{ id: string; values: unknown[] }> | undefined,
+): { filters: DashboardFilterTree; warnings: string[] } {
+  return applyFilterValueOverrides(
+    dashboard.filters as DashboardFilterTree | undefined,
+    filterOverrides,
+  );
+}
+
+async function executeSemanticDashboardTile(args: DashboardTileRunArgs): Promise<TextContent> {
+  const chartUuid = String(args.props.savedChartUuid ?? args.props.chartUuid ?? '');
+  if (!chartUuid) {
+    return codedErrorResult('CONTENT_NOT_EXECUTABLE', 'Tile has no saved chart UUID');
+  }
+
+  const { filters, warnings: filterWarnings } = applyDashboardFilters(
+    args.dashboard,
+    args.filterOverrides,
+  );
+
+  const body: ExecuteAsyncDashboardChartRequestParams = {
+    dashboardUuid: String(args.dashboard.uuid),
+    tileUuid: args.tileUuid,
+    chartUuid,
+    dashboardFilters: filters as ExecuteAsyncDashboardChartRequestParams['dashboardFilters'],
+    dashboardSorts: [],
+    parameters: args.parameterOverrides as ExecuteAsyncDashboardChartRequestParams['parameters'],
+    dateZoom: args.dateZoom,
+    limit: args.limit,
+    invalidateCache: false,
+    context: 'dashboardView',
+  };
+
+  const bounded = await runBoundedSavedQuery({
+    client: args.client,
+    projectUuid: args.projectUuid,
+    sourceType: 'dashboard_tile',
+    sourceUuid: args.tileUuid,
+    limit: args.limit,
+    waitForResults: args.waitForResults,
+    timeoutMs: args.timeoutMs,
+    execute: () => args.client.v2.query.runDashboardChartQuery(args.projectUuid, body),
+  });
+  if (!bounded.ok) {
+    return bounded.result;
+  }
+
+  return jsonToolResult(
+    contentReaderEnvelope(
+      {
+        ...bounded.normalized,
+        content: {
+          type: 'dashboard_tile' as const,
+          dashboardUuid: args.dashboard.uuid,
+          dashboardName: args.dashboard.name,
+          tileUuid: args.tileUuid,
+          chartUuid,
+          chartName: args.props.chartName,
+        },
+        appliedDashboardFilters: filters,
+        appliedDateZoom: args.dateZoom,
+      },
+      {
+        profile: args.profile,
+        projectUuid: args.projectUuid,
+        projectPinned: args.projectPinned,
+        complete: isCoverageComplete(bounded.normalized),
+        truncated: bounded.normalized.truncated,
+        warnings: [...filterOverrideWarnings(filterWarnings), ...bounded.warnings],
+      },
+    ),
+  );
+}
+
+async function executeSqlDashboardTile(args: DashboardTileRunArgs): Promise<TextContent> {
+  const savedSqlUuid = String(args.props.savedSqlUuid ?? '');
+  if (!savedSqlUuid) {
+    return codedErrorResult('CONTENT_NOT_EXECUTABLE', 'Tile has no saved SQL UUID');
+  }
+
+  const { filters, warnings: filterWarnings } = applyDashboardFilters(
+    args.dashboard,
+    args.filterOverrides,
+  );
+
+  const body: ExecuteAsyncDashboardSqlChartRequestParams = {
+    savedSqlUuid,
+    dashboardUuid: String(args.dashboard.uuid),
+    tileUuid: args.tileUuid,
+    dashboardFilters: filters as ExecuteAsyncDashboardSqlChartRequestParams['dashboardFilters'],
+    dashboardSorts: [],
+    parameters: args.parameterOverrides as ExecuteAsyncDashboardSqlChartRequestParams['parameters'],
+    limit: args.limit,
+    invalidateCache: false,
+    context: 'dashboardView',
+  };
+
+  const bounded = await runBoundedSavedQuery({
+    client: args.client,
+    projectUuid: args.projectUuid,
+    sourceType: 'dashboard_tile',
+    sourceUuid: args.tileUuid,
+    limit: args.limit,
+    waitForResults: args.waitForResults,
+    timeoutMs: args.timeoutMs,
+    execute: () => args.client.v2.query.runDashboardSqlChartQuery(args.projectUuid, body),
+  });
+  if (!bounded.ok) {
+    return bounded.result;
+  }
+
+  const extraWarnings: ContentReaderWarning[] = [
+    ...filterOverrideWarnings(filterWarnings),
+    SQL_TILE_ROW_LEVEL_WARNING,
+    ...(args.dateZoom === undefined ? [] : [DATE_ZOOM_IGNORED_ON_SQL_TILE]),
+    ...bounded.warnings,
+  ];
+
+  return jsonToolResult(
+    contentReaderEnvelope(
+      {
+        ...bounded.normalized,
+        content: {
+          type: 'dashboard_tile' as const,
+          dashboardUuid: args.dashboard.uuid,
+          dashboardName: args.dashboard.name,
+          tileUuid: args.tileUuid,
+          savedSqlUuid,
+          chartSlug: args.props.chartSlug,
+          chartName: args.props.chartName,
+        },
+        appliedDashboardFilters: filters,
+      },
+      {
+        profile: args.profile,
+        projectUuid: args.projectUuid,
+        projectPinned: args.projectPinned,
+        complete: isCoverageComplete(bounded.normalized),
+        truncated: bounded.normalized.truncated,
+        warnings: extraWarnings,
+      },
+    ),
+  );
+}
 
 export function registerRunChart(server: McpServer, contextProvider: McpContextProvider): void {
   registerContentReaderTool(
@@ -168,7 +356,7 @@ export function registerRunDashboardTile(
     {
       title: 'Run dashboard tile',
       description:
-        'Execute one dashboard tile in dashboard context (saved semantic charts only; SQL tiles disabled)',
+        'Execute one dashboard tile in dashboard context (saved semantic charts or saved SQL tiles). Cache-first, bounded rows.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -190,7 +378,6 @@ export function registerRunDashboardTile(
         timeoutMs: z.number().int().nonnegative().optional(),
       },
     },
-    /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- tile validation + execution */
     (profile) =>
       wrapTool(
         contextProvider,
@@ -230,94 +417,30 @@ export function registerRunDashboardTile(
                 );
               }
               const tileType = String(tile.type ?? 'unknown');
-              if (tileType === 'sql_chart') {
-                return codedErrorResult(
-                  'CONTENT_NOT_EXECUTABLE',
-                  'Dashboard SQL chart tiles are disabled by default on content-reader',
-                );
-              }
-              if (tileType !== 'saved_chart') {
-                return codedErrorResult(
-                  'CONTENT_NOT_EXECUTABLE',
-                  `Tile type '${tileType}' is not executable`,
-                );
-              }
-              const props = asRecord(tile.properties);
-              const chartUuid = String(props.savedChartUuid ?? props.chartUuid ?? '');
-              if (!chartUuid) {
-                return codedErrorResult('CONTENT_NOT_EXECUTABLE', 'Tile has no saved chart UUID');
-              }
-
-              const { filters, warnings: filterWarnings } = applyFilterValueOverrides(
-                dashboard.filters as
-                  | {
-                      dimensions?: Array<Record<string, unknown>>;
-                      metrics?: Array<Record<string, unknown>>;
-                      tableCalculations?: Array<Record<string, unknown>>;
-                    }
-                  | undefined,
-                args.filterOverrides,
-              );
-
-              const body: ExecuteAsyncDashboardChartRequestParams = {
-                dashboardUuid: String(dashboard.uuid),
-                tileUuid: args.tileUuid,
-                chartUuid,
-                dashboardFilters:
-                  filters as ExecuteAsyncDashboardChartRequestParams['dashboardFilters'],
-                dashboardSorts: [],
-                parameters:
-                  args.parameterOverrides as ExecuteAsyncDashboardChartRequestParams['parameters'],
-                dateZoom: args.dateZoom,
-                limit,
-                invalidateCache: false,
-                context: 'dashboardView',
-              };
-
-              const bounded = await runBoundedSavedQuery({
+              const runArgs: DashboardTileRunArgs = {
                 client: c,
+                profile,
                 projectUuid: scope.projectUuid,
-                sourceType: 'dashboard_tile',
-                sourceUuid: args.tileUuid,
+                projectPinned: scope.projectPinned,
+                dashboard,
+                tileUuid: args.tileUuid,
+                props: asRecord(tile.properties),
                 limit,
+                filterOverrides: args.filterOverrides,
+                parameterOverrides: args.parameterOverrides,
+                dateZoom: args.dateZoom,
                 waitForResults: args.waitForResults,
                 timeoutMs: args.timeoutMs,
-                execute: () => c.v2.query.runDashboardChartQuery(scope.projectUuid, body),
-              });
-              if (!bounded.ok) {
-                return bounded.result;
+              };
+              if (tileType === 'sql_chart') {
+                return executeSqlDashboardTile(runArgs);
               }
-
-              return jsonToolResult(
-                contentReaderEnvelope(
-                  {
-                    ...bounded.normalized,
-                    content: {
-                      type: 'dashboard_tile' as const,
-                      dashboardUuid: dashboard.uuid,
-                      dashboardName: dashboard.name,
-                      tileUuid: args.tileUuid,
-                      chartUuid,
-                      chartName: props.chartName,
-                    },
-                    appliedDashboardFilters: filters,
-                    appliedDateZoom: args.dateZoom,
-                  },
-                  {
-                    profile,
-                    projectUuid: scope.projectUuid,
-                    projectPinned: scope.projectPinned,
-                    complete: isCoverageComplete(bounded.normalized),
-                    truncated: bounded.normalized.truncated,
-                    warnings: [
-                      ...filterWarnings.map((message) => ({
-                        code: 'FILTER_IGNORED' as const,
-                        message,
-                      })),
-                      ...bounded.warnings,
-                    ],
-                  },
-                ),
+              if (tileType === 'saved_chart') {
+                return executeSemanticDashboardTile(runArgs);
+              }
+              return codedErrorResult(
+                'CONTENT_NOT_EXECUTABLE',
+                `Tile type '${tileType}' is not executable`,
               );
             } catch (err) {
               if (err instanceof ProjectScopeError) {
@@ -333,7 +456,6 @@ export function registerRunDashboardTile(
             }
           },
       ),
-    /* eslint-enable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
   );
 }
 
