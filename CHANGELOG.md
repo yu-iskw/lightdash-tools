@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.16.1] - 2026-08-20
+
+### Features
+
+- MCP progressive-disclosure prompt context (compact default; compatible/embedded via LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)
+
+### Documentation
+
+- Document MCP HTTP health probes (/health/live, /health/ready) in the package README and Cloud Run operator guide.
+
+### Chores
+
+- Sync OpenAPI types to Lightdash 1.109.1
+
 ## [0.14.0] - 2026-08-10
 
 ### Features
