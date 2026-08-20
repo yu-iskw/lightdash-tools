@@ -1,5 +1,5 @@
 /**
- * AI-agent chat / preference MCP tools (ADR-0029).
+ * AI-agent conversation write / preference MCP tools (ADR-0029).
  */
 
 import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
@@ -10,17 +10,19 @@ import { resetAvailableProjectsCache } from '../../governance/available-projects
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
 import { TOOL_PREFIX } from '../shared.js';
 
+import { registerGetUserAgentPreferences } from './agents.js';
+import { THREAD_PROMPT_MAX_CHARS, threadPromptField } from './helpers.js';
+import {
+  mockAiAgentsContext,
+  parseAiAgentToolBody,
+  registeredAiAgentTool,
+} from './test-support.js';
 import {
   GENERATE_AGENT_RESPONSE_TIMEOUT_MS,
-  THREAD_PROMPT_MAX_CHARS,
   registerCreateAgentThread,
   registerCreateAgentThreadMessage,
   registerGenerateAgentResponse,
-  threadPromptField,
-} from './chat.js';
-import { registerGetUserAgentPreferences } from './preferences.js';
-
-import type { McpContextProvider } from '../../server/request-context.js';
+} from './threads.js';
 
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,48 +39,6 @@ const PROJECT = '11111111-1111-1111-1111-111111111111';
 const OTHER = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const AGENT = '22222222-2222-2222-2222-222222222222';
 const THREAD = '33333333-3333-3333-3333-333333333333';
-
-function mockContext(aiAgents: Record<string, ReturnType<typeof vi.fn>>): McpContextProvider {
-  return {
-    getContext: async () => ({
-      lightdashClient: {
-        v1: { aiAgents },
-      },
-      auth: { mode: 'none' as const },
-    }),
-  } as unknown as McpContextProvider;
-}
-
-type ToolResult = {
-  content: Array<{ type: string; text: string }>;
-  isError?: boolean;
-};
-
-type RegisteredTool = {
-  handler: (args: Record<string, unknown>, extra?: unknown) => Promise<ToolResult>;
-  options: { inputSchema: Record<string, unknown> };
-};
-
-function registeredTool(
-  register: (server: never, ctx: McpContextProvider) => void,
-  ctx: McpContextProvider,
-  toolId: string,
-  server: { registerTool: ReturnType<typeof vi.fn> } = { registerTool: vi.fn() },
-): RegisteredTool {
-  register(server as never, ctx);
-  const call = server.registerTool.mock.calls.find(
-    (entry) => entry[0] === `${TOOL_PREFIX}${toolId}`,
-  );
-  expect(call).toBeDefined();
-  return {
-    options: call![1] as { inputSchema: Record<string, unknown> },
-    handler: call![2] as RegisteredTool['handler'],
-  };
-}
-
-function parseBody(result: ToolResult): Record<string, unknown> {
-  return JSON.parse(result.content[0].text) as Record<string, unknown>;
-}
 
 describe('threadPromptField', () => {
   const schema = threadPromptField();
@@ -106,35 +66,35 @@ describe('ai-agent-chat tools', () => {
 
   it('reads user agent preferences', async () => {
     const getUserAgentPreferences = vi.fn().mockResolvedValue({ defaultAgentUuid: AGENT });
-    const { handler } = registeredTool(
+    const { handler } = registeredAiAgentTool(
       registerGetUserAgentPreferences,
-      mockContext({ getUserAgentPreferences }),
+      mockAiAgentsContext({ getUserAgentPreferences }),
       'get_user_agent_preferences',
     );
     const result = await handler({ projectUuid: PROJECT });
     expect(result.isError).toBeUndefined();
     expect(getUserAgentPreferences).toHaveBeenCalledWith(PROJECT);
-    expect(parseBody(result).data).toEqual({ defaultAgentUuid: AGENT });
+    expect(parseAiAgentToolBody(result).data).toEqual({ defaultAgentUuid: AGENT });
   });
 
   it('creates a thread with no extra body', async () => {
     const createAgentThread = vi.fn().mockResolvedValue({ uuid: THREAD });
-    const { handler, options } = registeredTool(
+    const { handler, options } = registeredAiAgentTool(
       registerCreateAgentThread,
-      mockContext({ createAgentThread }),
+      mockAiAgentsContext({ createAgentThread }),
       'create_agent_thread',
     );
     expect(Object.keys(options.inputSchema).sort()).toEqual(['agentUuid', 'projectUuid']);
     const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
-    expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT);
-    expect(parseBody(result).data).toEqual({ uuid: THREAD });
+    expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {});
+    expect(parseAiAgentToolBody(result).data).toEqual({ uuid: THREAD });
   });
 
   it('creates a thread message with prompt only', async () => {
     const createAgentThreadMessage = vi.fn().mockResolvedValue({ uuid: 'msg-1' });
-    const { handler, options } = registeredTool(
+    const { handler, options } = registeredAiAgentTool(
       registerCreateAgentThreadMessage,
-      mockContext({ createAgentThreadMessage }),
+      mockAiAgentsContext({ createAgentThreadMessage }),
       'create_agent_thread_message',
     );
     expect(Object.keys(options.inputSchema).sort()).toEqual([
@@ -156,14 +116,14 @@ describe('ai-agent-chat tools', () => {
     expect(createAgentThreadMessage).toHaveBeenCalledWith(PROJECT, AGENT, THREAD, {
       prompt: 'What is revenue?',
     });
-    expect(parseBody(result).data).toEqual({ uuid: 'msg-1' });
+    expect(parseAiAgentToolBody(result).data).toEqual({ uuid: 'msg-1' });
   });
 
   it('generates via generateAgentThreadResponse with a bounded timeout', async () => {
     const generateAgentThreadResponse = vi.fn().mockResolvedValue({ response: 'secret answer' });
-    const { handler, options } = registeredTool(
+    const { handler, options } = registeredAiAgentTool(
       registerGenerateAgentResponse,
-      mockContext({ generateAgentThreadResponse }),
+      mockAiAgentsContext({ generateAgentThreadResponse }),
       'generate_agent_response',
     );
     expect(Object.keys(options.inputSchema).sort()).toEqual([
@@ -184,7 +144,7 @@ describe('ai-agent-chat tools', () => {
     expect(generateAgentThreadResponse).toHaveBeenCalledWith(PROJECT, AGENT, THREAD, {
       timeoutMs: GENERATE_AGENT_RESPONSE_TIMEOUT_MS,
     });
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect(body.data).toEqual({ response: 'secret answer' });
     expect(body.mode).toBe('lightdash_ai_agent_generate');
     expect((body.limitations as string[]).join(' ')).toMatch(/not \/stream/i);
@@ -217,32 +177,38 @@ describe('ai-agent-chat tools', () => {
     },
   ] as const)('surfaces PROJECT_SCOPE_REQUIRED for $id when unresolved', async (row) => {
     const stub = vi.fn();
-    const { handler } = registeredTool(row.register, mockContext({ [row.stub]: stub }), row.id);
+    const { handler } = registeredAiAgentTool(
+      row.register,
+      mockAiAgentsContext({ [row.stub]: stub }),
+      row.id,
+    );
     const result = await handler(row.args);
     expect(result.isError).toBe(true);
-    expect((parseBody(result).error as { code: string }).code).toBe('PROJECT_SCOPE_REQUIRED');
+    expect((parseAiAgentToolBody(result).error as { code: string }).code).toBe(
+      'PROJECT_SCOPE_REQUIRED',
+    );
     expect(stub).not.toHaveBeenCalled();
   });
 
   it('uses the HTTP pin when projectUuid is omitted', async () => {
     const createAgentThread = vi.fn().mockResolvedValue({ uuid: THREAD });
-    const { handler } = registeredTool(
+    const { handler } = registeredAiAgentTool(
       registerCreateAgentThread,
-      mockContext({ createAgentThread }),
+      mockAiAgentsContext({ createAgentThread }),
       'create_agent_thread',
     );
     await runWithProjectPinAsync(PROJECT, async () => {
       const result = await handler({ agentUuid: AGENT });
       expect(result.isError).toBeUndefined();
-      expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT);
+      expect(createAgentThread).toHaveBeenCalledWith(PROJECT, AGENT, {});
     });
   });
 
   it('blocks mismatched pin on generate', async () => {
     const generateAgentThreadResponse = vi.fn();
-    const { handler } = registeredTool(
+    const { handler } = registeredAiAgentTool(
       registerGenerateAgentResponse,
-      mockContext({ generateAgentThreadResponse }),
+      mockAiAgentsContext({ generateAgentThreadResponse }),
       'generate_agent_response',
     );
     await runWithProjectPinAsync(PROJECT, async () => {
@@ -261,9 +227,9 @@ describe('ai-agent-chat tools', () => {
     process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = OTHER;
     resetAvailableProjectsCache();
     const generateAgentThreadResponse = vi.fn();
-    const { handler } = registeredTool(
+    const { handler } = registeredAiAgentTool(
       registerGenerateAgentResponse,
-      mockContext({ generateAgentThreadResponse }),
+      mockAiAgentsContext({ generateAgentThreadResponse }),
       'generate_agent_response',
     );
     const result = await handler({
@@ -280,9 +246,9 @@ describe('ai-agent-chat tools', () => {
     const server = { registerTool: vi.fn() };
     bindServerProfile(server, 'ai-agent-chat');
     const createAgentThreadMessage = vi.fn().mockResolvedValue({ uuid: 'msg-1' });
-    const { handler } = registeredTool(
+    const { handler } = registeredAiAgentTool(
       registerCreateAgentThreadMessage,
-      mockContext({ createAgentThreadMessage }),
+      mockAiAgentsContext({ createAgentThreadMessage }),
       'create_agent_thread_message',
       server,
     );

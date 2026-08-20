@@ -2,14 +2,17 @@
  * AI-agent-chat profile: managed Lightdash AI-agent conversation (ADR-0029).
  */
 
-import { listProjectAgentsTool } from '../../../tools/ai-agents/agents.js';
+import {
+  getUserAgentPreferencesTool,
+  listProjectAgentsTool,
+} from '../../../tools/ai-agents/agents.js';
 import {
   createAgentThreadMessageTool,
   createAgentThreadTool,
   generateAgentResponseTool,
-} from '../../../tools/ai-agents/chat.js';
-import { getUserAgentPreferencesTool } from '../../../tools/ai-agents/preferences.js';
-import { getAgentThreadTool, listAgentThreadsTool } from '../../../tools/ai-agents/threads.js';
+  getAgentThreadTool,
+  listAgentThreadsTool,
+} from '../../../tools/ai-agents/threads.js';
 
 import { registerAiAgentChatPrompts } from './prompts.js';
 import { registerAiAgentChatPlaybook } from './resources/playbooks.js';

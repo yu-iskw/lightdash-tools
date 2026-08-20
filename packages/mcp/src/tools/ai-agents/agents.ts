@@ -5,7 +5,12 @@
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { agentUuidField, optionalProjectUuidField, withAiAgentProjectScope } from './helpers.js';
+import {
+  agentUuidField,
+  optionalProjectUuidField,
+  withAiAgentProjectScope,
+  type AiAgentScopeArgs,
+} from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -53,9 +58,34 @@ export function registerGetProjectAgent(
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: { projectUuid?: string; agentUuid: string }) =>
+        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgent(scope.projectUuid, agentUuid),
+          })),
+    ),
+  );
+}
+
+export function registerGetUserAgentPreferences(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerToolSafe(
+    server,
+    'get_user_agent_preferences',
+    {
+      title: 'Get user agent preferences',
+      description:
+        "Read the current user's per-project default AI agent (null when none is set). Read-only; this profile does not set or delete preferences.",
+      inputSchema: { projectUuid: optionalProjectUuidField() },
+      annotations: READ_ONLY_DEFAULT,
+    },
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({ projectUuid }: { projectUuid?: string }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
+            data: await c.v1.aiAgents.getUserAgentPreferences(scope.projectUuid),
           })),
     ),
   );
@@ -64,3 +94,7 @@ export function registerGetProjectAgent(
 // ToolModule exports (profile mounts)
 export const listProjectAgentsTool = defineTool('list_project_agents', registerListProjectAgents);
 export const getProjectAgentTool = defineTool('get_project_agent', registerGetProjectAgent);
+export const getUserAgentPreferencesTool = defineTool(
+  'get_user_agent_preferences',
+  registerGetUserAgentPreferences,
+);

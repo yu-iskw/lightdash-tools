@@ -7,15 +7,18 @@ import { z } from 'zod';
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { agentUuidField, optionalProjectUuidField, withAiAgentProjectScope } from './helpers.js';
+import {
+  agentUuidField,
+  optionalProjectUuidField,
+  withAiAgentProjectScope,
+  type AiAgentScopeArgs,
+} from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const READINESS_LIMITATION =
   'evaluate_agent_readiness calls the Lightdash readiness API only. It is not an evaluation-suite run and does not invoke the agent end-to-end.';
-
-type AgentScopeArgs = { projectUuid?: string; agentUuid: string };
 
 export function registerEvaluateAgentReadiness(
   server: McpServer,
@@ -37,7 +40,7 @@ export function registerEvaluateAgentReadiness(
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
+        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.evaluateAgentReadiness(scope.projectUuid, agentUuid),
             mode: 'project_readiness_api',
@@ -66,7 +69,7 @@ export function registerGetAgentSuggestions(
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
+        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgentSuggestions(scope.projectUuid, agentUuid),
           })),
@@ -93,7 +96,7 @@ export function registerGetAgentModels(
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: AgentScopeArgs) =>
+        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgentModelOptions(scope.projectUuid, agentUuid),
           })),

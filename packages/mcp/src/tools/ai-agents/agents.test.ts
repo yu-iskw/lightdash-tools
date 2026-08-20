@@ -1,7 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TOOL_PREFIX } from '../shared.js';
-
 import { registerGetProjectAgent, registerListProjectAgents } from './agents.js';
 import { registerEvaluateAgentReadiness } from './discovery.js';
 import { registerGetAgentEvalRunResults, registerRunAgentEvaluation } from './evaluations.js';
@@ -11,48 +9,16 @@ import {
   redactThreadMessages,
   redactThreadSummaries,
 } from './helpers.js';
-
-import type { McpContextProvider } from '../../server/request-context.js';
+import {
+  mockAiAgentsContext,
+  parseAiAgentToolBody,
+  registeredAiAgentTool,
+} from './test-support.js';
 
 const PROJECT = '11111111-1111-1111-1111-111111111111';
 const AGENT = '22222222-2222-2222-2222-222222222222';
 const EVAL_UUID = '33333333-3333-3333-3333-333333333333';
 const RUN = '44444444-4444-4444-4444-444444444444';
-
-function mockContext(aiAgents: Record<string, ReturnType<typeof vi.fn>>): McpContextProvider {
-  return {
-    getContext: async () => ({
-      lightdashClient: {
-        v1: { aiAgents },
-      },
-      auth: { mode: 'none' as const },
-    }),
-  } as unknown as McpContextProvider;
-}
-
-type ToolResult = {
-  content: Array<{ type: string; text: string }>;
-  isError?: boolean;
-  structuredContent?: Record<string, unknown>;
-};
-
-function registeredHandler(
-  register: (server: never, ctx: McpContextProvider) => void,
-  ctx: McpContextProvider,
-  toolId: string,
-): (args: Record<string, unknown>) => Promise<ToolResult> {
-  const mockServer = { registerTool: vi.fn() };
-  register(mockServer as never, ctx);
-  const call = mockServer.registerTool.mock.calls.find(
-    (entry) => entry[0] === `${TOOL_PREFIX}${toolId}`,
-  );
-  expect(call).toBeDefined();
-  return call![2] as (args: Record<string, unknown>) => Promise<ToolResult>;
-}
-
-function parseBody(result: ToolResult): Record<string, unknown> {
-  return JSON.parse(result.content[0].text) as Record<string, unknown>;
-}
 
 describe('ai-agents helpers', () => {
   it('redacts message bodies, firstMessage, and nested tool I/O by default', () => {
@@ -188,14 +154,14 @@ describe('ai-agent-ops tools', () => {
 
   it('lists agents when projectUuid is passed', async () => {
     const listAgents = vi.fn().mockResolvedValue([{ uuid: AGENT, name: 'Revenue' }]);
-    const handler = registeredHandler(
+    const { handler } = registeredAiAgentTool(
       registerListProjectAgents,
-      mockContext({ listAgents }),
+      mockAiAgentsContext({ listAgents }),
       'list_project_agents',
     );
     const result = await handler({ projectUuid: PROJECT });
     expect(result.isError).toBeUndefined();
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect(listAgents).toHaveBeenCalledWith(PROJECT);
     expect(body.data).toEqual([{ uuid: AGENT, name: 'Revenue' }]);
     expect((body.context as { projectUuid: string }).projectUuid).toBe(PROJECT);
@@ -203,22 +169,22 @@ describe('ai-agent-ops tools', () => {
 
   it('labels readiness as non-e2e', async () => {
     const evaluateAgentReadiness = vi.fn().mockResolvedValue({ score: 0.8 });
-    const handler = registeredHandler(
+    const { handler } = registeredAiAgentTool(
       registerEvaluateAgentReadiness,
-      mockContext({ evaluateAgentReadiness }),
+      mockAiAgentsContext({ evaluateAgentReadiness }),
       'evaluate_agent_readiness',
     );
     const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect(body.mode).toBe('project_readiness_api');
     expect((body.limitations as string[])[0]).toMatch(/not an evaluation-suite run/i);
   });
 
   it('run evaluation notes CLI gate ownership', async () => {
     const runEvaluation = vi.fn().mockResolvedValue({ runUuid: RUN, status: 'pending' });
-    const handler = registeredHandler(
+    const { handler } = registeredAiAgentTool(
       registerRunAgentEvaluation,
-      mockContext({ runEvaluation }),
+      mockAiAgentsContext({ runEvaluation }),
       'run_agent_evaluation',
     );
     const result = await handler({
@@ -226,7 +192,7 @@ describe('ai-agent-ops tools', () => {
       agentUuid: AGENT,
       evalUuid: EVAL_UUID,
     });
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect(body.mode).toBe('lightdash_agent_evaluation_run');
     expect((body.limitations as string[]).join(' ')).toMatch(/agentops evaluate-gate/);
   });
@@ -235,9 +201,9 @@ describe('ai-agent-ops tools', () => {
     const getEvaluationRunResults = vi
       .fn()
       .mockResolvedValue({ runUuid: RUN, status: 'completed' });
-    const handler = registeredHandler(
+    const { handler } = registeredAiAgentTool(
       registerGetAgentEvalRunResults,
-      mockContext({ getEvaluationRunResults }),
+      mockAiAgentsContext({ getEvaluationRunResults }),
       'get_agent_eval_run_results',
     );
     const result = await handler({
@@ -246,21 +212,21 @@ describe('ai-agent-ops tools', () => {
       evalUuid: EVAL_UUID,
       runUuid: RUN,
     });
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect((body.limitations as string[]).join(' ')).toMatch(/evaluate-gate/);
     expect((body.limitations as string[]).join(' ')).not.toMatch(/gate passed/i);
   });
 
   it('surfaces PROJECT_SCOPE_REQUIRED when unresolved', async () => {
     const getAgent = vi.fn();
-    const handler = registeredHandler(
+    const { handler } = registeredAiAgentTool(
       registerGetProjectAgent,
-      mockContext({ getAgent }),
+      mockAiAgentsContext({ getAgent }),
       'get_project_agent',
     );
     const result = await handler({ agentUuid: AGENT });
     expect(result.isError).toBe(true);
-    const body = parseBody(result);
+    const body = parseAiAgentToolBody(result);
     expect((body.error as { code: string }).code).toBe('PROJECT_SCOPE_REQUIRED');
     expect(getAgent).not.toHaveBeenCalled();
   });

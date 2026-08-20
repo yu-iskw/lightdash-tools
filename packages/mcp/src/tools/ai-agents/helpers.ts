@@ -22,6 +22,22 @@ export const runUuidField = (): z.ZodString => z.string().describe('Evaluation r
 
 export const threadUuidField = (): z.ZodString => z.string().describe('Thread UUID');
 
+/** Project + agent identity shared by inventory, thread, discovery, and eval tools. */
+export type AiAgentScopeArgs = { projectUuid?: string; agentUuid: string };
+
+export type AiAgentThreadScopeArgs = AiAgentScopeArgs & { threadUuid: string };
+
+/** Conservative local prompt ceiling; not env-configurable in v1 (ADR-0029). */
+export const THREAD_PROMPT_MAX_CHARS = 32_000;
+
+export const threadPromptField = (): z.ZodString =>
+  z
+    .string()
+    .trim()
+    .min(1)
+    .max(THREAD_PROMPT_MAX_CHARS)
+    .describe('User prompt to store on the thread (not sent to /generate)');
+
 const evaluationPromptSchema = z.union([
   z.object({
     prompt: z.string().min(1),
