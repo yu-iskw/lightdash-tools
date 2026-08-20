@@ -6,16 +6,16 @@ Developing this package? See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## Choose a profile
 
-| Profile              | Use when                                 | HTTP path                    | Stdio `--profile`    | Catalog                                                          |
-| :------------------- | :--------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
-| `semantic-layer`     | Explore metrics, compile queries         | `/semantic-layer/v1/mcp`     | `semantic-layer`     | —                                                                |
-| `organization-audit` | Read-only org governance                 | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/profiles/organization-audit/inventory.md) |
-| `content-reader`     | Discover and run saved content           | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/profiles/content-reader/inventory.md)     |
-| `content-developer`  | Author charts/dashboards (preview gate)  | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/profiles/content-developer/inventory.md)  |
-| `content-governance` | Soft-delete / promote (form elicitation) | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/profiles/content-governance/inventory.md) |
-| `ai-agent-ops`       | Thin AI-agent APIs + product eval runs   | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/profiles/ai-agent-ops/inventory.md)       |
-| `ai-agent-chat`      | Use existing AI Agents as the current user | `/ai-agent-chat/v1/mcp`    | `ai-agent-chat`      | [inventory](../../docs/profiles/ai-agent-chat/inventory.md)      |
-| `data-analyst`       | Unsaved Explore metric queries           | `/data-analyst/v1/mcp`       | `data-analyst`       | [inventory](../../docs/profiles/data-analyst/inventory.md)       |
+| Profile              | Use when                                   | HTTP path                    | Stdio `--profile`    | Catalog                                                          |
+| :------------------- | :----------------------------------------- | :--------------------------- | :------------------- | :--------------------------------------------------------------- |
+| `semantic-layer`     | Explore metrics, compile queries           | `/semantic-layer/v1/mcp`     | `semantic-layer`     | —                                                                |
+| `organization-audit` | Read-only org governance                   | `/organization-audit/v1/mcp` | `organization-audit` | [inventory](../../docs/profiles/organization-audit/inventory.md) |
+| `content-reader`     | Discover and run saved content             | `/content-reader/v1/mcp`     | `content-reader`     | [inventory](../../docs/profiles/content-reader/inventory.md)     |
+| `content-developer`  | Author charts/dashboards (preview gate)    | `/content-developer/v1/mcp`  | `content-developer`  | [inventory](../../docs/profiles/content-developer/inventory.md)  |
+| `content-governance` | Soft-delete / promote (form elicitation)   | `/content-governance/v1/mcp` | `content-governance` | [inventory](../../docs/profiles/content-governance/inventory.md) |
+| `ai-agent-ops`       | Thin AI-agent APIs + product eval runs     | `/ai-agent-ops/v1/mcp`       | `ai-agent-ops`       | [inventory](../../docs/profiles/ai-agent-ops/inventory.md)       |
+| `ai-agent-chat`      | Use existing AI Agents as the current user | `/ai-agent-chat/v1/mcp`      | `ai-agent-chat`      | [inventory](../../docs/profiles/ai-agent-chat/inventory.md)      |
+| `data-analyst`       | Unsaved Explore metric queries             | `/data-analyst/v1/mcp`       | `data-analyst`       | [inventory](../../docs/profiles/data-analyst/inventory.md)       |
 
 Tool names are prefixed with `lightdash_`. MCP display names are shortened where needed for client length limits (e.g. `lightdash-mcp-content`).
 

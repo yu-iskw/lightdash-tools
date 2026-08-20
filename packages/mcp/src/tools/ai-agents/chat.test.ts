@@ -190,48 +190,38 @@ describe('ai-agent-chat tools', () => {
     expect((body.limitations as string[]).join(' ')).toMatch(/not \/stream/i);
   });
 
-  it('surfaces PROJECT_SCOPE_REQUIRED when unresolved for each new tool', async () => {
-    const cases: Array<{
-      register: (server: never, ctx: McpContextProvider) => void;
-      id: string;
-      args: Record<string, unknown>;
-      stub: string;
-    }> = [
-      {
-        register: registerGetUserAgentPreferences,
-        id: 'get_user_agent_preferences',
-        args: {},
-        stub: 'getUserAgentPreferences',
-      },
-      {
-        register: registerCreateAgentThread,
-        id: 'create_agent_thread',
-        args: { agentUuid: AGENT },
-        stub: 'createAgentThread',
-      },
-      {
-        register: registerCreateAgentThreadMessage,
-        id: 'create_agent_thread_message',
-        args: { agentUuid: AGENT, threadUuid: THREAD, prompt: 'hi' },
-        stub: 'createAgentThreadMessage',
-      },
-      {
-        register: registerGenerateAgentResponse,
-        id: 'generate_agent_response',
-        args: { agentUuid: AGENT, threadUuid: THREAD },
-        stub: 'generateAgentThreadResponse',
-      },
-    ];
-    for (const row of cases) {
-      const stub = vi.fn();
-      const { handler } = registeredTool(row.register, mockContext({ [row.stub]: stub }), row.id);
-      const result = await handler(row.args);
-      expect(result.isError, row.id).toBe(true);
-      expect((parseBody(result).error as { code: string }).code, row.id).toBe(
-        'PROJECT_SCOPE_REQUIRED',
-      );
-      expect(stub, row.id).not.toHaveBeenCalled();
-    }
+  it.each([
+    {
+      register: registerGetUserAgentPreferences,
+      id: 'get_user_agent_preferences',
+      args: {},
+      stub: 'getUserAgentPreferences',
+    },
+    {
+      register: registerCreateAgentThread,
+      id: 'create_agent_thread',
+      args: { agentUuid: AGENT },
+      stub: 'createAgentThread',
+    },
+    {
+      register: registerCreateAgentThreadMessage,
+      id: 'create_agent_thread_message',
+      args: { agentUuid: AGENT, threadUuid: THREAD, prompt: 'hi' },
+      stub: 'createAgentThreadMessage',
+    },
+    {
+      register: registerGenerateAgentResponse,
+      id: 'generate_agent_response',
+      args: { agentUuid: AGENT, threadUuid: THREAD },
+      stub: 'generateAgentThreadResponse',
+    },
+  ] as const)('surfaces PROJECT_SCOPE_REQUIRED for $id when unresolved', async (row) => {
+    const stub = vi.fn();
+    const { handler } = registeredTool(row.register, mockContext({ [row.stub]: stub }), row.id);
+    const result = await handler(row.args);
+    expect(result.isError).toBe(true);
+    expect((parseBody(result).error as { code: string }).code).toBe('PROJECT_SCOPE_REQUIRED');
+    expect(stub).not.toHaveBeenCalled();
   });
 
   it('uses the HTTP pin when projectUuid is omitted', async () => {

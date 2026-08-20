@@ -136,7 +136,7 @@ export function registerGenerateAgentResponse(
             ),
             mode: 'lightdash_ai_agent_generate',
             limitations: [
-              'Uses POST …/generate (non-streaming). SQL mode, autoApproveSql, and toolHints are not accepted.',
+              'Uses POST …/generate (non-streaming), not /stream. SQL mode, autoApproveSql, and toolHints are not accepted.',
               'Generation is open-world: nested Lightdash-agent tools may have side effects.',
               'Non-idempotent: do not retry create_agent_thread or create_agent_thread_message after an ambiguous failure; retry generate only if the user message already exists.',
             ],
