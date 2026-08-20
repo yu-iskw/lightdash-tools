@@ -89,7 +89,11 @@ describe('streamable HTTP security policy', () => {
 
 describe('streamable HTTP OAuth metadata', () => {
   it('builds protected resource metadata with MCP host as authorization_servers', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, SEMANTIC_LAYER_PROFILE_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
     expect(metadata.resource).toBe(`https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}`);
     expect(getAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
@@ -97,16 +101,31 @@ describe('streamable HTTP OAuth metadata', () => {
     );
   });
 
+  it('builds protected resource metadata for an extra invoke origin', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      'http://mcp.ilb.internal',
+    );
+    expect(metadata.resource).toBe('http://mcp.ilb.internal/semantic-layer/v1/mcp');
+    expect(metadata.authorization_servers).toEqual(['http://mcp.ilb.internal']);
+  });
+
   it('builds organization-audit protected resource metadata', () => {
     const metadata = buildOAuthProtectedResourceMetadata(
       oauthConfig,
       ORGANIZATION_AUDIT_PROFILE_PATH,
+      'https://mcp.example.com',
     );
     expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PROFILE_PATH}`);
   });
 
   it('builds content-reader protected resource metadata', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, CONTENT_READER_PROFILE_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      CONTENT_READER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
     expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PROFILE_PATH}`);
   });
 

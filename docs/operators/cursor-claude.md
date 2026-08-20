@@ -37,6 +37,8 @@ MCP    → Lightdash API with same Bearer token
 
 Replace the host with your `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Path is profile-owned: `/semantic-layer/v1/mcp`.
 
+Private-network clients on an extra invoke origin are a different contract — see [mcp-oauth.md](mcp-oauth.md#extra-invoke-origins-private-load-balancer--internal-dns). Cursor / Claude Code should keep using public HTTPS.
+
 **Do not** put `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID` / `_SECRET` (or any Lightdash client secret) in Cursor or Claude Code config.
 
 ## Local smoke (Cloudflare Tunnel)

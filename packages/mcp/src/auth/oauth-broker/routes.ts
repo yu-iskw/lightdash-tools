@@ -12,6 +12,7 @@ import { parseJsonBody, readBody } from '../../transports/http-body.js';
 import { sendJson } from '../../transports/http-response.js';
 
 import { buildBrokerAuthorizationServerMetadata } from './as-metadata.js';
+import { allowedResourceOrigins, resourceOriginForRequest } from './invoke-origins.js';
 import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
@@ -121,10 +122,36 @@ function isAllowedClientRedirectUri(redirectUri: string): boolean {
   }
 }
 
+function canonicalProfileResource(resource: string): string | undefined {
+  try {
+    const url = new URL(resource);
+    if (
+      (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+      url.username !== '' ||
+      url.password !== '' ||
+      url.search !== '' ||
+      url.hash !== ''
+    ) {
+      return undefined;
+    }
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return undefined;
+  }
+}
+
 function isAllowedMcpResource(config: McpHttpConfig, resource: string): boolean {
-  const publicUrl = requirePublicUrl(config, 'OAuth resource validation');
-  return listEnabledProfilePaths(config.enabledProfiles).some(
-    (profilePath) => resource === `${publicUrl}${profilePath}`,
+  const canonical = canonicalProfileResource(resource);
+  if (canonical === undefined) {
+    return false;
+  }
+  const profilePaths = listEnabledProfilePaths(config.enabledProfiles);
+  const origins = allowedResourceOrigins(
+    requirePublicUrl(config, 'OAuth resource validation'),
+    config.invokeOrigins,
+  );
+  return origins.some((origin) =>
+    profilePaths.some((profilePath) => canonical === `${origin}${profilePath}`),
   );
 }
 
@@ -581,8 +608,19 @@ async function handleRegister(
   });
 }
 
-function handleAsMetadata(res: ServerResponse, config: McpHttpConfig): void {
-  sendJson(res, 200, buildBrokerAuthorizationServerMetadata(config));
+function handleAsMetadata(req: IncomingMessage, res: ServerResponse, config: McpHttpConfig): void {
+  sendJson(
+    res,
+    200,
+    buildBrokerAuthorizationServerMetadata(
+      config,
+      resourceOriginForRequest(
+        req,
+        config.invokeOrigins,
+        requirePublicUrl(config, 'OAuth resource origin'),
+      ),
+    ),
+  );
 }
 
 const BROKER_PATHS: ReadonlySet<string> = new Set([
@@ -619,7 +657,7 @@ export function createOAuthBroker(
       }
 
       if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
-        handleAsMetadata(res, config);
+        handleAsMetadata(req, res, config);
         return true;
       }
 

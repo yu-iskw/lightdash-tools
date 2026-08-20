@@ -10,6 +10,7 @@ export function makeTestMcpHttpConfig(overrides?: Partial<McpHttpConfig>): McpHt
     host: '127.0.0.1',
     port: 3100,
     publicUrl: 'https://mcp.example.com',
+    invokeOrigins: [],
     mcpPath: resolveRootMcpPath(enabledProfiles),
     enabledProfiles,
     promptContextPolicy: 'compact',

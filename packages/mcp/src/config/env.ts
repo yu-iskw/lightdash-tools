@@ -8,6 +8,11 @@ export const ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT = 'LIGHTDASH_TOOLS_MCP_HTTP_PORT'
 /** Platform listen port (Cloud Run / many PaaS). Used only when dedicated MCP port env is unset. */
 export const ENV_PLATFORM_PORT = 'PORT';
 export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_URL';
+/**
+ * Optional comma-separated extra invoke origins (private load balancer, internal DNS).
+ * On a matching Host, PRM and token/DCR advertise that origin; issuer/authorize stay on PUBLIC_URL.
+ */
+export const ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS = 'LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS';
 /** Rejected at config load — MCP path is profile-owned (see profiles/). */
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
 /** Optional HTTP mount allowlist (comma-separated ProfileIds). Unset/empty → all. Stdio ignores. */

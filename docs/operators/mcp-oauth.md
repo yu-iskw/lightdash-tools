@@ -1,18 +1,18 @@
 # OAuth-backed Streamable HTTP MCP
 
-Operator guide for hosted `@lightdash-tools/mcp` with a **server-held Lightdash OAuth application** (confidential client + dual-leg broker). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Threat model: [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md).
+Operator guide for hosted `@lightdash-tools/mcp` with a **server-held Lightdash OAuth application** (confidential client + dual-leg broker). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) and [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Threat model: [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md).
 
 ## Mental model
 
-| Role                                   | Who                                                                                       |
-| :------------------------------------- | :---------------------------------------------------------------------------------------- |
-| Lightdash OAuth app (client id/secret) | **MCP server** env (downstream confidential client)                                       |
-| Redirect URI (one, shared)             | `{PUBLIC_URL}/oauth/callback`                                                             |
-| AS façade for MCP clients              | MCP host (`/oauth/*`, PRM `authorization_servers` = `PUBLIC_URL`)                         |
-| MCP access token                       | Broker-issued `ldmcp1.*` AEAD bearer; audience = exact enabled profile resource           |
-| Downstream Lightdash credential        | Recovered server-side from the broker token only; never returned as the MCP client bearer |
-| Resource servers                       | Profile paths (`/semantic-layer/v1/mcp`, …)                                               |
-| MCP clients (Claude Code / Cursor)     | **URL only** — no client secret                                                           |
+| Role                                   | Who                                                                                                              |
+| :------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| Lightdash OAuth app (client id/secret) | **MCP server** env (downstream confidential client)                                                              |
+| Redirect URI (one, shared)             | `{PUBLIC_URL}/oauth/callback`                                                                                    |
+| AS façade for MCP clients              | MCP host (`/oauth/*`, PRM `authorization_servers` = `PUBLIC_URL`, or an extra invoke origin when `Host` matches) |
+| MCP access token                       | Broker-issued `ldmcp1.*` AEAD bearer; audience = exact enabled profile resource                                  |
+| Downstream Lightdash credential        | Recovered server-side from the broker token only; never returned as the MCP client bearer                        |
+| Resource servers                       | Profile paths (`/semantic-layer/v1/mcp`, …)                                                                      |
+| MCP clients (Claude Code / Cursor)     | **URL only** — no client secret                                                                                  |
 
 Auth mode is **inferred** from credentials (no `LIGHTDASH_TOOLS_MCP_AUTH_MODE`).
 
@@ -80,6 +80,32 @@ curl -s "https://lightdash-mcp.example.com/.well-known/oauth-authorization-serve
 
 MCP endpoint: `POST/GET/DELETE /semantic-layer/v1/mcp`.
 
+## Extra invoke origins (private load balancer / internal DNS)
+
+Optional. Use when VPC clients reach the same process on a **different** origin than `PUBLIC_URL` (internal HTTP LB, private DNS, Kubernetes Service) and must not fetch public well-known through a WAF.
+
+Do **not** point `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` at the extra origin. Prefer same-hostname private TLS when you can; this env covers extra hostnames, including cleartext HTTP.
+
+```bash
+export LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS="http://mcp.ilb.internal"
+```
+
+Comma-separated absolute `http(s)` origins, no path. Invalid values fail OAuth startup. Matching is the full origin (scheme + host + port), not hostname alone. Scheme comes from `X-Forwarded-Proto` (first value), else TLS, else `http` — set the env origin to the scheme clients use, and make sure the proxy forwards that proto.
+
+On a matching `Host`:
+
+- PRM `resource` / `authorization_servers` and AS `token_endpoint` / `registration_endpoint` use the extra origin
+- AS `issuer`, `/oauth/authorize`, and `/oauth/callback` stay on `PUBLIC_URL`
+- Broker tokens are bound to `{invokeOrigin}{profilePath}`
+
+Client contract for those origins:
+
+- Server URL = extra origin + profile path (for example `http://mcp.ilb.internal/semantic-layer/v1/mcp`)
+- Resource URL **empty** (the server URL becomes RFC 8707 `resource`). A public Resource URL causes mismatch
+- Enable DCR if the client requires `/oauth/register`
+
+`@modelcontextprotocol/client` **v2** will reject HTTP invoke origins (`IssuerMismatchError`, `InsecureTokenEndpointError`). Point that SDK at public HTTPS. Do not serve extra-origin Hostnames on the public VIP.
+
 ## Secondary: PAT / local
 
 | Use                        | Env                                       |
@@ -114,6 +140,7 @@ After deploying the dual-leg broker, re-run the client OAuth login so cached raw
 | :------------------------------------ | :------------------------------------------------------------------------ |
 | `LIGHTDASH_URL`                       | Lightdash instance                                                        |
 | `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`      | Public base URL (required for OAuth)                                      |
+| `LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`  | Optional extra invoke origins (comma-separated; host-aware PRM/token/DCR) |
 | `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`     | Server-held Lightdash app client id                                       |
 | `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | Server-held Lightdash app client secret (also derives MCP token AEAD key) |
 | `LIGHTDASH_TOOLS_MCP_SHARED_KEY`      | Secondary shared-key gateway                                              |
@@ -129,19 +156,20 @@ CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `DRY_RUN`. Share
 
 ## Broker routes
 
-| Path                                      | Purpose                                                                           |
-| :---------------------------------------- | :-------------------------------------------------------------------------------- |
-| `/oauth/authorize`                        | Start client OAuth; require `resource`; redirect to Lightdash with fixed callback |
-| `/oauth/callback`                         | Lightdash redirect; exchange code with client secret                              |
-| `/oauth/token`                            | PKCE + same `resource`; mint `ldmcp1.*` MCP access token                          |
-| `/oauth/register`                         | Thin DCR stub (public client)                                                     |
-| `/.well-known/oauth-authorization-server` | Broker AS metadata                                                                |
-| `/.well-known/oauth-protected-resource`   | PRM (`authorization_servers` = `PUBLIC_URL`)                                      |
-| `/health/live`, `/health/ready`           | Unauthenticated process probes (not OAuth; see [cloud-run.md](cloud-run.md))      |
+| Path                                      | Purpose                                                                                                    |
+| :---------------------------------------- | :--------------------------------------------------------------------------------------------------------- |
+| `/oauth/authorize`                        | Start client OAuth; require `resource`; redirect to Lightdash with fixed callback                          |
+| `/oauth/callback`                         | Lightdash redirect; exchange code with client secret                                                       |
+| `/oauth/token`                            | PKCE + same `resource`; mint `ldmcp1.*` MCP access token                                                   |
+| `/oauth/register`                         | Thin DCR stub (public client)                                                                              |
+| `/.well-known/oauth-authorization-server` | Broker AS metadata (token/DCR URLs follow `Host` when it matches `INVOKE_ORIGINS`)                         |
+| `/.well-known/oauth-protected-resource`   | PRM (`authorization_servers` = request origin when Host matches an extra invoke origin; else `PUBLIC_URL`) |
+| `/health/live`, `/health/ready`           | Unauthenticated process probes (not OAuth; see [cloud-run.md](cloud-run.md))                               |
 
 ## Related
 
 - [ADR-0026 — dual-leg MCP OAuth token boundary](../adr/0026-mcp-oauth-dual-leg-token-boundary.md)
+- [ADR-0027 — extra invoke origins](../adr/0027-mcp-oauth-extra-invoke-origins.md)
 - [cursor-claude.md](cursor-claude.md)
 - [cloud-run.md](cloud-run.md)
 - [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md)

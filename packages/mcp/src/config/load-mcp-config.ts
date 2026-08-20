@@ -9,6 +9,7 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
+import { parseInvokeOrigins } from '../auth/oauth-broker/invoke-origins.js';
 import { getDefaultProfile, listProfilePaths } from '../profiles/index.js';
 
 import {
@@ -20,6 +21,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
+  ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS,
   ENV_PLATFORM_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
@@ -184,6 +186,8 @@ export interface McpHttpConfig {
   host: string;
   port: number;
   publicUrl?: string;
+  /** Extra invoke origins. Parsed only in OAuth mode. */
+  invokeOrigins: URL[];
   mcpPath: string;
   /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
   enabledProfiles: EnabledProfilesPolicy;
@@ -274,6 +278,25 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
   }
 
   emitNgrokFreeInterstitialWarning(config.publicUrl);
+  emitInvokeOriginWarnings(config);
+}
+
+function emitInvokeOriginWarnings(config: McpHttpConfig): void {
+  const cleartext = config.invokeOrigins.filter(
+    (origin) => origin.protocol === 'http:' && !isLocalHttpOrigin(origin.origin),
+  );
+  if (cleartext.length === 0) {
+    return;
+  }
+
+  const listed = cleartext.map((origin) => origin.origin).join(', ');
+  console.warn(
+    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS} includes non-loopback http origins (${listed}). ` +
+      'On those Hosts, token/DCR and PRM advertise the invoke origin while issuer/authorize stay on ' +
+      `${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL}. This is an intentional RFC 8414 issuer split; ` +
+      '@modelcontextprotocol/client v2 will reject HTTP invoke origins. Point that SDK at public HTTPS. ' +
+      'Do not serve extra origins as the public VIP Host.',
+  );
 }
 
 /** Free ngrok serves ERR_NGROK_6024 for browser-UA GETs; Cursor's post-callback rediscovery uses Mozilla UA. */
@@ -412,6 +435,10 @@ export function loadMcpHttpConfig(
   const mcpPath = resolveRootMcpPath(enabledProfiles);
   const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
+  const invokeOrigins =
+    authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+      ? parseInvokeOrigins(readEnv(ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS, env), publicUrl)
+      : [];
 
   const validateToken = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
@@ -440,6 +467,7 @@ export function loadMcpHttpConfig(
       ENV_PLATFORM_PORT,
     ),
     publicUrl,
+    invokeOrigins,
     mcpPath,
     enabledProfiles,
     promptContextPolicy,
