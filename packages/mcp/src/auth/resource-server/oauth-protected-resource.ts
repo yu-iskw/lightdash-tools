@@ -25,17 +25,16 @@ export interface OAuthProtectedResourceMetadata {
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
   mcpPath: string,
+  resourceOrigin: string,
 ): OAuthProtectedResourceMetadata {
-  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
   const path = normalizeMcpPath(mcpPath);
 
-  // Broker mode: authorization_servers is the MCP host (PUBLIC_URL). Clients discover
-  // AS metadata at {PUBLIC_URL}/.well-known/oauth-authorization-server and never need
-  // the Lightdash client secret. The broker issues its own access token bound to this
-  // exact resource; the downstream Lightdash credential remains a separate OAuth leg.
+  // Broker mode: authorization_servers is the MCP host clients should use for AS
+  // discovery. On PUBLIC_URL that is the public origin. On an extra invoke origin
+  // it is that origin so private-network clients do not fetch public well-known.
   return {
-    resource: `${publicUrl}${path}`,
-    authorization_servers: [publicUrl],
+    resource: `${resourceOrigin}${path}`,
+    authorization_servers: [resourceOrigin],
     bearer_methods_supported: ['header'],
     scopes_supported: config.scopesSupported,
   };
@@ -49,10 +48,10 @@ export function getProtectedResourceMetadataUrl(config: McpHttpConfig): string {
 export function getProtectedResourceMetadataPathUrl(
   config: McpHttpConfig,
   mcpPath: string,
+  resourceOrigin: string,
 ): string {
-  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
   const resourcePath = normalizeMcpPath(mcpPath).replace(/^\//, '');
-  return `${publicUrl}${OAUTH_PROTECTED_RESOURCE_ROOT}/${resourcePath}`;
+  return `${resourceOrigin}${OAUTH_PROTECTED_RESOURCE_ROOT}/${resourcePath}`;
 }
 
 /**

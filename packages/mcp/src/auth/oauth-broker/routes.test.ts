@@ -79,6 +79,7 @@ function mockReq(
   url: string,
   body?: string,
   contentType = 'application/x-www-form-urlencoded',
+  extraHeaders?: Record<string, string>,
 ): IncomingMessage {
   const req = new EventEmitter() as EventEmitter & IncomingMessage;
   req.method = method;
@@ -86,6 +87,7 @@ function mockReq(
   req.headers = {
     host: 'mcp.example.com',
     ...(body !== undefined ? { 'content-type': contentType } : {}),
+    ...extraHeaders,
   };
   queueMicrotask(() => {
     if (body !== undefined) {
@@ -125,11 +127,51 @@ describe('oauth broker helpers', () => {
   });
 
   it('publishes AS metadata pointing at broker endpoints', () => {
-    const metadata = buildBrokerAuthorizationServerMetadata(baseConfig());
+    const metadata = buildBrokerAuthorizationServerMetadata(
+      baseConfig(),
+      'https://mcp.example.com',
+    );
     expect(metadata.issuer).toBe('https://mcp.example.com');
     expect(metadata.authorization_endpoint).toBe('https://mcp.example.com/oauth/authorize');
     expect(metadata.token_endpoint).toBe('https://mcp.example.com/oauth/token');
     expect(metadata.registration_endpoint).toBe('https://mcp.example.com/oauth/register');
+  });
+
+  it('moves token and DCR onto an extra invoke origin while issuer stays public', () => {
+    const metadata = buildBrokerAuthorizationServerMetadata(
+      baseConfig(),
+      'http://mcp.ilb.internal',
+    );
+    expect(metadata.issuer).toBe('https://mcp.example.com');
+    expect(metadata.authorization_endpoint).toBe('https://mcp.example.com/oauth/authorize');
+    expect(metadata.token_endpoint).toBe('http://mcp.ilb.internal/oauth/token');
+    expect(metadata.registration_endpoint).toBe('http://mcp.ilb.internal/oauth/register');
+  });
+
+  it('serves host-aware AS metadata when Host matches an extra invoke origin', async () => {
+    const broker = createOAuthBroker(
+      baseConfig({ invokeOrigins: [new URL('http://mcp.ilb.internal')] }),
+    );
+    const res = mockRes();
+    await broker.handle(
+      mockReq('GET', '/.well-known/oauth-authorization-server', undefined, undefined, {
+        host: 'mcp.ilb.internal',
+        'x-forwarded-proto': 'http',
+      }),
+      res,
+      '/.well-known/oauth-authorization-server',
+    );
+    expect(res.statusCode).toBe(200);
+    const body = res.body as {
+      issuer: string;
+      authorization_endpoint: string;
+      token_endpoint: string;
+      registration_endpoint: string;
+    };
+    expect(body.issuer).toBe('https://mcp.example.com');
+    expect(body.authorization_endpoint).toBe('https://mcp.example.com/oauth/authorize');
+    expect(body.token_endpoint).toBe('http://mcp.ilb.internal/oauth/token');
+    expect(body.registration_endpoint).toBe('http://mcp.ilb.internal/oauth/register');
   });
 
   it('verifies S256 PKCE and rejects PLAIN', () => {
@@ -333,6 +375,174 @@ describe('oauth broker DCR + authorize binding', () => {
     );
     expect(wrongRes.statusCode).toBe(400);
     expect((wrongRes.body as { error: string }).error).toBe('invalid_target');
+  });
+
+  it('accepts an extra invoke-origin profile resource at authorize', async () => {
+    const invokeResource = 'http://mcp.ilb.internal/semantic-layer/v1/mcp';
+    const broker = createOAuthBroker(
+      baseConfig({ invokeOrigins: [new URL('http://mcp.ilb.internal')] }),
+    );
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq(
+        'GET',
+        authorizeUrl(clientId, redirectUri, challenge).replace(
+          encodeURIComponent(RESOURCE),
+          encodeURIComponent(invokeResource),
+        ),
+      ),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    expect(authorizeRes.statusCode).toBe(302);
+    expect(String(authorizeRes.headers.Location)).toContain('/api/v1/oauth/authorize');
+  });
+
+  it('accepts a public profile resource when PUBLIC_URL includes a default port', async () => {
+    const broker = createOAuthBroker(baseConfig({ publicUrl: 'https://mcp.example.com:443' }));
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq('GET', authorizeUrl(clientId, redirectUri, challenge)),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    expect(authorizeRes.statusCode).toBe(302);
+  });
+
+  it('accepts an extra invoke-origin resource that includes a default port', async () => {
+    const invokeResource = 'http://mcp.ilb.internal:80/semantic-layer/v1/mcp';
+    const broker = createOAuthBroker(
+      baseConfig({ invokeOrigins: [new URL('http://mcp.ilb.internal')] }),
+    );
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq(
+        'GET',
+        authorizeUrl(clientId, redirectUri, challenge).replace(
+          encodeURIComponent(RESOURCE),
+          encodeURIComponent(invokeResource),
+        ),
+      ),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    expect(authorizeRes.statusCode).toBe(302);
+  });
+
+  it('mints a portless audience when authorize and token use a default-port invoke resource', async () => {
+    const portedResource = 'http://mcp.ilb.internal:80/semantic-layer/v1/mcp';
+    const canonicalResource = 'http://mcp.ilb.internal/semantic-layer/v1/mcp';
+    const config = baseConfig({ invokeOrigins: [new URL('http://mcp.ilb.internal')] });
+    const broker = createOAuthBroker(config);
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const verifier = 'test-verifier-value-1234567890';
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
+
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq(
+        'GET',
+        authorizeUrl(clientId, redirectUri, challenge).replace(
+          encodeURIComponent(RESOURCE),
+          encodeURIComponent(portedResource),
+        ),
+      ),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    expect(authorizeRes.statusCode).toBe(302);
+    const ldAuthorize = new URL(String(authorizeRes.headers.Location));
+    const brokerState = ldAuthorize.searchParams.get('state');
+    expect(brokerState).toBeTruthy();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          access_token: 'ld-access',
+          refresh_token: 'ld-refresh',
+          token_type: 'Bearer',
+          expires_in: 3600,
+          scope: 'mcp:read',
+        }),
+      }),
+    );
+
+    const callbackRes = mockRes();
+    await broker.handle(
+      mockReq('GET', `/oauth/callback?code=ld-code&state=${encodeURIComponent(brokerState!)}`),
+      callbackRes,
+      '/oauth/callback',
+    );
+    expect(callbackRes.statusCode).toBe(302);
+    const callbackLocation = new URL(String(callbackRes.headers.Location));
+    const code = callbackLocation.searchParams.get('code');
+    expect(code).toBeTruthy();
+
+    const tokenRes = mockRes();
+    await broker.handle(
+      mockReq(
+        'POST',
+        '/oauth/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: code!,
+          redirect_uri: redirectUri,
+          client_id: clientId,
+          code_verifier: verifier,
+          resource: portedResource,
+        }).toString(),
+      ),
+      tokenRes,
+      '/oauth/token',
+    );
+
+    expect(tokenRes.statusCode).toBe(200);
+    const body = tokenRes.body as { access_token: string };
+    expect(String(body.access_token)).toMatch(/^ldmcp1\./);
+    expect(verifyMcpAccessToken(config, body.access_token, portedResource)).toBeUndefined();
+    expect(verifyMcpAccessToken(config, body.access_token, canonicalResource)).toMatchObject({
+      resource: canonicalResource,
+    });
   });
 
   it('returns an MCP-issued resource-bound token and never exposes Lightdash tokens', async () => {

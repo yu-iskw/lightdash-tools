@@ -22,9 +22,13 @@ const baseConfig = makeTestMcpHttpConfig({
   requiredScopes: [],
 });
 
-function createRequest(authorization?: string): IncomingMessage {
+function createRequest(authorization?: string, headers?: Record<string, string>): IncomingMessage {
   return {
-    headers: authorization ? { authorization } : {},
+    headers: {
+      ...(authorization ? { authorization } : {}),
+      ...headers,
+    },
+    socket: {},
   } as IncomingMessage;
 }
 
@@ -259,6 +263,58 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.accessToken).toBe('ld-upstream-token');
+  });
+
+  it('challenges and verifies against an extra invoke-origin resource when Host matches', async () => {
+    const invokeOrigin = new URL('http://mcp.ilb.internal');
+    const invokeConfig = makeTestMcpHttpConfig({
+      oauthClientId: 'ld-client',
+      oauthClientSecret: new SecretString('test-lightdash-confidential-client-secret'),
+      requiredScopes: [],
+      invokeOrigins: [invokeOrigin],
+    });
+    const invokeHeaders = {
+      host: 'mcp.ilb.internal',
+      'x-forwarded-proto': 'http',
+    };
+    const invokeResource = `http://mcp.ilb.internal${SEMANTIC_LAYER_PROFILE_PATH}`;
+
+    const challenge = await authenticateLightdashOAuth(
+      createRequest(undefined, invokeHeaders),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(challenge.ok).toBe(false);
+    if (challenge.ok) return;
+    expect(challenge.wwwAuthenticate).toContain(
+      'http://mcp.ilb.internal/.well-known/oauth-protected-resource/semantic-layer/v1/mcp',
+    );
+
+    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
+      userUuid: 'user-1',
+      email: 'user@example.com',
+    });
+
+    const invokeToken = mintMcpAccessToken(invokeConfig, {
+      lightdashAccessToken: 'ld-upstream-token',
+      clientId: 'mcp-client-1',
+      resource: invokeResource,
+      expiresAtMs: Date.now() + 60_000,
+    }).accessToken;
+
+    const ok = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${invokeToken}`, invokeHeaders),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(ok.ok).toBe(true);
+
+    const publicHostRejectsInvokeToken = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${invokeToken}`, { host: 'mcp.example.com' }),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(publicHostRejectsInvokeToken.ok).toBe(false);
   });
 });
 

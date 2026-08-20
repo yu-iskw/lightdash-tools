@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/client",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "description": "Client library for Lightdash AI.",
   "keywords": [],
   "repository": {

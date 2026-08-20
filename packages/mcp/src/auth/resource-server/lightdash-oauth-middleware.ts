@@ -1,5 +1,7 @@
+import { requirePublicUrl } from '../../config/public-url.js';
 import { sendJson } from '../../transports/http-response.js';
 import { extractBearerToken } from '../bearer.js';
+import { resourceOriginForRequest } from '../oauth-broker/invoke-origins.js';
 import { verifyMcpAccessToken } from '../oauth-broker/mcp-access-token.js';
 
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
@@ -38,8 +40,9 @@ export type OAuthAuthResult = OAuthAuthFailure | OAuthAuthSuccess;
 export function buildBearerRequiredFailure(
   config: McpHttpConfig,
   mcpPath: string,
+  resourceOrigin: string,
 ): OAuthAuthFailure {
-  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath, resourceOrigin);
   const scope = config.requiredScopes.join(' ');
   return {
     ok: false,
@@ -81,13 +84,22 @@ export async function authenticateLightdashOAuth(
   config: McpHttpConfig,
   mcpPath: string,
 ): Promise<OAuthAuthResult> {
-  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath);
-  const expectedResource = buildOAuthProtectedResourceMetadata(config, mcpPath).resource;
+  const resourceOrigin = resourceOriginForRequest(
+    req,
+    config.invokeOrigins,
+    requirePublicUrl(config, 'OAuth resource origin'),
+  );
+  const resourceMetadataUrl = getProtectedResourceMetadataPathUrl(config, mcpPath, resourceOrigin);
+  const expectedResource = buildOAuthProtectedResourceMetadata(
+    config,
+    mcpPath,
+    resourceOrigin,
+  ).resource;
   const scope = config.requiredScopes.join(' ');
   const token = extractBearerToken(req);
 
   if (!token) {
-    return buildBearerRequiredFailure(config, mcpPath);
+    return buildBearerRequiredFailure(config, mcpPath, resourceOrigin);
   }
 
   // The MCP resource server accepts only tokens minted by its co-located authorization

@@ -12,6 +12,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
+  ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
   ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
@@ -269,6 +270,44 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.publicUrl).toBe('http://127.0.0.1:3100');
+  });
+
+  it('parses extra invoke origins in OAuth mode including non-loopback http', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] =
+      'http://mcp.ilb.internal, https://mcp.example.com';
+
+    const config = loadMcpHttpConfig();
+    expect(config.invokeOrigins.map((origin) => origin.origin)).toEqual([
+      'http://mcp.ilb.internal',
+    ]);
+  });
+
+  it('rejects invalid invoke origins in OAuth mode', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'not-a-url';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS);
+  });
+
+  it('ignores invoke origins outside OAuth mode', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'not-a-url';
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('none');
+    expect(config.invokeOrigins).toEqual([]);
+  });
+
+  it('warns for non-loopback http invoke origins', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'http://mcp.ilb.internal';
+    const config = loadMcpHttpConfig();
+    emitMcpHttpSecurityWarnings(config);
+    expect(vi.mocked(console.warn).mock.calls.flat().join('\n')).toMatch(
+      /non-loopback http origins/,
+    );
   });
 
   it('rejects VALIDATE_TOKEN=false in production', () => {

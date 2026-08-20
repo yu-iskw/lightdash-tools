@@ -28,7 +28,11 @@ describe('getAuthorizationServerMetadataUrl', () => {
 
 describe('buildOAuthProtectedResourceMetadata', () => {
   it('includes resource and MCP host as authorization_servers', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, SEMANTIC_LAYER_PROFILE_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      baseConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
     expect(metadata).toEqual({
       resource: `https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}`,
       authorization_servers: ['https://mcp.example.com'],
@@ -44,13 +48,18 @@ describe('buildOAuthProtectedResourceMetadata', () => {
     const metadata = buildOAuthProtectedResourceMetadata(
       baseConfig,
       ORGANIZATION_AUDIT_PROFILE_PATH,
+      'https://mcp.example.com',
     );
     expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PROFILE_PATH}`);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
   });
 
   it('builds profile-specific resource metadata for content-reader', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(baseConfig, CONTENT_READER_PROFILE_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      baseConfig,
+      CONTENT_READER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
     expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PROFILE_PATH}`);
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
   });

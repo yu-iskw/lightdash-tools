@@ -6,6 +6,8 @@ Date: 2026-08-17
 
 Accepted
 
+Amended by [27. Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
+
 Amends [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
 
 ## Context

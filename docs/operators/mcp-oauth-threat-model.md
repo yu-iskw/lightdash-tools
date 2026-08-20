@@ -1,6 +1,6 @@
 # Threat model: OAuth-backed Streamable HTTP MCP
 
-Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
+Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) and [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
 
 ## Assets
 
@@ -27,7 +27,9 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 | No per-token MCP revocation                     | Medium | Self-contained broker tokens stop on expiry, upstream Lightdash revocation, or OAuth client-secret rotation. Opaque shared token store is out of scope (conflicts with ADR-0019 unless product requires revoke).                                                                                       |
 | Token leakage in logs                           | High   | Redact `Authorization` in reverse proxies and platform logs. Never log raw tokens or client secret. Audit entries use token hash only.                                                                                                                                                                 |
 | Token/session confusion                         | High   | Bind sessions to `userUuid` and `organizationUuid`; reject subject or organization mismatch on resume.                                                                                                                                                                                                 |
-| OAuth metadata spoofing (wrong public URL)      | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Normalize URL. PRM `authorization_servers` = public MCP host (broker), not Lightdash directly.                                                                                                                                                               |
+| OAuth metadata spoofing (wrong public URL)      | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Normalize URL. PRM `authorization_servers` = public MCP host (broker), not Lightdash directly. Extra `INVOKE_ORIGINS` rewrite metadata only when `Host` matches an explicit listed origin.                                                                   |
+| Extra-origin Host spoofing on the public VIP    | Medium | Rewrite PRM/token/DCR only for listed origins. Do not route extra-origin Hostnames on the public VIP. Cleartext HTTP extra origins are for private networks; `@modelcontextprotocol/client` v2 is unsupported there ([ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md)).                       |
+| Spoofed `X-Forwarded-Proto` on extra origins    | Medium | Scheme is part of origin match. Trust `X-Forwarded-Proto` only from the private proxy that terminates the extra hostname; strip or overwrite it on the public VIP. A client that can set both `Host` and proto to a listed HTTP origin gets HTTP token/DCR URLs.                                       |
 | Reimplemented RBAC mismatch                     | High   | Do not recreate Lightdash object-level permissions in MCP. Delegate to Lightdash API with the recovered downstream credential after broker-token validation.                                                                                                                                           |
 | Agent destructive actions                       | High   | Profile `tools` mounts fix the MCP catalog (ADR-0006 / ADR-0022; [ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)); shipped `semantic-layer` profile is discovery/compile only; irrecoverable ops are client-only per [ADR-0004](../adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md). |
 | CSRF / browser-origin misuse                    | Medium | Bearer tokens in `Authorization` header only. Optional `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`. No cookie-based MCP auth.                                                                                                                                                                                |
@@ -38,6 +40,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 ### Server configuration
 
 - [ ] Set `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`.
+- [ ] If VPC clients use an extra hostname: set `LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS` (do not point `PUBLIC_URL` at that origin; do not serve that Host on the public VIP).
 - [ ] Register exactly one Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`.
 - [ ] Confirm deployed profile URL matches intended capability (shipped `semantic-layer` = discovery/compile only; ADR-0006).
 - [ ] Pin project via client/gateway `X-Lightdash-Project` when operators need a per-request project, and/or set `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` for a process-level hard allowlist ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
@@ -91,6 +94,7 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 
 - [mcp-oauth.md](mcp-oauth.md) — setup and troubleshooting
 - [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) — dual-leg token boundary
+- [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md) — extra invoke origins
 - [cursor-claude.md](cursor-claude.md) — Cursor client setup
 - [cloud-run.md](cloud-run.md) — Cloud Run deployment
 - [agent-context.md](agent-context.md) — agent guardrail invariants

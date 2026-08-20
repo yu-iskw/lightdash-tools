@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/mcp",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "description": "MCP server for Lightdash semantic-layer, organization-audit, content-reader, content-developer, content-governance, and ai-agent-ops profiles.",
   "keywords": [],
   "repository": {

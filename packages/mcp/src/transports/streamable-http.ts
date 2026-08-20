@@ -10,6 +10,7 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
+import { resourceOriginForRequest } from '../auth/oauth-broker/invoke-origins.js';
 import {
   createOAuthBroker,
   isOAuthBrokerPath,
@@ -41,6 +42,7 @@ import {
   emitMcpHttpSecurityWarnings,
   type McpHttpConfig,
 } from '../config/load-mcp-config.js';
+import { requirePublicUrl } from '../config/public-url.js';
 import { getClient, getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from '../config/runtime.js';
 import { validateAvailableProjectsConfig } from '../governance/available-projects.js';
 import {
@@ -435,7 +437,19 @@ async function handlePublicHttpPaths(
       : undefined;
   if (prmMcpPath !== undefined) {
     applyOptionalCorsHeaders(req, res, config, true);
-    sendJson(res, 200, buildOAuthProtectedResourceMetadata(config, prmMcpPath));
+    sendJson(
+      res,
+      200,
+      buildOAuthProtectedResourceMetadata(
+        config,
+        prmMcpPath,
+        resourceOriginForRequest(
+          req,
+          config.invokeOrigins,
+          requirePublicUrl(config, 'OAuth resource origin'),
+        ),
+      ),
+    );
     return true;
   }
 

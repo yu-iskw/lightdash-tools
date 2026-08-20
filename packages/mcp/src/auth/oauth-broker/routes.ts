@@ -12,6 +12,7 @@ import { parseJsonBody, readBody } from '../../transports/http-body.js';
 import { sendJson } from '../../transports/http-response.js';
 
 import { buildBrokerAuthorizationServerMetadata } from './as-metadata.js';
+import { allowedResourceOrigins, resourceOriginForRequest } from './invoke-origins.js';
 import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
@@ -121,11 +122,38 @@ function isAllowedClientRedirectUri(redirectUri: string): boolean {
   }
 }
 
-function isAllowedMcpResource(config: McpHttpConfig, resource: string): boolean {
-  const publicUrl = requirePublicUrl(config, 'OAuth resource validation');
-  return listEnabledProfilePaths(config.enabledProfiles).some(
-    (profilePath) => resource === `${publicUrl}${profilePath}`,
+function canonicalProfileResource(resource: string): string | undefined {
+  try {
+    const url = new URL(resource);
+    if (
+      (url.protocol !== 'http:' && url.protocol !== 'https:') ||
+      url.username !== '' ||
+      url.password !== '' ||
+      url.search !== '' ||
+      url.hash !== ''
+    ) {
+      return undefined;
+    }
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return undefined;
+  }
+}
+
+function allowedMcpResource(config: McpHttpConfig, resource: string): string | undefined {
+  const canonical = canonicalProfileResource(resource);
+  if (canonical === undefined) {
+    return undefined;
+  }
+  const profilePaths = listEnabledProfilePaths(config.enabledProfiles);
+  const origins = allowedResourceOrigins(
+    requirePublicUrl(config, 'OAuth resource validation'),
+    config.invokeOrigins,
   );
+  const allowed = origins.some((origin) =>
+    profilePaths.some((profilePath) => canonical === `${origin}${profilePath}`),
+  );
+  return allowed ? canonical : undefined;
 }
 
 type AuthorizeParseFail = { ok: false; status: number; body: Record<string, string> };
@@ -244,7 +272,8 @@ async function parseAuthorizeRequest(
     };
   }
   const resource = resources[0]!;
-  if (!isAllowedMcpResource(config, resource)) {
+  const allowedResource = allowedMcpResource(config, resource);
+  if (allowedResource === undefined) {
     return {
       ok: false,
       status: 400,
@@ -262,7 +291,7 @@ async function parseAuthorizeRequest(
       redirectUri: registered.redirectUri,
       clientState: query.get('state') ?? undefined,
       codeChallenge,
-      resource,
+      resource: allowedResource,
       scope: query.get('scope') ?? undefined,
     },
   };
@@ -471,7 +500,7 @@ async function validateTokenGrant(
     return restoreInvalidGrant(store, candidate, 'client_id mismatch');
   }
 
-  if (candidate.resource !== request.resource) {
+  if (candidate.resource !== canonicalProfileResource(request.resource)) {
     return restoreInvalidGrant(store, candidate, 'resource mismatch');
   }
 
@@ -581,8 +610,19 @@ async function handleRegister(
   });
 }
 
-function handleAsMetadata(res: ServerResponse, config: McpHttpConfig): void {
-  sendJson(res, 200, buildBrokerAuthorizationServerMetadata(config));
+function handleAsMetadata(req: IncomingMessage, res: ServerResponse, config: McpHttpConfig): void {
+  sendJson(
+    res,
+    200,
+    buildBrokerAuthorizationServerMetadata(
+      config,
+      resourceOriginForRequest(
+        req,
+        config.invokeOrigins,
+        requirePublicUrl(config, 'OAuth resource origin'),
+      ),
+    ),
+  );
 }
 
 const BROKER_PATHS: ReadonlySet<string> = new Set([
@@ -619,7 +659,7 @@ export function createOAuthBroker(
       }
 
       if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
-        handleAsMetadata(res, config);
+        handleAsMetadata(req, res, config);
         return true;
       }
 

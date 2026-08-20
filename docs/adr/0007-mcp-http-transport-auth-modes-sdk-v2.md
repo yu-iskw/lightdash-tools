@@ -10,6 +10,8 @@ Amended by [19. MCP stateless protocol core without Redis ephemeral store](0019-
 
 Amended by [26. MCP OAuth uses a dual-leg, resource-bound token boundary](0026-mcp-oauth-dual-leg-token-boundary.md)
 
+Amended by [27. Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
+
 ## Context
 
 `@lightdash-tools/mcp` must serve STDIO (local agents) and Streamable HTTP (remote). Hosted HTTP needs per-user Lightdash identity. Operators register one Lightdash OAuth application per MCP deployment; the **client secret must not** be shipped to Claude Code / Cursor.
