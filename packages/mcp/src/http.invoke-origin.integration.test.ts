@@ -8,10 +8,10 @@ import {
   nodeRequest,
   postMcp,
   startMockLightdashServer,
-  type McpHttpServer,
-  type MockLightdashServer,
 } from './http.integration.helpers.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
+
+import type { McpHttpServer, MockLightdashServer } from './http.integration.helpers.js';
 
 describe('MCP HTTP extra invoke-origin OAuth', () => {
   const invokeHost = 'mcp.ilb.internal';

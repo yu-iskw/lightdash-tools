@@ -3,12 +3,14 @@ import {
   request as httpRequest,
   type IncomingHttpHeaders,
   type Server,
+  type ServerResponse,
 } from 'node:http';
 
 import { SecretString } from '@lightdash-tools/client';
 
 import { mintMcpAccessToken } from './auth/oauth-broker/mcp-access-token.js';
 import { makeTestMcpHttpConfig } from './config/test-mcp-http-config.js';
+
 import type { McpHttpConfig } from './config/load-mcp-config.js';
 import type { AddressInfo } from 'node:net';
 
@@ -60,14 +62,35 @@ export function listen(server: Server, port: number, host: string): Promise<void
   });
 }
 
+type MockUser = { userUuid: string; email: string; organizationUuid?: string };
+
+function writeJson(res: ServerResponse, status: number, body: unknown): void {
+  res.writeHead(status, { 'Content-Type': 'application/json' }).end(JSON.stringify(body));
+}
+
+function writeUnauthorized(res: ServerResponse): void {
+  writeJson(res, 401, {
+    status: 'error',
+    error: { statusCode: 401, name: 'Unauthorized', message: 'Invalid token' },
+  });
+}
+
+function bearerFromAuth(auth: string): string {
+  return auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
+}
+
+function userForAuth(auth: string, users: ReadonlyMap<string, MockUser>): MockUser | undefined {
+  return users.get(bearerFromAuth(auth));
+}
+
 export async function startMockLightdashServer(): Promise<MockLightdashServer> {
   const authorizationHeaders: string[] = [];
-  const users: Record<string, { userUuid: string; email: string; organizationUuid?: string }> = {
-    [TOKEN_A]: USER_A,
-    [TOKEN_B]: USER_B,
-    [TOKEN_READ_ONLY]: USER_A,
-    [OPAQUE_TOKEN_A]: USER_A,
-  };
+  const users = new Map<string, MockUser>([
+    [TOKEN_A, USER_A],
+    [TOKEN_B, USER_B],
+    [TOKEN_READ_ONLY, USER_A],
+    [OPAQUE_TOKEN_A, USER_A],
+  ]);
 
   let issuerBaseUrl = '';
 
@@ -77,62 +100,36 @@ export async function startMockLightdashServer(): Promise<MockLightdashServer> {
     authorizationHeaders.push(auth);
 
     if (req.method === 'GET' && req.url === '/.well-known/oauth-authorization-server') {
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          issuer: issuerBaseUrl,
-          authorization_endpoint: `${issuerBaseUrl}/api/v1/oauth/authorize`,
-          token_endpoint: `${issuerBaseUrl}/api/v1/oauth/token`,
-          revocation_endpoint: `${issuerBaseUrl}/api/v1/oauth/revoke`,
-          registration_endpoint: `${issuerBaseUrl}/api/v1/oauth/register`,
-          userinfo_endpoint: `${issuerBaseUrl}/api/v1/oauth/userinfo`,
-        }),
-      );
+      writeJson(res, 200, {
+        issuer: issuerBaseUrl,
+        authorization_endpoint: `${issuerBaseUrl}/api/v1/oauth/authorize`,
+        token_endpoint: `${issuerBaseUrl}/api/v1/oauth/token`,
+        revocation_endpoint: `${issuerBaseUrl}/api/v1/oauth/revoke`,
+        registration_endpoint: `${issuerBaseUrl}/api/v1/oauth/register`,
+        userinfo_endpoint: `${issuerBaseUrl}/api/v1/oauth/userinfo`,
+      });
       return;
     }
 
     if (req.method === 'GET' && req.url === '/api/v1/user') {
-      const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
-      const user = users[token];
-      if (!user) {
-        res.writeHead(401, { 'Content-Type': 'application/json' }).end(
-          JSON.stringify({
-            status: 'error',
-            error: { statusCode: 401, name: 'Unauthorized', message: 'Invalid token' },
-          }),
-        );
+      const user = userForAuth(auth, users);
+      if (user === undefined) {
+        writeUnauthorized(res);
         return;
       }
-
-      res
-        .writeHead(200, { 'Content-Type': 'application/json' })
-        .end(JSON.stringify({ status: 'ok', results: user }));
+      writeJson(res, 200, { status: 'ok', results: user });
       return;
     }
 
     if (req.method === 'GET' && req.url === '/api/v1/org/projects') {
-      const token = auth.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : '';
-      if (!users[token]) {
-        res.writeHead(401, { 'Content-Type': 'application/json' }).end(
-          JSON.stringify({
-            status: 'error',
-            error: { statusCode: 401, name: 'Unauthorized', message: 'Invalid token' },
-          }),
-        );
+      if (userForAuth(auth, users) === undefined) {
+        writeUnauthorized(res);
         return;
       }
-
-      res.writeHead(200, { 'Content-Type': 'application/json' }).end(
-        JSON.stringify({
-          status: 'ok',
-          results: [
-            {
-              projectUuid: 'project-a-uuid',
-              name: 'Project A',
-              type: 'DEFAULT',
-            },
-          ],
-        }),
-      );
+      writeJson(res, 200, {
+        status: 'ok',
+        results: [{ projectUuid: 'project-a-uuid', name: 'Project A', type: 'DEFAULT' }],
+      });
       return;
     }
 

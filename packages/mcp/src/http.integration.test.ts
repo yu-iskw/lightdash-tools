@@ -1,5 +1,4 @@
 import { createServer } from 'node:http';
-import type { AddressInfo } from 'node:net';
 
 import { SecretString } from '@lightdash-tools/client';
 import { CLIENT_CAPABILITIES_META_KEY } from '@modelcontextprotocol/server';
@@ -19,10 +18,11 @@ import {
   listen,
   postMcp,
   startMockLightdashServer,
-  type McpHttpServer,
-  type MockLightdashServer,
 } from './http.integration.helpers.js';
 import { createStreamableHttpServer } from './transports/streamable-http.js';
+
+import type { McpHttpServer, MockLightdashServer } from './http.integration.helpers.js';
+import type { AddressInfo } from 'node:net';
 
 function parseSseOrJsonToolText(raw: string): string {
   if (raw.includes('data:')) {
