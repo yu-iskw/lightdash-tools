@@ -116,7 +116,7 @@ function matchInvokeOriginFromRequest(
 }
 
 export function allowedResourceOrigins(publicUrl: string, invokeOrigins: readonly URL[]): string[] {
-  return [publicUrl, ...invokeOrigins.map((origin) => origin.origin)];
+  return [new URL(publicUrl).origin, ...invokeOrigins.map((origin) => origin.origin)];
 }
 
 /** Public URL, or a matching extra invoke origin, with no trailing slash. */
@@ -129,5 +129,5 @@ export function resourceOriginForRequest(
   if (invoke !== undefined) {
     return invoke.origin;
   }
-  return publicUrl;
+  return new URL(publicUrl).origin;
 }

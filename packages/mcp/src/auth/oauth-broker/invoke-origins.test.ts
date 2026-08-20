@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  allowedResourceOrigins,
   matchInvokeOrigin,
   originFromHostHeader,
   parseInvokeOrigins,
   requestProtocol,
+  resourceOriginForRequest,
 } from './invoke-origins.js';
 
 import type { IncomingMessage } from 'node:http';
@@ -105,5 +107,20 @@ describe('requestProtocol', () => {
         socket: {},
       } as unknown as IncomingMessage),
     ).toBe('http');
+  });
+});
+
+describe('allowedResourceOrigins / resourceOriginForRequest', () => {
+  it('strips a default port from the configured public URL', () => {
+    expect(allowedResourceOrigins('https://mcp.example.com:443', [])).toEqual([
+      'https://mcp.example.com',
+    ]);
+    expect(
+      resourceOriginForRequest(
+        { headers: { host: 'mcp.example.com' }, socket: {} } as unknown as IncomingMessage,
+        [],
+        'https://mcp.example.com:443',
+      ),
+    ).toBe('https://mcp.example.com');
   });
 });

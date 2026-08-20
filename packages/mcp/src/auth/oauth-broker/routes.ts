@@ -140,19 +140,20 @@ function canonicalProfileResource(resource: string): string | undefined {
   }
 }
 
-function isAllowedMcpResource(config: McpHttpConfig, resource: string): boolean {
+function allowedMcpResource(config: McpHttpConfig, resource: string): string | undefined {
   const canonical = canonicalProfileResource(resource);
   if (canonical === undefined) {
-    return false;
+    return undefined;
   }
   const profilePaths = listEnabledProfilePaths(config.enabledProfiles);
   const origins = allowedResourceOrigins(
     requirePublicUrl(config, 'OAuth resource validation'),
     config.invokeOrigins,
   );
-  return origins.some((origin) =>
+  const allowed = origins.some((origin) =>
     profilePaths.some((profilePath) => canonical === `${origin}${profilePath}`),
   );
+  return allowed ? canonical : undefined;
 }
 
 type AuthorizeParseFail = { ok: false; status: number; body: Record<string, string> };
@@ -271,7 +272,8 @@ async function parseAuthorizeRequest(
     };
   }
   const resource = resources[0]!;
-  if (!isAllowedMcpResource(config, resource)) {
+  const allowedResource = allowedMcpResource(config, resource);
+  if (allowedResource === undefined) {
     return {
       ok: false,
       status: 400,
@@ -289,7 +291,7 @@ async function parseAuthorizeRequest(
       redirectUri: registered.redirectUri,
       clientState: query.get('state') ?? undefined,
       codeChallenge,
-      resource,
+      resource: allowedResource,
       scope: query.get('scope') ?? undefined,
     },
   };
@@ -498,7 +500,7 @@ async function validateTokenGrant(
     return restoreInvalidGrant(store, candidate, 'client_id mismatch');
   }
 
-  if (candidate.resource !== request.resource) {
+  if (candidate.resource !== canonicalProfileResource(request.resource)) {
     return restoreInvalidGrant(store, candidate, 'resource mismatch');
   }
 
