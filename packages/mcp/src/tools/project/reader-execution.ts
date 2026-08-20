@@ -4,7 +4,7 @@
 
 import { z } from 'zod';
 
-import { ProjectScopeError, resolveProjectScope } from '../../governance/project-scope.js';
+import { resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
@@ -12,12 +12,20 @@ import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
 import { classifyChartSource } from '../query/chart-source.js';
-import { FilterOverrideError, applyFilterValueOverrides } from '../query/filter-overrides.js';
-import { codedErrorResult, isCoverageComplete } from '../query/reader-tool-helpers.js';
+import {
+  FilterOverrideError,
+  applyFilterValueOverrides,
+  type DashboardFiltersLike,
+} from '../query/filter-overrides.js';
+import {
+  codedErrorResult,
+  isCoverageComplete,
+  projectScopeErrorResult,
+} from '../query/reader-tool-helpers.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { detectChartType } from './reader-content.js';
+import { classifyDashboardTile, detectChartType } from './reader-content.js';
 
 import type { ContentReaderWarning } from '../../policy/envelope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -52,13 +60,7 @@ const DATE_ZOOM_IGNORED_ON_SQL_TILE: ContentReaderWarning = {
   message: 'dateZoom is not a field on dashboard-sql-chart; dashboard default granularity applies',
 };
 
-type DashboardFilterTree = {
-  dimensions?: Array<Record<string, unknown>>;
-  metrics?: Array<Record<string, unknown>>;
-  tableCalculations?: Array<Record<string, unknown>>;
-};
-
-type DashboardTileRunArgs = {
+type DashboardTileSharedArgs = {
   client: LightdashClient;
   profile: ProfileId;
   projectUuid: string;
@@ -66,10 +68,10 @@ type DashboardTileRunArgs = {
   dashboard: Record<string, unknown>;
   tileUuid: string;
   props: Record<string, unknown>;
+  filters: DashboardFiltersLike;
+  filterWarnings: string[];
   limit: number;
-  filterOverrides?: Array<{ id: string; values: unknown[] }>;
   parameterOverrides?: Record<string, unknown>;
-  dateZoom?: DateZoom;
   waitForResults?: boolean;
   timeoutMs?: number;
 };
@@ -78,38 +80,42 @@ function filterOverrideWarnings(messages: string[]): ContentReaderWarning[] {
   return messages.map((message) => ({ code: 'FILTER_IGNORED' as const, message }));
 }
 
-function applyDashboardFilters(
-  dashboard: Record<string, unknown>,
-  filterOverrides: Array<{ id: string; values: unknown[] }> | undefined,
-): { filters: DashboardFilterTree; warnings: string[] } {
-  return applyFilterValueOverrides(
-    dashboard.filters as DashboardFilterTree | undefined,
-    filterOverrides,
-  );
+type DashboardTileRequestBase = {
+  context: 'dashboardView';
+  dashboardFilters: ExecuteAsyncDashboardChartRequestParams['dashboardFilters'];
+  dashboardSorts: ExecuteAsyncDashboardChartRequestParams['dashboardSorts'];
+  dashboardUuid: string;
+  invalidateCache: false;
+  limit: number;
+  parameters: ExecuteAsyncDashboardChartRequestParams['parameters'];
+  tileUuid: string;
+};
+
+function dashboardTileRequestBase(args: DashboardTileSharedArgs): DashboardTileRequestBase {
+  return {
+    dashboardUuid: String(args.dashboard.uuid),
+    tileUuid: args.tileUuid,
+    dashboardFilters: args.filters as ExecuteAsyncDashboardChartRequestParams['dashboardFilters'],
+    dashboardSorts: [],
+    parameters: args.parameterOverrides as ExecuteAsyncDashboardChartRequestParams['parameters'],
+    limit: args.limit,
+    invalidateCache: false,
+    context: 'dashboardView',
+  };
 }
 
-async function executeSemanticDashboardTile(args: DashboardTileRunArgs): Promise<TextContent> {
+async function executeSemanticDashboardTile(
+  args: DashboardTileSharedArgs & { dateZoom?: DateZoom },
+): Promise<TextContent> {
   const chartUuid = String(args.props.savedChartUuid ?? args.props.chartUuid ?? '');
   if (!chartUuid) {
     return codedErrorResult('CONTENT_NOT_EXECUTABLE', 'Tile has no saved chart UUID');
   }
 
-  const { filters, warnings: filterWarnings } = applyDashboardFilters(
-    args.dashboard,
-    args.filterOverrides,
-  );
-
   const body: ExecuteAsyncDashboardChartRequestParams = {
-    dashboardUuid: String(args.dashboard.uuid),
-    tileUuid: args.tileUuid,
+    ...dashboardTileRequestBase(args),
     chartUuid,
-    dashboardFilters: filters as ExecuteAsyncDashboardChartRequestParams['dashboardFilters'],
-    dashboardSorts: [],
-    parameters: args.parameterOverrides as ExecuteAsyncDashboardChartRequestParams['parameters'],
     dateZoom: args.dateZoom,
-    limit: args.limit,
-    invalidateCache: false,
-    context: 'dashboardView',
   };
 
   const bounded = await runBoundedSavedQuery({
@@ -138,7 +144,7 @@ async function executeSemanticDashboardTile(args: DashboardTileRunArgs): Promise
           chartUuid,
           chartName: args.props.chartName,
         },
-        appliedDashboardFilters: filters,
+        appliedDashboardFilters: args.filters,
         appliedDateZoom: args.dateZoom,
       },
       {
@@ -147,33 +153,20 @@ async function executeSemanticDashboardTile(args: DashboardTileRunArgs): Promise
         projectPinned: args.projectPinned,
         complete: isCoverageComplete(bounded.normalized),
         truncated: bounded.normalized.truncated,
-        warnings: [...filterOverrideWarnings(filterWarnings), ...bounded.warnings],
+        warnings: [...filterOverrideWarnings(args.filterWarnings), ...bounded.warnings],
       },
     ),
   );
 }
 
-async function executeSqlDashboardTile(args: DashboardTileRunArgs): Promise<TextContent> {
-  const savedSqlUuid = String(args.props.savedSqlUuid ?? '');
-  if (!savedSqlUuid) {
-    return codedErrorResult('CONTENT_NOT_EXECUTABLE', 'Tile has no saved SQL UUID');
-  }
-
-  const { filters, warnings: filterWarnings } = applyDashboardFilters(
-    args.dashboard,
-    args.filterOverrides,
-  );
-
+async function executeSqlDashboardTile(
+  args: DashboardTileSharedArgs & { savedSqlUuid: string; dateZoomIgnored: boolean },
+): Promise<TextContent> {
   const body: ExecuteAsyncDashboardSqlChartRequestParams = {
-    savedSqlUuid,
-    dashboardUuid: String(args.dashboard.uuid),
-    tileUuid: args.tileUuid,
-    dashboardFilters: filters as ExecuteAsyncDashboardSqlChartRequestParams['dashboardFilters'],
-    dashboardSorts: [],
-    parameters: args.parameterOverrides as ExecuteAsyncDashboardSqlChartRequestParams['parameters'],
-    limit: args.limit,
-    invalidateCache: false,
-    context: 'dashboardView',
+    ...dashboardTileRequestBase(args),
+    savedSqlUuid: args.savedSqlUuid,
+    dashboardFilters:
+      args.filters as ExecuteAsyncDashboardSqlChartRequestParams['dashboardFilters'],
   };
 
   const bounded = await runBoundedSavedQuery({
@@ -190,13 +183,6 @@ async function executeSqlDashboardTile(args: DashboardTileRunArgs): Promise<Text
     return bounded.result;
   }
 
-  const extraWarnings: ContentReaderWarning[] = [
-    ...filterOverrideWarnings(filterWarnings),
-    SQL_TILE_ROW_LEVEL_WARNING,
-    ...(args.dateZoom === undefined ? [] : [DATE_ZOOM_IGNORED_ON_SQL_TILE]),
-    ...bounded.warnings,
-  ];
-
   return jsonToolResult(
     contentReaderEnvelope(
       {
@@ -206,11 +192,11 @@ async function executeSqlDashboardTile(args: DashboardTileRunArgs): Promise<Text
           dashboardUuid: args.dashboard.uuid,
           dashboardName: args.dashboard.name,
           tileUuid: args.tileUuid,
-          savedSqlUuid,
+          savedSqlUuid: args.savedSqlUuid,
           chartSlug: args.props.chartSlug,
           chartName: args.props.chartName,
         },
-        appliedDashboardFilters: filters,
+        appliedDashboardFilters: args.filters,
       },
       {
         profile: args.profile,
@@ -218,7 +204,12 @@ async function executeSqlDashboardTile(args: DashboardTileRunArgs): Promise<Text
         projectPinned: args.projectPinned,
         complete: isCoverageComplete(bounded.normalized),
         truncated: bounded.normalized.truncated,
-        warnings: extraWarnings,
+        warnings: [
+          ...filterOverrideWarnings(args.filterWarnings),
+          SQL_TILE_ROW_LEVEL_WARNING,
+          ...(args.dateZoomIgnored ? [DATE_ZOOM_IGNORED_ON_SQL_TILE] : []),
+          ...bounded.warnings,
+        ],
       },
     ),
   );
@@ -333,13 +324,10 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                 ),
               );
             } catch (err) {
-              if (err instanceof ProjectScopeError) {
-                return codedErrorResult(err.code, err.message);
-              }
               if (err instanceof ResultLimitError) {
                 return codedErrorResult(err.code, err.message);
               }
-              throw err;
+              return projectScopeErrorResult(err);
             }
           },
       ),
@@ -416,43 +404,58 @@ export function registerRunDashboardTile(
                   `Tile '${args.tileUuid}' not found on dashboard`,
                 );
               }
-              const tileType = String(tile.type ?? 'unknown');
-              const runArgs: DashboardTileRunArgs = {
+              const tileType = typeof tile.type === 'string' ? tile.type : 'unknown';
+              const props = asRecord(tile.properties);
+              const classified = classifyDashboardTile(tileType, props);
+              if (classified.kind === 'not_executable') {
+                return codedErrorResult(
+                  'CONTENT_NOT_EXECUTABLE',
+                  classified.reason === 'missing_saved_sql_uuid'
+                    ? 'Tile has no saved SQL UUID'
+                    : `Tile type '${classified.tileType}' is not executable`,
+                );
+              }
+              const { filters, warnings: filterWarnings } = applyFilterValueOverrides(
+                dashboard.filters as DashboardFiltersLike | undefined,
+                args.filterOverrides,
+              );
+              const shared: DashboardTileSharedArgs = {
                 client: c,
                 profile,
                 projectUuid: scope.projectUuid,
                 projectPinned: scope.projectPinned,
                 dashboard,
                 tileUuid: args.tileUuid,
-                props: asRecord(tile.properties),
+                props,
+                filters,
+                filterWarnings,
                 limit,
-                filterOverrides: args.filterOverrides,
                 parameterOverrides: args.parameterOverrides,
-                dateZoom: args.dateZoom,
                 waitForResults: args.waitForResults,
                 timeoutMs: args.timeoutMs,
               };
-              if (tileType === 'sql_chart') {
-                return executeSqlDashboardTile(runArgs);
+              switch (classified.kind) {
+                case 'sql_chart':
+                  return executeSqlDashboardTile({
+                    ...shared,
+                    savedSqlUuid: classified.savedSqlUuid,
+                    dateZoomIgnored: args.dateZoom !== undefined,
+                  });
+                case 'saved_chart':
+                  return executeSemanticDashboardTile({
+                    ...shared,
+                    dateZoom: args.dateZoom,
+                  });
+                default: {
+                  const _exhaustive: never = classified;
+                  return _exhaustive;
+                }
               }
-              if (tileType === 'saved_chart') {
-                return executeSemanticDashboardTile(runArgs);
-              }
-              return codedErrorResult(
-                'CONTENT_NOT_EXECUTABLE',
-                `Tile type '${tileType}' is not executable`,
-              );
             } catch (err) {
-              if (err instanceof ProjectScopeError) {
+              if (err instanceof ResultLimitError || err instanceof FilterOverrideError) {
                 return codedErrorResult(err.code, err.message);
               }
-              if (err instanceof ResultLimitError) {
-                return codedErrorResult(err.code, err.message);
-              }
-              if (err instanceof FilterOverrideError) {
-                return codedErrorResult(err.code, err.message);
-              }
-              throw err;
+              return projectScopeErrorResult(err);
             }
           },
       ),

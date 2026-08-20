@@ -30,6 +30,33 @@ export function detectChartType(chart: Record<string, unknown>): 'semantic' | 's
   return 'unknown';
 }
 
+export type DashboardTileClass =
+  | {
+      kind: 'not_executable';
+      reason: 'missing_saved_sql_uuid' | 'unsupported_type';
+      tileType: string;
+    }
+  | { kind: 'saved_chart' }
+  | { kind: 'sql_chart'; savedSqlUuid: string };
+
+/** Shared execute/discovery rule: semantic tiles by type; SQL tiles need savedSqlUuid. */
+export function classifyDashboardTile(
+  type: string,
+  props: Record<string, unknown>,
+): DashboardTileClass {
+  if (type === 'saved_chart') {
+    return { kind: 'saved_chart' };
+  }
+  if (type === 'sql_chart') {
+    const savedSqlUuid = props.savedSqlUuid;
+    if (typeof savedSqlUuid === 'string' && savedSqlUuid.length > 0) {
+      return { kind: 'sql_chart', savedSqlUuid };
+    }
+    return { kind: 'not_executable', tileType: type, reason: 'missing_saved_sql_uuid' };
+  }
+  return { kind: 'not_executable', tileType: type, reason: 'unsupported_type' };
+}
+
 /** Pass through OpenAPI TableCalculation fields agents need to clone. */
 export function toReaderTableCalculation(tc: unknown): Record<string, unknown> {
   const row = (tc ?? {}) as Record<string, unknown>;
@@ -96,15 +123,42 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
   };
 }
 
-function toReaderDashboard(dashboard: Record<string, unknown>, includeTiles: boolean) {
+export function toReaderDashboard(
+  dashboard: Record<string, unknown>,
+  includeTiles: boolean,
+): {
+  description: unknown;
+  filters: unknown;
+  name: unknown;
+  parameters: unknown;
+  slug: unknown;
+  space: { name: unknown; uuid: unknown };
+  tabs: unknown;
+  tiles:
+    | Array<{
+        chartKind: unknown;
+        chartName: unknown;
+        chartSlug: unknown;
+        chartUuid: unknown;
+        executable: boolean;
+        savedSqlUuid: unknown;
+        tabUuid: unknown;
+        tileUuid: unknown;
+        title: unknown;
+        type: string;
+      }>
+    | undefined;
+  updatedAt: unknown;
+  uuid: unknown;
+  verification: unknown;
+  views: unknown;
+} {
   const tilesRaw = Array.isArray(dashboard.tiles) ? dashboard.tiles : [];
   const tiles = includeTiles
     ? tilesRaw.map((tile) => {
         const t = tile as Record<string, unknown>;
         const props = (t.properties ?? {}) as Record<string, unknown>;
         const type = typeof t.type === 'string' ? t.type : 'unknown';
-        const executable =
-          type === 'saved_chart' || (type === 'sql_chart' && Boolean(props.savedSqlUuid));
         return {
           tileUuid: t.uuid,
           tabUuid: t.tabUuid,
@@ -115,7 +169,7 @@ function toReaderDashboard(dashboard: Record<string, unknown>, includeTiles: boo
           chartSlug: props.chartSlug,
           chartName: props.chartName,
           chartKind: props.chartKind,
-          executable,
+          executable: classifyDashboardTile(type, props).kind !== 'not_executable',
         };
       })
     : undefined;

@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.18.0] - 2026-08-20
+
+### Features
+
+- content-reader executes saved dashboard SQL tiles via query/dashboard-sql-chart (standalone SQL charts remain disabled)
+
 ## [0.17.0] - 2026-08-20
 
 ### Features
