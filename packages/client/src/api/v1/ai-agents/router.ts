@@ -10,6 +10,8 @@ import type { AiRouterRouteRequest, AiRouterRouteResponseResult } from '@lightda
 export class AiAgentsRouterClient extends BaseApiClient {
   /** Route a user prompt to the best accessible agent in the project. */
   async routeAiAgent(body: AiRouterRouteRequest): Promise<AiRouterRouteResponseResult> {
-    return this.http.post<AiRouterRouteResponseResult>('/org/aiRouter/route', body);
+    return this.http.post<AiRouterRouteResponseResult>('/org/aiRouter/route', body, undefined, {
+      maxRetries: 0,
+    });
   }
 }

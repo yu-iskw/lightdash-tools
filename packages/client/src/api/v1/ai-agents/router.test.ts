@@ -32,7 +32,9 @@ describe('AiAgentsRouterClient', () => {
     vi.mocked(mockHttp.post).mockResolvedValue(result);
     const body = { projectUuid: 'proj1', prompt: 'What is revenue?' };
     const got = await client.routeAiAgent(body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/org/aiRouter/route', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/org/aiRouter/route', body, undefined, {
+      maxRetries: 0,
+    });
     expect(got).toEqual(result);
   });
 });
