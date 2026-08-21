@@ -4,9 +4,9 @@ URI: `lightdash://playbooks/ai-agent-chat/conversation`
 
 ## Goal
 
-Delegate a business question to the **managed Lightdash AI Agent** and return that agent's answer.
+Delegate a business question to the **managed Lightdash AI Agent** and return that agent's answer. **Default to a new conversation.** Continue only with a known own-thread UUID (this session or user-supplied). Do not auto-browse threads on a plain question.
 
-## New conversation
+## New conversation (default)
 
 When the user simply asks a question:
 
@@ -14,24 +14,31 @@ When the user simply asks a question:
 2. `get_user_agent_preferences`. If a `defaultAgentUuid` is present and accessible, use it.
 3. Otherwise `list_project_agents` and select (ask the user only when necessary).
 4. If the user **named** an agent, do not prefer the default first — resolve that name from `list_project_agents`.
-5. `create_agent_thread` (empty body).
-6. `create_agent_thread_message` with the **exact** user prompt.
-7. `generate_agent_response`.
-8. Return the generated result.
+5. `create_agent_thread` with the **exact** user prompt (required — empty create fails upstream).
+6. `generate_agent_response`.
+7. Return the generated result.
 
-## Follow-up
+Do **not** call `create_agent_thread_message` on the first turn (the prompt is already on the thread). Do **not** call `list_agent_threads` on a plain new question.
 
-When the user says "continue" and a thread UUID is already known:
+## Follow-up (known threadUuid)
+
+When the user continues and a **threadUuid** is already known (prompt args or this session):
 
 1. `create_agent_thread_message` on that thread.
 2. `generate_agent_response`.
 3. Do not create a second message when retrying generate after a failed generation.
 
-## Resume an older conversation
+If `threadUuid` is missing: ask the user for it, or start a **new conversation** (above). Do **not** default to `list_agent_threads`.
 
-1. `list_agent_threads` with `includeMessageText=false`.
+## Optional own-history lookup
+
+Only when the user **explicitly** asks to find or continue _their_ prior chat (and no threadUuid is known):
+
+1. `list_agent_threads` with `includeMessageText=false` (caller-visible threads only — never invent `allUsers`).
 2. Request `includeMessageText=true` only when identification needs conversation text.
-3. Then follow-up (message + generate).
+3. Confirm the thread with the user when ambiguous, then follow-up (message + generate).
+
+Do not take over other users' threads. Admin thread visibility in the Lightdash app is not an MCP workflow.
 
 ## Failures
 

@@ -10,6 +10,8 @@ Amends [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-
 
 Related to [18. MCP ai-agent-ops profile thin API boundary](0018-mcp-ai-agent-ops-profile-thin-api-boundary.md)
 
+**Amended by [30. MCP ai-agent-chat first turn requires prompt on create](0030-mcp-ai-agent-chat-first-turn-requires-prompt-on-create.md)** — decision 4 empty `{}` create is replaced by required `prompt` on create.
+
 ## Context
 
 Agents need to **use** managed Lightdash AI Agents as the current user: discover an accessible agent, resolve a default when the caller has one, create or resume a conversation, submit a prompt, and receive the generated answer — **without** AgentOps, evaluations, SQL-mode controls, or content authoring.

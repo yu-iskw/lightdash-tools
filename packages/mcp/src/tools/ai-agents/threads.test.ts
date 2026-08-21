@@ -63,19 +63,23 @@ describe('ai-agent-chat thread writes', () => {
     vi.mocked(logAuditEntry).mockClear();
   });
 
-  it('creates a thread with no extra body', async () => {
+  it('creates a thread with the first user prompt', async () => {
     const createAgentThread = vi.fn().mockResolvedValue({ uuid: THREAD });
     const { handler, options } = registeredAiAgentTool(
       registerCreateAgentThread,
       mockAiAgentsContext({ createAgentThread }),
       'create_agent_thread',
     );
-    expect(Object.keys(options.inputSchema).sort()).toEqual(['agentUuid', 'projectUuid']);
-    const result = await handler({ projectUuid: PROJECT, agentUuid: AGENT });
+    expect(Object.keys(options.inputSchema).sort()).toEqual(['agentUuid', 'projectUuid', 'prompt']);
+    const result = await handler({
+      projectUuid: PROJECT,
+      agentUuid: AGENT,
+      prompt: 'What is revenue?',
+    });
     expect(createAgentThread).toHaveBeenCalledWith(
       PROJECT,
       AGENT,
-      {},
+      { prompt: 'What is revenue?' },
       { retry: { maxRetries: 0 } },
     );
     expect(parseAiAgentToolBody(result).data).toEqual({ uuid: THREAD });
@@ -141,7 +145,7 @@ describe('ai-agent-chat thread writes', () => {
     {
       register: registerCreateAgentThread,
       id: 'create_agent_thread',
-      args: { agentUuid: AGENT },
+      args: { agentUuid: AGENT, prompt: 'hi' },
       stub: 'createAgentThread',
     },
     {
@@ -179,12 +183,12 @@ describe('ai-agent-chat thread writes', () => {
       'create_agent_thread',
     );
     await runWithProjectPinAsync(PROJECT, async () => {
-      const result = await handler({ agentUuid: AGENT });
+      const result = await handler({ agentUuid: AGENT, prompt: 'What is revenue?' });
       expect(result.isError).toBeUndefined();
       expect(createAgentThread).toHaveBeenCalledWith(
         PROJECT,
         AGENT,
-        {},
+        { prompt: 'What is revenue?' },
         { retry: { maxRetries: 0 } },
       );
     });

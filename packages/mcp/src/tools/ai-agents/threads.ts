@@ -1,7 +1,8 @@
 /**
- * AI agent thread tools: redacted reads plus conversation writes (ADR-0029).
+ * AI agent thread tools: redacted reads plus conversation writes (ADR-0029 / ADR-0030).
  *
- * Hosts orchestrate create thread → create message → generate. Do not wrap /stream.
+ * Hosts orchestrate: new conversation = create thread (with prompt) → generate;
+ * follow-up = create message → generate. Do not wrap /stream.
  */
 
 import { WRITE_NONDESTRUCTIVE, WRITE_OPEN_WORLD } from '@lightdash-tools/common';
@@ -115,22 +116,23 @@ export function registerCreateAgentThread(
     {
       title: 'Create agent thread',
       description:
-        'Create an empty conversation thread for an accessible AI agent. Sends {}. Non-idempotent — do not retry blindly after an ambiguous network failure.',
+        'Create a conversation thread for an accessible AI agent with the first user prompt. Upstream cannot return a thread summary without a prompt (empty {} fails). Then call generate_agent_response. Non-idempotent — do not retry blindly after an ambiguous network failure.',
       inputSchema: {
         projectUuid: optionalProjectUuidField(),
         agentUuid: agentUuidField(),
+        prompt: threadPromptField(),
       },
       annotations: WRITE_NONDESTRUCTIVE,
     },
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
+        async ({ projectUuid, agentUuid, prompt }: AiAgentScopeArgs & { prompt: string }) =>
           withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.createAgentThread(
               scope.projectUuid,
               agentUuid,
-              {},
+              { prompt },
               {
                 retry: NO_HTTP_RETRIES,
               },

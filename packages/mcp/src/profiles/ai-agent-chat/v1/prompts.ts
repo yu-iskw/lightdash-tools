@@ -1,5 +1,8 @@
 /**
  * MCP prompts for ai-agent-chat workflows (progressive-disclosure context).
+ *
+ * Procedure detail lives in playbooks (manifest / selective embed via policy).
+ * Prompt bodies stay goal/input-specific — do not restate entire SOPs here.
  */
 
 /* eslint-disable @typescript-eslint/no-deprecated -- matches other profile prompt registration pattern */
@@ -43,7 +46,7 @@ export function registerAiAgentChatPrompts(
     {
       title: 'Ask Lightdash AI Agent',
       description:
-        'Ask or continue a managed Lightdash AI Agent conversation as the current user — do not substitute data-analyst',
+        'Start a new managed Lightdash AI Agent conversation as the current user — do not substitute data-analyst',
       argsSchema: {
         projectUuid: optionalProjectUuidField(),
         question: z.string(),
@@ -52,18 +55,14 @@ export function registerAiAgentChatPrompts(
     },
     ({ projectUuid, question, agentHint }) =>
       promptContext({
-        task: `Delegate this question to the managed Lightdash AI Agent (not a host-side Explore rewrite):
+        task: `Start a **new** managed Lightdash AI Agent conversation (not a host-side Explore rewrite):
 
 ${question}
 
 ${formatPromptProjectUuidLine(projectUuid)}
 Agent hint: ${agentHint ?? '(use get_user_agent_preferences, else list_project_agents)'}.
 
-Procedure:
-1. Resolve project scope.
-2. If the user named an agent, list_project_agents and select that accessible agent. Otherwise get_user_agent_preferences; if no default, list_project_agents and select.
-3. create_agent_thread → create_agent_thread_message with the user's exact prompt → generate_agent_response.
-4. Return the generated answer. On generate failure, report the upstream error — do not silently switch to data-analyst or semantic-layer.`,
+Always create a new thread (preferences/list → create_agent_thread with the exact question as prompt → generate_agent_response). Do not call create_agent_thread_message on the first turn. Do not list or resume threads for a plain question. On generate failure, report the upstream error — do not silently switch to data-analyst or semantic-layer.`,
         invariantIds,
         requiredTopics: [TOPIC_CONVERSATION],
       }),
@@ -73,7 +72,8 @@ Procedure:
     'continue_lightdash_ai_agent',
     {
       title: 'Continue Lightdash AI Agent thread',
-      description: 'Add a follow-up to an existing accessible AI-agent thread and generate',
+      description:
+        "Add a follow-up on a known own-thread UUID and generate — do not auto-browse or take over other users' threads",
       argsSchema: {
         projectUuid: optionalProjectUuidField(),
         agentUuid: z.string().optional(),
@@ -83,17 +83,14 @@ Procedure:
     },
     ({ projectUuid, agentUuid, threadUuid, question }) =>
       promptContext({
-        task: `Continue a managed Lightdash AI Agent conversation.
+        task: `Continue a managed Lightdash AI Agent conversation on a **known** own-thread UUID.
 
 ${formatPromptProjectUuidLine(projectUuid)}
-Agent: ${agentUuid ?? '(from current context or list_project_agents)'}.
-Thread: ${threadUuid ?? '(reuse known threadUuid, else list_agent_threads)'}.
+Agent: ${agentUuid ?? '(from current context)'}.
+Thread: ${threadUuid ?? '(reuse known threadUuid from this session; if missing ask the user or start a new ask — do not default to list_agent_threads)'}.
 Follow-up: ${question}
 
-Procedure:
-1. Reuse agentUuid/threadUuid from context when reliable. Otherwise list_agent_threads (includeMessageText only if identification needs conversation text).
-2. create_agent_thread_message with the exact follow-up, then generate_agent_response.
-3. Do not create a second message when retrying generate after a failed generation.`,
+Use create_agent_thread_message then generate_agent_response. Do not create a second message when retrying generate. List caller-visible threads only if the user explicitly asks to find their own prior chat.`,
         invariantIds,
         requiredTopics: [TOPIC_CONVERSATION],
       }),

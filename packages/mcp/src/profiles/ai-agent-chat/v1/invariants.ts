@@ -20,7 +20,7 @@ export const AI_AGENT_CHAT_INVARIANTS = [
   {
     id: 'own-thread-scope',
     short:
-      'Use only threads the current Lightdash identity is authorized to access. Do not seek cross-user conversation access.',
+      "Use only caller-visible threads for the current Lightdash identity. Do not seek cross-user conversation access, take over other users' threads, or invent allUsers listing.",
   },
   {
     id: 'no-sql-mode',

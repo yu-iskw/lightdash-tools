@@ -224,7 +224,7 @@ Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/r
 
 ### `ai-agent-chat`
 
-Use existing Lightdash AI Agents as the authenticated Lightdash user. Supports accessible-agent discovery and the user's own conversation flow (`create_agent_thread` → `create_agent_thread_message` → `generate_agent_response`). The profile does not expose AI-agent administration, evaluations, SQL mode, or Lightdash content mutation. The selected Lightdash AI Agent may still use tools configured for that agent. Server name: `lightdash-mcp-aichat`. Inventory: [docs/profiles/ai-agent-chat/inventory.md](../../docs/profiles/ai-agent-chat/inventory.md). Hosted viewer deployments should set `LIGHTDASH_TOOLS_MCP_PROFILES=ai-agent-chat` plus a project UUID ceiling.
+Use existing Lightdash AI Agents as the authenticated Lightdash user. Supports accessible-agent discovery and the user's own conversation flow (new: `create_agent_thread` with `prompt` → `generate_agent_response`; follow-up: `create_agent_thread_message` → `generate_agent_response`). The profile does not expose AI-agent administration, evaluations, SQL mode, or Lightdash content mutation. The selected Lightdash AI Agent may still use tools configured for that agent. Server name: `lightdash-mcp-aichat`. Inventory: [docs/profiles/ai-agent-chat/inventory.md](../../docs/profiles/ai-agent-chat/inventory.md). Hosted viewer deployments should set `LIGHTDASH_TOOLS_MCP_PROFILES=ai-agent-chat` plus a project UUID ceiling.
 
 ### `data-analyst`
 

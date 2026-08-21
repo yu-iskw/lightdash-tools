@@ -16,9 +16,10 @@ const playbooks = defineProfilePlaybooks<AiAgentChatPlaybookTopic>({
     {
       id: 'conversation',
       title: 'AI-agent-chat conversation playbook',
-      description: 'Select an agent and run new, follow-up, or resume conversation flows',
+      description:
+        'Select an agent; new conversation by default, continue only on a known own-thread UUID',
       file: 'conversation.md',
-      useWhen: 'Asking a Lightdash AI Agent a question or continuing a thread',
+      useWhen: 'Asking a Lightdash AI Agent a new question or continuing a known own-thread',
       priority: 0.8,
     },
   ],
