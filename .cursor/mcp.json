@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "lightdash-semantic-layer-mcp-local": {
-      "url": "http://localhost:8080/semantic-layer/v1/mcp"
+    "local-lightdash-tools": {
+      "url": "http://127.0.0.1:8080/ai-agent-chat/v1/mcp"
     }
   }
 }
