@@ -12,6 +12,7 @@ import { AiAgentsDiscoveryClient } from './discovery';
 import { AiAgentsEvaluationsClient } from './evaluations';
 import { AiAgentsFeedbackClient } from './feedback';
 import { AiAgentsMcpServersClient } from './mcp-servers';
+import { AiAgentsRouterClient } from './router';
 import { AiAgentsSqlApprovalClient } from './sql-approval';
 import { AiAgentsThreadsClient, type StartConversationThreadBody } from './threads';
 
@@ -39,6 +40,8 @@ import type {
   AiMcpServer,
   AiMcpServerTool,
   AiModelOption,
+  AiRouterRouteRequest,
+  AiRouterRouteResponseResult,
   AppendEvaluationBody,
   CloneThreadBody,
   CreateAgentThreadBody,
@@ -75,6 +78,7 @@ export class AiAgentsClient extends BaseApiClient {
   private readonly evaluations: AiAgentsEvaluationsClient;
   private readonly feedback: AiAgentsFeedbackClient;
   private readonly mcpServers: AiAgentsMcpServersClient;
+  private readonly router: AiAgentsRouterClient;
   private readonly sqlApproval: AiAgentsSqlApprovalClient;
 
   constructor(http: HttpClient) {
@@ -87,6 +91,7 @@ export class AiAgentsClient extends BaseApiClient {
     this.evaluations = new AiAgentsEvaluationsClient(http);
     this.feedback = new AiAgentsFeedbackClient(http);
     this.mcpServers = new AiAgentsMcpServersClient(http);
+    this.router = new AiAgentsRouterClient(http);
     this.sqlApproval = new AiAgentsSqlApprovalClient(http);
   }
 
@@ -184,6 +189,12 @@ export class AiAgentsClient extends BaseApiClient {
 
   deleteUserAgentPreferences(projectUuid: string): Promise<void> {
     return this.discovery.deleteUserAgentPreferences(projectUuid);
+  }
+
+  // ─── AI Router (org-scoped) ──────────────────────────────────────────────────
+
+  routeAiAgent(body: AiRouterRouteRequest): Promise<AiRouterRouteResponseResult> {
+    return this.router.routeAiAgent(body);
   }
 
   // ─── Project-scoped: threads ─────────────────────────────────────────────────

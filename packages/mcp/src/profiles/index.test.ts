@@ -125,6 +125,7 @@ describe('profiles', () => {
     expect(tools).toEqual([
       'list_project_agents',
       'get_user_agent_preferences',
+      'route_agent',
       'list_agent_threads',
       'get_agent_thread',
       'create_agent_thread',

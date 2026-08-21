@@ -272,6 +272,9 @@ export namespace LightdashApi {
     export type SqlApprovalDecision = AiAgentsTypes.SqlApprovalDecision;
     export type SubmitSqlApprovalBody = AiAgentsTypes.SubmitSqlApprovalBody;
     export type SubmitSqlApprovalResult = AiAgentsTypes.SubmitSqlApprovalResult;
+    // AI Router
+    export type AiRouterRouteRequest = AiAgentsTypes.AiRouterRouteRequest;
+    export type AiRouterRouteResponseResult = AiAgentsTypes.AiRouterRouteResponseResult;
   }
 
   export namespace Explores {
@@ -441,6 +444,9 @@ export type UpdateAgentMcpServerToolsBody = AiAgents.UpdateAgentMcpServerToolsBo
 export type SqlApprovalDecision = AiAgents.SqlApprovalDecision;
 export type SubmitSqlApprovalBody = AiAgents.SubmitSqlApprovalBody;
 export type SubmitSqlApprovalResult = AiAgents.SubmitSqlApprovalResult;
+// AI agents (flat exports) — AI Router
+export type AiRouterRouteRequest = AiAgents.AiRouterRouteRequest;
+export type AiRouterRouteResponseResult = AiAgents.AiRouterRouteResponseResult;
 
 // Explores (flat exports)
 export type ApiExploresResults = Explores.ApiExploresResults;

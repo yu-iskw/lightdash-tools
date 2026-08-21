@@ -30,13 +30,9 @@ export type AiAgentThreadScopeArgs = AiAgentScopeArgs & { threadUuid: string };
 /** Conservative local prompt ceiling; not env-configurable in v1 (ADR-0029). */
 export const THREAD_PROMPT_MAX_CHARS = 32_000;
 
-export const threadPromptField = (): z.ZodString =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(THREAD_PROMPT_MAX_CHARS)
-    .describe('User prompt to store on the thread (not sent to /generate)');
+export const threadPromptField = (
+  description = 'User prompt to store on the thread (not sent to /generate)',
+): z.ZodString => z.string().trim().min(1).max(THREAD_PROMPT_MAX_CHARS).describe(description);
 
 const evaluationPromptSchema = z.union([
   z.object({

@@ -18,17 +18,30 @@ describe('ai-agent-chat prompts/playbook', () => {
     expect(AI_AGENT_CHAT_HARD_BANS.toLowerCase()).toContain('evaluations');
   });
 
-  it('conversation playbook teaches preference then list, two-call new chat, follow-up message, and no data-analyst fallback', () => {
+  it('conversation playbook teaches preference then route_agent, two-call new chat, follow-up message, and no data-analyst fallback', () => {
     const md = getAllPlaybookMarkdown().toLowerCase();
     expect(md).toContain('get_user_agent_preferences');
+    expect(md).toContain('route_agent');
     expect(md).toContain('create_agent_thread');
     expect(md).toContain('create_agent_thread_message');
     expect(md).toContain('generate_agent_response');
     expect(md).toContain('includemessagetext');
     expect(md).toContain('data-analyst');
     expect(md).toContain('open-world');
-    expect(md).toMatch(/empty create fails|prompt \(required|exact.*user prompt/);
+    expect(md).toMatch(/empty create fails|prompt \(required|exact.*user prompt|grounded prompt/);
     expect(md).toMatch(/do \*\*not\*\* call `create_agent_thread_message` on the first turn/);
+    expect(md).toMatch(/show_picker|ask the user/);
+    expect(md).toMatch(/dashboarduuid|target content/);
+    expect(md).toMatch(/never.*invent|enablecontenttools|instruction text/);
+    expect(md).toMatch(/exact.*match|case-insensitive/);
+    expect(md).toMatch(/resolved.*scope|pin wins|differ.*pin/);
+  });
+
+  it('invariants ban host agent heuristics', () => {
+    const heuristic = AI_AGENT_CHAT_INVARIANTS.find((i) => i.id === 'no-host-agent-heuristic');
+    expect(heuristic).toBeDefined();
+    expect(heuristic!.short.toLowerCase()).toMatch(/route_agent|heuristic|enablecontenttools/);
+    expect(AI_AGENT_CHAT_HARD_BANS.toLowerCase()).toMatch(/enablecontenttools|route_agent/);
   });
 
   it('new-by-default: plain questions create a thread; follow-up needs a known threadUuid', () => {

@@ -60,9 +60,9 @@ export function registerAiAgentChatPrompts(
 ${question}
 
 ${formatPromptProjectUuidLine(projectUuid)}
-Agent hint: ${agentHint ?? '(use get_user_agent_preferences, else list_project_agents)'}.
+Agent hint: ${agentHint ?? '(none — follow conversation playbook selection)'}.
 
-Always create a new thread (preferences/list → create_agent_thread with the exact question as prompt → generate_agent_response). Do not call create_agent_thread_message on the first turn. Do not list or resume threads for a plain question. On generate failure, report the upstream error — do not silently switch to data-analyst or semantic-layer.`,
+Follow the conversation playbook: select agent → ground URL/UUID on create (and on route_agent only when that step runs) → create_agent_thread with prompt → generate_agent_response. Do not call create_agent_thread_message on the first turn. Do not list or resume threads for a plain question. On generate failure, report the upstream error — do not silently switch to data-analyst or semantic-layer.`,
         invariantIds,
         requiredTopics: [TOPIC_CONVERSATION],
       }),

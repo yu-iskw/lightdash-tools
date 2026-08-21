@@ -45,6 +45,11 @@ export const AI_AGENT_CHAT_INVARIANTS = [
     id: 'respect-project-scope',
     short: 'Resolve and enforce the existing project pin/allowlist contract.',
   },
+  {
+    id: 'no-host-agent-heuristic',
+    short:
+      'Do not invent an agent pick from instruction text, enableContentTools, tags, or fuzzy name match — use named/hint, preferences, route_agent, single-agent fallback, or ask the user.',
+  },
 ] as const satisfies readonly PromptInvariant[];
 
 export const AI_AGENT_CHAT_HARD_BANS = formatHardBansProjection(AI_AGENT_CHAT_INVARIANTS);

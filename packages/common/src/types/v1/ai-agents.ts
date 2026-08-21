@@ -245,4 +245,11 @@ export namespace AiAgents {
   export interface SubmitSqlApprovalResult {
     decision: SqlApprovalDecision;
   }
+
+  // ─── AI Router (org-scoped; POST /org/aiRouter/route) ─────────────────────────
+
+  /** Request body for POST /api/v1/org/aiRouter/route. */
+  export type AiRouterRouteRequest = components['schemas']['AiRouterRouteRequest'];
+  /** Results of POST /api/v1/org/aiRouter/route. */
+  export type AiRouterRouteResponseResult = components['schemas']['AiRouterRouteResponseResult'];
 }

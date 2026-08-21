@@ -6,6 +6,7 @@ import {
   getUserAgentPreferencesTool,
   listProjectAgentsTool,
 } from '../../../tools/ai-agents/agents.js';
+import { routeAgentTool } from '../../../tools/ai-agents/router.js';
 import {
   createAgentThreadMessageTool,
   createAgentThreadTool,
@@ -28,6 +29,7 @@ export const aiAgentChatProfile: ProfileDefinition = {
   tools: [
     listProjectAgentsTool,
     getUserAgentPreferencesTool,
+    routeAgentTool,
     listAgentThreadsTool,
     getAgentThreadTool,
     createAgentThreadTool,
