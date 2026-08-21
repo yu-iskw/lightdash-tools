@@ -1,6 +1,11 @@
 /**
- * AI agent thread read tools (ai-agent-ops profile).
+ * AI agent thread tools: redacted reads plus conversation writes (ADR-0029 / ADR-0030).
+ *
+ * Hosts orchestrate: new conversation = create thread (with prompt) → generate;
+ * follow-up = create message → generate. Do not wrap /stream.
  */
+
+import { WRITE_NONDESTRUCTIVE, WRITE_OPEN_WORLD } from '@lightdash-tools/common';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
@@ -11,14 +16,21 @@ import {
   optionalProjectUuidField,
   redactThreadMessages,
   redactThreadSummaries,
+  threadPromptField,
   threadUuidField,
-  withAgentOpsScope,
+  withAiAgentProjectScope,
+  type AiAgentScopeArgs,
+  type AiAgentThreadScopeArgs,
 } from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-type AgentScopeArgs = { projectUuid?: string; agentUuid: string };
+/** Generation can exceed the client 30s default; keep a bounded timeout. */
+export const GENERATE_AGENT_RESPONSE_TIMEOUT_MS = 180_000;
+
+/** Conversation writes are non-idempotent; do not ride the client 5xx retry loop. */
+const NO_HTTP_RETRIES = { maxRetries: 0 } as const;
 
 export function registerListAgentThreads(
   server: McpServer,
@@ -45,8 +57,8 @@ export function registerListAgentThreads(
           projectUuid,
           agentUuid,
           includeMessageText,
-        }: AgentScopeArgs & { includeMessageText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+        }: AiAgentScopeArgs & { includeMessageText?: boolean }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const threads = await c.v1.aiAgents.listAgentThreads(scope.projectUuid, agentUuid);
             return redactThreadSummaries(threads, includeMessageText === true);
           }),
@@ -81,8 +93,8 @@ export function registerGetAgentThread(
           agentUuid,
           threadUuid,
           includeMessageText,
-        }: AgentScopeArgs & { threadUuid: string; includeMessageText?: boolean }) =>
-          withAgentOpsScope(projectUuid, async (scope) => {
+        }: AiAgentThreadScopeArgs & { includeMessageText?: boolean }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => {
             const thread = await c.v1.aiAgents.getAgentThread(
               scope.projectUuid,
               agentUuid,
@@ -94,6 +106,134 @@ export function registerGetAgentThread(
   );
 }
 
-// ToolModule exports (profile mounts)
+export function registerCreateAgentThread(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerToolSafe(
+    server,
+    'create_agent_thread',
+    {
+      title: 'Create agent thread',
+      description:
+        'Create a conversation thread for an accessible AI agent with the first user prompt. Upstream cannot return a thread summary without a prompt (empty {} fails). Then call generate_agent_response. Non-idempotent — do not retry blindly after an ambiguous network failure.',
+      inputSchema: {
+        projectUuid: optionalProjectUuidField(),
+        agentUuid: agentUuidField(),
+        prompt: threadPromptField(),
+      },
+      annotations: WRITE_NONDESTRUCTIVE,
+    },
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({ projectUuid, agentUuid, prompt }: AiAgentScopeArgs & { prompt: string }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
+            data: await c.v1.aiAgents.createAgentThread(
+              scope.projectUuid,
+              agentUuid,
+              { prompt },
+              {
+                retry: NO_HTTP_RETRIES,
+              },
+            ),
+          })),
+    ),
+  );
+}
+
+export function registerCreateAgentThreadMessage(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerToolSafe(
+    server,
+    'create_agent_thread_message',
+    {
+      title: 'Create agent thread message',
+      description:
+        'Add a user prompt to an accessible thread. Does not invoke the managed agent. Non-idempotent — do not retry create after an ambiguous failure; retry generate instead if the message already exists.',
+      inputSchema: {
+        projectUuid: optionalProjectUuidField(),
+        agentUuid: agentUuidField(),
+        threadUuid: threadUuidField(),
+        prompt: threadPromptField(),
+      },
+      annotations: WRITE_NONDESTRUCTIVE,
+    },
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({
+          projectUuid,
+          agentUuid,
+          threadUuid,
+          prompt,
+        }: AiAgentThreadScopeArgs & { prompt: string }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
+            data: await c.v1.aiAgents.createAgentThreadMessage(
+              scope.projectUuid,
+              agentUuid,
+              threadUuid,
+              { prompt },
+              { retry: NO_HTTP_RETRIES },
+            ),
+          })),
+    ),
+  );
+}
+
+export function registerGenerateAgentResponse(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerToolSafe(
+    server,
+    'generate_agent_response',
+    {
+      title: 'Generate agent response',
+      description:
+        'Ask Lightdash to generate the managed AI-agent reply for the latest pending user message (POST …/generate, not /stream). Non-idempotent — do not call twice because the first response is slow. Open-world: the selected agent may query the warehouse and invoke tools configured on that agent in Lightdash; this is not a read-only operation. Nested tool authority is not enforced by this MCP profile. Do not pass SQL-mode flags.',
+      inputSchema: {
+        projectUuid: optionalProjectUuidField(),
+        agentUuid: agentUuidField(),
+        threadUuid: threadUuidField(),
+      },
+      annotations: WRITE_OPEN_WORLD,
+    },
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({ projectUuid, agentUuid, threadUuid }: AiAgentThreadScopeArgs) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
+            data: await c.v1.aiAgents.generateAgentThreadResponse(
+              scope.projectUuid,
+              agentUuid,
+              threadUuid,
+              {
+                timeoutMs: GENERATE_AGENT_RESPONSE_TIMEOUT_MS,
+                retry: NO_HTTP_RETRIES,
+              },
+            ),
+            mode: 'lightdash_ai_agent_generate',
+            limitations: [
+              'Uses POST …/generate (non-streaming), not /stream. SQL mode, autoApproveSql, and toolHints are not accepted.',
+              'Generation is open-world: nested Lightdash-agent tools may have side effects.',
+              'Non-idempotent: do not retry create_agent_thread or create_agent_thread_message after an ambiguous failure; retry generate only if the user message already exists.',
+            ],
+          })),
+    ),
+  );
+}
+
 export const listAgentThreadsTool = defineTool('list_agent_threads', registerListAgentThreads);
 export const getAgentThreadTool = defineTool('get_agent_thread', registerGetAgentThread);
+export const createAgentThreadTool = defineTool('create_agent_thread', registerCreateAgentThread);
+export const createAgentThreadMessageTool = defineTool(
+  'create_agent_thread_message',
+  registerCreateAgentThreadMessage,
+);
+export const generateAgentResponseTool = defineTool(
+  'generate_agent_response',
+  registerGenerateAgentResponse,
+);

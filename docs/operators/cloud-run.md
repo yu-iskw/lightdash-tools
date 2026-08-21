@@ -58,7 +58,7 @@ LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=...   # from Secret Manager
 LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=...
 ```
 
-Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI), `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset = all seven HTTP mounts).
+Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI), `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset = all eight HTTP mounts).
 
 **Do not set `LIGHTDASH_TOOLS_AUDIT_LOG` on Cloud Run.** Tool audit entries are written as pure JSON NDJSON on **stderr** and are captured automatically by [Cloud Run logging](https://docs.cloud.google.com/run/docs/logging) into Cloud Logging (`jsonPayload`). A container file path is ephemeral and unsuitable as the primary audit sink. Use `LIGHTDASH_TOOLS_AUDIT_LOG` only for CLI/local file append.
 

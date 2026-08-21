@@ -166,5 +166,8 @@ export namespace V1 {
     export type SqlApprovalDecision = A.SqlApprovalDecision;
     export type SubmitSqlApprovalBody = A.SubmitSqlApprovalBody;
     export type SubmitSqlApprovalResult = A.SubmitSqlApprovalResult;
+    // AI Router
+    export type AiRouterRouteRequest = A.AiRouterRouteRequest;
+    export type AiRouterRouteResponseResult = A.AiRouterRouteResponseResult;
   }
 }

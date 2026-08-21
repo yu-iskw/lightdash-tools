@@ -7,6 +7,7 @@ import { compileQueryTool } from '../tools/semantic/query.js';
 import { TOOL_PREFIX } from '../tools/shared.js';
 
 import {
+  AI_AGENT_CHAT_PROFILE_PATH,
   AI_AGENT_OPS_PROFILE_PATH,
   CONTENT_DEVELOPER_PROFILE_PATH,
   CONTENT_GOVERNANCE_PROFILE_PATH,
@@ -26,7 +27,7 @@ import {
 } from './index.js';
 
 describe('profiles', () => {
-  it('ships seven profiles with fixed paths and matching keys', () => {
+  it('ships eight profiles with fixed paths and matching keys', () => {
     expect(Object.keys(PROFILES).sort()).toEqual([...PROFILE_IDS].sort());
     for (const [key, profile] of Object.entries(PROFILES)) {
       expect(profile.id).toBe(key);
@@ -35,6 +36,7 @@ describe('profiles', () => {
     expect(DEFAULT_PROFILE_ID).toBe('semantic-layer');
     expect(listProfilePaths().sort()).toEqual(
       [
+        AI_AGENT_CHAT_PROFILE_PATH,
         AI_AGENT_OPS_PROFILE_PATH,
         CONTENT_DEVELOPER_PROFILE_PATH,
         CONTENT_GOVERNANCE_PROFILE_PATH,
@@ -49,6 +51,7 @@ describe('profiles', () => {
     expect(getProfileByPath(CONTENT_READER_PROFILE_PATH)?.id).toBe('content-reader');
     expect(getProfileByPath(CONTENT_DEVELOPER_PROFILE_PATH)?.id).toBe('content-developer');
     expect(getProfileByPath(CONTENT_GOVERNANCE_PROFILE_PATH)?.id).toBe('content-governance');
+    expect(getProfileByPath(AI_AGENT_CHAT_PROFILE_PATH)?.id).toBe('ai-agent-chat');
     expect(getProfileByPath(AI_AGENT_OPS_PROFILE_PATH)?.id).toBe('ai-agent-ops');
     expect(getProfileByPath(DATA_ANALYST_PROFILE_PATH)?.id).toBe('data-analyst');
     expect(getProfileByPath('/mcp')).toBeUndefined();
@@ -60,6 +63,7 @@ describe('profiles', () => {
     expect(getProfileByPath(`${CONTENT_READER_PROFILE_PATH}/`)?.id).toBe('content-reader');
     expect(getProfileByPath(`${CONTENT_DEVELOPER_PROFILE_PATH}/`)?.id).toBe('content-developer');
     expect(getProfileByPath(`${CONTENT_GOVERNANCE_PROFILE_PATH}/`)?.id).toBe('content-governance');
+    expect(getProfileByPath(`${AI_AGENT_CHAT_PROFILE_PATH}/`)?.id).toBe('ai-agent-chat');
     expect(getProfileByPath(`${AI_AGENT_OPS_PROFILE_PATH}/`)?.id).toBe('ai-agent-ops');
     expect(getProfileByPath(`${DATA_ANALYST_PROFILE_PATH}/`)?.id).toBe('data-analyst');
   });
@@ -111,7 +115,24 @@ describe('profiles', () => {
     expect(tools).toHaveLength(17);
     expect(tools).not.toContain('create_project_agent');
     expect(tools).not.toContain('generate_agent_message');
+    expect(tools).not.toContain('generate_agent_response');
     expect(getProfileServerName(profile)).toBe('lightdash-mcp-aops');
+  });
+
+  it('ai-agent-chat membership and short server name', () => {
+    const profile = getProfile('ai-agent-chat');
+    const tools = listToolIds(profile);
+    expect(tools).toEqual([
+      'list_project_agents',
+      'get_user_agent_preferences',
+      'route_agent',
+      'list_agent_threads',
+      'get_agent_thread',
+      'create_agent_thread',
+      'create_agent_thread_message',
+      'generate_agent_response',
+    ]);
+    expect(getProfileServerName(profile)).toBe('lightdash-mcp-aichat');
   });
 
   it('data-analyst membership and short server name', () => {
@@ -139,6 +160,7 @@ describe('profiles', () => {
     expect(parseProfileId('content-reader')).toBe('content-reader');
     expect(parseProfileId('content-developer')).toBe('content-developer');
     expect(parseProfileId('content-governance')).toBe('content-governance');
+    expect(parseProfileId('ai-agent-chat')).toBe('ai-agent-chat');
     expect(parseProfileId('ai-agent-ops')).toBe('ai-agent-ops');
     expect(parseProfileId('data-analyst')).toBe('data-analyst');
     expect(parseProfileId('nope')).toBeUndefined();

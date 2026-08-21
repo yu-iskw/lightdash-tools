@@ -1,11 +1,16 @@
 /**
- * Project AI agent inventory tools (ai-agent-ops profile).
+ * Project AI agent inventory tools (ai-agent-ops and ai-agent-chat profiles).
  */
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import { agentUuidField, optionalProjectUuidField, withAgentOpsScope } from './helpers.js';
+import {
+  agentUuidField,
+  optionalProjectUuidField,
+  withAiAgentProjectScope,
+  type AiAgentScopeArgs,
+} from './helpers.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -27,7 +32,7 @@ export function registerListProjectAgents(
       contextProvider,
       (c) =>
         async ({ projectUuid }: { projectUuid?: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.listAgents(scope.projectUuid),
           })),
     ),
@@ -53,9 +58,34 @@ export function registerGetProjectAgent(
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, agentUuid }: { projectUuid?: string; agentUuid: string }) =>
-          withAgentOpsScope(projectUuid, async (scope) => ({
+        async ({ projectUuid, agentUuid }: AiAgentScopeArgs) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
             data: await c.v1.aiAgents.getAgent(scope.projectUuid, agentUuid),
+          })),
+    ),
+  );
+}
+
+export function registerGetUserAgentPreferences(
+  server: McpServer,
+  contextProvider: McpContextProvider,
+): void {
+  registerToolSafe(
+    server,
+    'get_user_agent_preferences',
+    {
+      title: 'Get user agent preferences',
+      description:
+        "Read the current user's per-project default AI agent (null when none is set). Does not set or delete preferences.",
+      inputSchema: { projectUuid: optionalProjectUuidField() },
+      annotations: READ_ONLY_DEFAULT,
+    },
+    wrapTool(
+      contextProvider,
+      (c) =>
+        async ({ projectUuid }: { projectUuid?: string }) =>
+          withAiAgentProjectScope(projectUuid, async (scope) => ({
+            data: await c.v1.aiAgents.getUserAgentPreferences(scope.projectUuid),
           })),
     ),
   );
@@ -64,3 +94,7 @@ export function registerGetProjectAgent(
 // ToolModule exports (profile mounts)
 export const listProjectAgentsTool = defineTool('list_project_agents', registerListProjectAgents);
 export const getProjectAgentTool = defineTool('get_project_agent', registerGetProjectAgent);
+export const getUserAgentPreferencesTool = defineTool(
+  'get_user_agent_preferences',
+  registerGetUserAgentPreferences,
+);

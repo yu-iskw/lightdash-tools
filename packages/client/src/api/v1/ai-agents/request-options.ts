@@ -1,3 +1,4 @@
+import type { RetryConfig } from '../../../config';
 import type { AxiosRequestConfig } from 'axios';
 
 /** Per-request overrides for AI agent thread operations. */
@@ -8,9 +9,11 @@ export interface RequestOptions {
   timeoutMs?: number;
   /** Optional correlation ID sent as `X-Request-Id`. */
   requestId?: string;
+  /** Override the client retry policy for this request (HttpClient 4th argument). */
+  retry?: RetryConfig;
 }
 
-/** Maps {@link RequestOptions} to Axios request config. */
+/** Maps Axios-owned {@link RequestOptions} fields. `retry` is passed separately. */
 export function toAxiosConfig(options?: RequestOptions): AxiosRequestConfig | undefined {
   if (!options) {
     return undefined;

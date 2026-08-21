@@ -1,0 +1,3 @@
+kind: fix
+body: Require prompt on ai-agent-chat create_agent_thread; empty create fails upstream (ADR-0030).
+time: 2026-08-21T11:57:46.597111+09:00

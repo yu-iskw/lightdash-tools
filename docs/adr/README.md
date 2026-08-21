@@ -48,5 +48,8 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 25. [MCP OAuth uses a dual-leg, resource-bound token boundary](0026-mcp-oauth-dual-leg-token-boundary.md)
 26. [Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
 27. [MCP content-reader executes saved dashboard SQL tiles](0028-mcp-content-reader-executes-saved-dashboard-sql-tiles.md)
+28. [MCP ai-agent-chat profile conversation boundary](0029-mcp-ai-agent-chat-profile-conversation-boundary.md)
+29. [MCP ai-agent-chat first turn requires prompt on create](0030-mcp-ai-agent-chat-first-turn-requires-prompt-on-create.md)
+30. [MCP ai-agent-chat AI Router route_agent selection](0031-mcp-ai-agent-chat-ai-router-route-agent-selection.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

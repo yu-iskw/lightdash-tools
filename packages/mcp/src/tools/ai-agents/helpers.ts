@@ -1,5 +1,5 @@
 /**
- * Shared helpers for ai-agent-ops MCP tools (ADR-0018).
+ * Shared helpers for AI-agent MCP tools (ai-agent-ops and ai-agent-chat).
  */
 
 import { z } from 'zod';
@@ -21,6 +21,18 @@ export const evalUuidField = (): z.ZodString => z.string().describe('Evaluation 
 export const runUuidField = (): z.ZodString => z.string().describe('Evaluation run UUID');
 
 export const threadUuidField = (): z.ZodString => z.string().describe('Thread UUID');
+
+/** Project + agent identity shared by inventory, thread, discovery, and eval tools. */
+export type AiAgentScopeArgs = { projectUuid?: string; agentUuid: string };
+
+export type AiAgentThreadScopeArgs = AiAgentScopeArgs & { threadUuid: string };
+
+/** Conservative local prompt ceiling; not env-configurable in v1 (ADR-0029). */
+export const THREAD_PROMPT_MAX_CHARS = 32_000;
+
+export const threadPromptField = (
+  description = 'User prompt to store on the thread (not sent to /generate)',
+): z.ZodString => z.string().trim().min(1).max(THREAD_PROMPT_MAX_CHARS).describe(description);
 
 const evaluationPromptSchema = z.union([
   z.object({
@@ -78,7 +90,7 @@ type ProjectScopedBody = Record<string, unknown> & { data: unknown };
  * Resolve project scope, run the handler, and attach standard context.
  * Maps ProjectScopeError to a blocked tool result; other errors rethrow for wrapTool.
  */
-export async function withAgentOpsScope(
+export async function withAiAgentProjectScope(
   projectUuid: string | undefined,
   run: (scope: ResolvedProjectScope) => Promise<ProjectScopedBody>,
 ): Promise<TextContent> {

@@ -133,6 +133,8 @@ export type {
   SqlApprovalDecision,
   SubmitSqlApprovalBody,
   SubmitSqlApprovalResult,
+  AiRouterRouteRequest,
+  AiRouterRouteResponseResult,
   ApiExploresResults,
   ApiExploreResults,
 } from './v1/lightdash-api';

@@ -200,4 +200,5 @@ Before commit: `pnpm verify` (or `pnpm verify:quick`) from the repo root — see
 - ADR-0015 — Soft-delete elicitation
 - ADR-0018 — AI-agent-ops thin API surface
 - ADR-0020 — data-analyst ad-hoc metric-query boundary
+- ADR-0029 — AI-agent-chat conversation boundary
 - [ADR-0019](../../docs/adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) — Stateless HTTP; HMAC handles; no Redis
