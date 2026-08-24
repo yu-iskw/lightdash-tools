@@ -86,7 +86,7 @@ export interface OAuthBrokerStore {
   getClient(clientId: string): Promise<RegisteredClient | undefined>;
   isRedirectAllowedForClient(clientId: string, redirectUri: string): Promise<boolean>;
   createPending(
-    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt' | 'csrfToken' | 'consented'>,
+    input: Omit<PendingAuthorization, 'brokerState' | 'consented' | 'createdAt' | 'csrfToken'>,
   ): Promise<PendingAuthorization | undefined>;
   getPending(brokerState: string): Promise<PendingAuthorization | undefined>;
   markConsented(brokerState: string): Promise<PendingAuthorization | undefined>;
@@ -172,7 +172,7 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
    * (after TTL cleanup).
    */
   async createPending(
-    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt' | 'csrfToken' | 'consented'>,
+    input: Omit<PendingAuthorization, 'brokerState' | 'consented' | 'createdAt' | 'csrfToken'>,
   ): Promise<PendingAuthorization | undefined> {
     this.cleanup();
     if (this.pendingByBrokerState.size >= this.maxPending) {

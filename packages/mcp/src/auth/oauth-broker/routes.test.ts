@@ -100,8 +100,13 @@ function mockReq(
   return req;
 }
 
-function hiddenInput(html: string, name: string): string {
-  const match = html.match(new RegExp(`name="${name}" value="([^"]+)"`));
+const HIDDEN_INPUT_PATTERN = {
+  broker_state: /name="broker_state" value="([^"]+)"/,
+  csrf_token: /name="csrf_token" value="([^"]+)"/,
+} as const;
+
+function hiddenInput(html: string, name: keyof typeof HIDDEN_INPUT_PATTERN): string {
+  const match = html.match(HIDDEN_INPUT_PATTERN[name]);
   if (!match?.[1]) {
     throw new Error(`missing hidden field ${name}`);
   }
@@ -946,11 +951,7 @@ describe('oauth broker DCR + authorize binding', () => {
     }
     const limited = mockRes();
     await broker.handle(
-      mockReq(
-        'POST',
-        '/oauth/register',
-        `redirect_uris=${encodeURIComponent(`${redirectUri}x`)}`,
-      ),
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(`${redirectUri}x`)}`),
       limited,
       '/oauth/register',
     );

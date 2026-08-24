@@ -16,7 +16,7 @@ Related to [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-sha
 
 [ADR-0024](0024-mcp-http-profile-mount-allowlist-via-env.md) added `LIGHTDASH_TOOLS_MCP_PROFILES` as an HTTP-only mount ceiling: **unset or empty mounts every shipped path**. That default is convenient for local `http` and matches “clients pick the URL.” On a hosted production process (`NODE_ENV=production`, Cloud Run) it is the opposite of least privilege: forgetting the var exposes all eight guessable profile URLs (`semantic-layer`, `content-reader`, `content-developer`, `content-governance`, `ai-agent-chat`, `ai-agent-ops`, `data-analyst`, `organization-audit`) to any valid OAuth bearer.
 
-Unauthenticated HTTP (`auth=none`) is already forbidden in production ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)). When it *is* allowed (non-production), the historical listen default `0.0.0.0` publishes that unauthenticated surface on every interface. Compose needs `0.0.0.0` inside a container; a laptop `npx` does not.
+Unauthenticated HTTP (`auth=none`) is already forbidden in production ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)). When it _is_ allowed (non-production), the historical listen default `0.0.0.0` publishes that unauthenticated surface on every interface. Compose needs `0.0.0.0` inside a container; a laptop `npx` does not.
 
 `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` already requires `https://` or loopback `http://`. `LIGHTDASH_URL` (upstream Lightdash) did not get the same check, so a production process could send OAuth and API calls to cleartext non-loopback Lightdash.
 

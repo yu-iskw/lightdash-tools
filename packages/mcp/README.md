@@ -99,8 +99,8 @@ Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `
 
 ### HTTP OAuth (primary)
 
-| Required                                                                                                                    | Common optional                                                                                                                                                                                                              |
-| :-------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Required                                                                                                                                                                                          | Common optional                                                                                                                                                        |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`; production also [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist) | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`](#extra-invoke-origins), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), token cache TTL |
 
 On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).

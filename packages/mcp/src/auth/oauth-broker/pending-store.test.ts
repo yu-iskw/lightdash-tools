@@ -23,7 +23,7 @@ async function consentedPending(
   store: InMemoryOAuthBrokerStore,
   input: Omit<
     PendingAuthorization,
-    'brokerState' | 'createdAt' | 'csrfToken' | 'consented'
+    'brokerState' | 'consented' | 'createdAt' | 'csrfToken'
   > = pendingInput(),
 ) {
   const pending = await store.createPending(input);

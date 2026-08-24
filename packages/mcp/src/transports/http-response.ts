@@ -75,4 +75,3 @@ export function sendHtml(
 ): void {
   res.writeHead(status, extraHeaders).end(body);
 }
-

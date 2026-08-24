@@ -99,7 +99,7 @@ function displayClientName(name: string | undefined): string {
   return trimmed.length > 0 ? trimmed : UNREGISTERED_CLIENT_NAME;
 }
 
-function auditConsent(status: 'success' | 'blocked'): void {
+function auditConsent(status: 'blocked' | 'success'): void {
   const startMs = Date.now();
   logAuditEntry(
     buildAuditLogEntry({
@@ -793,6 +793,74 @@ export function isOAuthBrokerPath(path: string): boolean {
   return BROKER_PATHS.has(path);
 }
 
+async function runRateLimited(
+  req: IncomingMessage,
+  res: ServerResponse,
+  limiter: InMemoryOAuthRateLimiter,
+  action: OAuthRateLimitAction,
+  run: () => Promise<void>,
+): Promise<void> {
+  if (!applyRateLimit(req, res, limiter, action)) {
+    return;
+  }
+  await run();
+}
+
+async function dispatchOAuthBroker(
+  req: IncomingMessage,
+  res: ServerResponse,
+  path: string,
+  ctx: {
+    config: McpHttpConfig;
+    limiter: InMemoryOAuthRateLimiter;
+    store: OAuthBrokerStore;
+  },
+): Promise<boolean> {
+  const { config, limiter, store } = ctx;
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, { Allow: 'GET, POST, OPTIONS' }).end();
+    return true;
+  }
+
+  if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
+    handleAsMetadata(req, res, config);
+    return true;
+  }
+
+  if (path === OAUTH_AUTHORIZE_PATH) {
+    await runRateLimited(req, res, limiter, 'authorize', () =>
+      handleAuthorize(req, res, config, store),
+    );
+    return true;
+  }
+
+  if (path === OAUTH_CONSENT_PATH) {
+    await runRateLimited(req, res, limiter, 'consent', () =>
+      handleConsent(req, res, config, store),
+    );
+    return true;
+  }
+
+  if (path === OAUTH_CALLBACK_PATH) {
+    await handleCallback(req, res, config, store);
+    return true;
+  }
+
+  if (path === OAUTH_TOKEN_PATH) {
+    await runRateLimited(req, res, limiter, 'token', () => handleToken(req, res, config, store));
+    return true;
+  }
+
+  if (path === OAUTH_REGISTER_PATH) {
+    await runRateLimited(req, res, limiter, 'register', () =>
+      handleRegister(req, res, config, store),
+    );
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Creates the OAuth broker request handler for co-located AS façade routes.
  * Pending authorization/code state is process-local, so `/oauth/*` still needs
@@ -808,55 +876,7 @@ export function createOAuthBroker(
       if (!isOAuthBrokerPath(path)) {
         return false;
       }
-
-      if (req.method === 'OPTIONS') {
-        res.writeHead(204, { Allow: 'GET, POST, OPTIONS' }).end();
-        return true;
-      }
-
-      if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
-        handleAsMetadata(req, res, config);
-        return true;
-      }
-
-      if (path === OAUTH_AUTHORIZE_PATH) {
-        if (!applyRateLimit(req, res, limiter, 'authorize')) {
-          return true;
-        }
-        await handleAuthorize(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_CONSENT_PATH) {
-        if (!applyRateLimit(req, res, limiter, 'consent')) {
-          return true;
-        }
-        await handleConsent(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_CALLBACK_PATH) {
-        await handleCallback(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_TOKEN_PATH) {
-        if (!applyRateLimit(req, res, limiter, 'token')) {
-          return true;
-        }
-        await handleToken(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_REGISTER_PATH) {
-        if (!applyRateLimit(req, res, limiter, 'register')) {
-          return true;
-        }
-        await handleRegister(req, res, config, store);
-        return true;
-      }
-
-      return false;
+      return dispatchOAuthBroker(req, res, path, { config, limiter, store });
     },
   };
 }

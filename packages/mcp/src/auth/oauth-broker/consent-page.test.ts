@@ -5,17 +5,11 @@ import {
   SEMANTIC_LAYER_PROFILE_PATH,
 } from '../../profiles/index.js';
 
-import {
-  escapeHtml,
-  profileCapabilitiesFromResource,
-  renderConsentPage,
-} from './consent-page.js';
+import { escapeHtml, profileCapabilitiesFromResource, renderConsentPage } from './consent-page.js';
 
 describe('consent page', () => {
   it('escapes HTML metacharacters', () => {
-    expect(escapeHtml('<script>alert(1)</script>')).toBe(
-      '&lt;script&gt;alert(1)&lt;/script&gt;',
-    );
+    expect(escapeHtml('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;/script&gt;');
   });
 
   it('classifies semantic-layer as non-mutating', () => {

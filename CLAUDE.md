@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-24]: MCP `tsc` lib target has no `String.replaceAll` (`TS2550`); use global `.replace(/…/g, …)` in `packages/mcp`.
 - [2026-08-24]: Production HTTP (`NODE_ENV=production`) requires non-empty `LIGHTDASH_TOOLS_MCP_PROFILES` (ADR-0033); unset no longer mounts all eight paths. OAuth `/oauth/authorize` shows per-client consent HTML before Lightdash (ADR-0032); DCR `client_name` is unverified. Stdio still `--profile` only; non-production HTTP unset still mounts all.
 - [2026-08-21]: `ai-agent-chat` agent pick is named/hint → preferences → `route_agent` → single-agent or ask user (ADR-0031). Never match on instruction/`enableContentTools`. Prefix Lightdash dashboard/chart UUID into create prompt; require title+UUID in the reply.
 - [2026-08-21]: `ai-agent-chat` `create_agent_thread` requires `prompt` (ADR-0030). Empty `{}` fails live: upstream inserts `ai_thread` then `getThread` INNER JOINs `ai_prompt` (promptless = unfetchable). Flow: create(+prompt)→generate; follow-ups message→generate.

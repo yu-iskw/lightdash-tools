@@ -1,6 +1,6 @@
-export type OAuthRateLimitAction = 'register' | 'authorize' | 'token' | 'consent';
+export type OAuthRateLimitAction = 'authorize' | 'consent' | 'register' | 'token';
 
-export type OAuthRateLimitResult = { ok: true } | { ok: false; retryAfterSec: number };
+export type OAuthRateLimitResult = { ok: false; retryAfterSec: number } | { ok: true };
 
 export type OAuthRateLimiterLimits = {
   windowMs: number;
@@ -61,14 +61,14 @@ export class InMemoryOAuthRateLimiter {
 
   private maxFor(action: OAuthRateLimitAction): number {
     switch (action) {
-      case 'register':
-        return this.limits.maxRegister;
       case 'authorize':
         return this.limits.maxAuthorize;
-      case 'token':
-        return this.limits.maxToken;
       case 'consent':
         return this.limits.maxConsent;
+      case 'register':
+        return this.limits.maxRegister;
+      case 'token':
+        return this.limits.maxToken;
       default: {
         const _exhaustive: never = action;
         return _exhaustive;
