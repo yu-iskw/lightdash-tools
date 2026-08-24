@@ -14,7 +14,6 @@ import {
   buildAuditLogEntry,
   extractProjectUuids,
   ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
-  READ_ONLY_DEFAULT,
   logAuditEntry,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
@@ -146,12 +145,16 @@ function enrichStructuredContent(result: TextContent): TextContent {
 /** Tool handler type used to avoid deep instantiation with SDK/Zod. Accepts (args, extra) for SDK compatibility. */
 export type ToolHandler = (args: unknown, extra?: unknown) => Promise<ToolResult>;
 
-/** Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility. Pass annotations explicitly (e.g. READ_ONLY_DEFAULT or WRITE_IDEMPOTENT) for visibility. */
+/**
+ * Options for registerTool; inputSchema typed as ZodRawShapeCompat for SDK compatibility.
+ * `annotations` is required (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, WRITE_NONDESTRUCTIVE,
+ * WRITE_OPEN_WORLD, or WRITE_DESTRUCTIVE). Omitted annotations are not treated as read-only.
+ */
 export type ToolOptions = {
   description: string;
   inputSchema: Record<string, z.ZodType>;
   title?: string;
-  annotations?: ToolAnnotations;
+  annotations: ToolAnnotations;
   /** MCP Apps UI metadata (e.g. `{ ui: { resourceUri } }`). Passed through to the SDK registerTool call. */
   _meta?: Record<string, unknown>;
 };
@@ -159,14 +162,26 @@ export type ToolOptions = {
 // Re-export presets used by tools and tests
 export { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
-/** Internal default for mergeAnnotations; READ_ONLY_DEFAULT is the exported preset. */
-const DEFAULT_ANNOTATIONS: ToolAnnotations = READ_ONLY_DEFAULT;
-
 type RegisterToolFn = (name: string, options: ToolOptions, handler: ToolHandler) => void;
 
-/** Merges per-tool annotations with defaults; per-tool values win. */
-function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
-  return { ...DEFAULT_ANNOTATIONS, ...overrides };
+/**
+ * Copies caller-provided annotations. Does not default omitted annotations to
+ * READ_ONLY_DEFAULT — registerToolSafe throws when annotations are missing.
+ */
+function mergeAnnotations(overrides: ToolAnnotations): ToolAnnotations {
+  return { ...overrides };
+}
+
+function requireToolAnnotations(
+  annotations: ToolAnnotations | undefined | null,
+  toolName: string,
+): ToolAnnotations {
+  if (annotations === undefined || annotations === null) {
+    throw new Error(
+      `MCP tool '${toolName}' requires annotations with an explicit readOnlyHint; omitted annotations are not treated as read-only`,
+    );
+  }
+  return mergeAnnotations(annotations);
 }
 
 /** Internal marker attached to responses produced by a guardrail (project-pin denial
@@ -232,7 +247,7 @@ export function withAuditStatus<T extends TextContent>(
 /**
  * Registers a tool with prefix and annotations, applying pin / validation / audit guardrails.
  * shortName is prefixed to become TOOL_PREFIX + shortName.
- * Pass annotations explicitly (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
+ * Annotations are required (e.g. READ_ONLY_DEFAULT, WRITE_IDEMPOTENT, or WRITE_DESTRUCTIVE).
  * Handlers may return TextContent or InputRequiredResult (MRTR elicitation).
  */
 export function registerToolSafe(
@@ -242,7 +257,11 @@ export function registerToolSafe(
   handler: ToolHandler,
 ): void {
   const name = TOOL_PREFIX + shortName;
-  const annotations = mergeAnnotations(options.annotations);
+  // Runtime check: `as ToolOptions` can still omit annotations despite the required type.
+  const annotations = requireToolAnnotations(
+    (options as { annotations?: ToolAnnotations | null }).annotations,
+    name,
+  );
 
   let finalHandler: ToolHandler = handler;
 
@@ -337,7 +356,7 @@ export function registerToolSafe(
 
   const mergedOptions: ToolOptions = {
     ...options,
-    title: options.title ?? options.annotations?.title,
+    title: options.title ?? annotations.title,
     annotations,
   };
   (server as { registerTool: RegisterToolFn }).registerTool(name, mergedOptions, finalHandler);
