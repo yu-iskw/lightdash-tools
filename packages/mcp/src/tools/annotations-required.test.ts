@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { bindServerProfile } from '../audit/server-profile.js';
 import { PROFILES, listToolIds } from '../profiles/index.js';
+
 import { registerTools } from './registry.js';
 import { TOOL_PREFIX } from './shared.js';
 

@@ -173,7 +173,7 @@ function mergeAnnotations(overrides: ToolAnnotations): ToolAnnotations {
 }
 
 function requireToolAnnotations(
-  annotations: ToolAnnotations | undefined | null,
+  annotations: ToolAnnotations | null | undefined,
   toolName: string,
 ): ToolAnnotations {
   if (annotations === undefined || annotations === null) {

@@ -12,8 +12,8 @@ import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT, TOOL_PREFIX } from './shared.js';
 
-import type { McpContextProvider } from '../server/request-context.js';
 import type { ToolOptions } from './shared.js';
+import type { McpContextProvider } from '../server/request-context.js';
 
 // Silence audit log output during tests
 vi.mock('@lightdash-tools/common', async (importOriginal) => {
