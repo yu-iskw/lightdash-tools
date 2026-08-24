@@ -56,9 +56,13 @@ LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://lightdash-mcp-xxxxx.a.run.app
 LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080
 LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=...   # from Secret Manager
 LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=...
+# REQUIRED in production — process will not start without a non-empty list (ADR-0033)
+LIGHTDASH_TOOLS_MCP_PROFILES=semantic-layer,content-reader
 ```
 
-Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI), `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset = all eight HTTP mounts).
+**`LIGHTDASH_TOOLS_MCP_PROFILES` is required on Cloud Run.** Production (`NODE_ENV=production`) will not start if it is unset or empty; that default no longer mounts all eight HTTP paths. Starter for a read-oriented service: `semantic-layer,content-reader`. Add `content-developer`, `content-governance`, `ai-agent-chat`, `ai-agent-ops`, `data-analyst`, or `organization-audit` only when that revision should expose them. Unknown ids fail startup with a list of valid ids.
+
+Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI).
 
 **Do not set `LIGHTDASH_TOOLS_AUDIT_LOG` on Cloud Run.** Tool audit entries are written as pure JSON NDJSON on **stderr** and are captured automatically by [Cloud Run logging](https://docs.cloud.google.com/run/docs/logging) into Cloud Logging (`jsonPayload`). A container file path is ephemeral and unsuitable as the primary audit sink. Use `LIGHTDASH_TOOLS_AUDIT_LOG` only for CLI/local file append.
 
@@ -112,7 +116,7 @@ Grant the sink writer identity permission on the destination bucket after create
 
 ### Governance companions (already in the product)
 
-- Profile URL + catalog membership (capability surface); optional `LIGHTDASH_TOOLS_MCP_PROFILES` mount ceiling
+- Profile URL + catalog membership (capability surface); **required** `LIGHTDASH_TOOLS_MCP_PROFILES` mount ceiling in production
 - OAuth identity + Lightdash RBAC
 - `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` process ceiling for shared services
 - Optional `X-Lightdash-Project` pin
@@ -128,6 +132,7 @@ gcloud run deploy lightdash-mcp \
   --port 8080 \
   --set-env-vars "LIGHTDASH_URL=https://app.lightdash.cloud,LIGHTDASH_TOOLS_MCP_HTTP_PORT=8080" \
   --set-env-vars "LIGHTDASH_TOOLS_MCP_PUBLIC_URL=https://lightdash-mcp-xxxxx.a.run.app" \
+  --set-env-vars "LIGHTDASH_TOOLS_MCP_PROFILES=semantic-layer,content-reader" \
   --set-secrets "LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=mcp-oauth-client-id:latest,LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=mcp-oauth-client-secret:latest" \
   --allow-unauthenticated
 ```
@@ -143,5 +148,5 @@ gcloud run deploy lightdash-mcp \
 - [ ] `LIGHTDASH_TOOLS_AUDIT_LOG` unset (stderr → Cloud Logging)
 - [ ] Audit sink / retention configured if compliance requires >30 days
 - [ ] `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` set when the service must not see the whole org
-- [ ] `LIGHTDASH_TOOLS_MCP_PROFILES` set when the service must not mount every persona
+- [ ] `LIGHTDASH_TOOLS_MCP_PROFILES` set (required in production; starter `semantic-layer,content-reader`)
 - [ ] Startup / liveness probe is `GET /health/live` on the container port

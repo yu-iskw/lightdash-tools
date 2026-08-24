@@ -1,0 +1,3 @@
+kind: feat
+body: MCP OAuth shows per-client consent before the Lightdash redirect and rate-limits DCR/authorize/token/consent.
+time: 2026-08-24T21:58:13.667365045Z
