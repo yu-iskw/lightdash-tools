@@ -1,27 +1,39 @@
+import { buildAuditLogEntry, logAuditEntry } from '@lightdash-tools/common';
+
 import { listEnabledProfilePaths } from '../../config/enabled-profiles.js';
 import {
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
   OAUTH_CALLBACK_PATH,
+  OAUTH_CONSENT_PATH,
   OAUTH_REGISTER_PATH,
   OAUTH_TOKEN_PATH,
 } from '../../config/env.js';
 import { isLocalHttpOrigin } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
 import { parseJsonBody, readBody } from '../../transports/http-body.js';
-import { sendJson } from '../../transports/http-response.js';
+import { sendHtml, sendJson, timingSafeEqualString } from '../../transports/http-response.js';
 
 import { buildBrokerAuthorizationServerMetadata } from './as-metadata.js';
+import { CONSENT_PAGE_HEADERS, renderConsentPage } from './consent-page.js';
 import { allowedResourceOrigins, resourceOriginForRequest } from './invoke-origins.js';
 import {
   buildLightdashAuthorizeUrl,
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
 import { mintMcpAccessToken } from './mcp-access-token.js';
-import { InMemoryOAuthBrokerStore } from './pending-store.js';
+import {
+  clientKeyFromRequest,
+  InMemoryOAuthRateLimiter,
+  type OAuthRateLimitAction,
+} from './oauth-rate-limit.js';
+import {
+  InMemoryOAuthBrokerStore,
+  type IssuedAuthorizationCode,
+  type OAuthBrokerStore,
+} from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 
-import type { IssuedAuthorizationCode, OAuthBrokerStore } from './pending-store.js';
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -35,6 +47,67 @@ const AS_BUSY = {
 
 export interface OAuthBroker {
   handle: (req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>;
+}
+
+const UNREGISTERED_CLIENT_NAME = 'Unregistered MCP client';
+
+function applyRateLimit(
+  req: IncomingMessage,
+  res: ServerResponse,
+  limiter: InMemoryOAuthRateLimiter,
+  action: OAuthRateLimitAction,
+): boolean {
+  const result = limiter.consume(action, clientKeyFromRequest(req.socket.remoteAddress));
+  if (result.ok) {
+    return true;
+  }
+  sendJson(
+    res,
+    429,
+    {
+      error: 'temporarily_unavailable',
+      error_description: 'Too many requests; retry later',
+    },
+    { 'Retry-After': String(result.retryAfterSec) },
+  );
+  return false;
+}
+
+function publicOrigin(config: McpHttpConfig): string {
+  return new URL(requirePublicUrl(config, 'OAuth consent Origin')).origin;
+}
+
+function requestOrigin(req: IncomingMessage): string | undefined {
+  const raw = req.headers.origin;
+  return typeof raw === 'string' && raw.length > 0 ? raw : undefined;
+}
+
+function originAllowed(req: IncomingMessage, config: McpHttpConfig): boolean {
+  const origin = requestOrigin(req);
+  if (!origin) {
+    return false;
+  }
+  try {
+    return new URL(origin).origin === publicOrigin(config);
+  } catch {
+    return false;
+  }
+}
+
+function displayClientName(name: string | undefined): string {
+  const trimmed = name?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : UNREGISTERED_CLIENT_NAME;
+}
+
+function auditConsent(status: 'success' | 'blocked'): void {
+  const startMs = Date.now();
+  logAuditEntry(
+    buildAuditLogEntry({
+      tool: 'oauth_consent',
+      status,
+      startMs,
+    }),
+  );
 }
 
 function redirect(res: ServerResponse, location: string): void {
@@ -329,9 +402,16 @@ async function handleAuthorize(
     return;
   }
 
-  // The MCP resource/scope belong to the client→broker leg. Do not forward them
-  // to Lightdash, whose OAuth client and protected resource are distinct.
-  redirect(res, buildLightdashAuthorizeUrl(config, { state: pending.brokerState }));
+  const client = await store.getClient(clientId);
+  const html = renderConsentPage({
+    consentPath: OAUTH_CONSENT_PATH,
+    brokerState: pending.brokerState,
+    csrfToken: pending.csrfToken,
+    clientId,
+    clientName: displayClientName(client?.clientName),
+    resource,
+  });
+  sendHtml(res, 200, html, CONSENT_PAGE_HEADERS);
 }
 
 function redirectToClient(
@@ -369,6 +449,14 @@ async function handleCallback(
   const pending = await store.takePending(brokerState);
   if (!pending) {
     sendJson(res, 400, { error: 'invalid_request', error_description: 'Unknown or expired state' });
+    return;
+  }
+
+  if (!pending.consented) {
+    sendJson(res, 400, {
+      error: 'access_denied',
+      error_description: 'Authorization was not consented',
+    });
     return;
   }
 
@@ -463,12 +551,7 @@ function parseTokenGrantRequest(params: URLSearchParams): TokenGrantError | Toke
   return { code, redirectUri, clientId, codeVerifier, resource };
 }
 
-async function restoreInvalidGrant(
-  store: OAuthBrokerStore,
-  candidate: IssuedAuthorizationCode,
-  description: string,
-): Promise<TokenGrantError> {
-  await store.restoreCode(candidate);
+function invalidGrant(description: string): TokenGrantError {
   return {
     status: 400,
     body: { error: 'invalid_grant', error_description: description },
@@ -482,8 +565,7 @@ async function validateTokenGrant(
   const request = parseTokenGrantRequest(params);
   if ('status' in request) return request;
 
-  // Atomic take first. Restore on validation failure so a bad verifier / redirect /
-  // resource does not permanently burn a one-time code.
+  // Atomic take first. Do not restore on mismatch — a redemption attempt burns the code.
   const candidate = await store.takeCode(request.code);
   if (!candidate) {
     return {
@@ -493,19 +575,19 @@ async function validateTokenGrant(
   }
 
   if (candidate.redirectUri !== request.redirectUri) {
-    return restoreInvalidGrant(store, candidate, 'redirect_uri mismatch');
+    return invalidGrant('redirect_uri mismatch');
   }
 
   if (candidate.clientId !== request.clientId) {
-    return restoreInvalidGrant(store, candidate, 'client_id mismatch');
+    return invalidGrant('client_id mismatch');
   }
 
   if (candidate.resource !== canonicalProfileResource(request.resource)) {
-    return restoreInvalidGrant(store, candidate, 'resource mismatch');
+    return invalidGrant('resource mismatch');
   }
 
   if (!verifyPkce(request.codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
-    return restoreInvalidGrant(store, candidate, 'PKCE verification failed');
+    return invalidGrant('PKCE verification failed');
   }
 
   return { issued: candidate };
@@ -593,7 +675,8 @@ async function handleRegister(
     }
   }
 
-  const registered = await store.registerClient(redirectUris);
+  const clientName = params.get('client_name') ?? undefined;
+  const registered = await store.registerClient(redirectUris, clientName);
   if (!registered) {
     sendJson(res, 503, { ...AS_BUSY });
     return;
@@ -606,8 +689,79 @@ async function handleRegister(
     grant_types: ['authorization_code'],
     response_types: ['code'],
     token_endpoint_auth_method: 'none',
-    client_name: params.get('client_name') ?? 'MCP Client',
+    client_name: displayClientName(registered.clientName),
   });
+}
+
+async function handleConsent(
+  req: IncomingMessage,
+  res: ServerResponse,
+  config: McpHttpConfig,
+  store: OAuthBrokerStore,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    res.writeHead(405, { Allow: 'POST' }).end();
+    return;
+  }
+
+  if (!originAllowed(req, config)) {
+    auditConsent('blocked');
+    sendJson(res, 400, {
+      error: 'invalid_request',
+      error_description: 'Origin does not match the MCP public URL',
+    });
+    return;
+  }
+
+  const params = await readFormOrJson(req, res, config.maxBodyBytes);
+  if (!params) return;
+
+  const brokerState = params.get('broker_state') ?? '';
+  const csrfToken = params.get('csrf_token') ?? '';
+  const decision = params.get('decision') ?? '';
+  const pending = await store.getPending(brokerState);
+  if (!pending || !timingSafeEqualString(csrfToken, pending.csrfToken)) {
+    auditConsent('blocked');
+    sendJson(res, 400, {
+      error: 'invalid_request',
+      error_description: 'Invalid or expired consent request',
+    });
+    return;
+  }
+
+  if (decision === 'deny') {
+    await store.takePending(brokerState);
+    auditConsent('blocked');
+    redirectToClient(res, pending.redirectUri, {
+      error: 'access_denied',
+      error_description: 'The user denied the authorization request',
+      state: pending.clientState,
+    });
+    return;
+  }
+
+  if (decision !== 'approve') {
+    auditConsent('blocked');
+    sendJson(res, 400, {
+      error: 'invalid_request',
+      error_description: 'decision must be approve or deny',
+    });
+    return;
+  }
+
+  const consented = await store.markConsented(brokerState);
+  if (!consented) {
+    auditConsent('blocked');
+    sendJson(res, 400, {
+      error: 'invalid_request',
+      error_description: 'Invalid or expired consent request',
+    });
+    return;
+  }
+
+  auditConsent('success');
+  // MCP resource/scope stay on the client→broker leg. Do not forward them to Lightdash.
+  redirect(res, buildLightdashAuthorizeUrl(config, { state: consented.brokerState }));
 }
 
 function handleAsMetadata(req: IncomingMessage, res: ServerResponse, config: McpHttpConfig): void {
@@ -629,6 +783,7 @@ const BROKER_PATHS: ReadonlySet<string> = new Set([
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
   OAUTH_CALLBACK_PATH,
+  OAUTH_CONSENT_PATH,
   OAUTH_TOKEN_PATH,
   OAUTH_REGISTER_PATH,
 ]);
@@ -646,6 +801,7 @@ export function isOAuthBrokerPath(path: string): boolean {
 export function createOAuthBroker(
   config: McpHttpConfig,
   store: OAuthBrokerStore = new InMemoryOAuthBrokerStore(),
+  limiter: InMemoryOAuthRateLimiter = new InMemoryOAuthRateLimiter(),
 ): OAuthBroker {
   return {
     async handle(req, res, path): Promise<boolean> {
@@ -664,7 +820,18 @@ export function createOAuthBroker(
       }
 
       if (path === OAUTH_AUTHORIZE_PATH) {
+        if (!applyRateLimit(req, res, limiter, 'authorize')) {
+          return true;
+        }
         await handleAuthorize(req, res, config, store);
+        return true;
+      }
+
+      if (path === OAUTH_CONSENT_PATH) {
+        if (!applyRateLimit(req, res, limiter, 'consent')) {
+          return true;
+        }
+        await handleConsent(req, res, config, store);
         return true;
       }
 
@@ -674,11 +841,17 @@ export function createOAuthBroker(
       }
 
       if (path === OAUTH_TOKEN_PATH) {
+        if (!applyRateLimit(req, res, limiter, 'token')) {
+          return true;
+        }
         await handleToken(req, res, config, store);
         return true;
       }
 
       if (path === OAUTH_REGISTER_PATH) {
+        if (!applyRateLimit(req, res, limiter, 'register')) {
+          return true;
+        }
         await handleRegister(req, res, config, store);
         return true;
       }

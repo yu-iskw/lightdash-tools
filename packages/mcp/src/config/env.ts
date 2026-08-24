@@ -15,7 +15,11 @@ export const ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL = 'LIGHTDASH_TOOLS_MCP_PUBLIC_UR
 export const ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS = 'LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS';
 /** Rejected at config load — MCP path is profile-owned (see profiles/). */
 export const ENV_LIGHTDASH_TOOLS_MCP_PATH = 'LIGHTDASH_TOOLS_MCP_PATH';
-/** Optional HTTP mount allowlist (comma-separated ProfileIds). Unset/empty → all. Stdio ignores. */
+/**
+ * Optional HTTP mount allowlist (comma-separated ProfileIds).
+ * Production HTTP requires a non-empty value (ADR-0033). Non-production unset/empty → all.
+ * Stdio ignores this env.
+ */
 export const ENV_LIGHTDASH_TOOLS_MCP_PROFILES = 'LIGHTDASH_TOOLS_MCP_PROFILES';
 /**
  * Prompt playbook embedding policy: `compact` | `compatible` | `embedded`.
@@ -68,6 +72,7 @@ export const OAUTH_CALLBACK_PATH = '/oauth/callback' as const;
 export const OAUTH_AUTHORIZE_PATH = '/oauth/authorize' as const;
 export const OAUTH_TOKEN_PATH = '/oauth/token' as const;
 export const OAUTH_REGISTER_PATH = '/oauth/register' as const;
+export const OAUTH_CONSENT_PATH = '/oauth/consent' as const;
 /** RFC 8414 Authorization Server Metadata path on the MCP public host. */
 export const OAUTH_AUTHORIZATION_SERVER_METADATA_PATH =
   '/.well-known/oauth-authorization-server' as const;

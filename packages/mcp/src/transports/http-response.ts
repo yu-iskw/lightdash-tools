@@ -66,3 +66,13 @@ export function sendJson(
     .writeHead(status, { 'Content-Type': 'application/json', ...extraHeaders })
     .end(JSON.stringify(body));
 }
+
+export function sendHtml(
+  res: ServerResponse,
+  status: number,
+  body: string,
+  extraHeaders?: Record<string, string>,
+): void {
+  res.writeHead(status, extraHeaders).end(body);
+}
+

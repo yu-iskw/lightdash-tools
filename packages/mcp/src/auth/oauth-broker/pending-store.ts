@@ -23,6 +23,10 @@ export interface PendingAuthorization {
   resource: string;
   /** MCP authorization scope. This is not a downstream Lightdash scope. */
   scope?: string;
+  /** CSRF nonce for POST /oauth/consent (not the broker state). */
+  csrfToken: string;
+  /** True after the user approves the consent page. Callback refuses otherwise. */
+  consented: boolean;
   createdAt: number;
 }
 
@@ -46,6 +50,8 @@ export interface IssuedAuthorizationCode {
 export interface RegisteredClient {
   clientId: string;
   redirectUris: ReadonlySet<string>;
+  /** Unverified DCR client_name (display only). */
+  clientName?: string;
   createdAt: number;
 }
 
@@ -73,13 +79,19 @@ export type OAuthBrokerStoreOptions = {
  * Async methods keep call sites await-uniform for future backends if needed.
  */
 export interface OAuthBrokerStore {
-  registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined>;
+  registerClient(
+    redirectUris: readonly string[],
+    clientName?: string,
+  ): Promise<RegisteredClient | undefined>;
   getClient(clientId: string): Promise<RegisteredClient | undefined>;
   isRedirectAllowedForClient(clientId: string, redirectUri: string): Promise<boolean>;
   createPending(
-    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt'>,
+    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt' | 'csrfToken' | 'consented'>,
   ): Promise<PendingAuthorization | undefined>;
+  getPending(brokerState: string): Promise<PendingAuthorization | undefined>;
+  markConsented(brokerState: string): Promise<PendingAuthorization | undefined>;
   takePending(brokerState: string): Promise<PendingAuthorization | undefined>;
+  /** Issues a one-time code only when `pending.consented` is true. */
   issueCode(
     pending: PendingAuthorization,
     tokens: {
@@ -125,14 +137,19 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
    * Registers a public MCP client with exact redirect URIs, or returns undefined
    * when the in-memory client cap is reached (after TTL cleanup).
    */
-  async registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined> {
+  async registerClient(
+    redirectUris: readonly string[],
+    clientName?: string,
+  ): Promise<RegisteredClient | undefined> {
     this.cleanup();
     if (this.clients.size >= this.maxClients) {
       return undefined;
     }
+    const trimmedName = clientName?.trim();
     const client: RegisteredClient = {
       clientId: randomBytes(16).toString('base64url'),
       redirectUris: new Set(redirectUris),
+      clientName: trimmedName && trimmedName.length > 0 ? trimmedName : undefined,
       createdAt: Date.now(),
     };
     this.clients.set(client.clientId, client);
@@ -155,7 +172,7 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
    * (after TTL cleanup).
    */
   async createPending(
-    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt'>,
+    input: Omit<PendingAuthorization, 'brokerState' | 'createdAt' | 'csrfToken' | 'consented'>,
   ): Promise<PendingAuthorization | undefined> {
     this.cleanup();
     if (this.pendingByBrokerState.size >= this.maxPending) {
@@ -164,10 +181,26 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
     const pending: PendingAuthorization = {
       ...input,
       brokerState: randomBytes(24).toString('base64url'),
+      csrfToken: randomBytes(32).toString('base64url'),
+      consented: false,
       createdAt: Date.now(),
     };
     this.pendingByBrokerState.set(pending.brokerState, pending);
     return pending;
+  }
+
+  async getPending(brokerState: string): Promise<PendingAuthorization | undefined> {
+    this.cleanup();
+    return this.pendingByBrokerState.get(brokerState);
+  }
+
+  async markConsented(brokerState: string): Promise<PendingAuthorization | undefined> {
+    this.cleanup();
+    const pending = this.pendingByBrokerState.get(brokerState);
+    if (!pending) return undefined;
+    const next: PendingAuthorization = { ...pending, consented: true };
+    this.pendingByBrokerState.set(brokerState, next);
+    return next;
   }
 
   async takePending(brokerState: string): Promise<PendingAuthorization | undefined> {
@@ -187,6 +220,9 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
     },
   ): Promise<IssuedAuthorizationCode | undefined> {
     this.cleanup();
+    if (!pending.consented) {
+      return undefined;
+    }
     if (this.codes.size >= this.maxCodes) {
       return undefined;
     }

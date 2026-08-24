@@ -12,6 +12,7 @@ import {
   exchangeLightdashAuthorizationCode,
 } from './lightdash-token.js';
 import { verifyMcpAccessToken } from './mcp-access-token.js';
+import { InMemoryOAuthRateLimiter } from './oauth-rate-limit.js';
 import { InMemoryOAuthBrokerStore } from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 import { createOAuthBroker } from './routes.js';
@@ -89,6 +90,7 @@ function mockReq(
     ...(body !== undefined ? { 'content-type': contentType } : {}),
     ...extraHeaders,
   };
+  (req as IncomingMessage).socket = { remoteAddress: '127.0.0.1' } as IncomingMessage['socket'];
   queueMicrotask(() => {
     if (body !== undefined) {
       req.emit('data', Buffer.from(body, 'utf8'));
@@ -98,6 +100,47 @@ function mockReq(
   return req;
 }
 
+function hiddenInput(html: string, name: string): string {
+  const match = html.match(new RegExp(`name="${name}" value="([^"]+)"`));
+  if (!match?.[1]) {
+    throw new Error(`missing hidden field ${name}`);
+  }
+  return match[1];
+}
+
+async function postConsent(
+  broker: ReturnType<typeof createOAuthBroker>,
+  html: string,
+  decision: 'approve' | 'deny',
+  extra?: { origin?: string | null; csrfToken?: string },
+) {
+  const brokerState = hiddenInput(html, 'broker_state');
+  const csrfToken = extra?.csrfToken ?? hiddenInput(html, 'csrf_token');
+  const headers: Record<string, string> = {};
+  if (extra === undefined || extra.origin === undefined) {
+    headers.origin = 'https://mcp.example.com';
+  } else if (extra.origin !== null) {
+    headers.origin = extra.origin;
+  }
+  const res = mockRes();
+  await broker.handle(
+    mockReq(
+      'POST',
+      '/oauth/consent',
+      new URLSearchParams({
+        broker_state: brokerState,
+        csrf_token: csrfToken,
+        decision,
+      }).toString(),
+      'application/x-www-form-urlencoded',
+      headers,
+    ),
+    res,
+    '/oauth/consent',
+  );
+  return res;
+}
+
 function authorizeUrl(clientId: string, redirectUri: string, challenge: string): string {
   return (
     `/oauth/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}` +
@@ -105,6 +148,27 @@ function authorizeUrl(clientId: string, redirectUri: string, challenge: string):
     `&code_challenge=${encodeURIComponent(challenge)}&code_challenge_method=S256` +
     `&resource=${encodeURIComponent(RESOURCE)}`
   );
+}
+
+async function issueConsentedCode(
+  store: InMemoryOAuthBrokerStore,
+  input: {
+    clientId: string;
+    redirectUri: string;
+    codeChallenge: string;
+    resource?: string;
+  },
+) {
+  const pending = await store.createPending({
+    clientId: input.clientId,
+    redirectUri: input.redirectUri,
+    codeChallenge: input.codeChallenge,
+    codeChallengeMethod: 'S256',
+    resource: input.resource ?? RESOURCE,
+  });
+  const consented = await store.markConsented(pending!.brokerState);
+  const issued = await store.issueCode(consented!, { accessToken: 'ld-access', expiresIn: 3600 });
+  return { pending: consented!, issued: issued! };
 }
 
 describe('oauth broker helpers', () => {
@@ -204,7 +268,8 @@ describe('oauth broker helpers', () => {
       resource: RESOURCE,
     });
     expect(pending2).toBeDefined();
-    const issued = await store.issueCode(pending2!, { accessToken: 'atok' });
+    const consented2 = await store.markConsented(pending2!.brokerState);
+    const issued = await store.issueCode(consented2!, { accessToken: 'atok' });
     expect(issued).toBeDefined();
     expect(issued).not.toHaveProperty('refreshToken');
     const taken = await store.takeCode(issued!.code);
@@ -234,32 +299,22 @@ describe('oauth broker helpers', () => {
     ).toBe(false);
   });
 
-  it('restores issued code after failed PKCE so a later redeem can succeed', async () => {
+  it('restoreCode is unused by token grants; a later redeem cannot succeed after take', async () => {
     const store = new InMemoryOAuthBrokerStore();
-    const verifier = 'test-verifier-value-1234567890';
-    const challenge = createHash('sha256').update(verifier).digest('base64url');
-    const pending = await store.createPending({
+    const challenge = createHash('sha256')
+      .update('test-verifier-value-1234567890')
+      .digest('base64url');
+    const { issued } = await issueConsentedCode(store, {
       clientId: 'client-a',
       redirectUri: 'http://localhost:8787/callback',
       codeChallenge: challenge,
-      codeChallengeMethod: 'S256',
-      resource: RESOURCE,
     });
-    expect(pending).toBeDefined();
-    const issued = await store.issueCode(pending!, { accessToken: 'atok' });
-    expect(issued).toBeDefined();
 
-    // Simulate validateTokenGrant: take → failed PKCE → restore.
-    const taken = await store.takeCode(issued!.code);
+    const taken = await store.takeCode(issued.code);
     expect(taken).toBeDefined();
     expect(verifyPkce('wrong-verifier', taken!.codeChallenge, 'S256')).toBe(false);
-    await store.restoreCode(taken!);
-    expect((await store.getCode(issued!.code))?.accessToken).toBe('atok');
-
-    const redeemed = await store.takeCode(issued!.code);
-    expect(redeemed?.accessToken).toBe('atok');
-    expect(verifyPkce(verifier, redeemed!.codeChallenge, 'S256')).toBe(true);
-    expect(await store.takeCode(issued!.code)).toBeUndefined();
+    expect(await store.getCode(issued.code)).toBeUndefined();
+    expect(await store.takeCode(issued.code)).toBeUndefined();
   });
 
   it('forwards Proxy-Authorization on Lightdash token exchange when configured', async () => {
@@ -309,10 +364,11 @@ describe('oauth broker DCR + authorize binding', () => {
       okRes,
       '/oauth/authorize',
     );
-    expect(okRes.statusCode).toBe(302);
-    const upstream = new URL(String(okRes.headers.Location));
-    expect(upstream.pathname).toContain('/api/v1/oauth/authorize');
-    expect(upstream.searchParams.get('resource')).toBeNull();
+    expect(okRes.statusCode).toBe(200);
+    expect(String(okRes.body)).toContain(registered.client_id);
+    expect(String(okRes.body)).toContain('Unverified');
+    expect(String(okRes.body)).toContain('semantic-layer');
+    expect(okRes.headers.Location).toBeUndefined();
 
     const badRes = mockRes();
     await broker.handle(
@@ -404,8 +460,9 @@ describe('oauth broker DCR + authorize binding', () => {
       authorizeRes,
       '/oauth/authorize',
     );
-    expect(authorizeRes.statusCode).toBe(302);
-    expect(String(authorizeRes.headers.Location)).toContain('/api/v1/oauth/authorize');
+    expect(authorizeRes.statusCode).toBe(200);
+    expect(String(authorizeRes.body)).toContain('semantic-layer');
+    expect(authorizeRes.headers.Location).toBeUndefined();
   });
 
   it('accepts a public profile resource when PUBLIC_URL includes a default port', async () => {
@@ -426,7 +483,8 @@ describe('oauth broker DCR + authorize binding', () => {
       authorizeRes,
       '/oauth/authorize',
     );
-    expect(authorizeRes.statusCode).toBe(302);
+    expect(authorizeRes.statusCode).toBe(200);
+    expect(String(authorizeRes.body)).toContain(clientId);
   });
 
   it('accepts an extra invoke-origin resource that includes a default port', async () => {
@@ -456,7 +514,8 @@ describe('oauth broker DCR + authorize binding', () => {
       authorizeRes,
       '/oauth/authorize',
     );
-    expect(authorizeRes.statusCode).toBe(302);
+    expect(authorizeRes.statusCode).toBe(200);
+    expect(String(authorizeRes.body)).toContain('semantic-layer');
   });
 
   it('mints a portless audience when authorize and token use a default-port invoke resource', async () => {
@@ -488,10 +547,14 @@ describe('oauth broker DCR + authorize binding', () => {
       authorizeRes,
       '/oauth/authorize',
     );
-    expect(authorizeRes.statusCode).toBe(302);
-    const ldAuthorize = new URL(String(authorizeRes.headers.Location));
+    expect(authorizeRes.statusCode).toBe(200);
+    const consentRes = await postConsent(broker, String(authorizeRes.body), 'approve');
+    expect(consentRes.statusCode).toBe(302);
+    const ldAuthorize = new URL(String(consentRes.headers.Location));
+    expect(ldAuthorize.pathname).toContain('/api/v1/oauth/authorize');
     const brokerState = ldAuthorize.searchParams.get('state');
     expect(brokerState).toBeTruthy();
+    expect(ldAuthorize.searchParams.get('resource')).toBeNull();
 
     vi.stubGlobal(
       'fetch',
@@ -566,7 +629,11 @@ describe('oauth broker DCR + authorize binding', () => {
       authorizeRes,
       '/oauth/authorize',
     );
-    const ldAuthorize = new URL(String(authorizeRes.headers.Location));
+    expect(authorizeRes.statusCode).toBe(200);
+    expect(String(authorizeRes.body)).toContain(clientId);
+    const consentRes = await postConsent(broker, String(authorizeRes.body), 'approve');
+    expect(consentRes.statusCode).toBe(302);
+    const ldAuthorize = new URL(String(consentRes.headers.Location));
     const brokerState = ldAuthorize.searchParams.get('state');
     expect(brokerState).toBeTruthy();
     expect(ldAuthorize.searchParams.get('resource')).toBeNull();
@@ -636,14 +703,11 @@ describe('oauth broker DCR + authorize binding', () => {
     const store = new InMemoryOAuthBrokerStore();
     const verifier = 'test-verifier-value-1234567890';
     const challenge = createHash('sha256').update(verifier).digest('base64url');
-    const pending = await store.createPending({
+    const { pending, issued } = await issueConsentedCode(store, {
       clientId: 'client-a',
       redirectUri: 'http://127.0.0.1:8787/callback',
       codeChallenge: challenge,
-      codeChallengeMethod: 'S256',
-      resource: RESOURCE,
     });
-    const issued = await store.issueCode(pending!, { accessToken: 'ld-access', expiresIn: 3600 });
     const broker = createOAuthBroker(baseConfig(), store);
 
     const res = mockRes();
@@ -653,9 +717,9 @@ describe('oauth broker DCR + authorize binding', () => {
         '/oauth/token',
         new URLSearchParams({
           grant_type: 'authorization_code',
-          code: issued!.code,
-          redirect_uri: pending!.redirectUri,
-          client_id: pending!.clientId,
+          code: issued.code,
+          redirect_uri: pending.redirectUri,
+          client_id: pending.clientId,
           code_verifier: verifier,
           resource: 'https://mcp.example.com/content-governance/v1/mcp',
         }).toString(),
@@ -666,6 +730,232 @@ describe('oauth broker DCR + authorize binding', () => {
     expect(res.statusCode).toBe(400);
     expect((res.body as { error: string; error_description: string }).error).toBe('invalid_grant');
     expect((res.body as { error_description: string }).error_description).toBe('resource mismatch');
-    expect(await store.getCode(issued!.code)).toBeDefined();
+    expect(await store.getCode(issued.code)).toBeUndefined();
+  });
+
+  it('shows consent HTML instead of redirecting to Lightdash, then approves with CSRF', async () => {
+    const broker = createOAuthBroker(baseConfig());
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq(
+        'POST',
+        '/oauth/register',
+        JSON.stringify({
+          redirect_uris: [redirectUri],
+          client_name: '<script>alert(1)</script>',
+        }),
+        'application/json',
+      ),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq('GET', authorizeUrl(clientId, redirectUri, challenge)),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    expect(authorizeRes.statusCode).toBe(200);
+    const html = String(authorizeRes.body);
+    expect(html).toContain(clientId);
+    expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;');
+    expect(html).not.toContain('<script>alert(1)</script>');
+    expect(html).toContain('Unverified');
+    expect(authorizeRes.headers.Location).toBeUndefined();
+    expect(String(authorizeRes.headers['Content-Security-Policy'])).toContain("default-src 'none'");
+
+    const denied = await postConsent(broker, html, 'deny');
+    expect(denied.statusCode).toBe(302);
+    const deniedUrl = new URL(String(denied.headers.Location));
+    expect(deniedUrl.searchParams.get('error')).toBe('access_denied');
+    expect(String(denied.headers.Location)).not.toContain('/api/v1/oauth/authorize');
+  });
+
+  it('rejects consent with wrong CSRF or missing Origin', async () => {
+    const broker = createOAuthBroker(baseConfig());
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerRes = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerRes,
+      '/oauth/register',
+    );
+    const { client_id: clientId } = registerRes.body as { client_id: string };
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+    const authorizeRes = mockRes();
+    await broker.handle(
+      mockReq('GET', authorizeUrl(clientId, redirectUri, challenge)),
+      authorizeRes,
+      '/oauth/authorize',
+    );
+    const html = String(authorizeRes.body);
+
+    const badCsrf = await postConsent(broker, html, 'approve', { csrfToken: 'nope' });
+    expect(badCsrf.statusCode).toBe(400);
+    expect(badCsrf.headers.Location).toBeUndefined();
+
+    const missingOrigin = await postConsent(broker, html, 'approve', { origin: null });
+    expect(missingOrigin.statusCode).toBe(400);
+    expect(missingOrigin.headers.Location).toBeUndefined();
+
+    const evilOrigin = await postConsent(broker, html, 'approve', {
+      origin: 'https://evil.example',
+    });
+    expect(evilOrigin.statusCode).toBe(400);
+    expect(evilOrigin.headers.Location).toBeUndefined();
+  });
+
+  it('does not let a second DCR client skip consent', async () => {
+    const broker = createOAuthBroker(baseConfig());
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    const registerA = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerA,
+      '/oauth/register',
+    );
+    const registerB = mockRes();
+    await broker.handle(
+      mockReq('POST', '/oauth/register', `redirect_uris=${encodeURIComponent(redirectUri)}`),
+      registerB,
+      '/oauth/register',
+    );
+    const clientA = (registerA.body as { client_id: string }).client_id;
+    const clientB = (registerB.body as { client_id: string }).client_id;
+    const challenge = createHash('sha256').update('verifier').digest('base64url');
+    const htmlA = mockRes();
+    await broker.handle(
+      mockReq('GET', authorizeUrl(clientA, redirectUri, challenge)),
+      htmlA,
+      '/oauth/authorize',
+    );
+    const htmlB = mockRes();
+    await broker.handle(
+      mockReq('GET', authorizeUrl(clientB, redirectUri, challenge)),
+      htmlB,
+      '/oauth/authorize',
+    );
+    expect(htmlB.statusCode).toBe(200);
+    expect(String(htmlB.body)).toContain(clientB);
+    expect(String(htmlB.headers.Location ?? '')).not.toContain('/api/v1/oauth/authorize');
+  });
+
+  it('refuses callback when consent was never approved and does not exchange upstream', async () => {
+    const store = new InMemoryOAuthBrokerStore();
+    const pending = await store.createPending({
+      clientId: 'client-a',
+      redirectUri: 'http://127.0.0.1:8787/callback',
+      codeChallenge: 'challenge',
+      codeChallengeMethod: 'S256',
+      resource: RESOURCE,
+    });
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const broker = createOAuthBroker(baseConfig(), store);
+    const res = mockRes();
+    await broker.handle(
+      mockReq(
+        'GET',
+        `/oauth/callback?code=ld-code&state=${encodeURIComponent(pending!.brokerState)}`,
+      ),
+      res,
+      '/oauth/callback',
+    );
+    expect(res.statusCode).toBe(400);
+    expect((res.body as { error: string }).error).toBe('access_denied');
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(await store.getPending(pending!.brokerState)).toBeUndefined();
+  });
+
+  it('burns the authorization code after a failed PKCE redemption', async () => {
+    const store = new InMemoryOAuthBrokerStore();
+    const verifier = 'test-verifier-value-1234567890';
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
+    const { pending, issued } = await issueConsentedCode(store, {
+      clientId: 'client-a',
+      redirectUri: 'http://127.0.0.1:8787/callback',
+      codeChallenge: challenge,
+    });
+    const broker = createOAuthBroker(baseConfig(), store);
+
+    const wrong = mockRes();
+    await broker.handle(
+      mockReq(
+        'POST',
+        '/oauth/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: issued.code,
+          redirect_uri: pending.redirectUri,
+          client_id: pending.clientId,
+          code_verifier: 'wrong-verifier',
+          resource: RESOURCE,
+        }).toString(),
+      ),
+      wrong,
+      '/oauth/token',
+    );
+    expect(wrong.statusCode).toBe(400);
+
+    const retry = mockRes();
+    await broker.handle(
+      mockReq(
+        'POST',
+        '/oauth/token',
+        new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: issued.code,
+          redirect_uri: pending.redirectUri,
+          client_id: pending.clientId,
+          code_verifier: verifier,
+          resource: RESOURCE,
+        }).toString(),
+      ),
+      retry,
+      '/oauth/token',
+    );
+    expect(retry.statusCode).toBe(400);
+    expect((retry.body as { error: string }).error).toBe('invalid_grant');
+  });
+
+  it('rate-limits DCR register bursts', async () => {
+    const limiter = new InMemoryOAuthRateLimiter({
+      windowMs: 60_000,
+      maxRegister: 2,
+      maxAuthorize: 100,
+      maxToken: 100,
+      maxConsent: 100,
+    });
+    const broker = createOAuthBroker(baseConfig(), new InMemoryOAuthBrokerStore(), limiter);
+    const redirectUri = 'http://127.0.0.1:8787/callback';
+    for (let i = 0; i < 2; i += 1) {
+      const res = mockRes();
+      await broker.handle(
+        mockReq(
+          'POST',
+          '/oauth/register',
+          `redirect_uris=${encodeURIComponent(`${redirectUri}${i}`)}`,
+        ),
+        res,
+        '/oauth/register',
+      );
+      expect(res.statusCode).toBe(201);
+    }
+    const limited = mockRes();
+    await broker.handle(
+      mockReq(
+        'POST',
+        '/oauth/register',
+        `redirect_uris=${encodeURIComponent(`${redirectUri}x`)}`,
+      ),
+      limited,
+      '/oauth/register',
+    );
+    expect(limited.statusCode).toBe(429);
+    expect((limited.body as { error: string }).error).toBe('temporarily_unavailable');
+    expect(limited.headers['Retry-After']).toBeTruthy();
   });
 });
