@@ -2,8 +2,9 @@
  * HTTP mount allowlist for shipped MCP profiles (ADR-0024).
  *
  * Canonical: `LIGHTDASH_TOOLS_MCP_PROFILES`.
- * Unset/empty → unrestricted (all shipped paths). Non-empty → hard ceiling.
- * Unknown ids / empty CSV segments fail closed. Stdio ignores this env.
+ * This parser: unset/empty → unrestricted (all shipped paths). Non-empty → hard ceiling.
+ * Production HTTP (`loadMcpHttpConfig` when `NODE_ENV=production`) rejects unset/empty
+ * before calling this parser. Unknown ids / empty CSV segments fail closed. Stdio ignores this env.
  */
 
 import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';

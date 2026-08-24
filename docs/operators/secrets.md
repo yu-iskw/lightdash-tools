@@ -23,14 +23,14 @@ Set credentials via environment variables injected by your parent process. The t
 
 **Optional (CLI primarily; audit also used by MCP):**
 
-| Variable                                | Description                                                                                                                                                            |
-| :-------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_PROXY_AUTHORIZATION`         | Proxy authorization header                                                                                                                                             |
-| `LIGHTDASH_TOOLS_SAFETY_MODE`           | CLI only — safety mode (`read-only`, `write-idempotent`, `write-destructive`)                                                                                          |
-| `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP — comma-separated project UUIDs (ceiling; unset = unrestricted)                                                                                              |
-| `LIGHTDASH_TOOLS_MCP_PROFILES`          | MCP HTTP only — comma-separated profile ids to mount (unset = all). Stdio ignores this var.                                                                            |
-| `LIGHTDASH_TOOLS_DRY_RUN`               | CLI only — set to `1`, `true`, or `yes` to simulate mutating operations                                                                                                |
-| `LIGHTDASH_TOOLS_AUDIT_LOG`             | Optional file path for NDJSON audit append (CLI/local). Unset → stderr as pure JSON (`channel: "audit"`). On Cloud Run leave unset — see [cloud-run.md](cloud-run.md). |
+| Variable                                | Description                                                                                                                                                                                                                                           |
+| :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_PROXY_AUTHORIZATION`         | Proxy authorization header                                                                                                                                                                                                                            |
+| `LIGHTDASH_TOOLS_SAFETY_MODE`           | CLI only — safety mode (`read-only`, `write-idempotent`, `write-destructive`)                                                                                                                                                                         |
+| `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP — comma-separated project UUIDs (ceiling; unset = unrestricted)                                                                                                                                                                             |
+| `LIGHTDASH_TOOLS_MCP_PROFILES`          | MCP HTTP only — comma-separated profile ids to mount. **Production unset ≠ all mounts** (fails startup; [ADR-0033](../adr/0033-mcp-http-production-fail-closed-profile-allowlist.md)). Non-production unset still mounts all. Stdio ignores this var. |
+| `LIGHTDASH_TOOLS_DRY_RUN`               | CLI only — set to `1`, `true`, or `yes` to simulate mutating operations                                                                                                                                                                               |
+| `LIGHTDASH_TOOLS_AUDIT_LOG`             | Optional file path for NDJSON audit append (CLI/local). Unset → stderr as pure JSON (`channel: "audit"`). On Cloud Run leave unset — see [cloud-run.md](cloud-run.md).                                                                                |
 
 OAuth client id/secret belong on the **MCP server** only — never in Cursor/Claude `mcp.json`. Obsolete `AUTH_MODE` / `DANGEROUSLY_*` / `EXPERIMENTAL_*` / `INSECURE_DEV` / `LIGHTDASH_TOOLS_MCP_PATH` are **rejected** at startup.
 

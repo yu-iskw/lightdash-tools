@@ -3,6 +3,7 @@ import {
   ENV_LIGHTDASH_PROXY_AUTHORIZATION,
   SecretString,
 } from '@lightdash-tools/client';
+import { PROFILE_IDS } from '@lightdash-tools/common';
 
 import {
   MCP_AUTH_MODE_LIGHTDASH_OAUTH,
@@ -189,7 +190,10 @@ export interface McpHttpConfig {
   /** Extra invoke origins. Parsed only in OAuth mode. */
   invokeOrigins: URL[];
   mcpPath: string;
-  /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
+  /**
+   * HTTP mount allowlist. Unrestricted when `LIGHTDASH_TOOLS_MCP_PROFILES` is unset
+   * in non-production. Production requires a non-empty allowlist.
+   */
   enabledProfiles: EnabledProfilesPolicy;
   /** Progressive-disclosure prompt embedding policy (default compact). */
   promptContextPolicy: PromptContextPolicy;
@@ -313,6 +317,53 @@ function emitNgrokFreeInterstitialWarning(publicUrl: string | undefined): void {
   );
 }
 
+function isLoopbackBindHost(host: string): boolean {
+  return host === '::1' || isLocalHttpOrigin(`http://${host}`);
+}
+
+function resolveMcpHttpHost(authMode: McpAuthMode, env: NodeJS.ProcessEnv): string {
+  const configured = readEnv(ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST, env);
+  if (configured !== undefined) {
+    return configured;
+  }
+  return authMode === MCP_AUTH_MODE_NONE ? '127.0.0.1' : '0.0.0.0';
+}
+
+function assertProductionEnabledProfiles(env: NodeJS.ProcessEnv): void {
+  if (env.NODE_ENV !== 'production') {
+    return;
+  }
+  const raw = readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env);
+  if (raw !== undefined && raw.trim() !== '') {
+    return;
+  }
+  throw new Error(
+    `${ENV_LIGHTDASH_TOOLS_MCP_PROFILES} is required in production. ` +
+      `Set a non-empty comma-separated list of profile ids. Valid ids: ${PROFILE_IDS.join(', ')}.`,
+  );
+}
+
+function assertLightdashUrlSecurity(lightdashUrl: string): void {
+  if (lightdashUrl.startsWith('https://')) return;
+  if (isLocalHttpOrigin(lightdashUrl)) return;
+
+  throw new Error(
+    `${ENV_LIGHTDASH_URL} must use https:// (got ${lightdashUrl}). ` +
+      `For local HTTP testing use http://localhost or http://127.0.0.1.`,
+  );
+}
+
+function emitUnauthenticatedBindWarning(config: McpHttpConfig): void {
+  if (isLoopbackBindHost(config.host)) {
+    return;
+  }
+  console.warn(
+    `Warning: unauthenticated MCP HTTP is bound to ${config.host}, which is not a loopback address. ` +
+      'This exposes an unauthenticated endpoint on non-local interfaces. ' +
+      `Prefer 127.0.0.1 (the default when ${ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST} is unset).`,
+  );
+}
+
 function emitCorsSecurityWarnings(config: McpHttpConfig): void {
   if (config.allowedOrigins.length > 0) {
     return;
@@ -329,6 +380,7 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
     console.warn(
       'Warning: MCP HTTP endpoint is unauthenticated. Use OAuth client credentials or shared-key in production.',
     );
+    emitUnauthenticatedBindWarning(config);
   }
 
   emitLightdashOAuthSecurityWarnings(config);
@@ -423,6 +475,11 @@ export function loadMcpHttpConfig(
     );
   }
 
+  assertProductionEnabledProfiles(env);
+
+  const lightdashUrl = normalizeLightdashUrl(lightdashUrlRaw);
+  assertLightdashUrlSecurity(lightdashUrl);
+
   const allowedOriginsRaw = readStringEnv(env, ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS, [
     { name: ENV_MCP_ALLOWED_ORIGINS, newName: ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS },
   ]);
@@ -453,9 +510,9 @@ export function loadMcpHttpConfig(
   assertLightdashOAuthScopePolicy(authMode, requiredScopes, scopesSupportedEnvSet);
 
   return {
-    lightdashUrl: normalizeLightdashUrl(lightdashUrlRaw),
+    lightdashUrl,
     proxyAuthorization: proxyAuth ? new SecretString(proxyAuth) : undefined,
-    host: readEnv(ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST, env) ?? '0.0.0.0',
+    host: resolveMcpHttpHost(authMode, env),
     port: readNumberEnv(
       env,
       ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,

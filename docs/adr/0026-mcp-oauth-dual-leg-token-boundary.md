@@ -8,6 +8,8 @@ Accepted
 
 Amended by [27. Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
 
+**Amended by [32. MCP OAuth downstream client consent](0032-mcp-oauth-downstream-client-consent.md)** — per-client consent HTML before the Lightdash redirect; the confused-deputy residual below is closed.
+
 Amends [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
 
 ## Context
@@ -86,7 +88,7 @@ After `/oauth/token` succeeds, MCP access tokens are self-contained and authenti
 - Compromise of the MCP server process or its OAuth client secret can expose/decrypt delegated Lightdash credentials (and all outstanding MCP tokens). This is inherent in the server-side delegation role and reinforces the need for secret-manager-backed configuration, least privilege, audit logging, and short token lifetimes. A dedicated MCP token encryption secret (separate from the Lightdash OAuth client secret) would reduce blast radius and should be introduced by a future superseding ADR if operators need independent rotation.
 - MCP scopes sealed into the broker token are still taken from the client authorize request and checked against configured `requiredScopes`; they are not yet a broker-owned grant/consent boundary. Scope minimization and step-up remain future work.
 - The in-memory DCR/authorization-code handshake is still process-local. This ADR deliberately does not introduce a distributed authorization state store.
-- This decision closes token passthrough and MCP audience binding. It does **not** implement MCP proxy per-client consent before the static Lightdash OAuth redirect (confused-deputy class). That control is evaluated independently.
+- This decision closes token passthrough and MCP audience binding. Per-client consent before the static Lightdash OAuth redirect (confused-deputy class) is implemented by [ADR-0032](0032-mcp-oauth-downstream-client-consent.md): always-on consent HTML, CSRF, callback requires consented pending state, no remembered grants.
 
 ## References
 
@@ -95,3 +97,4 @@ After `/oauth/token` succeeds, MCP access tokens are self-contained and authenti
 - [RFC 8707 — Resource Indicators for OAuth 2.0](https://www.rfc-editor.org/rfc/rfc8707)
 - [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-auth-modes-sdk-v2.md)
 - [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+- [32. MCP OAuth downstream client consent](0032-mcp-oauth-downstream-client-consent.md)

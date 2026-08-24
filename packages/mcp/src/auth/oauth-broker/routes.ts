@@ -3,25 +3,34 @@ import {
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
   OAUTH_CALLBACK_PATH,
+  OAUTH_CONSENT_PATH,
   OAUTH_REGISTER_PATH,
   OAUTH_TOKEN_PATH,
 } from '../../config/env.js';
 import { isLocalHttpOrigin } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
-import { parseJsonBody, readBody } from '../../transports/http-body.js';
-import { sendJson } from '../../transports/http-response.js';
+import { sendHtml, sendJson, sendRedirectWithQuery } from '../../transports/http-response.js';
 
 import { buildBrokerAuthorizationServerMetadata } from './as-metadata.js';
+import { CONSENT_PAGE_HEADERS, displayClientName, renderConsentPage } from './consent-page.js';
+import { handleConsent } from './consent.js';
 import { allowedResourceOrigins, resourceOriginForRequest } from './invoke-origins.js';
-import {
-  buildLightdashAuthorizeUrl,
-  exchangeLightdashAuthorizationCode,
-} from './lightdash-token.js';
+import { exchangeLightdashAuthorizationCode } from './lightdash-token.js';
 import { mintMcpAccessToken } from './mcp-access-token.js';
-import { InMemoryOAuthBrokerStore } from './pending-store.js';
+import { readFormOrJson } from './oauth-form.js';
+import {
+  clientKeyFromRequest,
+  InMemoryOAuthRateLimiter,
+  type OAuthRateLimitAction,
+} from './oauth-rate-limit.js';
+import {
+  InMemoryOAuthBrokerStore,
+  type IssuedAuthorizationCode,
+  type OAuthBrokerStore,
+  type RegisteredClient,
+} from './pending-store.js';
 import { verifyPkce } from './pkce.js';
 
-import type { IssuedAuthorizationCode, OAuthBrokerStore } from './pending-store.js';
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -37,76 +46,10 @@ export interface OAuthBroker {
   handle: (req: IncomingMessage, res: ServerResponse, path: string) => Promise<boolean>;
 }
 
-function redirect(res: ServerResponse, location: string): void {
-  res.writeHead(302, { Location: location }).end();
-}
-
 function readQuery(req: IncomingMessage): URLSearchParams {
   const host = req.headers.host ?? 'localhost';
   const url = new URL(req.url ?? '/', `http://${host}`);
   return url.searchParams;
-}
-
-function appendJsonValueToParams(params: URLSearchParams, key: string, value: unknown): void {
-  if (typeof value === 'string') {
-    params.set(key, value);
-    return;
-  }
-
-  if (typeof value === 'number' || typeof value === 'boolean') {
-    params.set(key, String(value));
-    return;
-  }
-
-  if (!Array.isArray(value)) {
-    return;
-  }
-
-  for (const item of value) {
-    if (typeof item === 'string') {
-      params.append(key, item);
-    }
-  }
-}
-
-function jsonObjectToSearchParams(parsed: Record<string, unknown>): URLSearchParams {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(parsed)) {
-    appendJsonValueToParams(params, key, value);
-  }
-  return params;
-}
-
-function readJsonFormParams(res: ServerResponse, rawBuf: Buffer): URLSearchParams | undefined {
-  try {
-    const parsed = parseJsonBody(rawBuf);
-    if (parsed === undefined) return new URLSearchParams();
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      sendJson(res, 400, { error: 'invalid_request', error_description: 'Invalid JSON body' });
-      return undefined;
-    }
-    return jsonObjectToSearchParams(parsed as Record<string, unknown>);
-  } catch {
-    sendJson(res, 400, { error: 'invalid_request', error_description: 'Invalid JSON body' });
-    return undefined;
-  }
-}
-
-async function readFormOrJson(
-  req: IncomingMessage,
-  res: ServerResponse,
-  maxBodyBytes: number,
-): Promise<URLSearchParams | undefined> {
-  const rawBuf = await readBody(req, res, maxBodyBytes);
-  if (rawBuf === undefined) return undefined;
-  if (rawBuf.length === 0) return new URLSearchParams();
-
-  const contentType = req.headers['content-type'] ?? '';
-  if (contentType.includes('application/json')) {
-    return readJsonFormParams(res, rawBuf);
-  }
-
-  return new URLSearchParams(rawBuf.toString('utf8'));
 }
 
 function isAllowedClientRedirectUri(redirectUri: string): boolean {
@@ -161,7 +104,7 @@ type AuthorizeParseFail = { ok: false; status: number; body: Record<string, stri
 async function parseRegisteredClientRedirect(
   query: URLSearchParams,
   store: OAuthBrokerStore,
-): Promise<AuthorizeParseFail | { ok: true; clientId: string; redirectUri: string }> {
+): Promise<AuthorizeParseFail | { ok: true; client: RegisteredClient; redirectUri: string }> {
   const clientId = query.get('client_id');
   if (!clientId) {
     return {
@@ -174,7 +117,8 @@ async function parseRegisteredClientRedirect(
     };
   }
 
-  if (!(await store.getClient(clientId))) {
+  const client = await store.getClient(clientId);
+  if (!client) {
     return {
       ok: false,
       status: 400,
@@ -198,7 +142,7 @@ async function parseRegisteredClientRedirect(
     };
   }
 
-  if (!(await store.isRedirectAllowedForClient(clientId, redirectUri))) {
+  if (!client.redirectUris.has(redirectUri)) {
     return {
       ok: false,
       status: 400,
@@ -209,7 +153,7 @@ async function parseRegisteredClientRedirect(
     };
   }
 
-  return { ok: true, clientId, redirectUri };
+  return { ok: true, client, redirectUri };
 }
 
 async function parseAuthorizeRequest(
@@ -222,6 +166,7 @@ async function parseAuthorizeRequest(
       ok: true;
       value: {
         clientId: string;
+        clientName: string;
         redirectUri: string;
         clientState?: string;
         codeChallenge: string;
@@ -287,7 +232,8 @@ async function parseAuthorizeRequest(
   return {
     ok: true,
     value: {
-      clientId: registered.clientId,
+      clientId: registered.client.clientId,
+      clientName: displayClientName(registered.client.clientName),
       redirectUri: registered.redirectUri,
       clientState: query.get('state') ?? undefined,
       codeChallenge,
@@ -314,7 +260,8 @@ async function handleAuthorize(
     return;
   }
 
-  const { clientId, redirectUri, clientState, codeChallenge, resource, scope } = parsed.value;
+  const { clientId, clientName, redirectUri, clientState, codeChallenge, resource, scope } =
+    parsed.value;
   const pending = await store.createPending({
     clientId,
     redirectUri,
@@ -329,23 +276,15 @@ async function handleAuthorize(
     return;
   }
 
-  // The MCP resource/scope belong to the client→broker leg. Do not forward them
-  // to Lightdash, whose OAuth client and protected resource are distinct.
-  redirect(res, buildLightdashAuthorizeUrl(config, { state: pending.brokerState }));
-}
-
-function redirectToClient(
-  res: ServerResponse,
-  redirectUri: string,
-  params: Record<string, string | undefined>,
-): void {
-  const target = new URL(redirectUri);
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) {
-      target.searchParams.set(key, value);
-    }
-  }
-  redirect(res, target.toString());
+  const html = renderConsentPage({
+    consentPath: OAUTH_CONSENT_PATH,
+    brokerState: pending.brokerState,
+    csrfToken: pending.csrfToken,
+    clientId,
+    clientName,
+    resource,
+  });
+  sendHtml(res, 200, html, CONSENT_PAGE_HEADERS);
 }
 
 async function handleCallback(
@@ -372,9 +311,17 @@ async function handleCallback(
     return;
   }
 
+  if (!pending.consented) {
+    sendJson(res, 400, {
+      error: 'access_denied',
+      error_description: 'Authorization was not consented',
+    });
+    return;
+  }
+
   const upstreamError = query.get('error');
   if (upstreamError) {
-    redirectToClient(res, pending.redirectUri, {
+    sendRedirectWithQuery(res, pending.redirectUri, {
       error: upstreamError,
       error_description: query.get('error_description') ?? undefined,
       state: pending.clientState,
@@ -399,19 +346,19 @@ async function handleCallback(
       tokenType: tokens.token_type,
     });
     if (!issued) {
-      redirectToClient(res, pending.redirectUri, {
+      sendRedirectWithQuery(res, pending.redirectUri, {
         ...AS_BUSY,
         state: pending.clientState,
       });
       return;
     }
-    redirectToClient(res, pending.redirectUri, {
+    sendRedirectWithQuery(res, pending.redirectUri, {
       code: issued.code,
       state: pending.clientState,
     });
   } catch (err) {
     console.error('OAuth broker callback token exchange failed:', err);
-    redirectToClient(res, pending.redirectUri, {
+    sendRedirectWithQuery(res, pending.redirectUri, {
       error: 'server_error',
       error_description: 'Upstream token exchange failed',
       state: pending.clientState,
@@ -463,12 +410,7 @@ function parseTokenGrantRequest(params: URLSearchParams): TokenGrantError | Toke
   return { code, redirectUri, clientId, codeVerifier, resource };
 }
 
-async function restoreInvalidGrant(
-  store: OAuthBrokerStore,
-  candidate: IssuedAuthorizationCode,
-  description: string,
-): Promise<TokenGrantError> {
-  await store.restoreCode(candidate);
+function invalidGrant(description: string): TokenGrantError {
   return {
     status: 400,
     body: { error: 'invalid_grant', error_description: description },
@@ -482,8 +424,7 @@ async function validateTokenGrant(
   const request = parseTokenGrantRequest(params);
   if ('status' in request) return request;
 
-  // Atomic take first. Restore on validation failure so a bad verifier / redirect /
-  // resource does not permanently burn a one-time code.
+  // Atomic take first. Do not restore on mismatch — a redemption attempt burns the code.
   const candidate = await store.takeCode(request.code);
   if (!candidate) {
     return {
@@ -493,19 +434,19 @@ async function validateTokenGrant(
   }
 
   if (candidate.redirectUri !== request.redirectUri) {
-    return restoreInvalidGrant(store, candidate, 'redirect_uri mismatch');
+    return invalidGrant('redirect_uri mismatch');
   }
 
   if (candidate.clientId !== request.clientId) {
-    return restoreInvalidGrant(store, candidate, 'client_id mismatch');
+    return invalidGrant('client_id mismatch');
   }
 
   if (candidate.resource !== canonicalProfileResource(request.resource)) {
-    return restoreInvalidGrant(store, candidate, 'resource mismatch');
+    return invalidGrant('resource mismatch');
   }
 
   if (!verifyPkce(request.codeVerifier, candidate.codeChallenge, candidate.codeChallengeMethod)) {
-    return restoreInvalidGrant(store, candidate, 'PKCE verification failed');
+    return invalidGrant('PKCE verification failed');
   }
 
   return { issued: candidate };
@@ -593,7 +534,8 @@ async function handleRegister(
     }
   }
 
-  const registered = await store.registerClient(redirectUris);
+  const clientName = params.get('client_name') ?? undefined;
+  const registered = await store.registerClient(redirectUris, clientName);
   if (!registered) {
     sendJson(res, 503, { ...AS_BUSY });
     return;
@@ -606,7 +548,7 @@ async function handleRegister(
     grant_types: ['authorization_code'],
     response_types: ['code'],
     token_endpoint_auth_method: 'none',
-    client_name: params.get('client_name') ?? 'MCP Client',
+    client_name: displayClientName(registered.clientName),
   });
 }
 
@@ -629,6 +571,7 @@ const BROKER_PATHS: ReadonlySet<string> = new Set([
   OAUTH_AUTHORIZATION_SERVER_METADATA_PATH,
   OAUTH_AUTHORIZE_PATH,
   OAUTH_CALLBACK_PATH,
+  OAUTH_CONSENT_PATH,
   OAUTH_TOKEN_PATH,
   OAUTH_REGISTER_PATH,
 ]);
@@ -636,6 +579,85 @@ const BROKER_PATHS: ReadonlySet<string> = new Set([
 /** True for co-located OAuth AS / broker paths (CORS may reflect any Origin). */
 export function isOAuthBrokerPath(path: string): boolean {
   return BROKER_PATHS.has(path);
+}
+
+async function runRateLimited(
+  req: IncomingMessage,
+  res: ServerResponse,
+  limiter: InMemoryOAuthRateLimiter,
+  action: OAuthRateLimitAction,
+  run: () => Promise<void>,
+): Promise<void> {
+  const result = limiter.consume(action, clientKeyFromRequest(req.socket.remoteAddress));
+  if (!result.ok) {
+    sendJson(
+      res,
+      429,
+      {
+        error: 'temporarily_unavailable',
+        error_description: 'Too many requests; retry later',
+      },
+      { 'Retry-After': String(result.retryAfterSec) },
+    );
+    return;
+  }
+  await run();
+}
+
+async function dispatchOAuthBroker(
+  req: IncomingMessage,
+  res: ServerResponse,
+  path: string,
+  ctx: {
+    config: McpHttpConfig;
+    expectedOrigin: string;
+    limiter: InMemoryOAuthRateLimiter;
+    store: OAuthBrokerStore;
+  },
+): Promise<boolean> {
+  const { config, expectedOrigin, limiter, store } = ctx;
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204, { Allow: 'GET, POST, OPTIONS' }).end();
+    return true;
+  }
+
+  if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
+    handleAsMetadata(req, res, config);
+    return true;
+  }
+
+  if (path === OAUTH_AUTHORIZE_PATH) {
+    await runRateLimited(req, res, limiter, 'authorize', () =>
+      handleAuthorize(req, res, config, store),
+    );
+    return true;
+  }
+
+  if (path === OAUTH_CONSENT_PATH) {
+    await runRateLimited(req, res, limiter, 'consent', () =>
+      handleConsent(req, res, { config, expectedOrigin, store }),
+    );
+    return true;
+  }
+
+  if (path === OAUTH_CALLBACK_PATH) {
+    await handleCallback(req, res, config, store);
+    return true;
+  }
+
+  if (path === OAUTH_TOKEN_PATH) {
+    await runRateLimited(req, res, limiter, 'token', () => handleToken(req, res, config, store));
+    return true;
+  }
+
+  if (path === OAUTH_REGISTER_PATH) {
+    await runRateLimited(req, res, limiter, 'register', () =>
+      handleRegister(req, res, config, store),
+    );
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -646,44 +668,15 @@ export function isOAuthBrokerPath(path: string): boolean {
 export function createOAuthBroker(
   config: McpHttpConfig,
   store: OAuthBrokerStore = new InMemoryOAuthBrokerStore(),
+  limiter: InMemoryOAuthRateLimiter = new InMemoryOAuthRateLimiter(),
 ): OAuthBroker {
+  const expectedOrigin = new URL(requirePublicUrl(config, 'OAuth consent Origin')).origin;
   return {
     async handle(req, res, path): Promise<boolean> {
       if (!isOAuthBrokerPath(path)) {
         return false;
       }
-
-      if (req.method === 'OPTIONS') {
-        res.writeHead(204, { Allow: 'GET, POST, OPTIONS' }).end();
-        return true;
-      }
-
-      if (path === OAUTH_AUTHORIZATION_SERVER_METADATA_PATH && req.method === 'GET') {
-        handleAsMetadata(req, res, config);
-        return true;
-      }
-
-      if (path === OAUTH_AUTHORIZE_PATH) {
-        await handleAuthorize(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_CALLBACK_PATH) {
-        await handleCallback(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_TOKEN_PATH) {
-        await handleToken(req, res, config, store);
-        return true;
-      }
-
-      if (path === OAUTH_REGISTER_PATH) {
-        await handleRegister(req, res, config, store);
-        return true;
-      }
-
-      return false;
+      return dispatchOAuthBroker(req, res, path, { config, expectedOrigin, limiter, store });
     },
   };
 }

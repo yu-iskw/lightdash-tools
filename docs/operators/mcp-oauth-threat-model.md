@@ -1,6 +1,6 @@
 # Threat model: OAuth-backed Streamable HTTP MCP
 
-Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) and [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
+Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md), [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md), [ADR-0032](../adr/0032-mcp-oauth-downstream-client-consent.md), and [ADR-0033](../adr/0033-mcp-http-production-fail-closed-profile-allowlist.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
 
 ## Assets
 
@@ -16,30 +16,31 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 
 ## Threats and mitigations
 
-| Threat                                          | Risk   | Mitigation                                                                                                                                                                                                                                                                                             |
-| :---------------------------------------------- | :----- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Public unauthenticated MCP endpoint             | High   | Production requires OAuth client credentials + `PUBLIC_URL`, or shared-key+PAT. Unauthenticated HTTP rejected unless `NODE_ENV` is not `production` (e.g. local Compose).                                                                                                                              |
-| Client secret leakage to MCP clients            | High   | Secret stays on MCP process; clients use URL-only config. Broker is confidential client to Lightdash.                                                                                                                                                                                                  |
-| Token passthrough / MCP audience gap            | High   | **Mitigated ([ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md))**: broker mints resource-bound `ldmcp1.*` tokens; RS rejects raw Lightdash bearers, wrong-profile tokens, tampered/expired tokens before any Lightdash call. Downstream credential is recovered only after local verify.    |
-| Confused deputy (static Lightdash client + DCR) | High   | **Open**: redirect_uri + PKCE + `resource` binding and fixed `{PUBLIC_URL}/oauth/callback` reduce some abuse, but MCP Security Best Practices still require per-client consent before forwarding to the third-party AS. Not implemented in this release.                                               |
-| Shared PAT overreach                            | High   | PAT/shared-key is secondary; prefer OAuth. Profile tool surface (catalog membership) + Lightdash RBAC (+ optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`).                                                                                                           |
-| AEAD key / client-secret compromise             | High   | Compromise of `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` can decrypt outstanding MCP tokens (each carries a delegated Lightdash credential). Inject from a secret manager; rotate invalidates all MCP sessions; future dedicated MCP token key is a follow-up.                                              |
-| No per-token MCP revocation                     | Medium | Self-contained broker tokens stop on expiry, upstream Lightdash revocation, or OAuth client-secret rotation. Opaque shared token store is out of scope (conflicts with ADR-0019 unless product requires revoke).                                                                                       |
-| Token leakage in logs                           | High   | Redact `Authorization` in reverse proxies and platform logs. Never log raw tokens or client secret. Audit entries use token hash only.                                                                                                                                                                 |
-| Token/session confusion                         | High   | Bind sessions to `userUuid` and `organizationUuid`; reject subject or organization mismatch on resume.                                                                                                                                                                                                 |
-| OAuth metadata spoofing (wrong public URL)      | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Normalize URL. PRM `authorization_servers` = public MCP host (broker), not Lightdash directly. Extra `INVOKE_ORIGINS` rewrite metadata only when `Host` matches an explicit listed origin.                                                                   |
-| Extra-origin Host spoofing on the public VIP    | Medium | Rewrite PRM/token/DCR only for listed origins. Do not route extra-origin Hostnames on the public VIP. Cleartext HTTP extra origins are for private networks; `@modelcontextprotocol/client` v2 is unsupported there ([ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md)).                       |
-| Spoofed `X-Forwarded-Proto` on extra origins    | Medium | Scheme is part of origin match. Trust `X-Forwarded-Proto` only from the private proxy that terminates the extra hostname; strip or overwrite it on the public VIP. A client that can set both `Host` and proto to a listed HTTP origin gets HTTP token/DCR URLs.                                       |
-| Reimplemented RBAC mismatch                     | High   | Do not recreate Lightdash object-level permissions in MCP. Delegate to Lightdash API with the recovered downstream credential after broker-token validation.                                                                                                                                           |
-| Agent destructive actions                       | High   | Profile `tools` mounts fix the MCP catalog (ADR-0006 / ADR-0022; [ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)); shipped `semantic-layer` profile is discovery/compile only; irrecoverable ops are client-only per [ADR-0004](../adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md). |
-| CSRF / browser-origin misuse                    | Medium | Bearer tokens in `Authorization` header only. Optional `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`. No cookie-based MCP auth.                                                                                                                                                                                |
-| Rate-limit bypass / pending-store exhaustion    | Medium | Bounded in-memory broker pending/DCR/code caps. Use gateway rate limits in production; keep pending TTLs short. Sticky `/oauth/*` or single replica while handshake is in flight.                                                                                                                      |
+| Threat                                          | Risk   | Mitigation                                                                                                                                                                                                                                                                                                                                     |
+| :---------------------------------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public unauthenticated MCP endpoint             | High   | Production requires OAuth client credentials + `PUBLIC_URL`, or shared-key+PAT. Unauthenticated HTTP rejected unless `NODE_ENV` is not `production` (e.g. local Compose).                                                                                                                                                                      |
+| Client secret leakage to MCP clients            | High   | Secret stays on MCP process; clients use URL-only config. Broker is confidential client to Lightdash.                                                                                                                                                                                                                                          |
+| Token passthrough / MCP audience gap            | High   | **Mitigated ([ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md))**: broker mints resource-bound `ldmcp1.*` tokens; RS rejects raw Lightdash bearers, wrong-profile tokens, tampered/expired tokens before any Lightdash call. Downstream credential is recovered only after local verify.                                            |
+| Confused deputy (static Lightdash client + DCR) | High   | **Mitigated ([ADR-0032](../adr/0032-mcp-oauth-downstream-client-consent.md))**: consent HTML before the Lightdash redirect; CSRF on `/oauth/consent`; callback requires a consented pending authorization; no cookies or remembered grants (subject unknown until after Lightdash). Always show consent. DCR `client_name` remains unverified. |
+| Shared PAT overreach                            | High   | PAT/shared-key is secondary; prefer OAuth. Profile tool surface (catalog membership) + Lightdash RBAC (+ optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`).                                                                                                                                                   |
+| AEAD key / client-secret compromise             | High   | Compromise of `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` can decrypt outstanding MCP tokens (each carries a delegated Lightdash credential). Inject from a secret manager; rotate invalidates all MCP sessions; future dedicated MCP token key is a follow-up.                                                                                      |
+| No per-token MCP revocation                     | Medium | Self-contained broker tokens stop on expiry, upstream Lightdash revocation, or OAuth client-secret rotation. Opaque shared token store is out of scope (conflicts with ADR-0019 unless product requires revoke).                                                                                                                               |
+| Token leakage in logs                           | High   | Redact `Authorization` in reverse proxies and platform logs. Never log raw tokens or client secret. Audit entries use token hash only.                                                                                                                                                                                                         |
+| Token/session confusion                         | High   | Bind sessions to `userUuid` and `organizationUuid`; reject subject or organization mismatch on resume.                                                                                                                                                                                                                                         |
+| OAuth metadata spoofing (wrong public URL)      | Medium | Require `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`. Normalize URL. PRM `authorization_servers` = public MCP host (broker), not Lightdash directly. Extra `INVOKE_ORIGINS` rewrite metadata only when `Host` matches an explicit listed origin.                                                                                                           |
+| Extra-origin Host spoofing on the public VIP    | Medium | Rewrite PRM/token/DCR only for listed origins. Do not route extra-origin Hostnames on the public VIP. Cleartext HTTP extra origins are for private networks; `@modelcontextprotocol/client` v2 is unsupported there ([ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md)).                                                               |
+| Spoofed `X-Forwarded-Proto` on extra origins    | Medium | Scheme is part of origin match. Trust `X-Forwarded-Proto` only from the private proxy that terminates the extra hostname; strip or overwrite it on the public VIP. A client that can set both `Host` and proto to a listed HTTP origin gets HTTP token/DCR URLs.                                                                               |
+| Reimplemented RBAC mismatch                     | High   | Do not recreate Lightdash object-level permissions in MCP. Delegate to Lightdash API with the recovered downstream credential after broker-token validation.                                                                                                                                                                                   |
+| Agent destructive actions                       | High   | Profile `tools` mounts fix the MCP catalog (ADR-0006 / ADR-0022; [ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)); shipped `semantic-layer` profile is discovery/compile only; irrecoverable ops are client-only per [ADR-0004](../adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md).                                         |
+| CSRF / browser-origin misuse                    | Medium | Bearer tokens in `Authorization` header only. Optional `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`. No cookie-based MCP auth.                                                                                                                                                                                                                        |
+| Rate-limit bypass / pending-store exhaustion    | Medium | Application per-IP limiter on DCR / authorize / token / consent **plus** existing in-memory store caps. Replica-local bypass is accepted (process-local windows). Gateway rate limits remain the outer layer in production. Sticky `/oauth/*` or single replica while handshake is in flight.                                                  |
 
 ## Operator security checklist
 
 ### Server configuration
 
 - [ ] Set `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`.
+- [ ] On production HTTP (`NODE_ENV=production`): set non-empty `LIGHTDASH_TOOLS_MCP_PROFILES` (starter `semantic-layer,content-reader`). Unset no longer mounts all eight paths ([ADR-0033](../adr/0033-mcp-http-production-fail-closed-profile-allowlist.md)).
 - [ ] If VPC clients use an extra hostname: set `LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS` (do not point `PUBLIC_URL` at that origin; do not serve that Host on the public VIP).
 - [ ] Register exactly one Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`.
 - [ ] Confirm deployed profile URL matches intended capability (shipped `semantic-layer` = discovery/compile only; ADR-0006).
@@ -77,6 +78,14 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 - [ ] After dual-leg deploy, re-run OAuth so clients hold `ldmcp1.*` tokens rather than raw Lightdash bearers.
 - [ ] Validate identity after setup (e.g. a read tool that hits Lightdash as the user).
 
+## Residuals (accepted)
+
+- Sticky `/oauth/*` (or a single replica) for in-memory pending / DCR / codes / consent ([ADR-0019](../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)).
+- Unverified DCR `client_name` (compatibility stub; not identity).
+- No Client ID Metadata Documents (CIMD) — deferred (SSRF).
+- MCP token AEAD key still derived from `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` ([ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md)).
+- No private-scheme tightening on MCP client redirect URIs beyond blocked `javascript:` / `data:` / `vbscript:` / `file:`.
+
 ## Out of scope (v1 non-goals)
 
 - Full RFC 7591 DCR product (thin stub only if clients require `/register`)
@@ -85,15 +94,18 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 - `@modelcontextprotocol/server-legacy` AS router
 - MCP auth extensions (client-credentials, enterprise-managed)
 - CLI process safety mode / allowlist / dry-run on MCP (profile-first; ADR-0008)
-- Per-client consent UI before the static Lightdash OAuth redirect (confused-deputy follow-up)
+- Remembered grants / “skip consent next time” (subject unknown until after Lightdash; [ADR-0032](../adr/0032-mcp-oauth-downstream-client-consent.md))
 - Dedicated MCP token encryption secret separate from the Lightdash OAuth client secret
 - Independent MCP max TTL cap beyond upstream Lightdash `expires_in`
 - Opaque / shared MCP access-token store for fine-grained revocation
+- Private-scheme tightening of MCP client redirect URIs
 
 ## Related documentation
 
 - [mcp-oauth.md](mcp-oauth.md) — setup and troubleshooting
 - [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) — dual-leg token boundary
+- [ADR-0032](../adr/0032-mcp-oauth-downstream-client-consent.md) — per-client consent
+- [ADR-0033](../adr/0033-mcp-http-production-fail-closed-profile-allowlist.md) — production profile allowlist
 - [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md) — extra invoke origins
 - [cursor-claude.md](cursor-claude.md) — Cursor client setup
 - [cloud-run.md](cloud-run.md) — Cloud Run deployment

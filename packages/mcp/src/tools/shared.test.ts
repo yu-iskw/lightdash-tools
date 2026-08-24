@@ -1,5 +1,9 @@
 import { LightdashApiError } from '@lightdash-tools/client';
-import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, logAuditEntry } from '@lightdash-tools/common';
+import {
+  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
+  WRITE_DESTRUCTIVE,
+  logAuditEntry,
+} from '@lightdash-tools/common';
 import { afterEach, describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { bindServerProfile } from '../audit/server-profile.js';
@@ -8,6 +12,7 @@ import { runWithProjectPinAsync } from '../governance/project-pin.js';
 
 import { registerToolSafe, wrapTool, READ_ONLY_DEFAULT, TOOL_PREFIX } from './shared.js';
 
+import type { ToolOptions } from './shared.js';
 import type { McpContextProvider } from '../server/request-context.js';
 
 // Silence audit log output during tests
@@ -63,6 +68,38 @@ describe('registerToolSafe', () => {
 
     const result = await handler({});
     expect(result.content[0].text).toBe('success');
+  });
+
+  it('throws when annotations are omitted', () => {
+    expect(() =>
+      registerToolSafe(
+        mockServer,
+        'missing_annotations',
+        {
+          description: 'Missing annotations',
+          inputSchema: {},
+        } as ToolOptions,
+        mockHandler,
+      ),
+    ).toThrow(/annotations.*readOnlyHint|readOnlyHint.*annotations/);
+    expect(mockServer.registerTool).not.toHaveBeenCalled();
+  });
+
+  it('does not rewrite provided write annotations to read-only', () => {
+    registerToolSafe(
+      mockServer,
+      'write_tool',
+      {
+        description: 'Write something',
+        inputSchema: {},
+        annotations: WRITE_DESTRUCTIVE,
+      },
+      mockHandler,
+    );
+
+    const [, options] = mockServer.registerTool.mock.calls[0];
+    expect(options.annotations.readOnlyHint).toBe(false);
+    expect(options.annotations).toMatchObject(WRITE_DESTRUCTIVE);
   });
 
   it('audit entry includes channel, clientSessionId, and profileId', async () => {

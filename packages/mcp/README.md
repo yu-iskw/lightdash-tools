@@ -56,13 +56,15 @@ Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp 
 
 ### Streamable HTTP (remote)
 
-`http` mounts every fixed path from the profile table by default (no `--profile`); clients pick the path in the URL. Optionally restrict mounts with `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset or empty → all).
+`http` mounts every fixed path from the profile table by default in **non-production** (no `--profile`); clients pick the path in the URL. Restrict mounts with `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids). **Production (`NODE_ENV=production`) requires a non-empty allowlist** — unset no longer mounts all eight paths ([ADR-0033](../../docs/adr/0033-mcp-http-production-fail-closed-profile-allowlist.md)). Non-production unset or empty still mounts all. Stdio ignores this env.
 
 ```bash
 export LIGHTDASH_URL="https://app.lightdash.cloud"
 export LIGHTDASH_TOOLS_MCP_PUBLIC_URL="https://lightdash-mcp.example.com"
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_ID="..."
 export LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET="..."
+# Production requires this; unset no longer mounts all eight paths
+export LIGHTDASH_TOOLS_MCP_PROFILES="semantic-layer,content-reader"
 npx @lightdash-tools/mcp http
 # pnpm one-shot: pnpm dlx @lightdash-tools/mcp http
 ```
@@ -97,13 +99,13 @@ Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `
 
 ### HTTP OAuth (primary)
 
-| Required                                                                                                                    | Common optional                                                                                                                                                                                                              |
-| :-------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`](#extra-invoke-origins), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist), token cache TTL |
+| Required                                                                                                                                                                                          | Common optional                                                                                                                                                        |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`; production also [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist) | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`](#extra-invoke-origins), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), token cache TTL |
 
 On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).
 
-Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect with URL only to a profile path above. Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
+Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect with URL only to a profile path above. The broker shows a per-client consent page (`/oauth/consent`) **before** redirecting to Lightdash; DCR `client_name` is unverified ([ADR-0032](../../docs/adr/0032-mcp-oauth-downstream-client-consent.md)). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
 
 ### Extra invoke origins
 
@@ -132,20 +134,20 @@ Governance soft-delete needs client form elicitation; missing capability → `EL
 
 ### Profile allowlist
 
-Optional HTTP-only mount ceiling. Unset or empty → all eight shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
+HTTP-only mount ceiling. **Production (`NODE_ENV=production`) requires a non-empty list** — unset or empty fails startup and does **not** mount all eight shipped profile paths ([ADR-0033](../../docs/adr/0033-mcp-http-production-fail-closed-profile-allowlist.md)). Non-production unset or empty → all eight. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
 
 **Format**
 
 - Comma-separated profile ids from the table above (`semantic-layer`, `content-reader`, …)
 - Whitespace around commas is ignored
 - No empty segments (double commas are rejected)
-- Unknown ids fail at process startup
+- Unknown ids fail at process startup (error lists valid ids)
 
 ```bash
-export LIGHTDASH_TOOLS_MCP_PROFILES="content-reader,content-developer"
+export LIGHTDASH_TOOLS_MCP_PROFILES="semantic-layer,content-reader"
 ```
 
-Architecture: [ADR-0024](../../docs/adr/0024-mcp-http-profile-mount-allowlist-via-env.md).
+Architecture: [ADR-0024](../../docs/adr/0024-mcp-http-profile-mount-allowlist-via-env.md) as amended by [ADR-0033](../../docs/adr/0033-mcp-http-production-fail-closed-profile-allowlist.md).
 
 ### Prompt context policy
 

@@ -10,6 +10,8 @@ Amends [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-
 
 Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [9. Cross-cutting conventions](0009-cross-cutting-conventions.md)
 
+**Amended by [33. MCP HTTP production fail-closed profile allowlist](0033-mcp-http-production-fail-closed-profile-allowlist.md)** — production HTTP (`NODE_ENV=production`) requires a non-empty `LIGHTDASH_TOOLS_MCP_PROFILES`; **unset no longer mounts all eight paths**. Non-production unset/empty still mounts all (this ADR's original default).
+
 ## Context
 
 [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md) ships one MCP package with seven fixed HTTP paths. `lightdash-mcp http` mounted every path; clients chose a URL. That is still the right default, but a hosted process (Cloud Run, Compose) that only intends to serve reader or authoring personas still exposed guessable write/governance/analyst URLs to any valid OAuth bearer.
@@ -27,11 +29,11 @@ Free-form `LIGHTDASH_TOOLS_MCP_PATH` remains rejected. A process **tool** filter
 
 ### Trade-offs
 
-Unset/empty = all mounts (backward compatible) can surprise an operator who forgets the var. Fail-closed unknown ids and empty CSV segments limit that risk. Path-specific PRM for a disabled profile 404s so discovery does not advertise a dead resource.
+Unset/empty = all mounts (backward compatible) can surprise an operator who forgets the var. That default is **non-production only** after [ADR-0033](0033-mcp-http-production-fail-closed-profile-allowlist.md): production unset fails startup instead of mounting every path. Fail-closed unknown ids and empty CSV segments limit remaining risk. Path-specific PRM for a disabled profile 404s so discovery does not advertise a dead resource.
 
 ## Decision
 
-1. **HTTP-only allowlist** via `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated known `ProfileId`s). Unset or empty → mount every shipped path (ADR-0006 default). Non-empty → only listed ids; unknown ids or empty segments fail at startup. No free-form paths. No aliases.
+1. **HTTP-only allowlist** via `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated known `ProfileId`s). Unset or empty → mount every shipped path (ADR-0006 default) **when `NODE_ENV` is not `production`**. Production requires a non-empty list ([ADR-0033](0033-mcp-http-production-fail-closed-profile-allowlist.md)); unset no longer mounts all eight paths. Non-empty → only listed ids; unknown ids or empty segments fail at startup. No free-form paths. No aliases.
 2. **Stdio unchanged:** `lightdash-mcp stdio --profile <id>` only. This env is ignored on stdio.
 3. **Filter at the HTTP layer**, not the profile catalog. `getProfileByPath` / `tools` arrays stay complete. Disabled MCP paths and their path-specific PRM return the same 404 as unknown paths.
 4. **Root PRM** (`/.well-known/oauth-protected-resource`) uses `config.mcpPath`. When the allowlist omits `semantic-layer`, `mcpPath` is the first enabled id in `PROFILE_IDS` order so root metadata does not name a 404 resource.
@@ -60,9 +62,11 @@ flowchart TD
   skipKey --> listen
 ```
 
+Non-production path shown. Production unset/empty fails startup instead of `unsetAll` ([ADR-0033](0033-mcp-http-production-fail-closed-profile-allowlist.md)).
+
 ## Consequences
 
-- Operators can run a read-only or authoring Cloud Run revision without serving governance/analyst mounts or requiring a signing key.
+- Operators can run a read-only or authoring Cloud Run revision without serving governance/analyst mounts or requiring a signing key. Production must set `LIGHTDASH_TOOLS_MCP_PROFILES` explicitly ([ADR-0033](0033-mcp-http-production-fail-closed-profile-allowlist.md)); unset is not “all eight.”
 - Clients still connect by profile URL; a mis-aimed URL against a restricted process 404s instead of exposing another persona.
 - `http --help` continues to list all shipped profiles (offline inventory). Runtime enablement is env.
 - Adding a profile is still a new folder + fixed path; include the new id in the allowlist when restricted.
