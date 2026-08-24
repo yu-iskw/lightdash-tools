@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { InMemoryOAuthBrokerStore } from './pending-store.js';
+import { InMemoryOAuthBrokerStore, type PendingAuthorization } from './pending-store.js';
 
 const RESOURCE = 'https://mcp.example.com/semantic-layer/v1/mcp';
 
@@ -21,7 +21,10 @@ function pendingInput(clientId = 'c1') {
 
 async function consentedPending(
   store: InMemoryOAuthBrokerStore,
-  input = pendingInput(),
+  input: Omit<
+    PendingAuthorization,
+    'brokerState' | 'createdAt' | 'csrfToken' | 'consented'
+  > = pendingInput(),
 ) {
   const pending = await store.createPending(input);
   const marked = await store.markConsented(pending!.brokerState);
