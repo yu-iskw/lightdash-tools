@@ -13,23 +13,32 @@ export const CONSENT_PAGE_HEADERS: Record<string, string> = {
   'Cache-Control': 'no-store',
 };
 
+const AI_AGENT_OPS: ProfileId = 'ai-agent-ops';
+
 const WRITE_PROFILES = new Set<ProfileId>([
+  'ai-agent-chat',
+  AI_AGENT_OPS,
   'content-developer',
   'content-governance',
-  'ai-agent-ops',
-  'ai-agent-chat',
 ]);
 
-const DESTRUCTIVE_PROFILES = new Set<ProfileId>(['content-governance']);
+const DESTRUCTIVE_PROFILES = new Set<ProfileId>([AI_AGENT_OPS, 'content-governance']);
 
-const OPEN_WORLD_PROFILES = new Set<ProfileId>(['ai-agent-chat', 'data-analyst']);
+const OPEN_WORLD_PROFILES = new Set<ProfileId>(['ai-agent-chat', AI_AGENT_OPS, 'data-analyst']);
 
 export type ProfileConsentCapabilities = {
-  profileId: string;
+  profileId: ProfileId | 'unknown';
   canMutate: boolean;
   destructive: boolean;
   openWorld: boolean;
 };
+
+const UNREGISTERED_CLIENT_NAME = 'Unregistered MCP client';
+
+export function displayClientName(name: string | undefined): string {
+  const trimmed = name?.trim() ?? '';
+  return trimmed.length > 0 ? trimmed : UNREGISTERED_CLIENT_NAME;
+}
 
 export function escapeHtml(value: string): string {
   return value
@@ -73,7 +82,7 @@ function capabilityItem(allowed: boolean, label: string): string {
 
 export function renderConsentPage(input: ConsentPageInput): string {
   const caps = profileCapabilitiesFromResource(input.resource);
-  const name = input.clientName.trim() === '' ? 'Unregistered MCP client' : input.clientName;
+  const name = displayClientName(input.clientName);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

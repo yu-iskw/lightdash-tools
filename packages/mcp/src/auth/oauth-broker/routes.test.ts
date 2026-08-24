@@ -304,7 +304,7 @@ describe('oauth broker helpers', () => {
     ).toBe(false);
   });
 
-  it('restoreCode is unused by token grants; a later redeem cannot succeed after take', async () => {
+  it('a taken authorization code cannot be redeemed again', async () => {
     const store = new InMemoryOAuthBrokerStore();
     const challenge = createHash('sha256')
       .update('test-verifier-value-1234567890')

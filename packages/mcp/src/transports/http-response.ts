@@ -73,5 +73,23 @@ export function sendHtml(
   body: string,
   extraHeaders?: Record<string, string>,
 ): void {
-  res.writeHead(status, extraHeaders).end(body);
+  res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8', ...extraHeaders }).end(body);
+}
+
+export function sendRedirect(res: ServerResponse, location: string): void {
+  res.writeHead(302, { Location: location }).end();
+}
+
+export function sendRedirectWithQuery(
+  res: ServerResponse,
+  redirectUri: string,
+  params: Record<string, string | undefined>,
+): void {
+  const target = new URL(redirectUri);
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      target.searchParams.set(key, value);
+    }
+  }
+  sendRedirect(res, target.toString());
 }

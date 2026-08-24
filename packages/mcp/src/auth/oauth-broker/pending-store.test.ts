@@ -61,29 +61,6 @@ describe('InMemoryOAuthBrokerStore', () => {
     expect(issued?.scope).toBe('mcp:write');
   });
 
-  it('restoreCode re-inserts a taken code for retry', async () => {
-    const store = new InMemoryOAuthBrokerStore({ codeTtlMs: 60_000 });
-    const pending = await consentedPending(store);
-    const issued = await store.issueCode(pending, { accessToken: 'tok' });
-    const taken = await store.takeCode(issued!.code);
-    expect(taken?.accessToken).toBe('tok');
-    expect(await store.getCode(issued!.code)).toBeUndefined();
-
-    await store.restoreCode(taken!);
-    expect((await store.takeCode(issued!.code))?.accessToken).toBe('tok');
-  });
-
-  it('restoreCode skips codes whose TTL has already elapsed', async () => {
-    const store = new InMemoryOAuthBrokerStore({ codeTtlMs: 1_000 });
-    const pending = await consentedPending(store);
-    const issued = await store.issueCode(pending, { accessToken: 'tok' });
-    const taken = await store.takeCode(issued!.code);
-    expect(taken).toBeDefined();
-
-    await store.restoreCode({ ...taken!, createdAt: Date.now() - 5_000 });
-    expect(await store.getCode(issued!.code)).toBeUndefined();
-  });
-
   it('getCode / deleteCode still work for peek diagnostics', async () => {
     const store = new InMemoryOAuthBrokerStore();
     const pending = await consentedPending(store);

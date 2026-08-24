@@ -257,16 +257,6 @@ describe('loadMcpHttpConfig', () => {
     expect(config.host).toBe('127.0.0.1');
   });
 
-  it('defaults unauthenticated HTTP host to 127.0.0.1 when host env is unset', () => {
-    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
-    process.env.NODE_ENV = 'development';
-    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST];
-
-    const config = loadMcpHttpConfig();
-    expect(config.authMode).toBe('none');
-    expect(config.host).toBe('127.0.0.1');
-  });
-
   it('allows explicit non-loopback host for unauthenticated HTTP and warns about the bind', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env.NODE_ENV = 'development';

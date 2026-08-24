@@ -164,14 +164,6 @@ export { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 type RegisterToolFn = (name: string, options: ToolOptions, handler: ToolHandler) => void;
 
-/**
- * Copies caller-provided annotations. Does not default omitted annotations to
- * READ_ONLY_DEFAULT — registerToolSafe throws when annotations are missing.
- */
-function mergeAnnotations(overrides: ToolAnnotations): ToolAnnotations {
-  return { ...overrides };
-}
-
 function requireToolAnnotations(
   annotations: ToolAnnotations | null | undefined,
   toolName: string,
@@ -181,7 +173,7 @@ function requireToolAnnotations(
       `MCP tool '${toolName}' requires annotations with an explicit readOnlyHint; omitted annotations are not treated as read-only`,
     );
   }
-  return mergeAnnotations(annotations);
+  return { ...annotations };
 }
 
 /** Internal marker attached to responses produced by a guardrail (project-pin denial

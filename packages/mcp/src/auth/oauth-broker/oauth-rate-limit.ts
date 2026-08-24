@@ -44,6 +44,7 @@ export class InMemoryOAuthRateLimiter {
     const max = this.maxFor(action);
     const key = `${action}:${clientKey}`;
     const now = Date.now();
+    this.pruneExpired(now);
     const current = this.windows.get(key);
     if (current === undefined || now >= current.resetAt) {
       this.windows.set(key, { count: 1, resetAt: now + this.limits.windowMs });
@@ -57,6 +58,17 @@ export class InMemoryOAuthRateLimiter {
     }
     current.count += 1;
     return { ok: true };
+  }
+
+  private pruneExpired(now: number): void {
+    if (this.windows.size <= 4_096) {
+      return;
+    }
+    for (const [windowKey, window] of this.windows) {
+      if (now >= window.resetAt) {
+        this.windows.delete(windowKey);
+      }
+    }
   }
 
   private maxFor(action: OAuthRateLimitAction): number {

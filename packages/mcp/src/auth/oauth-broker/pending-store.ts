@@ -102,11 +102,6 @@ export interface OAuthBrokerStore {
   ): Promise<IssuedAuthorizationCode | undefined>;
   /** Atomic get+delete for one-time code consume. */
   takeCode(code: string): Promise<IssuedAuthorizationCode | undefined>;
-  /**
-   * Re-insert a previously taken code with remaining TTL based on `createdAt`
-   * and store `codeTtlMs`. Skips when already expired.
-   */
-  restoreCode(issued: IssuedAuthorizationCode): Promise<void>;
   /** Peek without consuming (tests / diagnostics). Prefer takeCode for grant paths. */
   getCode(code: string): Promise<IssuedAuthorizationCode | undefined>;
   deleteCode(code: string): Promise<void>;
@@ -198,6 +193,9 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
     this.cleanup();
     const pending = this.pendingByBrokerState.get(brokerState);
     if (!pending) return undefined;
+    if (pending.consented) {
+      return pending;
+    }
     const next: PendingAuthorization = { ...pending, consented: true };
     this.pendingByBrokerState.set(brokerState, next);
     return next;
@@ -250,18 +248,6 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
     if (!issued) return undefined;
     this.codes.delete(code);
     return issued;
-  }
-
-  /**
-   * Re-insert a taken code if its original TTL has not elapsed.
-   * In-memory expiry still uses `createdAt` + `codeTtlMs` on cleanup.
-   */
-  async restoreCode(issued: IssuedAuthorizationCode): Promise<void> {
-    const remaining = this.codeTtlMs - (Date.now() - issued.createdAt);
-    if (remaining <= 0) {
-      return;
-    }
-    this.codes.set(issued.code, issued);
   }
 
   /** Peek at an issued code without consuming it. */
