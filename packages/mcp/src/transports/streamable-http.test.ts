@@ -8,6 +8,7 @@ import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenti
 import { parseEnabledProfiles } from '../config/enabled-profiles.js';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
+  ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
@@ -70,6 +71,7 @@ describe('streamable HTTP security policy', () => {
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
     process.env[ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID] = 'id';
     process.env[ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET] = 'secret';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'semantic-layer,content-reader';
 
     const config = loadMcpHttpConfig();
     expect(config.authMode).toBe('lightdash-oauth');

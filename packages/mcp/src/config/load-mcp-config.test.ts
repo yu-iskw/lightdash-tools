@@ -11,6 +11,7 @@ import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
+  ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
   ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
@@ -46,11 +47,17 @@ function clearMcpEnv(): void {
   delete process.env.PORT;
 }
 
+const PRODUCTION_MCP_PROFILES = 'semantic-layer,content-reader';
+
 function setOAuthCreds(): void {
   process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
   process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] = 'https://mcp.example.com';
   process.env[ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID] = 'client-id';
   process.env[ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET] = 'client-secret';
+}
+
+function setProductionProfiles(): void {
+  process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = PRODUCTION_MCP_PROFILES;
 }
 
 beforeEach(() => {
@@ -247,6 +254,73 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.authMode).toBe('none');
+    expect(config.host).toBe('127.0.0.1');
+  });
+
+  it('defaults unauthenticated HTTP host to 127.0.0.1 when host env is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST];
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('none');
+    expect(config.host).toBe('127.0.0.1');
+  });
+
+  it('allows explicit non-loopback host for unauthenticated HTTP and warns about the bind', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST] = '0.0.0.0';
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('none');
+    expect(config.host).toBe('0.0.0.0');
+
+    emitMcpHttpSecurityWarnings(config);
+    expect(vi.mocked(console.warn).mock.calls.flat().join('\n')).toMatch(/0\.0\.0\.0/);
+  });
+
+  it('rejects non-HTTPS non-loopback LIGHTDASH_URL', () => {
+    process.env.LIGHTDASH_URL = 'http://example.com';
+    process.env.NODE_ENV = 'development';
+
+    expect(() => loadMcpHttpConfig()).toThrow(/LIGHTDASH_URL/);
+    expect(() => loadMcpHttpConfig()).toThrow(/https:\/\//);
+  });
+
+  it('allows loopback HTTP LIGHTDASH_URL in development', () => {
+    process.env.NODE_ENV = 'development';
+
+    process.env.LIGHTDASH_URL = 'http://127.0.0.1';
+    expect(loadMcpHttpConfig().lightdashUrl).toBe('http://127.0.0.1');
+
+    process.env.LIGHTDASH_URL = 'http://localhost';
+    expect(loadMcpHttpConfig().lightdashUrl).toBe('http://localhost');
+  });
+
+  it('requires LIGHTDASH_TOOLS_MCP_PROFILES in production even with OAuth credentials', () => {
+    setOAuthCreds();
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES];
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PROFILES);
+    expect(() => loadMcpHttpConfig()).toThrow(/semantic-layer/);
+
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = '';
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PROFILES);
+
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = '   ';
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PROFILES);
+  });
+
+  it('loads production OAuth when LIGHTDASH_TOOLS_MCP_PROFILES is set', () => {
+    setOAuthCreds();
+    process.env.NODE_ENV = 'production';
+    setProductionProfiles();
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('lightdash-oauth');
+    expect(config.enabledProfiles.restricted).toBe(true);
   });
 
   it('rejects obsolete INSECURE_DEV env', () => {
@@ -312,6 +386,7 @@ describe('loadMcpHttpConfig', () => {
 
   it('rejects VALIDATE_TOKEN=false in production', () => {
     setOAuthCreds();
+    setProductionProfiles();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
     process.env.NODE_ENV = 'production';
 
@@ -424,6 +499,7 @@ describe('loadMcpHttpConfig', () => {
 
   it('does not require ALLOWED_ORIGINS for production OAuth (non-browser agents)', () => {
     setOAuthCreds();
+    setProductionProfiles();
     process.env.NODE_ENV = 'production';
     delete process.env[ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS];
 
