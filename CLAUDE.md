@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-24]: Production HTTP (`NODE_ENV=production`) requires non-empty `LIGHTDASH_TOOLS_MCP_PROFILES` (ADR-0033); unset no longer mounts all eight paths. OAuth `/oauth/authorize` shows per-client consent HTML before Lightdash (ADR-0032); DCR `client_name` is unverified. Stdio still `--profile` only; non-production HTTP unset still mounts all.
 - [2026-08-21]: `ai-agent-chat` agent pick is named/hint → preferences → `route_agent` → single-agent or ask user (ADR-0031). Never match on instruction/`enableContentTools`. Prefix Lightdash dashboard/chart UUID into create prompt; require title+UUID in the reply.
 - [2026-08-21]: `ai-agent-chat` `create_agent_thread` requires `prompt` (ADR-0030). Empty `{}` fails live: upstream inserts `ai_thread` then `getThread` INNER JOINs `ai_prompt` (promptless = unfetchable). Flow: create(+prompt)→generate; follow-ups message→generate.
 - [2026-08-20]: HttpClient per-request retry is the 4th argument on get/post/put/patch/delete — do not put retry on Axios config. `ai-agent-chat` conversation writes pass `{ maxRetries: 0 }` so a 5xx after generate does not duplicate warehouse/LLM work.
@@ -88,7 +89,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 - [2026-08-10]: After `changie merge`, Trunk/Prettier rewrites CHANGELOG.md (`*` bullets → `-`, blank lines around headings). Format before claiming lint clean.
 - [2026-08-17]: Grype/GHSA-2v37-7h3g-55p8 now treats `nanoid` `<3.3.18` as High; pin exact `nanoid: 3.3.18` (not `>=`) — `3.3.17` was the prior pin and fails SBOM.
 - [2026-08-10]: pnpm `overrides` with `>=x.y.z` can jump majors (`js-yaml` 4→5, `nanoid` 3→6). Pin exact patched lines (4.3.1 / 3.3.18) for SBOM High CVEs.
-- [2026-08-10]: HTTP `LIGHTDASH_TOOLS_MCP_PROFILES` is a mount allowlist (unset = all eight paths); stdio still requires `--profile` and ignores this env. Disabled paths and their RFC 9728 PRM 404.
+- [2026-08-10]: HTTP `LIGHTDASH_TOOLS_MCP_PROFILES` is a mount allowlist; stdio still requires `--profile` and ignores this env. Disabled paths and their RFC 9728 PRM 404. Production unset is fail-closed as of 2026-08-24 (ADR-0033) — do not assume unset = all eight paths.
 - [2026-08-07]: content-reader verified discovery is `list_verified_content` → `GET …/content-verification`; `search_content` / OpenAPI v2 content list has no `verifiedOnly` filter — prompt preference flags must call the dedicated tool.
 - [2026-08-07]: PoP on content-developer: prefer cloned metrics with `generationType: periodOverPeriod` from seeds; table calculations remain the fallback when seeds lack native PoP (Explorer “Add period comparison” UI is unavailable on MCP).
 - [2026-08-06]: Pivot row share SQL is `row_total(${metric})` (aggregate), not invented `pivot_row_total` — that name does not exist; `pivot_*` are offset/index/row helpers only. Preview still accepts bad SQL helpers.

@@ -12,6 +12,10 @@ Amended by [26. MCP OAuth uses a dual-leg, resource-bound token boundary](0026-m
 
 Amended by [27. Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
 
+**Amended by [32. MCP OAuth downstream client consent](0032-mcp-oauth-downstream-client-consent.md)** — per-client consent HTML at `/oauth/consent` before the Lightdash redirect (confused-deputy).
+
+**Amended by [33. MCP HTTP production fail-closed profile allowlist](0033-mcp-http-production-fail-closed-profile-allowlist.md)** — production HTTP requires non-empty `LIGHTDASH_TOOLS_MCP_PROFILES`; `auth=none` defaults bind host to `127.0.0.1`.
+
 ## Context
 
 `@lightdash-tools/mcp` must serve STDIO (local agents) and Streamable HTTP (remote). Hosted HTTP needs per-user Lightdash identity. Operators register one Lightdash OAuth application per MCP deployment; the **client secret must not** be shipped to Claude Code / Cursor.
@@ -23,7 +27,7 @@ SDK v2 splits `@modelcontextprotocol/server` and `@modelcontextprotocol/node`. F
 ## Decision
 
 1. **Primary HTTP auth:** credential-inferred **OAuth broker + resource server**. Required env: `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET`. Shared Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback` (profile-agnostic).
-2. **Broker:** MCP host presents AS discovery (`authorization_servers` = `PUBLIC_URL`) and minimal `/oauth/authorize`, `/oauth/callback`, `/oauth/token` (plus a thin DCR stub if clients require registration). It is the confidential client toward Lightdash; MCP clients never receive the client secret.
+2. **Broker:** MCP host presents AS discovery (`authorization_servers` = `PUBLIC_URL`) and `/oauth/authorize`, `/oauth/consent`, `/oauth/callback`, `/oauth/token` (plus a thin DCR stub if clients require registration). Consent is required before the Lightdash redirect ([ADR-0032](0032-mcp-oauth-downstream-client-consent.md)). It is the confidential client toward Lightdash; MCP clients never receive the client secret.
 3. **Resource server:** Profile paths (`/semantic-layer/v1/mcp`, …) accept `Authorization: Bearer`, validate identity via `GET /api/v1/user`, forward the same token upstream. RFC 8707 `resource` is accepted on the broker; full audience enforcement remains limited by opaque Lightdash tokens.
 4. **Secondary:** STDIO and local HTTP use PAT (`LIGHTDASH_API_KEY`). Optional `shared-key` gateway when `LIGHTDASH_TOOLS_MCP_SHARED_KEY` is set with a PAT. Unauthenticated HTTP only when `NODE_ENV` is not `production` (e.g. local Compose).
 5. **Config surface:** No `LIGHTDASH_TOOLS_MCP_AUTH_MODE` / `EXPERIMENTAL_IDENTITY_OAUTH` / `DANGEROUSLY_*` forest. Infer mode from credentials. Reject obsolete vars at startup with migration errors.
@@ -36,7 +40,7 @@ There is **no** Redis or pluggable `LIGHTDASH_TOOLS_MCP_STORE` for MCP HTTP corr
 
 - Hosted operators configure four primary vars and register one callback in Lightdash; clients use URL-only MCP config.
 - Auth extensions (client-credentials, enterprise-managed) are out of scope for this product path.
-- Confused-deputy / audience binding remain partially upstream-limited until Lightdash issues resource-bound tokens.
+- Confused-deputy via the static Lightdash client is mitigated by per-client consent ([ADR-0032](0032-mcp-oauth-downstream-client-consent.md)); audience binding for MCP tokens is broker-issued ([ADR-0026](0026-mcp-oauth-dual-leg-token-boundary.md)). Upstream Lightdash tokens remain opaque.
 - MCP profile paths are protocol-stateless ([ADR-0019](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)). The in-memory OAuth broker remains process-local — use one replica or sticky `/oauth/*` until signed-state/CIMD.
 
 ## References
