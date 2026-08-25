@@ -10,6 +10,8 @@ Related to [11. MCP tool response sensitivity classes](0011-mcp-tool-response-se
 
 Amended by [12. MCP content-reader profile saved-content execution boundary](0012-mcp-content-reader-profile-saved-content-execution-boundary.md)
 
+Related to [32. MCP HTTP three-plane security control ownership](0032-mcp-http-three-plane-security-control-ownership.md)
+
 ## Context
 
 Process-level `LIGHTDASH_TOOLS_SAFETY_MODE` and dry-run were designed for a broad MCP catalog. Profiles ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)) fix the tool set via `tools: ToolModule[]` imports ([ADR-0022](0022-mcp-profile-owned-toolmodules-replace-operations-catalog.md)); they are not a process tool filter. Those CLI knobs became no-ops or overlapped HTTP project pinning, and suggested more protection than they provided. Opaque OAuth tokens cannot be authorized via local JWT scope checks ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md)).

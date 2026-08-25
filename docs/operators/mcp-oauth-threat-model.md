@@ -1,6 +1,6 @@
 # Threat model: OAuth-backed Streamable HTTP MCP
 
-Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) and [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
+Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth broker** (server-held Lightdash confidential client + broker-issued MCP access tokens). Architecture: [ADR-0007](../adr/0007-mcp-http-transport-auth-modes-sdk-v2.md) as amended by [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md), [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md), and [ADR-0032](../adr/0032-mcp-http-three-plane-security-control-ownership.md). Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization). Security guidance: [MCP Security Best Practices](https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices).
 
 ## Assets
 
@@ -32,8 +32,8 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 | Spoofed `X-Forwarded-Proto` on extra origins    | Medium | Scheme is part of origin match. Trust `X-Forwarded-Proto` only from the private proxy that terminates the extra hostname; strip or overwrite it on the public VIP. A client that can set both `Host` and proto to a listed HTTP origin gets HTTP token/DCR URLs.                                       |
 | Reimplemented RBAC mismatch                     | High   | Do not recreate Lightdash object-level permissions in MCP. Delegate to Lightdash API with the recovered downstream credential after broker-token validation.                                                                                                                                           |
 | Agent destructive actions                       | High   | Profile `tools` mounts fix the MCP catalog (ADR-0006 / ADR-0022; [ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)); shipped `semantic-layer` profile is discovery/compile only; irrecoverable ops are client-only per [ADR-0004](../adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md). |
-| CSRF / browser-origin misuse                    | Medium | Bearer tokens in `Authorization` header only. Optional `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`. No cookie-based MCP auth.                                                                                                                                                                                |
-| Rate-limit bypass / pending-store exhaustion    | Medium | Bounded in-memory broker pending/DCR/code caps. Use gateway rate limits in production; keep pending TTLs short. Sticky `/oauth/*` or single replica while handshake is in flight.                                                                                                                      |
+| CSRF / browser-origin misuse                    | Medium | Bearer tokens in `Authorization` header only. Streamable HTTP MUST 403 invalid `Origin`; missing `Origin` is allowed. Empty `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` is correct for non-browser agents. No cookie-based MCP auth.                                                                         |
+| Rate-limit bypass / pending-store exhaustion    | Medium | Bounded in-memory broker pending/DCR/code caps. Production: Cloud Armor **throttle** on GCLB ([http-control-plane.md](http-control-plane.md)); keep pending TTLs short. One replica or dedicated `/oauth/*` service — GCLB affinity does not pin Cloud Run instances.                                  |
 
 ## Operator security checklist
 
@@ -66,10 +66,12 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 
 ### Network and deployment
 
-- [ ] Terminate TLS at the platform edge (Cloud Run, load balancer).
-- [ ] Restrict ingress where possible (private service connect, allowlisted clients).
-- [ ] Sticky-route `/oauth/*` (or single replica) for in-memory broker pending/DCR/code handshake; profile MCP paths may be load-balanced after token issuance ([ADR-0019](../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) / [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md)).
+- [ ] Terminate TLS at the platform edge (load balancer in production). See [http-control-plane.md](http-control-plane.md) / [ADR-0032](../adr/0032-mcp-http-three-plane-security-control-ownership.md).
+- [ ] Production public path: GCLB + Cloud Armor **throttle** (not stock OWASP CRS on MCP POSTs) + Cloud Run ingress `internal-and-cloud-load-balancing` so `*.run.app` cannot skip Armor ([cloud-run.md](cloud-run.md)).
+- [ ] Restrict extra invoke-origin Hosts; do not serve them on the public VIP ([ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md)).
+- [ ] Single replica or a dedicated `/oauth/*` service for in-memory broker pending/DCR/code handshake; GCLB session affinity does not pin Cloud Run instances. Profile MCP paths may scale after token issuance ([ADR-0019](../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md) / [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md)).
 - [ ] Do not reintroduce Redis solely for OAuth pending state unless a later ADR supersedes ADR-0019.
+- [ ] Do not put IAP in front of Cursor/Claude URL-only OAuth. Do not add `TRUST_EDGE` / `DANGEROUSLY_*`.
 
 ### Client configuration
 
@@ -93,6 +95,8 @@ Security analysis for hosted `@lightdash-tools/mcp` with the **dual-leg OAuth br
 ## Related documentation
 
 - [mcp-oauth.md](mcp-oauth.md) — setup and troubleshooting
+- [http-control-plane.md](http-control-plane.md) — edge vs platform vs app ownership
+- [ADR-0032](../adr/0032-mcp-http-three-plane-security-control-ownership.md) — three-plane security split
 - [ADR-0026](../adr/0026-mcp-oauth-dual-leg-token-boundary.md) — dual-leg token boundary
 - [ADR-0027](../adr/0027-mcp-oauth-extra-invoke-origins.md) — extra invoke origins
 - [cursor-claude.md](cursor-claude.md) — Cursor client setup

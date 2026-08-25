@@ -97,13 +97,17 @@ Do **not** set OAuth client secrets for stdio. MCP ignores CLI `SAFETY_MODE` / `
 
 ### HTTP OAuth (primary)
 
-| Required                                                                                                                    | Common optional                                                                                                                                                                                                              |
-| :-------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, `ALLOWED_ORIGINS`, [`LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`](#extra-invoke-origins), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist), token cache TTL |
+| Required                                                                                                                    | Common optional                                                                                                                                                                                                                                           |
+| :-------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`, `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`, `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | port, [`ALLOWED_ORIGINS`](#browser-origin-allowlist), [`LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`](#extra-invoke-origins), [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist), [`LIGHTDASH_TOOLS_MCP_PROFILES`](#profile-allowlist), token cache TTL |
 
-On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md).
+On Cloud Run / hosted HTTP, leave `LIGHTDASH_TOOLS_AUDIT_LOG` unset — tool audits are stderr JSON (`channel: "audit"`) → Cloud Logging. See [cloud-run.md](../../docs/operators/cloud-run.md). Production public traffic should sit behind a load balancer + Armor throttle, not only `*.run.app`: [http-control-plane.md](../../docs/operators/http-control-plane.md).
 
 Register Lightdash redirect URI: `{PUBLIC_URL}/oauth/callback`. Clients connect with URL only to a profile path above. Protocol: [MCP Authorization 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization).
+
+### Browser Origin allowlist
+
+See [Empty `ALLOWED_ORIGINS`](../../docs/operators/http-control-plane.md#empty-allowed_origins) — profile routes 403 a present `Origin` that is not listed; empty is the hosted default.
 
 ### Extra invoke origins
 

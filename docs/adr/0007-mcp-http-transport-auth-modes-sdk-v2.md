@@ -12,6 +12,8 @@ Amended by [26. MCP OAuth uses a dual-leg, resource-bound token boundary](0026-m
 
 Amended by [27. Extra invoke origins advertise host-aware OAuth metadata](0027-mcp-oauth-extra-invoke-origins.md)
 
+Amended by [32. MCP HTTP three-plane security control ownership](0032-mcp-http-three-plane-security-control-ownership.md)
+
 ## Context
 
 `@lightdash-tools/mcp` must serve STDIO (local agents) and Streamable HTTP (remote). Hosted HTTP needs per-user Lightdash identity. Operators register one Lightdash OAuth application per MCP deployment; the **client secret must not** be shipped to Claude Code / Cursor.

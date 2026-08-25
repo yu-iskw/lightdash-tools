@@ -10,6 +10,8 @@ Amends [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-
 
 Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [9. Cross-cutting conventions](0009-cross-cutting-conventions.md)
 
+Related to [32. MCP HTTP three-plane security control ownership](0032-mcp-http-three-plane-security-control-ownership.md)
+
 ## Context
 
 [ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md) ships one MCP package with seven fixed HTTP paths. `lightdash-mcp http` mounted every path; clients chose a URL. That is still the right default, but a hosted process (Cloud Run, Compose) that only intends to serve reader or authoring personas still exposed guessable write/governance/analyst URLs to any valid OAuth bearer.

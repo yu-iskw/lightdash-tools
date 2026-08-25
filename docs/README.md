@@ -7,7 +7,8 @@ Index by audience. Binding architecture decisions live under [`adr/`](adr/).
 | Doc                                                                        | Purpose                                                 |
 | -------------------------------------------------------------------------- | ------------------------------------------------------- |
 | [operators/mcp-oauth.md](operators/mcp-oauth.md)                           | Hosted MCP OAuth hub (env, broker routes, mental model) |
-| [operators/cloud-run.md](operators/cloud-run.md)                           | Cloud Run deploy + audit logging                        |
+| [operators/http-control-plane.md](operators/http-control-plane.md)         | Edge vs platform vs app security ownership              |
+| [operators/cloud-run.md](operators/cloud-run.md)                           | Cloud Run deploy + GCLB/Armor recipe + audit logging    |
 | [operators/cursor-claude.md](operators/cursor-claude.md)                   | Cursor / Claude Code URL-only client setup              |
 | [operators/secrets.md](operators/secrets.md)                               | Env-from-parent and dotenvx                             |
 | [operators/mcp-oauth-threat-model.md](operators/mcp-oauth-threat-model.md) | OAuth threat model                                      |

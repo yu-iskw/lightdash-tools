@@ -10,6 +10,8 @@ Amends [7. MCP HTTP transport, OAuth broker, SDK v2](0007-mcp-http-transport-aut
 
 Amends [26. MCP OAuth uses a dual-leg, resource-bound token boundary](0026-mcp-oauth-dual-leg-token-boundary.md)
 
+Amended by [32. MCP HTTP three-plane security control ownership](0032-mcp-http-three-plane-security-control-ownership.md)
+
 ## Context
 
 Hosted MCP OAuth binds RFC 8707 `resource`, PRM, and broker AS metadata to `LIGHTDASH_TOOLS_MCP_PUBLIC_URL` ([ADR-0007](0007-mcp-http-transport-auth-modes-sdk-v2.md), [ADR-0026](0026-mcp-oauth-dual-leg-token-boundary.md)). That is correct for public HTTPS clients (Cursor, Claude Code, `@modelcontextprotocol/client` v2).

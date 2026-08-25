@@ -31,17 +31,17 @@ Lightdash API
 
 ## Limitations (honest)
 
-| Capability                                                        | Status                                                                                                                             |
-| :---------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
-| Per-user delegated access to Lightdash                            | Supported                                                                                                                          |
-| Server-held confidential client + shared callback                 | Supported                                                                                                                          |
-| PRM + broker AS metadata                                          | Supported                                                                                                                          |
-| RFC 8707 MCP resource / audience binding                          | Supported — broker-issued `ldmcp1.*` bound to exact profile resource                                                               |
-| Reject raw Lightdash bearers as MCP credentials                   | Supported                                                                                                                          |
-| Sticky `/oauth/*` (or single replica) during authorize→token      | Required — in-memory pending/DCR/code store ([ADR-0019](../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
-| Stateless profile MCP requests after token issuance               | Supported — any replica sharing the OAuth client secret                                                                            |
-| Per-client consent UI before Lightdash redirect (confused deputy) | **Not implemented** — see threat model                                                                                             |
-| Per-token MCP revocation store                                    | **Not implemented** — expiry / client-secret rotation / upstream revoke                                                            |
+| Capability                                                        | Status                                                                                                                                                                                              |
+| :---------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Per-user delegated access to Lightdash                            | Supported                                                                                                                                                                                           |
+| Server-held confidential client + shared callback                 | Supported                                                                                                                                                                                           |
+| PRM + broker AS metadata                                          | Supported                                                                                                                                                                                           |
+| RFC 8707 MCP resource / audience binding                          | Supported — broker-issued `ldmcp1.*` bound to exact profile resource                                                                                                                                |
+| Reject raw Lightdash bearers as MCP credentials                   | Supported                                                                                                                                                                                           |
+| One replica or dedicated `/oauth/*` during authorize→token        | Required — in-memory pending/DCR/code store; on Cloud Run behind GCLB do **not** treat LB affinity as sticky ([ADR-0019](../adr/0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)) |
+| Stateless profile MCP requests after token issuance               | Supported — any replica sharing the OAuth client secret                                                                                                                                             |
+| Per-client consent UI before Lightdash redirect (confused deputy) | **Not implemented** — see threat model                                                                                                                                                              |
+| Per-token MCP revocation store                                    | **Not implemented** — expiry / client-secret rotation / upstream revoke                                                                                                                             |
 
 Authorization in practice: Lightdash RBAC + profile `tools` mounts (ADR-0006 / ADR-0022) + optional `X-Lightdash-Project` pin and/or `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ([ADR-0008](../adr/0008-mcp-request-scope-and-hardening.md)).
 
@@ -63,7 +63,7 @@ npx @lightdash-tools/mcp http
 1. Create a Lightdash OAuth application.
 2. Register redirect URI exactly: `https://lightdash-mcp.example.com/oauth/callback`.
 3. Put client id/secret on the **MCP server** (Secret Manager / platform env), never in client `mcp.json`.
-4. For multi-replica hosting: sticky-route `/oauth/*` (or run one broker replica); profile MCP paths may load-balance.
+4. For multi-replica hosting: one broker replica or a dedicated `/oauth/*` service (GCLB affinity does not pin Cloud Run instances); profile MCP paths may load-balance.
 
 Verify:
 
@@ -136,19 +136,19 @@ After deploying the dual-leg broker, re-run the client OAuth login so cached raw
 
 ## Environment reference
 
-| Variable                              | Role                                                                      |
-| :------------------------------------ | :------------------------------------------------------------------------ |
-| `LIGHTDASH_URL`                       | Lightdash instance                                                        |
-| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`      | Public base URL (required for OAuth)                                      |
-| `LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`  | Optional extra invoke origins (comma-separated; host-aware PRM/token/DCR) |
-| `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`     | Server-held Lightdash app client id                                       |
-| `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | Server-held Lightdash app client secret (also derives MCP token AEAD key) |
-| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`      | Secondary shared-key gateway                                              |
-| `LIGHTDASH_API_KEY`                   | Stdio / shared-key / local none upstream PAT                              |
-| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` | Optional CORS allowlist                                                   |
-| `LIGHTDASH_TOOLS_AUDIT_LOG`           | Optional file path (CLI/local); unset → stderr JSON audit                 |
-| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`       | Default `3100`; if unset, platform `PORT` (e.g. Cloud Run), else `3100`   |
-| `LIGHTDASH_TOOLS_MCP_PROFILES`        | Optional HTTP mount allowlist (comma-separated profile ids; unset = all)  |
+| Variable                              | Role                                                                                                  |
+| :------------------------------------ | :---------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_URL`                       | Lightdash instance                                                                                    |
+| `LIGHTDASH_TOOLS_MCP_PUBLIC_URL`      | Public base URL (required for OAuth)                                                                  |
+| `LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS`  | Optional extra invoke origins (comma-separated; host-aware PRM/token/DCR)                             |
+| `LIGHTDASH_TOOLS_OAUTH_CLIENT_ID`     | Server-held Lightdash app client id                                                                   |
+| `LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET` | Server-held Lightdash app client secret (also derives MCP token AEAD key)                             |
+| `LIGHTDASH_TOOLS_MCP_SHARED_KEY`      | Secondary shared-key gateway                                                                          |
+| `LIGHTDASH_API_KEY`                   | Stdio / shared-key / local none upstream PAT                                                          |
+| `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS` | Optional browser Origin allowlist (403 if present and not listed; empty is correct for Cursor/Claude) |
+| `LIGHTDASH_TOOLS_AUDIT_LOG`           | Optional file path (CLI/local); unset → stderr JSON audit                                             |
+| `LIGHTDASH_TOOLS_MCP_HTTP_PORT`       | Default `3100`; if unset, platform `PORT` (e.g. Cloud Run), else `3100`                               |
+| `LIGHTDASH_TOOLS_MCP_PROFILES`        | Optional HTTP mount allowlist (comma-separated profile ids; unset = all)                              |
 
 **Rejected at startup** (removed): `LIGHTDASH_TOOLS_MCP_AUTH_MODE`, `EXPERIMENTAL_IDENTITY_OAUTH`, `DANGEROUSLY_*`, `ALLOW_INSECURE_PUBLIC_URL`, `LIGHTDASH_TOOLS_MCP_INSECURE_DEV`, `LIGHTDASH_TOOLS_MCP_PATH`.
 
@@ -170,6 +170,8 @@ CLI-only (ignored for MCP auth): `LIGHTDASH_TOOLS_SAFETY_MODE`, `DRY_RUN`. Share
 
 - [ADR-0026 — dual-leg MCP OAuth token boundary](../adr/0026-mcp-oauth-dual-leg-token-boundary.md)
 - [ADR-0027 — extra invoke origins](../adr/0027-mcp-oauth-extra-invoke-origins.md)
+- [ADR-0032 — HTTP three-plane control ownership](../adr/0032-mcp-http-three-plane-security-control-ownership.md)
+- [http-control-plane.md](http-control-plane.md) — edge vs Cloud Run vs MCP process
 - [cursor-claude.md](cursor-claude.md)
 - [cloud-run.md](cloud-run.md)
 - [mcp-oauth-threat-model.md](mcp-oauth-threat-model.md)

@@ -12,6 +12,7 @@ export function timingSafeEqualString(a: string, b: string): boolean {
   return timingSafeEqual(bufA, bufB);
 }
 
+/** Missing Origin → allow; present Origin must match allowlist (or dangerouslyAllowAnyOrigin). */
 export function checkOrigin(
   origin: string | undefined,
   allowedOrigins: string[],
