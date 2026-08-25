@@ -1,8 +1,13 @@
+import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
 import boundaries from 'eslint-plugin-boundaries';
 import { projectStructureParser, projectStructurePlugin } from 'eslint-plugin-project-structure';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
 
 import { folderStructureConfig } from './folder-structure.mjs';
+
+const securityRecommended = security.configs.recommended;
 
 const elements = [
   { type: 'common', pattern: 'packages/common', partialMatch: false },
@@ -45,7 +50,12 @@ export default [
       parser: tsparser,
       parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
     },
-    plugins: { boundaries },
+    plugins: {
+      ...securityRecommended.plugins,
+      '@typescript-eslint': tseslint,
+      boundaries,
+      sonarjs,
+    },
     settings: {
       'boundaries/elements': elements,
       'boundaries/legacy-templates': false,
