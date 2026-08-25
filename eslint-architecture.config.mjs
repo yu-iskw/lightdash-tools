@@ -1,9 +1,6 @@
 import tsparser from '@typescript-eslint/parser';
 import boundaries from 'eslint-plugin-boundaries';
-import {
-  projectStructureParser,
-  projectStructurePlugin,
-} from 'eslint-plugin-project-structure';
+import { projectStructureParser, projectStructurePlugin } from 'eslint-plugin-project-structure';
 
 import { folderStructureConfig } from './folder-structure.mjs';
 
