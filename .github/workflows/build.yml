@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -35,7 +35,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-          persist-credentials: false
+          persist-credentials: true
+          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Harden Runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -59,6 +60,20 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Format architecture ESLint config
+        run: pnpm exec prettier --write eslint-architecture.config.mjs
+
+      - name: Commit formatting
+        run: |
+          if git diff --quiet -- eslint-architecture.config.mjs; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eslint-architecture.config.mjs
+          git commit -m "style: format architecture ESLint config"
+          git push
 
       - name: Run build
         run: pnpm build
