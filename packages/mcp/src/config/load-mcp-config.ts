@@ -199,7 +199,9 @@ export interface McpHttpConfig {
   oauthClientId?: string;
   /** Server-held Lightdash OAuth application client secret (broker mode). */
   oauthClientSecret?: SecretString;
+  /** Browser Origin allowlist. Empty hosted default: missing Origin OK; present Origin must match. */
   allowedOrigins: string[];
+  /** Process-memory backstop for JSON-RPC / OAuth form bodies (default 1 MiB; not edge WAF). */
   maxBodyBytes: number;
   requiredScopes: string[];
   scopesSupported: string[];
@@ -313,17 +315,6 @@ function emitNgrokFreeInterstitialWarning(publicUrl: string | undefined): void {
   );
 }
 
-function emitCorsSecurityWarnings(config: McpHttpConfig): void {
-  if (config.allowedOrigins.length > 0) {
-    return;
-  }
-
-  console.warn(
-    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — profile MCP routes do not reflect browser Origins. ` +
-      'OAuth broker/discovery routes still reflect Origin.',
-  );
-}
-
 export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   if (config.authMode === MCP_AUTH_MODE_NONE) {
     console.warn(
@@ -332,7 +323,6 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
   }
 
   emitLightdashOAuthSecurityWarnings(config);
-  emitCorsSecurityWarnings(config);
 }
 
 function readScopeList(env: NodeJS.ProcessEnv, primary: string, fallback: string[]): string[] {

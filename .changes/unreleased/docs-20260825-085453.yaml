@@ -1,0 +1,3 @@
+kind: docs
+body: Document MCP HTTP three-plane security ownership (edge vs Cloud Run vs app); Cloud Run GCLB+Armor recipe; empty ALLOWED_ORIGINS is the hosted default.
+time: 2026-08-25T08:54:53.885186+09:00

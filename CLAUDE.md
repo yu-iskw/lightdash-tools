@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-08-25]: MCP HTTP volume/TLS/Host/WAF belong at the operator edge (GCLB + Armor throttle, Cloud Run `internal-and-cloud-load-balancing`). Do not delete Origin, dual-leg OAuth, or per-user query budgets to “delegate to Armor”; empty `ALLOWED_ORIGINS` is the hosted default (ADR-0032). Stock OWASP CRS on JSON-RPC POSTs false-positives SQL/Explore payloads.
 - [2026-08-21]: `ai-agent-chat` agent pick is named/hint → preferences → `route_agent` → single-agent or ask user (ADR-0031). Never match on instruction/`enableContentTools`. Prefix Lightdash dashboard/chart UUID into create prompt; require title+UUID in the reply.
 - [2026-08-21]: `ai-agent-chat` `create_agent_thread` requires `prompt` (ADR-0030). Empty `{}` fails live: upstream inserts `ai_thread` then `getThread` INNER JOINs `ai_prompt` (promptless = unfetchable). Flow: create(+prompt)→generate; follow-ups message→generate.
 - [2026-08-20]: HttpClient per-request retry is the 4th argument on get/post/put/patch/delete — do not put retry on Axios config. `ai-agent-chat` conversation writes pass `{ maxRetries: 0 }` so a 5xx after generate does not duplicate warehouse/LLM work.

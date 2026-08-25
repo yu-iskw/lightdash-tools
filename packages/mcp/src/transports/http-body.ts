@@ -8,6 +8,7 @@ export function drainRequestBody(req: IncomingMessage): void {
   req.on('data', () => undefined);
 }
 
+/** Reads the request body up to `maxBodyBytes`; oversize → HTTP 413. */
 export function readBody(
   req: IncomingMessage,
   res: ServerResponse,

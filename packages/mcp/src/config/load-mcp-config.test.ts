@@ -430,5 +430,9 @@ describe('loadMcpHttpConfig', () => {
     const config = loadMcpHttpConfig();
     expect(config.authMode).toBe('lightdash-oauth');
     expect(config.allowedOrigins).toEqual([]);
+
+    emitMcpHttpSecurityWarnings(config);
+    const warned = vi.mocked(console.warn).mock.calls.flat().join('\n');
+    expect(warned).not.toMatch(/ALLOWED_ORIGINS is empty/);
   });
 });
