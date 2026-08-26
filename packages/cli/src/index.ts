@@ -35,7 +35,7 @@ const program = new Command();
 program
   .name('lightdash-ai')
   .description('CLI for Lightdash AI')
-  .version('0.19.0')
+  .version('0.20.0')
   .option(
     '--safety-mode <mode>',
     'Safety mode (read-only, write-idempotent, write-destructive)',

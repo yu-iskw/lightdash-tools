@@ -1,3 +1,0 @@
-kind: feat
-body: Reveal saved SQL chart bodies as MCP tool-result artifacts (opt-in includeArtifacts) without enabling standalone SQL execution
-time: 2026-08-26T10:08:41.750972+09:00
