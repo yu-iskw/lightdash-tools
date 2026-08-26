@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.20.0] - 2026-08-26
+
+### Features
+
+- Reveal saved SQL chart bodies as MCP tool-result artifacts (opt-in includeArtifacts) without enabling standalone SQL execution
+
 ## [0.19.0] - 2026-08-21
 
 ### Features
