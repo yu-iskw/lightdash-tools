@@ -10,21 +10,18 @@ import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import {
-  buildSqlArtifact,
-  catalogEntry,
-  contentReaderArtifactUri,
   includeArtifactsField,
   parseIncludeArtifacts,
+  sqlRevealToolResult,
 } from '../lib/artifacts.js';
 import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
-import { classifyChartSource } from '../query/chart-source.js';
+import { resolveChartSource } from '../query/chart-source.js';
 import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { resolveSavedSqlChart } from '../query/resolve-saved-sql-chart.js';
-import { artifactToolResult, jsonToolResult, wrapTool } from '../shared.js';
+import { jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
-import type { ContentReaderWarning } from '../../policy/envelope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { SqlChart } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
@@ -129,7 +126,9 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
     verification: chart.verification,
     updatedAt: chart.updatedAt,
     warnings:
-      chartType === 'sql' ? ['SQL text is hidden; SQL chart execution is disabled by default'] : [],
+      chartType === 'sql'
+        ? ['SQL chart; pass includeArtifacts=["sql"] on get_chart to attach authored SQL']
+        : [],
   };
 }
 
@@ -413,46 +412,20 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
               const include = parseIncludeArtifacts(args.includeArtifacts, []);
-              const preClass = await classifyChartSource(
-                c,
-                scope.projectUuid,
-                args.chartUuidOrSlug,
-              );
-              if (preClass === 'sql') {
+              const preClass = await resolveChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
+              if (preClass.class === 'sql') {
                 const sqlChart = await resolveSavedSqlChart(
                   c,
                   scope.projectUuid,
-                  args.chartUuidOrSlug,
+                  preClass.uuid ?? args.chartUuidOrSlug,
                 );
-                const sqlUri = contentReaderArtifactUri('sql', sqlChart.savedSqlUuid);
-                const includeSql = include.has('sql');
-                const warnings: ContentReaderWarning[] = includeSql
-                  ? []
-                  : [
-                      {
-                        code: 'SQL_ARTIFACT_AVAILABLE',
-                        message:
-                          'Authored SQL is available; pass includeArtifacts=["sql"] to attach it as a separate resource part',
-                      },
-                    ];
-                const envelope = contentReaderEnvelope(toReaderSqlChartSummary(sqlChart), {
+                return sqlRevealToolResult({
                   profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
-                  warnings,
-                });
-                return artifactToolResult({
-                  summary: envelope as unknown as Record<string, unknown>,
-                  artifacts: includeSql
-                    ? [
-                        buildSqlArtifact({
-                          savedSqlUuid: sqlChart.savedSqlUuid,
-                          sql: sqlChart.sql,
-                          forModel: true,
-                        }),
-                      ]
-                    : [],
-                  catalog: [catalogEntry('sql', sqlUri, 'text/sql', includeSql)],
+                  include,
+                  sqlChart,
+                  summaryData: toReaderSqlChartSummary(sqlChart),
                 });
               }
               const chart = asRecord(

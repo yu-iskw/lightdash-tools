@@ -20,8 +20,8 @@ describe('artifactToolResult', () => {
           uri: 'lightdash://artifacts/content-reader/sql/s1',
           mimeType: 'text/sql',
           text: 'SELECT 1',
-          audience: ['user'],
-          priority: 0.3,
+          audience: ['assistant', 'user'],
+          priority: 0.6,
         },
       ],
       catalog: [
@@ -54,7 +54,7 @@ describe('artifactToolResult', () => {
     expect(result.content[2]).toMatchObject({
       type: 'resource',
       resource: { mimeType: 'text/sql', text: 'SELECT 1' },
-      annotations: { audience: ['user'], priority: 0.3 },
+      annotations: { audience: ['assistant', 'user'], priority: 0.6 },
     });
     expect(result.structuredContent).toMatchObject({
       data: { queryUuid: 'q1' },

@@ -158,7 +158,7 @@ export function imageToolResult(args: {
  * structuredContent holds summary only (no SQL body / row payloads).
  */
 export function artifactToolResult(args: {
-  summary: Record<string, unknown>;
+  summary: object;
   artifacts?: ToolArtifactSpec[];
   catalog?: ToolArtifactCatalogEntry[];
 }): TextContent {
@@ -171,10 +171,10 @@ export function artifactToolResult(args: {
       mimeType: a.mimeType,
       included: true,
     }));
-  const summary = {
-    ...args.summary,
-    artifacts: catalog,
-  };
+  const summary = Object.assign({}, args.summary, { artifacts: catalog }) as Record<
+    string,
+    unknown
+  >;
   const content: ToolContentBlock[] = [
     { type: 'text', text: JSON.stringify(summary, null, 2) },
     ...artifacts.map((a): ResourceContentBlock => ({

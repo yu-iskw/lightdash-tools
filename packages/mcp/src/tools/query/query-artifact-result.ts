@@ -5,7 +5,7 @@
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import {
   buildDataArtifact,
-  buildSqlArtifact,
+  buildSqlArtifactParts,
   catalogEntry,
   contentReaderArtifactUri,
 } from '../lib/artifacts.js';
@@ -17,13 +17,10 @@ import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ProfileId } from '@lightdash-tools/common';
 
 export type QueryArtifactExtras = {
-  /** Extra fields merged into envelope `data` (content identity, applied filters, …). */
   dataExtras?: Record<string, unknown>;
-  /** Authored SQL: include body only when `include` has `'sql'`; catalog when uuid is known. */
   sql?: { savedSqlUuid: string; sql?: string };
 };
 
-/** Drop `rows` from the summary payload while preserving rowCount. */
 export function toQuerySummaryPayload(
   normalized: NormalizedQueryResult,
   extras?: Record<string, unknown>,
@@ -60,38 +57,31 @@ export function buildQueryArtifactResult(args: {
   const artifacts: ToolArtifactSpec[] = [];
   const catalog = [];
 
-  const dataUri = contentReaderArtifactUri('data', normalized.queryUuid || 'unknown');
-  const hasRows = Array.isArray(normalized.rows);
-  if (hasRows || include.has('data')) {
-    const included = include.has('data') && hasRows;
-    catalog.push(catalogEntry('data', dataUri, 'application/json', included));
-    if (included) {
-      artifacts.push(
-        buildDataArtifact({
-          queryUuid: normalized.queryUuid || 'unknown',
-          rows: normalized.rows,
-        }),
-      );
+  if (normalized.queryUuid) {
+    const dataUri = contentReaderArtifactUri('data', normalized.queryUuid);
+    const hasRows = Array.isArray(normalized.rows);
+    if (hasRows || include.has('data')) {
+      const included = include.has('data') && hasRows;
+      catalog.push(catalogEntry('data', dataUri, 'application/json', included));
+      if (included) {
+        artifacts.push(
+          buildDataArtifact({
+            queryUuid: normalized.queryUuid,
+            rows: normalized.rows,
+          }),
+        );
+      }
     }
   }
 
   if (extras?.sql) {
-    const sqlUri = contentReaderArtifactUri('sql', extras.sql.savedSqlUuid);
-    const included = include.has('sql') && typeof extras.sql.sql === 'string';
-    catalog.push(catalogEntry('sql', sqlUri, 'text/sql', included));
-    if (included && extras.sql.sql !== undefined) {
-      artifacts.push(
-        buildSqlArtifact({
-          savedSqlUuid: extras.sql.savedSqlUuid,
-          sql: extras.sql.sql,
-          forModel: true,
-        }),
-      );
-    }
+    const sqlParts = buildSqlArtifactParts(include, extras.sql);
+    catalog.push(...sqlParts.catalog);
+    artifacts.push(...sqlParts.artifacts);
   }
 
   return artifactToolResult({
-    summary: envelope as unknown as Record<string, unknown>,
+    summary: envelope,
     artifacts,
     catalog,
   });

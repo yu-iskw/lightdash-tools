@@ -8,7 +8,11 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
-import { includeArtifactsField, parseIncludeArtifacts } from '../lib/artifacts.js';
+import {
+  includeArtifactsField,
+  parseIncludeArtifacts,
+  SQL_ARTIFACT_AVAILABLE_WARNING,
+} from '../lib/artifacts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
 import { classifyChartSource } from '../query/chart-source.js';
@@ -23,7 +27,6 @@ import {
   isCoverageComplete,
   projectScopeErrorResult,
 } from '../query/reader-tool-helpers.js';
-import { resolveSavedSqlChart } from '../query/resolve-saved-sql-chart.js';
 import { wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
@@ -194,14 +197,13 @@ async function executeSqlDashboardTile(
     ...bounded.warnings,
   ];
   if (args.include.has('sql')) {
-    const sqlChart = await resolveSavedSqlChart(args.client, args.projectUuid, args.savedSqlUuid);
+    const sqlChart = await args.client.v1.sqlRunner.getSavedSqlChart(
+      args.projectUuid,
+      args.savedSqlUuid,
+    );
     sqlExtra = { savedSqlUuid: sqlChart.savedSqlUuid, sql: sqlChart.sql };
   } else {
-    warnings.push({
-      code: 'SQL_ARTIFACT_AVAILABLE',
-      message:
-        'Authored SQL is available; pass includeArtifacts=["sql"] (with data) to attach it as a separate resource part',
-    });
+    warnings.push(SQL_ARTIFACT_AVAILABLE_WARNING);
   }
 
   return buildQueryArtifactResult({
