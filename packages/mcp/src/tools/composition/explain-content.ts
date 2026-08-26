@@ -8,13 +8,22 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asRecord } from '../lib/api-shape.js';
+import {
+  buildSqlArtifact,
+  catalogEntry,
+  contentReaderArtifactUri,
+  includeArtifactsField,
+  parseIncludeArtifacts,
+} from '../lib/artifacts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
-import { detectChartType } from '../project/reader-content.js';
+import { detectChartType, toReaderSqlChartSummary } from '../project/reader-content.js';
 import { classifyChartSource } from '../query/chart-source.js';
-import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
-import { jsonToolResult, wrapTool } from '../shared.js';
+import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
+import { resolveSavedSqlChart } from '../query/resolve-saved-sql-chart.js';
+import { artifactToolResult, jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
+import type { ContentReaderWarning } from '../../policy/envelope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -27,12 +36,14 @@ export function registerExplainContent(
     'explain_content',
     {
       title: 'Explain content',
-      description: 'Produce a deterministic metadata-based explanation of a chart or dashboard',
+      description:
+        'Produce a deterministic metadata-based explanation of a chart or dashboard. For saved SQL charts, pass includeArtifacts=["sql"] to attach the authored SQL body as a separate MCP resource.',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         contentType: z.enum(['chart', 'dashboard']),
         contentUuidOrSlug: uuidOrSlugField('Content UUID or slug'),
+        includeArtifacts: includeArtifactsField(),
       },
     },
     /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- explain branches */
@@ -44,20 +55,72 @@ export function registerExplainContent(
             projectUuid?: string;
             contentType: 'chart' | 'dashboard';
             contentUuidOrSlug: string;
+            includeArtifacts?: Array<'data' | 'sql'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
               if (args.contentType === 'chart') {
+                const include = parseIncludeArtifacts(args.includeArtifacts, []);
                 const preClass = await classifyChartSource(
                   c,
                   scope.projectUuid,
                   args.contentUuidOrSlug,
                 );
                 if (preClass === 'sql') {
-                  return codedErrorResult(
-                    'CONTENT_NOT_EXECUTABLE',
-                    'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
+                  const sqlChart = await resolveSavedSqlChart(
+                    c,
+                    scope.projectUuid,
+                    args.contentUuidOrSlug,
                   );
+                  const includeSql = include.has('sql');
+                  const warnings: ContentReaderWarning[] = includeSql
+                    ? []
+                    : [
+                        {
+                          code: 'SQL_ARTIFACT_AVAILABLE',
+                          message:
+                            'Authored SQL is available; pass includeArtifacts=["sql"] to attach it as a separate resource part',
+                        },
+                      ];
+                  const explanation = {
+                    identity: {
+                      uuid: sqlChart.savedSqlUuid,
+                      name: sqlChart.name,
+                      type: 'chart' as const,
+                    },
+                    businessDescription: sqlChart.description,
+                    verification: { verified: false },
+                    measures: [],
+                    groupings: [],
+                    filters: [],
+                    parameters: [],
+                    timeContext: [],
+                    knownWarnings: [
+                      'SQL chart; standalone execution disabled by default on content-reader',
+                    ],
+                    executionRequirements: ['Not executable via run_chart on content-reader v1'],
+                    summary: toReaderSqlChartSummary(sqlChart),
+                  };
+                  const envelope = contentReaderEnvelope(explanation, {
+                    profile,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                    warnings,
+                  });
+                  const sqlUri = contentReaderArtifactUri('sql', sqlChart.savedSqlUuid);
+                  return artifactToolResult({
+                    summary: envelope as unknown as Record<string, unknown>,
+                    artifacts: includeSql
+                      ? [
+                          buildSqlArtifact({
+                            savedSqlUuid: sqlChart.savedSqlUuid,
+                            sql: sqlChart.sql,
+                            forModel: true,
+                          }),
+                        ]
+                      : [],
+                    catalog: [catalogEntry('sql', sqlUri, 'text/sql', includeSql)],
+                  });
                 }
                 const chart = asRecord(
                   await c.v2.charts.getSavedChart(scope.projectUuid, args.contentUuidOrSlug),

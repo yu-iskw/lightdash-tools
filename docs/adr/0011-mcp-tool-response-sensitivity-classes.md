@@ -12,6 +12,8 @@ Relates [4. Agent-safe exposure: MCP/CLI vs client-only](0004-agent-safe-exposur
 
 Relates [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md)
 
+Amended by [32. MCP tool-result artifacts and content-reader SQL body reveal](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)
+
 ## Context
 
 MCP tools return Lightdash API payloads into agent context (chat transcripts, host memory). The MCP specification requires servers to **sanitize tool outputs** ([Tools — Security Considerations](https://modelcontextprotocol.io/specification/2025-11-25/server/tools), 2025-11-25). Protocol-level sensitivity annotations (e.g. draft SEPs) are not shipped; implementors must enforce privacy in handlers.
@@ -33,12 +35,13 @@ A single global `withSensitive` flag would collapse distinct risk classes and fi
 
 1. **Sensitivity classes** for MCP tool responses:
 
-| Class                | Default                                                                                | Opt-in                        | Never on MCP            |
-| -------------------- | -------------------------------------------------------------------------------------- | ----------------------------- | ----------------------- |
-| `pii.email`          | Mask (`a***@domain` via `maybeRedactEmail`)                                            | `includeEmail === true`       | —                       |
-| `secret.destination` | Strip raw keys; expose `redactedDestination`                                           | `revealDestinations === true` | —                       |
-| `secret.connection`  | Omit (`warehouseConnection`, `dbtConnection`, PATs, `schedulerFailureContactOverride`) | —                             | Always; no reveal flag  |
-| `pii.name`           | Full names remain                                                                      | —                             | Out of scope (non-goal) |
+| Class                | Default                                                                                | Opt-in                                                                                                                                             | Never on MCP            |
+| -------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `pii.email`          | Mask (`a***@domain` via `maybeRedactEmail`)                                            | `includeEmail === true`                                                                                                                            | —                       |
+| `secret.destination` | Strip raw keys; expose `redactedDestination`                                           | `revealDestinations === true`                                                                                                                      | —                       |
+| `secret.connection`  | Omit (`warehouseConnection`, `dbtConnection`, PATs, `schedulerFailureContactOverride`) | —                                                                                                                                                  | Always; no reveal flag  |
+| `secret.sql_body`    | Omit from summary / `structuredContent`                                                | `includeArtifacts` contains `'sql'` (separate MCP resource part; [ADR-0032](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)) | —                       |
+| `pii.name`           | Full names remain                                                                      | —                                                                                                                                                  | Out of scope (non-goal) |
 
 2. **No global `withSensitive`.** Class-specific flags only; reveal requires strict `=== true`.
 3. **Handler-level allowlists** in tool handlers / `packages/mcp/src/tools/lib/redaction.ts` — not a new `registerToolSafe` middleware layer ([ADR-0008](0008-mcp-request-scope-and-hardening.md)).

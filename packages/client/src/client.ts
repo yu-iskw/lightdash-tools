@@ -15,6 +15,7 @@ import { ProjectsClient } from './api/v1/projects';
 import { QueryClient } from './api/v1/query';
 import { SchedulersClient } from './api/v1/schedulers';
 import { SpacesClient } from './api/v1/spaces';
+import { SqlRunnerClient } from './api/v1/sql-runner';
 import { TagsClient } from './api/v1/tags';
 import { UsersClient } from './api/v1/users';
 import { ValidationClient } from './api/v1/validation';
@@ -53,6 +54,7 @@ export class V1ApiClients {
   readonly schedulers: SchedulersClient;
   readonly tags: TagsClient;
   readonly analytics: AnalyticsClient;
+  readonly sqlRunner: SqlRunnerClient;
 
   constructor(http: HttpClient) {
     this.projects = new ProjectsClient(http);
@@ -71,6 +73,7 @@ export class V1ApiClients {
     this.schedulers = new SchedulersClient(http);
     this.tags = new TagsClient(http);
     this.analytics = new AnalyticsClient(http);
+    this.sqlRunner = new SqlRunnerClient(http);
   }
 }
 

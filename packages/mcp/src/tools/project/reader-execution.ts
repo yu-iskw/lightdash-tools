@@ -6,9 +6,9 @@ import { z } from 'zod';
 
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
-import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
 import { asRecord } from '../lib/api-shape.js';
+import { includeArtifactsField, parseIncludeArtifacts } from '../lib/artifacts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { runBoundedSavedQuery } from '../query/bounded-saved-query.js';
 import { classifyChartSource } from '../query/chart-source.js';
@@ -17,19 +17,21 @@ import {
   applyFilterValueOverrides,
   type DashboardFiltersLike,
 } from '../query/filter-overrides.js';
+import { buildQueryArtifactResult } from '../query/query-artifact-result.js';
 import {
   codedErrorResult,
   isCoverageComplete,
   projectScopeErrorResult,
 } from '../query/reader-tool-helpers.js';
-import { jsonToolResult, wrapTool } from '../shared.js';
+import { resolveSavedSqlChart } from '../query/resolve-saved-sql-chart.js';
+import { wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
 import { classifyDashboardTile, detectChartType } from './reader-content.js';
 
 import type { ContentReaderWarning } from '../../policy/envelope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { TextContent } from '../shared.js';
+import type { TextContent, ToolArtifactKind } from '../shared.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type {
   ExecuteAsyncDashboardChartRequestParams,
@@ -74,6 +76,7 @@ type DashboardTileSharedArgs = {
   parameterOverrides?: Record<string, unknown>;
   waitForResults?: boolean;
   timeoutMs?: number;
+  include: Set<ToolArtifactKind>;
 };
 
 function filterOverrideWarnings(messages: string[]): ContentReaderWarning[] {
@@ -132,10 +135,16 @@ async function executeSemanticDashboardTile(
     return bounded.result;
   }
 
-  return jsonToolResult(
-    contentReaderEnvelope(
-      {
-        ...bounded.normalized,
+  return buildQueryArtifactResult({
+    profile: args.profile,
+    projectUuid: args.projectUuid,
+    projectPinned: args.projectPinned,
+    normalized: bounded.normalized,
+    include: args.include,
+    complete: isCoverageComplete(bounded.normalized),
+    warnings: [...filterOverrideWarnings(args.filterWarnings), ...bounded.warnings],
+    extras: {
+      dataExtras: {
         content: {
           type: 'dashboard_tile' as const,
           dashboardUuid: args.dashboard.uuid,
@@ -147,16 +156,8 @@ async function executeSemanticDashboardTile(
         appliedDashboardFilters: args.filters,
         appliedDateZoom: args.dateZoom,
       },
-      {
-        profile: args.profile,
-        projectUuid: args.projectUuid,
-        projectPinned: args.projectPinned,
-        complete: isCoverageComplete(bounded.normalized),
-        truncated: bounded.normalized.truncated,
-        warnings: [...filterOverrideWarnings(args.filterWarnings), ...bounded.warnings],
-      },
-    ),
-  );
+    },
+  });
 }
 
 async function executeSqlDashboardTile(
@@ -183,10 +184,36 @@ async function executeSqlDashboardTile(
     return bounded.result;
   }
 
-  return jsonToolResult(
-    contentReaderEnvelope(
-      {
-        ...bounded.normalized,
+  let sqlExtra: { savedSqlUuid: string; sql?: string } = {
+    savedSqlUuid: args.savedSqlUuid,
+  };
+  const warnings: ContentReaderWarning[] = [
+    ...filterOverrideWarnings(args.filterWarnings),
+    SQL_TILE_ROW_LEVEL_WARNING,
+    ...(args.dateZoomIgnored ? [DATE_ZOOM_IGNORED_ON_SQL_TILE] : []),
+    ...bounded.warnings,
+  ];
+  if (args.include.has('sql')) {
+    const sqlChart = await resolveSavedSqlChart(args.client, args.projectUuid, args.savedSqlUuid);
+    sqlExtra = { savedSqlUuid: sqlChart.savedSqlUuid, sql: sqlChart.sql };
+  } else {
+    warnings.push({
+      code: 'SQL_ARTIFACT_AVAILABLE',
+      message:
+        'Authored SQL is available; pass includeArtifacts=["sql"] (with data) to attach it as a separate resource part',
+    });
+  }
+
+  return buildQueryArtifactResult({
+    profile: args.profile,
+    projectUuid: args.projectUuid,
+    projectPinned: args.projectPinned,
+    normalized: bounded.normalized,
+    include: args.include,
+    complete: isCoverageComplete(bounded.normalized),
+    warnings,
+    extras: {
+      dataExtras: {
         content: {
           type: 'dashboard_tile' as const,
           dashboardUuid: args.dashboard.uuid,
@@ -198,21 +225,9 @@ async function executeSqlDashboardTile(
         },
         appliedDashboardFilters: args.filters,
       },
-      {
-        profile: args.profile,
-        projectUuid: args.projectUuid,
-        projectPinned: args.projectPinned,
-        complete: isCoverageComplete(bounded.normalized),
-        truncated: bounded.normalized.truncated,
-        warnings: [
-          ...filterOverrideWarnings(args.filterWarnings),
-          SQL_TILE_ROW_LEVEL_WARNING,
-          ...(args.dateZoomIgnored ? [DATE_ZOOM_IGNORED_ON_SQL_TILE] : []),
-          ...bounded.warnings,
-        ],
-      },
-    ),
-  );
+      sql: sqlExtra,
+    },
+  });
 }
 
 export function registerRunChart(server: McpServer, contextProvider: McpContextProvider): void {
@@ -222,7 +237,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
     {
       title: 'Run chart',
       description:
-        'Execute one existing saved semantic chart (SQL charts disabled by default). Cache-first, bounded rows.',
+        'Execute one existing saved semantic chart (SQL charts disabled by default). Cache-first, bounded rows returned as a separate data artifact by default.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -233,6 +248,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
         useCache: z.boolean().optional(),
         waitForResults: z.boolean().optional(),
         timeoutMs: z.number().int().nonnegative().optional(),
+        includeArtifacts: includeArtifactsField(),
       },
     },
     (profile) =>
@@ -248,6 +264,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
             useCache?: boolean;
             waitForResults?: boolean;
             timeoutMs?: number;
+            includeArtifacts?: Array<'data' | 'sql'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -258,6 +275,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                 );
               }
               const limit = clampRowLimit(args.limit);
+              const include = parseIncludeArtifacts(args.includeArtifacts, ['data']);
               const preClass = await classifyChartSource(
                 c,
                 scope.projectUuid,
@@ -306,23 +324,21 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
                 return bounded.result;
               }
 
-              return jsonToolResult(
-                contentReaderEnvelope(
-                  {
-                    ...bounded.normalized,
+              return buildQueryArtifactResult({
+                profile,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+                normalized: bounded.normalized,
+                include,
+                complete: isCoverageComplete(bounded.normalized),
+                warnings: bounded.warnings,
+                extras: {
+                  dataExtras: {
                     content: { type: 'chart' as const, uuid: chartUuid, name: chart.name },
                     appliedParameters: args.parameters ?? {},
                   },
-                  {
-                    profile,
-                    projectUuid: scope.projectUuid,
-                    projectPinned: scope.projectPinned,
-                    complete: isCoverageComplete(bounded.normalized),
-                    truncated: bounded.normalized.truncated,
-                    warnings: bounded.warnings,
-                  },
-                ),
-              );
+                },
+              });
             } catch (err) {
               if (err instanceof ResultLimitError) {
                 return codedErrorResult(err.code, err.message);
@@ -344,7 +360,7 @@ export function registerRunDashboardTile(
     {
       title: 'Run dashboard tile',
       description:
-        'Execute one dashboard tile in dashboard context (saved semantic charts or saved SQL tiles). Cache-first, bounded rows.',
+        'Execute one dashboard tile in dashboard context (saved semantic charts or saved SQL tiles). Cache-first, bounded rows as a data artifact by default; pass includeArtifacts including "sql" for authored SQL on sql_chart tiles.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -364,6 +380,7 @@ export function registerRunDashboardTile(
         useCache: z.boolean().optional(),
         waitForResults: z.boolean().optional(),
         timeoutMs: z.number().int().nonnegative().optional(),
+        includeArtifacts: includeArtifactsField(),
       },
     },
     (profile) =>
@@ -381,6 +398,7 @@ export function registerRunDashboardTile(
             useCache?: boolean;
             waitForResults?: boolean;
             timeoutMs?: number;
+            includeArtifacts?: Array<'data' | 'sql'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -391,6 +409,7 @@ export function registerRunDashboardTile(
                 );
               }
               const limit = clampRowLimit(args.limit);
+              const include = parseIncludeArtifacts(args.includeArtifacts, ['data']);
               const dashboard = asRecord(
                 await c.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuidOrSlug),
               );
@@ -433,6 +452,7 @@ export function registerRunDashboardTile(
                 parameterOverrides: args.parameterOverrides,
                 waitForResults: args.waitForResults,
                 timeoutMs: args.timeoutMs,
+                include,
               };
               switch (classified.kind) {
                 case 'sql_chart':

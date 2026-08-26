@@ -8,10 +8,12 @@ import { ProjectScopeError, resolveProjectScope } from '../../governance/project
 import { SAVED_EXECUTION_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { clampWaitMs } from '../../policy/result-limits.js';
+import { includeArtifactsField, parseIncludeArtifacts } from '../lib/artifacts.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
+import { buildQueryArtifactResult } from './query-artifact-result.js';
 import { findQueryLedgerEntry, releaseQueryLedgerBudget } from './query-ledger.js';
 import {
   codedErrorResult,
@@ -35,7 +37,7 @@ export function registerGetQueryResult(
     {
       title: 'Get query result',
       description:
-        'Poll or retrieve a query started by this profile (by queryUuid handle). Shared by content-reader and data-analyst; safety preset is saved-execution (budget/ledger identical for metric_query).',
+        'Poll or retrieve a query started by this profile (by queryUuid handle). Rows are a separate data artifact by default (ADR-0032). Shared by content-reader and data-analyst.',
       safety: SAVED_EXECUTION_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -43,6 +45,7 @@ export function registerGetQueryResult(
         waitMs: z.number().int().nonnegative().optional(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().max(1000).optional(),
+        includeArtifacts: includeArtifactsField(),
       },
     },
     (profile) =>
@@ -55,6 +58,7 @@ export function registerGetQueryResult(
             waitMs?: number;
             page?: number;
             pageSize?: number;
+            includeArtifacts?: Array<'data' | 'sql'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -63,6 +67,7 @@ export function registerGetQueryResult(
                 projectUuid: scope.projectUuid,
                 queryUuid: args.queryUuid,
               });
+              const include = parseIncludeArtifacts(args.includeArtifacts, ['data']);
 
               const waitMs = clampWaitMs(args.waitMs ?? 0);
               const pageSize = args.pageSize ?? 100;
@@ -86,16 +91,15 @@ export function registerGetQueryResult(
                 releaseQueryLedgerBudget(ledgerEntry);
               }
 
-              return jsonToolResult(
-                contentReaderEnvelope(normalized, {
-                  profile,
-                  projectUuid: scope.projectUuid,
-                  projectPinned: scope.projectPinned,
-                  complete: isCoverageComplete(normalized),
-                  truncated: normalized.truncated,
-                  warnings: normalized.warnings.map(warningFromNormalizedMessage),
-                }),
-              );
+              return buildQueryArtifactResult({
+                profile,
+                projectUuid: scope.projectUuid,
+                projectPinned: scope.projectPinned,
+                normalized,
+                include,
+                complete: isCoverageComplete(normalized),
+                warnings: normalized.warnings.map(warningFromNormalizedMessage),
+              });
             } catch (err) {
               if (err instanceof ProjectScopeError) {
                 return codedErrorResult(err.code, err.message);
