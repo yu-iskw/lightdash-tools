@@ -79,15 +79,23 @@ describe('registerRunMetricQuery', () => {
       );
 
       const body = JSON.parse(result.content[0].text) as {
-        data: { queryUuid: string; status: string };
+        data: { queryUuid: string; status: string; rows?: unknown };
         context: { profile: string; projectUuid: string };
         coverage: { complete: boolean };
+        artifacts: Array<{ kind: string; included: boolean }>;
       };
       expect(body.data.queryUuid).toBe('q-metric');
       expect(body.data.status).toBe('complete');
+      expect(body.data.rows).toBeUndefined();
       expect(body.context.profile).toBe('data-analyst');
       expect(body.context.projectUuid).toBe(PROJECT);
       expect(body.coverage.complete).toBe(true);
+      expect(body.artifacts).toEqual([expect.objectContaining({ kind: 'data', included: true })]);
+      const dataPart = result.content.find(
+        (c: { type?: string; resource?: { mimeType?: string; text?: string } }) =>
+          c.type === 'resource' && c.resource?.mimeType === 'application/json',
+      );
+      expect(dataPart?.resource?.text).toContain('orders_order_id');
     });
   });
 

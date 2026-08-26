@@ -14,18 +14,21 @@ import type {
   ToolArtifactKind,
   ToolArtifactSpec,
 } from '../shared.js';
-import type { SqlChart } from '@lightdash-tools/client';
 import type { ProfileId } from '@lightdash-tools/common';
 
-export const ARTIFACT_KIND_SCHEMA = z.enum(['sql', 'data']);
-
-export const includeArtifactsField = (): z.ZodOptional<z.ZodArray<typeof ARTIFACT_KIND_SCHEMA>> =>
-  z
-    .array(ARTIFACT_KIND_SCHEMA)
+/** Per-tool allowlist — do not advertise kinds the tool cannot attach. */
+export function includeArtifactsField(
+  kinds: readonly [ToolArtifactKind, ...ToolArtifactKind[]],
+): z.ZodType<ToolArtifactKind[] | undefined> {
+  const kindList = kinds.join(', ');
+  const values = [...kinds] as [ToolArtifactKind, ...ToolArtifactKind[]];
+  return z
+    .array(z.enum(values))
     .optional()
     .describe(
-      "Bulky payloads to attach as separate MCP resource parts (default: discover=[], run=['data']). SQL bodies require explicit 'sql'.",
+      `Bulky payloads to attach as separate MCP resource parts (allowed: ${kindList}). Omitted kinds use each tool's default.`,
     );
+}
 
 export function parseIncludeArtifacts(
   value: Array<'data' | 'sql'> | undefined,
@@ -97,7 +100,9 @@ export function sqlRevealToolResult(args: {
   projectUuid: string;
   projectPinned: boolean;
   include: Set<ToolArtifactKind>;
-  sqlChart: SqlChart;
+  savedSqlUuid: string;
+  /** Present only when `include` has `'sql'` (avoids downloading the body otherwise). */
+  sql?: string;
   summaryData: object;
 }): TextContent {
   const includeSql = args.include.has('sql');
@@ -109,8 +114,8 @@ export function sqlRevealToolResult(args: {
     warnings,
   });
   const { artifacts, catalog } = buildSqlArtifactParts(args.include, {
-    savedSqlUuid: args.sqlChart.savedSqlUuid,
-    sql: includeSql ? args.sqlChart.sql : undefined,
+    savedSqlUuid: args.savedSqlUuid,
+    sql: includeSql ? args.sql : undefined,
   });
   return artifactToolResult({
     summary: envelope,

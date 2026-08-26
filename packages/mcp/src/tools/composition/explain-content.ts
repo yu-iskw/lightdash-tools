@@ -24,6 +24,35 @@ import { defineTool } from '../types.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { McpServer } from '@modelcontextprotocol/server';
 
+function sqlExplainSummary(args: {
+  savedSqlUuid: string;
+  name?: string;
+  description?: string | null;
+  slug?: string;
+  space?: { uuid: string; name: string };
+  lastUpdatedAt?: string | null;
+  chartKind?: unknown;
+  limit?: unknown;
+}): object {
+  return {
+    identity: {
+      uuid: args.savedSqlUuid,
+      name: args.name,
+      type: 'chart' as const,
+    },
+    businessDescription: args.description,
+    verification: { verified: false },
+    measures: [],
+    groupings: [],
+    filters: [],
+    parameters: [],
+    timeContext: [],
+    knownWarnings: ['SQL chart; standalone execution disabled by default on content-reader'],
+    executionRequirements: ['Not executable via run_chart on content-reader v1'],
+    summary: toReaderSqlChartSummary(args),
+  };
+}
+
 export function registerExplainContent(
   server: McpServer,
   contextProvider: McpContextProvider,
@@ -40,7 +69,7 @@ export function registerExplainContent(
         projectUuid: projectUuidField().optional(),
         contentType: z.enum(['chart', 'dashboard']),
         contentUuidOrSlug: uuidOrSlugField('Content UUID or slug'),
-        includeArtifacts: includeArtifactsField(),
+        includeArtifacts: includeArtifactsField(['sql']),
       },
     },
     /* eslint-disable sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity -- explain branches */
@@ -64,36 +93,33 @@ export function registerExplainContent(
                   args.contentUuidOrSlug,
                 );
                 if (preClass.class === 'sql') {
-                  const sqlChart = await resolveSavedSqlChart(
-                    c,
-                    scope.projectUuid,
-                    preClass.uuid ?? args.contentUuidOrSlug,
-                  );
+                  const savedSqlUuid = preClass.uuid ?? args.contentUuidOrSlug;
+                  if (include.has('sql')) {
+                    const sqlChart = await resolveSavedSqlChart(c, scope.projectUuid, savedSqlUuid);
+                    return sqlRevealToolResult({
+                      profile,
+                      projectUuid: scope.projectUuid,
+                      projectPinned: scope.projectPinned,
+                      include,
+                      savedSqlUuid: sqlChart.savedSqlUuid,
+                      sql: sqlChart.sql,
+                      summaryData: sqlExplainSummary(sqlChart),
+                    });
+                  }
                   return sqlRevealToolResult({
                     profile,
                     projectUuid: scope.projectUuid,
                     projectPinned: scope.projectPinned,
                     include,
-                    sqlChart,
-                    summaryData: {
-                      identity: {
-                        uuid: sqlChart.savedSqlUuid,
-                        name: sqlChart.name,
-                        type: 'chart' as const,
-                      },
-                      businessDescription: sqlChart.description,
-                      verification: { verified: false },
-                      measures: [],
-                      groupings: [],
-                      filters: [],
-                      parameters: [],
-                      timeContext: [],
-                      knownWarnings: [
-                        'SQL chart; standalone execution disabled by default on content-reader',
-                      ],
-                      executionRequirements: ['Not executable via run_chart on content-reader v1'],
-                      summary: toReaderSqlChartSummary(sqlChart),
-                    },
+                    savedSqlUuid,
+                    summaryData: sqlExplainSummary({
+                      savedSqlUuid,
+                      name: preClass.name,
+                      description: preClass.description,
+                      slug: preClass.slug,
+                      space: preClass.space,
+                      lastUpdatedAt: preClass.lastUpdatedAt,
+                    }),
                   });
                 }
                 const chart = asRecord(

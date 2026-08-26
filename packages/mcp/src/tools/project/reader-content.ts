@@ -23,7 +23,6 @@ import { jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
-import type { SqlChart } from '@lightdash-tools/client';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 export function detectChartType(chart: Record<string, unknown>): 'semantic' | 'sql' | 'unknown' {
@@ -133,7 +132,16 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
 }
 
 /** Metadata summary for a saved SQL chart — never includes the authored SQL body. */
-export function toReaderSqlChartSummary(chart: SqlChart): Record<string, unknown> {
+export function toReaderSqlChartSummary(chart: {
+  savedSqlUuid: string;
+  slug?: string;
+  name?: string;
+  description?: string | null;
+  chartKind?: unknown;
+  limit?: unknown;
+  space?: unknown;
+  lastUpdatedAt?: string | null;
+}): Record<string, unknown> {
   return {
     uuid: chart.savedSqlUuid,
     savedSqlUuid: chart.savedSqlUuid,
@@ -143,7 +151,15 @@ export function toReaderSqlChartSummary(chart: SqlChart): Record<string, unknown
     chartType: 'sql' as const,
     chartKind: chart.chartKind,
     limit: chart.limit,
-    space: chart.space,
+    space:
+      chart.space && typeof chart.space === 'object'
+        ? (() => {
+            const space = chart.space as { uuid?: unknown; name?: unknown };
+            return typeof space.uuid === 'string' && typeof space.name === 'string'
+              ? { uuid: space.uuid, name: space.name }
+              : undefined;
+          })()
+        : undefined,
     updatedAt: chart.lastUpdatedAt,
     executable: false,
   };
@@ -396,7 +412,7 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
         projectUuid: projectUuidField().optional(),
         chartUuidOrSlug: uuidOrSlugField('Chart UUID or slug'),
         includeQueryDefinition: z.boolean().optional(),
-        includeArtifacts: includeArtifactsField(),
+        includeArtifacts: includeArtifactsField(['sql']),
       },
     },
     (profile) =>
@@ -414,18 +430,33 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
               const include = parseIncludeArtifacts(args.includeArtifacts, []);
               const preClass = await resolveChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
               if (preClass.class === 'sql') {
-                const sqlChart = await resolveSavedSqlChart(
-                  c,
-                  scope.projectUuid,
-                  preClass.uuid ?? args.chartUuidOrSlug,
-                );
+                const savedSqlUuid = preClass.uuid ?? args.chartUuidOrSlug;
+                if (include.has('sql')) {
+                  const sqlChart = await resolveSavedSqlChart(c, scope.projectUuid, savedSqlUuid);
+                  return sqlRevealToolResult({
+                    profile,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                    include,
+                    savedSqlUuid: sqlChart.savedSqlUuid,
+                    sql: sqlChart.sql,
+                    summaryData: toReaderSqlChartSummary(sqlChart),
+                  });
+                }
                 return sqlRevealToolResult({
                   profile,
                   projectUuid: scope.projectUuid,
                   projectPinned: scope.projectPinned,
                   include,
-                  sqlChart,
-                  summaryData: toReaderSqlChartSummary(sqlChart),
+                  savedSqlUuid,
+                  summaryData: toReaderSqlChartSummary({
+                    savedSqlUuid,
+                    slug: preClass.slug,
+                    name: preClass.name,
+                    description: preClass.description,
+                    space: preClass.space,
+                    lastUpdatedAt: preClass.lastUpdatedAt,
+                  }),
                 });
               }
               const chart = asRecord(

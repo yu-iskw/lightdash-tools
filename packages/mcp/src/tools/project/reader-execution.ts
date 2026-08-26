@@ -173,6 +173,11 @@ async function executeSqlDashboardTile(
       args.filters as ExecuteAsyncDashboardSqlChartRequestParams['dashboardFilters'],
   };
 
+  // Overlap SQL body fetch with query wait when the caller opted into the sql artifact.
+  const sqlFetch = args.include.has('sql')
+    ? args.client.v1.sqlRunner.getSavedSqlChart(args.projectUuid, args.savedSqlUuid)
+    : undefined;
+
   const bounded = await runBoundedSavedQuery({
     client: args.client,
     projectUuid: args.projectUuid,
@@ -196,11 +201,8 @@ async function executeSqlDashboardTile(
     ...(args.dateZoomIgnored ? [DATE_ZOOM_IGNORED_ON_SQL_TILE] : []),
     ...bounded.warnings,
   ];
-  if (args.include.has('sql')) {
-    const sqlChart = await args.client.v1.sqlRunner.getSavedSqlChart(
-      args.projectUuid,
-      args.savedSqlUuid,
-    );
+  if (sqlFetch) {
+    const sqlChart = await sqlFetch;
     sqlExtra = { savedSqlUuid: sqlChart.savedSqlUuid, sql: sqlChart.sql };
   } else {
     warnings.push(SQL_ARTIFACT_AVAILABLE_WARNING);
@@ -250,7 +252,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
         useCache: z.boolean().optional(),
         waitForResults: z.boolean().optional(),
         timeoutMs: z.number().int().nonnegative().optional(),
-        includeArtifacts: includeArtifactsField(),
+        includeArtifacts: includeArtifactsField(['data']),
       },
     },
     (profile) =>
@@ -266,7 +268,7 @@ export function registerRunChart(server: McpServer, contextProvider: McpContextP
             useCache?: boolean;
             waitForResults?: boolean;
             timeoutMs?: number;
-            includeArtifacts?: Array<'data' | 'sql'>;
+            includeArtifacts?: Array<'data'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
@@ -382,7 +384,7 @@ export function registerRunDashboardTile(
         useCache: z.boolean().optional(),
         waitForResults: z.boolean().optional(),
         timeoutMs: z.number().int().nonnegative().optional(),
-        includeArtifacts: includeArtifactsField(),
+        includeArtifacts: includeArtifactsField(['data', 'sql']),
       },
     },
     (profile) =>

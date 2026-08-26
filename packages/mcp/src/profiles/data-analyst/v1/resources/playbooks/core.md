@@ -21,19 +21,19 @@ Explore a Lightdash project's semantic layer and **run unsaved metric queries** 
 | `list_explores`                | Always `search` + `limit≤15`; inspect ≤10 candidates                            |
 | Field shortlists               | Prefer base-table dimensions; explore-local metrics                             |
 | `run_metric_query`             | Prefer `limit≤100` (hard max 1000); ≤5 exploratory runs per answer unless asked |
-| Result rows kept in the answer | ≤20 (even if more returned)                                                     |
-| `get_query_result` polls       | Only while status is non-terminal                                               |
+| Result rows kept in the answer | ≤20 (even if more returned via data artifact)                                   |
+| `get_query_result` polls       | Only while status is non-terminal; rows are data artifacts, not `data.rows`     |
 
 ## Allowed tools (`lightdash_*`)
 
-| Tool                                | Use for                                     |
-| ----------------------------------- | ------------------------------------------- |
-| `get_project`                       | Resolve project; read `analystCapabilities` |
-| `list_explores` / `get_explore`     | Find and lock an explore                    |
-| `list_dimensions` / `list_metrics`  | Copy fieldIds                               |
-| `compile_query`                     | Optional SQL pre-flight (no warehouse rows) |
-| `run_metric_query`                  | Bounded ad-hoc execution                    |
-| `get_query_result` / `cancel_query` | Poll / cancel by `queryUuid`                |
+| Tool                                | Use for                                                   |
+| ----------------------------------- | --------------------------------------------------------- |
+| `get_project`                       | Resolve project; read `analystCapabilities`               |
+| `list_explores` / `get_explore`     | Find and lock an explore                                  |
+| `list_dimensions` / `list_metrics`  | Copy fieldIds                                             |
+| `compile_query`                     | Optional SQL pre-flight (no warehouse rows)               |
+| `run_metric_query`                  | Bounded ad-hoc execution; rows as data artifact (default) |
+| `get_query_result` / `cancel_query` | Poll / cancel by `queryUuid` (same artifact shape)        |
 
 ## Phase 0 — Resolve project
 

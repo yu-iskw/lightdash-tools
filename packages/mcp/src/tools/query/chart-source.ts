@@ -12,13 +12,58 @@ export type ChartContentMatch = {
   uuid: string;
   slug?: string;
   source?: string;
+  name?: string;
+  description?: string | null;
+  space?: { uuid: string; name: string };
+  lastUpdatedAt?: string | null;
 };
 
 export type ChartSourceResolution = {
   class: ChartSourceClass;
   uuid?: string;
   slug?: string;
+  name?: string;
+  description?: string | null;
+  space?: { uuid: string; name: string };
+  lastUpdatedAt?: string | null;
 };
+
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function optionalStringOrNull(value: unknown): string | null | undefined {
+  if (typeof value === 'string' || value === null) {
+    return value;
+  }
+  return undefined;
+}
+
+function spaceNameUuid(value: unknown): { uuid: string; name: string } | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+  const space = value as { uuid?: unknown; name?: unknown };
+  if (typeof space.uuid === 'string' && typeof space.name === 'string') {
+    return { uuid: space.uuid, name: space.name };
+  }
+  return undefined;
+}
+
+function toChartContentMatch(match: Record<string, unknown>): ChartContentMatch | undefined {
+  if (typeof match.uuid !== 'string') {
+    return undefined;
+  }
+  return {
+    uuid: match.uuid,
+    slug: optionalString(match.slug),
+    source: optionalString(match.source),
+    name: optionalString(match.name),
+    description: optionalStringOrNull(match.description),
+    space: spaceNameUuid(match.space),
+    lastUpdatedAt: optionalStringOrNull(match.lastUpdatedAt),
+  };
+}
 
 /** Exact uuid/slug chart hit from `search_content` (first page). */
 export async function findChartContentMatch(
@@ -39,14 +84,7 @@ export async function findChartContentMatch(
     }
     return item.uuid === chartUuidOrSlug || item.slug === chartUuidOrSlug;
   });
-  if (!match || typeof match.uuid !== 'string') {
-    return undefined;
-  }
-  return {
-    uuid: match.uuid,
-    slug: typeof match.slug === 'string' ? match.slug : undefined,
-    source: typeof match.source === 'string' ? match.source : undefined,
-  };
+  return match ? toChartContentMatch(match) : undefined;
 }
 
 function classFromSource(source: string | undefined): ChartSourceClass {
@@ -73,6 +111,10 @@ export async function resolveChartSource(
     class: classFromSource(match.source),
     uuid: match.uuid,
     slug: match.slug,
+    name: match.name,
+    description: match.description,
+    space: match.space,
+    lastUpdatedAt: match.lastUpdatedAt,
   };
 }
 

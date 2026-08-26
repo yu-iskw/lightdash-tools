@@ -50,19 +50,20 @@ describe('registerGetChart SQL reveal', () => {
 
   it('returns metadata with SQL_ARTIFACT_AVAILABLE by default', async () => {
     const searchContent = vi.fn().mockResolvedValue({
-      data: [{ contentType: 'chart', uuid: SAVED_SQL, slug: 'sql-kpi', source: 'sql' }],
+      data: [
+        {
+          contentType: 'chart',
+          uuid: SAVED_SQL,
+          slug: 'sql-kpi',
+          source: 'sql',
+          name: 'SQL KPI',
+          description: null,
+          space: { uuid: 's1', name: 'Space' },
+          lastUpdatedAt: '2026-01-01T00:00:00Z',
+        },
+      ],
     });
-    const getSavedSqlChart = vi.fn().mockResolvedValue({
-      savedSqlUuid: SAVED_SQL,
-      name: 'SQL KPI',
-      slug: 'sql-kpi',
-      description: null,
-      sql: 'SELECT metric FROM kpi',
-      limit: 500,
-      chartKind: 'table',
-      space: { uuid: 's1', name: 'Space' },
-      lastUpdatedAt: '2026-01-01T00:00:00Z',
-    });
+    const getSavedSqlChart = vi.fn();
     const mockServer = { registerTool: vi.fn() };
     bindServerProfile(mockServer, 'content-reader');
     registerGetChart(
@@ -82,13 +83,15 @@ describe('registerGetChart SQL reveal', () => {
       chartUuidOrSlug: SAVED_SQL,
     });
 
+    expect(getSavedSqlChart).not.toHaveBeenCalled();
     const body = JSON.parse(result.content[0].text!) as {
-      data: { chartType: string; savedSqlUuid: string };
+      data: { chartType: string; savedSqlUuid: string; name?: string };
       warnings: Array<{ code: string }>;
       artifacts: Array<{ kind: string; included: boolean }>;
     };
     expect(body.data.chartType).toBe('sql');
     expect(body.data.savedSqlUuid).toBe(SAVED_SQL);
+    expect(body.data.name).toBe('SQL KPI');
     expect(JSON.stringify(body)).not.toContain('SELECT metric');
     expect(body.warnings.map((w) => w.code)).toContain('SQL_ARTIFACT_AVAILABLE');
     expect(body.artifacts).toEqual([expect.objectContaining({ kind: 'sql', included: false })]);

@@ -45,7 +45,7 @@ export function registerGetQueryResult(
         waitMs: z.number().int().nonnegative().optional(),
         page: z.number().int().positive().optional(),
         pageSize: z.number().int().positive().max(1000).optional(),
-        includeArtifacts: includeArtifactsField(),
+        includeArtifacts: includeArtifactsField(['data']),
       },
     },
     (profile) =>
@@ -58,7 +58,7 @@ export function registerGetQueryResult(
             waitMs?: number;
             page?: number;
             pageSize?: number;
-            includeArtifacts?: Array<'data' | 'sql'>;
+            includeArtifacts?: Array<'data'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
