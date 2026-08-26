@@ -11,13 +11,15 @@ URI: `lightdash://playbooks/content-reader/explain-run`
 
 ## SQL vs semantic (critical)
 
-| Signal                                                      | Action                                                                                                              |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Search `source=sql`                                         | Do **not** call `run_chart`; explain metadata only; cite `CONTENT_NOT_EXECUTABLE` / `canExecuteSqlCharts=false`     |
-| `get_chart` → `chartType=sql` + warnings                    | Same — saved SQL **chart** body hidden; standalone execution disabled                                               |
-| Dashboard tile `type=sql_chart` and `executable=true`       | Call `run_dashboard_tile` (not `run_chart`). Cite `canExecuteDashboardSqlTiles=true`. SQL text stays hidden         |
-| Opaque API errors (e.g. “Saved query not found”) on SQL ids | Treat as non-executable; do not retry endlessly                                                                     |
-| `readerCapabilities.canExecuteSqlCharts=false`              | Hard stop for **standalone** SQL chart execution (`run_chart`); dashboard SQL tiles use the dashboard-sql-chart API |
+| Signal                                                      | Action                                                                                                                                        |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Search `source=sql`                                         | Do **not** call `run_chart`; use `get_chart` / `explain_content` for metadata; cite `canExecuteSqlCharts=false`                               |
+| Need authored SQL body                                      | Pass `includeArtifacts=["sql"]` on `get_chart` / `explain_content` / `run_dashboard_tile`. SQL arrives as a separate MCP `resource` part      |
+| Warning `SQL_ARTIFACT_AVAILABLE`                            | SQL exists but was not attached — re-call with `includeArtifacts` including `sql` if the user asked to see SQL                                |
+| Dashboard tile `type=sql_chart` and `executable=true`       | Call `run_dashboard_tile` (not `run_chart`). Cite `canExecuteDashboardSqlTiles=true`. Default rows artifact; SQL only with `includeArtifacts` |
+| Opaque API errors (e.g. “Saved query not found”) on SQL ids | Treat as non-executable; do not retry endlessly                                                                                               |
+| `readerCapabilities.canExecuteSqlCharts=false`              | Hard stop for **standalone** SQL chart execution (`run_chart`); dashboard SQL tiles use the dashboard-sql-chart API                           |
+| `readerCapabilities.canRevealSqlBodies=true`                | Authored SQL reveal allowed via artifacts only — never invent SQL                                                                             |
 
 ## Decide whether to execute
 

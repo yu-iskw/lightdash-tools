@@ -27,6 +27,7 @@ const READER_CAPABILITIES = {
   canExecuteSqlCharts: false,
   canExecuteDashboardTiles: true,
   canExecuteDashboardSqlTiles: true,
+  canRevealSqlBodies: true,
 } as const;
 
 const DEVELOPER_CAPABILITIES = {

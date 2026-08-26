@@ -70,7 +70,12 @@ function registerDashboardTileHandler(lightdashClient: unknown) {
   expect(toolName).toBe('lightdash_run_dashboard_tile');
   return handler as (args: Record<string, unknown>) => Promise<{
     isError?: boolean;
-    content: Array<{ text: string }>;
+    content: Array<{
+      type?: string;
+      text?: string;
+      resource?: { text?: string; mimeType?: string };
+    }>;
+    structuredContent?: Record<string, unknown>;
   }>;
 }
 
@@ -124,9 +129,10 @@ describe('registerRunDashboardTile', () => {
       );
       expect(runDashboardChartQuery).not.toHaveBeenCalled();
 
-      const body = JSON.parse(result.content[0].text) as {
-        data: { queryUuid: string; content: Record<string, unknown> };
+      const body = JSON.parse(result.content[0].text!) as {
+        data: { queryUuid: string; content: Record<string, unknown>; rows?: unknown };
         warnings: Array<{ code: string }>;
+        artifacts: Array<{ kind: string; included: boolean }>;
       };
       expect(body.data.queryUuid).toBe('q-sql');
       expect(body.data.content).toMatchObject({
@@ -135,7 +141,72 @@ describe('registerRunDashboardTile', () => {
         tileUuid: TILE_SQL,
       });
       expect(body.data.content).not.toHaveProperty('chartUuid');
-      expect(body.warnings.map((w) => w.code)).toContain('SQL_RESULT_MAY_BE_ROW_LEVEL');
+      expect(body.data.rows).toBeUndefined();
+      expect(body.artifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ kind: 'data', included: true }),
+          expect.objectContaining({ kind: 'sql', included: false }),
+        ]),
+      );
+      expect(result.content.some((c) => c.type === 'resource')).toBe(true);
+      expect(body.warnings.map((w) => w.code)).toEqual(
+        expect.arrayContaining(['SQL_RESULT_MAY_BE_ROW_LEVEL', 'SQL_ARTIFACT_AVAILABLE']),
+      );
+    });
+  });
+
+  it('attaches authored SQL resource when includeArtifacts includes sql', async () => {
+    const runDashboardSqlChartQuery = vi.fn().mockResolvedValue({ queryUuid: 'q-sql-art' });
+    const getAsyncQueryResults = vi.fn().mockResolvedValue({
+      queryUuid: 'q-sql-art',
+      status: 'ready',
+      columns: {},
+      rows: [{ metric: 2 }],
+      totalResults: 1,
+    });
+    const getSavedSqlChart = vi.fn().mockResolvedValue({
+      savedSqlUuid: SAVED_SQL,
+      name: 'SQL KPI',
+      slug: 'sql-kpi',
+      sql: 'SELECT metric FROM kpi',
+      limit: 500,
+    });
+
+    const handler = registerDashboardTileHandler({
+      v1: { sqlRunner: { getSavedSqlChart } },
+      v2: {
+        dashboards: { getDashboard: vi.fn().mockResolvedValue(dashboardFixture) },
+        query: { runDashboardSqlChartQuery, getAsyncQueryResults },
+      },
+    });
+
+    const sessionId = resolveMcpClientSessionId({ sessionId: 'mcp-reader-sql-art' });
+    await runWithMcpClientSessionAsync(sessionId, async () => {
+      const result = await handler({
+        projectUuid: PROJECT,
+        dashboardUuidOrSlug: DASHBOARD,
+        tileUuid: TILE_SQL,
+        waitForResults: true,
+        includeArtifacts: ['data', 'sql'],
+      });
+
+      expect(result.isError).toBeUndefined();
+      expect(getSavedSqlChart).toHaveBeenCalledWith(PROJECT, SAVED_SQL);
+      const sqlPart = result.content.find(
+        (c) => c.type === 'resource' && c.resource?.mimeType === 'text/sql',
+      );
+      expect(sqlPart?.resource?.text).toBe('SELECT metric FROM kpi');
+      const summary = JSON.parse(result.content[0].text!) as {
+        warnings: Array<{ code: string }>;
+        artifacts: Array<{ kind: string; included: boolean }>;
+      };
+      expect(summary.artifacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ kind: 'sql', included: true }),
+          expect.objectContaining({ kind: 'data', included: true }),
+        ]),
+      );
+      expect(summary.warnings.map((w) => w.code)).not.toContain('SQL_ARTIFACT_AVAILABLE');
     });
   });
 
@@ -169,11 +240,15 @@ describe('registerRunDashboardTile', () => {
       expect(result.isError).toBeUndefined();
       const [, body] = runDashboardSqlChartQuery.mock.calls[0] as [string, Record<string, unknown>];
       expect(body).not.toHaveProperty('dateZoom');
-      const parsed = JSON.parse(result.content[0].text) as {
+      const parsed = JSON.parse(result.content[0].text!) as {
         warnings: Array<{ code: string }>;
       };
       expect(parsed.warnings.map((w) => w.code)).toEqual(
-        expect.arrayContaining(['DATE_ZOOM_IGNORED', 'SQL_RESULT_MAY_BE_ROW_LEVEL']),
+        expect.arrayContaining([
+          'DATE_ZOOM_IGNORED',
+          'SQL_RESULT_MAY_BE_ROW_LEVEL',
+          'SQL_ARTIFACT_AVAILABLE',
+        ]),
       );
     });
   });
@@ -235,10 +310,15 @@ describe('registerRunDashboardTile', () => {
         }),
       );
       expect(runDashboardSqlChartQuery).not.toHaveBeenCalled();
-      const body = JSON.parse(result.content[0].text) as {
-        data: { content: Record<string, unknown> };
+      const body = JSON.parse(result.content[0].text!) as {
+        data: { content: Record<string, unknown>; rows?: unknown };
+        artifacts: Array<{ kind: string; included: boolean }>;
       };
       expect(body.data.content).toMatchObject({ chartUuid: SAVED_CHART });
+      expect(body.data.rows).toBeUndefined();
+      expect(body.artifacts).toEqual(
+        expect.arrayContaining([expect.objectContaining({ kind: 'data', included: true })]),
+      );
     });
   });
 

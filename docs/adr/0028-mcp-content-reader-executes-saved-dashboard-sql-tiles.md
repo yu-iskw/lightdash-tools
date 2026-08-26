@@ -10,6 +10,8 @@ Amends [12. MCP content-reader profile saved-content execution boundary](0012-mc
 
 Related to [20. MCP data-analyst profile ad-hoc metric-query boundary](0020-mcp-data-analyst-profile-ad-hoc-metric-query-boundary.md)
 
+Amended by [32. MCP tool-result artifacts and content-reader SQL body reveal](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)
+
 ## Context
 
 [ADR-0012](0012-mcp-content-reader-profile-saved-content-execution-boundary.md) lets `content-reader` run **saved** semantic charts and dashboard tiles, and treats SQL-backed saved charts as a higher-risk class disabled by default. Decision 4 returned `CONTENT_NOT_EXECUTABLE` for saved SQL charts **and** dashboard SQL tiles, and left OpenAPI `query/sql-chart` and `query/dashboard-sql-chart` off the MCP surface pending a later opt-in.

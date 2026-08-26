@@ -47,12 +47,46 @@ export type ImageContentBlock = {
   mimeType: string;
 };
 
-export type ToolContentBlock = ImageContentBlock | { type: 'text'; text: string };
+/** MCP embedded resource content block (tool-result artifacts). */
+export type ResourceContentBlock = {
+  type: 'resource';
+  resource: {
+    uri: string;
+    mimeType?: string;
+    text: string;
+  };
+  annotations?: {
+    audience?: Array<'assistant' | 'user'>;
+    priority?: number;
+  };
+};
+
+export type ToolContentBlock =
+  ImageContentBlock | ResourceContentBlock | { type: 'text'; text: string };
 
 export type TextContent = {
   content: ToolContentBlock[];
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
+};
+
+/** Kind of bulky payload kept out of the compact summary body (ADR-0032). */
+export type ToolArtifactKind = 'data' | 'sql';
+
+export type ToolArtifactSpec = {
+  kind: ToolArtifactKind;
+  uri: string;
+  mimeType: string;
+  text: string;
+  audience: Array<'assistant' | 'user'>;
+  priority?: number;
+};
+
+export type ToolArtifactCatalogEntry = {
+  kind: ToolArtifactKind;
+  uri: string;
+  mimeType: string;
+  included: boolean;
 };
 
 /** Handler return type: normal tool content or MCP 2026-07-28 MRTR InputRequiredResult. */
@@ -115,6 +149,50 @@ export function imageToolResult(args: {
       { type: 'image', data: args.imageBase64, mimeType },
     ],
     structuredContent: toStructuredContent(args.meta),
+  };
+}
+
+/**
+ * Compact summary + optional embedded resource artifacts (ADR-0032).
+ * Spec: https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool-result
+ * structuredContent holds summary only (no SQL body / row payloads).
+ */
+export function artifactToolResult(args: {
+  summary: object;
+  artifacts?: ToolArtifactSpec[];
+  catalog?: ToolArtifactCatalogEntry[];
+}): TextContent {
+  const artifacts = args.artifacts ?? [];
+  const catalog =
+    args.catalog ??
+    artifacts.map((a) => ({
+      kind: a.kind,
+      uri: a.uri,
+      mimeType: a.mimeType,
+      included: true,
+    }));
+  const summary = Object.assign({}, args.summary, { artifacts: catalog }) as Record<
+    string,
+    unknown
+  >;
+  const content: ToolContentBlock[] = [
+    { type: 'text', text: JSON.stringify(summary, null, 2) },
+    ...artifacts.map((a): ResourceContentBlock => ({
+      type: 'resource',
+      resource: {
+        uri: a.uri,
+        mimeType: a.mimeType,
+        text: a.text,
+      },
+      annotations: {
+        audience: a.audience,
+        ...(a.priority !== undefined ? { priority: a.priority } : {}),
+      },
+    })),
+  ];
+  return {
+    content,
+    structuredContent: toStructuredContent(summary),
   };
 }
 

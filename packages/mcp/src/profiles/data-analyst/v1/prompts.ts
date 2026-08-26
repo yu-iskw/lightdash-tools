@@ -63,7 +63,7 @@ Procedure:
 1. get_project; record analystCapabilities.
 2. list_explores (search+limit≤15) → get_explore → lock exploreName.
 3. Copy fieldIds from list_dimensions / list_metrics (or get_explore base-table metrics). Never invent fieldIds.
-4. Optional compile_query; then run_metric_query with small limit. Poll get_query_result if needed.
+4. Optional compile_query; then run_metric_query with small limit (rows arrive as a data artifact). Poll get_query_result if needed.
 5. Iterate filters/fields. Do not save charts unless the user asks.`,
         invariantIds,
         requiredTopics: [TOPIC_EXPLORE],

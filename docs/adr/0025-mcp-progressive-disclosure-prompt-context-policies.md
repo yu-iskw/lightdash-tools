@@ -12,6 +12,8 @@ Related to [10](0010-mcp-organization-audit-profile-read-only-boundary.md), [12]
 
 Design detail: [RFC: Token-Efficient MCP Prompts](../rfc-token-efficient-mcp-prompts.md)
 
+Related to [32. MCP tool-result artifacts and content-reader SQL body reveal](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)
+
 ## Context
 
 Profile prompts historically returned `prompts/get` messages that always embedded the full core playbook markdown plus selected topic playbooks (`createPromptPlaybookEmbedder`). Prompt bodies also pasted `*_HARD_BANS` strings that duplicated `core.md`. That is protocol-valid and host-portable, but it forces every invocation to pay for cold-path and conditionally relevant text. Peak cost was content-developer `create_dashboard` (~44KB embedded playbooks).

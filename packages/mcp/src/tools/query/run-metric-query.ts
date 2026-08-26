@@ -6,13 +6,14 @@ import { z } from 'zod';
 
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METRIC_QUERY_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
-import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
+import { includeArtifactsField, parseIncludeArtifacts } from '../lib/artifacts.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
-import { jsonToolResult, wrapTool } from '../shared.js';
+import { wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
 import { runBoundedSavedQuery } from './bounded-saved-query.js';
+import { buildQueryArtifactResult } from './query-artifact-result.js';
 import {
   codedErrorResult,
   isCoverageComplete,
@@ -49,6 +50,7 @@ const runMetricQueryInputSchema = z.object({
   limit: z.number().int().positive().optional(),
   waitForResults: z.boolean().optional(),
   timeoutMs: z.number().int().nonnegative().optional(),
+  includeArtifacts: includeArtifactsField(['data']),
 });
 
 type RunMetricQueryArgs = z.infer<typeof runMetricQueryInputSchema>;
@@ -63,7 +65,7 @@ export function registerRunMetricQuery(
     {
       title: 'Run metric query',
       description:
-        'Execute an unsaved explore metric query (dimensions, metrics, filters, sorts). Bounded rows; no chart save; no tableCalculations/SQL. Prefer fieldIds from get_explore / list_dimensions / list_metrics.',
+        'Execute an unsaved explore metric query (dimensions, metrics, filters, sorts). Bounded rows as a separate data artifact by default (same shape as get_query_result); no chart save; no tableCalculations/SQL. Prefer fieldIds from get_explore / list_dimensions / list_metrics.',
       safety: METRIC_QUERY_SAFETY,
       inputSchema: runMetricQueryInputSchema.shape,
     },
@@ -72,6 +74,7 @@ export function registerRunMetricQuery(
         try {
           const scope = resolveProjectScope({ projectUuid: args.projectUuid });
           const limit = clampRowLimit(args.limit);
+          const include = parseIncludeArtifacts(args.includeArtifacts, ['data']);
           const body: ExecuteAsyncMetricQueryRequestParams = {
             query: {
               exploreName: args.exploreName,
@@ -101,16 +104,15 @@ export function registerRunMetricQuery(
             return bounded.result;
           }
 
-          return jsonToolResult(
-            contentReaderEnvelope(bounded.normalized, {
-              profile,
-              projectUuid: scope.projectUuid,
-              projectPinned: scope.projectPinned,
-              complete: isCoverageComplete(bounded.normalized),
-              truncated: bounded.normalized.truncated,
-              warnings: bounded.warnings,
-            }),
-          );
+          return buildQueryArtifactResult({
+            profile,
+            projectUuid: scope.projectUuid,
+            projectPinned: scope.projectPinned,
+            normalized: bounded.normalized,
+            include,
+            complete: isCoverageComplete(bounded.normalized),
+            warnings: bounded.warnings,
+          });
         } catch (err) {
           if (err instanceof ResultLimitError) {
             return codedErrorResult(err.code, err.message);

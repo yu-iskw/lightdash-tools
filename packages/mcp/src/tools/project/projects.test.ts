@@ -221,6 +221,7 @@ describe('get_project ToolModules', () => {
       canExecuteSqlCharts: false,
       canExecuteDashboardTiles: true,
       canExecuteDashboardSqlTiles: true,
+      canRevealSqlBodies: true,
     });
     expect(body.context.projectUuid).toBe(PINNED);
     expect(getProject).toHaveBeenCalledWith(PINNED);

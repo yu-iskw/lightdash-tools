@@ -9,10 +9,16 @@ import { resolveProjectScope } from '../../governance/project-scope.js';
 import { METADATA_SAFETY, registerContentReaderTool } from '../../policy/content-reader.js';
 import { contentReaderEnvelope } from '../../policy/envelope.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
+import {
+  includeArtifactsField,
+  parseIncludeArtifacts,
+  sqlRevealToolResult,
+} from '../lib/artifacts.js';
 import { isPageComplete } from '../lib/contracts.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
-import { classifyChartSource } from '../query/chart-source.js';
-import { codedErrorResult, projectScopeErrorResult } from '../query/reader-tool-helpers.js';
+import { resolveChartSource } from '../query/chart-source.js';
+import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
+import { resolveSavedSqlChart } from '../query/resolve-saved-sql-chart.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
@@ -119,7 +125,43 @@ function toReaderChart(chart: Record<string, unknown>, includeQuery: boolean) {
     verification: chart.verification,
     updatedAt: chart.updatedAt,
     warnings:
-      chartType === 'sql' ? ['SQL text is hidden; SQL chart execution is disabled by default'] : [],
+      chartType === 'sql'
+        ? ['SQL chart; pass includeArtifacts=["sql"] on get_chart to attach authored SQL']
+        : [],
+  };
+}
+
+/** Metadata summary for a saved SQL chart — never includes the authored SQL body. */
+export function toReaderSqlChartSummary(chart: {
+  savedSqlUuid: string;
+  slug?: string;
+  name?: string;
+  description?: string | null;
+  chartKind?: unknown;
+  limit?: unknown;
+  space?: unknown;
+  lastUpdatedAt?: string | null;
+}): Record<string, unknown> {
+  return {
+    uuid: chart.savedSqlUuid,
+    savedSqlUuid: chart.savedSqlUuid,
+    slug: chart.slug,
+    name: chart.name,
+    description: chart.description,
+    chartType: 'sql' as const,
+    chartKind: chart.chartKind,
+    limit: chart.limit,
+    space:
+      chart.space && typeof chart.space === 'object'
+        ? (() => {
+            const space = chart.space as { uuid?: unknown; name?: unknown };
+            return typeof space.uuid === 'string' && typeof space.name === 'string'
+              ? { uuid: space.uuid, name: space.name }
+              : undefined;
+          })()
+        : undefined,
+    updatedAt: chart.lastUpdatedAt,
+    executable: false,
   };
 }
 
@@ -364,12 +406,13 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
     {
       title: 'Get chart',
       description:
-        'Explain a saved semantic chart definition (saved SQL chart bodies stay hidden; tableCalculations expressions included when includeQueryDefinition)',
+        'Explain a saved chart definition. Semantic charts return query fields when includeQueryDefinition. Saved SQL charts return metadata; pass includeArtifacts=["sql"] for the authored SQL body as a separate MCP resource (never inlined in the summary). Standalone SQL execution stays disabled.',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         chartUuidOrSlug: uuidOrSlugField('Chart UUID or slug'),
         includeQueryDefinition: z.boolean().optional(),
+        includeArtifacts: includeArtifactsField(['sql']),
       },
     },
     (profile) =>
@@ -380,19 +423,41 @@ export function registerGetChart(server: McpServer, contextProvider: McpContextP
             projectUuid?: string;
             chartUuidOrSlug: string;
             includeQueryDefinition?: boolean;
+            includeArtifacts?: Array<'data' | 'sql'>;
           }) => {
             try {
               const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-              const preClass = await classifyChartSource(
-                c,
-                scope.projectUuid,
-                args.chartUuidOrSlug,
-              );
-              if (preClass === 'sql') {
-                return codedErrorResult(
-                  'CONTENT_NOT_EXECUTABLE',
-                  'Saved SQL chart definitions are not loaded via the semantic chart API on content-reader',
-                );
+              const include = parseIncludeArtifacts(args.includeArtifacts, []);
+              const preClass = await resolveChartSource(c, scope.projectUuid, args.chartUuidOrSlug);
+              if (preClass.class === 'sql') {
+                const savedSqlUuid = preClass.uuid ?? args.chartUuidOrSlug;
+                if (include.has('sql')) {
+                  const sqlChart = await resolveSavedSqlChart(c, scope.projectUuid, savedSqlUuid);
+                  return sqlRevealToolResult({
+                    profile,
+                    projectUuid: scope.projectUuid,
+                    projectPinned: scope.projectPinned,
+                    include,
+                    savedSqlUuid: sqlChart.savedSqlUuid,
+                    sql: sqlChart.sql,
+                    summaryData: toReaderSqlChartSummary(sqlChart),
+                  });
+                }
+                return sqlRevealToolResult({
+                  profile,
+                  projectUuid: scope.projectUuid,
+                  projectPinned: scope.projectPinned,
+                  include,
+                  savedSqlUuid,
+                  summaryData: toReaderSqlChartSummary({
+                    savedSqlUuid,
+                    slug: preClass.slug,
+                    name: preClass.name,
+                    description: preClass.description,
+                    space: preClass.space,
+                    lastUpdatedAt: preClass.lastUpdatedAt,
+                  }),
+                });
               }
               const chart = asRecord(
                 await c.v2.charts.getSavedChart(scope.projectUuid, args.chartUuidOrSlug),

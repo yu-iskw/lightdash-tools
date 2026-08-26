@@ -16,6 +16,8 @@ Related to [20. MCP data-analyst profile ad-hoc metric-query boundary](0020-mcp-
 
 Amended by [28. MCP content-reader executes saved dashboard SQL tiles](0028-mcp-content-reader-executes-saved-dashboard-sql-tiles.md)
 
+Amended by [32. MCP tool-result artifacts and content-reader SQL body reveal](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)
+
 ## Context
 
 Agents and analysts need to read saved Lightdash content (charts, dashboards, spaces) and run **saved** semantic-layer queries to answer questions — without gaining arbitrary warehouse access. The `semantic-layer` profile exposes explore/compile primitives but not saved-content execution. The `organization-audit` profile ([ADR-0010](0010-mcp-organization-audit-profile-read-only-boundary.md)) is metadata-only: no query execution, no row-level data.

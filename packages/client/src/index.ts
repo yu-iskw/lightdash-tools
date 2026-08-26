@@ -20,6 +20,8 @@ export { MetricsClient } from './api/v1/metrics';
 export { SchedulersClient } from './api/v1/schedulers';
 export { TagsClient } from './api/v1/tags';
 export { AnalyticsClient } from './api/v1/analytics';
+export { SqlRunnerClient } from './api/v1/sql-runner';
+export type { SqlChart } from './api/v1/sql-runner';
 export { ContentClient } from './api/v2/content';
 export { ChartsClientV2 } from './api/v2/charts';
 export { DashboardsClientV2 } from './api/v2/dashboards';

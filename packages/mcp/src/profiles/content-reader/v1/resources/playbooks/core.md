@@ -16,7 +16,7 @@ Discover, explain, and **optionally execute** saved Lightdash charts/dashboards 
 - Do not execute content outside the resolved project.
 - Do not present truncated / incomplete coverage as a full answer.
 - Do not claim metric equivalence from matching labels alone.
-- Do not invent secrets, warehouse credentials, or hidden SQL text.
+- Do not invent secrets, warehouse credentials, or SQL text. Authored SQL is available only via `includeArtifacts=["sql"]` (`canRevealSqlBodies=true`); never paste invented SQL.
 
 ## Default budgets (override only if the user expands scope)
 
@@ -41,23 +41,23 @@ Record budget / pagination / truncation stops in the answer.
 
 ## Allowed tools (`lightdash_*`)
 
-| Tool                                                 | Use for                                                                                                                    |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `get_project`                                        | Resolve project; read `readerCapabilities` + pin context                                                                   |
-| `search_content`                                     | Find charts/dashboards/spaces/data apps                                                                                    |
-| `list_verified_content`                              | List admin-verified charts/dashboards (prefer as trusted seeds)                                                            |
-| `list_spaces` / `get_space`                          | Space hierarchy + immediate content                                                                                        |
-| `get_dashboard` / `get_chart`                        | Structure / definition (saved SQL **chart** bodies hidden; semantic `tableCalculations` may appear when query is included) |
-| `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                                                                                    |
-| `explain_content`                                    | Compact metadata explanation                                                                                               |
-| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution (numbers)                                                                                          |
-| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless                                                                     |
-| `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid`                                                                                               |
+| Tool                                                 | Use for                                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `get_project`                                        | Resolve project; read `readerCapabilities` + pin context                                                                        |
+| `search_content`                                     | Find charts/dashboards/spaces/data apps                                                                                         |
+| `list_verified_content`                              | List admin-verified charts/dashboards (prefer as trusted seeds)                                                                 |
+| `list_spaces` / `get_space`                          | Space hierarchy + immediate content                                                                                             |
+| `get_dashboard` / `get_chart`                        | Structure / definition (SQL chart bodies via `includeArtifacts=["sql"]` only; semantic `tableCalculations` when query included) |
+| `list_project_parameters` / `get_project_parameters` | Parameter defs / values                                                                                                         |
+| `explain_content`                                    | Compact metadata explanation (same SQL artifact opt-in)                                                                         |
+| `run_chart` / `run_dashboard_tile`                   | Bounded saved execution; rows as data artifact by default                                                                       |
+| `export_chart_image`                                 | PNG snapshot of a saved chart (vision); needs headless                                                                          |
+| `get_query_result` / `cancel_query`                  | Poll / cancel by `queryUuid` (rows as data artifact by default)                                                                 |
 
 ## Phase 0 — Resolve project
 
 1. Always pass **`projectUuid`** (or rely on HTTP `X-Lightdash-Project` pin). Without either → `PROJECT_SCOPE_REQUIRED`; stop.
-2. Call `get_project`. Record UUID, name, `context.projectPinned`, and `readerCapabilities` (`canExecuteSavedCharts`, `canExecuteSqlCharts`, `canExecuteDashboardTiles`, `canExecuteDashboardSqlTiles`).
+2. Call `get_project`. Record UUID, name, `context.projectPinned`, and `readerCapabilities` (`canExecuteSavedCharts`, `canExecuteSqlCharts`, `canExecuteDashboardTiles`, `canExecuteDashboardSqlTiles`, `canRevealSqlBodies`).
 3. There is **no** org-wide project list on this profile — never invent one.
 
 ## Answer shape

@@ -17,7 +17,8 @@ Answer a data question by iterating Explore-style queries **without saving** a c
    - `exploreName` = locked explore name
    - `dimensions` / `metrics` = full **fieldIds** only (`{table}_{name}`)
    - `filters` (dimensions/metrics only) / `sorts` / `limit` as needed — never send `tableCalculations`
-7. If status is running, poll `get_query_result` with the returned `queryUuid`. Cancel with `cancel_query` when abandoning.
+   - Rows are a **data artifact** by default (not inlined in the summary). Read `content[]` resource parts or `artifacts` catalog — do not expect `data.rows` in the summary JSON.
+7. If status is running, poll `get_query_result` with the returned `queryUuid` (same artifact shape). Cancel with `cancel_query` when abandoning.
 8. Iterate: change dims/metrics/filters and re-run. Do **not** create charts unless the user asks to save (then hand off to content-developer).
 
 ## Coverage

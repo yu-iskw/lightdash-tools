@@ -45,7 +45,8 @@ export const CONTENT_READER_INVARIANTS = [
   },
   {
     id: 'no-secrets',
-    short: 'Do not reveal secrets, warehouse credentials, hidden SQL, or inaccessible content.',
+    short:
+      'Do not invent secrets, warehouse credentials, or SQL text; reveal authored SQL only via includeArtifacts.',
   },
 ] as const satisfies readonly PromptInvariant[];
 
