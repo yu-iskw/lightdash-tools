@@ -113,11 +113,30 @@ describe('create elicitation helpers', () => {
       payload,
       tags: ['missing'],
       exploreCount: 0,
+      spaceAccessValidation: { skipped: true },
     });
     expect(msg).toMatch(/0 explores/);
     expect(msg).toMatch(/Analyst/);
     expect(msg).toMatch(/Permissions:/);
     expect(msg).toMatch(/Read rows behind chart: on/);
+    expect(msg).toMatch(/all project spaces/);
+  });
+
+  it('buildCreateAgentConfirmationMessage shows resolved space names', () => {
+    const spaceUuid = '00000000-0000-4000-8000-000000000040';
+    const payload = { name: 'Analyst', spaceAccess: [spaceUuid] };
+    const msg = buildCreateAgentConfirmationMessage({
+      name: 'Analyst',
+      payload,
+      tags: null,
+      exploreCount: null,
+      spaceAccessValidation: {
+        resolved: [{ uuid: spaceUuid, name: 'Finance' }],
+        unknownUuids: [],
+      },
+    });
+    expect(msg).toMatch(/Finance/);
+    expect(msg).toMatch(/1 space\(s\)/);
   });
 
   it('minimal payload digest uses secure defaults', () => {
@@ -222,6 +241,30 @@ describe('create_project_agent elicitation', () => {
     expect(created.warnings).toEqual(
       expect.arrayContaining([expect.objectContaining({ code: 'ELEVATED_DATA_ACCESS' })]),
     );
+  });
+
+  it('preview_create_agent lists spaces once when spaceAccess is set', async () => {
+    const spaceUuid = '00000000-0000-4000-8000-000000000040';
+    const listSpacesInProject = vi.fn().mockResolvedValue([{ uuid: spaceUuid, name: 'Finance' }]);
+    const { handler } = registeredAiAgentTool(
+      registerPreviewCreateAgent,
+      mockAiAgentsContext(
+        { getExploreAccessSummary: vi.fn().mockResolvedValue([]) },
+        { listSpacesInProject },
+      ),
+      'preview_create_agent',
+      { registerTool: vi.fn(), server: { getClientCapabilities: () => ({}) } } as never,
+    );
+
+    const result = parseAiAgentToolBody(
+      await handler(
+        { projectUuid: PROJECT, name: 'Analyst', spaceAccess: [spaceUuid] },
+        { mcpReq: { envelope: {} } },
+      ),
+    ) as { warnings: Array<{ code: string }> };
+
+    expect(listSpacesInProject).toHaveBeenCalledTimes(1);
+    expect(result.warnings).toEqual([]);
   });
 
   it('returns InputRequiredResult on first call when form elicitation is present', async () => {

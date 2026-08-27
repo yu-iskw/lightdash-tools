@@ -43,6 +43,11 @@ import {
   withAiAgentProjectScope,
   type AiAgentScopeArgs,
 } from './helpers.js';
+import {
+  fetchSpaceAccessValidation,
+  warningsForAgentSpaceAccess,
+  warningsFromSpaceAccessValidation,
+} from './space-warnings.js';
 import { warningsForAgentTags } from './tag-warnings.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
@@ -91,7 +96,13 @@ const projectAgentPatchFields = {
     ),
   groupAccess: z.array(z.string()).optional().describe('Group UUIDs with access'),
   userAccess: z.array(z.string()).optional().describe('User UUIDs with access'),
-  spaceAccess: z.array(z.string()).optional().describe('Space UUIDs with access'),
+  spaceAccess: z
+    .array(z.string())
+    .optional()
+    .describe(
+      'Space UUIDs the agent may access for saved content (charts/dashboards). ' +
+        'Empty or omitted = all project spaces. Discover UUIDs via content-reader list_spaces — do not invent.',
+    ),
   mcpServerUuids: z.array(z.string()).optional().describe('Nested MCP server UUIDs'),
 } as const;
 
@@ -244,17 +255,18 @@ export function registerPreviewCreateAgent(
     },
     wrapToolContextual(contextProvider, (ctx) => {
       const aiAgents = ctx.lightdashClient.v1.aiAgents;
+      const spacesClient = ctx.lightdashClient.v1.spaces;
       return async (rawArgs: CreateProjectAgentArgs) => {
         const scope = await resolveCreateProjectUuid(rawArgs.projectUuid);
         if (!scope.ok) {
           return scope.result;
         }
         const payload = buildCreatePayload(rawArgs);
-        const exploreCount = await previewExploreCountForTags(
-          aiAgents,
-          scope.projectUuid,
-          payload.tags,
-        );
+        const [exploreCount, spaceAccessValidation] = await Promise.all([
+          previewExploreCountForTags(aiAgents, scope.projectUuid, payload.tags),
+          fetchSpaceAccessValidation(spacesClient, scope.projectUuid, payload.spaceAccess),
+        ]);
+        const spacePreviewWarnings = warningsFromSpaceAccessValidation(spaceAccessValidation);
         const payloadDigest = digestCreateAgentPayload(payload);
         const { createPreviewToken, claims } = await mintDraftCreateAgentPreviewToken({
           subject: ctx.subject,
@@ -272,6 +284,7 @@ export function registerPreviewCreateAgent(
           payload,
           tags: payload.tags,
           exploreCount,
+          spaceAccessValidation,
         });
         const elevationPreviewWarnings = collectElevationWarnings(payload);
         return withAiAgentProjectScope(scope.projectUuid, async () => ({
@@ -283,7 +296,7 @@ export function registerPreviewCreateAgent(
             confirmationMessage,
             exploreCount,
           },
-          warnings: elevationPreviewWarnings,
+          warnings: [...elevationPreviewWarnings, ...spacePreviewWarnings],
         }));
       };
     }),
@@ -380,6 +393,7 @@ export function registerCreateProjectAgent(
     },
     wrapToolContextual(contextProvider, (ctx) => {
       const aiAgents = ctx.lightdashClient.v1.aiAgents;
+      const spacesClient = ctx.lightdashClient.v1.spaces;
       return async (rawArgs: CreateProjectAgentArgs) => {
         const scope = await resolveCreateProjectUuid(rawArgs.projectUuid);
         if (!scope.ok) {
@@ -393,6 +407,7 @@ export function registerCreateProjectAgent(
           projectUuid: scope.projectUuid,
           payload,
           exploreAccessClient: aiAgents,
+          spacesClient,
           createConfirmToken: rawArgs.createConfirmToken,
         });
         if (!gate.proceed) {
@@ -404,13 +419,16 @@ export function registerCreateProjectAgent(
             resolvedScope.projectUuid,
             buildSecureCreateAiAgentBody({ ...payload, projectUuid: resolvedScope.projectUuid }),
           );
-          const tagWarnings = await warningsForAgentTags(
-            aiAgents,
-            resolvedScope.projectUuid,
-            payload.tags,
-          );
+          const [tagWarnings, spaceWarnings] = await Promise.all([
+            warningsForAgentTags(aiAgents, resolvedScope.projectUuid, payload.tags),
+            warningsForAgentSpaceAccess(
+              spacesClient,
+              resolvedScope.projectUuid,
+              payload.spaceAccess,
+            ),
+          ]);
           const permissionWarnings = collectElevationWarnings(payload);
-          return { data, warnings: [...tagWarnings, ...permissionWarnings] };
+          return { data, warnings: [...tagWarnings, ...spaceWarnings, ...permissionWarnings] };
         });
       };
     }),
@@ -452,12 +470,19 @@ export function registerUpdateProjectAgent(
               agentUuid,
               buildUpdateProjectAgentBody(agentUuid, patch),
             );
-            const tagWarnings =
+            const [tagWarnings, spaceWarnings] = await Promise.all([
               patch.tags === undefined
                 ? []
-                : await warningsForAgentTags(c.v1.aiAgents, scope.projectUuid, patch.tags);
+                : warningsForAgentTags(c.v1.aiAgents, scope.projectUuid, patch.tags),
+              patch.spaceAccess === undefined
+                ? []
+                : warningsForAgentSpaceAccess(c.v1.spaces, scope.projectUuid, patch.spaceAccess),
+            ]);
             const permissionWarnings = collectElevationWarningsFromPatch(patch);
-            return { data, warnings: [...tagWarnings, ...permissionWarnings] };
+            return {
+              data,
+              warnings: [...tagWarnings, ...spaceWarnings, ...permissionWarnings],
+            };
           }),
     ),
   );

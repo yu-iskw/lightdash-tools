@@ -17,10 +17,19 @@ import {
   verifyCreateAgentRequestState,
   type CreateAgentRequestState,
 } from './create-request-state.js';
-import { effectiveAgentTags, previewExploreCountForTags } from './tag-warnings.js';
+import {
+  fetchSpaceAccessValidation,
+  formatSpaceAccessPreviewLine,
+  type ProjectSpacesClient,
+  type SpaceAccessValidationResult,
+} from './space-warnings.js';
+import {
+  effectiveAgentTags,
+  previewExploreCountForTags,
+  type ExploreAccessSummaryClient,
+} from './tag-warnings.js';
 
 import type { ToolExecutionContext, ToolResult } from '../shared.js';
-import type { ExploreAccessSummaryClient } from './tag-warnings.js';
 import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
 
 export { digestCreateAgentPayload, previewExploreCountForTags };
@@ -75,6 +84,7 @@ export function buildCreateAgentConfirmationMessage(input: {
   payload: AgentCreatePayloadFields;
   tags: string[] | null | undefined;
   exploreCount: number | null;
+  spaceAccessValidation: SpaceAccessValidationResult;
 }): string {
   const lines = [
     'Confirm creation of a new Lightdash AI agent.',
@@ -85,6 +95,7 @@ export function buildCreateAgentConfirmationMessage(input: {
       userAccess: input.payload.userAccess,
     }),
   ];
+  lines.push(formatSpaceAccessPreviewLine(input.payload.spaceAccess, input.spaceAccessValidation));
   appendTagPreviewLines(lines, input.tags, input.exploreCount);
   lines.push('Choose Create agent to proceed, or Do not create to cancel.');
   return lines.join('\n');
@@ -205,12 +216,12 @@ async function mintCreateInputRequired(input: {
   payloadDigest: string;
   subject: string;
   exploreAccessClient: ExploreAccessSummaryClient;
+  spacesClient: ProjectSpacesClient;
 }): Promise<ToolResult> {
-  const exploreCount = await previewExploreCountForTags(
-    input.exploreAccessClient,
-    input.projectUuid,
-    input.payload.tags,
-  );
+  const [exploreCount, spaceAccessValidation] = await Promise.all([
+    previewExploreCountForTags(input.exploreAccessClient, input.projectUuid, input.payload.tags),
+    fetchSpaceAccessValidation(input.spacesClient, input.projectUuid, input.payload.spaceAccess),
+  ]);
   const stateToken = await mintCreateAgentRequestState(
     {
       operationId: CREATE_PROJECT_AGENT_OPERATION_ID,
@@ -230,6 +241,7 @@ async function mintCreateInputRequired(input: {
           payload: input.payload,
           tags: input.payload.tags,
           exploreCount,
+          spaceAccessValidation,
         }),
         requestedSchema: CREATE_AGENT_CONFIRM_FORM_SCHEMA,
       }),
@@ -248,8 +260,9 @@ export async function gateCreateProjectAgentElicitation(input: {
   projectUuid: string;
   payload: AgentCreatePayloadFields;
   exploreAccessClient: ExploreAccessSummaryClient;
+  spacesClient: ProjectSpacesClient;
 }): Promise<{ proceed: false; result: ToolResult } | { proceed: true }> {
-  const { ctx, projectUuid, payload, exploreAccessClient } = input;
+  const { ctx, projectUuid, payload, exploreAccessClient, spacesClient } = input;
   const elicitationError = requireElicitationServerContext(ctx.serverContext);
   if (elicitationError) {
     return { proceed: false, result: elicitationError };
@@ -295,6 +308,7 @@ export async function gateCreateProjectAgentElicitation(input: {
       payloadDigest,
       subject: ctx.subject,
       exploreAccessClient,
+      spacesClient,
     }),
   };
 }

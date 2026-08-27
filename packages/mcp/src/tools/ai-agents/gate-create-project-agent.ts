@@ -15,6 +15,7 @@ import {
 } from './create-elicitation.js';
 
 import type { ToolExecutionContext, ToolResult } from '../shared.js';
+import type { ProjectSpacesClient } from './space-warnings.js';
 import type { ExploreAccessSummaryClient } from './tag-warnings.js';
 import type { AgentCreatePayloadFields } from '@lightdash-tools/common';
 import type { ClientCapabilities, McpServer, ServerContext } from '@modelcontextprotocol/server';
@@ -58,9 +59,18 @@ export async function gateCreateProjectAgent(input: {
   projectUuid: string;
   payload: AgentCreatePayloadFields;
   exploreAccessClient: ExploreAccessSummaryClient;
+  spacesClient: ProjectSpacesClient;
   createConfirmToken?: string;
 }): Promise<{ proceed: false; result: ToolResult } | { proceed: true }> {
-  const { server, ctx, projectUuid, payload, exploreAccessClient, createConfirmToken } = input;
+  const {
+    server,
+    ctx,
+    projectUuid,
+    payload,
+    exploreAccessClient,
+    spacesClient,
+    createConfirmToken,
+  } = input;
   // eslint-disable-next-line @typescript-eslint/no-deprecated -- 2025-era fallback
   const initializeCaps = server.server.getClientCapabilities() as ClientCapabilities | undefined;
 
@@ -71,6 +81,7 @@ export async function gateCreateProjectAgent(input: {
       projectUuid,
       payload,
       exploreAccessClient,
+      spacesClient,
     });
   }
 

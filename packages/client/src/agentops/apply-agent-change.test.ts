@@ -64,6 +64,39 @@ describe('applyAgentChange create', () => {
     );
     expect(createAgent.mock.calls[0]?.[1]).toMatchObject(SECURE_AGENT_CREATE_DEFAULTS);
   });
+
+  it('forwards spaceAccess from bundle spec on create', async () => {
+    const spaceUuid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    const createAgent = vi.fn().mockResolvedValue({ uuid: 'agent-1', name: 'Scoped Agent' });
+    const bundleWithSpaces: LightdashAiAgentBundle = {
+      ...bundle,
+      spec: {
+        ...bundle.spec,
+        agents: [
+          {
+            key: 'a1',
+            name: 'Scoped Agent',
+            spaceAccess: [spaceUuid],
+            evaluations: [],
+          },
+        ],
+      },
+    };
+    const ctx: ApplyBundleContext = {
+      ...makeCreateContext(createAgent),
+      bundle: bundleWithSpaces,
+    };
+
+    const ok = await applyAgentChange(ctx, {
+      resourceType: 'agent',
+      operation: 'create',
+      key: 'a1',
+      path: 'agents[a1]',
+    });
+
+    expect(ok).toBe(true);
+    expect(createAgent.mock.calls[0]?.[1]).toMatchObject({ spaceAccess: [spaceUuid] });
+  });
 });
 
 describe('applyAgentChange update', () => {
@@ -119,5 +152,55 @@ describe('applyAgentChange update', () => {
       enableContentTools: true,
       adminOnly: false,
     });
+  });
+
+  it('forwards spaceAccess from bundle spec on update', async () => {
+    const spaceUuid = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+    const updateAgent = vi.fn().mockResolvedValue({});
+    const bundleWithSpaces: LightdashAiAgentBundle = {
+      ...bundle,
+      spec: {
+        ...bundle.spec,
+        agents: [
+          {
+            key: 'a1',
+            uuid: 'agent-1',
+            name: 'Governed Agent',
+            spaceAccess: [spaceUuid],
+            evaluations: [],
+          },
+        ],
+      },
+    };
+    const ctx: ApplyBundleContext = {
+      bundle: bundleWithSpaces,
+      projectUuid: PROJECT_UUID,
+      client: {
+        v1: {
+          aiAgents: {
+            createAgent: vi.fn(),
+            updateAgent,
+            deleteAgent: vi.fn(),
+          },
+        },
+      } as unknown as ApplyBundleContext['client'],
+      agentUuidByKey: new Map(),
+      failed: [],
+    };
+
+    const ok = await applyAgentChange(ctx, {
+      resourceType: 'agent',
+      operation: 'update',
+      key: 'a1',
+      agentUuid: 'agent-1',
+      path: 'agents[a1]',
+    });
+
+    expect(ok).toBe(true);
+    expect(updateAgent).toHaveBeenCalledWith(
+      PROJECT_UUID,
+      'agent-1',
+      expect.objectContaining({ spaceAccess: [spaceUuid] }),
+    );
   });
 });

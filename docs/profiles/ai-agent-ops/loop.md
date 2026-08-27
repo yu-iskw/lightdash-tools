@@ -29,8 +29,9 @@ Gates use `kind: LightdashAiEvaluationGate` and `evaluateGatePolicy()` in `@ligh
 ## Recommended host sequence
 
 1. MCP: `list_project_agents` → prefer `update_project_agent` when an existing agent fits; otherwise draft create args
+   1b. MCP (`content-reader`): `list_spaces` / `get_space` to discover space UUIDs when scoping saved content; never invent UUIDs. `spaceAccess: []` or omit = all project spaces; non-empty = agent content boundary ([content tools](https://docs.lightdash.com/guides/ai-agents/content-tools))
 2. MCP: `get_explore_access_summary` with proposed tags (null/empty = all explores) before create/update
-3. MCP: create when needed — **form elicitation** when the host supports it, otherwise `preview_create_agent` → human approval of permission summary → `confirm_create_agent` → `create_project_agent` with `createConfirmToken` and identical payload ([ADR-0034](../../adr/0034-mcp-ai-agent-ops-create-preview-token-confirmation-for-non-elicitation-hosts.md)); or `update_project_agent` without a create gate. Heed `TAGS_MATCH_NO_EXPLORES` and `ELEVATED_*`. Enable `enableDataAccess` only when eval runs need warehouse rows.
+3. MCP: create when needed — **form elicitation** when the host supports it, otherwise `preview_create_agent` → human approval of permission + space scope summary → `confirm_create_agent` → `create_project_agent` with `createConfirmToken` and identical payload ([ADR-0034](../../adr/0034-mcp-ai-agent-ops-create-preview-token-confirmation-for-non-elicitation-hosts.md)); or `update_project_agent` without a create gate. Heed `TAGS_MATCH_NO_EXPLORES`, `SPACES_NOT_IN_PROJECT`, `SPACE_LIST_UNAVAILABLE`, and `ELEVATED_*`. Enable `enableDataAccess` only when eval runs need warehouse rows; pair with `enableContentTools` when the agent must create/edit dashboards in scoped spaces.
 4. MCP: optional `evaluate_agent_readiness` → ensure suite (`list/get/create/update` evaluation) → `run_agent_evaluation` → poll runs → `get_agent_eval_run_results`
 5. MCP (when failures need business context): `list_agent_documents` → `create_agent_document` / `update_agent_document` for glossaries and SOPs ([ADR-0035](../../adr/0035-mcp-ai-agent-ops-agent-knowledge-document-crud.md)); prefer semantic `ai_hint` fixes via other profiles when the issue is field metadata
 6. CLI: `agentops evaluate-gate` against the completed run
@@ -43,3 +44,4 @@ Gates use `kind: LightdashAiEvaluationGate` and `evaluateGatePolicy()` in `@ligh
 - MCP run results ≠ promotion decision (use `agentops evaluate-gate`)
 - No offline scorers or `recommend_*` tools on MCP
 - Agent `tags` = explore/field tag allowlist ([Lightdash data access](https://docs.lightdash.com/guides/ai-agents/data-access)), **not** explore names — verify with `get_explore_access_summary` before setting tags
+- Agent `spaceAccess` = saved content space allowlist ([Lightdash content tools](https://docs.lightdash.com/guides/ai-agents/content-tools)), **not** semantic data — discover UUIDs with `content-reader` `list_spaces`; empty = all spaces

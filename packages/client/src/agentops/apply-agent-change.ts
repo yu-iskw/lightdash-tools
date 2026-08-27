@@ -30,6 +30,7 @@ function buildAgentUpdatePatch(desired: BundleAgentSpec, agentUuid: string) {
     ...(desired.enableSelfImprovement !== undefined
       ? { enableSelfImprovement: desired.enableSelfImprovement }
       : {}),
+    ...(desired.spaceAccess !== undefined ? { spaceAccess: desired.spaceAccess } : {}),
   };
 }
 

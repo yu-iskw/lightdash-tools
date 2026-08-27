@@ -326,6 +326,51 @@ spec:
     expect(diff.changes[0]?.fields?.enableContentTools).toEqual({ from: false, to: true });
   });
 
+  it('detects spaceAccess-only bundle drift as update', () => {
+    const spaceUuid = '00000000-0000-4000-8000-000000000040';
+    const bundleWithSpaceAccess = parseLightdashAiAgentBundle(`
+apiVersion: lightdash.ai/v1alpha1
+kind: LightdashAiAgentBundle
+metadata:
+  name: sales-bundle
+spec:
+  projectUuid: ${PROJECT_UUID}
+  agents:
+    - key: sales
+      uuid: ${AGENT_UUID}
+      name: Sales Agent
+      instruction: Help with sales
+      spaceAccess:
+        - ${spaceUuid}
+      evaluations: []
+`);
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Sales Agent',
+            description: null,
+            instruction: 'Help with sales',
+            tags: null,
+            spaceAccess: [],
+          },
+          evaluations: [],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(bundleWithSpaceAccess, current);
+    expect(diff.summary.updates).toBe(1);
+    expect(diff.changes[0]?.operation).toBe('update');
+    expect(diff.changes[0]?.fields?.spaceAccess).toEqual({
+      from: [],
+      to: [spaceUuid],
+    });
+  });
+
   it('includes agentUuid on name-matched agent update changes', () => {
     const nameMatchedBundle = parseLightdashAiAgentBundle(`
 apiVersion: lightdash.ai/v1alpha1

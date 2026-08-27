@@ -51,6 +51,7 @@ const bundleAgentSchema = z.object({
   enableUserContext: z.boolean().optional(),
   adminOnly: z.boolean().optional(),
   enableSelfImprovement: z.boolean().optional(),
+  spaceAccess: z.array(z.string().uuid()).optional(),
   evaluations: z.array(bundleEvaluationSchema).optional().default([]),
 });
 
@@ -148,6 +149,7 @@ export interface AgentStateSnapshot {
   description: string | null;
   instruction: string | null;
   tags: string[] | null;
+  spaceAccess?: string[];
   enableDataAccess?: boolean;
   enableContentTools?: boolean;
   enableSqlMode?: boolean;
@@ -268,6 +270,9 @@ const OPTIONAL_AGENT_BOOLEAN_FIELDS = [
 
 function agentFieldsToCompare(agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
   const fields: Array<keyof AgentStateSnapshot> = ['name', 'description', 'instruction', 'tags'];
+  if (agent.spaceAccess !== undefined) {
+    fields.push('spaceAccess');
+  }
   for (const field of OPTIONAL_AGENT_BOOLEAN_FIELDS) {
     if (agent[field] !== undefined) {
       fields.push(field);
@@ -285,12 +290,22 @@ function normalizeTags(tags: string[] | null | undefined): string[] | null {
   return normalizeAgentTags(tags);
 }
 
+function normalizeSpaceAccess(spaceAccess: string[] | undefined): string[] | undefined {
+  if (spaceAccess === undefined) {
+    return undefined;
+  }
+  return [...spaceAccess].sort();
+}
+
 function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot> {
   return {
     name: agent.name,
     description: agent.description,
     instruction: agent.instruction,
     tags: normalizeTags(agent.tags),
+    ...(agent.spaceAccess !== undefined
+      ? { spaceAccess: normalizeSpaceAccess(agent.spaceAccess) }
+      : {}),
     enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
     enableContentTools: normalizeAgentBooleanFlag(agent.enableContentTools),
     enableSqlMode: normalizeAgentBooleanFlag(agent.enableSqlMode),
@@ -307,6 +322,9 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
     description: agent.description ?? null,
     instruction: agent.instruction ?? null,
     tags: normalizeTags(agent.tags ?? null),
+    ...(agent.spaceAccess !== undefined
+      ? { spaceAccess: normalizeSpaceAccess(agent.spaceAccess) }
+      : {}),
     ...(agent.enableDataAccess !== undefined ? { enableDataAccess: agent.enableDataAccess } : {}),
     ...(agent.enableContentTools !== undefined
       ? { enableContentTools: agent.enableContentTools }
