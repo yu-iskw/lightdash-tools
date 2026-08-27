@@ -1,3 +1,0 @@
-kind: feat
-body: ai-agent-ops create_project_agent requires form elicitation and secure-by-default permissions; create/update warn TAGS_MATCH_NO_EXPLORES and ELEVATED_* when applicable
-time: 2026-08-27T10:55:00+09:00

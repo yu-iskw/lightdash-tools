@@ -1,3 +1,0 @@
-kind: feat
-body: ai-agent-ops create/update/preview support spaceAccess with SPACES_NOT_IN_PROJECT and SPACE_LIST_UNAVAILABLE warnings; agentops bundle diff includes spaceAccess
-time: 2026-08-27T14:22:00+09:00

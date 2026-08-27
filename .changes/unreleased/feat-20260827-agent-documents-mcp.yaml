@@ -1,2 +1,0 @@
-kind: feat
-body: Add ai-agent-ops MCP tools for agent-scoped knowledge document CRUD (list/get/create/update/delete) with 20KB preflight, content redaction, and soft governance warnings (ADR-0035).
