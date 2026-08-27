@@ -20,6 +20,8 @@ export const evalUuidField = (): z.ZodString => z.string().describe('Evaluation 
 
 export const runUuidField = (): z.ZodString => z.string().describe('Evaluation run UUID');
 
+export const documentUuidField = (): z.ZodString => z.string().describe('Knowledge document UUID');
+
 export const threadUuidField = (): z.ZodString => z.string().describe('Thread UUID');
 
 /** Project + agent identity shared by inventory, thread, discovery, and eval tools. */
@@ -58,6 +60,12 @@ export const includePromptTextField = (): z.ZodOptional<z.ZodBoolean> =>
     .optional()
     .describe('Return evaluation prompt / expected-response text when true (default false)');
 
+export const includeDocumentContentField = (): z.ZodOptional<z.ZodBoolean> =>
+  z
+    .boolean()
+    .optional()
+    .describe('Return full knowledge document content when true (default false)');
+
 export const CONVERSATION_REDACTED_WARNING = {
   code: 'REDACTED' as const,
   message:
@@ -67,6 +75,11 @@ export const CONVERSATION_REDACTED_WARNING = {
 export const PROMPT_REDACTED_WARNING = {
   code: 'REDACTED' as const,
   message: 'Evaluation prompt text redacted; pass includePromptText=true to reveal',
+};
+
+export const DOCUMENT_CONTENT_REDACTED_WARNING = {
+  code: 'REDACTED' as const,
+  message: 'Document content redacted; pass includeDocumentContent=true to reveal',
 };
 
 type RedactionWarning = { code: 'REDACTED'; message: string };
@@ -401,4 +414,27 @@ export function redactEvalRunResults(
   warnings: RedactionWarning[];
 } {
   return redactPromptTextCollection(run, 'results', includePromptText);
+}
+
+/** Redact knowledge document content unless explicitly requested. */
+export function redactDocumentContent(
+  document: unknown,
+  includeDocumentContent: boolean,
+): {
+  data: unknown;
+  warnings: RedactionWarning[];
+} {
+  if (includeDocumentContent) {
+    return { data: document, warnings: [] };
+  }
+  const base = asRecord(document);
+  if (!base) {
+    return { data: document, warnings: [] };
+  }
+  const data = { ...base };
+  const changed = redactStringKeys(data, ['content']);
+  return {
+    data,
+    warnings: changed ? [DOCUMENT_CONTENT_REDACTED_WARNING] : [],
+  };
 }

@@ -248,6 +248,13 @@ export namespace LightdashApi {
     // Threads: title & clone
     export type GenerateThreadTitleResult = AiAgentsTypes.GenerateThreadTitleResult;
     export type CloneThreadBody = AiAgentsTypes.CloneThreadBody;
+    // Knowledge documents
+    export type AiAgentDocument = AiAgentsTypes.AiAgentDocument;
+    export type AiAgentDocumentSummary = AiAgentsTypes.AiAgentDocumentSummary;
+    export type AiAgentDocumentContent = AiAgentsTypes.AiAgentDocumentContent;
+    export type CreateAgentDocumentBody = AiAgentsTypes.CreateAgentDocumentBody;
+    export type UpdateAgentDocumentContentBody = AiAgentsTypes.UpdateAgentDocumentContentBody;
+    export type UpdateAgentDocumentSettingsBody = AiAgentsTypes.UpdateAgentDocumentSettingsBody;
     // Artifacts
     export type AiAgentVerifiedArtifact = AiAgentsTypes.AiAgentVerifiedArtifact;
     export type AiAgentVerifiedArtifactsListResult =
@@ -421,6 +428,13 @@ export type AgentSuggestions = AiAgents.AgentSuggestions;
 // AI agents (flat exports) — threads: title & clone
 export type GenerateThreadTitleResult = AiAgents.GenerateThreadTitleResult;
 export type CloneThreadBody = AiAgents.CloneThreadBody;
+// AI agents (flat exports) — knowledge documents
+export type AiAgentDocument = AiAgents.AiAgentDocument;
+export type AiAgentDocumentSummary = AiAgents.AiAgentDocumentSummary;
+export type AiAgentDocumentContent = AiAgents.AiAgentDocumentContent;
+export type CreateAgentDocumentBody = AiAgents.CreateAgentDocumentBody;
+export type UpdateAgentDocumentContentBody = AiAgents.UpdateAgentDocumentContentBody;
+export type UpdateAgentDocumentSettingsBody = AiAgents.UpdateAgentDocumentSettingsBody;
 // AI agents (flat exports) — artifacts
 export type AiAgentVerifiedArtifact = AiAgents.AiAgentVerifiedArtifact;
 export type AiAgentVerifiedArtifactsListResult = AiAgents.AiAgentVerifiedArtifactsListResult;

@@ -49,12 +49,13 @@ export function isProfileEnabled(policy: EnabledProfilesPolicy, id: ProfileId): 
   return !policy.restricted || policy.ids.has(id);
 }
 
-/** Preview/destructive HMAC key is required when write profiles are mounted. */
+/** Preview/destructive/create-agent HMAC key is required when those profiles are mounted. */
 export function requiresSignedStateKey(policy: EnabledProfilesPolicy): boolean {
   return (
     !policy.restricted ||
     policy.ids.has('content-developer') ||
-    policy.ids.has('content-governance')
+    policy.ids.has('content-governance') ||
+    policy.ids.has('ai-agent-ops')
   );
 }
 

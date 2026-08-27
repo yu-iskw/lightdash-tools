@@ -286,6 +286,46 @@ spec:
     expect(diff.summary.noops).toBe(1);
   });
 
+  it('detects drift when bundle sets enableContentTools', () => {
+    const bundleWithContentTools = parseLightdashAiAgentBundle(`
+apiVersion: lightdash.ai/v1alpha1
+kind: LightdashAiAgentBundle
+metadata:
+  name: sales-bundle
+spec:
+  projectUuid: ${PROJECT_UUID}
+  agents:
+    - key: sales
+      uuid: ${AGENT_UUID}
+      name: Sales Agent
+      instruction: Help with sales
+      enableContentTools: true
+      evaluations: []
+`);
+
+    const current = {
+      projectUuid: PROJECT_UUID,
+      agents: [
+        {
+          agent: {
+            uuid: AGENT_UUID,
+            name: 'Sales Agent',
+            description: null,
+            instruction: 'Help with sales',
+            tags: null,
+            enableContentTools: false,
+          },
+          evaluations: [],
+        },
+      ],
+    };
+
+    const diff = computeBundleDiff(bundleWithContentTools, current);
+    expect(diff.summary.updates).toBe(1);
+    expect(diff.changes[0]?.operation).toBe('update');
+    expect(diff.changes[0]?.fields?.enableContentTools).toEqual({ from: false, to: true });
+  });
+
   it('includes agentUuid on name-matched agent update changes', () => {
     const nameMatchedBundle = parseLightdashAiAgentBundle(`
 apiVersion: lightdash.ai/v1alpha1

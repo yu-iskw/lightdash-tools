@@ -67,6 +67,7 @@ describe('isProfileEnabled / requiresSignedStateKey / resolveRootMcpPath', () =>
       true,
     );
     expect(requiresSignedStateKey(parseEnabledProfiles('ai-agent-chat'))).toBe(false);
+    expect(requiresSignedStateKey(parseEnabledProfiles('ai-agent-ops'))).toBe(true);
   });
 
   it('uses semantic-layer mcpPath when unrestricted or when that id is listed', () => {

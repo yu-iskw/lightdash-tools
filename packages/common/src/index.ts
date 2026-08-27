@@ -16,6 +16,12 @@ export * from './profile-ids';
 // Irrecoverable MCP tool denylist
 export * from './agent-safe';
 
+// Secure AI agent create defaults (MCP, CLI, agentops)
+export * from './ai-agents/secure-create-defaults';
+
+// AI agent knowledge document limits
+export * from './ai-agents/document-limits';
+
 // Export AgentOps bundle and gate types
 export * from './agentops/types';
 export * from './agentops/snapshots';

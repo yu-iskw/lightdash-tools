@@ -2,13 +2,27 @@
  * AI agent-ops profile: thin Lightdash AI-agent API surface (ADR-0018).
  */
 
-import { getProjectAgentTool, listProjectAgentsTool } from '../../../tools/ai-agents/agents.js';
+import {
+  confirmCreateAgentTool,
+  createProjectAgentTool,
+  getProjectAgentTool,
+  listProjectAgentsTool,
+  previewCreateAgentTool,
+  updateProjectAgentTool,
+} from '../../../tools/ai-agents/agents.js';
 import {
   evaluateAgentReadinessTool,
   getAgentModelsTool,
   getAgentSuggestionsTool,
   getExploreAccessSummaryTool,
 } from '../../../tools/ai-agents/discovery.js';
+import {
+  createAgentDocumentTool,
+  deleteAgentDocumentTool,
+  getAgentDocumentTool,
+  listAgentDocumentsTool,
+  updateAgentDocumentTool,
+} from '../../../tools/ai-agents/documents.js';
 import {
   appendAgentEvaluationPromptsTool,
   createAgentEvaluationTool,
@@ -36,6 +50,10 @@ export const aiAgentOpsProfile: ProfileDefinition = {
   tools: [
     listProjectAgentsTool,
     getProjectAgentTool,
+    previewCreateAgentTool,
+    confirmCreateAgentTool,
+    createProjectAgentTool,
+    updateProjectAgentTool,
     evaluateAgentReadinessTool,
     getAgentSuggestionsTool,
     getAgentModelsTool,
@@ -51,6 +69,11 @@ export const aiAgentOpsProfile: ProfileDefinition = {
     runAgentEvaluationTool,
     listAgentEvaluationRunsTool,
     getAgentEvalRunResultsTool,
+    listAgentDocumentsTool,
+    getAgentDocumentTool,
+    createAgentDocumentTool,
+    updateAgentDocumentTool,
+    deleteAgentDocumentTool,
   ],
   registerPrompts: registerAiAgentOpsPrompts,
   registerResources: registerAiAgentOpsPlaybook,

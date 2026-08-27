@@ -36,8 +36,14 @@ export function registeredAiAgentTool(
   register: (server: never, ctx: McpContextProvider) => void,
   ctx: McpContextProvider,
   toolId: string,
-  server: { registerTool: ReturnType<typeof vi.fn> } = { registerTool: vi.fn() },
+  server: {
+    registerTool: ReturnType<typeof vi.fn>;
+    server?: { getClientCapabilities: () => unknown };
+  } = { registerTool: vi.fn() },
 ): RegisteredAiAgentTool {
+  if (!server.registerTool) {
+    server.registerTool = vi.fn();
+  }
   register(server as never, ctx);
   const call = server.registerTool.mock.calls.find(
     (entry) => entry[0] === `${TOOL_PREFIX}${toolId}`,

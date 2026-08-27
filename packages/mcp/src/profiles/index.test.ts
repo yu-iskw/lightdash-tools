@@ -112,8 +112,13 @@ describe('profiles', () => {
   it('ai-agent-ops membership and short server name', () => {
     const profile = getProfile('ai-agent-ops');
     const tools = listToolIds(profile);
-    expect(tools).toHaveLength(17);
-    expect(tools).not.toContain('create_project_agent');
+    expect(tools).toHaveLength(26);
+    expect(tools).toContain('preview_create_agent');
+    expect(tools).toContain('confirm_create_agent');
+    expect(tools).toContain('create_project_agent');
+    expect(tools).toContain('update_project_agent');
+    expect(tools).toContain('create_agent_document');
+    expect(tools).not.toContain('delete_project_agent');
     expect(tools).not.toContain('generate_agent_message');
     expect(tools).not.toContain('generate_agent_response');
     expect(getProfileServerName(profile)).toBe('lightdash-mcp-aops');

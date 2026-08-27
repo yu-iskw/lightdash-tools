@@ -143,6 +143,13 @@ export namespace V1 {
     // Threads: title & clone
     export type GenerateThreadTitleResult = A.GenerateThreadTitleResult;
     export type CloneThreadBody = A.CloneThreadBody;
+    // Knowledge documents
+    export type AiAgentDocument = A.AiAgentDocument;
+    export type AiAgentDocumentSummary = A.AiAgentDocumentSummary;
+    export type AiAgentDocumentContent = A.AiAgentDocumentContent;
+    export type CreateAgentDocumentBody = A.CreateAgentDocumentBody;
+    export type UpdateAgentDocumentContentBody = A.UpdateAgentDocumentContentBody;
+    export type UpdateAgentDocumentSettingsBody = A.UpdateAgentDocumentSettingsBody;
     // Artifacts
     export type AiAgentVerifiedArtifact = A.AiAgentVerifiedArtifact;
     export type AiAgentVerifiedArtifactsListResult = A.AiAgentVerifiedArtifactsListResult;

@@ -9,6 +9,7 @@ import { AiAgentsAdminClient } from './admin';
 import { AiAgentsProjectClient } from './agents';
 import { AiAgentsArtifactsClient } from './artifacts';
 import { AiAgentsDiscoveryClient } from './discovery';
+import { AiAgentsDocumentsClient } from './documents';
 import { AiAgentsEvaluationsClient } from './evaluations';
 import { AiAgentsFeedbackClient } from './feedback';
 import { AiAgentsMcpServersClient } from './mcp-servers';
@@ -21,6 +22,9 @@ import type { HttpClient } from '../../../http/http-client';
 import type {
   AgentSuggestions,
   AiAgent,
+  AiAgentDocument,
+  AiAgentDocumentContent,
+  AiAgentDocumentSummary,
   AiAgentEvaluation,
   AiAgentEvaluationRun,
   AiAgentEvaluationRunSummary,
@@ -46,6 +50,7 @@ import type {
   CloneThreadBody,
   CreateAgentThreadBody,
   CreateAgentThreadMessageResult,
+  CreateAgentDocumentBody,
   CreateAiAgent,
   CreateEvaluationBody,
   CreateEvaluationResult,
@@ -63,6 +68,8 @@ import type {
   SubmitSqlApprovalResult,
   UpdateAiAgent,
   UpdateAiOrganizationSettings,
+  UpdateAgentDocumentContentBody,
+  UpdateAgentDocumentSettingsBody,
   UpdateAiOrganizationSettingsResult,
   UpdateAgentMcpServerToolsBody,
   UpdateEvaluationBody,
@@ -74,6 +81,7 @@ export class AiAgentsClient extends BaseApiClient {
   private readonly agents: AiAgentsProjectClient;
   private readonly artifacts: AiAgentsArtifactsClient;
   private readonly discovery: AiAgentsDiscoveryClient;
+  private readonly documents: AiAgentsDocumentsClient;
   private readonly threads: AiAgentsThreadsClient;
   private readonly evaluations: AiAgentsEvaluationsClient;
   private readonly feedback: AiAgentsFeedbackClient;
@@ -87,6 +95,7 @@ export class AiAgentsClient extends BaseApiClient {
     this.agents = new AiAgentsProjectClient(http);
     this.artifacts = new AiAgentsArtifactsClient(http);
     this.discovery = new AiAgentsDiscoveryClient(http);
+    this.documents = new AiAgentsDocumentsClient(http);
     this.threads = new AiAgentsThreadsClient(http);
     this.evaluations = new AiAgentsEvaluationsClient(http);
     this.feedback = new AiAgentsFeedbackClient(http);
@@ -512,5 +521,49 @@ export class AiAgentsClient extends BaseApiClient {
     runUuid: string,
   ): Promise<AiAgentEvaluationRun> {
     return this.evaluations.getEvaluationRunResults(projectUuid, agentUuid, evalUuid, runUuid);
+  }
+
+  // ─── Project-scoped: knowledge documents ─────────────────────────────────────
+
+  listDocuments(projectUuid: string, agentUuid: string): Promise<AiAgentDocumentSummary[]> {
+    return this.documents.listDocuments(projectUuid, agentUuid);
+  }
+
+  getDocumentContent(
+    projectUuid: string,
+    agentUuid: string,
+    documentUuid: string,
+  ): Promise<AiAgentDocumentContent> {
+    return this.documents.getDocumentContent(projectUuid, agentUuid, documentUuid);
+  }
+
+  createDocument(
+    projectUuid: string,
+    agentUuid: string,
+    body: CreateAgentDocumentBody,
+  ): Promise<AiAgentDocument> {
+    return this.documents.createDocument(projectUuid, agentUuid, body);
+  }
+
+  updateDocumentContent(
+    projectUuid: string,
+    agentUuid: string,
+    documentUuid: string,
+    body: UpdateAgentDocumentContentBody,
+  ): Promise<AiAgentDocument> {
+    return this.documents.updateDocumentContent(projectUuid, agentUuid, documentUuid, body);
+  }
+
+  updateDocumentSettings(
+    projectUuid: string,
+    agentUuid: string,
+    documentUuid: string,
+    body: UpdateAgentDocumentSettingsBody,
+  ): Promise<void> {
+    return this.documents.updateDocumentSettings(projectUuid, agentUuid, documentUuid, body);
+  }
+
+  deleteDocument(projectUuid: string, agentUuid: string, documentUuid: string): Promise<void> {
+    return this.documents.deleteDocument(projectUuid, agentUuid, documentUuid);
   }
 }

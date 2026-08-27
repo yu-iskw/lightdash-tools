@@ -57,7 +57,7 @@ Procedure (primitives only):
 3. Optionally evaluate_agent_readiness — label as readiness API, not e2e.
 4. List evaluations and recent runs; note coverage gaps.
 5. Distinguish API facts, readiness signals, evaluation evidence, assumptions, and unknowns.
-6. Do not mutate the agent or claim compliance.`,
+6. Do not delete agents or start threads unless the user explicitly requests a separate chat profile flow.`,
         invariantIds,
         requiredTopics: [],
       }),
@@ -151,6 +151,30 @@ Stop when gates pass, no safe intervention remains, or the budget is exhausted.`
   );
 
   server.registerPrompt(
+    'create_governed_project_agent',
+    {
+      title: 'Create governed project AI agent',
+      description: 'Create an agent with secure defaults (capabilities off, admin-only visibility)',
+      argsSchema: {
+        name: z.string().optional().describe('Agent display name'),
+        instruction: z.string().optional().describe('System instruction'),
+      },
+    },
+    ({ name, instruction }) =>
+      promptContext({
+        task: `Create a governed Lightdash AI agent${name ? ` named "${name}"` : ''}.
+
+Use create_project_agent with secure defaults only (omit capability flags — data/content/SQL/user context stay off, adminOnly stays on).
+${instruction ? `Instruction draft: ${instruction}` : 'Draft a minimal instruction after listing explores if needed.'}
+Verify tags with get_explore_access_summary before setting any tag allowlist (explore names are not tags).
+Human must accept create confirmation: form elicitation when supported; otherwise preview_create_agent → confirm_create_agent → create with createConfirmToken.
+Do not elevate permissions unless the user explicitly asks.`,
+        invariantIds,
+        requiredTopics: [],
+      }),
+  );
+
+  server.registerPrompt(
     'review_agent_access_and_scope',
     {
       title: 'Review agent access and scope',
@@ -163,8 +187,11 @@ Stop when gates pass, no safe intervention remains, or the budget is exhausted.`
       promptContext({
         task: `Review access and scope for agent ${agentUuid ?? '(select)'}.
 
-Use get_project_agent and get_explore_access_summary. Note unexpectedly broad/narrow tags,
-data-access inconsistencies, and self-improvement risk. Do not mutate access.`,
+Use get_project_agent and get_explore_access_summary (pass the agent's tags). Review enableDataAccess, enableContentTools, enableSqlMode, enableUserContext, and adminOnly against the secure baseline.
+Note unexpectedly broad/narrow tags,
+invented tags that match zero explores (TAGS_MATCH_NO_EXPLORES), data-access inconsistencies, and self-improvement risk.
+Prefer update_project_agent over create_project_agent when adjusting scope. Do not mutate access unless the user asks.
+create_project_agent requires human confirmation (form elicitation or preview_create_agent → confirm_create_agent).`,
         invariantIds,
         requiredTopics: [],
       }),

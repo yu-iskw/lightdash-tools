@@ -25,6 +25,10 @@ export function toAgentSnapshot(agent: {
   instruction: string | null;
   tags: string[] | null;
   enableDataAccess?: boolean;
+  enableContentTools?: boolean;
+  enableSqlMode?: boolean;
+  enableUserContext?: boolean;
+  adminOnly?: boolean;
   enableSelfImprovement?: boolean;
 }): AgentStateSnapshot {
   return {
@@ -34,6 +38,10 @@ export function toAgentSnapshot(agent: {
     instruction: agent.instruction,
     tags: agent.tags,
     enableDataAccess: agent.enableDataAccess,
+    enableContentTools: agent.enableContentTools,
+    enableSqlMode: agent.enableSqlMode,
+    enableUserContext: agent.enableUserContext,
+    adminOnly: agent.adminOnly,
     enableSelfImprovement: agent.enableSelfImprovement,
   };
 }
