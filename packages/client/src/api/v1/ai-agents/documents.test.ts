@@ -46,7 +46,12 @@ describe('AiAgentsDocumentsClient', () => {
     const created = { uuid: 'd1', ...body };
     vi.mocked(mockHttp.post).mockResolvedValue(created);
     const result = await client.createDocument('proj1', 'a1', body);
-    expect(mockHttp.post).toHaveBeenCalledWith('/projects/proj1/aiAgents/a1/documents', body);
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/documents',
+      body,
+      undefined,
+      { maxRetries: 0 },
+    );
     expect(result).toEqual(created);
   });
 

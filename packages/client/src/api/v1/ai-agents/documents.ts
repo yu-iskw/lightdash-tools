@@ -42,6 +42,8 @@ export class AiAgentsDocumentsClient extends BaseApiClient {
     return this.http.post<AiAgentDocument>(
       `/projects/${projectUuid}/aiAgents/${agentUuid}/documents`,
       body,
+      undefined,
+      { maxRetries: 0 },
     );
   }
 

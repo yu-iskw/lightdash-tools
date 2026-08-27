@@ -56,6 +56,9 @@ export type AgentCreatePayloadFields = SecureAgentCreateFlags & {
 
 export type BuildSecureCreateAiAgentInput = AgentCreatePayloadFields & {
   projectUuid: string;
+  integrations?: CreateAiAgent['integrations'];
+  imageUrl?: CreateAiAgent['imageUrl'];
+  modelConfig?: CreateAiAgent['modelConfig'];
 };
 
 function sortedStrings(values: string[] | undefined): string[] {
@@ -145,8 +148,8 @@ export function buildSecureCreateAiAgentBody(input: BuildSecureCreateAiAgentInpu
     description: input.description ?? null,
     instruction: input.instruction ?? null,
     tags: normalizeAgentTags(input.tags),
-    integrations: [],
-    imageUrl: null,
+    integrations: input.integrations ?? [],
+    imageUrl: input.imageUrl ?? null,
     groupAccess: input.groupAccess ?? [],
     userAccess: input.userAccess ?? [],
     spaceAccess: input.spaceAccess ?? [],
@@ -158,6 +161,7 @@ export function buildSecureCreateAiAgentBody(input: BuildSecureCreateAiAgentInpu
     enableSelfImprovement: flags.enableSelfImprovement,
     version: 1,
     ...(input.mcpServerUuids !== undefined ? { mcpServerUuids: input.mcpServerUuids } : {}),
+    ...(input.modelConfig !== undefined ? { modelConfig: input.modelConfig } : {}),
   };
 }
 

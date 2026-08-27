@@ -54,6 +54,20 @@ describe('buildSecureCreateAiAgentBody', () => {
       version: 1,
     });
   });
+
+  it('preserves integrations, imageUrl, and modelConfig from file input', () => {
+    const modelConfig = { modelProvider: 'openai', modelName: 'gpt-4o' };
+    const body = buildSecureCreateAiAgentBody({
+      name: 'Advanced',
+      projectUuid: '550e8400-e29b-41d4-a716-446655440000',
+      integrations: [{ type: 'slack', channelId: 'C123' }],
+      imageUrl: 'https://example.com/agent.png',
+      modelConfig,
+    });
+    expect(body.integrations).toEqual([{ type: 'slack', channelId: 'C123' }]);
+    expect(body.imageUrl).toBe('https://example.com/agent.png');
+    expect(body.modelConfig).toEqual(modelConfig);
+  });
 });
 
 describe('collectElevationWarnings', () => {
