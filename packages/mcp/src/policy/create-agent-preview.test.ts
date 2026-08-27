@@ -177,4 +177,29 @@ describe('create-agent preview tokens', () => {
     );
     expect(result).toEqual(expect.any(String));
   });
+
+  it('validated createConfirmToken can be applied multiple times (no server-side single-use)', async () => {
+    // HMAC tokens are client-carried and stateless (ADR-0019); single-use would require server-side claim store.
+    const { createPreviewToken } = await mintDraftCreateAgentPreviewToken({
+      subject: SUBJECT,
+      projectUuid: PROJECT,
+      agentName: PAYLOAD.name,
+      payloadDigest: digest(),
+    });
+    const { createConfirmToken } = await confirmCreateAgentPreviewToken({
+      createPreviewToken,
+      subject: SUBJECT,
+      projectUuid: PROJECT,
+      agentName: PAYLOAD.name,
+    });
+    const applyInput = {
+      createConfirmToken,
+      subject: SUBJECT,
+      projectUuid: PROJECT,
+      agentName: PAYLOAD.name,
+      payloadDigest: digest(),
+    };
+    await expect(withValidatedCreateAgentApply(applyInput, async () => 1)).resolves.toBe(1);
+    await expect(withValidatedCreateAgentApply(applyInput, async () => 2)).resolves.toBe(2);
+  });
 });

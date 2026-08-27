@@ -35,10 +35,10 @@ Boolean or chat “please confirm” is not a trustworthy create gate ([ADR-0015
 
 ## Consequences
 
-- Hosts can stand up jaffle-style analysts (instruction + explicit `enableDataAccess: true`) without leaving `ai-agent-ops`, but **only after a human accepts the create form** showing the permission matrix.
+- Hosts can stand up jaffle-style analysts (instruction + explicit `enableDataAccess: true`) without leaving `ai-agent-ops`, but **only after a human accepts the create form** showing the permission matrix, or after the ADR-0034 preview-token path with out-of-band approval of the permission summary.
 - Minimal creates no longer inherit permissive Lightdash UI defaults for omitted capability flags.
-- Clients without form elicitation cannot create agents via MCP (safe refusal).
-- Duplicate create is not idempotent — hosts must not blind-retry after ambiguous failures.
+- Clients without form elicitation use **`preview_create_agent` → human approval → `confirm_create_agent` → `create_project_agent`** with `createConfirmToken` (ADR-0034); bare create returns `PREVIEW_REQUIRED`, not silent success.
+- Validated **`createConfirmToken` is reusable within TTL** (stateless HMAC, same as content-developer preview ledger) — duplicate agents are possible if hosts blind-retry after ambiguous failures; create is not idempotent.
 - Invented agent tags no longer fail silently at eval time without a warning code.
 - Advanced agent config still flows through CLI/GitOps; MCP surface stays bounded.
 - Profile tool count rises by two; wire names remain under the 60-character limit.
