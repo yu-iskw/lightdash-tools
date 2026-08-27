@@ -52,5 +52,8 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 29. [MCP ai-agent-chat first turn requires prompt on create](0030-mcp-ai-agent-chat-first-turn-requires-prompt-on-create.md)
 30. [MCP ai-agent-chat AI Router route_agent selection](0031-mcp-ai-agent-chat-ai-router-route-agent-selection.md)
 31. [MCP tool-result artifacts and content-reader SQL body reveal](0032-mcp-tool-result-artifacts-and-content-reader-sql-body-reveal.md)
+32. [MCP ai-agent-ops project agent create and update](0033-mcp-ai-agent-ops-project-agent-create-and-update.md)
+33. [MCP ai-agent-ops create preview-token confirmation for non-elicitation hosts](0034-mcp-ai-agent-ops-create-preview-token-confirmation-for-non-elicitation-hosts.md)
+34. [MCP ai-agent-ops agent knowledge document CRUD](0035-mcp-ai-agent-ops-agent-knowledge-document-crud.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

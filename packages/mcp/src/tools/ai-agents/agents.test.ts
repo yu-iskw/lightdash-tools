@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  registerCreateProjectAgent,
   registerGetProjectAgent,
   registerGetUserAgentPreferences,
   registerListProjectAgents,
+  registerUpdateProjectAgent,
 } from './agents.js';
 import { registerEvaluateAgentReadiness } from './discovery.js';
 import { registerGetAgentEvalRunResults, registerRunAgentEvaluation } from './evaluations.js';
@@ -246,6 +248,41 @@ describe('ai-agent-ops tools', () => {
     expect(result.isError).toBeUndefined();
     expect(getUserAgentPreferences).toHaveBeenCalledWith(PROJECT);
     expect(parseAiAgentToolBody(result).data).toEqual({ defaultAgentUuid: AGENT });
+  });
+
+  it('registers create_project_agent as WRITE_NONDESTRUCTIVE', () => {
+    const createAgent = vi.fn();
+    const { options } = registeredAiAgentTool(
+      registerCreateProjectAgent,
+      mockAiAgentsContext({ createAgent }),
+      'create_project_agent',
+    );
+    expect(options).toMatchObject({
+      annotations: expect.objectContaining({
+        readOnlyHint: false,
+        destructiveHint: false,
+      }),
+    });
+  });
+
+  it('updates a project agent with partial patch body', async () => {
+    const updateAgent = vi.fn().mockResolvedValue({ uuid: AGENT, instruction: 'Updated' });
+    const { handler } = registeredAiAgentTool(
+      registerUpdateProjectAgent,
+      mockAiAgentsContext({ updateAgent }),
+      'update_project_agent',
+    );
+    const result = await handler({
+      projectUuid: PROJECT,
+      agentUuid: AGENT,
+      instruction: 'Updated',
+    });
+    expect(result.isError).toBeUndefined();
+    expect(updateAgent).toHaveBeenCalledWith(PROJECT, AGENT, {
+      uuid: AGENT,
+      instruction: 'Updated',
+    });
+    expect(parseAiAgentToolBody(result).data).toEqual({ uuid: AGENT, instruction: 'Updated' });
   });
 
   it('surfaces PROJECT_SCOPE_REQUIRED for get_user_agent_preferences when unresolved', async () => {

@@ -7,6 +7,10 @@ import {
 } from '../auth/request-state-key.js';
 import { getDestructiveRequestStateCodec } from '../destructive/request-state.js';
 import { getDefaultProfile, getProfileServerName } from '../profiles/index.js';
+import {
+  CREATE_AGENT_REQUEST_STATE_KEY_PURPOSE,
+  getCreateAgentRequestStateCodec,
+} from '../tools/ai-agents/create-request-state.js';
 
 import { registerCapabilities } from './capabilities.js';
 import { PACKAGE_VERSION } from './version.js';
@@ -24,16 +28,28 @@ export function createLightdashMcpServer(
     assertRequestStateKeyConfigured(DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE);
   } else if (profile.id === 'content-developer') {
     assertRequestStateKeyConfigured(PREVIEW_TOKEN_KEY_PURPOSE);
+  } else if (profile.id === 'ai-agent-ops') {
+    assertRequestStateKeyConfigured(CREATE_AGENT_REQUEST_STATE_KEY_PURPOSE);
   }
-  const serverOptions =
-    profile.id === 'content-governance'
-      ? {
-          requestState: {
-            verify: (state: string, ctx: ServerContext) =>
-              getDestructiveRequestStateCodec().verify(state, ctx),
-          },
-        }
-      : undefined;
+
+  let serverOptions:
+    { requestState: { verify: (state: string, ctx: ServerContext) => unknown } } | undefined;
+  if (profile.id === 'content-governance') {
+    serverOptions = {
+      requestState: {
+        verify: (state: string, ctx: ServerContext) =>
+          getDestructiveRequestStateCodec().verify(state, ctx),
+      },
+    };
+  } else if (profile.id === 'ai-agent-ops') {
+    serverOptions = {
+      requestState: {
+        verify: (state: string, ctx: ServerContext) =>
+          getCreateAgentRequestStateCodec().verify(state, ctx),
+      },
+    };
+  }
+
   const server = new McpServer(
     {
       name: getProfileServerName(profile),

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.21.0] - 2026-08-27
+
+### Features
+
+- Add ai-agent-ops MCP tools for agent-scoped knowledge document CRUD (list/get/create/update/delete) with 20KB preflight, content redaction, and soft governance warnings (ADR-0035).
+- ai-agent-ops create_project_agent requires form elicitation and secure-by-default permissions; create/update warn TAGS_MATCH_NO_EXPLORES and ELEVATED_* when applicable
+- ai-agent-ops create/update/preview support spaceAccess with SPACES_NOT_IN_PROJECT and SPACE_LIST_UNAVAILABLE warnings; agentops bundle diff includes spaceAccess
+
 ## [0.20.0] - 2026-08-26
 
 ### Features

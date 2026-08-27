@@ -10,8 +10,8 @@ import {
 
 export const AI_AGENT_OPS_INVARIANTS = [
   {
-    id: 'no-agent-crud',
-    short: 'Do not create/update/delete agents on this server.',
+    id: 'no-agent-delete',
+    short: 'Do not delete agents on this server.',
   },
   {
     id: 'no-thread-mutation',
@@ -37,6 +37,11 @@ export const AI_AGENT_OPS_INVARIANTS = [
   {
     id: 'no-mcp-only-gate-claim',
     short: 'Do not claim a CLI promotion gate passed from MCP run results alone.',
+  },
+  {
+    id: 'secure-agent-defaults',
+    short:
+      'Do not enable data/content/SQL/user context or public visibility on create unless the user explicitly requested elevation — governed defaults apply.',
   },
 ] as const satisfies readonly PromptInvariant[];
 

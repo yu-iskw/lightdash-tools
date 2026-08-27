@@ -21,11 +21,14 @@ export type RegisteredAiAgentTool = {
 
 export function mockAiAgentsContext(
   aiAgents: Record<string, ReturnType<typeof vi.fn>>,
+  spaces: Record<string, ReturnType<typeof vi.fn>> = {
+    listSpacesInProject: vi.fn().mockResolvedValue([]),
+  },
 ): McpContextProvider {
   return {
     getContext: async () => ({
       lightdashClient: {
-        v1: { aiAgents },
+        v1: { aiAgents, spaces },
       },
       auth: { mode: 'none' as const },
     }),
@@ -36,8 +39,14 @@ export function registeredAiAgentTool(
   register: (server: never, ctx: McpContextProvider) => void,
   ctx: McpContextProvider,
   toolId: string,
-  server: { registerTool: ReturnType<typeof vi.fn> } = { registerTool: vi.fn() },
+  server: {
+    registerTool: ReturnType<typeof vi.fn>;
+    server?: { getClientCapabilities: () => unknown };
+  } = { registerTool: vi.fn() },
 ): RegisteredAiAgentTool {
+  if (!server.registerTool) {
+    server.registerTool = vi.fn();
+  }
   register(server as never, ctx);
   const call = server.registerTool.mock.calls.find(
     (entry) => entry[0] === `${TOOL_PREFIX}${toolId}`,

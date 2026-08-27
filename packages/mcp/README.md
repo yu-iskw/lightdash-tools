@@ -117,9 +117,9 @@ On those Hosts, leave the client Resource URL empty. Do not point `@modelcontext
 
 ### Content-developer / content-governance signing
 
-| Required (non-test)                     | Notes                                                                                                                                                                                                     |
-| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC `previewToken` / `requestState` (fail closed if unset; not encryption). Required only when `content-developer` or `content-governance` is mounted (including unrestricted HTTP). |
+| Required (non-test)                     | Notes                                                                                                                                                                                                                 |
+| :-------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY` | ≥32-byte secret for HMAC `previewToken` / `requestState` (fail closed if unset; not encryption). Required when `content-developer`, `content-governance`, or `ai-agent-ops` is mounted (including unrestricted HTTP). |
 
 Governance soft-delete needs client form elicitation; missing capability → `ELICITATION_REQUIRED`.
 
@@ -220,7 +220,7 @@ Soft-delete charts/dashboards and elicitation-gated dashboard promote. Permanent
 
 ### `ai-agent-ops`
 
-Thin AI-agent inventory, readiness, thread reads, and product evaluation suite/run APIs. No agent CRUD or thread generate on MCP. Server name: `lightdash-mcp-aops`. Loop engineering: [docs/profiles/ai-agent-ops/loop.md](../../docs/profiles/ai-agent-ops/loop.md).
+Thin AI-agent inventory, **create/update**, **knowledge documents**, readiness, thread reads, and product evaluation suite/run APIs. Agent delete and thread generate stay off MCP. **`create_project_agent`** uses secure-by-default permissions and dual-gate confirmation: MCP form elicitation when supported, otherwise `preview_create_agent` → `confirm_create_agent` → create with `createConfirmToken` (ADR-0034). Knowledge documents: `create_agent_document` and related tools (ADR-0035). Server name: `lightdash-mcp-aops`. Loop engineering: [docs/profiles/ai-agent-ops/loop.md](../../docs/profiles/ai-agent-ops/loop.md).
 
 ### `ai-agent-chat`
 
@@ -233,7 +233,7 @@ Unsaved Explore-style metric queries (`run_metric_query`) with explore discovery
 ## Safety
 
 - **Off MCP:** irrecoverable admin deletes, permanent content purge, broad org mutations — use `@lightdash-tools/client` or the CLI ([ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
-- **Writes:** `content-developer` (preview gate). Soft-delete / promote: `content-governance` (form elicitation). `ai-agent-chat` creates threads/messages and triggers open-world managed-agent generation (nested agent tools stay Lightdash-governed).
+- **Writes:** `content-developer` (preview gate). Soft-delete / promote: `content-governance` (form elicitation). `ai-agent-ops` creates/updates project agents (`WRITE_NONDESTRUCTIVE`). `ai-agent-chat` creates threads/messages and triggers open-world managed-agent generation (nested agent tools stay Lightdash-governed).
 - **Redaction:** emails masked unless `includeEmail=true`; scheduler destinations redacted unless `revealDestinations=true`; warehouse/dbt connection secrets never on MCP ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)).
 - **Project scope:** optional HTTP pin `X-Lightdash-Project`, else tool `projectUuid`; optional ceiling [`LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS`](#project-allowlist).
 

@@ -10,9 +10,9 @@ const TEST_FALLBACK_KEY = 'lightdash-tools-dev-request-state-key!!';
 export const PREVIEW_TOKEN_KEY_PURPOSE = 'content-developer preview tokens are enabled';
 export const DESTRUCTIVE_REQUEST_STATE_KEY_PURPOSE =
   'content-governance destructive tools are enabled';
-/** Preview + destructive elicitation share one signing key when write profiles are mounted. */
+/** Preview + destructive + create-agent elicitation share one signing key when those profiles are mounted. */
 export const HTTP_SIGNED_STATE_KEY_PURPOSE =
-  'HTTP MCP exposes content-developer preview tokens and content-governance destructive tools';
+  'HTTP MCP exposes content-developer preview tokens, content-governance destructive tools, and/or ai-agent-ops create confirmation';
 
 function isTestRuntime(): boolean {
   return process.env.VITEST === 'true' || process.env.NODE_ENV === 'test';
