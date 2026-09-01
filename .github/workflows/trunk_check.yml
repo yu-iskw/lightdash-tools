@@ -52,5 +52,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build packages
         run: pnpm build
+      - name: Check architecture
+        run: pnpm lint:architecture
       - name: Trunk Check
         uses: trunk-io/trunk-action@75699af9e26881e564e9d832ef7dc3af25ec031b # v1.2.4
