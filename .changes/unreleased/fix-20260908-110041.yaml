@@ -1,0 +1,3 @@
+kind: fix
+body: Restore the axios lockfile importer specifier so frozen CI installs match the workspace override.
+time: 2026-09-08T11:00:41.68988+09:00
