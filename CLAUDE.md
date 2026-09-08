@@ -74,3 +74,7 @@ When you notice repeated mistakes, recurring explanations, or opportunities for 
 4. **Be Specific & Minimal**: Only add rules or skills that provide clear, non-obvious value.
 
 Use the `/improve-claude-config` skill to orchestrate deeper changes.
+
+## Recent Learnings
+
+- [2026-09-08]: `pnpm audit --fix` can rewrite a lockfile importer specifier to the package.json range and break `--frozen-lockfile` when `pnpm-workspace.yaml` overrides differ (axios `'>=1.18.0'` vs `^1.19.0`). Do not add a custom lockfile parser; `pnpm install --frozen-lockfile` is the gate. The audit workflow opens a draft PR only after that install succeeds.
