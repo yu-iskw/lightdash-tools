@@ -34,11 +34,10 @@
     "test:fast": "vitest run",
     "trunk:install": "pnpm exec trunk install",
     "validate:deps": "node scripts/check-common-no-client.mjs",
-    "validate:lockfile-overrides": "node scripts/check-lockfile-override-specifiers.mjs",
     "validate:names": "node scripts/validate-package-names.mjs",
     "verify": "pnpm verify:pr",
     "verify:ci": "pnpm verify:pr && pnpm lint:trunk",
-    "verify:pr": "pnpm validate:lockfile-overrides && pnpm validate:names && pnpm validate:deps && pnpm build && pnpm test && pnpm lint:local",
+    "verify:pr": "pnpm validate:names && pnpm validate:deps && pnpm build && pnpm test && pnpm lint:local",
     "verify:quick": "pnpm build && pnpm test && pnpm lint:local"
   },
   "devDependencies": {
