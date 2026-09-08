@@ -21,6 +21,11 @@
 #
 # npm audit and Trunk security (pnpm lint:security) use different signals; merge
 # only after CI is green.
+#
+# Never push to main. Open a draft PR on chore/pnpm-audit-fix-<run_id> only
+# after importer specifiers still match workspace overrides and
+# `pnpm install --frozen-lockfile` succeeds. `pnpm audit --fix` can rewrite an
+# importer specifier to the package.json range and break frozen CI.
 
 name: Dependency audit fix
 
@@ -71,15 +76,23 @@ jobs:
         continue-on-error: true
         run: pnpm audit --fix update
 
+      - name: Reject lockfile importer specifiers that disagree with overrides
+        run: node scripts/check-lockfile-override-specifiers.mjs
+
+      - name: Prove frozen install still matches the lockfile
+        run: pnpm install --frozen-lockfile
+
       - name: Create pull request
         # zizmor: ignore[superfluous-actions] create-pull-request handles commit+push+PR; gh alone needs more plumbing
         uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
         with:
-          token: '${{ secrets.GITHUB_TOKEN }}'
+          token: ${{ secrets.DEPENDENCY_AUTOMATION_PAT || secrets.GITHUB_TOKEN }}
           commit-message: 'chore(deps): apply pnpm audit --fix'
           title: 'chore(deps): apply pnpm audit --fix'
           signoff: true
+          base: main
           branch: 'chore/pnpm-audit-fix-${{ github.run_id }}'
+          draft: true
           delete-branch: true
           add-paths: |
             pnpm-lock.yaml
@@ -87,8 +100,11 @@ jobs:
           body: |
             Automated lockfile / manifest updates from `pnpm audit --fix` (npm advisory data).
 
-            **Before merging**
+            This pull request is a draft. Do not merge it, and do not push these commits to `main`, until every check is green.
+
+            **Before marking ready / merging**
             - Wait for all checks to pass (`pnpm test`, `pnpm lint`, and `pnpm lint:security`).
+            - Confirm `pnpm install --frozen-lockfile` succeeded. A lockfile importer specifier must stay aligned with `pnpm-workspace.yaml` overrides (`pnpm validate:lockfile-overrides`).
             - `pnpm audit` and Trunk/OSV-scoped security are not identical; review any security findings.
 
             If checks did not run on this PR, configure optional repository secret `DEPENDENCY_AUTOMATION_PAT` (see workflow file header in `.github/workflows/dependency_audit_fix.yml`).
