@@ -10,9 +10,9 @@ import {
   CLIENT_INFO_META_KEY,
   PROTOCOL_VERSION_META_KEY,
 } from '@modelcontextprotocol/server';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { getProfile } from './profiles/index.js';
+import { getProfile, preloadProfiles } from './profiles/index.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 /** Vitest runs from the monorepo root (`vitest.config.ts`). */
@@ -20,7 +20,12 @@ const repoRoot = process.cwd();
 const binPath = path.join(repoRoot, 'packages/mcp/dist/bin.js');
 
 const INIT_TIMEOUT_MS = 5_000;
-const SEMANTIC_LAYER_TOOL_COUNT = getProfile('semantic-layer').tools.length;
+let SEMANTIC_LAYER_TOOL_COUNT = 0;
+
+beforeAll(async () => {
+  await preloadProfiles(['semantic-layer']);
+  SEMANTIC_LAYER_TOOL_COUNT = getProfile('semantic-layer').tools.length;
+});
 
 interface JsonRpcMessage {
   jsonrpc?: string;

@@ -4,11 +4,15 @@
 
 import { expect } from 'vitest';
 
-import { getProfile, listToolIds } from '../index.js';
+import { getProfile, listToolIds, preloadProfiles } from '../index.js';
 
 import type { ProfileId } from '../types.js';
 
-export function expectPlaybookCoversProfileTools(profileId: ProfileId, markdown: string): void {
+export async function expectPlaybookCoversProfileTools(
+  profileId: ProfileId,
+  markdown: string,
+): Promise<void> {
+  await preloadProfiles([profileId]);
   for (const id of listToolIds(getProfile(profileId))) {
     expect(markdown.includes(id) || markdown.includes(`lightdash_${id}`)).toBe(true);
   }

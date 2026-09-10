@@ -5,9 +5,9 @@ import {
   AI_AGENT_CHAT_PROFILE_PATH,
   CONTENT_DEVELOPER_PROFILE_PATH,
   CONTENT_READER_PROFILE_PATH,
-  getProfile,
+  getProfilePath,
   SEMANTIC_LAYER_PROFILE_PATH,
-} from '../profiles/index.js';
+} from '../profiles/catalog.js';
 
 import {
   UNRESTRICTED_ENABLED_PROFILES,
@@ -98,7 +98,7 @@ describe('isProfileEnabled / requiresSignedStateKey / resolveRootMcpPath', () =>
 
   it('lists shipped paths when unrestricted and only enabled paths when restricted', () => {
     expect(listEnabledProfilePaths(UNRESTRICTED_ENABLED_PROFILES)).toEqual(
-      PROFILE_IDS.map((id) => getProfile(id).path),
+      PROFILE_IDS.map((id) => getProfilePath(id)),
     );
     expect(listEnabledProfilePaths(parseEnabledProfiles('content-reader'))).toEqual([
       CONTENT_READER_PROFILE_PATH,

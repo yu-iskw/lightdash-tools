@@ -4,16 +4,18 @@
  * Canonical: `LIGHTDASH_TOOLS_MCP_PROFILES`.
  * Unset/empty → unrestricted (all shipped paths). Non-empty → hard ceiling.
  * Unknown ids / empty CSV segments fail closed. Stdio ignores this env.
+ *
+ * Uses the light profile catalog only (no ToolModule imports).
  */
 
 import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 
 import {
   DEFAULT_PROFILE_ID,
-  getDefaultProfile,
-  getProfile,
+  getDefaultProfilePath,
+  getProfilePath,
   parseProfileId,
-} from '../profiles/index.js';
+} from '../profiles/catalog.js';
 
 import { ENV_LIGHTDASH_TOOLS_MCP_PROFILES } from './env.js';
 
@@ -59,15 +61,20 @@ export function requiresSignedStateKey(policy: EnabledProfilesPolicy): boolean {
   );
 }
 
-/** Enabled HTTP mount paths in `PROFILE_IDS` order. */
+/** Enabled profile ids in `PROFILE_IDS` order. */
+export function listEnabledProfileIds(policy: EnabledProfilesPolicy): ProfileId[] {
+  return PROFILE_IDS.filter((id) => isProfileEnabled(policy, id));
+}
+
+/** Enabled HTTP mount paths in `PROFILE_IDS` order (catalog paths; no ToolModule load). */
 export function listEnabledProfilePaths(policy: EnabledProfilesPolicy): string[] {
-  return PROFILE_IDS.filter((id) => isProfileEnabled(policy, id)).map((id) => getProfile(id).path);
+  return listEnabledProfileIds(policy).map((id) => getProfilePath(id));
 }
 
 /** Root PRM / `config.mcpPath` anchor: default profile, else first enabled `PROFILE_IDS` id. */
 export function resolveRootMcpPath(policy: EnabledProfilesPolicy): string {
   if (!policy.restricted || policy.ids.has(DEFAULT_PROFILE_ID)) {
-    return getDefaultProfile().path;
+    return getDefaultProfilePath();
   }
   return listEnabledProfilePaths(policy)[0]!;
 }

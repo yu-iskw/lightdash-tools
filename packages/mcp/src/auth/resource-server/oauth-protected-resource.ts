@@ -2,7 +2,7 @@ import { isProfileEnabled } from '../../config/enabled-profiles.js';
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../../config/env.js';
 import { normalizeMcpPath } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
-import { getProfileByPath } from '../../profiles/index.js';
+import { getProfileIdByPath, getProfilePath } from '../../profiles/catalog.js';
 
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
@@ -71,11 +71,11 @@ export function resolveProtectedResourceMcpPath(
     return undefined;
   }
   const resourcePath = `/${path.slice(prefix.length)}`;
-  const profile = getProfileByPath(resourcePath);
-  if (!profile || !isProfileEnabled(config.enabledProfiles, profile.id)) {
+  const profileId = getProfileIdByPath(resourcePath);
+  if (!profileId || !isProfileEnabled(config.enabledProfiles, profileId)) {
     return undefined;
   }
-  return profile.path;
+  return getProfilePath(profileId);
 }
 
 /** Well-known OAuth Authorization Server Metadata URL for an AS origin. */

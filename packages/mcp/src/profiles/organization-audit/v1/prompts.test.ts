@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { getAllPlaybookMarkdown, ORGANIZATION_AUDIT_HARD_BANS } from './resources/playbooks.js';
 
 describe('organization-audit prompts/playbook', () => {
-  it('playbook references only registered tool short ids', () => {
+  it('playbook references only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('organization-audit', md);
+    await expectPlaybookCoversProfileTools('organization-audit', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(ORGANIZATION_AUDIT_HARD_BANS.toLowerCase()).toContain('compliance');
   });

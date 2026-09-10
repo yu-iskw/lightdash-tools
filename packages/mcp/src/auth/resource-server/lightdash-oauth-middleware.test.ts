@@ -2,8 +2,10 @@ import { SecretString } from '@lightdash-tools/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
-import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../profiles/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PROFILE_PATH } from '../../profiles/semantic-layer/v1/index.js';
+import {
+  ORGANIZATION_AUDIT_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../../profiles/catalog.js';
 import { mintMcpAccessToken } from '../oauth-broker/mcp-access-token.js';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';

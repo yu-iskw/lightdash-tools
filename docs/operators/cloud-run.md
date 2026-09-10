@@ -27,9 +27,11 @@ CMD ["node", "packages/mcp/dist/bin.js", "http"]
 
 Unauthenticated HTTP probes (always mounted, including when `LIGHTDASH_TOOLS_MCP_PROFILES` restricts MCP paths). They are not MCP tools and do not require OAuth. Prefer **`GET /health/live`** for Cloud Run [startup and liveness](https://docs.cloud.google.com/run/docs/configuring/healthchecks) — same path Compose uses. Contract: [packages/mcp/README.md](../../packages/mcp/README.md).
 
+`createStreamableHttpServer` **preloads enabled profile ToolModules and creates the OAuth broker before listening**, so a successful `/health/live` means OAuth routes and enabled MCP mounts are ready (not a bare socket). This follows Cloud Run guidance to bind `$PORT` only after startup-critical work, and to [lazy-load unused Node dependencies](https://cloud.google.com/run/docs/tips/nodejs) via dynamic imports for profiles omitted from `LIGHTDASH_TOOLS_MCP_PROFILES`.
+
 | Path            | When to use        | Success                       | Notes                                                                                      |
 | :-------------- | :----------------- | :---------------------------- | :----------------------------------------------------------------------------------------- |
-| `/health/live`  | startup + liveness | `200` `{ "status": "ok" }`    | Process is listening                                                                       |
+| `/health/live`  | startup + liveness | `200` `{ "status": "ok" }`    | Process is listening; enabled profiles + OAuth broker (when configured) are ready          |
 | `/health/ready` | optional readiness | `200` `{ "status": "ready" }` | `503` if an API-key client cannot be constructed; hosted OAuth has no key, so ready ≈ live |
 
 ```bash
@@ -58,7 +60,7 @@ LIGHTDASH_TOOLS_OAUTH_CLIENT_ID=...   # from Secret Manager
 LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET=...
 ```
 
-Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI), `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset = all eight HTTP mounts).
+Optional: `LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS`, `LIGHTDASH_PROXY_AUTHORIZATION`, `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` (comma-separated project UUID hard allowlist shared with CLI), `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset = all eight HTTP mounts). Restricting profiles also **defers loading** unused ToolModule graphs (ADR-0024), which is the main application-side cold-start lever on `min instances = 0`.
 
 **Do not set `LIGHTDASH_TOOLS_AUDIT_LOG` on Cloud Run.** Tool audit entries are written as pure JSON NDJSON on **stderr** and are captured automatically by [Cloud Run logging](https://docs.cloud.google.com/run/docs/logging) into Cloud Logging (`jsonPayload`). A container file path is ephemeral and unsuitable as the primary audit sink. Use `LIGHTDASH_TOOLS_AUDIT_LOG` only for CLI/local file append.
 

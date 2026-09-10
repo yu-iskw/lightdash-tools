@@ -7,10 +7,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { bindServerProfile } from '../../audit/server-profile.js';
 import { getProfile, listToolIds } from '../../profiles/index.js';
+import { usePreloadedProfiles } from '../../profiles/test-support/preload-profiles.js';
 import { registerTools } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
 describe('content-reader safety invariants', () => {
+  usePreloadedProfiles();
+
   it('registers only readOnlyHint tools for profile-mounted tools', () => {
     const annotationsByName = new Map<string, unknown>();
     const mockServer = {

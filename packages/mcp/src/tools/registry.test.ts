@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { bindServerProfile } from '../audit/server-profile.js';
 import { getDefaultProfile, listToolIds } from '../profiles/index.js';
+import { usePreloadedProfiles } from '../profiles/test-support/preload-profiles.js';
 
 import { registerTools } from './registry.js';
 import { TOOL_PREFIX } from './shared.js';
@@ -16,6 +17,8 @@ vi.mock('@lightdash-tools/common', async (importOriginal) => {
     initAuditLog: vi.fn(),
   };
 });
+
+usePreloadedProfiles();
 
 describe('registerTools', () => {
   const registeredTools: Array<{ name: string; description: string }> = [];

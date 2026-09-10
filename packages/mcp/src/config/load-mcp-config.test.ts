@@ -4,7 +4,7 @@ import {
   CONTENT_DEVELOPER_PROFILE_PATH,
   CONTENT_READER_PROFILE_PATH,
   SEMANTIC_LAYER_PROFILE_PATH,
-} from '../profiles/index.js';
+} from '../profiles/catalog.js';
 
 import { UNRESTRICTED_ENABLED_PROFILES } from './enabled-profiles.js';
 import {

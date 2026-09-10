@@ -10,9 +10,9 @@ import { AI_AGENT_CHAT_INVARIANTS } from './invariants.js';
 import { AI_AGENT_CHAT_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('ai-agent-chat prompts/playbook', () => {
-  it('playbook references registered tools and hard bans', () => {
+  it('playbook references registered tools and hard bans', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('ai-agent-chat', md);
+    await expectPlaybookCoversProfileTools('ai-agent-chat', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(AI_AGENT_CHAT_HARD_BANS.toLowerCase()).toContain('sql mode');
     expect(AI_AGENT_CHAT_HARD_BANS.toLowerCase()).toContain('evaluations');

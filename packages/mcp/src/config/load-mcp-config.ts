@@ -10,7 +10,7 @@ import {
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
 import { parseInvokeOrigins } from '../auth/oauth-broker/invoke-origins.js';
-import { getDefaultProfile, listProfilePaths } from '../profiles/index.js';
+import { getDefaultProfilePath, listCatalogProfilePaths } from '../profiles/catalog.js';
 
 import {
   parseEnabledProfiles,
@@ -407,7 +407,7 @@ export function loadMcpHttpConfig(
   if (readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) !== undefined) {
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_PATH} is unused and rejected. ` +
-        `The MCP endpoint path is profile-owned (${getDefaultProfile().path}); leave this variable unset.`,
+        `The MCP endpoint path is profile-owned (${getDefaultProfilePath()}); leave this variable unset.`,
     );
   }
 
@@ -433,7 +433,9 @@ export function loadMcpHttpConfig(
   const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
   const promptContextPolicy = options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
   const mcpPath = resolveRootMcpPath(enabledProfiles);
-  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
+  const publicUrl = publicUrlRaw
+    ? normalizePublicUrl(publicUrlRaw, listCatalogProfilePaths())
+    : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
   const invokeOrigins =
     authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH

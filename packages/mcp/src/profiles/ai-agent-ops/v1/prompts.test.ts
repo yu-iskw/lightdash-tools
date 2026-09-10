@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { AI_AGENT_OPS_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('ai-agent-ops prompts/playbook', () => {
-  it('playbook references only registered tool short ids', () => {
+  it('playbook references only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('ai-agent-ops', md);
+    await expectPlaybookCoversProfileTools('ai-agent-ops', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(AI_AGENT_OPS_HARD_BANS.toLowerCase()).toContain('recommend');
   });
