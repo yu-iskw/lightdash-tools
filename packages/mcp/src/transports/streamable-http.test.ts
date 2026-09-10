@@ -213,4 +213,29 @@ describe('streamable HTTP OAuth metadata', () => {
     expect([400, 302, 303]).toContain(res.status);
     await handle.close();
   });
+
+  it('keeps health probes up when shared-key/none mode lacks Lightdash credentials', async () => {
+    clearMcpEnv();
+    delete process.env.LIGHTDASH_API_KEY;
+    delete process.env.LIGHTDASH_URL;
+
+    resetLoadedProfilesForTests();
+    const handle = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        authMode: 'none',
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+
+    const live = await fetch(`http://127.0.0.1:${handle.port}/health/live`);
+    expect(live.status).toBe(200);
+    await expect(live.json()).resolves.toEqual({ status: 'ok' });
+
+    const ready = await fetch(`http://127.0.0.1:${handle.port}/health/ready`);
+    expect(ready.status).toBe(503);
+    await expect(ready.json()).resolves.toEqual({ status: 'not ready' });
+
+    await handle.close();
+  });
 });

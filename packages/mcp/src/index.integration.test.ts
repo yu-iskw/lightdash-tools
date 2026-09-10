@@ -1,12 +1,14 @@
 import { LightdashClient, SecretString } from '@lightdash-tools/client';
 import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/server';
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
 import { validateLightdashAccessToken } from './auth/resource-server/lightdash-token-validation.js';
 import { getClient } from './config/runtime.js';
 import { makeTestMcpHttpConfig } from './config/test-mcp-http-config.js';
+import { DEFAULT_PROFILE_ID } from './profiles/catalog.js';
+import { preloadProfiles } from './profiles/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared';
 
@@ -15,6 +17,10 @@ const hasOAuthToken =
   !!process.env.LIGHTDASH_TOOLS_TEST_OAUTH_ACCESS_TOKEN && !!process.env.LIGHTDASH_URL;
 
 describe.runIf(hasCredentials)('MCP Integration (Real API)', () => {
+  beforeAll(async () => {
+    await preloadProfiles([DEFAULT_PROFILE_ID]);
+  });
+
   it('should authenticate and fetch current organization', async () => {
     const client = getClient();
     // getCurrentOrganization is a better test for connectivity

@@ -138,10 +138,10 @@ function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpCo
 }
 
 function createEnvContextProvider(config: McpHttpConfig): McpContextProvider {
+  // Defer getClient() until getContext / /health/ready so missing creds yield 503, not failed listen.
   return new EnvContextProvider({
     mode:
       config.authMode === MCP_AUTH_MODE_SHARED_KEY ? MCP_AUTH_MODE_SHARED_KEY : MCP_AUTH_MODE_NONE,
-    client: getClient(),
   });
 }
 
