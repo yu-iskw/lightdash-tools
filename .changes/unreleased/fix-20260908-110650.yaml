@@ -1,0 +1,3 @@
+kind: fix
+body: Pin browserslist to 4.28.7 so the SBOM High/Critical gate clears GHSA-73wf-gq98-2v4g and GHSA-c83g-rgw3-j3cx.
+time: 2026-09-08T11:06:50.928547+09:00
