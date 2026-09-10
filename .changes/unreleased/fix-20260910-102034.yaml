@@ -1,3 +1,0 @@
-kind: fix
-body: Pin js-yaml to 4.3.2 so the SBOM High/Critical gate clears GHSA-2883-xcg3-v3hh.
-time: 2026-09-10T10:20:34.204772+09:00

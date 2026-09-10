@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.23.0] - 2026-09-10
+
+### Bug Fixes
+
+- Pin js-yaml to 4.3.2 so the SBOM High/Critical gate clears GHSA-2883-xcg3-v3hh.
+
 ## [0.22.0] - 2026-09-10
 
 ### Bug Fixes
