@@ -63,6 +63,46 @@ jobs:
       - name: Run tests
         run: |
           pnpm test
+      - name: Assert release tag matches package versions
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          expected="${RELEASE_TAG#v}"
+          mismatch=0
+          for pkg_json in package.json packages/*/package.json; do
+            [[ -f "${pkg_json}" ]] || continue
+            name="$(node -p "require('./${pkg_json}').name")"
+            version="$(node -p "require('./${pkg_json}').version")"
+            if [[ "${version}" != "${expected}" ]]; then
+              echo "::error::${name} version ${version} does not match release tag ${RELEASE_TAG} (expected ${expected})"
+              mismatch=1
+            else
+              echo "OK ${name}@${version}"
+            fi
+          done
+          if [[ "${mismatch}" -ne 0 ]]; then
+            echo "::error::Release tag and package.json versions must match before publish"
+            exit 1
+          fi
       - name: Publish to npm
         run: |
-          pnpm -r publish --no-git-checks --access public
+          set -euo pipefail
+          pnpm -r publish --no-git-checks --access public --report-summary
+          if [[ ! -f pnpm-publish-summary.json ]]; then
+            echo "::error::pnpm-publish-summary.json was not written"
+            exit 1
+          fi
+          count="$(node -p "const s=require('./pnpm-publish-summary.json'); (s.publishedPackages||[]).length")"
+          echo "Published package count: ${count}"
+          node -e "
+            const s = require('./pnpm-publish-summary.json');
+            for (const p of s.publishedPackages || []) {
+              console.log('published ' + p.name + '@' + p.version);
+            }
+          "
+          if [[ "${count}" -eq 0 ]]; then
+            echo "::error::pnpm publish reported no new packages (would leave npm unchanged)"
+            exit 1
+          fi
