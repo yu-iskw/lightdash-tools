@@ -77,6 +77,7 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-09-10]: `parallel_validation` expects booleans for both `trivialChangeDeclaration.codeReview.isTrivial` and `trivialChangeDeclaration.codeql.isTrivial`; passing a string for `codeql.isTrivial` fails input validation.
 - [2026-09-10]: MCP HTTP cold start: light `profiles/catalog.ts` for ids/paths; `preloadProfiles` loads ToolModules only for enabled mounts before `$PORT` listen; OAuth broker is created before listen; shared-key/none reuses one process `EnvContextProvider`. `getProfile` throws until preload. CLI help loads profiles lazily via `require('./cli-help.js')` so `bin http` stays light.
 - [2026-08-27]: ai-agent-ops knowledge documents: `list/get/create/update/delete_agent_document` on agent-scoped `…/documents` route (inline JSON, 20KB preflight, content redacted on get unless `includeDocumentContent`; ADR-0035). Not multipart; host reads local `.md` and passes `content`.
 - [2026-08-27]: ai-agent-ops create dual-gate: form elicitation when capable; else `preview_create_agent` → human approval → `confirm_create_agent` → `create_project_agent` with `createConfirmToken` (ADR-0034). Non-form hosts get `PREVIEW_REQUIRED`, not `ELICITATION_REQUIRED`.

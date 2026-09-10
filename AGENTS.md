@@ -166,6 +166,7 @@ Additional specialized skills are documented in `CLAUDE.md`.
 - content-reader: prefer `list_verified_content` (GET `…/content-verification`) for trusted seeds; `search_content` has no `verifiedOnly` filter. Dashboard `sql_chart` tiles run via `run_dashboard_tile` (ADR-0028); standalone `run_chart` SQL stays off; `dateZoom` is ignored on SQL tiles. Authored SQL reveal is opt-in `includeArtifacts=["sql"]` as a separate MCP resource (ADR-0032); run/poll default `['data']` keeps rows out of the summary envelope.
 - OpenAPI lists are wrapped (`results.data.<key>`); bump `config/lightdash-openapi-ref.txt` (40-char commit SHA for releases) before `generate:types` — never hand-edit generated types.
 - MCP tests are CJS under `tsc` — no `import.meta`; stdio smoke spawns `dist/bin.js` with an explicit profile arg.
+- `parallel_validation`: pass booleans for both `trivialChangeDeclaration.codeReview.isTrivial` and `trivialChangeDeclaration.codeql.isTrivial`; the `codeql.isTrivial` schema rejects string values.
 - Knip: keep type-barrel `ignoreIssues`; delete unused intermediate re-exports rather than broaden ignores.
 - GPG: agent commit/rebase can hang on pinentry; rebase may ignore `commit.gpgsign=false` — finish with `git commit --no-gpg-sign`.
 - Profile depth, inventories, and binding why → [`docs/adr`](docs/adr) + [`docs/profiles`](docs/profiles) (not here).
