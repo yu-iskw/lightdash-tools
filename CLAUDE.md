@@ -77,4 +77,5 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
+- [2026-09-10]: `pnpm -r publish` exits 0 with `There are no new packages that should be published` when `package.json` versions already exist on npm — a GitHub Release tag alone does not bump packages. Publish workflow asserts tag↔versions and non-empty `--report-summary`. npm packument can lag a few minutes after CI success.
 - [2026-09-08]: `pnpm audit --fix` can rewrite a lockfile importer specifier to the package.json range and break `--frozen-lockfile` when `pnpm-workspace.yaml` overrides differ (axios `'>=1.18.0'` vs `^1.19.0`). Do not add a custom lockfile parser; `pnpm install --frozen-lockfile` is the gate. The audit workflow opens a draft PR only after that install succeeds.
