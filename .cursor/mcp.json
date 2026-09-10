@@ -1,25 +1,29 @@
 {
   "mcpServers": {
     "local-ai-agent-ops": {
-      "url": "http://127.0.0.1:8080/ai-agent-ops/v1/mcp",
+      "type": "http",
+      "url": "http://127.0.0.1:3100/ai-agent-ops/v1/mcp",
       "headers": {
         "X-Lightdash-Project": "3dda11cb-aac8-42f7-82f1-26fa6b1afa80"
       }
     },
     "local-ai-agent-chat": {
-      "url": "http://127.0.0.1:8080/ai-agent-chat/v1/mcp",
+      "type": "http",
+      "url": "http://127.0.0.1:3100/ai-agent-chat/v1/mcp",
       "headers": {
         "X-Lightdash-Project": "3dda11cb-aac8-42f7-82f1-26fa6b1afa80"
       }
     },
     "local-content-developer": {
-      "url": "http://127.0.0.1:8080/content-developer/v1/mcp",
+      "type": "http",
+      "url": "http://127.0.0.1:3100/content-developer/v1/mcp",
       "headers": {
         "X-Lightdash-Project": "3dda11cb-aac8-42f7-82f1-26fa6b1afa80"
       }
     },
-    "local-content-viewer": {
-      "url": "http://127.0.0.1:8080/content-viewer/v1/mcp",
+    "local-content-reader": {
+      "type": "http",
+      "url": "http://127.0.0.1:3100/content-reader/v1/mcp",
       "headers": {
         "X-Lightdash-Project": "3dda11cb-aac8-42f7-82f1-26fa6b1afa80"
       }
