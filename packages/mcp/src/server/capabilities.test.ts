@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { getServerProfile } from '../audit/server-profile.js';
 import { getDefaultProfile } from '../profiles/index.js';
+import { usePreloadedProfiles } from '../profiles/test-support/preload-profiles.js';
 import { registerTools } from '../tools/registry.js';
 
 import { registerCapabilities } from './capabilities.js';
@@ -17,6 +18,8 @@ vi.mock('../tools/registry.js', async (importOriginal) => {
 });
 
 import type { McpContextProvider } from './request-context.js';
+
+usePreloadedProfiles();
 
 function createMockContextProvider(lightdashClient: object = {}): McpContextProvider {
   return {

@@ -7,13 +7,14 @@ import { deleteChartTool } from '../../../tools/project/delete-chart.js';
 import { deleteDashboardTool } from '../../../tools/project/delete-dashboard.js';
 import { getDashboardPromoteDiffTool } from '../../../tools/project/get-dashboard-promote-diff.js';
 import { promoteDashboardTool } from '../../../tools/project/promote-dashboard.js';
+import { CONTENT_GOVERNANCE_PROFILE_PATH } from '../../catalog.js';
 
 import { registerContentGovernancePrompts } from './prompts.js';
 import { registerContentGovernancePlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const CONTENT_GOVERNANCE_PROFILE_PATH = '/content-governance/v1/mcp' as const;
+export { CONTENT_GOVERNANCE_PROFILE_PATH };
 
 export const contentGovernanceProfile: ProfileDefinition = {
   id: 'content-governance',

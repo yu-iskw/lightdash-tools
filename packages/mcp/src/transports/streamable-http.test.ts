@@ -1,3 +1,4 @@
+import { SecretString } from '@lightdash-tools/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -15,9 +16,12 @@ import {
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
 import { makeTestMcpHttpConfig } from '../config/test-mcp-http-config.js';
-import { CONTENT_READER_PROFILE_PATH } from '../profiles/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../profiles/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PROFILE_PATH } from '../profiles/semantic-layer/v1/index.js';
+import {
+  CONTENT_READER_PROFILE_PATH,
+  ORGANIZATION_AUDIT_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../profiles/catalog.js';
+import { isProfileLoaded, resetLoadedProfilesForTests } from '../profiles/index.js';
 
 import { buildCorsHeaders, checkOrigin } from './http-response.js';
 import { createStreamableHttpServer, startStreamableHttpServer } from './streamable-http.js';
@@ -171,6 +175,7 @@ describe('streamable HTTP OAuth metadata', () => {
     process.env.NODE_ENV = 'production';
     delete process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY];
 
+    resetLoadedProfilesForTests();
     const handle = await createStreamableHttpServer(
       makeTestMcpHttpConfig({
         port: 0,
@@ -178,10 +183,59 @@ describe('streamable HTTP OAuth metadata', () => {
       }),
     );
     expect(handle.port).toBeGreaterThan(0);
+    expect(isProfileLoaded('content-reader')).toBe(true);
+    expect(isProfileLoaded('data-analyst')).toBe(false);
     await handle.close();
 
     if (savedVitest !== undefined) {
       process.env.VITEST = savedVitest;
     }
+  });
+
+  it('serves OAuth authorize immediately after createStreamableHttpServer resolves', async () => {
+    const handle = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        authMode: 'lightdash-oauth',
+        oauthClientId: 'client-id',
+        oauthClientSecret: new SecretString('client-secret'),
+        publicUrl: 'https://mcp.example.com',
+        validateToken: false,
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+
+    const res = await fetch(`http://127.0.0.1:${handle.port}/oauth/authorize`, {
+      redirect: 'manual',
+    });
+    // Broker is ready (not 404). Missing query params → 400 from authorize handler.
+    expect(res.status).not.toBe(404);
+    expect([400, 302, 303]).toContain(res.status);
+    await handle.close();
+  });
+
+  it('keeps health probes up when shared-key/none mode lacks Lightdash credentials', async () => {
+    clearMcpEnv();
+    delete process.env.LIGHTDASH_API_KEY;
+    delete process.env.LIGHTDASH_URL;
+
+    resetLoadedProfilesForTests();
+    const handle = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        authMode: 'none',
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+
+    const live = await fetch(`http://127.0.0.1:${handle.port}/health/live`);
+    expect(live.status).toBe(200);
+    await expect(live.json()).resolves.toEqual({ status: 'ok' });
+
+    const ready = await fetch(`http://127.0.0.1:${handle.port}/health/ready`);
+    expect(ready.status).toBe(503);
+    await expect(ready.json()).resolves.toEqual({ status: 'not ready' });
+
+    await handle.close();
   });
 });

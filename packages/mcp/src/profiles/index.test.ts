@@ -1,5 +1,5 @@
 import { IRRECOVERABLE_TOOL_DENYLIST, PROFILE_IDS } from '@lightdash-tools/common';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { listProjectsTool } from '../tools/project/projects.js';
 import { registerTools } from '../tools/registry.js';
@@ -18,19 +18,27 @@ import {
   getProfile,
   getProfileByPath,
   getProfileServerName,
+  isProfileLoaded,
   listProfilePaths,
   listToolIds,
   ORGANIZATION_AUDIT_PROFILE_PATH,
   parseProfileId,
-  PROFILES,
+  preloadAllProfiles,
+  preloadProfiles,
+  resetLoadedProfilesForTests,
   SEMANTIC_LAYER_PROFILE_PATH,
 } from './index.js';
 
 describe('profiles', () => {
+  beforeAll(async () => {
+    await preloadAllProfiles();
+  });
+
   it('ships eight profiles with fixed paths and matching keys', () => {
-    expect(Object.keys(PROFILES).sort()).toEqual([...PROFILE_IDS].sort());
-    for (const [key, profile] of Object.entries(PROFILES)) {
-      expect(profile.id).toBe(key);
+    expect(PROFILE_IDS.map((id) => getProfile(id).id).sort()).toEqual([...PROFILE_IDS].sort());
+    for (const id of PROFILE_IDS) {
+      const profile = getProfile(id);
+      expect(profile.id).toBe(id);
       expect(profile.tools.length).toBeGreaterThan(0);
     }
     expect(DEFAULT_PROFILE_ID).toBe('semantic-layer');
@@ -55,6 +63,17 @@ describe('profiles', () => {
     expect(getProfileByPath(AI_AGENT_OPS_PROFILE_PATH)?.id).toBe('ai-agent-ops');
     expect(getProfileByPath(DATA_ANALYST_PROFILE_PATH)?.id).toBe('data-analyst');
     expect(getProfileByPath('/mcp')).toBeUndefined();
+  });
+
+  it('preloads only requested profiles', async () => {
+    resetLoadedProfilesForTests();
+    expect(isProfileLoaded('content-reader')).toBe(false);
+    await preloadProfiles(['content-reader']);
+    expect(isProfileLoaded('content-reader')).toBe(true);
+    expect(isProfileLoaded('data-analyst')).toBe(false);
+    expect(getProfileByPath(DATA_ANALYST_PROFILE_PATH)).toBeUndefined();
+    expect(getProfile('content-reader').id).toBe('content-reader');
+    await preloadAllProfiles();
   });
 
   it('normalizes trailing slashes when resolving path', () => {
@@ -150,11 +169,12 @@ describe('profiles', () => {
   });
 
   it('keeps combined server+tool wire names under 60 characters', () => {
-    for (const profile of Object.values(PROFILES)) {
+    for (const id of PROFILE_IDS) {
+      const profile = getProfile(id);
       const serverName = getProfileServerName(profile);
-      for (const id of listToolIds(profile)) {
-        const combined = serverName.length + (TOOL_PREFIX + id).length;
-        expect(combined, `${serverName}+${TOOL_PREFIX}${id}`).toBeLessThanOrEqual(60);
+      for (const toolId of listToolIds(profile)) {
+        const combined = serverName.length + (TOOL_PREFIX + toolId).length;
+        expect(combined, `${serverName}+${TOOL_PREFIX}${toolId}`).toBeLessThanOrEqual(60);
       }
     }
   });
@@ -187,11 +207,11 @@ describe('profiles', () => {
 
   it('profile tools have unique ids and are not on the denylist', () => {
     const banned = new Set<string>(IRRECOVERABLE_TOOL_DENYLIST);
-    for (const profile of Object.values(PROFILES)) {
-      const ids = listToolIds(profile);
+    for (const id of PROFILE_IDS) {
+      const ids = listToolIds(getProfile(id));
       expect(new Set(ids).size).toBe(ids.length);
-      for (const id of ids) {
-        expect(banned.has(id)).toBe(false);
+      for (const toolId of ids) {
+        expect(banned.has(toolId)).toBe(false);
       }
     }
   });

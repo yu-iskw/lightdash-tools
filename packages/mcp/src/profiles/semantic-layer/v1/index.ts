@@ -11,13 +11,14 @@ import {
 } from '../../../tools/semantic/explores.js';
 import { getMetricTool, listMetricsTool } from '../../../tools/semantic/metrics.js';
 import { compileQueryTool } from '../../../tools/semantic/query.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../../catalog.js';
 
 import { registerSemanticLayerPrompts } from './prompts.js';
 import { registerSemanticLayerPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const SEMANTIC_LAYER_PROFILE_PATH = '/semantic-layer/v1/mcp' as const;
+export { SEMANTIC_LAYER_PROFILE_PATH };
 
 export const semanticLayerProfile: ProfileDefinition = {
   id: 'semantic-layer',

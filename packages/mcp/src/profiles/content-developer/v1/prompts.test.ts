@@ -2,9 +2,9 @@
  * Content-developer prompt/playbook invariants.
  */
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeAll } from 'vitest';
 
-import { getProfile, listToolIds } from '../../index.js';
+import { getProfile, listToolIds, preloadProfiles } from '../../index.js';
 import { playbookTopicUri } from '../../lib/playbook-resources.js';
 import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-invariants.js';
 
@@ -17,9 +17,13 @@ import {
 } from './resources/playbooks.js';
 
 describe('content-developer prompts/playbook', () => {
-  it('playbooks reference only registered tool short ids', () => {
+  beforeAll(async () => {
+    await preloadProfiles(['content-developer']);
+  });
+
+  it('playbooks reference only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('content-developer', md);
+    await expectPlaybookCoversProfileTools('content-developer', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_DEVELOPER_HARD_BANS.toLowerCase()).toContain('terraform');
   });

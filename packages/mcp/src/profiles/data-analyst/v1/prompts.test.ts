@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { DATA_ANALYST_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('data-analyst prompts/playbook', () => {
-  it('playbook references registered tools and hard bans', () => {
+  it('playbook references registered tools and hard bans', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('data-analyst', md);
+    await expectPlaybookCoversProfileTools('data-analyst', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(DATA_ANALYST_HARD_BANS.toLowerCase()).toContain('raw sql');
     expect(DATA_ANALYST_HARD_BANS.toLowerCase()).toContain('mutate');

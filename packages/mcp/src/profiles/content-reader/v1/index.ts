@@ -18,13 +18,14 @@ import { runChartTool, runDashboardTileTool } from '../../../tools/project/reade
 import { exportChartImageTool } from '../../../tools/project/reader-export-chart-image.js';
 import { getSpaceTool, listSpacesTool } from '../../../tools/project/spaces.js';
 import { cancelQueryTool, getQueryResultTool } from '../../../tools/query/lifecycle.js';
+import { CONTENT_READER_PROFILE_PATH } from '../../catalog.js';
 
 import { registerContentReaderPrompts } from './prompts.js';
 import { registerContentReaderPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const CONTENT_READER_PROFILE_PATH = '/content-reader/v1/mcp' as const;
+export { CONTENT_READER_PROFILE_PATH };
 
 export const contentReaderProfile: ProfileDefinition = {
   id: 'content-reader',

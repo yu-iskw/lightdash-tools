@@ -32,6 +32,7 @@ import { authenticateSharedKey } from '../auth/resource-server/shared-key-middle
 import { hashToken } from '../auth/token-hash.js';
 import {
   isProfileEnabled,
+  listEnabledProfileIds,
   listEnabledProfilePaths,
   requiresSignedStateKey,
 } from '../config/enabled-profiles.js';
@@ -53,7 +54,7 @@ import {
   extractPinnedProjectFromRequest,
   runWithProjectPinAsync,
 } from '../governance/project-pin.js';
-import { getProfileByPath } from '../profiles/index.js';
+import { getProfileByPath, preloadProfiles } from '../profiles/index.js';
 import { createLightdashMcpServer } from '../server/server.js';
 
 import { parseJsonBody, readBody, drainRequestBody } from './http-body.js';
@@ -137,10 +138,10 @@ function resolveHttpConfig(config: McpHttpConfig, listenPort: number): McpHttpCo
 }
 
 function createEnvContextProvider(config: McpHttpConfig): McpContextProvider {
+  // Defer getClient() until getContext / /health/ready so missing creds yield 503, not failed listen.
   return new EnvContextProvider({
     mode:
       config.authMode === MCP_AUTH_MODE_SHARED_KEY ? MCP_AUTH_MODE_SHARED_KEY : MCP_AUTH_MODE_NONE,
-    client: getClient(),
   });
 }
 
@@ -210,13 +211,14 @@ function getOAuthAuditContext(req: IncomingMessage): {
 }
 
 /**
- * Creates a fresh context provider for the current request.
+ * Creates a context provider for the current request.
  * For OAuth, uses the bearer token from this request directly.
- * For shared-key/none, uses the env-based provider.
+ * For shared-key/none, reuses the process-scoped env provider.
  */
 function createContextProviderForRequest(
   config: McpHttpConfig,
   req: IncomingMessage,
+  processEnvProvider: McpContextProvider | undefined,
 ): McpContextProvider {
   if (config.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
     const oauth = (req as OAuthRequest).lightdashOAuth;
@@ -228,7 +230,10 @@ function createContextProviderForRequest(
     }
     throw new Error('OAuth auth mode requires authenticated request context');
   }
-  return createEnvContextProvider(config);
+  if (!processEnvProvider) {
+    throw new Error('Shared-key/none auth mode requires a process EnvContextProvider');
+  }
+  return processEnvProvider;
 }
 
 /** Local HTTP POST args — not the SDK `McpRequestContext` factory type. */
@@ -238,6 +243,7 @@ interface HttpMcpPostArgs {
   config: McpHttpConfig;
   profile: ProfileDefinition;
   nodeHandler: McpNodeHandler;
+  processEnvProvider: McpContextProvider | undefined;
 }
 
 /**
@@ -245,7 +251,7 @@ interface HttpMcpPostArgs {
  * so the process-lifetime createMcpHandler factory can build a fresh McpServer.
  */
 async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
-  const { req, res, config, profile, nodeHandler } = ctx;
+  const { req, res, config, profile, nodeHandler, processEnvProvider } = ctx;
 
   if (!(await ensureEndpointAuth(req, res, config, profile.path))) {
     drainRequestBody(req);
@@ -265,7 +271,7 @@ async function handleMcpPost(ctx: HttpMcpPostArgs): Promise<void> {
     }
   }
 
-  const contextProvider = createContextProviderForRequest(config, req);
+  const contextProvider = createContextProviderForRequest(config, req, processEnvProvider);
   const auditAuth = getOAuthAuditContext(req);
 
   await runWithMcpPostFactoryAsync(
@@ -299,15 +305,32 @@ export async function createStreamableHttpServer(
   }
   initAuditLog(getAuditLogPath());
 
+  await preloadProfiles(listEnabledProfileIds(inputConfig.enabledProfiles));
+
+  const processEnvProvider =
+    inputConfig.authMode === MCP_AUTH_MODE_SHARED_KEY || inputConfig.authMode === MCP_AUTH_MODE_NONE
+      ? createEnvContextProvider(inputConfig)
+      : undefined;
+
   let httpConfig = inputConfig;
 
+  // Create OAuth broker before listen so /oauth/* is ready when Cloud Run sends traffic.
+  // Production OAuth requires PUBLIC_URL (fixed port on Cloud Run); port-0 tests resolve after listen.
   let oauthBroker: OAuthBroker | undefined;
+  if (inputConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+    oauthBroker = createOAuthBroker(inputConfig);
+  }
 
   const mcpHttpHandler = createProcessMcpHttpHandler();
   const mcpNodeHandler = toNodeHandler(mcpHttpHandler, { onerror: reportMcpHttpError });
 
   const server = createServer((req, res) => {
-    handleHttpRequest(req, res, httpConfig, oauthBroker, mcpNodeHandler).catch((err) => {
+    handleHttpRequest(req, res, {
+      config: httpConfig,
+      oauthBroker,
+      nodeHandler: mcpNodeHandler,
+      processEnvProvider,
+    }).catch((err) => {
       reportMcpHttpError(err);
       if (!res.headersSent) {
         sendJson(res, 500, { error: 'Internal Server Error' });
@@ -321,7 +344,11 @@ export async function createStreamableHttpServer(
   const port = typeof address === 'object' && address !== null ? address.port : inputConfig.port;
   httpConfig = resolveHttpConfig(inputConfig, port);
   const baseUrl = httpConfig.publicUrl ?? `http://${resolveListenHost(httpConfig.host)}:${port}`;
-  if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+  if (
+    inputConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH &&
+    httpConfig.publicUrl !== inputConfig.publicUrl
+  ) {
+    // Rare port-0 / publicUrl rewrite path: recreate broker with resolved public URL.
     oauthBroker = createOAuthBroker(httpConfig);
   }
 
@@ -343,24 +370,23 @@ export async function createStreamableHttpServer(
   };
 }
 
-export function startStreamableHttpServer(config?: McpHttpConfig): void {
-  void createStreamableHttpServer(config)
-    .then(({ baseUrl, config: httpConfig }) => {
-      const paths = listEnabledProfilePaths(httpConfig.enabledProfiles)
-        .map((p) => `${baseUrl}${p}`)
-        .join(', ');
-      console.error(
-        `Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode}; prompt-context=${httpConfig.promptContextPolicy})`,
-      );
-      if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
-        console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
-        console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);
-      }
-    })
-    .catch((err: unknown) => {
-      console.error('Failed to start MCP HTTP server:', err);
-      process.exit(1);
-    });
+export async function startStreamableHttpServer(config?: McpHttpConfig): Promise<void> {
+  try {
+    const { baseUrl, config: httpConfig } = await createStreamableHttpServer(config);
+    const paths = listEnabledProfilePaths(httpConfig.enabledProfiles)
+      .map((p) => `${baseUrl}${p}`)
+      .join(', ');
+    console.error(
+      `Lightdash MCP server listening on ${paths} (auth: ${httpConfig.authMode}; prompt-context=${httpConfig.promptContextPolicy})`,
+    );
+    if (httpConfig.authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH) {
+      console.error(`OAuth PRM: ${getProtectedResourceMetadataUrl(httpConfig)}`);
+      console.error(`OAuth callback (register in Lightdash): ${getOAuthCallbackUrl(httpConfig)}`);
+    }
+  } catch (err: unknown) {
+    console.error('Failed to start MCP HTTP server:', err);
+    process.exit(1);
+  }
 }
 
 function requestOrigin(req: IncomingMessage): string | undefined {
@@ -456,13 +482,19 @@ async function handlePublicHttpPaths(
   return false;
 }
 
+type HttpRequestRuntime = {
+  config: McpHttpConfig;
+  oauthBroker: OAuthBroker | undefined;
+  nodeHandler: McpNodeHandler;
+  processEnvProvider: McpContextProvider | undefined;
+};
+
 async function handleHttpRequest(
   req: IncomingMessage,
   res: ServerResponse,
-  config: McpHttpConfig,
-  oauthBroker: OAuthBroker | undefined,
-  nodeHandler: McpNodeHandler,
+  runtime: HttpRequestRuntime,
 ): Promise<void> {
+  const { config, oauthBroker, nodeHandler, processEnvProvider } = runtime;
   const path = (req.url ?? '').split('?')[0] ?? '';
 
   if (await handlePublicHttpPaths(req, res, config, path, oauthBroker)) {
@@ -489,6 +521,6 @@ async function handleHttpRequest(
   const pinnedProjectUuid = extractPinnedProjectFromRequest(req);
 
   await runWithProjectPinAsync(pinnedProjectUuid, () =>
-    handleMcpPost({ req, res, config, profile, nodeHandler }),
+    handleMcpPost({ req, res, config, profile, nodeHandler, processEnvProvider }),
   );
 }

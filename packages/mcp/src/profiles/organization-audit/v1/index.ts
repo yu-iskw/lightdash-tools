@@ -24,13 +24,14 @@ import {
 } from '../../../tools/project/content.js';
 import { getSchedulerTool, listProjectSchedulersTool } from '../../../tools/project/schedulers.js';
 import { listSpaceAccessTool, resolveEffectiveAccessTool } from '../../../tools/space/access.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../catalog.js';
 
 import { registerOrganizationAuditPrompts } from './prompts.js';
 import { registerOrganizationAuditPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const ORGANIZATION_AUDIT_PROFILE_PATH = '/organization-audit/v1/mcp' as const;
+export { ORGANIZATION_AUDIT_PROFILE_PATH };
 
 export const organizationAuditProfile: ProfileDefinition = {
   id: 'organization-audit',

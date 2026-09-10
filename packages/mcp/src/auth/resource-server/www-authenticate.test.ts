@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
-import { CONTENT_READER_PROFILE_PATH } from '../../profiles/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../profiles/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PROFILE_PATH } from '../../profiles/semantic-layer/v1/index.js';
+import {
+  CONTENT_READER_PROFILE_PATH,
+  ORGANIZATION_AUDIT_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../../profiles/catalog.js';
 
 import {
   buildOAuthProtectedResourceMetadata,

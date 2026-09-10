@@ -35,13 +35,14 @@ import {
   searchContentTool,
 } from '../../../tools/project/reader-content.js';
 import { getSpaceTool, listSpacesTool } from '../../../tools/project/spaces.js';
+import { CONTENT_DEVELOPER_PROFILE_PATH } from '../../catalog.js';
 
 import { registerContentDeveloperPrompts } from './prompts.js';
 import { registerContentDeveloperPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const CONTENT_DEVELOPER_PROFILE_PATH = '/content-developer/v1/mcp' as const;
+export { CONTENT_DEVELOPER_PROFILE_PATH };
 
 export const contentDeveloperProfile: ProfileDefinition = {
   id: 'content-developer',

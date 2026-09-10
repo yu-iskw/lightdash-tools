@@ -56,7 +56,7 @@ Or install globally: `npm install -g @lightdash-tools/mcp`, then `lightdash-mcp 
 
 ### Streamable HTTP (remote)
 
-`http` mounts every fixed path from the profile table by default (no `--profile`); clients pick the path in the URL. Optionally restrict mounts with `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset or empty → all).
+`http` mounts every fixed path from the profile table by default (no `--profile`); clients pick the path in the URL. Optionally restrict mounts with `LIGHTDASH_TOOLS_MCP_PROFILES` (comma-separated profile ids; unset or empty → all). Restricted mounts also skip loading disabled profile ToolModules (faster Cloud Run cold start).
 
 ```bash
 export LIGHTDASH_URL="https://app.lightdash.cloud"
@@ -69,7 +69,7 @@ npx @lightdash-tools/mcp http
 
 Profile MCP endpoints accept **POST** only ([Streamable HTTP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http); no protocol sessions). Default listen port: `3100` (`LIGHTDASH_TOOLS_MCP_HTTP_PORT`). On Cloud Run / containers, when that env is unset, the platform `PORT` is used.
 
-HTTP process probes (unauthenticated, not MCP tools; always mounted even when `LIGHTDASH_TOOLS_MCP_PROFILES` restricts profile paths). Stdio has no health paths.
+HTTP process probes (unauthenticated, not MCP tools; always mounted even when `LIGHTDASH_TOOLS_MCP_PROFILES` restricts profile paths). Stdio has no health paths. The process listens only after enabled profiles are preloaded and the OAuth broker (when configured) is created.
 
 | Path                | Typical use                            | Success                       | Failure                           |
 | :------------------ | :------------------------------------- | :---------------------------- | :-------------------------------- |
@@ -132,7 +132,7 @@ Governance soft-delete needs client form elicitation; missing capability → `EL
 
 ### Profile allowlist
 
-Optional HTTP-only mount ceiling. Unset or empty → all eight shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required).
+Optional HTTP-only mount ceiling. Unset or empty → all eight shipped profile paths. Non-empty → only listed profile ids are mounted; other paths (and their path-specific OAuth PRM) 404. Stdio ignores this variable (`stdio --profile` still required). Restricted lists also avoid importing disabled ToolModules at process start.
 
 **Format**
 

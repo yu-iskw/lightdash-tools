@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { CONTENT_GOVERNANCE_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('content-governance prompts/playbook', () => {
-  it('playbooks reference only registered tool short ids', () => {
+  it('playbooks reference only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('content-governance', md);
+    await expectPlaybookCoversProfileTools('content-governance', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_GOVERNANCE_HARD_BANS.toLowerCase()).toContain('permanently purge');
   });

@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { SEMANTIC_LAYER_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('semantic-layer prompts/playbook', () => {
-  it('playbooks reference only registered tool short ids', () => {
+  it('playbooks reference only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('semantic-layer', md);
+    await expectPlaybookCoversProfileTools('semantic-layer', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(SEMANTIC_LAYER_HARD_BANS.toLowerCase()).toContain('sql');
   });

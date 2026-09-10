@@ -14,13 +14,14 @@ import {
   getAgentThreadTool,
   listAgentThreadsTool,
 } from '../../../tools/ai-agents/threads.js';
+import { AI_AGENT_CHAT_PROFILE_PATH } from '../../catalog.js';
 
 import { registerAiAgentChatPrompts } from './prompts.js';
 import { registerAiAgentChatPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const AI_AGENT_CHAT_PROFILE_PATH = '/ai-agent-chat/v1/mcp' as const;
+export { AI_AGENT_CHAT_PROFILE_PATH };
 
 export const aiAgentChatProfile: ProfileDefinition = {
   id: 'ai-agent-chat',

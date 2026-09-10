@@ -1,11 +1,16 @@
 import { PROFILE_IDS } from '@lightdash-tools/common';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { formatProfilesHelp } from './cli-help.js';
-import { getProfile, listToolIds } from './profiles/index.js';
+import { getProfilePath } from './profiles/catalog.js';
+import { listToolIds, preloadAllProfiles, getProfile } from './profiles/index.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 describe('formatProfilesHelp', () => {
+  beforeAll(async () => {
+    await preloadAllProfiles();
+  });
+
   it('lists every profile id, path, and mounted tool id in PROFILE_IDS order', () => {
     const text = formatProfilesHelp();
 
@@ -14,7 +19,7 @@ describe('formatProfilesHelp', () => {
     for (const id of PROFILE_IDS) {
       const profile = getProfile(id);
       expect(text).toContain(id);
-      expect(text).toContain(profile.path);
+      expect(text).toContain(getProfilePath(id));
       for (const toolId of listToolIds(profile)) {
         expect(text).toContain(toolId);
       }

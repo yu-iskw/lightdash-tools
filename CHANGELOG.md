@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.23.0] - 2026-09-10
+
+### Bug Fixes
+
+- Pin js-yaml to 4.3.2 so the SBOM High/Critical gate clears GHSA-2883-xcg3-v3hh.
+
+## [0.22.0] - 2026-09-10
+
+### Bug Fixes
+
+- Restore the axios lockfile importer specifier so frozen CI installs match the workspace override.
+- Pin browserslist to 4.28.7 so the SBOM High/Critical gate clears GHSA-73wf-gq98-2v4g and GHSA-c83g-rgw3-j3cx.
+
+### Performance
+
+- Defer unused MCP profile ToolModules until preload; create OAuth broker before HTTP listen for Cloud Run cold start.
+
 ## [0.21.0] - 2026-08-27
 
 ### Features

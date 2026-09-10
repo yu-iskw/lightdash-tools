@@ -5,16 +5,21 @@
  */
 import { Client, StreamableHTTPClientTransport } from '@modelcontextprotocol/client';
 import { createMcpHandler, InMemoryTransport } from '@modelcontextprotocol/server';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import { getProfile } from './profiles/index.js';
+import { getProfile, preloadProfiles } from './profiles/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 import { TOOL_PREFIX } from './tools/shared.js';
 
 import type { McpContextProvider } from './server/request-context.js';
 import type { McpHttpHandler, McpServer } from '@modelcontextprotocol/server';
 
-const EXPECTED_TOOL_COUNT = getProfile('semantic-layer').tools.length;
+let EXPECTED_TOOL_COUNT = 0;
+
+beforeAll(async () => {
+  await preloadProfiles(['semantic-layer']);
+  EXPECTED_TOOL_COUNT = getProfile('semantic-layer').tools.length;
+});
 
 function createStubContextProvider(): McpContextProvider {
   return {

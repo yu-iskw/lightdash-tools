@@ -21,7 +21,7 @@ import {
 } from './config/prompt-context-policy.js';
 import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
 import { validateAvailableProjectsConfig } from './governance/available-projects.js';
-import { getProfile } from './profiles/index.js';
+import { getProfile, preloadProfiles } from './profiles/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 
 import type { ProfileId } from './profiles/types.js';
@@ -32,12 +32,14 @@ export type StartStdioOptions = {
 };
 
 /** Start stdio MCP for an explicit profile (CLI-selected). */
-export function startStdio(profileId: ProfileId, options?: StartStdioOptions): void {
+export async function startStdio(profileId: ProfileId, options?: StartStdioOptions): Promise<void> {
   try {
     assertObsoleteEnvRejected(process.env);
     warnIgnoredCliGuardrailEnvVars();
     validateAvailableProjectsConfig();
     initAuditLog(getAuditLogPath());
+
+    await preloadProfiles([profileId]);
 
     const promptContextPolicy =
       options?.promptContextPolicy ?? resolvePromptContextPolicy({ env: process.env });

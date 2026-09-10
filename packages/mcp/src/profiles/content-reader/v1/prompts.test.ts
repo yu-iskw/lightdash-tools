@@ -9,9 +9,9 @@ import { expectPlaybookCoversProfileTools } from '../../test-support/playbook-in
 import { CONTENT_READER_HARD_BANS, getAllPlaybookMarkdown } from './resources/playbooks.js';
 
 describe('content-reader prompts/playbook', () => {
-  it('playbook references only registered tool short ids', () => {
+  it('playbook references only registered tool short ids', async () => {
     const md = getAllPlaybookMarkdown();
-    expectPlaybookCoversProfileTools('content-reader', md);
+    await expectPlaybookCoversProfileTools('content-reader', md);
     expect(md.toLowerCase()).toContain('hard bans');
     expect(CONTENT_READER_HARD_BANS.toLowerCase()).toContain('sql');
   });

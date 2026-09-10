@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { AI_AGENT_OPS_PROFILE_PATH } from '../profiles/ai-agent-ops/v1/index.js';
-import { CONTENT_READER_PROFILE_PATH } from '../profiles/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../profiles/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PROFILE_PATH } from '../profiles/semantic-layer/v1/index.js';
+import {
+  AI_AGENT_OPS_PROFILE_PATH,
+  CONTENT_READER_PROFILE_PATH,
+  ORGANIZATION_AUDIT_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../profiles/catalog.js';
 
 import { normalizeMcpPath, normalizePublicUrl } from './normalize-url.js';
 

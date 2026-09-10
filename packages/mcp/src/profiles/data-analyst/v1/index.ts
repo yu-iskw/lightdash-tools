@@ -12,13 +12,14 @@ import {
 } from '../../../tools/semantic/explores.js';
 import { listMetricsTool } from '../../../tools/semantic/metrics.js';
 import { compileQueryTool } from '../../../tools/semantic/query.js';
+import { DATA_ANALYST_PROFILE_PATH } from '../../catalog.js';
 
 import { registerDataAnalystPrompts } from './prompts.js';
 import { registerDataAnalystPlaybook } from './resources/playbooks.js';
 
 import type { ProfileDefinition } from '../../types.js';
 
-export const DATA_ANALYST_PROFILE_PATH = '/data-analyst/v1/mcp' as const;
+export { DATA_ANALYST_PROFILE_PATH };
 
 export const dataAnalystProfile: ProfileDefinition = {
   id: 'data-analyst',
