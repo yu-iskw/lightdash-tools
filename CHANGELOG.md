@@ -8,6 +8,7 @@
 - Pin browserslist to 4.28.7 so the SBOM High/Critical gate clears GHSA-73wf-gq98-2v4g and GHSA-c83g-rgw3-j3cx.
 - Drop the custom lockfile override specifier check that rejected valid pnpm v11 importer pins.
 - Fail the Publish workflow when the release tag does not match package versions or when pnpm reports no new packages to publish.
+- Pin js-yaml to 4.3.2 and smol-toml to 1.7.1 so the SBOM High/Critical gate clears GHSA-2883-xcg3-v3hh and GHSA-7w5x-hrqm-74c2.
 
 ### Chores
 
