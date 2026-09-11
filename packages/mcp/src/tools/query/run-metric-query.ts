@@ -9,6 +9,7 @@ import { METRIC_QUERY_SAFETY, registerContentReaderTool } from '../../policy/con
 import { ResultLimitError, clampRowLimit } from '../../policy/result-limits.js';
 import { includeArtifactsField, parseIncludeArtifacts } from '../lib/artifacts.js';
 import { optionalProjectUuidField } from '../lib/schema-fields.js';
+import { ensureFilterIds } from '../semantic/ensure-filter-ids.js';
 import { wrapTool } from '../shared.js';
 import { defineTool } from '../types.js';
 
@@ -65,7 +66,7 @@ export function registerRunMetricQuery(
     {
       title: 'Run metric query',
       description:
-        'Execute an unsaved explore metric query (dimensions, metrics, filters, sorts). Bounded rows as a separate data artifact by default (same shape as get_query_result); no chart save; no tableCalculations/SQL. Prefer fieldIds from get_explore / list_dimensions / list_metrics.',
+        'Execute an unsaved explore metric query (dimensions, metrics, filters, sorts). Fills missing FilterGroup/FilterRule ids. Bounded rows as a separate data artifact by default (same shape as get_query_result); no chart save; no tableCalculations/SQL. Prefer fieldIds from get_explore / list_dimensions / list_metrics.',
       safety: METRIC_QUERY_SAFETY,
       inputSchema: runMetricQueryInputSchema.shape,
     },
@@ -75,12 +76,15 @@ export function registerRunMetricQuery(
           const scope = resolveProjectScope({ projectUuid: args.projectUuid });
           const limit = clampRowLimit(args.limit);
           const include = parseIncludeArtifacts(args.includeArtifacts, ['data']);
+          const filters = ensureFilterIds(
+            args.filters ?? {},
+          ) as ExecuteAsyncMetricQueryRequestParams['query']['filters'];
           const body: ExecuteAsyncMetricQueryRequestParams = {
             query: {
               exploreName: args.exploreName,
               dimensions: args.dimensions,
               metrics: args.metrics,
-              filters: args.filters ?? {},
+              filters,
               sorts: args.sorts ?? [],
               limit,
               tableCalculations: [],

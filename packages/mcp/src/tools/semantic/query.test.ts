@@ -175,4 +175,193 @@ describe('registerCompileQuery', () => {
       expect.objectContaining({ tableCalculations }),
     );
   });
+
+  it('returns isError when a requested dimension is missing from SELECT aliases', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query:
+        'SELECT COUNT(DISTINCT `orders`.order_id) AS `orders_num_unique_order_ids` FROM orders',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    const result = await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_payments.payment_method'],
+        metrics: ['orders_num_unique_order_ids'],
+        filters: {},
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('orders_payments.payment_method');
+    expect(result.content[0].text).toContain('missing SELECT aliases');
+  });
+
+  it('succeeds when every requested fieldId appears as a SELECT alias', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: `
+SELECT
+  \`orders\`.payments.payment_method AS \`orders_payments__payment_method\`,
+  SUM(\`orders\`.payments.amount) AS \`orders_sum_payment_amount\`
+FROM orders
+GROUP BY 1`,
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    const result = await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_payments__payment_method'],
+        metrics: ['orders_sum_payment_amount'],
+        filters: {},
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(result.isError).toBeUndefined();
+    expect(result.content[0].text).toContain('orders_payments__payment_method');
+  });
+
+  it('succeeds for double-quoted SELECT aliases (Postgres-style)', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'SELECT status AS "orders_status", COUNT(*) AS "orders_count" FROM orders GROUP BY 1',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    const result = await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: ['orders_count'],
+        filters: {},
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('does not isError when alias parse is inconclusive (CTE truncates SELECT list)', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'WITH x AS (SELECT 1 FROM dual) SELECT a AS `orders_status` FROM t',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    const result = await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {},
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('injects missing FilterGroup and FilterRule ids before compile', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'SELECT `orders`.status AS `orders_status` FROM orders',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {
+          dimensions: {
+            and: [
+              {
+                target: { fieldId: 'orders_status' },
+                operator: 'equals',
+                values: ['completed'],
+              },
+            ],
+          },
+        },
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    const body = compileQuery.mock.calls[0][2] as {
+      filters: {
+        dimensions: {
+          id: string;
+          and: Array<{ id: string; target: { fieldId: string } }>;
+        };
+      };
+    };
+    expect(body.filters.dimensions.id).toBeTruthy();
+    expect(body.filters.dimensions.and[0].id).toBeTruthy();
+    expect(body.filters.dimensions.and[0].target.fieldId).toBe('orders_status');
+  });
+
+  it('preserves existing filter ids', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'SELECT `orders`.status AS `orders_status` FROM orders',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {
+          dimensions: {
+            id: 'keep-group',
+            and: [
+              {
+                id: 'keep-rule',
+                target: { fieldId: 'orders_status' },
+                operator: 'equals',
+                values: ['shipped'],
+              },
+            ],
+          },
+        },
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(compileQuery).toHaveBeenCalledWith(
+      PROJECT,
+      'orders',
+      expect.objectContaining({
+        filters: {
+          dimensions: {
+            id: 'keep-group',
+            and: [
+              expect.objectContaining({
+                id: 'keep-rule',
+                target: { fieldId: 'orders_status' },
+              }),
+            ],
+          },
+        },
+      }),
+    );
+  });
 });

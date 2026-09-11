@@ -148,4 +148,67 @@ describe('registerRunMetricQuery', () => {
     expect(JSON.stringify(result)).toContain('PROJECT_SCOPE_REQUIRED');
     expect(runMetricQuery).not.toHaveBeenCalled();
   });
+
+  it('injects missing FilterGroup and FilterRule ids before run', async () => {
+    const runMetricQuery = vi.fn().mockResolvedValue({ queryUuid: 'q-filter' });
+    const getAsyncQueryResults = vi.fn().mockResolvedValue({
+      queryUuid: 'q-filter',
+      status: 'ready',
+      columns: {},
+      rows: [],
+      totalResults: 0,
+    });
+
+    const contextProvider = {
+      getContext: async () => ({
+        lightdashClient: {
+          v2: { query: { runMetricQuery, getAsyncQueryResults } },
+        },
+        auth: { mode: 'none' as const },
+      }),
+    } as unknown as McpContextProvider;
+
+    const mockServer = { registerTool: vi.fn() };
+    bindServerProfile(mockServer, 'data-analyst');
+    registerRunMetricQuery(mockServer as never, contextProvider);
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+    const sessionId = resolveMcpClientSessionId({ sessionId: 'mcp-analyst-filters' });
+    await runWithMcpClientSessionAsync(sessionId, async () => {
+      await handler({
+        projectUuid: PROJECT,
+        exploreName: 'orders',
+        dimensions: ['orders_status'],
+        metrics: ['orders_order_count'],
+        filters: {
+          dimensions: {
+            and: [
+              {
+                target: { fieldId: 'orders_status' },
+                operator: 'equals',
+                values: ['completed'],
+              },
+            ],
+          },
+        },
+        limit: 10,
+        waitForResults: true,
+        timeoutMs: 5_000,
+      });
+    });
+
+    const body = runMetricQuery.mock.calls[0][1] as {
+      query: {
+        filters: {
+          dimensions: {
+            id: string;
+            and: Array<{ id: string; target: { fieldId: string } }>;
+          };
+        };
+      };
+    };
+    expect(body.query.filters.dimensions.id).toBeTruthy();
+    expect(body.query.filters.dimensions.and[0].id).toBeTruthy();
+    expect(body.query.filters.dimensions.and[0].target.fieldId).toBe('orders_status');
+  });
 });

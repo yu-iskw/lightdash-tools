@@ -36,7 +36,7 @@ Remember: `databaseName` may differ from the Lightdash project’s usual warehou
 ## Progressive discovery
 
 1. `list_explores` → disambiguate → lock `exploreId` (= explore `name`).
-2. `list_dimensions` (default `baseTableOnly=true`). Set `baseTableOnly=false` only if you need joined-table fields (payload grows a lot).
+2. `list_dimensions` (default `baseTableOnly=true`). Set `baseTableOnly=false` when you need joined-table fields **or** repeated ARRAY nests (payload grows a lot). `get_explore` may show ARRAY nests as `joinedTables` / `tables[…].nestedFrom` with names like `{baseTable}__{column}`.
 3. Metrics: **`get_explore` → `tables[baseTable].metrics` only** (see below). Ignore join metrics; do not dump the explore JSON.
 4. Stop at a shortlist unless the user asked to compile.
 
@@ -58,7 +58,18 @@ Rules:
 3. `get_metric` `tableName` must be the full explore id. Short labels → “Metric not found”. Call only when definition/SQL is needed; summarize — payloads include huge `availableTimeDimensions` from joins. Prefer `compiledSql` over name/label when they disagree.
 4. Compile metric ids as `{exploreId}_{metricName}` (same pattern as dimension `fieldId` from `list_dimensions`).
 5. Dimension-only (`metrics: []`) is valid for volume-by-time; for “insights” prefer real explore metrics when available.
-6. Joined **dimension** `fieldId`s (e.g. `customers_*` on an `orders` explore) are valid when `list_dimensions` with `baseTableOnly=false` returns them — use only those copied ids.
+6. Joined **dimension** `fieldId`s (ordinary joins like `customers_*`, or ARRAY UNNEST tables like `{base}__payments_*`) are valid when `list_dimensions` with `baseTableOnly=false` returns them — use only those copied ids.
+
+## Nested dimensions: STRUCT vs ARRAY (critical)
+
+Do **not** conflate these shapes:
+
+| Shape                     | Where it lives                                                                             | Discovery                                                  | Example `fieldId`                               |
+| ------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- | ----------------------------------------------- |
+| **STRUCT** (non-repeated) | Still on `baseTable`; API `name` may contain dots (`customer.first_name`)                  | Default `list_dimensions` (`baseTableOnly=true`) is enough | `…_customer__first_name` (`.` in `name` → `__`) |
+| **ARRAY** (repeated)      | Join tables named `{baseTable}__{column}` (often `UNNEST` + `nestedFrom` on `get_explore`) | Requires `list_dimensions(..., baseTableOnly=false)`       | `…__payments_payment_method`, `…__tags_value`   |
+
+Copy `fieldId` from tool output only. Do not invent `{base}_payments__amount` unless that exact id appears — ARRAY element fields often have simple `name`s on the join table, not dotted base-table names.
 
 ## Dimension shortlist (large explores)
 
@@ -73,7 +84,7 @@ Prefer high-signal fields that **appear in `list_dimensions`**, by **role**:
 
 Skip nested event dumps and deep struct paths unless the question targets them.
 
-**Copy `fieldId` literally.** Do not invent grains like `{explore}_session_day` if that string is not in `list_dimensions`.
+**Copy `fieldId` literally.** Do not invent grains like `{explore}_session_day` if that string is not in `list_dimensions`. For STRUCT nests, `list_dimensions` emits compile-ready ids with dots → `__` — copy that `fieldId`; do not join `table` + dotted `name` yourself.
 
 ## Field lineage
 

@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  collectRequestedFieldIds,
   extractCompiledSql,
+  extractSelectAliases,
+  findMissingFieldIds,
   flattenExploreDimensions,
   isEmptySelectSql,
   summarizeDimensions,
   summarizeExplores,
   toExploreSummary,
+  toFieldId,
 } from './explore-helpers.js';
 
 import type { ApiExploreResults, ApiExploresResults } from '@lightdash-tools/common';
@@ -117,8 +121,9 @@ describe('summarizeExplores', () => {
   });
 });
 
-describe('summarizeDimensions', () => {
-  it('keeps compact fields and adds fieldId as table_name', () => {
+describe('toFieldId / summarizeDimensions', () => {
+  it('encodes flat names as table_name', () => {
+    expect(toFieldId('orders', 'created_at')).toBe('orders_created_at');
     expect(
       summarizeDimensions([
         {
@@ -152,6 +157,45 @@ describe('summarizeDimensions', () => {
         ])[0],
       ).sort(),
     ).toEqual(['fieldId', 'label', 'name', 'table', 'type']);
+  });
+
+  it('replaces dots in nested names with double underscores (getItemId)', () => {
+    expect(toFieldId('orders_nested_demo', 'payments.amount')).toBe(
+      'orders_nested_demo_payments__amount',
+    );
+    expect(
+      summarizeDimensions([
+        {
+          name: 'payments.amount',
+          table: 'orders_nested_demo',
+          label: 'Payments amount',
+          type: 'number',
+        },
+        {
+          name: 'customer.first_name',
+          table: 'orders_nested_demo',
+          type: 'string',
+        },
+      ]),
+    ).toEqual([
+      {
+        name: 'payments.amount',
+        table: 'orders_nested_demo',
+        label: 'Payments amount',
+        type: 'number',
+        fieldId: 'orders_nested_demo_payments__amount',
+      },
+      {
+        name: 'customer.first_name',
+        table: 'orders_nested_demo',
+        type: 'string',
+        fieldId: 'orders_nested_demo_customer__first_name',
+      },
+    ]);
+  });
+
+  it('leaves names that already use __ unchanged', () => {
+    expect(toFieldId('orders', 'struct_col__id')).toBe('orders_struct_col__id');
   });
 
   it('filters to base table when baseTable is set', () => {
@@ -200,5 +244,68 @@ describe('isEmptySelectSql / extractCompiledSql', () => {
     expect(isEmptySelectSql('SELECT col FROM t')).toBe(false);
     expect(extractCompiledSql({ query: 'SELECT 1' })).toBe('SELECT 1');
     expect(extractCompiledSql('raw')).toBe('raw');
+  });
+});
+
+describe('extractSelectAliases / findMissingFieldIds', () => {
+  const sampleSql = `
+SELECT
+  \`orders_nested_demo\`.status AS \`orders_nested_demo_status\`,
+  COUNT(DISTINCT \`orders_nested_demo\`.order_id) AS \`orders_nested_demo_num_unique_order_ids\`
+FROM \`analytics-dev\`.\`jaffle_shop\`.\`orders_nested_demo\` AS \`orders_nested_demo\`
+GROUP BY 1
+ORDER BY \`orders_nested_demo_num_unique_order_ids\` DESC
+LIMIT 500`;
+
+  it('extracts backtick, double-quoted, and plain AS aliases from the SELECT list', () => {
+    expect(extractSelectAliases(sampleSql)).toEqual([
+      'orders_nested_demo_status',
+      'orders_nested_demo_num_unique_order_ids',
+    ]);
+    expect(extractSelectAliases('SELECT col AS plain_alias FROM t')).toEqual(['plain_alias']);
+    expect(extractSelectAliases('SELECT 1 AS `orders_status`')).toEqual(['orders_status']);
+    expect(
+      extractSelectAliases(
+        'SELECT status AS "orders_status", COUNT(*) AS "orders_count" FROM orders',
+      ),
+    ).toEqual(['orders_status', 'orders_count']);
+  });
+
+  it('reports requested fieldIds missing from SELECT aliases', () => {
+    expect(
+      findMissingFieldIds(
+        [
+          'orders_nested_demo_status',
+          'orders_nested_demo_payments__payment_method',
+          'orders_nested_demo_num_unique_order_ids',
+        ],
+        sampleSql,
+      ),
+    ).toEqual(['orders_nested_demo_payments__payment_method']);
+    expect(
+      findMissingFieldIds(
+        ['orders_nested_demo_status', 'orders_nested_demo_num_unique_order_ids'],
+        sampleSql,
+      ),
+    ).toEqual([]);
+  });
+
+  it('skips missing-alias checks when no aliases could be parsed (CTE / inconclusive)', () => {
+    expect(
+      findMissingFieldIds(
+        ['orders_status'],
+        'WITH x AS (SELECT 1 FROM dual) SELECT a AS `orders_status` FROM t',
+      ),
+    ).toEqual([]);
+  });
+
+  it('collects string dimensions and metrics from metricQuery', () => {
+    expect(
+      collectRequestedFieldIds({
+        dimensions: ['orders_status', 1, ''],
+        metrics: ['orders_count'],
+        sorts: [{ fieldId: 'orders_status' }],
+      }),
+    ).toEqual(['orders_status', 'orders_count']);
   });
 });
