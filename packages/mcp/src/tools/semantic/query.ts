@@ -13,10 +13,8 @@ import { defineTool } from '../types.js';
 import { ensureFilterIds } from './ensure-filter-ids.js';
 import {
   collectRequestedFieldIds,
+  diagnoseCompiledSql,
   extractCompiledSql,
-  findMissingFieldIds,
-  hasCompileSqlErrorComment,
-  isEmptySelectSql,
 } from './explore-helpers.js';
 import { exploreIdField } from './schema-fields.js';
 
@@ -70,34 +68,12 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
               body as never,
             );
             const sql = extractCompiledSql(result);
-            const sqlError = (text: string) => ({
-              content: [{ type: 'text' as const, text }],
-              isError: true as const,
-            });
-            if (sql && isEmptySelectSql(sql)) {
-              return sqlError(
-                'Error: compile_query produced an empty SELECT (no columns). ' +
-                  'Use fieldId values like `{table}_{name}` from list_dimensions (base table; nested dots → `__`), ' +
-                  'not short field names. Re-compile after fixing metricQuery.',
-              );
-            }
-            if (sql && hasCompileSqlErrorComment(sql)) {
-              return sqlError(
-                'Error: compile_query SQL contains a Lightdash `/* ERROR:` comment ' +
-                  '(often an unknown filter fieldId). ' +
-                  'Copy fieldIds from list_dimensions (STRUCT name dots → `__`; ARRAY via join tables with ' +
-                  'baseTableOnly=false) and explore-local metrics; re-compile.',
-              );
-            }
-            if (sql) {
-              const missing = findMissingFieldIds(collectRequestedFieldIds(metricQuery), sql);
-              if (missing.length > 0) {
-                return sqlError(
-                  'Error: compile_query SQL is missing SELECT aliases for requested fieldIds: ' +
-                    `${missing.join(', ')}. ` +
-                    'Copy fieldIds from list_dimensions (nested name dots become `__`) and explore-local metrics; re-compile.',
-                );
-              }
+            const diagnosis = diagnoseCompiledSql(sql, collectRequestedFieldIds(metricQuery));
+            if (diagnosis) {
+              return {
+                content: [{ type: 'text' as const, text: diagnosis }],
+                isError: true as const,
+              };
             }
             return jsonToolResult(result);
           } catch (err) {

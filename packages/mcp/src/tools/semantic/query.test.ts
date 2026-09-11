@@ -147,6 +147,7 @@ GROUP BY 1`,
     expect(result.isError).toBe(true);
     expect(result.content[0].text).toContain('ERROR:');
     expect(result.content[0].text).toContain('unknown filter fieldId');
+    expect(result.content[0].text).toContain('orders_customer.first_name');
   });
 
   it('defaults missing tableCalculations to []', async () => {
