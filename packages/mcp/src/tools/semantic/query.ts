@@ -13,9 +13,8 @@ import { defineTool } from '../types.js';
 import { ensureFilterIds } from './ensure-filter-ids.js';
 import {
   collectRequestedFieldIds,
+  diagnoseCompiledSql,
   extractCompiledSql,
-  findMissingFieldIds,
-  isEmptySelectSql,
 } from './explore-helpers.js';
 import { exploreIdField } from './schema-fields.js';
 
@@ -29,7 +28,7 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
     {
       title: 'Compile query',
       description:
-        'Compile a metric query for an explore without executing it. Sets metricQuery.exploreName from exploreId (authoritative), defaults missing tableCalculations to [], and fills missing FilterGroup/FilterRule ids. Use fieldIds from list_dimensions (`{table}_{name}` with nested dots in name replaced by `__`). Empty SELECT or requested dimensions/metrics missing from SELECT aliases return isError. projectUuid optional when X-Lightdash-Project is set.',
+        'Compile a metric query for an explore without executing it. Sets metricQuery.exploreName from exploreId (authoritative), defaults missing tableCalculations and sorts to [], and fills missing FilterGroup/FilterRule ids. Use fieldIds from list_dimensions (`{table}_{name}` with nested dots in name replaced by `__`). Empty SELECT, compiled SQL `/* ERROR:` comments (e.g. unknown filter fieldId), or requested dimensions/metrics missing from SELECT aliases return isError. projectUuid optional when X-Lightdash-Project is set.',
       inputSchema: {
         projectUuid: optionalProjectUuidField(),
         exploreId: exploreIdField(),
@@ -53,13 +52,14 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
         }) => {
           try {
             const scope = resolveProjectScope({ projectUuid });
-            // Path exploreId is authoritative; OpenAPI MetricQuery requires exploreName + tableCalculations.
+            // Path exploreId is authoritative; OpenAPI MetricQuery requires exploreName + tableCalculations + sorts.
             const body = {
               ...metricQuery,
               filters: ensureFilterIds(metricQuery.filters ?? {}),
               tableCalculations: Array.isArray(metricQuery.tableCalculations)
                 ? metricQuery.tableCalculations
                 : [],
+              sorts: Array.isArray(metricQuery.sorts) ? metricQuery.sorts : [],
               exploreName: exploreId,
             };
             const result = await c.v1.query.compileQuery(
@@ -68,26 +68,12 @@ export function registerCompileQuery(server: McpServer, contextProvider: McpCont
               body as never,
             );
             const sql = extractCompiledSql(result);
-            const sqlError = (text: string) => ({
-              content: [{ type: 'text' as const, text }],
-              isError: true as const,
-            });
-            if (sql && isEmptySelectSql(sql)) {
-              return sqlError(
-                'Error: compile_query produced an empty SELECT (no columns). ' +
-                  'Use fieldId values like `{table}_{name}` from list_dimensions (base table; nested dots → `__`), ' +
-                  'not short field names. Re-compile after fixing metricQuery.',
-              );
-            }
-            if (sql) {
-              const missing = findMissingFieldIds(collectRequestedFieldIds(metricQuery), sql);
-              if (missing.length > 0) {
-                return sqlError(
-                  'Error: compile_query SQL is missing SELECT aliases for requested fieldIds: ' +
-                    `${missing.join(', ')}. ` +
-                    'Copy fieldIds from list_dimensions (nested name dots become `__`) and explore-local metrics; re-compile.',
-                );
-              }
+            const diagnosis = diagnoseCompiledSql(sql, collectRequestedFieldIds(metricQuery));
+            if (diagnosis) {
+              return {
+                content: [{ type: 'text' as const, text: diagnosis }],
+                isError: true as const,
+              };
             }
             return jsonToolResult(result);
           } catch (err) {

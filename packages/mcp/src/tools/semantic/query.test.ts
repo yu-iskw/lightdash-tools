@@ -119,6 +119,39 @@ describe('registerCompileQuery', () => {
     expect(result.content[0].text).toContain('empty SELECT');
   });
 
+  it('returns isError when compiled SQL embeds an ERROR comment', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: `SELECT
+  \`orders\`.status AS \`orders_status\`
+FROM orders
+WHERE ((
+  /* ERROR: Filter has a reference to an unknown dimension: orders_customer.first_name */ x
+))
+GROUP BY 1`,
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    const result = await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {},
+        sorts: [],
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(result.isError).toBe(true);
+    expect(result.content[0].text).toContain('ERROR:');
+    expect(result.content[0].text).toContain('unknown filter fieldId');
+    expect(result.content[0].text).toContain('orders_customer.first_name');
+    expect(result.content[0].text).toContain('list_dimensions');
+    expect(result.content[0].text).not.toContain('${COMPILED_SQL_FIELD_ID_HINT}');
+  });
+
   it('defaults missing tableCalculations to []', async () => {
     const compileQuery = vi.fn().mockResolvedValue({
       query: 'SELECT `orders`.status AS `orders_status` FROM orders',
@@ -144,6 +177,61 @@ describe('registerCompileQuery', () => {
         exploreName: 'orders',
         tableCalculations: [],
       }),
+    );
+  });
+
+  it('defaults missing sorts to []', async () => {
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'SELECT `orders`.status AS `orders_status` FROM orders',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {},
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(compileQuery).toHaveBeenCalledWith(
+      PROJECT,
+      'orders',
+      expect.objectContaining({
+        exploreName: 'orders',
+        sorts: [],
+      }),
+    );
+  });
+
+  it('preserves explicit sorts', async () => {
+    const sorts = [{ fieldId: 'orders_status', descending: true }];
+    const compileQuery = vi.fn().mockResolvedValue({
+      query: 'SELECT `orders`.status AS `orders_status` FROM orders',
+    });
+    const { handler } = createCompileHandler(compileQuery);
+
+    await handler({
+      projectUuid: PROJECT,
+      exploreId: 'orders',
+      metricQuery: {
+        dimensions: ['orders_status'],
+        metrics: [],
+        filters: {},
+        sorts,
+        limit: 50,
+        tableCalculations: [],
+      },
+    });
+
+    expect(compileQuery).toHaveBeenCalledWith(
+      PROJECT,
+      'orders',
+      expect.objectContaining({ sorts }),
     );
   });
 

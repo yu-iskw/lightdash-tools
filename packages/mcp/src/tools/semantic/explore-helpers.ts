@@ -136,6 +136,18 @@ export function isEmptySelectSql(sql: string): boolean {
   return /SELECT FROM\b/i.test(normalized);
 }
 
+/** Body of the first Lightdash ERROR block comment (`ERROR:…`), if present. */
+export function extractCompileSqlErrorComment(sql: string): string | undefined {
+  const match = /\/\*\s*(ERROR:[\s\S]*?)\*\//i.exec(sql);
+  const body = match?.[1]?.trim();
+  return body && body.length > 0 ? body : undefined;
+}
+
+/** True when Lightdash embedded a compile failure comment (e.g. unknown filter fieldId). */
+export function hasCompileSqlErrorComment(sql: string): boolean {
+  return extractCompileSqlErrorComment(sql) !== undefined;
+}
+
 /**
  * Collect SELECT aliases from compiled SQL (`AS \`alias\``, `AS "alias"`, or `AS alias`).
  * Heuristic only (not a SQL parser): stops at the first FROM; CAST(... AS type) may
@@ -184,6 +196,46 @@ export function collectRequestedFieldIds(metricQuery: Record<string, unknown>): 
     }
   }
   return requested;
+}
+
+const COMPILED_SQL_FIELD_ID_HINT =
+  'Copy fieldIds from list_dimensions (STRUCT name dots → `__`; ARRAY via join tables with ' +
+  'baseTableOnly=false) and explore-local metrics; re-compile.';
+
+/** Diagnose post-compile SQL for agents. Returns error text, or undefined when OK. */
+export function diagnoseCompiledSql(
+  sql: string | undefined,
+  requestedFieldIds: readonly string[],
+): string | undefined {
+  if (!sql) return undefined;
+  if (isEmptySelectSql(sql)) {
+    return (
+      'Error: compile_query produced an empty SELECT (no columns). ' +
+      'Use fieldId values like `{table}_{name}` from list_dimensions (base table; nested dots → `__`), ' +
+      'not short field names. Re-compile after fixing metricQuery.'
+    );
+  }
+  const errorComment = extractCompileSqlErrorComment(sql);
+  if (errorComment) {
+    return (
+      'Error: compile_query SQL contains a Lightdash `/* ERROR:` comment ' +
+      '(often an unknown filter fieldId). ' +
+      COMPILED_SQL_FIELD_ID_HINT +
+      '\nLightdash: /* ' +
+      errorComment +
+      ' */'
+    );
+  }
+  const missing = findMissingFieldIds(requestedFieldIds, sql);
+  if (missing.length > 0) {
+    return (
+      'Error: compile_query SQL is missing SELECT aliases for requested fieldIds: ' +
+      missing.join(', ') +
+      '. ' +
+      COMPILED_SQL_FIELD_ID_HINT
+    );
+  }
+  return undefined;
 }
 
 /** Extract SQL text from a compile_query API payload. */
