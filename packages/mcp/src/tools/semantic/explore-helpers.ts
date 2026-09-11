@@ -219,15 +219,20 @@ export function diagnoseCompiledSql(
   if (errorComment) {
     return (
       'Error: compile_query SQL contains a Lightdash `/* ERROR:` comment ' +
-      `(often an unknown filter fieldId). ${COMPILED_SQL_FIELD_ID_HINT}\n` +
-      `Lightdash: /* ${errorComment} */`
+      '(often an unknown filter fieldId). ' +
+      COMPILED_SQL_FIELD_ID_HINT +
+      '\nLightdash: /* ' +
+      errorComment +
+      ' */'
     );
   }
   const missing = findMissingFieldIds(requestedFieldIds, sql);
   if (missing.length > 0) {
     return (
       'Error: compile_query SQL is missing SELECT aliases for requested fieldIds: ' +
-      `${missing.join(', ')}. ${COMPILED_SQL_FIELD_ID_HINT}`
+      missing.join(', ') +
+      '. ' +
+      COMPILED_SQL_FIELD_ID_HINT
     );
   }
   return undefined;

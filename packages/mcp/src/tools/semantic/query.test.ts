@@ -148,6 +148,8 @@ GROUP BY 1`,
     expect(result.content[0].text).toContain('ERROR:');
     expect(result.content[0].text).toContain('unknown filter fieldId');
     expect(result.content[0].text).toContain('orders_customer.first_name');
+    expect(result.content[0].text).toContain('list_dimensions');
+    expect(result.content[0].text).not.toContain('${COMPILED_SQL_FIELD_ID_HINT}');
   });
 
   it('defaults missing tableCalculations to []', async () => {
