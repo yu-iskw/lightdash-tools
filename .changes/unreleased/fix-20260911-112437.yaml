@@ -1,3 +1,0 @@
-kind: fix
-body: Align list_dimensions fieldIds with Lightdash getItemId (nested dots to __) and fail compile_query when requested dims/metrics are missing from SELECT aliases.
-time: 2026-09-11T11:24:37.298104+09:00

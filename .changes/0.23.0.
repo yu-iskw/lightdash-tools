@@ -1,0 +1,6 @@
+## [0.23.0] - 2026-09-11
+### Bug Fixes
+* Align list_dimensions fieldIds with Lightdash getItemId (nested dots to __) and fail compile_query when requested dims/metrics are missing from SELECT aliases.
+* Fill missing FilterGroup and FilterRule ids on compile_query and run_metric_query so agents avoid UPSTREAM_VALIDATION against strict MetricQuery Filters.
+### Chores
+* Bump Lightdash OpenAPI pin to 2.192.0 (536dca8) and regenerate types.
