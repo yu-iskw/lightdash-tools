@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.24.0] - 2026-09-11
+
+### Bug Fixes
+
+- Harden compile_query: default missing sorts to [] and isError on Lightdash ERROR SQL comments
+
 ## [0.23.0] - 2026-09-11
 
 ### Bug Fixes

@@ -1,3 +1,0 @@
-kind: fix
-body: 'Harden compile_query: default missing sorts to [] and isError on Lightdash ERROR SQL comments'
-time: 2026-09-11T15:44:08.381714+09:00
