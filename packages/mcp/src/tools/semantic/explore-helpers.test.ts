@@ -6,6 +6,7 @@ import {
   extractSelectAliases,
   findMissingFieldIds,
   flattenExploreDimensions,
+  hasCompileSqlErrorComment,
   isEmptySelectSql,
   summarizeDimensions,
   summarizeExplores,
@@ -244,6 +245,22 @@ describe('isEmptySelectSql / extractCompiledSql', () => {
     expect(isEmptySelectSql('SELECT col FROM t')).toBe(false);
     expect(extractCompiledSql({ query: 'SELECT 1' })).toBe('SELECT 1');
     expect(extractCompiledSql('raw')).toBe('raw');
+  });
+});
+
+describe('hasCompileSqlErrorComment', () => {
+  it('detects Lightdash unknown-dimension ERROR comments in compiled SQL', () => {
+    const sql = `SELECT
+  \`orders_nested_demo\`.status AS \`orders_nested_demo_status\`
+FROM orders
+WHERE ((
+  /* ERROR: Filter has a reference to an unknown dimension: orders_nested_demo_customer.first_name */ orders_nested_demo_customer.first_name equals ("Anna")
+))
+GROUP BY 1`;
+    expect(hasCompileSqlErrorComment(sql)).toBe(true);
+    expect(hasCompileSqlErrorComment('SELECT 1 /* note */ FROM t')).toBe(false);
+    expect(hasCompileSqlErrorComment('SELECT 1 FROM t')).toBe(false);
+    expect(hasCompileSqlErrorComment('/*ERROR: bare */ SELECT 1')).toBe(true);
   });
 });
 

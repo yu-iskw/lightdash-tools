@@ -96,7 +96,7 @@ Procedure:
 1. If exploreId is missing, resolve it per explore playbook (search + disambiguation). Stay on this projectUuid.
 2. Copy fieldIds from list_dimensions and {exploreId}_{metricName} from get_explore → tables[baseTable].metrics. Never invent grains.
 3. If the user asked for N insights, reuse one explore and compile N diverse cuts.
-4. Build metricQuery from the compose-compile skeleton (fieldIds only; tool sets exploreName from exploreId and defaults missing tableCalculations to []). After each compile, verify every requested fieldId appears as a SELECT alias (missing alias = failure even without isError). Prefer SELECT aliases over metric name/label. ≤2 fix retries.
+4. Build metricQuery from the compose-compile skeleton (fieldIds only; tool sets exploreName from exploreId and defaults missing tableCalculations and sorts to []). After each compile, verify every requested fieldId appears as a SELECT alias (missing alias = failure even without isError). Prefer SELECT aliases over metric name/label. ≤2 fix retries.
 5. Deliverable: insight title(s) + fieldIds + compiled SQL (or errors). Never paste full explore/dimension/metric/lineage payloads.`,
         invariantIds,
         requiredTopics: [TOPIC_COMPOSE_COMPILE],
@@ -126,8 +126,8 @@ Explore: ${exploreId}
 ${err}
 
 Checklist:
-- unknown field id / empty SELECT / missing SELECT alias → use fieldIds from list_dimensions (base table) + explore-local metrics; re-compile (≤2 retries). Prefer SELECT aliases / compiledSql over metric name/label.
-- Other OpenAPI-required keys still failing (filters, sorts, limit, …) → copy the compose-compile skeleton; MCP fills exploreName and missing tableCalculations.
+- unknown field id / empty SELECT / missing SELECT alias / SQL ERROR comment → use fieldIds from list_dimensions (base table; STRUCT dots → __; ARRAY via baseTableOnly=false) + explore-local metrics; re-compile (≤2 retries). Prefer SELECT aliases / compiledSql over metric name/label.
+- Other OpenAPI-required keys still failing (filters, limit, …) → copy the compose-compile skeleton; MCP fills exploreName and missing tableCalculations / sorts.
 - Wrong explore → re-disambiguate (schemaName; label or name __{table}; skip empty schema / eda unless asked).
 - Metric not found / catalog empty → get_explore tables[baseTable].metrics; tableName must be the full explore id; compile as {exploreId}_{metricName}.
 - Verify SELECT aliases after every compile. Stop after a good compile or a clear blocker.`,

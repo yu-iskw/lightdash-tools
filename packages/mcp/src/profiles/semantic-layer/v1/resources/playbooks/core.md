@@ -38,7 +38,7 @@ Record when a budget stopped you.
 | `list_dimensions`               | Compact `{ name, label, table, type, fieldId }`. Default = base table only. Use `baseTableOnly=false` for ordinary joins **and** ARRAY UNNEST tables (`{base}__{column}`).      |
 | `get_explore`                   | **Preferred** metric menu: `tables[baseTable].metrics` names/labels only. Ignore join **metrics**; joined/ARRAY dims via `list_dimensions` (`baseTableOnly=false`) when needed. |
 | `list_metrics` / `get_metric`   | Optional catalog / definition dig. Filter `tableName === exploreId`.                                                                                                            |
-| `compile_query`                 | Compile only — never “run”. Sets `exploreName` from `exploreId`; defaults missing `tableCalculations` to `[]`. Prefer compiled SQL aliases over metric labels.                  |
+| `compile_query`                 | Compile only — never “run”. Sets `exploreName` from `exploreId`; defaults missing `tableCalculations` and `sorts` to `[]`. Prefer compiled SQL aliases over metric labels.      |
 | `get_field_lineage`             | Optional provenance; summarize, don’t dump.                                                                                                                                     |
 
 ## Project scope (critical)

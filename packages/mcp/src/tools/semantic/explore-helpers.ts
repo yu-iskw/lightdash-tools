@@ -137,6 +137,22 @@ export function isEmptySelectSql(sql: string): boolean {
 }
 
 /**
+ * True when Lightdash embedded a compile failure comment (e.g. unknown filter fieldId).
+ * Matches block comments whose body starts with ERROR: (optional whitespace after the opener).
+ */
+export function hasCompileSqlErrorComment(sql: string): boolean {
+  let from = 0;
+  while (from < sql.length) {
+    const open = sql.indexOf('/*', from);
+    if (open < 0) return false;
+    const body = sql.slice(open + 2).trimStart();
+    if (body.toUpperCase().startsWith('ERROR:')) return true;
+    from = open + 2;
+  }
+  return false;
+}
+
+/**
  * Collect SELECT aliases from compiled SQL (`AS \`alias\``, `AS "alias"`, or `AS alias`).
  * Heuristic only (not a SQL parser): stops at the first FROM; CAST(... AS type) may
  * contribute type names as extras. Prefer {@link findMissingFieldIds}, which skips the
