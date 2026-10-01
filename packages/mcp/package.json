@@ -27,7 +27,7 @@
   "dependencies": {
     "@lightdash-tools/client": "workspace:*",
     "@lightdash-tools/common": "workspace:*",
-    "@modelcontextprotocol/node": "2.0.0",
+    "@modelcontextprotocol/node": "2.1.0",
     "@modelcontextprotocol/server": "2.0.0",
     "commander": "^15.0.0",
     "hono": "^4.13.10",
