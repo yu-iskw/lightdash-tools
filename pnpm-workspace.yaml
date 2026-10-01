@@ -36,7 +36,7 @@ minimumReleaseAgeExclude:
   - redis
   - '@redis/*'
   - hono@4.12.34
-  - brace-expansion@5.0.9
+  - brace-expansion@5.0.12
   - browserslist@4.28.7
 
 overrides:
@@ -48,9 +48,9 @@ overrides:
   semver: '>=7.8.4'
   tar: '>=7.5.19'
   vite: 8.1.5
-  brace-expansion: '>=5.0.8'
+  brace-expansion: 5.0.12
   postcss: '>=8.5.18'
   fast-uri: '>=3.1.4'
-  axios: '>=1.18.0'
+  axios: 1.20.0
   browserslist: 4.28.7
   '@hono/node-server': '>=2.0.12'
