@@ -1,16 +1,21 @@
 /**
- * Content-reader response envelope helpers (RFC §10).
+ * Content response envelope helpers (RFC §10 / ADR-0006).
  */
+
+import type { ProfileId } from '@lightdash-tools/common';
 
 export type ContentReaderWarningCode =
   | 'CACHE_STALE'
+  | 'DATE_ZOOM_IGNORED'
   | 'FILTER_IGNORED'
   | 'PARAMETER_DEFAULTED'
   | 'PARTIAL_RESULT'
   | 'QUERY_RUNNING'
   | 'QUERY_TIMEOUT'
   | 'REDACTED'
+  | 'SQL_ARTIFACT_AVAILABLE'
   | 'SQL_EXECUTION_DISABLED'
+  | 'SQL_RESULT_MAY_BE_ROW_LEVEL'
   | 'STALE_CONTENT'
   | 'TRUNCATED'
   | 'UNSUPPORTED_TILE'
@@ -24,7 +29,7 @@ export type ContentReaderWarning = {
 export type ContentReaderEnvelope<T> = {
   data: T;
   context: {
-    persona: 'content-reader';
+    profile: ProfileId;
     projectUuid: string;
     projectPinned: boolean;
     observedAt: string;
@@ -40,6 +45,7 @@ export type ContentReaderEnvelope<T> = {
 export function contentReaderEnvelope<T>(
   data: T,
   opts: {
+    profile: ProfileId;
     projectUuid: string;
     projectPinned: boolean;
     complete?: boolean;
@@ -51,7 +57,7 @@ export function contentReaderEnvelope<T>(
   return {
     data,
     context: {
-      persona: 'content-reader',
+      profile: opts.profile,
       projectUuid: opts.projectUuid,
       projectPinned: opts.projectPinned,
       observedAt: new Date().toISOString(),

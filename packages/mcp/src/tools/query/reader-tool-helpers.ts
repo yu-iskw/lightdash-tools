@@ -1,49 +1,47 @@
 /**
- * Shared error/warning helpers for content-reader and content-developer (ADR-0014)
- * query and metadata tools.
+ * Shared error/warning helpers for pin-scoped and bounded-query MCP tools
+ * (content-reader, content-developer, data-analyst, semantic discovery).
  */
 
 import { ProjectScopeError } from '../../governance/project-scope.js';
-import { jsonToolResult, withLightdashBlockedMarker } from '../shared.js';
+import { toolErrorResult, withLightdashBlockedMarker } from '../shared.js';
 
 import type { NormalizedQueryResult } from './result-normalizer.js';
 import type { ContentReaderWarning, ContentReaderWarningCode } from '../../policy/envelope.js';
-import type { TextContent } from '../shared.js';
+import type { TextContent, ToolErrorExtras } from '../shared.js';
 
 /** Policy denials that should audit as `blocked` (stripped `_lightdashBlocked` marker). */
 const BLOCKED_POLICY_CODES = new Set([
+  'PROJECT_NOT_AVAILABLE',
   'PROJECT_SCOPE_MISMATCH',
   'PROJECT_SCOPE_REQUIRED',
   'CONTENT_NOT_EXECUTABLE',
   'CONTENT_NOT_FOUND',
   'INVALID_FILTER_OVERRIDE',
   'INVALID_PARAMETER_OVERRIDE',
-  'QUERY_NOT_OWNED',
+  'QUERY_NOT_FOUND',
   'QUERY_EXPIRED',
   'QUERY_BUDGET_EXCEEDED',
   'RATE_LIMITED',
   'ROW_LIMIT_EXCEEDED',
-  // content-developer preview ledger (ADR-0014)
+  // content-developer preview tokens (ADR-0014 / ADR-0019)
   'PREVIEW_REQUIRED',
   'PREVIEW_STALE',
-  'PREVIEW_EXPIRED',
   'PREVIEW_NOT_VALIDATED',
   'PREVIEW_NOT_OWNED',
-  'PREVIEW_RECONCILIATION_REQUIRED',
   'CHART_SLUG_EXISTS',
   'RENAME_DRY_RUN',
   'RENAME_FIELD_PREFIX',
-  'RENAME_SCOPE',
   'RENAME_TARGET',
   'RENAME_UNCHANGED',
 ]);
 
-export function codedErrorResult(code: string, message: string): TextContent {
-  const body = { error: { code, message } };
-  const result: TextContent = {
-    ...jsonToolResult(body),
-    isError: true,
-  };
+export function codedErrorResult(
+  code: string,
+  message: string,
+  extras?: ToolErrorExtras,
+): TextContent {
+  const result = toolErrorResult(code, message, extras);
   if (BLOCKED_POLICY_CODES.has(code)) {
     return withLightdashBlockedMarker(result);
   }
@@ -70,4 +68,9 @@ export function isCoverageComplete(
   result: Pick<NormalizedQueryResult, 'status' | 'truncated'>,
 ): boolean {
   return result.status === 'complete' && !result.truncated;
+}
+
+/** True when the async query will not produce further status transitions. */
+export function isTerminalStatus(status: NormalizedQueryResult['status']): boolean {
+  return status === 'complete' || status === 'failed' || status === 'cancelled';
 }

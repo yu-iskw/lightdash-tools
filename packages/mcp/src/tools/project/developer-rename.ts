@@ -1,16 +1,15 @@
 /**
- * Content-developer rename tools (ADR-0018).
+ * Content-developer rename tools (ADR-0036).
  *
- * list_rename_fields reads the dropdown. preview_rename stores a RenameInstruction.
- * Chart and dashboard scopes do not call POST /rename/preview. Project scope does,
- * and stores the uuid lists on the baseline. Apply claims that preview, posts the
- * matching rename endpoint, then marks the preview applied.
+ * preview_rename mints a previewToken (ADR-0019) over a RenameInstruction. Chart and
+ * dashboard scopes bind the saved resource baseline and do not call POST /rename/preview.
+ * Project scope calls it and binds the impacted uuid lists. Apply tools rebuild the
+ * instruction from their own arguments, so a token unlocks only the rename it previewed.
  */
 
 import { WRITE_NONDESTRUCTIVE } from '@lightdash-tools/common';
 import { z } from 'zod';
 
-import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
 import {
   DISCOVERY_SAFETY,
@@ -19,13 +18,15 @@ import {
   registerContentDeveloperTool,
 } from '../../policy/content-developer.js';
 import {
-  addPreviewLedgerEntry,
-  getOwnedPreview,
-  withClaimedPreviewApply,
+  PreviewLedgerError,
+  mintDraftPreviewToken,
+  withValidatedPreviewApply,
 } from '../../policy/preview-ledger.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField } from '../lib/schema-fields.js';
+import { stableStringify } from '../lib/stable-stringify.js';
 import { jsonToolResult } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { developerContext, wrapDeveloperHandler } from './developer-content-shared.js';
 import { baselineFromResource } from './developer-helpers.js';
@@ -34,7 +35,6 @@ import {
   assertApplyIsNotDryRun,
   assertListedFieldId,
   assertRenameNamesDiffer,
-  parseRenameInstruction,
   projectRenameBody,
   projectRenameResourceKey,
   renameImpactFromChanges,
@@ -47,224 +47,119 @@ import type {
   RenameInstruction,
   RenameKind,
 } from './rename-instruction.js';
-import type { PreviewBaseline } from '../../policy/preview-ledger.js';
+import type { PreviewBaseline, RenameImpactBaseline } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { components } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
-type RenameFieldsResult = components['schemas']['ApiRenameFieldsResponse']['results'];
-type RenamePreviewResult = components['schemas']['ApiRenameResponse']['results'];
-type RenameChartResult = components['schemas']['ApiRenameChartResponse']['results'];
-type RenameDashboardResult = components['schemas']['ApiRenameDashboardResponse']['results'];
-type RenameJobResult = components['schemas']['ApiJobScheduledResponse']['results'];
-
-export type RenameApi = {
-  listChartFields: (projectUuid: string, chartUuid: string) => Promise<RenameFieldsResult>;
-  listDashboardFields: (
-    projectUuid: string,
-    dashboardUuid: string,
-    table?: string,
-  ) => Promise<RenameFieldsResult>;
-  previewRename: (
-    projectUuid: string,
-    body: components['schemas']['ApiRenameBody'],
-  ) => Promise<RenamePreviewResult>;
-  renameChart: (
-    projectUuid: string,
-    chartUuid: string,
-    body: components['schemas']['ApiRenameChartBody'],
-  ) => Promise<RenameChartResult>;
-  renameDashboardFilter: (
-    projectUuid: string,
-    dashboardUuid: string,
-    body: components['schemas']['ApiRenameDashboardBody'],
-  ) => Promise<RenameDashboardResult>;
-  renameResources: (
-    projectUuid: string,
-    body: components['schemas']['ApiRenameBody'],
-  ) => Promise<RenameJobResult>;
-  getSavedChart: (projectUuid: string, chartUuid: string) => Promise<Record<string, unknown>>;
-  getDashboard: (projectUuid: string, dashboardUuid: string) => Promise<Record<string, unknown>>;
-};
+type RenameFields = components['schemas']['ApiRenameFieldsResponse']['results']['fields'];
 
 const renameTypeSchema = z.enum(['field', 'model']);
 const renameNameSchema = z.string().min(1);
 
-const previewIdField = () => z.string().describe('Single-use previewId from preview_rename');
+const previewTokenField = () =>
+  z.string().describe('Validated previewToken from preview_rename then confirm_preview');
 
-function storedName(value: string | undefined): string | null {
-  return value == null || value === '' ? null : value;
-}
+const VALIDATE_CHART_NEXT = 'Run validate_chart on the saved chart.';
+const VALIDATE_DASHBOARD_NEXT = 'Run validate_dashboard on the saved dashboard.';
+const PROJECT_NEXT =
+  'rename_project returns jobId and does not poll. When the job finishes, run validate_chart or validate_dashboard on the previewed uuids. If charts or dashboards as code live in git, run lightdash download and commit before the next lightdash upload.';
 
-function sameOptionalName(stored: string | null, given: string | undefined): boolean {
-  return storedName(stored ?? undefined) === storedName(given);
-}
-
-function renameApiFromClient(client: LightdashClient): RenameApi {
-  return {
-    listChartFields: (projectUuid, chartUuid) =>
-      client.v1.rename.listChartFields(projectUuid, chartUuid),
-    listDashboardFields: (projectUuid, dashboardUuid, table) =>
-      client.v1.rename.listDashboardFields(projectUuid, dashboardUuid, table),
-    previewRename: (projectUuid, body) => client.v1.rename.previewRename(projectUuid, body),
-    renameChart: (projectUuid, chartUuid, body) =>
-      client.v1.rename.renameChart(projectUuid, chartUuid, body),
-    renameDashboardFilter: (projectUuid, dashboardUuid, body) =>
-      client.v1.rename.renameDashboardFilter(projectUuid, dashboardUuid, body),
-    renameResources: (projectUuid, body) => client.v1.rename.renameResources(projectUuid, body),
-    getSavedChart: async (projectUuid, chartUuid) =>
-      asRecord(await client.v2.charts.getSavedChart(projectUuid, chartUuid)),
-    getDashboard: async (projectUuid, dashboardUuid) =>
-      asRecord(await client.v2.dashboards.getDashboard(projectUuid, dashboardUuid)),
-  };
-}
-
-function tableNameOf(resource: Record<string, unknown>): string | undefined {
-  const tableName = resource.tableName;
-  return typeof tableName === 'string' && tableName.length > 0 ? tableName : undefined;
-}
-
-export async function listRenameFields(
-  api: RenameApi,
-  input: {
-    projectUuid: string;
-    target: 'chart' | 'dashboard';
-    chartUuid?: string;
-    dashboardUuid?: string;
-    table?: string;
-  },
-): Promise<RenameFieldsResult> {
-  if (input.target === 'chart') {
-    if (input.chartUuid == null || input.chartUuid === '') {
-      throw new RenameRejectedError(
-        'RENAME_TARGET',
-        'list_rename_fields for a chart needs chartUuid',
-      );
-    }
-    return api.listChartFields(input.projectUuid, input.chartUuid);
-  }
-  if (input.dashboardUuid == null || input.dashboardUuid === '') {
-    throw new RenameRejectedError(
-      'RENAME_TARGET',
-      'list_rename_fields for a dashboard needs dashboardUuid',
-    );
-  }
-  return api.listDashboardFields(input.projectUuid, input.dashboardUuid, input.table);
-}
-
-type RenamePreviewResultBody = {
-  previewId: string;
-  resourceKind: 'rename';
-  resourceKey: string;
-  status: 'draft';
-  fields?: RenameFieldsResult['fields'];
-  impact?: ReturnType<typeof renameImpactFromChanges>;
+type PreviewRenameArgs = {
+  projectUuid?: string;
+  scope: RenameInstruction['scope'];
+  type: RenameKind;
+  from: string;
+  to: string;
+  chartUuid?: string;
+  dashboardUuid?: string;
+  model?: string;
+  table?: string;
 };
 
-function draftRename(entry: { previewId: string; resourceKey: string }): RenamePreviewResultBody {
-  return {
-    previewId: entry.previewId,
-    resourceKind: 'rename',
-    resourceKey: entry.resourceKey,
-    status: 'draft',
-  };
+type RenameDraft = {
+  proposed: RenameInstruction;
+  resourceKey: string;
+  baseline: PreviewBaseline | undefined;
+  fields?: RenameFields;
+  impact?: RenameImpactBaseline;
+};
+
+function requireTarget(value: string | undefined, message: string): string {
+  if (value == null || value === '') {
+    throw new RenameRejectedError('RENAME_TARGET', message);
+  }
+  return value;
 }
 
 async function listedFields(
   type: RenameKind,
   to: string,
-  load: () => Promise<RenameFieldsResult>,
-): Promise<RenameFieldsResult['fields'] | undefined> {
+  load: () => Promise<{ fields: RenameFields }>,
+): Promise<RenameFields | undefined> {
   if (type !== 'field') {
     return undefined;
   }
-  const fields = await load();
-  assertListedFieldId(fields.fields, to);
-  return fields.fields;
+  const { fields } = await load();
+  assertListedFieldId(fields, to);
+  return fields;
 }
 
-async function issueChartPreview(
-  api: RenameApi,
-  input: {
-    sessionId: string;
-    projectUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    chartUuid: string;
-  },
-): Promise<RenamePreviewResultBody> {
-  const chart = await api.getSavedChart(input.projectUuid, input.chartUuid);
-  const fields = await listedFields(input.type, input.to, () =>
-    api.listChartFields(input.projectUuid, input.chartUuid),
+async function draftChartRename(
+  client: LightdashClient,
+  projectUuid: string,
+  args: PreviewRenameArgs,
+): Promise<RenameDraft> {
+  const chartUuid = requireTarget(args.chartUuid, 'preview_rename for a chart needs chartUuid');
+  const chart = asRecord(await client.v2.charts.getSavedChart(projectUuid, chartUuid));
+  const fields = await listedFields(args.type, args.to, () =>
+    client.v1.rename.listChartFields(projectUuid, chartUuid),
   );
   const proposed: ChartRenameInstruction = {
     scope: 'chart',
-    chartUuid: input.chartUuid,
-    type: input.type,
-    from: input.from,
-    to: input.to,
-    tableName: storedName(tableNameOf(chart)),
+    chartUuid,
+    type: args.type,
+    from: args.from,
+    to: args.to,
   };
-  const entry = await addPreviewLedgerEntry({
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    resourceKind: 'rename',
-    resourceKey: input.chartUuid,
-    proposed,
-    baseline: baselineFromResource(chart),
-  });
-  return { ...draftRename(entry), ...(fields == null ? {} : { fields }) };
+  return { proposed, resourceKey: chartUuid, baseline: baselineFromResource(chart), fields };
 }
 
-async function issueDashboardPreview(
-  api: RenameApi,
-  input: {
-    sessionId: string;
-    projectUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    dashboardUuid: string;
-    table?: string;
-  },
-): Promise<RenamePreviewResultBody> {
-  const dashboard = await api.getDashboard(input.projectUuid, input.dashboardUuid);
-  const fields = await listedFields(input.type, input.to, () =>
-    api.listDashboardFields(input.projectUuid, input.dashboardUuid, input.table),
+async function draftDashboardFilterRename(
+  client: LightdashClient,
+  projectUuid: string,
+  args: PreviewRenameArgs,
+): Promise<RenameDraft> {
+  const dashboardUuid = requireTarget(
+    args.dashboardUuid,
+    'preview_rename for a dashboard filter needs dashboardUuid',
+  );
+  const dashboard = asRecord(await client.v2.dashboards.getDashboard(projectUuid, dashboardUuid));
+  const fields = await listedFields(args.type, args.to, () =>
+    client.v1.rename.listDashboardFields(projectUuid, dashboardUuid, args.table),
   );
   const proposed: DashboardFilterRenameInstruction = {
     scope: 'dashboard-filter',
-    dashboardUuid: input.dashboardUuid,
-    type: input.type,
-    from: input.from,
-    to: input.to,
+    dashboardUuid,
+    type: args.type,
+    from: args.from,
+    to: args.to,
   };
-  const entry = await addPreviewLedgerEntry({
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    resourceKind: 'rename',
-    resourceKey: input.dashboardUuid,
+  return {
     proposed,
+    resourceKey: dashboardUuid,
     baseline: baselineFromResource(dashboard),
-  });
-  return { ...draftRename(entry), ...(fields == null ? {} : { fields }) };
+    fields,
+  };
 }
 
-async function issueProjectPreview(
-  api: RenameApi,
-  input: {
-    sessionId: string;
-    projectUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    model?: string;
-  },
-): Promise<RenamePreviewResultBody> {
-  const model = storedName(input.model);
-  if (input.type === 'field' && model == null) {
+async function draftProjectRename(
+  client: LightdashClient,
+  projectUuid: string,
+  args: PreviewRenameArgs,
+): Promise<RenameDraft> {
+  if (args.type === 'field' && args.model == null) {
     throw new RenameRejectedError(
       'RENAME_TARGET',
       'A project field rename needs model set to the explore name, plus full field ids',
@@ -272,230 +167,44 @@ async function issueProjectPreview(
   }
   const proposed: ProjectRenameInstruction = {
     scope: 'project',
-    type: input.type,
-    from: input.from,
-    to: input.to,
-    model,
+    type: args.type,
+    from: args.from,
+    to: args.to,
+    model: args.model ?? null,
   };
-  const impact = await api.previewRename(input.projectUuid, projectRenameBody(proposed, true));
-  const renameImpact = renameImpactFromChanges(impact);
-  const entry = await addPreviewLedgerEntry({
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    resourceKind: 'rename',
-    resourceKey: projectRenameResourceKey(proposed),
+  const impact = renameImpactFromChanges(
+    await client.v1.rename.previewRename(projectUuid, projectRenameBody(proposed, true)),
+  );
+  return {
     proposed,
-    baseline: { renameImpact },
-  });
-  return { ...draftRename(entry), impact: renameImpact };
-}
-
-export async function issueRenamePreview(
-  api: RenameApi,
-  input: {
-    sessionId: string;
-    projectUuid: string;
-    scope: 'chart' | 'dashboard-filter' | 'project';
-    type: RenameKind;
-    from: string;
-    to: string;
-    chartUuid?: string;
-    dashboardUuid?: string;
-    model?: string;
-    table?: string;
-  },
-): Promise<RenamePreviewResultBody> {
-  assertRenameNamesDiffer(input.from, input.to);
-  if (input.scope === 'chart') {
-    if (input.chartUuid == null || input.chartUuid === '') {
-      throw new RenameRejectedError('RENAME_TARGET', 'preview_rename for a chart needs chartUuid');
-    }
-    return issueChartPreview(api, { ...input, chartUuid: input.chartUuid });
-  }
-  if (input.scope === 'dashboard-filter') {
-    if (input.dashboardUuid == null || input.dashboardUuid === '') {
-      throw new RenameRejectedError(
-        'RENAME_TARGET',
-        'preview_rename for a dashboard filter needs dashboardUuid',
-      );
-    }
-    return issueDashboardPreview(api, { ...input, dashboardUuid: input.dashboardUuid });
-  }
-  return issueProjectPreview(api, input);
-}
-
-function instructionForScope<S extends RenameInstruction['scope']>(
-  instruction: RenameInstruction,
-  scope: S,
-): Extract<RenameInstruction, { scope: S }> | undefined {
-  if (instruction.scope !== scope) {
-    return undefined;
-  }
-  return instruction as Extract<RenameInstruction, { scope: S }>;
-}
-
-async function claimAndApply<S extends RenameInstruction['scope'], T>(input: {
-  previewId: string;
-  sessionId: string;
-  projectUuid: string;
-  dryRun?: boolean;
-  expectedScope: S;
-  matches: (instruction: Extract<RenameInstruction, { scope: S }>) => boolean;
-  currentBaseline: (
-    instruction: Extract<RenameInstruction, { scope: S }>,
-  ) => Promise<PreviewBaseline | undefined>;
-  mutate: (instruction: Extract<RenameInstruction, { scope: S }>) => Promise<T>;
-}): Promise<T> {
-  assertApplyIsNotDryRun(input.dryRun);
-  const entry = await getOwnedPreview({
-    previewId: input.previewId,
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-  });
-  const instruction = instructionForScope(
-    parseRenameInstruction(entry.proposed),
-    input.expectedScope,
-  );
-  if (instruction == null || !input.matches(instruction)) {
-    throw new RenameRejectedError(
-      'RENAME_SCOPE',
-      `This apply tool only accepts a ${input.expectedScope} instruction`,
-    );
-  }
-  const currentBaseline = await input.currentBaseline(instruction);
-  return withClaimedPreviewApply(
-    {
-      previewId: input.previewId,
-      sessionId: input.sessionId,
-      projectUuid: input.projectUuid,
-      resourceKind: 'rename',
-      resourceKey: entry.resourceKey,
-      proposed: entry.proposed,
-      currentBaseline,
-    },
-    async () => input.mutate(instruction),
-  );
-}
-
-const VALIDATE_CHART_NEXT = 'Run validate_chart on the saved chart.';
-const VALIDATE_DASHBOARD_NEXT = 'Run validate_dashboard on the saved dashboard.';
-const PROJECT_NEXT =
-  'rename_project returns jobId and does not poll. When the job finishes, run validate_chart or list validation results. If charts or dashboards as code live in git, run lightdash download and commit before the next lightdash deploy.';
-
-export async function applyChartRename(
-  api: RenameApi,
-  input: {
-    previewId: string;
-    sessionId: string;
-    projectUuid: string;
-    chartUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    dryRun?: boolean;
-  },
-): Promise<{ applied: true; jobId?: string; next: string }> {
-  const result = await claimAndApply({
-    previewId: input.previewId,
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    dryRun: input.dryRun,
-    expectedScope: 'chart',
-    matches: (instruction) =>
-      instruction.chartUuid === input.chartUuid &&
-      instruction.type === input.type &&
-      instruction.from === input.from &&
-      instruction.to === input.to,
-    currentBaseline: async () =>
-      baselineFromResource(await api.getSavedChart(input.projectUuid, input.chartUuid)),
-    mutate: (instruction) =>
-      api.renameChart(input.projectUuid, instruction.chartUuid, {
-        type: instruction.type,
-        from: instruction.from,
-        to: instruction.to,
-      }),
-  });
-  return {
-    applied: true,
-    ...(result.jobId == null ? {} : { jobId: result.jobId }),
-    next: VALIDATE_CHART_NEXT,
+    resourceKey: projectRenameResourceKey(proposed),
+    baseline: { renameImpact: impact },
+    impact,
   };
 }
 
-export async function applyDashboardFilterRename(
-  api: RenameApi,
-  input: {
-    previewId: string;
-    sessionId: string;
-    projectUuid: string;
-    dashboardUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    dryRun?: boolean;
-  },
-): Promise<{ applied: true; jobId?: string; next: string }> {
-  const result = await claimAndApply({
-    previewId: input.previewId,
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    dryRun: input.dryRun,
-    expectedScope: 'dashboard-filter',
-    matches: (instruction) =>
-      instruction.dashboardUuid === input.dashboardUuid &&
-      instruction.type === input.type &&
-      instruction.from === input.from &&
-      instruction.to === input.to,
-    currentBaseline: async () =>
-      baselineFromResource(await api.getDashboard(input.projectUuid, input.dashboardUuid)),
-    mutate: (instruction) =>
-      api.renameDashboardFilter(input.projectUuid, instruction.dashboardUuid, {
-        type: instruction.type,
-        from: instruction.from,
-        to: instruction.to,
-      }),
-  });
-  return {
-    applied: true,
-    ...(result.jobId == null ? {} : { jobId: result.jobId }),
-    next: VALIDATE_DASHBOARD_NEXT,
-  };
+function draftRename(
+  client: LightdashClient,
+  projectUuid: string,
+  args: PreviewRenameArgs,
+): Promise<RenameDraft> {
+  assertRenameNamesDiffer(args.from, args.to);
+  switch (args.scope) {
+    case 'chart':
+      return draftChartRename(client, projectUuid, args);
+    case 'dashboard-filter':
+      return draftDashboardFilterRename(client, projectUuid, args);
+    case 'project':
+      return draftProjectRename(client, projectUuid, args);
+    default: {
+      const unhandled: never = args.scope;
+      throw new RenameRejectedError('RENAME_TARGET', `Unknown rename scope '${String(unhandled)}'`);
+    }
+  }
 }
 
-export async function applyProjectRename(
-  api: RenameApi,
-  input: {
-    previewId: string;
-    sessionId: string;
-    projectUuid: string;
-    type: RenameKind;
-    from: string;
-    to: string;
-    model?: string;
-    dryRun?: boolean;
-  },
-): Promise<{ applied: true; jobId: string; next: string }> {
-  const result = await claimAndApply({
-    previewId: input.previewId,
-    sessionId: input.sessionId,
-    projectUuid: input.projectUuid,
-    dryRun: input.dryRun,
-    expectedScope: 'project',
-    matches: (instruction) =>
-      instruction.type === input.type &&
-      instruction.from === input.from &&
-      instruction.to === input.to &&
-      sameOptionalName(instruction.model, input.model),
-    currentBaseline: async (instruction) => {
-      const fresh = await api.previewRename(
-        input.projectUuid,
-        projectRenameBody(instruction, true),
-      );
-      return { renameImpact: renameImpactFromChanges(fresh) };
-    },
-    mutate: (instruction) => api.renameResources(input.projectUuid, projectRenameBody(instruction)),
-  });
-  return { applied: true, jobId: result.jobId, next: PROJECT_NEXT };
+function applied(jobId: string | undefined, next: string) {
+  return { applied: true as const, ...(jobId == null ? {} : { jobId }), next };
 }
 
 function registerListRenameFields(server: McpServer, contextProvider: McpContextProvider): void {
@@ -521,15 +230,22 @@ function registerListRenameFields(server: McpServer, contextProvider: McpContext
       chartUuid?: string;
       dashboardUuid?: string;
       table?: string;
-    }>(contextProvider, (client) => async (args) => {
+    }>(contextProvider, ({ client }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const fields = await listRenameFields(renameApiFromClient(client), {
-        projectUuid: scope.projectUuid,
-        target: args.target,
-        chartUuid: args.chartUuid,
-        dashboardUuid: args.dashboardUuid,
-        table: args.table,
-      });
+      const fields =
+        args.target === 'chart'
+          ? await client.v1.rename.listChartFields(
+              scope.projectUuid,
+              requireTarget(args.chartUuid, 'list_rename_fields for a chart needs chartUuid'),
+            )
+          : await client.v1.rename.listDashboardFields(
+              scope.projectUuid,
+              requireTarget(
+                args.dashboardUuid,
+                'list_rename_fields for a dashboard needs dashboardUuid',
+              ),
+              args.table,
+            );
       return jsonToolResult({ data: fields, context: developerContext(scope) });
     }),
   );
@@ -542,7 +258,7 @@ function registerPreviewRename(server: McpServer, contextProvider: McpContextPro
     {
       title: 'Preview rename',
       description:
-        'Store a rename instruction and return previewId. Chart and dashboard scopes do not call the project rename preview. Project scope records affected resource uuids. Confirm with resourceKind rename before apply. Does not write a chart version.',
+        'Mint a previewToken for a rename instruction. Chart and dashboard scopes do not call the project rename preview. Project scope records affected resource uuids. Confirm with resourceKind rename before apply. Does not write a chart version.',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -560,32 +276,37 @@ function registerPreviewRename(server: McpServer, contextProvider: McpContextPro
         table: z.string().optional().describe('Dashboard field list table filter'),
       },
     },
-    wrapDeveloperHandler<{
-      projectUuid?: string;
-      scope: 'chart' | 'dashboard-filter' | 'project';
-      type: RenameKind;
-      from: string;
-      to: string;
-      chartUuid?: string;
-      dashboardUuid?: string;
-      model?: string;
-      table?: string;
-    }>(contextProvider, (client) => async (args) => {
-      const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const preview = await issueRenamePreview(renameApiFromClient(client), {
-        sessionId: getMcpClientSessionId(),
-        projectUuid: scope.projectUuid,
-        scope: args.scope,
-        type: args.type,
-        from: args.from,
-        to: args.to,
-        chartUuid: args.chartUuid,
-        dashboardUuid: args.dashboardUuid,
-        model: args.model,
-        table: args.table,
-      });
-      return jsonToolResult({ data: preview, context: developerContext(scope) });
-    }),
+    wrapDeveloperHandler<PreviewRenameArgs>(
+      contextProvider,
+      ({ client, subject, serverContext }) =>
+        async (args) => {
+          const scope = resolveProjectScope({ projectUuid: args.projectUuid });
+          const draft = await draftRename(client, scope.projectUuid, args);
+          const entry = await mintDraftPreviewToken({
+            subject,
+            serverContext,
+            projectUuid: scope.projectUuid,
+            resourceKind: 'rename',
+            resourceKey: draft.resourceKey,
+            proposed: draft.proposed,
+            baseline: draft.baseline,
+          });
+          return jsonToolResult({
+            data: {
+              previewToken: entry.previewToken,
+              previewId: entry.claims.previewId,
+              resourceKind: entry.claims.resourceKind,
+              resourceKey: draft.resourceKey,
+              status: entry.claims.status,
+              contentHash: entry.claims.contentHash,
+              expiresAt: entry.claims.expiresAt,
+              ...(draft.fields == null ? {} : { fields: draft.fields }),
+              ...(draft.impact == null ? {} : { impact: draft.impact }),
+            },
+            context: developerContext(scope),
+          });
+        },
+    ),
   );
 }
 
@@ -596,12 +317,12 @@ function registerRenameChart(server: McpServer, contextProvider: McpContextProvi
     {
       title: 'Rename chart field or model',
       description:
-        'Apply a confirmed chart rename instruction. Posts once to the chart rename endpoint and does not upsert chart-as-code. Then run validate_chart.',
+        'Apply a confirmed chart rename. Posts once to the chart rename endpoint and does not upsert chart-as-code. Then run validate_chart.',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         chartUuid: z.string(),
         type: renameTypeSchema,
         from: renameNameSchema,
@@ -611,25 +332,47 @@ function registerRenameChart(server: McpServer, contextProvider: McpContextProvi
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       chartUuid: string;
       type: RenameKind;
       from: string;
       to: string;
       dryRun?: boolean;
-    }>(contextProvider, (client) => async (args) => {
+    }>(contextProvider, ({ client, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const applied = await applyChartRename(renameApiFromClient(client), {
-        previewId: args.previewId,
-        sessionId: getMcpClientSessionId(),
-        projectUuid: scope.projectUuid,
+      assertApplyIsNotDryRun(args.dryRun);
+      const chart = asRecord(
+        await client.v2.charts.getSavedChart(scope.projectUuid, args.chartUuid),
+      );
+      const proposed: ChartRenameInstruction = {
+        scope: 'chart',
         chartUuid: args.chartUuid,
         type: args.type,
         from: args.from,
         to: args.to,
-        dryRun: args.dryRun,
+      };
+      const result = await withValidatedPreviewApply(
+        {
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'rename',
+          resourceKey: args.chartUuid,
+          proposed,
+          currentBaseline: baselineFromResource(chart),
+        },
+        () =>
+          client.v1.rename.renameChart(scope.projectUuid, args.chartUuid, {
+            type: args.type,
+            from: args.from,
+            to: args.to,
+          }),
+      );
+      return jsonToolResult({
+        data: applied(result.jobId, VALIDATE_CHART_NEXT),
+        context: developerContext(scope),
       });
-      return jsonToolResult({ data: applied, context: developerContext(scope) });
     }),
   );
 }
@@ -643,13 +386,12 @@ function registerRenameDashboardFilter(
     'rename_dashboard_filter',
     {
       title: 'Rename dashboard filter',
-      description:
-        'Apply a confirmed dashboard-filter rename instruction. Then run validate_dashboard.',
+      description: 'Apply a confirmed dashboard-filter rename. Then run validate_dashboard.',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         dashboardUuid: z.string(),
         type: renameTypeSchema,
         from: renameNameSchema,
@@ -659,25 +401,47 @@ function registerRenameDashboardFilter(
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       dashboardUuid: string;
       type: RenameKind;
       from: string;
       to: string;
       dryRun?: boolean;
-    }>(contextProvider, (client) => async (args) => {
+    }>(contextProvider, ({ client, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const applied = await applyDashboardFilterRename(renameApiFromClient(client), {
-        previewId: args.previewId,
-        sessionId: getMcpClientSessionId(),
-        projectUuid: scope.projectUuid,
+      assertApplyIsNotDryRun(args.dryRun);
+      const dashboard = asRecord(
+        await client.v2.dashboards.getDashboard(scope.projectUuid, args.dashboardUuid),
+      );
+      const proposed: DashboardFilterRenameInstruction = {
+        scope: 'dashboard-filter',
         dashboardUuid: args.dashboardUuid,
         type: args.type,
         from: args.from,
         to: args.to,
-        dryRun: args.dryRun,
+      };
+      const result = await withValidatedPreviewApply(
+        {
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'rename',
+          resourceKey: args.dashboardUuid,
+          proposed,
+          currentBaseline: baselineFromResource(dashboard),
+        },
+        () =>
+          client.v1.rename.renameDashboardFilter(scope.projectUuid, args.dashboardUuid, {
+            type: args.type,
+            from: args.from,
+            to: args.to,
+          }),
+      );
+      return jsonToolResult({
+        data: applied(result.jobId, VALIDATE_DASHBOARD_NEXT),
+        context: developerContext(scope),
       });
-      return jsonToolResult({ data: applied, context: developerContext(scope) });
     }),
   );
 }
@@ -689,12 +453,12 @@ function registerRenameProject(server: McpServer, contextProvider: McpContextPro
     {
       title: 'Rename across the project',
       description:
-        'Apply a confirmed project rename. Re-checks the preview uuid lists, posts the project rename, and returns jobId without polling. If content as code lives in git, run lightdash download before the next deploy.',
+        'Apply a confirmed project rename. Re-checks the preview uuid lists, posts the project rename, and returns jobId without polling. If content as code lives in git, run lightdash download before the next lightdash upload.',
       safety: WRITE_SAFETY,
       annotations: WRITE_NONDESTRUCTIVE,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
-        previewId: previewIdField(),
+        previewToken: previewTokenField(),
         type: renameTypeSchema,
         from: renameNameSchema,
         to: renameNameSchema,
@@ -704,34 +468,61 @@ function registerRenameProject(server: McpServer, contextProvider: McpContextPro
     },
     wrapDeveloperHandler<{
       projectUuid?: string;
-      previewId: string;
+      previewToken: string;
       type: RenameKind;
       from: string;
       to: string;
       model?: string;
       dryRun?: boolean;
-    }>(contextProvider, (client) => async (args) => {
+    }>(contextProvider, ({ client, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const applied = await applyProjectRename(renameApiFromClient(client), {
-        previewId: args.previewId,
-        sessionId: getMcpClientSessionId(),
-        projectUuid: scope.projectUuid,
+      assertApplyIsNotDryRun(args.dryRun);
+      const proposed: ProjectRenameInstruction = {
+        scope: 'project',
         type: args.type,
         from: args.from,
         to: args.to,
-        model: args.model,
-        dryRun: args.dryRun,
+        model: args.model ?? null,
+      };
+      const { jobId } = await withValidatedPreviewApply(
+        {
+          previewToken: args.previewToken,
+          subject,
+          serverContext,
+          projectUuid: scope.projectUuid,
+          resourceKind: 'rename',
+          resourceKey: projectRenameResourceKey(proposed),
+          proposed,
+        },
+        async (claims) => {
+          const fresh = renameImpactFromChanges(
+            await client.v1.rename.previewRename(
+              scope.projectUuid,
+              projectRenameBody(proposed, true),
+            ),
+          );
+          if (stableStringify(fresh) !== stableStringify(claims.baseline?.renameImpact)) {
+            throw new PreviewLedgerError(
+              'PREVIEW_STALE',
+              `Preview '${claims.previewId}' rename impact changed; re-run preview_rename -> confirm_preview`,
+            );
+          }
+          return client.v1.rename.renameResources(scope.projectUuid, projectRenameBody(proposed));
+        },
+      );
+      return jsonToolResult({
+        data: applied(jobId, PROJECT_NEXT),
+        context: developerContext(scope),
       });
-      return jsonToolResult({ data: applied, context: developerContext(scope) });
     }),
   );
 }
 
-export {
-  RenameRejectedError,
-  registerListRenameFields,
-  registerPreviewRename,
-  registerRenameChart,
+export const listRenameFieldsTool = defineTool('list_rename_fields', registerListRenameFields);
+export const previewRenameTool = defineTool('preview_rename', registerPreviewRename);
+export const renameChartTool = defineTool('rename_chart', registerRenameChart);
+export const renameDashboardFilterTool = defineTool(
+  'rename_dashboard_filter',
   registerRenameDashboardFilter,
-  registerRenameProject,
-};
+);
+export const renameProjectTool = defineTool('rename_project', registerRenameProject);

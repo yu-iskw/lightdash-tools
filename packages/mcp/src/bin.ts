@@ -1,103 +1,95 @@
+#!/usr/bin/env node
+import { PROFILE_IDS, type ProfileId } from '@lightdash-tools/common';
 import { Command } from 'commander';
+
+import { formatProfilesHelp } from './cli-help.js';
+import { ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT } from './config/env.js';
+import {
+  PROMPT_CONTEXT_POLICIES,
+  resolvePromptContextPolicy,
+  type PromptContextPolicy,
+} from './config/prompt-context-policy.js';
+import { parseProfileId } from './profiles/index.js';
+import { PACKAGE_VERSION } from './server/version.js';
 
 const program = new Command();
 
-const PERSONA_SEMANTIC_LAYER = 'semantic-layer' as const;
-const PERSONA_ORGANIZATION_AUDIT = 'organization-audit' as const;
-const PERSONA_CONTENT_READER = 'content-reader' as const;
-const PERSONA_CONTENT_DEVELOPER = 'content-developer' as const;
-const PERSONA_CONTENT_GOVERNANCE = 'content-governance' as const;
-
-type StdioPersonaId =
-  | typeof PERSONA_CONTENT_DEVELOPER
-  | typeof PERSONA_CONTENT_GOVERNANCE
-  | typeof PERSONA_CONTENT_READER
-  | typeof PERSONA_ORGANIZATION_AUDIT
-  | typeof PERSONA_SEMANTIC_LAYER;
-
-function runStdio(personaId?: StdioPersonaId): void {
-  if (personaId) {
-    process.env.LIGHTDASH_TOOLS_MCP_STDIO_PERSONA = personaId;
+function resolvePolicyOrExit(cli?: string): PromptContextPolicy | undefined {
+  try {
+    return resolvePromptContextPolicy({
+      cli,
+      env: process.env,
+    });
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+    process.exitCode = 1;
+    return undefined;
   }
-  void import('./index.js');
 }
 
-function runHttp(): void {
-  void import('./http.js');
+function runStdio(profileId: ProfileId, promptContext?: string): void {
+  const promptContextPolicy = resolvePolicyOrExit(promptContext);
+  if (!promptContextPolicy) return;
+  void import('./index.js').then((m) => {
+    m.startStdio(profileId, { promptContextPolicy });
+  });
 }
+
+function runHttp(promptContext?: string): void {
+  const policy = resolvePolicyOrExit(promptContext);
+  if (!policy) return;
+  void import('./http.js').then((m) => {
+    void m.startHttp({ promptContextPolicy: policy });
+  });
+}
+
+const profileList = PROFILE_IDS.join(', ');
+const promptContextHelp = `Prompt context policy (${PROMPT_CONTEXT_POLICIES.join('|')}; env: ${ENV_LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT})`;
 
 program
   .name('lightdash-mcp')
   .description(
-    'MCP server for Lightdash (semantic-layer, organization-audit, content-reader, content-developer, content-governance). Default stdio persona is semantic-layer.',
+    `MCP server for Lightdash (${profileList}). Use \`stdio --profile <id>\` or \`http\`.`,
   )
-  .version('0.7.0');
+  .version(PACKAGE_VERSION)
+  .showHelpAfterError()
+  .addHelpText(
+    'after',
+    () =>
+      '\nSee `lightdash-mcp stdio --help` or `lightdash-mcp http --help` for profiles, paths, and tools.\n',
+  )
+  .action(() => {
+    console.error(
+      `Transport required. Use \`lightdash-mcp stdio --profile <id>\` (profiles: ${profileList}) or \`lightdash-mcp http\`.`,
+    );
+    // Stdio MCP requires stdout for JSON-RPC only — help must go to stderr.
+    program.outputHelp({ error: true });
+    process.exitCode = 1;
+  });
 
 program
   .command('stdio')
-  .description('Run MCP server on stdio with the default semantic-layer persona')
-  .action(() => {
-    runStdio(PERSONA_SEMANTIC_LAYER);
-  });
-
-program
-  .command(PERSONA_SEMANTIC_LAYER)
-  .description('Run semantic-layer persona on stdio')
-  .action(() => {
-    runStdio(PERSONA_SEMANTIC_LAYER);
-  });
-
-program
-  .command(PERSONA_ORGANIZATION_AUDIT)
-  .description('Run organization-audit persona on stdio (read-only org governance)')
-  .action(() => {
-    runStdio(PERSONA_ORGANIZATION_AUDIT);
-  });
-
-program
-  .command(PERSONA_CONTENT_READER)
-  .description(
-    'Run content-reader persona on stdio (saved-content discovery and bounded execution)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_READER);
-  });
-
-program
-  .command(PERSONA_CONTENT_DEVELOPER)
-  .description(
-    'Run content-developer persona on stdio (chart/dashboard/space authoring behind preview -> validate -> apply)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_DEVELOPER);
-  });
-
-program
-  .command(PERSONA_CONTENT_GOVERNANCE)
-  .description(
-    'Run content-governance persona on stdio (elicitation-gated soft-delete of charts and dashboards)',
-  )
-  .action(() => {
-    runStdio(PERSONA_CONTENT_GOVERNANCE);
-  });
-
-program
-  .command('serve-http')
-  .description(
-    'Run MCP server with Streamable HTTP transport (auth inferred from OAuth client credentials, shared-key, or NODE_ENV=development)',
-  )
-  .action(() => {
-    runHttp();
-  });
-
-program
-  .option('--http', 'Run as HTTP server instead of Stdio (alias for serve-http)')
-  .action((options) => {
-    if (options.http) {
-      runHttp();
-    } else {
-      runStdio();
+  .description('Run MCP server on stdio')
+  .requiredOption('--profile <id>', `Profile id (${profileList})`)
+  .option('--prompt-context <policy>', promptContextHelp)
+  .addHelpText('after', formatProfilesHelp)
+  .action((opts: { profile: string; promptContext?: string }) => {
+    const id = parseProfileId(opts.profile);
+    if (!id) {
+      console.error(`Invalid profile '${opts.profile}'. Expected one of: ${profileList}.`);
+      process.exitCode = 1;
+      return;
     }
+    runStdio(id, opts.promptContext);
+  });
+
+program
+  .command('http')
+  .description('Run MCP server over Streamable HTTP (fixed profile paths)')
+  .option('--prompt-context <policy>', promptContextHelp)
+  .addHelpText('after', formatProfilesHelp)
+  .action((opts: { promptContext?: string }) => {
+    runHttp(opts.promptContext);
   });
 
 program.parse(process.argv);

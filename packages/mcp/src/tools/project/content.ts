@@ -5,6 +5,7 @@
 import { CONTENT_SORT_BY_COLUMNS } from '@lightdash-tools/common';
 import { z } from 'zod';
 
+import { resolveSearchProjectUuids } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { asPaginated, asRecord } from '../lib/api-shape.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
@@ -12,6 +13,7 @@ import { registerOrgAuditTool } from '../lib/register-org-audit.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashApi } from '@lightdash-tools/common';
@@ -74,7 +76,10 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
         }) => {
           const session = await resolveSessionOrganization(c);
           const pinned = getPinnedProjectUuid();
-          const projectUuids = pinned ? [pinned] : args.projectUuids;
+          const projectUuids = resolveSearchProjectUuids({
+            pinned,
+            explicit: args.projectUuids,
+          });
           const result = await c.v2.content.searchContent({
             projectUuids,
             spaceUuids: args.spaceUuids,
@@ -300,3 +305,15 @@ export function registerGetProjectUserActivity(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listContentTool = defineTool('list_content', registerListContent);
+export const getDashboardMetaTool = defineTool('get_dashboard_meta', registerGetDashboardMeta);
+export const listValidationResultsTool = defineTool(
+  'list_validation_results',
+  registerListValidationResults,
+);
+export const getProjectUserActivityTool = defineTool(
+  'get_project_user_activity',
+  registerGetProjectUserActivity,
+);

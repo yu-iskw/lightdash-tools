@@ -2,49 +2,14 @@
  * Charts (v1) command implementation.
  */
 
-import { readFileSync } from 'fs';
-
 import { READ_ONLY_DEFAULT, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
+import { readParsedInput } from '../utils/file-input';
 import { wrapAction } from '../utils/safety';
 
 import type { UpsertChartAsCodeBody } from '@lightdash-tools/common';
 import type { Command } from 'commander';
-
-/**
- * Reads JSON from stdin or a file (for chart-as-code upsert body).
- */
-async function readChartJsonInput(filePath?: string): Promise<UpsertChartAsCodeBody> {
-  if (filePath) {
-    const content = readFileSync(filePath, 'utf-8');
-    return JSON.parse(content) as UpsertChartAsCodeBody;
-  }
-  return new Promise((resolve, reject) => {
-    if (process.stdin.isTTY) {
-      reject(new Error('No input provided. Use --file <path> or pipe JSON to stdin.'));
-      return;
-    }
-    const chunks: Buffer[] = [];
-    process.stdin.setEncoding('utf8');
-    process.stdin.on('data', (chunk) => {
-      chunks.push(Buffer.from(chunk));
-    });
-    process.stdin.on('end', () => {
-      try {
-        const input = Buffer.concat(chunks).toString('utf-8');
-        resolve(JSON.parse(input) as UpsertChartAsCodeBody);
-      } catch (err) {
-        reject(
-          new Error(`Failed to parse JSON: ${err instanceof Error ? err.message : String(err)}`),
-        );
-      }
-    });
-    process.stdin.on('error', (err) => {
-      reject(err);
-    });
-  });
-}
 
 /**
  * Registers the projects charts subcommands under the existing projects command.
@@ -123,7 +88,7 @@ export function registerChartsCommand(program: Command): void {
         WRITE_IDEMPOTENT,
         async (projectUuid: string, slug: string, options: { file?: string }) => {
           try {
-            const body = await readChartJsonInput(options.file);
+            const body = (await readParsedInput({ file: options.file })) as UpsertChartAsCodeBody;
             const client = getClient();
             const result = await client.v1.charts.upsertChartAsCode(projectUuid, slug, body);
             console.log(JSON.stringify(result, null, 2));

@@ -1,11 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  CONTENT_DEVELOPER_PROFILE_PATH,
+  CONTENT_READER_PROFILE_PATH,
+  SEMANTIC_LAYER_PROFILE_PATH,
+} from '../profiles/index.js';
+
+import { UNRESTRICTED_ENABLED_PROFILES } from './enabled-profiles.js';
+import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
+  ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
+  ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
@@ -34,6 +43,7 @@ function clearMcpEnv(): void {
   }
   delete process.env.LIGHTDASH_URL;
   delete process.env.LIGHTDASH_API_KEY;
+  delete process.env.PORT;
 }
 
 function setOAuthCreds(): void {
@@ -54,10 +64,75 @@ afterEach(() => {
 });
 
 describe('loadMcpHttpConfig', () => {
+  it('defaults promptContextPolicy to compact and accepts overrides', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    expect(loadMcpHttpConfig().promptContextPolicy).toBe('compact');
+
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'embedded';
+    expect(loadMcpHttpConfig().promptContextPolicy).toBe('embedded');
+  });
+
+  it('fails closed on invalid LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'uri-only';
+    expect(() => loadMcpHttpConfig()).toThrow(/LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT/);
+  });
+
+  it('uses explicit promptContextPolicy and skips invalid env resolve', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env.LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT = 'uri-only';
+    const config = loadMcpHttpConfig(process.env, { promptContextPolicy: 'compact' });
+    expect(config.promptContextPolicy).toBe('compact');
+  });
+
   it('prefers LIGHTDASH_TOOLS_MCP_HTTP_PORT over MCP_HTTP_PORT', () => {
     process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
     process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
     process.env.MCP_HTTP_PORT = '3100';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3200);
+  });
+
+  it('uses platform PORT when dedicated MCP port env is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(8080);
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  it('prefers LIGHTDASH_TOOLS_MCP_HTTP_PORT over platform PORT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3200);
+  });
+
+  it('prefers obsolete MCP_HTTP_PORT over platform PORT', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.MCP_HTTP_PORT = '3300';
+    process.env.PORT = '8080';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.port).toBe(3300);
+    expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('ignores invalid platform PORT when dedicated MCP port is set', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.LIGHTDASH_TOOLS_MCP_HTTP_PORT = '3200';
+    process.env.PORT = 'not-a-port';
     process.env.NODE_ENV = 'development';
 
     const config = loadMcpHttpConfig();
@@ -78,7 +153,7 @@ describe('loadMcpHttpConfig', () => {
     expect(config.scopesSupported).toEqual([]);
   });
 
-  it('strips organization-audit persona path from public URL', () => {
+  it('strips organization-audit profile path from public URL', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
       'https://mcp.example.com/organization-audit/v1/mcp';
@@ -87,7 +162,7 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('https://mcp.example.com');
   });
 
-  it('strips content-reader persona path from public URL', () => {
+  it('strips content-reader profile path from public URL', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
       'https://mcp.example.com/content-reader/v1/mcp';
@@ -197,6 +272,44 @@ describe('loadMcpHttpConfig', () => {
     expect(config.publicUrl).toBe('http://127.0.0.1:3100');
   });
 
+  it('parses extra invoke origins in OAuth mode including non-loopback http', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] =
+      'http://mcp.ilb.internal, https://mcp.example.com';
+
+    const config = loadMcpHttpConfig();
+    expect(config.invokeOrigins.map((origin) => origin.origin)).toEqual([
+      'http://mcp.ilb.internal',
+    ]);
+  });
+
+  it('rejects invalid invoke origins in OAuth mode', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'not-a-url';
+
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS);
+  });
+
+  it('ignores invoke origins outside OAuth mode', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'not-a-url';
+
+    const config = loadMcpHttpConfig();
+    expect(config.authMode).toBe('none');
+    expect(config.invokeOrigins).toEqual([]);
+  });
+
+  it('warns for non-loopback http invoke origins', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS] = 'http://mcp.ilb.internal';
+    const config = loadMcpHttpConfig();
+    emitMcpHttpSecurityWarnings(config);
+    expect(vi.mocked(console.warn).mock.calls.flat().join('\n')).toMatch(
+      /non-loopback http origins/,
+    );
+  });
+
   it('rejects VALIDATE_TOKEN=false in production', () => {
     setOAuthCreds();
     process.env[ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN] = 'false';
@@ -212,6 +325,55 @@ describe('loadMcpHttpConfig', () => {
 
     const config = loadMcpHttpConfig();
     expect(config.validateToken).toBe(false);
+  });
+
+  it('keeps default mcpPath when MCP_PROFILES is unset', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+
+    const config = loadMcpHttpConfig();
+    expect(config.enabledProfiles).toEqual(UNRESTRICTED_ENABLED_PROFILES);
+    expect(config.mcpPath).toBe(SEMANTIC_LAYER_PROFILE_PATH);
+  });
+
+  it('keeps semantic-layer mcpPath when that id is in the allowlist', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'semantic-layer, content-reader';
+
+    const config = loadMcpHttpConfig();
+    expect(config.enabledProfiles.restricted).toBe(true);
+    expect(config.mcpPath).toBe(SEMANTIC_LAYER_PROFILE_PATH);
+  });
+
+  it('uses first PROFILE_IDS-enabled mcpPath when semantic-layer is omitted', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader,content-developer';
+
+    const config = loadMcpHttpConfig();
+    expect(config.mcpPath).toBe(CONTENT_DEVELOPER_PROFILE_PATH);
+  });
+
+  it('rejects unknown MCP_PROFILES ids and empty segments', () => {
+    process.env.LIGHTDASH_URL = 'https://app.lightdash.cloud';
+    process.env.NODE_ENV = 'development';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'not-a-profile';
+    expect(() => loadMcpHttpConfig()).toThrow(ENV_LIGHTDASH_TOOLS_MCP_PROFILES);
+
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader,';
+    expect(() => loadMcpHttpConfig()).toThrow(/empty segments/);
+  });
+
+  it('still strips disabled profile suffixes from PUBLIC_URL', () => {
+    setOAuthCreds();
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PROFILES] = 'content-reader';
+    process.env[ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL] =
+      'https://mcp.example.com/content-governance/v1/mcp';
+
+    const config = loadMcpHttpConfig();
+    expect(config.publicUrl).toBe('https://mcp.example.com');
+    expect(config.mcpPath).toBe(CONTENT_READER_PROFILE_PATH);
   });
 
   it('rejects LIGHTDASH_TOOLS_MCP_PATH', () => {

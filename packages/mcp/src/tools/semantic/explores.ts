@@ -1,11 +1,14 @@
 /**
- * MCP tools: explores (list, get, dimensions, lineage) — shared catalog.
+ * MCP tools: explores (list, get, dimensions, lineage).
  */
 
 import { z } from 'zod';
 
-import { projectUuidField } from '../lib/schema-fields.js';
+import { resolveProjectScope } from '../../governance/project-scope.js';
+import { optionalProjectUuidField } from '../lib/schema-fields.js';
+import { projectScopeErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult, registerToolSafe, wrapTool, READ_ONLY_DEFAULT } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   flattenExploreDimensions,
@@ -24,9 +27,9 @@ export function registerListExplores(server: McpServer, contextProvider: McpCont
     {
       title: 'List explores',
       description:
-        'List explore summaries (name, label, tags, databaseName, schemaName, errors?, warnings?); optional search/limit (client-side after full list fetch)',
+        'List explore summaries (name, label, tags, databaseName, schemaName, errors?, warnings?); optional search/limit (client-side after full list fetch). projectUuid optional when X-Lightdash-Project is set.',
       inputSchema: {
-        projectUuid: projectUuidField(),
+        projectUuid: optionalProjectUuidField(),
         search: z.string().optional().describe('Filter by name, label, tag, database, or schema'),
         limit: z.number().int().positive().optional().describe('Max explores to return'),
       },
@@ -40,12 +43,17 @@ export function registerListExplores(server: McpServer, contextProvider: McpCont
           search,
           limit,
         }: {
-          projectUuid: string;
+          projectUuid?: string;
           search?: string;
           limit?: number;
         }) => {
-          const explores = await c.v1.explores.listExplores(projectUuid);
-          return jsonToolResult(summarizeExplores(explores, { search, limit }));
+          try {
+            const scope = resolveProjectScope({ projectUuid });
+            const explores = await c.v1.explores.listExplores(scope.projectUuid);
+            return jsonToolResult(summarizeExplores(explores, { search, limit }));
+          } catch (err) {
+            return projectScopeErrorResult(err);
+          }
         },
     ),
   );
@@ -58,9 +66,9 @@ export function registerGetExplore(server: McpServer, contextProvider: McpContex
     {
       title: 'Get explore',
       description:
-        'Get an explore by project UUID and explore ID (includes tables, dimensions, and metrics)',
+        'Get an explore by project UUID and explore ID (includes tables, dimensions, and metrics). projectUuid optional when X-Lightdash-Project is set.',
       inputSchema: {
-        projectUuid: projectUuidField(),
+        projectUuid: optionalProjectUuidField(),
         exploreId: exploreIdField(),
       },
       annotations: READ_ONLY_DEFAULT,
@@ -68,9 +76,14 @@ export function registerGetExplore(server: McpServer, contextProvider: McpContex
     wrapTool(
       contextProvider,
       (c) =>
-        async ({ projectUuid, exploreId }: { projectUuid: string; exploreId: string }) => {
-          const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
-          return jsonToolResult(explore);
+        async ({ projectUuid, exploreId }: { projectUuid?: string; exploreId: string }) => {
+          try {
+            const scope = resolveProjectScope({ projectUuid });
+            const explore = await c.v1.explores.getExplore(scope.projectUuid, exploreId);
+            return jsonToolResult(explore);
+          } catch (err) {
+            return projectScopeErrorResult(err);
+          }
         },
     ),
   );
@@ -86,9 +99,9 @@ export function registerListDimensions(
     {
       title: 'List dimensions',
       description:
-        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === explore.baseTable); set baseTableOnly=false for joined tables.',
+        'List compact dimensions (name, label, table, type, fieldId). Defaults to base-table only (`table` === explore.baseTable); set baseTableOnly=false for joined tables. projectUuid optional when X-Lightdash-Project is set.',
       inputSchema: {
-        projectUuid: projectUuidField(),
+        projectUuid: optionalProjectUuidField(),
         exploreId: exploreIdField(),
         baseTableOnly: z
           .boolean()
@@ -105,16 +118,21 @@ export function registerListDimensions(
           exploreId,
           baseTableOnly,
         }: {
-          projectUuid: string;
+          projectUuid?: string;
           exploreId: string;
           baseTableOnly?: boolean;
         }) => {
-          const explore = await c.v1.explores.getExplore(projectUuid, exploreId);
-          const { baseTable, dimensions } = flattenExploreDimensions(explore);
-          const baseOnly = baseTableOnly !== false;
-          return jsonToolResult(
-            summarizeDimensions(dimensions, baseOnly ? { baseTable } : undefined),
-          );
+          try {
+            const scope = resolveProjectScope({ projectUuid });
+            const explore = await c.v1.explores.getExplore(scope.projectUuid, exploreId);
+            const { baseTable, dimensions } = flattenExploreDimensions(explore);
+            const baseOnly = baseTableOnly !== false;
+            return jsonToolResult(
+              summarizeDimensions(dimensions, baseOnly ? { baseTable } : undefined),
+            );
+          } catch (err) {
+            return projectScopeErrorResult(err);
+          }
         },
     ),
   );
@@ -131,7 +149,7 @@ export function registerGetFieldLineage(
       title: 'Get field lineage',
       description: 'Get upstream lineage for a specific field in an explore',
       inputSchema: {
-        projectUuid: projectUuidField(),
+        projectUuid: optionalProjectUuidField(),
         exploreId: exploreIdField(),
         fieldId: z
           .string()
@@ -147,13 +165,28 @@ export function registerGetFieldLineage(
           exploreId,
           fieldId,
         }: {
-          projectUuid: string;
+          projectUuid?: string;
           exploreId: string;
           fieldId: string;
         }) => {
-          const result = await c.v1.explores.getFieldLineage(projectUuid, exploreId, fieldId);
-          return jsonToolResult(result);
+          try {
+            const scope = resolveProjectScope({ projectUuid });
+            const result = await c.v1.explores.getFieldLineage(
+              scope.projectUuid,
+              exploreId,
+              fieldId,
+            );
+            return jsonToolResult(result);
+          } catch (err) {
+            return projectScopeErrorResult(err);
+          }
         },
     ),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const listExploresTool = defineTool('list_explores', registerListExplores);
+export const getExploreTool = defineTool('get_explore', registerGetExplore);
+export const listDimensionsTool = defineTool('list_dimensions', registerListDimensions);
+export const getFieldLineageTool = defineTool('get_field_lineage', registerGetFieldLineage);

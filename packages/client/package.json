@@ -1,6 +1,6 @@
 {
   "name": "@lightdash-tools/client",
-  "version": "0.7.0",
+  "version": "0.24.0",
   "description": "Client library for Lightdash AI.",
   "keywords": [],
   "repository": {
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@lightdash-tools/common": "workspace:*",
-    "axios": "^1.19.0",
+    "axios": "^1.20.0",
     "bottleneck": "^2.19.5"
   },
   "devDependencies": {

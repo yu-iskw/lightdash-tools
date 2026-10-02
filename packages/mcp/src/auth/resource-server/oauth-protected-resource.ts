@@ -1,7 +1,8 @@
+import { isProfileEnabled } from '../../config/enabled-profiles.js';
 import { OAUTH_AUTHORIZATION_SERVER_METADATA_PATH } from '../../config/env.js';
 import { normalizeMcpPath } from '../../config/normalize-url.js';
 import { requirePublicUrl } from '../../config/public-url.js';
-import { getPersonaByPath } from '../../personas/index.js';
+import { getProfileByPath } from '../../profiles/index.js';
 
 import type { McpHttpConfig } from '../../config/load-mcp-config.js';
 
@@ -18,23 +19,22 @@ export interface OAuthProtectedResourceMetadata {
 }
 
 /**
- * Builds MCP OAuth protected-resource metadata for a persona MCP path.
- * Callers must pass an explicit persona path (root PRM uses `config.mcpPath`).
+ * Builds MCP OAuth protected-resource metadata for a profile MCP path.
+ * Callers must pass an explicit profile path (root PRM uses `config.mcpPath`).
  */
 export function buildOAuthProtectedResourceMetadata(
   config: McpHttpConfig,
   mcpPath: string,
+  resourceOrigin: string,
 ): OAuthProtectedResourceMetadata {
-  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
   const path = normalizeMcpPath(mcpPath);
 
-  // Broker mode: authorization_servers is the MCP host (PUBLIC_URL). Clients discover
-  // AS metadata at {PUBLIC_URL}/.well-known/oauth-authorization-server and never need
-  // the Lightdash client secret. Identity validation remains GET /api/v1/user until
-  // upstream tokens are resource-bound.
+  // Broker mode: authorization_servers is the MCP host clients should use for AS
+  // discovery. On PUBLIC_URL that is the public origin. On an extra invoke origin
+  // it is that origin so private-network clients do not fetch public well-known.
   return {
-    resource: `${publicUrl}${path}`,
-    authorization_servers: [publicUrl],
+    resource: `${resourceOrigin}${path}`,
+    authorization_servers: [resourceOrigin],
     bearer_methods_supported: ['header'],
     scopes_supported: config.scopesSupported,
   };
@@ -44,28 +44,25 @@ export function getProtectedResourceMetadataUrl(config: McpHttpConfig): string {
   return `${requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT)}${OAUTH_PROTECTED_RESOURCE_ROOT}`;
 }
 
-/** Path-specific PRM URL for a persona MCP endpoint. */
+/** Path-specific PRM URL for a profile MCP endpoint. */
 export function getProtectedResourceMetadataPathUrl(
   config: McpHttpConfig,
   mcpPath: string,
+  resourceOrigin: string,
 ): string {
-  const publicUrl = requirePublicUrl(config, OAUTH_PROTECTED_RESOURCE_CONTEXT);
   const resourcePath = normalizeMcpPath(mcpPath).replace(/^\//, '');
-  return `${publicUrl}${OAUTH_PROTECTED_RESOURCE_ROOT}/${resourcePath}`;
+  return `${resourceOrigin}${OAUTH_PROTECTED_RESOURCE_ROOT}/${resourcePath}`;
 }
 
 /**
- * Resolves the persona MCP path for a PRM well-known request.
- * Root PRM maps to the default persona (`config.mcpPath`); path-specific PRM
- * is served only for shipped persona paths.
+ * Resolves the profile MCP path for a PRM well-known request.
+ * Root PRM maps to `config.mcpPath`; path-specific PRM is served only for
+ * enabled shipped profile paths (ADR-0024).
  */
 export function resolveProtectedResourceMcpPath(
   path: string,
   config: McpHttpConfig,
 ): string | undefined {
-  if (!path.startsWith(OAUTH_PROTECTED_RESOURCE_ROOT)) {
-    return undefined;
-  }
   if (path === OAUTH_PROTECTED_RESOURCE_ROOT) {
     return config.mcpPath;
   }
@@ -74,7 +71,11 @@ export function resolveProtectedResourceMcpPath(
     return undefined;
   }
   const resourcePath = `/${path.slice(prefix.length)}`;
-  return getPersonaByPath(resourcePath)?.path;
+  const profile = getProfileByPath(resourcePath);
+  if (!profile || !isProfileEnabled(config.enabledProfiles, profile.id)) {
+    return undefined;
+  }
+  return profile.path;
 }
 
 /** Well-known OAuth Authorization Server Metadata URL for an AS origin. */

@@ -26,14 +26,14 @@ The CLI requires the following environment variables (consistent with `@lightdas
 - `LIGHTDASH_API_KEY` - Personal access token (PAT)
 - `LIGHTDASH_PROXY_AUTHORIZATION` - Optional proxy authorization header
 - `LIGHTDASH_TOOLS_SAFETY_MODE` - Optional safety mode (`read-only`, `write-idempotent`, `write-destructive`)
-- `LIGHTDASH_TOOLS_ALLOWED_PROJECTS` - Optional comma-separated project UUIDs (restrict operations to these projects; empty = all allowed)
+- `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` - Optional comma-separated project UUIDs (restrict operations to these projects; empty = all allowed)
 - `LIGHTDASH_TOOLS_DRY_RUN` - Set to `1`, `true`, or `yes` to simulate mutating operations without executing
 
-Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/secrets-and-credentials.md](../../docs/secrets-and-credentials.md).
+Prefer env vars from the parent process. Avoid plaintext `.env` when AI agents have file access. If using `.env`, use [dotenvx](https://dotenvx.com/) for encrypted secrets. See [docs/operators/secrets.md](../../docs/operators/secrets.md).
 
 ### Agent-safe surface
 
-CLI exposes the agent-safe operation tier (with `--safety-mode` / `--dry-run` / project allowlist). MCP ships a narrower persona surface (semantic-layer discovery/compile) without those process knobs — see [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md). Irrecoverable actions (e.g. deleting org members) are **not** CLI or MCP tools — use `@lightdash-tools/client`. See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md).
+CLI exposes the agent-safe operation tier (with `--safety-mode` / `--dry-run` / project allowlist). MCP ships a narrower profile surface (semantic-layer discovery/compile) without those process knobs — see [ADR-0008](../../docs/adr/0008-mcp-request-scope-and-hardening.md). Irrecoverable actions (e.g. deleting org members) are **not** CLI or MCP tools — use `@lightdash-tools/client`. See [ADR-0004](../../docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md) and [docs/operators/agent-context.md](../../docs/operators/agent-context.md).
 
 Example:
 
@@ -161,15 +161,14 @@ lightdash-ai ai-agents list
 lightdash-ai ai-agents threads --page 1 --page-size 10
 ```
 
-#### Schema Introspection (Agent-Friendly)
+#### Discovery
 
 ```bash
-# List all introspectable resources
-lightdash-ai schema list
+# CLI command help (Commander)
+lightdash-ai agents --help
+lightdash-ai ai-agents --help
 
-# Get schema for a resource (path, method, params)
-lightdash-ai schema get cli.charts.list
-lightdash-ai schema get ai-agents.admin.settings.update
+# MCP: connect a profile and call tools/list (e.g. ai-agent-ops)
 ```
 
 ### Global Options
@@ -230,7 +229,7 @@ The CLI validates all resource IDs (project UUIDs, slugs) before executing. Inva
 - Query/fragment chars (`?`, `#`, `%`)
 - Path traversal (`..`)
 
-This guards against adversarial or hallucinated inputs when used by AI agents. See [docs/agent-context/CONTEXT.md](../../docs/agent-context/CONTEXT.md) for agent-specific guidance.
+This guards against adversarial or hallucinated inputs when used by AI agents. See [docs/operators/agent-context.md](../../docs/operators/agent-context.md) for agent-specific guidance.
 
 ## Error Handling
 

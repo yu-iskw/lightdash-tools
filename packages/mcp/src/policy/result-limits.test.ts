@@ -30,11 +30,23 @@ describe('result-limits', () => {
     expect(clampWaitMs(60_000)).toBe(30_000);
   });
 
-  it('enforces session concurrent limit', () => {
+  it('enforces session concurrent limit when no user key', () => {
     acquireQueryBudget('s1');
     acquireQueryBudget('s1');
     expect(() => acquireQueryBudget('s1')).toThrow(/RATE_LIMITED|concurrent/);
     releaseQueryBudget('s1');
     releaseQueryBudget('s1');
+  });
+
+  it('uses only user budgets when userKey is set (sessionless HTTP)', () => {
+    for (let i = 0; i < 5; i += 1) {
+      acquireQueryBudget('process:shared', 'user-a');
+    }
+    expect(() => acquireQueryBudget('process:shared', 'user-a')).toThrow(
+      /RATE_LIMITED|User concurrent/,
+    );
+    // A different subject is not blocked by user-a's slots.
+    acquireQueryBudget('process:shared', 'user-b');
+    releaseQueryBudget('process:shared', 'user-a');
   });
 });

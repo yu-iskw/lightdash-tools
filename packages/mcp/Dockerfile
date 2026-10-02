@@ -30,7 +30,9 @@ WORKDIR /app
 RUN groupadd --gid 1001 mcp \
   && useradd --uid 1001 --gid mcp --shell /usr/sbin/nologin --create-home mcp
 COPY --from=build --chown=mcp:mcp /out /app
+RUN chmod +x /app/dist/bin.js \
+  && ln -sf /app/dist/bin.js /usr/local/bin/lightdash-mcp
 USER mcp
-# Stdio MCP: no HTTP port; disable inherited healthchecks (Cursor attaches stdin/stdout).
+# No CMD — require explicit args (profile or http), matching CLI. HEALTHCHECK NONE for stdio.
 HEALTHCHECK NONE
-CMD ["node", "dist/bin.js", "stdio"]
+ENTRYPOINT ["lightdash-mcp"]

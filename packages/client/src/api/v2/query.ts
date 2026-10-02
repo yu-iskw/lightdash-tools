@@ -91,7 +91,7 @@ export class QueryClientV2 extends BaseApiClient {
     );
   }
 
-  /** Run a dashboard SQL chart query (v2). Present for completeness; MCP content-reader keeps SQL off by default. */
+  /** Run a dashboard SQL chart query (v2). Used by content-reader `run_dashboard_tile` for `sql_chart` tiles (ADR-0028). */
   async runDashboardSqlChartQuery(
     projectUuid: string,
     body: ExecuteAsyncDashboardSqlChartRequestParams,

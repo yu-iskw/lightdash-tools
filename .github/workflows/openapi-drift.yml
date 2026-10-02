@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
 
       - name: Harden Runner
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
@@ -57,18 +59,6 @@ jobs:
 
       - name: Regenerate OpenAPI types
         run: pnpm --filter @lightdash-tools/common generate:types
-
-      - name: Regenerate operation registry
-        run: pnpm --filter @lightdash-tools/common generate:operation-registry
-
-      - name: Check catalog client coverage
-        run: pnpm --filter @lightdash-tools/common check:client-coverage
-
-      - name: Regenerate CLI docs
-        run: node scripts/generate-cli-docs.mjs
-
-      - name: Format generated CLI docs
-        run: pnpm exec prettier --write docs/reference/cli-ai-agents.md
 
       - name: Fail on uncommitted generated changes
         run: git diff --exit-code

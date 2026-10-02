@@ -168,6 +168,22 @@ export namespace AiAgents {
     createdFrom?: 'evals' | 'web_app';
   }
 
+  // ─── Knowledge documents ─────────────────────────────────────────────────────
+
+  /** Full knowledge document (POST create response). */
+  export type AiAgentDocument = components['schemas']['AiAgentDocument'];
+  /** Document summary in list responses (no full content). */
+  export type AiAgentDocumentSummary = components['schemas']['AiAgentDocumentSummary'];
+  /** Document content payload (GET …/content). */
+  export type AiAgentDocumentContent = components['schemas']['AiAgentDocumentContent'];
+  /** Request body for POST …/documents. */
+  export type CreateAgentDocumentBody = components['schemas']['ApiCreateAgentDocument'];
+  /** Request body for PATCH …/documents/{uuid}/content. */
+  export type UpdateAgentDocumentContentBody =
+    components['schemas']['ApiUpdateAgentDocumentContent'];
+  /** Request body for PATCH …/documents/{uuid} settings. */
+  export type UpdateAgentDocumentSettingsBody = components['schemas']['ApiUpdateAgentDocument'];
+
   // ─── Artifacts ─────────────────────────────────────────────────────────────────
 
   /** Verified artifact summary (GET …/verified-artifacts). */
@@ -245,4 +261,11 @@ export namespace AiAgents {
   export interface SubmitSqlApprovalResult {
     decision: SqlApprovalDecision;
   }
+
+  // ─── AI Router (org-scoped; POST /org/aiRouter/route) ─────────────────────────
+
+  /** Request body for POST /api/v1/org/aiRouter/route. */
+  export type AiRouterRouteRequest = components['schemas']['AiRouterRouteRequest'];
+  /** Results of POST /api/v1/org/aiRouter/route. */
+  export type AiRouterRouteResponseResult = components['schemas']['AiRouterRouteResponseResult'];
 }

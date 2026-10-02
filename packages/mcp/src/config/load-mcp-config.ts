@@ -9,30 +9,26 @@ import {
   MCP_AUTH_MODE_NONE,
   MCP_AUTH_MODE_SHARED_KEY,
 } from '../auth/auth-mode.js';
-import { getDefaultPersona, listPersonaPaths } from '../personas/index.js';
-import { emitEphemeralStoreHttpWarning, resolveEphemeralStoreConfig } from '../store/config.js';
+import { parseInvokeOrigins } from '../auth/oauth-broker/invoke-origins.js';
+import { getDefaultProfile, listProfilePaths } from '../profiles/index.js';
 
 import {
+  parseEnabledProfiles,
+  resolveRootMcpPath,
+  type EnabledProfilesPolicy,
+} from './enabled-profiles.js';
+import {
   ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS,
-  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
-  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_HOST,
   ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT,
-  ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
+  ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS,
+  ENV_PLATFORM_PORT,
   ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
-  ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
-  ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
   ENV_LIGHTDASH_TOOLS_MCP_PATH,
+  ENV_LIGHTDASH_TOOLS_MCP_PROFILES,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
   ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES,
   ENV_LIGHTDASH_TOOLS_MCP_SCOPES_SUPPORTED,
-  ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
-  ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS,
   ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY,
   ENV_LIGHTDASH_TOOLS_MCP_TOKEN_VALIDATION_CACHE_TTL_MS,
   ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
@@ -43,30 +39,19 @@ import {
   ENV_MCP_AUTH_ENABLED,
   ENV_MCP_HTTP_PORT,
   ENV_MCP_MAX_BODY_BYTES,
-  ENV_MCP_MAX_SESSIONS,
   ENV_MCP_PUBLIC_URL,
   ENV_MCP_SERVER_PORT,
-  ENV_MCP_SESSION_CLEANUP_MS,
-  ENV_MCP_SESSION_TTL_MS,
   OAUTH_CALLBACK_PATH,
 } from './env.js';
 import { normalizeLightdashUrl, normalizePublicUrl, isLocalHttpOrigin } from './normalize-url.js';
+import { assertObsoleteEnvRejected } from './obsolete-env.js';
+import { resolvePromptContextPolicy, type PromptContextPolicy } from './prompt-context-policy.js';
 import { requirePublicUrl } from './public-url.js';
+import { readEnv } from './read-env.js';
 
 import type { McpAuthMode } from '../auth/auth-mode.js';
 
 const DEFAULT_SCOPES_SUPPORTED = ['read', 'write', 'mcp:read', 'mcp:write'] as const;
-
-const OBSOLETE_ENV_VARS = [
-  ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
-  ENV_LIGHTDASH_TOOLS_MCP_EXPERIMENTAL_IDENTITY_OAUTH,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_ANY_ORIGIN,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_ALLOW_UNAUTHENTICATED,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_GRANT_ALL_SCOPES,
-  ENV_LIGHTDASH_TOOLS_MCP_DANGEROUSLY_SKIP_TOKEN_VALIDATION,
-  ENV_LIGHTDASH_TOOLS_MCP_ALLOW_INSECURE_PUBLIC_URL,
-  ENV_LIGHTDASH_TOOLS_MCP_INSECURE_DEV,
-] as const;
 
 const warnedAliases = new Set<string>();
 
@@ -74,13 +59,6 @@ function warnDeprecatedAlias(oldName: string, newName: string): void {
   if (warnedAliases.has(oldName)) return;
   warnedAliases.add(oldName);
   console.warn(`Warning: ${oldName} is deprecated. Use ${newName}.`);
-}
-
-function readEnv(name: string, env: NodeJS.ProcessEnv): string | undefined {
-  // eslint-disable-next-line security/detect-object-injection -- env var names are fixed constants in this module
-  const value = env[name];
-  if (value === undefined || value === '') return undefined;
-  return value;
 }
 
 function parsePositiveIntegerEnv(name: string, value: string): number {
@@ -96,6 +74,8 @@ function readNumberEnv(
   primary: string,
   aliases: Array<{ name: string; newName: string }>,
   defaultValue: number,
+  /** Silent fallback (e.g. Cloud Run `PORT`); read only when primary/aliases unset. */
+  silentFallback?: string,
 ): number {
   const primaryValue = readEnv(primary, env);
   if (primaryValue !== undefined) {
@@ -106,6 +86,12 @@ function readNumberEnv(
     if (aliasValue !== undefined) {
       warnDeprecatedAlias(alias.name, alias.newName);
       return parsePositiveIntegerEnv(alias.name, aliasValue);
+    }
+  }
+  if (silentFallback !== undefined) {
+    const fallbackValue = readEnv(silentFallback, env);
+    if (fallbackValue !== undefined) {
+      return parsePositiveIntegerEnv(silentFallback, fallbackValue);
     }
   }
   return defaultValue;
@@ -141,21 +127,6 @@ function parseBooleanEnv(name: string, value: string | undefined, defaultValue: 
   if (value === '1' || value === 'true' || value === 'yes') return true;
   if (value === '0' || value === 'false' || value === 'no') return false;
   throw new Error(`Invalid ${name}: ${value}. Expected 1, true, yes, 0, false, or no.`);
-}
-
-function assertObsoleteEnvRejected(env: NodeJS.ProcessEnv): void {
-  for (const name of OBSOLETE_ENV_VARS) {
-    if (readEnv(name, env) !== undefined) {
-      throw new Error(
-        `${name} is removed. Auth is inferred from credentials: set ` +
-          `${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID}, ${ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET}, ` +
-          `and ${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL} for hosted OAuth; ` +
-          `or ${ENV_LIGHTDASH_TOOLS_MCP_SHARED_KEY} + LIGHTDASH_API_KEY for shared-key; ` +
-          `or NODE_ENV=development for local unauthenticated HTTP. ` +
-          `See docs/mcp-oauth-http.md and ADR-0007.`,
-      );
-    }
-  }
 }
 
 function inferAuthMode(params: {
@@ -215,7 +186,13 @@ export interface McpHttpConfig {
   host: string;
   port: number;
   publicUrl?: string;
+  /** Extra invoke origins. Parsed only in OAuth mode. */
+  invokeOrigins: URL[];
   mcpPath: string;
+  /** HTTP mount allowlist. Unrestricted when LIGHTDASH_TOOLS_MCP_PROFILES is unset. */
+  enabledProfiles: EnabledProfilesPolicy;
+  /** Progressive-disclosure prompt embedding policy (default compact). */
+  promptContextPolicy: PromptContextPolicy;
   authMode: McpAuthMode;
   sharedKey?: SecretString;
   /** Server-held Lightdash OAuth application client id (broker mode). */
@@ -224,10 +201,6 @@ export interface McpHttpConfig {
   oauthClientSecret?: SecretString;
   allowedOrigins: string[];
   maxBodyBytes: number;
-  sessionTtlMs: number;
-  maxSessions: number;
-  maxSessionsPerSubject: number;
-  sessionCleanupMs: number;
   requiredScopes: string[];
   scopesSupported: string[];
   validateToken: boolean;
@@ -273,7 +246,7 @@ function assertLightdashOAuthScopePolicy(
   if (requiredScopes.length > 0) {
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_REQUIRED_SCOPES} cannot be set in OAuth broker mode. ` +
-        `Leave it unset and rely on Lightdash RBAC plus the persona tool surface (ADR-0006).`,
+        `Leave it unset and rely on Lightdash RBAC plus the profile tool surface (ADR-0006).`,
     );
   }
 
@@ -291,27 +264,39 @@ function emitLightdashOAuthSecurityWarnings(config: McpHttpConfig): void {
   }
 
   console.warn(
-    'Note: hosted OAuth uses a server-held Lightdash confidential client (OAuth broker). ' +
-      'Token validation confirms Lightdash user identity via GET /api/v1/user; ' +
-      'opaque Lightdash tokens are not fully resource/audience-bound until upstream supports it. ' +
+    'Note: hosted OAuth uses a dual-leg broker with a server-held Lightdash confidential client. ' +
+      'MCP clients receive resource-bound broker tokens; delegated Lightdash access tokens remain ' +
+      'encrypted inside the broker token and are recovered only server-side for upstream calls. ' +
       `Register redirect URI ${getOAuthCallbackUrl(config)} in Lightdash.`,
   );
 
   if (!config.validateToken) {
     console.warn(
-      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — MCP accepts any bearer token without calling Lightdash. ` +
-        'Use only for local development.',
-    );
-  }
-
-  if (config.maxSessionsPerSubject > 0) {
-    console.warn(
-      `Note: in-memory sessions are capped at ${config.maxSessions} global and ${config.maxSessionsPerSubject} per OAuth subject. ` +
-        'Use gateway-level rate limits and short session TTLs for multi-tenant production deployments.',
+      `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN}=false — broker-issued MCP tokens are still authenticated and audience-bound, ` +
+        'but downstream Lightdash user/token validation is skipped. Use only for local development.',
     );
   }
 
   emitNgrokFreeInterstitialWarning(config.publicUrl);
+  emitInvokeOriginWarnings(config);
+}
+
+function emitInvokeOriginWarnings(config: McpHttpConfig): void {
+  const cleartext = config.invokeOrigins.filter(
+    (origin) => origin.protocol === 'http:' && !isLocalHttpOrigin(origin.origin),
+  );
+  if (cleartext.length === 0) {
+    return;
+  }
+
+  const listed = cleartext.map((origin) => origin.origin).join(', ');
+  console.warn(
+    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS} includes non-loopback http origins (${listed}). ` +
+      'On those Hosts, token/DCR and PRM advertise the invoke origin while issuer/authorize stay on ' +
+      `${ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL}. This is an intentional RFC 8414 issuer split; ` +
+      '@modelcontextprotocol/client v2 will reject HTTP invoke origins. Point that SDK at public HTTPS. ' +
+      'Do not serve extra origins as the public VIP Host.',
+  );
 }
 
 /** Free ngrok serves ERR_NGROK_6024 for browser-UA GETs; Cursor's post-callback rediscovery uses Mozilla UA. */
@@ -334,7 +319,7 @@ function emitCorsSecurityWarnings(config: McpHttpConfig): void {
   }
 
   console.warn(
-    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — persona MCP routes do not reflect browser Origins. ` +
+    `Warning: ${ENV_LIGHTDASH_TOOLS_MCP_ALLOWED_ORIGINS} is empty — profile MCP routes do not reflect browser Origins. ` +
       'OAuth broker/discovery routes still reflect Origin.',
   );
 }
@@ -348,7 +333,6 @@ export function emitMcpHttpSecurityWarnings(config: McpHttpConfig): void {
 
   emitLightdashOAuthSecurityWarnings(config);
   emitCorsSecurityWarnings(config);
-  emitEphemeralStoreHttpWarning(resolveEphemeralStoreConfig());
 }
 
 function readScopeList(env: NodeJS.ProcessEnv, primary: string, fallback: string[]): string[] {
@@ -405,7 +389,16 @@ function resolveOAuthCredentials(
   };
 }
 
-export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttpConfig {
+/**
+ * Load Streamable HTTP MCP config from env.
+ * When `options.promptContextPolicy` is set (CLI path), that value wins and
+ * `LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT` is not re-resolved — so invalid env
+ * cannot fail a start that already resolved a valid CLI policy.
+ */
+export function loadMcpHttpConfig(
+  env: NodeJS.ProcessEnv = process.env,
+  options?: { promptContextPolicy?: PromptContextPolicy },
+): McpHttpConfig {
   const lightdashUrlRaw = readEnv(ENV_LIGHTDASH_URL, env);
   if (!lightdashUrlRaw) {
     throw new Error(`${ENV_LIGHTDASH_URL} is required.`);
@@ -414,14 +407,11 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
   if (readEnv(ENV_LIGHTDASH_TOOLS_MCP_PATH, env) !== undefined) {
     throw new Error(
       `${ENV_LIGHTDASH_TOOLS_MCP_PATH} is unused and rejected. ` +
-        `The MCP endpoint path is persona-owned (${getDefaultPersona().path}); leave this variable unset.`,
+        `The MCP endpoint path is profile-owned (${getDefaultProfile().path}); leave this variable unset.`,
     );
   }
 
   assertObsoleteEnvRejected(env);
-
-  // Fail closed early when STORE=redis without REDIS_URL (ADR-0016).
-  resolveEphemeralStoreConfig(env);
 
   const { oauthClientId, oauthClientSecretRaw, publicUrlRaw, sharedKeyRaw, authMode } =
     readHttpAuthInputs(env);
@@ -440,9 +430,15 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
 
   const proxyAuth = readEnv(ENV_LIGHTDASH_PROXY_AUTHORIZATION, env);
 
-  const mcpPath = getDefaultPersona().path;
-  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listPersonaPaths()) : undefined;
+  const enabledProfiles = parseEnabledProfiles(readEnv(ENV_LIGHTDASH_TOOLS_MCP_PROFILES, env));
+  const promptContextPolicy = options?.promptContextPolicy ?? resolvePromptContextPolicy({ env });
+  const mcpPath = resolveRootMcpPath(enabledProfiles);
+  const publicUrl = publicUrlRaw ? normalizePublicUrl(publicUrlRaw, listProfilePaths()) : undefined;
   assertPublicUrlSecurity(authMode, publicUrl);
+  const invokeOrigins =
+    authMode === MCP_AUTH_MODE_LIGHTDASH_OAUTH
+      ? parseInvokeOrigins(readEnv(ENV_LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS, env), publicUrl)
+      : [];
 
   const validateToken = parseBooleanEnv(
     ENV_LIGHTDASH_TOOLS_MCP_VALIDATE_TOKEN,
@@ -468,9 +464,13 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
         { name: ENV_MCP_SERVER_PORT, newName: ENV_LIGHTDASH_TOOLS_MCP_HTTP_PORT },
       ],
       3100,
+      ENV_PLATFORM_PORT,
     ),
     publicUrl,
+    invokeOrigins,
     mcpPath,
+    enabledProfiles,
+    promptContextPolicy,
     authMode,
     sharedKey: sharedKeyRaw ? new SecretString(sharedKeyRaw) : undefined,
     ...resolveOAuthCredentials(authMode, oauthClientId, oauthClientSecretRaw),
@@ -480,30 +480,6 @@ export function loadMcpHttpConfig(env: NodeJS.ProcessEnv = process.env): McpHttp
       ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES,
       [{ name: ENV_MCP_MAX_BODY_BYTES, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_BODY_BYTES }],
       1024 * 1024,
-    ),
-    sessionTtlMs: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS,
-      [{ name: ENV_MCP_SESSION_TTL_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_TTL_MS }],
-      30 * 60 * 1000,
-    ),
-    maxSessions: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS,
-      [{ name: ENV_MCP_MAX_SESSIONS, newName: ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS }],
-      100,
-    ),
-    maxSessionsPerSubject: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_MAX_SESSIONS_PER_SUBJECT,
-      [],
-      10,
-    ),
-    sessionCleanupMs: readNumberEnv(
-      env,
-      ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS,
-      [{ name: ENV_MCP_SESSION_CLEANUP_MS, newName: ENV_LIGHTDASH_TOOLS_MCP_SESSION_CLEANUP_MS }],
-      60_000,
     ),
     requiredScopes,
     scopesSupported: readScopeList(

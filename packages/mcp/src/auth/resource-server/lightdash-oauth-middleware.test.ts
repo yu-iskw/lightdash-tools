@@ -1,8 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { SecretString } from '@lightdash-tools/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { makeTestMcpHttpConfig } from '../../config/test-mcp-http-config.js';
-import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../../personas/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PERSONA_PATH } from '../../personas/semantic-layer/v1/index.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../../profiles/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../../profiles/semantic-layer/v1/index.js';
+import { mintMcpAccessToken } from '../oauth-broker/mcp-access-token.js';
 
 import { authenticateLightdashOAuth, writeOAuthAuthFailure } from './lightdash-oauth-middleware.js';
 import { validateLightdashAccessToken } from './lightdash-token-validation.js';
@@ -15,27 +17,53 @@ vi.mock('./lightdash-token-validation.js', () => ({
 }));
 
 const baseConfig = makeTestMcpHttpConfig({
+  oauthClientId: 'ld-client',
+  oauthClientSecret: new SecretString('test-lightdash-confidential-client-secret'),
   requiredScopes: [],
 });
 
-function jwtWithScope(scope: string): string {
-  const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-  const payload = Buffer.from(JSON.stringify({ scope })).toString('base64url');
-  return `${header}.${payload}.signature`;
-}
-
-function createRequest(authorization?: string): IncomingMessage {
+function createRequest(authorization?: string, headers?: Record<string, string>): IncomingMessage {
   return {
-    headers: authorization ? { authorization } : {},
+    headers: {
+      ...(authorization ? { authorization } : {}),
+      ...headers,
+    },
+    socket: {},
   } as IncomingMessage;
 }
 
+function resourceFor(path: string): string {
+  return `https://mcp.example.com${path}`;
+}
+
+function mcpToken(
+  options: {
+    path?: string;
+    scope?: string;
+    lightdashAccessToken?: string;
+    expiresAtMs?: number;
+  } = {},
+): string {
+  const path = options.path ?? SEMANTIC_LAYER_PROFILE_PATH;
+  return mintMcpAccessToken(baseConfig, {
+    lightdashAccessToken: options.lightdashAccessToken ?? 'ld-upstream-token',
+    clientId: 'mcp-client-1',
+    resource: resourceFor(path),
+    scope: options.scope,
+    expiresAtMs: options.expiresAtMs ?? Date.now() + 60_000,
+  }).accessToken;
+}
+
 describe('authenticateLightdashOAuth', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it('returns 401 with WWW-Authenticate resource_metadata when token is missing', async () => {
     const result = await authenticateLightdashOAuth(
       createRequest(),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -53,11 +81,11 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).not.toContain('scope=');
   });
 
-  it('points resource_metadata at the requested persona path', async () => {
+  it('points resource_metadata at the requested profile path', async () => {
     const result = await authenticateLightdashOAuth(
       createRequest(),
       baseConfig,
-      ORGANIZATION_AUDIT_PERSONA_PATH,
+      ORGANIZATION_AUDIT_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -69,16 +97,47 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.wwwAuthenticate).not.toContain('semantic-layer/v1/mcp');
   });
 
-  it('returns 401 without echoing the bearer token when validation fails', async () => {
+  it('rejects a raw downstream Lightdash bearer before calling Lightdash', async () => {
+    const token = 'ld-upstream-token';
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(401);
+    expect(result.body.error).toBe('invalid_token');
+    expect(JSON.stringify(result.body)).not.toContain(token);
+    expect(validateLightdashAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('rejects a valid broker token at a different profile resource', async () => {
+    const token = mcpToken({ path: ORGANIZATION_AUDIT_PROFILE_PATH });
+    const result = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${token}`),
+      baseConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.status).toBe(401);
+    expect(result.body.error_description).toContain('wrong-audience');
+    expect(validateLightdashAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 without echoing the MCP bearer when downstream validation fails', async () => {
     vi.mocked(validateLightdashAccessToken).mockRejectedValue(
       new TokenValidationError('invalid_token', 'Invalid or expired Lightdash access token'),
     );
 
-    const token = 'secret-oauth-token';
+    const token = mcpToken();
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -86,9 +145,9 @@ describe('authenticateLightdashOAuth', () => {
 
     expect(result.status).toBe(401);
     expect(result.body.error).toBe('invalid_token');
-    expect(result.body.error_description).toBe('Invalid or expired Lightdash access token');
     expect(JSON.stringify(result.body)).not.toContain(token);
     expect(result.wwwAuthenticate).toContain('error="invalid_token"');
+    expect(validateLightdashAccessToken).toHaveBeenCalledWith(baseConfig, 'ld-upstream-token');
   });
 
   it('returns 503 when Lightdash upstream is unavailable', async () => {
@@ -97,9 +156,9 @@ describe('authenticateLightdashOAuth', () => {
     );
 
     const result = await authenticateLightdashOAuth(
-      createRequest('Bearer token'),
+      createRequest(`Bearer ${mcpToken()}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -119,9 +178,9 @@ describe('authenticateLightdashOAuth', () => {
     );
 
     const result = await authenticateLightdashOAuth(
-      createRequest('Bearer token'),
+      createRequest(`Bearer ${mcpToken()}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -131,62 +190,38 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.headers).toEqual({ 'Retry-After': '60' });
   });
 
-  it('returns user context when token validation succeeds', async () => {
+  it('returns downstream user context only after broker-token validation succeeds', async () => {
     vi.mocked(validateLightdashAccessToken).mockResolvedValue({
       userUuid: 'user-uuid-1',
       email: 'user@example.com',
     });
 
-    const token = jwtWithScope('mcp:read mcp:write');
+    const token = mcpToken({ scope: 'mcp:read mcp:write' });
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result).toEqual({
       ok: true,
-      accessToken: token,
+      accessToken: 'ld-upstream-token',
       user: { userUuid: 'user-uuid-1', email: 'user@example.com' },
       scopes: ['mcp:read', 'mcp:write'],
     });
-    expect(validateLightdashAccessToken).toHaveBeenCalledWith(baseConfig, token);
+    expect(validateLightdashAccessToken).toHaveBeenCalledWith(baseConfig, 'ld-upstream-token');
   });
 
-  it('accepts opaque tokens when endpoint scope requirements are unset', async () => {
+  it('accepts an MCP token without scopes when endpoint scope requirements are unset', async () => {
     vi.mocked(validateLightdashAccessToken).mockResolvedValue({
       userUuid: 'user-uuid-1',
       email: 'user@example.com',
     });
 
     const result = await authenticateLightdashOAuth(
-      createRequest('Bearer opaque-token'),
+      createRequest(`Bearer ${mcpToken()}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
-    );
-
-    expect(result).toEqual({
-      ok: true,
-      accessToken: 'opaque-token',
-      user: { userUuid: 'user-uuid-1', email: 'user@example.com' },
-      scopes: undefined,
-    });
-  });
-
-  it('accepts JWTs without scope claims when endpoint scope requirements are unset', async () => {
-    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
-      userUuid: 'user-uuid-1',
-      email: 'user@example.com',
-    });
-
-    const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-    const payload = Buffer.from(JSON.stringify({ sub: 'user-uuid-1' })).toString('base64url');
-    const token = `${header}.${payload}.signature`;
-
-    const result = await authenticateLightdashOAuth(
-      createRequest(`Bearer ${token}`),
-      baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(true);
@@ -194,42 +229,13 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.scopes).toBeUndefined();
   });
 
-  it('returns 403 insufficient_scope when required endpoint scopes are configured and missing', async () => {
-    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
-      userUuid: 'user-uuid-1',
-      email: 'user@example.com',
-    });
-
+  it('returns 403 insufficient_scope before calling Lightdash when MCP scopes are missing', async () => {
     const scopedConfig = { ...baseConfig, requiredScopes: ['mcp:read'] };
-    const result = await authenticateLightdashOAuth(
-      createRequest('Bearer opaque-token'),
-      scopedConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
-    );
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-
-    expect(result.status).toBe(403);
-    expect(result.body.error).toBe('insufficient_scope');
-    expect(result.wwwAuthenticate).toContain('scope="mcp:read"');
-  });
-
-  it('returns 403 insufficient_scope when required scopes are missing from token claims', async () => {
-    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
-      userUuid: 'user-uuid-1',
-      email: 'user@example.com',
-    });
-
-    const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
-    const payload = Buffer.from(JSON.stringify({ scope: 'mcp:write' })).toString('base64url');
-    const token = `${header}.${payload}.signature`;
-
-    const scopedConfig = { ...baseConfig, requiredScopes: ['mcp:read'] };
+    const token = mcpToken({ scope: 'mcp:write' });
     const result = await authenticateLightdashOAuth(
       createRequest(`Bearer ${token}`),
       scopedConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(false);
@@ -238,6 +244,8 @@ describe('authenticateLightdashOAuth', () => {
     expect(result.status).toBe(403);
     expect(result.body.error).toBe('insufficient_scope');
     expect(result.wwwAuthenticate).toContain('error="insufficient_scope"');
+    expect(result.wwwAuthenticate).toContain('scope="mcp:read"');
+    expect(validateLightdashAccessToken).not.toHaveBeenCalled();
   });
 
   it('accepts lowercase bearer scheme prefix', async () => {
@@ -246,16 +254,67 @@ describe('authenticateLightdashOAuth', () => {
       email: 'user@example.com',
     });
 
-    const token = jwtWithScope('mcp:read mcp:write');
     const result = await authenticateLightdashOAuth(
-      createRequest(`bearer ${token}`),
+      createRequest(`bearer ${mcpToken()}`),
       baseConfig,
-      SEMANTIC_LAYER_PERSONA_PATH,
+      SEMANTIC_LAYER_PROFILE_PATH,
     );
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.accessToken).toBe(token);
+    expect(result.accessToken).toBe('ld-upstream-token');
+  });
+
+  it('challenges and verifies against an extra invoke-origin resource when Host matches', async () => {
+    const invokeOrigin = new URL('http://mcp.ilb.internal');
+    const invokeConfig = makeTestMcpHttpConfig({
+      oauthClientId: 'ld-client',
+      oauthClientSecret: new SecretString('test-lightdash-confidential-client-secret'),
+      requiredScopes: [],
+      invokeOrigins: [invokeOrigin],
+    });
+    const invokeHeaders = {
+      host: 'mcp.ilb.internal',
+      'x-forwarded-proto': 'http',
+    };
+    const invokeResource = `http://mcp.ilb.internal${SEMANTIC_LAYER_PROFILE_PATH}`;
+
+    const challenge = await authenticateLightdashOAuth(
+      createRequest(undefined, invokeHeaders),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(challenge.ok).toBe(false);
+    if (challenge.ok) return;
+    expect(challenge.wwwAuthenticate).toContain(
+      'http://mcp.ilb.internal/.well-known/oauth-protected-resource/semantic-layer/v1/mcp',
+    );
+
+    vi.mocked(validateLightdashAccessToken).mockResolvedValue({
+      userUuid: 'user-1',
+      email: 'user@example.com',
+    });
+
+    const invokeToken = mintMcpAccessToken(invokeConfig, {
+      lightdashAccessToken: 'ld-upstream-token',
+      clientId: 'mcp-client-1',
+      resource: invokeResource,
+      expiresAtMs: Date.now() + 60_000,
+    }).accessToken;
+
+    const ok = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${invokeToken}`, invokeHeaders),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(ok.ok).toBe(true);
+
+    const publicHostRejectsInvokeToken = await authenticateLightdashOAuth(
+      createRequest(`Bearer ${invokeToken}`, { host: 'mcp.example.com' }),
+      invokeConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+    );
+    expect(publicHostRejectsInvokeToken.ok).toBe(false);
   });
 });
 

@@ -20,10 +20,10 @@ We need a policy for **which** operations appear on MCP/CLI at all, separate fro
 
 Operations in `packages/common/src/operations/` carry `agentExposure`:
 
-| Value         | Meaning                                                                                                                 |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `agent`       | May appear on MCP (when exposed) and CLI (`cli.commandPath` required).                                                  |
-| `client-only` | Documented in the registry but **not** registered as an MCP tool or CLI command. Callers use `@lightdash-tools/client`. |
+| Value         | Meaning                                                                                                                |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `agent`       | May appear on MCP (when exposed) and CLI (`cli.commandPath` required).                                                 |
+| `client-only` | Documented in the catalog but **not** registered as an MCP tool or CLI command. Callers use `@lightdash-tools/client`. |
 
 Exposure classes:
 
@@ -31,16 +31,16 @@ Exposure classes:
 | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
 | Irrecoverable                | Never on MCP/CLI (`client-only`)                                                                                                                          | `delete_member`, permanent content purge                         |
 | Reversible destructive       | Expose with `WRITE_DESTRUCTIVE` + surface guardrails                                                                                                      | `delete_group`, revoke space access                              |
-| Soft-delete (content)        | MCP only via elicitation-required confirmation ([ADR-0015](0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md))             | `delete_chart`, `delete_dashboard` (soft-delete)                 |
+| Soft-delete (content)        | MCP only via elicitation-required confirmation ([ADR-0015](0015-mcp-content-governance-profile-elicitation-required-soft-delete-boundary.md))             | `delete_chart`, `delete_dashboard` (soft-delete)                 |
 | Cross-project promote        | MCP only via elicitation-required confirmation ([ADR-0017](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md)); dashboard-first in v1 | `promote_dashboard` (upstream overwrite of nested charts/spaces) |
 | Read / non-destructive write | Expose on the agent tier                                                                                                                                  | list/create group                                                |
 
 Runtime safety modes and `destructiveHint` gate **reversible** destructive ops. They are not a substitute for banning irrecoverable ops from the surface. Content soft-delete and dashboard promote additionally require MCP form elicitation (not a boolean tool argument).
 
-The shipped MCP persona is a narrower compile/discovery set ([ADR-0006](0006-mcp-personas-shared-registry-fixed-paths.md)); broad admin ops stay on client/CLI.
+Each shipped MCP **profile** is a narrower capability set derived from catalog `profiles` ([ADR-0006](0006-mcp-profiles-shared-registry-fixed-paths.md)); broad admin ops stay on client/CLI.
 
 ## Consequences
 
 - Irrecoverable harm requires deliberate use of the typed client.
 - Agent parity is defined on the `agent` tier, not the full API.
-- Domains migrate into the registry incrementally; until then, the same exposure classes apply by review.
+- Domains migrate into the catalog incrementally; until then, the same exposure classes apply by review.

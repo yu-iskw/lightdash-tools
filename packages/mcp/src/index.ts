@@ -2,47 +2,59 @@
  * MCP server entrypoint (Stdio). Use LIGHTDASH_URL and LIGHTDASH_API_KEY.
  * Logging: stderr only (stdout is JSON-RPC).
  *
- * Optional persona via LIGHTDASH_TOOLS_MCP_STDIO_PERSONA (set by bin subcommands).
+ * Profile is selected by CLI argv (`lightdash-mcp stdio --profile <id>`)
+ * and passed into {@link startStdio} — not via env.
+ *
+ * Uses SDK `serveStdio` so the process speaks 2026-07-28 (and legacy initialize
+ * via `legacy: 'serve'`). Hand-wiring `StdioServerTransport` + `connect()` stays
+ * on the 2025-era wire only.
  */
 
-import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
+import { serveStdio } from '@modelcontextprotocol/server/stdio';
 
 import { initAuditLog } from './audit/audit.js';
 import { EnvContextProvider } from './auth/providers/env-context-provider.js';
+import { assertObsoleteEnvRejected } from './config/obsolete-env.js';
+import {
+  resolvePromptContextPolicy,
+  type PromptContextPolicy,
+} from './config/prompt-context-policy.js';
 import { getAuditLogPath, warnIgnoredCliGuardrailEnvVars } from './config/runtime.js';
-import { getDefaultPersona, getPersona, parsePersonaId } from './personas/index.js';
+import { validateAvailableProjectsConfig } from './governance/available-projects.js';
+import { getProfile } from './profiles/index.js';
 import { createLightdashMcpServer } from './server/server.js';
 
-import type { PersonaDefinition } from './personas/types.js';
+import type { ProfileId } from './profiles/types.js';
 
-function resolveStdioPersona(): PersonaDefinition {
-  const raw = process.env.LIGHTDASH_TOOLS_MCP_STDIO_PERSONA;
-  if (!raw) {
-    return getDefaultPersona();
-  }
-  const id = parsePersonaId(raw);
-  if (!id) {
-    throw new Error(
-      `Invalid LIGHTDASH_TOOLS_MCP_STDIO_PERSONA='${raw}'. Expected semantic-layer, organization-audit, content-reader, content-developer, or content-governance.`,
+export type StartStdioOptions = {
+  /** Explicit policy; when omitted, resolve from env (default compact). */
+  promptContextPolicy?: PromptContextPolicy;
+};
+
+/** Start stdio MCP for an explicit profile (CLI-selected). */
+export function startStdio(profileId: ProfileId, options?: StartStdioOptions): void {
+  try {
+    assertObsoleteEnvRejected(process.env);
+    warnIgnoredCliGuardrailEnvVars();
+    validateAvailableProjectsConfig();
+    initAuditLog(getAuditLogPath());
+
+    const promptContextPolicy =
+      options?.promptContextPolicy ?? resolvePromptContextPolicy({ env: process.env });
+    const profile = getProfile(profileId);
+    const contextProvider = new EnvContextProvider();
+
+    serveStdio(() => createLightdashMcpServer(contextProvider, { profile, promptContextPolicy }), {
+      legacy: 'serve',
+      onerror: (error) => {
+        console.error('MCP stdio error:', error);
+      },
+    });
+    console.error(
+      `Lightdash MCP server (${profile.id}) running on stdio (prompt-context=${promptContextPolicy})`,
     );
+  } catch (err) {
+    console.error('Fatal:', err);
+    process.exit(1);
   }
-  return getPersona(id);
 }
-
-async function main(): Promise<void> {
-  warnIgnoredCliGuardrailEnvVars();
-  initAuditLog(getAuditLogPath());
-
-  const persona = resolveStdioPersona();
-  const contextProvider = new EnvContextProvider();
-  const server = createLightdashMcpServer(contextProvider, { persona });
-
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error(`Lightdash MCP server (${persona.id}) running on stdio`);
-}
-
-main().catch((err) => {
-  console.error('Fatal:', err);
-  process.exit(1);
-});

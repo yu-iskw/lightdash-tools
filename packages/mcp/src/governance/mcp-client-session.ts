@@ -1,6 +1,7 @@
 /**
- * MCP client session identity for content-reader ledger/budget keys.
- * HTTP Streamable transports pass `sessionId` on tool `extra`; stdio falls back to process session.
+ * MCP client session identity for content-reader budget/ledger bookkeeping.
+ * Prefer auth subject for concurrency budgets (ADR-0019). `extra.sessionId` is used when
+ * present; otherwise fall back to a process-scoped id (stdio / sessionless HTTP).
  */
 
 import { AsyncLocalStorage } from 'node:async_hooks';

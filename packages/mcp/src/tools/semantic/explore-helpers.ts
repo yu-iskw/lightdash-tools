@@ -98,8 +98,17 @@ export function flattenExploreDimensions(explore: ApiExploreResults): {
 }
 
 /**
- * Compact dimensions with compile_query fieldId `{table}_{name}`.
+ * Compile-ready fieldId matching Lightdash `getItemId`
+ * (`${table}_${name}` with every `.` in `name` → `__`; see lightdash#6320).
+ */
+export function toFieldId(table: string, name: string): string {
+  return `${table}_${name.split('.').join('__')}`;
+}
+
+/**
+ * Compact dimensions with compile_query fieldId via {@link toFieldId}.
  * When `baseTable` is set, keep only rows whose `table` equals that id (joined tables dropped).
+ * `name` stays the API value (may contain dots); `fieldId` is compile-ready.
  */
 export function summarizeDimensions(
   dimensions: readonly DimensionLike[],
@@ -112,7 +121,7 @@ export function summarizeDimensions(
     const summary: DimensionSummary = {
       name: dim.name,
       table: dim.table,
-      fieldId: `${dim.table}_${dim.name}`,
+      fieldId: toFieldId(dim.table, dim.name),
     };
     if (typeof dim.label === 'string') summary.label = dim.label;
     if (typeof dim.type === 'string') summary.type = dim.type;
@@ -125,6 +134,108 @@ export function summarizeDimensions(
 export function isEmptySelectSql(sql: string): boolean {
   const normalized = sql.replace(/\s+/g, ' ').trim();
   return /SELECT FROM\b/i.test(normalized);
+}
+
+/** Body of the first Lightdash ERROR block comment (`ERROR:…`), if present. */
+export function extractCompileSqlErrorComment(sql: string): string | undefined {
+  const match = /\/\*\s*(ERROR:[\s\S]*?)\*\//i.exec(sql);
+  const body = match?.[1]?.trim();
+  return body && body.length > 0 ? body : undefined;
+}
+
+/** True when Lightdash embedded a compile failure comment (e.g. unknown filter fieldId). */
+export function hasCompileSqlErrorComment(sql: string): boolean {
+  return extractCompileSqlErrorComment(sql) !== undefined;
+}
+
+/**
+ * Collect SELECT aliases from compiled SQL (`AS \`alias\``, `AS "alias"`, or `AS alias`).
+ * Heuristic only (not a SQL parser): stops at the first FROM; CAST(... AS type) may
+ * contribute type names as extras. Prefer {@link findMissingFieldIds}, which skips the
+ * check when no aliases are found (inconclusive dialect/CTE parse).
+ */
+export function extractSelectAliases(sql: string): string[] {
+  const normalized = sql.replace(/\s+/g, ' ').trim();
+  const selectMatch = /\bSELECT\b([\s\S]*?)(?:\bFROM\b|$)/i.exec(normalized);
+  if (!selectMatch?.[1]) return [];
+  const selectList = selectMatch[1];
+  const aliases: string[] = [];
+  const quotedAs = /\bAS\s+(?:`([^`]+)`|"([^"]+)")/gi;
+  const plainAs = /\bAS\s+([A-Za-z_][\w$]*)/gi;
+  for (const match of selectList.matchAll(quotedAs)) {
+    const alias = match[1] ?? match[2];
+    if (alias) aliases.push(alias);
+  }
+  for (const match of selectList.matchAll(plainAs)) {
+    if (match[1]) aliases.push(match[1]);
+  }
+  return aliases;
+}
+
+/**
+ * Requested fieldIds that do not appear as SELECT aliases in compiled SQL.
+ * Returns [] when the alias extract is empty (inconclusive — e.g. CTE-truncated SELECT
+ * or an unsupported quote style) so compile_query does not false-fail closed.
+ */
+export function findMissingFieldIds(requested: readonly string[], sql: string): string[] {
+  if (requested.length === 0) return [];
+  const aliases = extractSelectAliases(sql);
+  if (aliases.length === 0) return [];
+  const aliasSet = new Set(aliases);
+  return requested.filter((id) => !aliasSet.has(id));
+}
+
+/** Collect string fieldIds from metricQuery.dimensions and metricQuery.metrics. */
+export function collectRequestedFieldIds(metricQuery: Record<string, unknown>): string[] {
+  const requested: string[] = [];
+  const batches = [metricQuery.dimensions, metricQuery.metrics];
+  for (const value of batches) {
+    if (!Array.isArray(value)) continue;
+    for (const entry of value) {
+      if (typeof entry === 'string' && entry.length > 0) requested.push(entry);
+    }
+  }
+  return requested;
+}
+
+const COMPILED_SQL_FIELD_ID_HINT =
+  'Copy fieldIds from list_dimensions (STRUCT name dots → `__`; ARRAY via join tables with ' +
+  'baseTableOnly=false) and explore-local metrics; re-compile.';
+
+/** Diagnose post-compile SQL for agents. Returns error text, or undefined when OK. */
+export function diagnoseCompiledSql(
+  sql: string | undefined,
+  requestedFieldIds: readonly string[],
+): string | undefined {
+  if (!sql) return undefined;
+  if (isEmptySelectSql(sql)) {
+    return (
+      'Error: compile_query produced an empty SELECT (no columns). ' +
+      'Use fieldId values like `{table}_{name}` from list_dimensions (base table; nested dots → `__`), ' +
+      'not short field names. Re-compile after fixing metricQuery.'
+    );
+  }
+  const errorComment = extractCompileSqlErrorComment(sql);
+  if (errorComment) {
+    return (
+      'Error: compile_query SQL contains a Lightdash `/* ERROR:` comment ' +
+      '(often an unknown filter fieldId). ' +
+      COMPILED_SQL_FIELD_ID_HINT +
+      '\nLightdash: /* ' +
+      errorComment +
+      ' */'
+    );
+  }
+  const missing = findMissingFieldIds(requestedFieldIds, sql);
+  if (missing.length > 0) {
+    return (
+      'Error: compile_query SQL is missing SELECT aliases for requested fieldIds: ' +
+      missing.join(', ') +
+      '. ' +
+      COMPILED_SQL_FIELD_ID_HINT
+    );
+  }
+  return undefined;
 }
 
 /** Extract SQL text from a compile_query API payload. */

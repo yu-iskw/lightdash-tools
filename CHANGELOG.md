@@ -1,5 +1,195 @@
 # Changelog
 
+## [0.24.0] - 2026-09-11
+
+### Bug Fixes
+
+- Harden compile_query: default missing sorts to [] and isError on Lightdash ERROR SQL comments
+
+## [0.23.0] - 2026-09-11
+
+### Bug Fixes
+
+- Align list_dimensions fieldIds with Lightdash getItemId (nested dots to __) and fail compile_query when requested dims/metrics are missing from SELECT aliases.
+- Fill missing FilterGroup and FilterRule ids on compile_query and run_metric_query so agents avoid UPSTREAM_VALIDATION against strict MetricQuery Filters.
+
+### Chores
+
+- Bump Lightdash OpenAPI pin to 2.192.0 (536dca8) and regenerate types.
+
+## [0.22.0] - 2026-09-10
+
+### Bug Fixes
+
+- Restore the axios lockfile importer specifier so frozen CI installs match the workspace override.
+- Pin browserslist to 4.28.7 so the SBOM High/Critical gate clears GHSA-73wf-gq98-2v4g and GHSA-c83g-rgw3-j3cx.
+- Drop the custom lockfile override specifier check that rejected valid pnpm v11 importer pins.
+- Fail the Publish workflow when the release tag does not match package versions or when pnpm reports no new packages to publish.
+- Pin js-yaml to 4.3.2 and smol-toml to 1.7.1 so the SBOM High/Critical gate clears GHSA-2883-xcg3-v3hh and GHSA-7w5x-hrqm-74c2.
+
+### Chores
+
+- Apply pnpm audit --fix dependency updates.
+- Upgrade Trunk-managed linters and formatters.
+
+## [0.21.0] - 2026-08-27
+
+### Features
+
+- Add ai-agent-ops MCP tools for agent-scoped knowledge document CRUD (list/get/create/update/delete) with 20KB preflight, content redaction, and soft governance warnings (ADR-0035).
+- ai-agent-ops create_project_agent requires form elicitation and secure-by-default permissions; create/update warn TAGS_MATCH_NO_EXPLORES and ELEVATED_* when applicable
+- ai-agent-ops create/update/preview support spaceAccess with SPACES_NOT_IN_PROJECT and SPACE_LIST_UNAVAILABLE warnings; agentops bundle diff includes spaceAccess
+
+## [0.20.0] - 2026-08-26
+
+### Features
+
+- Reveal saved SQL chart bodies as MCP tool-result artifacts (opt-in includeArtifacts) without enabling standalone SQL execution
+
+## [0.19.0] - 2026-08-21
+
+### Features
+
+- Add ai-agent-chat MCP profile for using existing Lightdash AI Agents (ADR-0029).
+- ai-agent-chat: add route_agent (AI Router) and URL/UUID grounding playbooks (ADR-0031)
+
+### Bug Fixes
+
+- Require prompt on ai-agent-chat create_agent_thread; empty create fails upstream (ADR-0030).
+
+### Documentation
+
+- Clarify ai-agent-chat prompts/playbooks as new-conversation-by-default with own-thread continue only (no cross-user takeover).
+
+## [0.18.0] - 2026-08-20
+
+### Features
+
+- content-reader executes saved dashboard SQL tiles via query/dashboard-sql-chart (standalone SQL charts remain disabled)
+
+## [0.17.0] - 2026-08-20
+
+### Features
+
+- MCP HTTP OAuth advertises host-aware metadata on extra invoke origins (LIGHTDASH_TOOLS_MCP_INVOKE_ORIGINS)
+
+### Bug Fixes
+
+- Separate MCP-issued OAuth tokens from Lightdash credentials and canonicalize RFC 8707 resource audiences
+
+## [0.16.1] - 2026-08-20
+
+### Features
+
+- MCP progressive-disclosure prompt context (compact default; compatible/embedded via LIGHTDASH_TOOLS_MCP_PROMPT_CONTEXT)
+
+### Documentation
+
+- Document MCP HTTP health probes (/health/live, /health/ready) in the package README and Cloud Run operator guide.
+
+### Chores
+
+- Sync OpenAPI types to Lightdash 1.109.1
+
+## [0.14.0] - 2026-08-10
+
+### Features
+
+- MCP HTTP: optional LIGHTDASH_TOOLS_MCP_PROFILES allowlist to mount a subset of fixed profile paths.
+
+### Bug Fixes
+
+- Bump js-yaml to 4.3.1 and nanoid to 3.3.17 to remediate High SBOM findings (GHSA-5p4m-2wfm-xmqj, GHSA-2v37-7h3g-55p8).
+
+## [0.13.2] - 2026-08-06
+
+## [0.13.1] - 2026-08-06
+
+## [0.13.0] - 2026-08-04
+
+### Features
+
+- MCP CLI: stdio/http --help lists profile mounts and tool ids from PROFILES.
+
+### Bug Fixes
+
+- MCP compile_query sets metricQuery.exploreName from exploreId; clarify semantic-layer playbooks for joins and compiledSql trust.
+- MCP compile_query defaults missing tableCalculations to []; semantic-layer playbooks/prompts prioritize fieldIds and SELECT aliases.
+- BREAKING: MCP stdio profile is CLI-only via `stdio --profile <id>`; no env-based profile selection.
+- BREAKING: MCP stdio is transport-first — use `stdio --profile <id>`; remove profile subcommands and positional stdio args.
+
+### Documentation
+
+- Clarify MCP README for stdio --profile and http launchers.
+
+### Refactors
+
+- MCP mount membership uses literal per-profile tool tables in common for IDE-traceable SSOT.
+- Replace operations catalog with profile-owned ToolModules; remove CLI schema introspection.
+
+## [0.12.1] - 2026-08-04
+
+### Features
+
+- Honor Cloud Run PORT for MCP HTTP listen when LIGHTDASH_TOOLS_MCP_HTTP_PORT is unset
+- BREAKING: MCP stdio no longer defaults to semantic-layer; use `stdio --profile <id>`.
+- BREAKING: remove deprecated lightdash-mcp serve-http alias; use http.
+
+## [0.12.0] - 2026-08-04
+
+### Bug Fixes
+
+- Remediate audit findings for hono and brace-expansion.
+
+## [0.11.0] - 2026-08-04
+
+### Features
+
+- Add data-analyst MCP persona for unsaved Explore metric queries (run_metric_query).
+- BREAKING: MCP packaging uses profile (not persona): catalog profiles are tool-membership SSOT; envelope context.profile; stdio profile subcommand; drop semantic-discovery/org-audit-readonly and granular CLI profile tags.
+
+### Bug Fixes
+
+- Content tool envelopes stamp the serving persona from bindServerPersona (no hard-coded content-reader label).
+
+## [0.10.0] - 2026-08-03
+
+### Features
+
+- MCP dual-era protocol serving via SDK serveStdio and createMcpHandler; remove initialize caps process cache
+
+### Documentation
+
+- Reorganize docs into operators/personas audience taxonomy; archive Accepted RFCs; OAuth hub at docs/operators/mcp-oauth.md.
+- Drop docs/archive, agent-context, security, and reference dirs; keep threat model and agent-context under operators; CLI AI-agents reference under personas/ai-agent-ops.
+
+## [0.9.0] - 2026-08-03
+
+### Features
+
+- Breaking: MCP/CLI share LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS allowlist (renamed from ALLOWED_PROJECTS); removes PROJECT_UUID default and MCP_AVAILABLE_PROJECT_UUIDS — startup/CLI fail if legacy ALLOWED_PROJECTS or MCP_AVAILABLE still set; promote_dashboard also fails closed when upstream is outside the ceiling
+- Make MCP HTTP stateless: drop Redis ephemeral store and transport sessions; use HMAC-signed preview tokens; keep in-memory OAuth broker only.
+- content-developer prompts/playbooks require Design Spec approval before dashboard writes
+- content-reader export_chart_image returns a single PNG snapshot (MCP ImageContent; SSRF-hardened download; SQL charts blocked)
+- Emit Cloud Logging–parseable MCP/CLI audit JSON on stderr (channel=audit) with clientSessionId and personaId; document Cloud Run sink/retention.
+
+### Bug Fixes
+
+- MCP wrapTool maps uncaught Lightdash API failures to structured UPSTREAM and RATE_LIMITED tool errors; HttpClient rejects malformed success envelopes as ContractError
+
+## [0.8.0] - 2026-08-02
+
+### Features
+
+- Add content-reader MCP persona for project-scoped saved-content reads and bounded semantic chart execution (ADR-0012).
+- Add content-governance MCP persona with elicitation-gated soft-delete for charts and dashboards (ADR-0015).
+- Add elicitation-gated dashboard promote (and read-only promoteDiff) on the content-governance MCP persona.
+- Add pluggable MCP ephemeral store (memory/redis) and preview claim/apply/release state machine (ADR-0016).
+
+### Bug Fixes
+
+- Redact MCP emails on direct access and omit project connection secrets by default (ADR-0011).
+
 ## [0.7.0] - 2026-08-01
 
 ### Features

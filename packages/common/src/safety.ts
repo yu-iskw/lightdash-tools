@@ -1,16 +1,8 @@
 import { extractProjectUuidsFromToolArgs } from './agentops/extract-yaml-project';
-import { ENV_LIGHTDASH_TOOLS_SAFETY_MODE, ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS } from './env';
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS, ENV_LIGHTDASH_TOOLS_SAFETY_MODE } from './env';
 
-/**
- * Semantic impact classification for operations (RFC Phase 0).
- * Used by {@link OperationPolicy} and {@link isOperationAllowed}.
- */
-export type SafetyImpact =
-  | 'credential-sensitive'
-  | 'external-side-effect'
-  | 'read'
-  | 'write-destructive'
-  | 'write-nondestructive';
+/** Removed allowlist env — fail closed if still set. */
+const ENV_ALLOWED_PROJECTS_REMOVED = 'LIGHTDASH_TOOLS_ALLOWED_PROJECTS';
 
 /**
  * Hierarchical safety modes for Lightdash AI tools and CLI.
@@ -33,11 +25,6 @@ export type ToolAnnotations = {
   destructiveHint?: boolean;
   idempotentHint?: boolean;
   openWorldHint?: boolean;
-};
-
-/** Policy describing the semantic impact of an operation. */
-export type OperationPolicy = {
-  impact: SafetyImpact;
 };
 
 /** Preset: read-only, non-destructive, idempotent, closed-world. Use for list/get/compile tools. */
@@ -113,28 +100,6 @@ export function isAllowed(mode: SafetyMode | string, annotations: ToolAnnotation
 }
 
 /**
- * Validates if an operation is allowed in the current safety mode using semantic impact policy.
- * Unknown modes fail closed.
- */
-export function isOperationAllowed(mode: SafetyMode | string, policy: OperationPolicy): boolean {
-  switch (mode) {
-    case SafetyMode.READ_ONLY:
-      return policy.impact === 'read';
-    case SafetyMode.WRITE_NONDESTRUCTIVE:
-    case SafetyMode.WRITE_IDEMPOTENT:
-      return (
-        policy.impact === 'read' ||
-        policy.impact === 'write-nondestructive' ||
-        policy.impact === 'external-side-effect'
-      );
-    case SafetyMode.WRITE_DESTRUCTIVE:
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
  * Resolves safety mode from environment variable.
  * Accepts `write-idempotent` as a deprecated alias for `write-nondestructive`.
  */
@@ -150,27 +115,26 @@ export function getSafetyModeFromEnv(): SafetyMode {
 }
 
 /**
- * Parses allowed project UUIDs from the LIGHTDASH_TOOLS_ALLOWED_PROJECTS environment
+ * Parses allowed project UUIDs from the LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS environment
  * variable (comma-separated). Returns an empty array when the variable is unset, meaning
  * all projects are allowed.
  *
- * Note: CLI/MCP flags (--allowed-projects) always take priority over this env var.
+ * Throws if the removed name LIGHTDASH_TOOLS_ALLOWED_PROJECTS is still set.
+ * Note: CLI `--projects` takes priority over this env var.
  */
 export function getAllowedProjectUuidsFromEnv(): string[] {
-  const raw = process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECTS] ?? '';
+  const legacy = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECTS;
+  if (legacy !== undefined && legacy.trim() !== '') {
+    throw new Error(
+      `${ENV_ALLOWED_PROJECTS_REMOVED} is no longer supported. ` +
+        `Use ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS} instead.`,
+    );
+  }
+  const raw = process.env.LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS ?? '';
   return raw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-}
-
-/**
- * Returns true if a single projectUuid is permitted by the allowlist.
- * An empty allowlist means all projects are allowed.
- */
-export function isProjectAllowed(allowedUuids: readonly string[], projectUuid: string): boolean {
-  if (allowedUuids.length === 0) return true;
-  return allowedUuids.includes(projectUuid);
 }
 
 /**

@@ -1,10 +1,9 @@
 /**
- * Descriptor-driven argument validation for CLI and MCP tools (RFC Phase 0).
- * Validates known resource identifier keys with semantic type rules.
+ * Resource-identifier validation for CLI and MCP tools.
+ * Validates known resource identifier keys when walking tool/command argument objects.
  */
 
 import {
-  rejectControlChars,
   validateFingerprint,
   validateSlug,
   validateUuid,
@@ -63,113 +62,6 @@ const UUID_OR_SLUG_KEYS = new Set([
   'contentUuidOrSlug',
 ]);
 
-export type ArgumentSource = 'body' | 'option' | 'positional';
-
-export type ArgumentSemanticType =
-  'boolean' | 'fingerprint' | 'free-text' | 'json' | 'number' | 'slug' | 'uuid-or-slug' | 'uuid';
-
-/** Per-argument validation metadata supplied by CLI/MCP command definitions. */
-export interface ArgumentDescriptor {
-  name: string;
-  source: ArgumentSource;
-  semanticType: ArgumentSemanticType;
-  required?: boolean;
-}
-
-function isMissing(value: unknown): boolean {
-  return value === undefined || value === null;
-}
-
-function requireString(value: unknown, name: string, label: string): string {
-  if (typeof value !== 'string') {
-    throw new Error(`Argument '${name}' must be a string ${label}`);
-  }
-  return value;
-}
-
-function validateUuidArgument(value: unknown, name: string): void {
-  validateUuid(requireString(value, name, 'UUID'));
-}
-
-function validateSlugArgument(value: unknown, name: string): void {
-  validateSlug(requireString(value, name, 'slug'));
-}
-
-function validateFingerprintArgument(value: unknown, name: string): void {
-  validateFingerprint(requireString(value, name, 'fingerprint'));
-}
-
-function validateFreeTextArgument(value: unknown, _name: string): void {
-  if (typeof value === 'string') {
-    rejectControlChars(value);
-  }
-}
-
-function validateJsonArgument(value: unknown, name: string): void {
-  if (typeof value !== 'string') {
-    return;
-  }
-  rejectControlChars(value);
-  try {
-    JSON.parse(value);
-  } catch {
-    throw new Error(`Argument '${name}' must be valid JSON`);
-  }
-}
-
-function validateBooleanArgument(value: unknown, name: string): void {
-  if (typeof value !== 'boolean') {
-    throw new Error(`Argument '${name}' must be a boolean`);
-  }
-}
-
-function validateNumberArgument(value: unknown, name: string): void {
-  if (typeof value !== 'number' || Number.isNaN(value)) {
-    throw new Error(`Argument '${name}' must be a number`);
-  }
-}
-
-function validateUuidOrSlugArgument(value: unknown, name: string): void {
-  validateUuidOrSlug(requireString(value, name, 'UUID or slug'));
-}
-
-function validateBySemanticType(
-  value: unknown,
-  semanticType: ArgumentSemanticType,
-  name: string,
-): void {
-  switch (semanticType) {
-    case 'boolean':
-      validateBooleanArgument(value, name);
-      break;
-    case 'fingerprint':
-      validateFingerprintArgument(value, name);
-      break;
-    case 'free-text':
-      validateFreeTextArgument(value, name);
-      break;
-    case 'json':
-      validateJsonArgument(value, name);
-      break;
-    case 'number':
-      validateNumberArgument(value, name);
-      break;
-    case 'slug':
-      validateSlugArgument(value, name);
-      break;
-    case 'uuid':
-      validateUuidArgument(value, name);
-      break;
-    case 'uuid-or-slug':
-      validateUuidOrSlugArgument(value, name);
-      break;
-    default: {
-      const exhaustive: never = semanticType;
-      throw new Error(`Unknown semantic type: ${exhaustive}`);
-    }
-  }
-}
-
 function validateResourceIdValue(key: string, value: string): void {
   if (key === 'slug' || key === 'newSlug') {
     validateSlug(value);
@@ -197,33 +89,6 @@ function validateResourceIdValues(key: string, value: unknown): void {
         throw new Error(`Argument '${key}' must be a string or string array`);
       }
       validateResourceIdValue(key, item);
-    }
-  }
-}
-
-/**
- * Validates tool arguments against explicit descriptors.
- * Identifier semantic types (`uuid`, `slug`, `fingerprint`) receive strict validation.
- */
-export function validateArguments(
-  args: Record<string, unknown>,
-  descriptors: ArgumentDescriptor[],
-): void {
-  for (const descriptor of descriptors) {
-    const value = args[descriptor.name];
-    if (isMissing(value)) {
-      if (descriptor.required) {
-        throw new Error(`Required argument '${descriptor.name}' is missing`);
-      }
-      continue;
-    }
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        validateBySemanticType(item, descriptor.semanticType, descriptor.name);
-      }
-    } else {
-      validateBySemanticType(value, descriptor.semanticType, descriptor.name);
     }
   }
 }

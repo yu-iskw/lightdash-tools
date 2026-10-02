@@ -5,17 +5,19 @@ import {
   getAuthorizationServerMetadataUrl,
 } from '../auth/resource-server/oauth-protected-resource.js';
 import { buildWwwAuthenticateHeader } from '../auth/resource-server/www-authenticate.js';
+import { parseEnabledProfiles } from '../config/enabled-profiles.js';
 import {
   ENV_LIGHTDASH_TOOLS_MCP_AUTH_MODE,
   ENV_LIGHTDASH_TOOLS_MCP_PUBLIC_URL,
+  ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_ID,
   ENV_LIGHTDASH_TOOLS_OAUTH_CLIENT_SECRET,
 } from '../config/env.js';
 import { loadMcpHttpConfig } from '../config/load-mcp-config.js';
 import { makeTestMcpHttpConfig } from '../config/test-mcp-http-config.js';
-import { CONTENT_READER_PERSONA_PATH } from '../personas/content-reader/v1/index.js';
-import { ORGANIZATION_AUDIT_PERSONA_PATH } from '../personas/organization-audit/v1/index.js';
-import { SEMANTIC_LAYER_PERSONA_PATH } from '../personas/semantic-layer/v1/index.js';
+import { CONTENT_READER_PROFILE_PATH } from '../profiles/content-reader/v1/index.js';
+import { ORGANIZATION_AUDIT_PROFILE_PATH } from '../profiles/organization-audit/v1/index.js';
+import { SEMANTIC_LAYER_PROFILE_PATH } from '../profiles/semantic-layer/v1/index.js';
 
 import { buildCorsHeaders, checkOrigin } from './http-response.js';
 import { createStreamableHttpServer, startStreamableHttpServer } from './streamable-http.js';
@@ -23,9 +25,6 @@ import { createStreamableHttpServer, startStreamableHttpServer } from './streama
 const oauthConfig = makeTestMcpHttpConfig({
   port: 0,
   oauthClientId: 'client-id',
-  sessionTtlMs: 10_000,
-  maxSessions: 1000,
-  maxSessionsPerSubject: 50,
   validateToken: false,
   tokenValidationCacheTtlMs: 60_000,
 });
@@ -90,25 +89,44 @@ describe('streamable HTTP security policy', () => {
 
 describe('streamable HTTP OAuth metadata', () => {
   it('builds protected resource metadata with MCP host as authorization_servers', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, SEMANTIC_LAYER_PERSONA_PATH);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
     expect(metadata.authorization_servers).toEqual(['https://mcp.example.com']);
-    expect(metadata.resource).toBe(`https://mcp.example.com${SEMANTIC_LAYER_PERSONA_PATH}`);
+    expect(metadata.resource).toBe(`https://mcp.example.com${SEMANTIC_LAYER_PROFILE_PATH}`);
     expect(getAuthorizationServerMetadataUrl(metadata.authorization_servers[0])).toBe(
       'https://mcp.example.com/.well-known/oauth-authorization-server',
     );
   });
 
+  it('builds protected resource metadata for an extra invoke origin', () => {
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      SEMANTIC_LAYER_PROFILE_PATH,
+      'http://mcp.ilb.internal',
+    );
+    expect(metadata.resource).toBe('http://mcp.ilb.internal/semantic-layer/v1/mcp');
+    expect(metadata.authorization_servers).toEqual(['http://mcp.ilb.internal']);
+  });
+
   it('builds organization-audit protected resource metadata', () => {
     const metadata = buildOAuthProtectedResourceMetadata(
       oauthConfig,
-      ORGANIZATION_AUDIT_PERSONA_PATH,
+      ORGANIZATION_AUDIT_PROFILE_PATH,
+      'https://mcp.example.com',
     );
-    expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PERSONA_PATH}`);
+    expect(metadata.resource).toBe(`https://mcp.example.com${ORGANIZATION_AUDIT_PROFILE_PATH}`);
   });
 
   it('builds content-reader protected resource metadata', () => {
-    const metadata = buildOAuthProtectedResourceMetadata(oauthConfig, CONTENT_READER_PERSONA_PATH);
-    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PERSONA_PATH}`);
+    const metadata = buildOAuthProtectedResourceMetadata(
+      oauthConfig,
+      CONTENT_READER_PROFILE_PATH,
+      'https://mcp.example.com',
+    );
+    expect(metadata.resource).toBe(`https://mcp.example.com${CONTENT_READER_PROFILE_PATH}`);
   });
 
   it('builds WWW-Authenticate challenges with resource_metadata for OAuth clients', () => {
@@ -130,5 +148,40 @@ describe('streamable HTTP OAuth metadata', () => {
 
   it('exports createStreamableHttpServer', () => {
     expect(typeof createStreamableHttpServer).toBe('function');
+  });
+
+  it('rejects HTTP startup when request-state key is missing in production', async () => {
+    const savedVitest = process.env.VITEST;
+    delete process.env.VITEST;
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY];
+
+    await expect(createStreamableHttpServer(makeTestMcpHttpConfig({ port: 0 }))).rejects.toThrow(
+      /LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY/,
+    );
+
+    if (savedVitest !== undefined) {
+      process.env.VITEST = savedVitest;
+    }
+  });
+
+  it('allows HTTP startup without request-state key when write profiles are disabled', async () => {
+    const savedVitest = process.env.VITEST;
+    delete process.env.VITEST;
+    process.env.NODE_ENV = 'production';
+    delete process.env[ENV_LIGHTDASH_TOOLS_MCP_REQUEST_STATE_KEY];
+
+    const handle = await createStreamableHttpServer(
+      makeTestMcpHttpConfig({
+        port: 0,
+        enabledProfiles: parseEnabledProfiles('content-reader'),
+      }),
+    );
+    expect(handle.port).toBeGreaterThan(0);
+    await handle.close();
+
+    if (savedVitest !== undefined) {
+      process.env.VITEST = savedVitest;
+    }
   });
 });

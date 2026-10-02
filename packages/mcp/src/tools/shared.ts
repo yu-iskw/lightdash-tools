@@ -2,31 +2,36 @@
  * Shared types and helpers for MCP tool registration.
  *
  * Guardrail layers applied by registerToolSafe (outer → inner):
- *   1. Audit log wrapper    — captures timing and outcome for every call.
- *   2. HTTP project pin       — rejects projectUuid(s) that do not match X-Lightdash-Project (ALS).
- *   3. Input validation       — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
- *   4. Raw handler            — the actual tool implementation.
+ *   1. Audit log wrapper       — captures timing and outcome for every call.
+ *   2. Project scope           — pin mismatch + LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS membership.
+ *   3. Input validation        — rejects invalid resource IDs (control chars, ?, #, %, path traversal).
+ *   4. Raw handler             — the actual tool implementation.
  *
- * Capability surface is the persona toolIds allowlist (ADR-0006), not process safety mode.
+ * Capability surface is the profile's tools array, not process safety mode.
  */
 
 import {
+  buildAuditLogEntry,
   extractProjectUuids,
+  ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS,
   READ_ONLY_DEFAULT,
   logAuditEntry,
-  getSessionId,
   validateResourceIdsInObject,
 } from '@lightdash-tools/common';
 import { isInputRequiredResult } from '@modelcontextprotocol/server';
 
+import { getServerProfile } from '../audit/server-profile.js';
 import { getToolAuditAuth, runWithToolAuditAuthAsync } from '../audit/tool-audit-context.js';
+import { findUnavailableProjectUuids } from '../governance/available-projects.js';
 import {
   resolveMcpClientSessionId,
   runWithMcpClientSessionAsync,
 } from '../governance/mcp-client-session.js';
 import { getPinnedProjectUuid } from '../governance/project-pin.js';
-import { toMcpErrorMessage } from '../server/errors.js';
+import { createOperationReporter } from '../notifications/operation-reporter.js';
+import { classifyUpstreamError } from '../server/upstream-errors.js';
 
+import type { OperationReporter } from '../notifications/operation-reporter.js';
 import type { McpContextProvider } from '../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { AuditStatus, ToolAnnotations } from '@lightdash-tools/common';
@@ -36,10 +41,52 @@ import type { z } from 'zod';
 /** Prefix for all MCP tool names (disambiguation when multiple servers are connected). */
 export const TOOL_PREFIX = 'lightdash_';
 
+export type ImageContentBlock = {
+  type: 'image';
+  data: string;
+  mimeType: string;
+};
+
+/** MCP embedded resource content block (tool-result artifacts). */
+export type ResourceContentBlock = {
+  type: 'resource';
+  resource: {
+    uri: string;
+    mimeType?: string;
+    text: string;
+  };
+  annotations?: {
+    audience?: Array<'assistant' | 'user'>;
+    priority?: number;
+  };
+};
+
+export type ToolContentBlock =
+  ImageContentBlock | ResourceContentBlock | { type: 'text'; text: string };
+
 export type TextContent = {
-  content: Array<{ type: 'text'; text: string }>;
+  content: ToolContentBlock[];
   structuredContent?: Record<string, unknown>;
   isError?: boolean;
+};
+
+/** Kind of bulky payload kept out of the compact summary body (ADR-0032). */
+export type ToolArtifactKind = 'data' | 'sql';
+
+export type ToolArtifactSpec = {
+  kind: ToolArtifactKind;
+  uri: string;
+  mimeType: string;
+  text: string;
+  audience: Array<'assistant' | 'user'>;
+  priority?: number;
+};
+
+export type ToolArtifactCatalogEntry = {
+  kind: ToolArtifactKind;
+  uri: string;
+  mimeType: string;
+  included: boolean;
 };
 
 /** Handler return type: normal tool content or MCP 2026-07-28 MRTR InputRequiredResult. */
@@ -58,6 +105,94 @@ export function jsonToolResult(data: unknown): TextContent {
   return {
     content: [{ type: 'text', text: JSON.stringify(data, null, 2) }],
     structuredContent: toStructuredContent(data),
+  };
+}
+
+/** Optional additive fields on structured tool errors (RFC progressive-disclosure recovery). */
+export type ToolErrorExtras = {
+  recovery?: string;
+  playbookUri?: string;
+};
+
+/** Tool execution error with structured `{ error: { code, message } }` (not policy-blocked). */
+export function toolErrorResult(
+  code: string,
+  message: string,
+  extras?: ToolErrorExtras,
+): TextContent {
+  const error: { code: string; message: string; recovery?: string; playbookUri?: string } = {
+    code,
+    message,
+  };
+  if (extras?.recovery !== undefined) {
+    error.recovery = extras.recovery;
+  }
+  if (extras?.playbookUri !== undefined) {
+    error.playbookUri = extras.playbookUri;
+  }
+  return { ...jsonToolResult({ error }), isError: true };
+}
+
+/**
+ * MCP ImageContent + metadata text. structuredContent holds meta only (no base64).
+ * Spec: https://modelcontextprotocol.io/specification/2025-11-25/server/tools
+ */
+export function imageToolResult(args: {
+  meta: Record<string, unknown>;
+  imageBase64: string;
+  mimeType?: string;
+}): TextContent {
+  const mimeType = args.mimeType ?? 'image/png';
+  return {
+    content: [
+      { type: 'text', text: JSON.stringify(args.meta, null, 2) },
+      { type: 'image', data: args.imageBase64, mimeType },
+    ],
+    structuredContent: toStructuredContent(args.meta),
+  };
+}
+
+/**
+ * Compact summary + optional embedded resource artifacts (ADR-0032).
+ * Spec: https://modelcontextprotocol.io/specification/2025-11-25/server/tools#tool-result
+ * structuredContent holds summary only (no SQL body / row payloads).
+ */
+export function artifactToolResult(args: {
+  summary: object;
+  artifacts?: ToolArtifactSpec[];
+  catalog?: ToolArtifactCatalogEntry[];
+}): TextContent {
+  const artifacts = args.artifacts ?? [];
+  const catalog =
+    args.catalog ??
+    artifacts.map((a) => ({
+      kind: a.kind,
+      uri: a.uri,
+      mimeType: a.mimeType,
+      included: true,
+    }));
+  const summary = Object.assign({}, args.summary, { artifacts: catalog }) as Record<
+    string,
+    unknown
+  >;
+  const content: ToolContentBlock[] = [
+    { type: 'text', text: JSON.stringify(summary, null, 2) },
+    ...artifacts.map((a): ResourceContentBlock => ({
+      type: 'resource',
+      resource: {
+        uri: a.uri,
+        mimeType: a.mimeType,
+        text: a.text,
+      },
+      annotations: {
+        audience: a.audience,
+        ...(a.priority !== undefined ? { priority: a.priority } : {}),
+      },
+    })),
+  ];
+  return {
+    content,
+    structuredContent: toStructuredContent(summary),
   };
 }
 
@@ -110,25 +245,6 @@ type RegisterToolFn = (name: string, options: ToolOptions, handler: ToolHandler)
 /** Merges per-tool annotations with defaults; per-tool values win. */
 function mergeAnnotations(overrides?: ToolAnnotations): ToolAnnotations {
   return { ...DEFAULT_ANNOTATIONS, ...overrides };
-}
-
-function buildAuditFields(
-  name: string,
-  projectUuids: string[],
-  status: AuditStatus,
-  start: number,
-  auth: ReturnType<typeof getToolAuditAuth>,
-): Parameters<typeof logAuditEntry>[0] {
-  return {
-    timestamp: new Date().toISOString(),
-    sessionId: getSessionId(),
-    tool: name,
-    projectUuids: projectUuids.length > 0 ? projectUuids : undefined,
-    tokenHash: auth?.tokenHash,
-    subject: auth?.subject,
-    status,
-    durationMs: Date.now() - start,
-  };
 }
 
 /** Internal marker attached to responses produced by a guardrail (project-pin denial
@@ -222,44 +338,67 @@ export function registerToolSafe(
     return validatedInner(args, extra);
   };
 
-  // ── HTTP project pin wrapper ──────────────────────────────────────────────
-  // When X-Lightdash-Project is set (ALS), reject tools that target another project.
-  const pinInner = finalHandler;
+  // ── Project pin + shared allowlist ────────────────────────────────────────
+  // One ALS read + one arg extract: pin mismatch, then ALLOWED_PROJECT_UUIDS membership.
+  const scopeInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
     const pinned = getPinnedProjectUuid();
+    const projectUuids = extractProjectUuids(args);
     if (pinned) {
-      const projectUuids = extractProjectUuids(args);
-      const mismatched = projectUuids.filter((uuid) => uuid !== pinned);
+      const pinnedLower = pinned.toLowerCase();
+      const mismatched = projectUuids.filter((uuid) => uuid.toLowerCase() !== pinnedLower);
       if (mismatched.length > 0) {
         return blockedToolContent(
           `Error: Project(s) [${mismatched.join(', ')}] do not match the pinned project ${pinned} (X-Lightdash-Project).`,
         );
       }
     }
-    return pinInner(args, extra);
+    // After pin match, args equal the pin — check pin alone; else check arg UUIDs.
+    const candidates = pinned ? [pinned] : projectUuids;
+    const unavailable = findUnavailableProjectUuids(candidates);
+    if (unavailable.length > 0) {
+      return blockedToolContent(
+        `Error: PROJECT_NOT_AVAILABLE: Project(s) [${unavailable.join(', ')}] are not in ${ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS}.`,
+      );
+    }
+    return scopeInner(args, extra);
   };
 
   // ── Audit log wrapper ─────────────────────────────────────────────────────
   // Outermost layer: records timing and outcome for every call.
+  // profileId is fixed at registration (bindServerProfile before registerTools).
+  const profileId =
+    typeof server === 'object' && server !== null ? getServerProfile(server) : undefined;
   const auditedInner = finalHandler;
   finalHandler = async (args, extra): Promise<ToolResult> => {
-    const start = Date.now();
+    const startMs = Date.now();
     const projectUuids = extractProjectUuids(args);
     // Snapshot before await — wrapTool ALS may end when the handler returns.
     const auth = getToolAuditAuth();
+    const clientSessionId = resolveMcpClientSessionId(extra);
     let status: AuditStatus = 'success';
-    let result: ToolResult;
+    let result!: ToolResult;
 
     try {
       result = await auditedInner(args, extra);
       status = resolveAuditStatus(result);
     } catch (err) {
       status = 'error';
-      logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
       throw err;
+    } finally {
+      logAuditEntry(
+        buildAuditLogEntry({
+          tool: name,
+          status,
+          startMs,
+          projectUuids,
+          tokenHash: auth?.tokenHash,
+          subject: auth?.subject,
+          clientSessionId,
+          profileId,
+        }),
+      );
     }
-
-    logAuditEntry(buildAuditFields(name, projectUuids, status, start, auth));
 
     // Pass InputRequiredResult through unchanged (MRTR).
     if (isInputRequiredResult(result)) {
@@ -284,9 +423,13 @@ export function registerToolSafe(
 
 export type ToolExecutionContext = {
   lightdashClient: LightdashClient;
+  /** Request-scoped reporter backed by MCP progress notifications when available. */
+  operationReporter: OperationReporter;
   /** SDK ServerContext when the transport provides it (second registerTool arg). */
   serverContext: ServerContext | undefined;
   sessionId: string;
+  /** Authenticated principal for signed handles (ADR-0019); anonymous when unset. */
+  subject: string;
 };
 
 function asServerContext(extra: unknown): ServerContext | undefined {
@@ -307,14 +450,17 @@ export function wrapToolContextual<T>(
       return await runWithMcpClientSessionAsync(sessionId, async () => {
         const context = await contextProvider.getContext(extra);
         const auth = context.auth;
+        const serverContext = asServerContext(extra);
 
         return await runWithToolAuditAuthAsync(
           { tokenHash: auth?.tokenHash, subject: auth?.subject },
           async () => {
             const execution: ToolExecutionContext = {
               lightdashClient: context.lightdashClient,
-              serverContext: asServerContext(extra),
+              operationReporter: createOperationReporter(serverContext),
+              serverContext,
               sessionId,
+              subject: auth?.subject ?? 'anonymous',
             };
             const handler = fn(execution);
             return await handler(args as T);
@@ -322,8 +468,8 @@ export function wrapToolContextual<T>(
         );
       });
     } catch (err) {
-      const text = toMcpErrorMessage(err);
-      return { content: [{ type: 'text', text }], isError: true };
+      const { code, message } = classifyUpstreamError(err);
+      return toolErrorResult(code, message);
     }
   };
 }

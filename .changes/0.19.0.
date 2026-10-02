@@ -1,0 +1,8 @@
+## [0.19.0] - 2026-08-21
+### Features
+* Add ai-agent-chat MCP profile for using existing Lightdash AI Agents (ADR-0029).
+* ai-agent-chat: add route_agent (AI Router) and URL/UUID grounding playbooks (ADR-0031)
+### Bug Fixes
+* Require prompt on ai-agent-chat create_agent_thread; empty create fails upstream (ADR-0030).
+### Documentation
+* Clarify ai-agent-chat prompts/playbooks as new-conversation-by-default with own-thread continue only (no cross-user takeover).

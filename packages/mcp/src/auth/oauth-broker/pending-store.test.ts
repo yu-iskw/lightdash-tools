@@ -1,52 +1,55 @@
 /**
- * In-memory OAuthBrokerStore unit tests (ADR-0016).
- * Redis path is covered only when LIGHTDASH_TOOLS_MCP_REDIS_URL is set
- * (skipped otherwise — no Redis required for default CI).
+ * In-memory OAuthBrokerStore unit tests (ADR-0019).
+ * Redis backend removed per ADR-0019; always memory.
  */
 
-import { afterEach, describe, expect, it } from 'vitest';
-
-import { createOAuthBrokerStore } from '../../store/create-oauth-broker-store.js';
-import { resetSharedRedisClientForTests } from '../../store/redis-client.js';
+import { describe, expect, it } from 'vitest';
 
 import { InMemoryOAuthBrokerStore } from './pending-store.js';
 
+const RESOURCE = 'https://mcp.example.com/semantic-layer/v1/mcp';
+
+function pendingInput(clientId = 'c1') {
+  return {
+    clientId,
+    redirectUri: 'http://127.0.0.1:1/cb',
+    codeChallenge: 'ch',
+    codeChallengeMethod: 'S256',
+    resource: RESOURCE,
+  };
+}
+
 describe('InMemoryOAuthBrokerStore', () => {
-  it('createPending / takePending is single-use', async () => {
+  it('createPending / takePending is single-use and keeps the MCP resource', async () => {
     const store = new InMemoryOAuthBrokerStore();
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const pending = await store.createPending(pendingInput());
     expect(pending?.brokerState).toBeTruthy();
+    expect(pending?.resource).toBe(RESOURCE);
     expect((await store.takePending(pending!.brokerState))?.clientId).toBe('c1');
     expect(await store.takePending(pending!.brokerState)).toBeUndefined();
   });
 
-  it('issueCode / takeCode is single-use', async () => {
+  it('issueCode / takeCode is single-use and carries MCP resource/scope', async () => {
     const store = new InMemoryOAuthBrokerStore();
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const pending = await store.createPending({ ...pendingInput(), scope: 'mcp:read' });
     const issued = await store.issueCode(pending!, { accessToken: 'tok' });
     expect(issued?.accessToken).toBe('tok');
+    expect(issued?.resource).toBe(RESOURCE);
+    expect(issued?.scope).toBe('mcp:read');
     expect((await store.takeCode(issued!.code))?.clientId).toBe('c1');
     expect(await store.takeCode(issued!.code)).toBeUndefined();
   });
 
+  it('does not substitute a downstream token scope for the MCP scope', async () => {
+    const store = new InMemoryOAuthBrokerStore();
+    const pending = await store.createPending({ ...pendingInput(), scope: 'mcp:write' });
+    const issued = await store.issueCode(pending!, { accessToken: 'tok' });
+    expect(issued?.scope).toBe('mcp:write');
+  });
+
   it('restoreCode re-inserts a taken code for retry', async () => {
     const store = new InMemoryOAuthBrokerStore({ codeTtlMs: 60_000 });
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const pending = await store.createPending(pendingInput());
     const issued = await store.issueCode(pending!, { accessToken: 'tok' });
     const taken = await store.takeCode(issued!.code);
     expect(taken?.accessToken).toBe('tok');
@@ -58,12 +61,7 @@ describe('InMemoryOAuthBrokerStore', () => {
 
   it('restoreCode skips codes whose TTL has already elapsed', async () => {
     const store = new InMemoryOAuthBrokerStore({ codeTtlMs: 1_000 });
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const pending = await store.createPending(pendingInput());
     const issued = await store.issueCode(pending!, { accessToken: 'tok' });
     const taken = await store.takeCode(issued!.code);
     expect(taken).toBeDefined();
@@ -74,12 +72,7 @@ describe('InMemoryOAuthBrokerStore', () => {
 
   it('getCode / deleteCode still work for peek diagnostics', async () => {
     const store = new InMemoryOAuthBrokerStore();
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const pending = await store.createPending(pendingInput());
     const issued = await store.issueCode(pending!, { accessToken: 'tok' });
     expect((await store.getCode(issued!.code))?.clientId).toBe('c1');
     await store.deleteCode(issued!.code);
@@ -100,64 +93,14 @@ describe('InMemoryOAuthBrokerStore', () => {
 
   it('enforces maxPending after cleanup', async () => {
     const store = new InMemoryOAuthBrokerStore({ maxPending: 1 });
-    const first = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
+    const first = await store.createPending(pendingInput());
     expect(first).toBeDefined();
-    expect(
-      await store.createPending({
-        clientId: 'c2',
-        redirectUri: 'http://127.0.0.1:1/cb',
-        codeChallenge: 'ch',
-        codeChallengeMethod: 'S256',
-      }),
-    ).toBeUndefined();
+    expect(await store.createPending(pendingInput('c2'))).toBeUndefined();
   });
 
   it('enforces maxClients', async () => {
     const store = new InMemoryOAuthBrokerStore({ maxClients: 1 });
     expect(await store.registerClient(['http://127.0.0.1:1/cb'])).toBeDefined();
     expect(await store.registerClient(['http://127.0.0.1:1/cb2'])).toBeUndefined();
-  });
-});
-
-describe('createOAuthBrokerStore', () => {
-  it('returns memory store by default', async () => {
-    const store = createOAuthBrokerStore({ backend: 'memory' });
-    const pending = await store.createPending({
-      clientId: 'c1',
-      redirectUri: 'http://127.0.0.1:1/cb',
-      codeChallenge: 'ch',
-      codeChallengeMethod: 'S256',
-    });
-    expect(pending?.brokerState).toBeTruthy();
-  });
-
-  const redisUrl = process.env.LIGHTDASH_TOOLS_MCP_REDIS_URL?.trim();
-  const describeRedis = redisUrl ? describe : describe.skip;
-
-  describeRedis('redis backend', () => {
-    afterEach(async () => {
-      await resetSharedRedisClientForTests();
-    });
-
-    it('persists pending across store instances', async () => {
-      const config = { backend: 'redis' as const, redisUrl: redisUrl! };
-      const a = createOAuthBrokerStore(config);
-      const pending = await a.createPending({
-        clientId: 'c1',
-        redirectUri: 'http://127.0.0.1:1/cb',
-        codeChallenge: 'ch',
-        codeChallengeMethod: 'S256',
-      });
-      expect(pending).toBeDefined();
-
-      const b = createOAuthBrokerStore(config);
-      const taken = await b.takePending(pending!.brokerState);
-      expect(taken?.clientId).toBe('c1');
-    });
   });
 });

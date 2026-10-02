@@ -3,7 +3,7 @@
   "ignoreDependencies": [],
   "ignoreExportsUsedInFile": true,
   "ignoreIssues": {
-    "packages/common/src/types/**": [
+    "packages/common/src/types/generated/openapi-types.ts": [
       "exports",
       "types",
       "nsExports",
@@ -11,7 +11,38 @@
       "enumMembers",
       "namespaceMembers"
     ],
-    "packages/client/src/http/axios-client.ts": ["exports"]
+    "packages/common/src/types/v1/**": [
+      "exports",
+      "types",
+      "nsExports",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ],
+    "packages/common/src/types/v2/**": [
+      "exports",
+      "types",
+      "nsExports",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ],
+    "packages/common/src/types/lightdash-api.ts": [
+      "exports",
+      "types",
+      "nsExports",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ],
+    "packages/common/src/types/index.ts": [
+      "exports",
+      "types",
+      "nsExports",
+      "nsTypes",
+      "enumMembers",
+      "namespaceMembers"
+    ]
   },
   "workspaces": {
     ".": {

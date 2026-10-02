@@ -2,7 +2,12 @@
  * Agent CRUD commands (list, get, create, update, delete).
  */
 
-import { READ_ONLY_DEFAULT, WRITE_DESTRUCTIVE, WRITE_IDEMPOTENT } from '@lightdash-tools/common';
+import {
+  buildSecureCreateAiAgentBody,
+  READ_ONLY_DEFAULT,
+  WRITE_DESTRUCTIVE,
+  WRITE_IDEMPOTENT,
+} from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
 import { hasExplicitFileInput, readParsedInput } from '../utils/file-input';
@@ -58,7 +63,9 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
 
   agentsCmd
     .command('create')
-    .description('Create a new agent in a project')
+    .description(
+      'Create a new agent in a project (omitted permission flags default to secure: data/content/SQL/user context off, adminOnly on)',
+    )
     .requiredOption('--project <uuid>', 'Project UUID')
     .option('--name <name>', 'Agent name')
     .option('--description <text>', 'Agent description')
@@ -77,7 +84,7 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
         };
         try {
           const client = getClient();
-          let body: Parameters<typeof client.v1.aiAgents.createAgent>[1];
+          let createInput: Record<string, unknown>;
 
           if (hasExplicitFileInput(options)) {
             const parsed = await readParsedInput({ file: options.file, stdin: options.stdin });
@@ -85,22 +92,23 @@ export function registerAgentsCrudCommands(agentsCmd: Command): void {
               console.error('Error: agent input must be a JSON/YAML object');
               process.exit(1);
             }
-            body = {
-              ...(parsed as Record<string, unknown>),
-              projectUuid: options.project,
-            } as Parameters<typeof client.v1.aiAgents.createAgent>[1];
+            createInput = parsed as Record<string, unknown>;
           } else {
             if (options.name == null) {
               console.error('Error: --name is required unless using --file or --stdin');
               process.exit(1);
             }
-            body = {
+            createInput = {
               name: options.name,
-              projectUuid: options.project,
               ...(options.description != null ? { description: options.description } : {}),
               ...(options.instruction != null ? { instruction: options.instruction } : {}),
-            } as Parameters<typeof client.v1.aiAgents.createAgent>[1];
+            };
           }
+
+          const body = buildSecureCreateAiAgentBody({
+            ...(createInput as Parameters<typeof buildSecureCreateAiAgentBody>[0]),
+            projectUuid: options.project,
+          });
 
           const result = await client.v1.aiAgents.createAgent(options.project, body);
           console.log(JSON.stringify(result, null, 2));

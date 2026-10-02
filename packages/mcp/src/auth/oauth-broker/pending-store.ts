@@ -1,9 +1,9 @@
 /**
- * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0016).
+ * OAuth broker pending / codes / DCR clients (ADR-0007 / ADR-0019).
  *
- * All values are JSON-serializable (redirect URI sets become string arrays on Redis).
- * Backends: in-memory (default) or Redis via `createOAuthBrokerStore` — full multi-instance
- * handoff for authorize → callback → token when STORE=redis.
+ * All values are JSON-serializable. Backend: in-memory only — process-local.
+ * Multi-instance OAuth authorization/code exchange needs sticky `/oauth/*` or a single replica.
+ * Issued MCP access tokens are self-contained and do not depend on this store after exchange.
  */
 
 import { randomBytes } from 'node:crypto';
@@ -19,6 +19,9 @@ export interface PendingAuthorization {
   clientState?: string;
   codeChallenge: string;
   codeChallengeMethod: string;
+  /** Exact RFC 8707 MCP protected-resource URI requested by the client. */
+  resource: string;
+  /** MCP authorization scope. This is not a downstream Lightdash scope. */
   scope?: string;
   createdAt: number;
 }
@@ -29,9 +32,13 @@ export interface IssuedAuthorizationCode {
   redirectUri: string;
   codeChallenge: string;
   codeChallengeMethod: string;
+  /** Server-held downstream Lightdash access token; never return it directly to MCP clients. */
   accessToken: string;
   expiresIn?: number;
   tokenType: string;
+  /** Exact RFC 8707 MCP protected-resource URI bound during authorization. */
+  resource: string;
+  /** MCP authorization scope. */
   scope?: string;
   createdAt: number;
 }
@@ -62,8 +69,8 @@ export type OAuthBrokerStoreOptions = {
 };
 
 /**
- * Pluggable OAuth broker ephemeral store (ADR-0016).
- * All methods are async so Redis and memory share one call-site shape.
+ * OAuth broker ephemeral store (ADR-0019). In-memory only (process-local).
+ * Async methods keep call sites await-uniform for future backends if needed.
  */
 export interface OAuthBrokerStore {
   registerClient(redirectUris: readonly string[]): Promise<RegisteredClient | undefined>;
@@ -79,10 +86,9 @@ export interface OAuthBrokerStore {
       accessToken: string;
       expiresIn?: number;
       tokenType?: string;
-      scope?: string;
     },
   ): Promise<IssuedAuthorizationCode | undefined>;
-  /** Atomic get+delete (multi-instance-safe consume). */
+  /** Atomic get+delete for one-time code consume. */
   takeCode(code: string): Promise<IssuedAuthorizationCode | undefined>;
   /**
    * Re-insert a previously taken code with remaining TTL based on `createdAt`
@@ -178,7 +184,6 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
       accessToken: string;
       expiresIn?: number;
       tokenType?: string;
-      scope?: string;
     },
   ): Promise<IssuedAuthorizationCode | undefined> {
     this.cleanup();
@@ -194,7 +199,8 @@ export class InMemoryOAuthBrokerStore implements OAuthBrokerStore {
       accessToken: tokens.accessToken,
       expiresIn: tokens.expiresIn,
       tokenType: tokens.tokenType ?? 'Bearer',
-      scope: tokens.scope ?? pending.scope,
+      resource: pending.resource,
+      scope: pending.scope,
       createdAt: Date.now(),
     };
     this.codes.set(issued.code, issued);

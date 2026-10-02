@@ -251,7 +251,6 @@ export default [
       'packages/common/src/safety.ts',
       'packages/cli/src/utils/safety.ts',
       'packages/client/src/utils/env.ts',
-      'packages/cli/src/commands/schema.ts',
       'packages/client/src/api/v1/explores.ts',
       '**/*.test.ts',
     ],

@@ -7,13 +7,14 @@
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
+import { playbookTopicUri } from '../profiles/lib/playbook-resources.js';
 import { RenameRejectedError } from '../tools/project/rename-instruction.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
 import { registerToolSafe } from '../tools/shared.js';
 
 import { PreviewLedgerError } from './preview-ledger.js';
 
-import type { ToolHandler, ToolOptions, TextContent } from '../tools/shared.js';
+import type { ToolHandler, ToolOptions, TextContent, ToolErrorExtras } from '../tools/shared.js';
 import type { ToolAnnotations } from '@lightdash-tools/common';
 import type { McpServer } from '@modelcontextprotocol/server';
 
@@ -34,7 +35,7 @@ export const DISCOVERY_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** preview_* — computes a diff and issues a previewId, never persists. */
+/** preview_* — computes a diff and issues a HMAC-signed previewToken (ADR-0019), never persists. */
 export const PREVIEW_SAFETY: DeveloperOperationSafety = {
   mutability: 'preview',
   queryCapability: 'none',
@@ -42,7 +43,7 @@ export const PREVIEW_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** validate_* — optional saved-resource health check; never unlocks the preview ledger. */
+/** validate_* — optional saved-resource health check; never unlocks the preview. */
 export const VALIDATE_SAFETY: DeveloperOperationSafety = {
   mutability: 'none',
   queryCapability: 'none',
@@ -58,7 +59,7 @@ export const COMPARE_SAFETY: DeveloperOperationSafety = {
   agentExposure: 'agent',
 };
 
-/** SAFE_WRITE apply tools gated by a validated previewId. */
+/** SAFE_WRITE apply tools gated by a validated previewToken. */
 export const WRITE_SAFETY: DeveloperOperationSafety = {
   mutability: MUTABILITY_WRITE_NONDESTRUCTIVE,
   queryCapability: 'none',
@@ -113,10 +114,39 @@ export function registerContentDeveloperTool(
   registerToolSafe(server, shortName, { ...options, annotations }, handler);
 }
 
-/** Map known policy errors to a coded tool result; rethrow anything else. */
+/** Additive recovery hints for content-developer preview errors. */
+const PREVIEW_RECOVERY_EXTRAS: Partial<Record<string, ToolErrorExtras>> = {
+  PREVIEW_STALE: {
+    recovery:
+      'Re-run preview_* with the intended payload, confirm_preview, then apply the identical proposed body.',
+    playbookUri: playbookTopicUri('content-developer', 'recovery/preview-stale'),
+  },
+  PREVIEW_REQUIRED: {
+    recovery: 'Call the matching preview_* tool, then confirm_preview before apply.',
+    playbookUri: playbookTopicUri('content-developer', 'recovery/preview-required'),
+  },
+};
+
+function recoveryExtrasForPreviewCode(code: string): ToolErrorExtras | undefined {
+  // eslint-disable-next-line security/detect-object-injection -- keys from PreviewLedgerError and RenameRejectedError codes
+  return PREVIEW_RECOVERY_EXTRAS[code];
+}
+
+/**
+ * Coded tool error for content-developer paths that return preview codes without
+ * throwing PreviewLedgerError (adds recovery extras when the code is known).
+ */
+export function developerCodedErrorResult(code: string, message: string): TextContent {
+  return codedErrorResult(code, message, recoveryExtrasForPreviewCode(code));
+}
+
+/**
+ * Map ProjectScopeError / PreviewLedgerError / RenameRejectedError to a coded tool error
+ * result; rethrow anything else.
+ */
 export function developerErrorResult(err: unknown): TextContent {
   if (err instanceof PreviewLedgerError || err instanceof RenameRejectedError) {
-    return codedErrorResult(err.code, err.message);
+    return developerCodedErrorResult(err.code, err.message);
   }
   return projectScopeErrorResult(err);
 }

@@ -1,0 +1,13 @@
+## [0.13.0] - 2026-08-04
+### Features
+* MCP CLI: stdio/http --help lists profile mounts and tool ids from PROFILES.
+### Bug Fixes
+* MCP compile_query sets metricQuery.exploreName from exploreId; clarify semantic-layer playbooks for joins and compiledSql trust.
+* MCP compile_query defaults missing tableCalculations to []; semantic-layer playbooks/prompts prioritize fieldIds and SELECT aliases.
+* BREAKING: MCP stdio profile is CLI-only via `stdio --profile <id>`; no env-based profile selection.
+* BREAKING: MCP stdio is transport-first — use `stdio --profile <id>`; remove profile subcommands and positional stdio args.
+### Documentation
+* Clarify MCP README for stdio --profile and http launchers.
+### Refactors
+* MCP mount membership uses literal per-profile tool tables in common for IDE-traceable SSOT.
+* Replace operations catalog with profile-owned ToolModules; remove CLI schema introspection.

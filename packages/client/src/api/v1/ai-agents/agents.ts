@@ -25,7 +25,9 @@ export class AiAgentsProjectClient extends BaseApiClient {
 
   /** Create a new agent in a project (POST /projects/{projectUuid}/aiAgents). */
   async createAgent(projectUuid: string, body: CreateAiAgent): Promise<AiAgent> {
-    return this.http.post<AiAgent>(`/projects/${projectUuid}/aiAgents`, body);
+    return this.http.post<AiAgent>(`/projects/${projectUuid}/aiAgents`, body, undefined, {
+      maxRetries: 0,
+    });
   }
 
   /** Update an existing agent (PATCH /projects/{projectUuid}/aiAgents/{agentUuid}). */

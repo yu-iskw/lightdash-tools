@@ -4,6 +4,7 @@
 
 import { z } from 'zod';
 
+import { filterProjectsByAvailability } from '../../governance/available-projects.js';
 import { getPinnedProjectUuid } from '../../governance/project-pin.js';
 import { emptyCoverage, isPageComplete } from '../lib/contracts.js';
 import {
@@ -20,6 +21,7 @@ import {
   projectUuidField,
 } from '../lib/schema-fields.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import { resolveSessionOrganization } from './binding.js';
 
@@ -273,7 +275,7 @@ export function registerListOrgProjects(
       if (!args.includePreviewProjects) {
         projects = projects.filter((p) => p.type !== 'PREVIEW');
       }
-      const data = projects.map((p) => toProjectSummary(p));
+      const data = filterProjectsByAvailability(projects.map((p) => toProjectSummary(p)));
       return jsonToolResult({
         data,
         pagination: { returned: data.length, complete: true },
@@ -295,3 +297,10 @@ export function registerListOrgProjects(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const getOrgProfileTool = defineTool('get_org_profile', registerGetOrgProfile);
+export const listOrgMembersTool = defineTool('list_org_members', registerListOrgMembers);
+export const getOrgMemberTool = defineTool('get_org_member', registerGetOrgMember);
+export const listOrgGroupsTool = defineTool('list_org_groups', registerListOrgGroups);
+export const listOrgProjectsTool = defineTool('list_org_projects', registerListOrgProjects);

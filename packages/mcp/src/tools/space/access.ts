@@ -16,6 +16,7 @@ import { registerOrgAuditTool } from '../lib/register-org-audit.js';
 import { projectUuidField } from '../lib/schema-fields.js';
 import { resolveSessionOrganization } from '../organization/binding.js';
 import { jsonToolResult, wrapTool } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { AuditCoverage, AuditWarning } from '../lib/contracts.js';
@@ -507,3 +508,10 @@ export function registerResolveEffectiveAccess(
 }
 
 /* eslint-enable max-params, sonarjs/cognitive-complexity, sonarjs/cyclomatic-complexity */
+
+// ToolModule exports (profile mounts)
+export const listSpaceAccessTool = defineTool('list_space_access', registerListSpaceAccess);
+export const resolveEffectiveAccessTool = defineTool(
+  'resolve_effective_access',
+  registerResolveEffectiveAccess,
+);

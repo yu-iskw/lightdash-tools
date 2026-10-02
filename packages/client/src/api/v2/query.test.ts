@@ -81,6 +81,22 @@ describe('QueryClientV2', () => {
     expect(result).toEqual(results);
   });
 
+  it('runDashboardSqlChartQuery should call POST /projects/{projectUuid}/query/dashboard-sql-chart with body', async () => {
+    const client = new QueryClientV2(mockHttp);
+    const body = {
+      savedSqlUuid: 'sql-1',
+      dashboardUuid: 'd1',
+      tileUuid: 't1',
+      dashboardFilters: { dimensions: [], metrics: [], tableCalculations: [] },
+      dashboardSorts: [],
+    };
+    const results = { queryUuid: 'q1', status: 'running' };
+    vi.mocked(mockHttp.post).mockResolvedValue(results);
+    const result = await client.runDashboardSqlChartQuery('p1', body);
+    expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/query/dashboard-sql-chart', body);
+    expect(result).toEqual(results);
+  });
+
   it('getAsyncQueryResults should call GET /projects/{projectUuid}/query/{queryUuid}', async () => {
     const client = new QueryClientV2(mockHttp);
     const results = { queryUuid: 'q1', status: 'ready', rows: [] };

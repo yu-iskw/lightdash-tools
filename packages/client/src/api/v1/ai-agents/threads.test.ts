@@ -52,4 +52,19 @@ describe('AiAgentsThreadsClient extensions', () => {
       'cloneThread requires body.promptUuid',
     );
   });
+
+  it('passes RequestOptions.retry as the HttpClient retry argument', async () => {
+    const client = new AiAgentsThreadsClient(mockHttp);
+    vi.mocked(mockHttp.post).mockResolvedValue({ response: 'ok' });
+    await client.generateAgentThreadResponse('proj1', 'a1', 't1', {
+      timeoutMs: 180_000,
+      retry: { maxRetries: 0 },
+    });
+    expect(mockHttp.post).toHaveBeenCalledWith(
+      '/projects/proj1/aiAgents/a1/threads/t1/generate',
+      undefined,
+      { timeout: 180_000 },
+      { maxRetries: 0 },
+    );
+  });
 });

@@ -28,7 +28,7 @@ pnpm build
 - `packages/cli/` — CLI for Lightdash APIs
 - `packages/client/` — HTTP client for Lightdash APIs
 - `packages/common/` — Shared types and utilities
-- `packages/mcp/` — MCP server exposing Lightdash tools
+- `packages/mcp/` — MCP server exposing Lightdash tools (architecture: [packages/mcp/CONTRIBUTING.md](packages/mcp/CONTRIBUTING.md))
 
 ## Before committing
 

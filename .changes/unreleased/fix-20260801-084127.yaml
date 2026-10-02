@@ -1,3 +1,0 @@
-kind: fix
-body: Redact MCP emails on direct access and omit project connection secrets by default (ADR-0011).
-time: 2026-08-01T08:41:27.475966+09:00

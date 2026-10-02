@@ -1,16 +1,17 @@
 /**
- * Persona safety invariant: all org-audit tools register as read-only GET.
+ * Profile safety invariant: all org-audit tools register as read-only GET.
  */
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ORGANIZATION_AUDIT_TOOL_IDS } from '../../personas/organization-audit/v1/index.js';
-import { registerToolsByIds } from '../registry.js';
+import { bindServerProfile } from '../../audit/server-profile.js';
+import { getProfile, listToolIds } from '../../profiles/index.js';
+import { registerTools } from '../registry.js';
 import { TOOL_PREFIX } from '../shared.js';
 
 describe('organization-audit safety invariants', () => {
-  it('registers only readOnlyHint tools for the allowlist', () => {
+  it('registers only readOnlyHint tools for profile-mounted tools', () => {
     const annotationsByName = new Map<string, unknown>();
     const mockServer = {
       registerTool: vi.fn((name: string, options: { annotations?: unknown }) => {
@@ -18,11 +19,14 @@ describe('organization-audit safety invariants', () => {
       }),
     };
     const mockCtx = { getContext: async () => ({ lightdashClient: {} }) };
+    const profile = getProfile('organization-audit');
+    const toolIds = listToolIds(profile);
 
-    registerToolsByIds(mockServer as never, mockCtx as never, ORGANIZATION_AUDIT_TOOL_IDS);
+    bindServerProfile(mockServer, profile.id);
+    registerTools(mockServer as never, mockCtx as never, profile.tools);
 
-    expect(annotationsByName.size).toBe(ORGANIZATION_AUDIT_TOOL_IDS.length);
-    for (const id of ORGANIZATION_AUDIT_TOOL_IDS) {
+    expect(annotationsByName.size).toBe(toolIds.length);
+    for (const id of toolIds) {
       const annotations = annotationsByName.get(`${TOOL_PREFIX}${id}`) as {
         readOnlyHint?: boolean;
       };

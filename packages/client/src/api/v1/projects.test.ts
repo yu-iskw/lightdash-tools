@@ -43,4 +43,29 @@ describe('ProjectsClient', () => {
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/charts');
     expect(result).toEqual(charts);
   });
+
+  it('listVerifiedContent should call GET /projects/{projectUuid}/content-verification', async () => {
+    const client = new ProjectsClient(mockHttp);
+    const items = [
+      {
+        contentType: 'chart' as const,
+        uuid: 'c1',
+        contentUuid: 'c1',
+        name: 'Verified chart',
+        description: null,
+        spaceUuid: 's1',
+        spaceName: 'Space',
+        views: 10,
+        lastUpdatedAt: null,
+        verifiedAt: '2026-01-01T00:00:00.000Z',
+        verifiedBy: { userUuid: 'u1', firstName: 'Ada', lastName: 'Lovelace' },
+        chartKind: 'vertical_bar' as const,
+        exploreName: 'orders',
+      },
+    ];
+    vi.mocked(mockHttp.get).mockResolvedValue(items);
+    const result = await client.listVerifiedContent('p1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p1/content-verification');
+    expect(result).toEqual(items);
+  });
 });

@@ -1,9 +1,17 @@
+import { ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS } from '@lightdash-tools/common';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { bindServerProfile } from '../../audit/server-profile.js';
+import { resetAvailableProjectsCache } from '../../governance/available-projects.js';
 import { runWithProjectPinAsync } from '../../governance/project-pin.js';
 import { CREDENTIALS_OMITTED_WARNING } from '../lib/redaction.js';
 
-import { registerGetProject, registerListProjects } from './projects.js';
+import {
+  getProjectAnalystTool,
+  getProjectReaderTool,
+  getProjectTool,
+  registerListProjects,
+} from './projects.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 
@@ -27,6 +35,8 @@ function mockContext(
 describe('registerListProjects', () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    delete process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS];
+    resetAvailableProjectsCache();
   });
 
   it('returns only the pinned project summary when X-Lightdash-Project ALS is set', async () => {
@@ -104,9 +114,38 @@ describe('registerListProjects', () => {
     expect(listProjects).toHaveBeenCalled();
     expect(getProject).not.toHaveBeenCalled();
   });
+
+  it('filters list results to LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS when set', async () => {
+    process.env[ENV_LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS] = PINNED;
+    resetAvailableProjectsCache();
+    const all = [
+      { projectUuid: PINNED, name: 'A', type: 'DEFAULT', warehouseType: 'snowflake' },
+      { projectUuid: OTHER, name: 'B', type: 'DEFAULT', warehouseType: 'bigquery' },
+    ];
+    const listProjects = vi.fn().mockResolvedValue(all);
+    const getProject = vi.fn();
+
+    const mockServer = { registerTool: vi.fn() };
+    registerListProjects(mockServer as never, mockContext(listProjects, getProject));
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+    const result = await handler({});
+    expect(result.isError).toBeUndefined();
+    const body = JSON.parse(result.content[0].text) as {
+      data: Array<Record<string, unknown>>;
+    };
+    expect(body.data).toEqual([
+      {
+        projectUuid: PINNED,
+        name: 'A',
+        type: 'DEFAULT',
+        warehouseType: 'snowflake',
+      },
+    ]);
+  });
 });
 
-describe('registerGetProject', () => {
+describe('get_project ToolModules', () => {
   afterEach(() => {
     vi.restoreAllMocks();
     delete process.env.LIGHTDASH_TOOLS_PROJECT_UUID;
@@ -125,7 +164,8 @@ describe('registerGetProject', () => {
     const listProjects = vi.fn();
 
     const mockServer = { registerTool: vi.fn() };
-    registerGetProject(mockServer as never, mockContext(listProjects, getProject));
+    bindServerProfile(mockServer, 'semantic-layer');
+    getProjectTool.register(mockServer as never, mockContext(listProjects, getProject));
     const [, , handler] = mockServer.registerTool.mock.calls[0];
 
     const result = await handler({ projectUuid: PINNED });
@@ -144,11 +184,12 @@ describe('registerGetProject', () => {
     expect(JSON.stringify(body)).not.toContain('token');
   });
 
-  it('does not use LIGHTDASH_TOOLS_PROJECT_UUID on the non-reader path', async () => {
+  it('requires pin or projectUuid (no env default)', async () => {
     process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
     const getProject = vi.fn();
     const mockServer = { registerTool: vi.fn() };
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject));
+    bindServerProfile(mockServer, 'semantic-layer');
+    getProjectTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
     expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
 
@@ -157,21 +198,19 @@ describe('registerGetProject', () => {
     expect(getProject).not.toHaveBeenCalled();
   });
 
-  it('includes readerCapabilities for content-reader persona', async () => {
-    process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
+  it('includes readerCapabilities for content-reader profile when projectUuid is passed', async () => {
     const getProject = vi.fn().mockResolvedValue({
       projectUuid: PINNED,
       name: 'Reader',
       type: 'DEFAULT',
     });
     const mockServer = { registerTool: vi.fn() };
-    registerGetProject(mockServer as never, mockContext(vi.fn(), getProject), {
-      personaId: 'content-reader',
-    });
+    bindServerProfile(mockServer, 'content-reader');
+    getProjectReaderTool.register(mockServer as never, mockContext(vi.fn(), getProject));
     const [, options, handler] = mockServer.registerTool.mock.calls[0];
-    expect(options.description).toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
+    expect(options.description).not.toContain('LIGHTDASH_TOOLS_PROJECT_UUID');
 
-    const result = await handler({});
+    const result = await handler({ projectUuid: PINNED });
     const body = JSON.parse(result.content[0].text) as {
       data: Record<string, unknown>;
       context: Record<string, unknown>;
@@ -181,8 +220,48 @@ describe('registerGetProject', () => {
       canExecuteSavedCharts: true,
       canExecuteSqlCharts: false,
       canExecuteDashboardTiles: true,
+      canExecuteDashboardSqlTiles: true,
+      canRevealSqlBodies: true,
     });
     expect(body.context.projectUuid).toBe(PINNED);
+    expect(getProject).toHaveBeenCalledWith(PINNED);
+  });
+
+  it('content-reader returns PROJECT_SCOPE_REQUIRED without pin or projectUuid', async () => {
+    process.env.LIGHTDASH_TOOLS_PROJECT_UUID = PINNED;
+    const getProject = vi.fn();
+    const mockServer = { registerTool: vi.fn() };
+    bindServerProfile(mockServer, 'content-reader');
+    getProjectReaderTool.register(mockServer as never, mockContext(vi.fn(), getProject));
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+    const result = await handler({});
+    expect(result.isError).toBe(true);
+    expect(getProject).not.toHaveBeenCalled();
+  });
+
+  it('includes analystCapabilities for data-analyst profile when projectUuid is passed', async () => {
+    const getProject = vi.fn().mockResolvedValue({
+      projectUuid: PINNED,
+      name: 'Analyst',
+      type: 'DEFAULT',
+    });
+    const mockServer = { registerTool: vi.fn() };
+    bindServerProfile(mockServer, 'data-analyst');
+    getProjectAnalystTool.register(mockServer as never, mockContext(vi.fn(), getProject));
+    const [, , handler] = mockServer.registerTool.mock.calls[0];
+
+    const result = await handler({ projectUuid: PINNED });
+    const body = JSON.parse(result.content[0].text) as {
+      data: Record<string, unknown>;
+    };
+    expect(body.data.analystCapabilities).toEqual({
+      canDiscoverExplores: true,
+      canCompileMetricQuery: true,
+      canRunMetricQuery: true,
+      canExecuteSavedCharts: false,
+      canExecuteSqlCharts: false,
+      canMutateContent: false,
+    });
     expect(getProject).toHaveBeenCalledWith(PINNED);
   });
 });

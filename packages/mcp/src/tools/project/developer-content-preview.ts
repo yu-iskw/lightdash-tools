@@ -1,22 +1,27 @@
 /**
  * Content-developer preview_* tools (ADR-0014).
  *
- * Issues a single-use previewId via the session-scoped preview ledger.
+ * Issues an HMAC-signed previewToken (ADR-0019) via mintDraftPreviewToken.
+ * Draft → confirm remints validated; apply re-checks hash/baseline (not single-use CAS).
  * `preview_content_move` previews bulk moves (`itemUuids` + `targetSpaceUuid` +
- * required `contentTypes`); space create/update is out of band (not on this persona).
+ * required `contentTypes`); space create/update is out of band (not on this profile).
  */
 
 import { z } from 'zod';
 
-import { getMcpClientSessionId } from '../../governance/mcp-client-session.js';
 import { resolveProjectScope } from '../../governance/project-scope.js';
-import { PREVIEW_SAFETY, registerContentDeveloperTool } from '../../policy/content-developer.js';
-import { addPreviewLedgerEntry, uniqueResourceKeys } from '../../policy/preview-ledger.js';
+import {
+  PREVIEW_SAFETY,
+  developerCodedErrorResult,
+  registerContentDeveloperTool,
+} from '../../policy/content-developer.js';
+import { mintDraftPreviewToken, uniqueResourceKeys } from '../../policy/preview-ledger.js';
 import { isNotFoundError } from '../lib/api-errors.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField, uuidOrSlugField } from '../lib/schema-fields.js';
 import { codedErrorResult } from '../query/reader-tool-helpers.js';
 import { jsonToolResult } from '../shared.js';
+import { defineTool } from '../types.js';
 
 import {
   MOVE_CHART_SOURCES,
@@ -52,7 +57,7 @@ import type { MoveChartSource, MoveContentType } from './developer-helpers.js';
 import type { ResolvedProjectScope } from '../../governance/project-scope.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { TextContent } from '../shared.js';
-import type { McpServer } from '@modelcontextprotocol/server';
+import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
 
 type GetSavedChart = (id: string) => Promise<Record<string, unknown>>;
 
@@ -60,7 +65,8 @@ async function previewDuplicateChart(input: {
   changes: Record<string, unknown>;
   chartUuidOrSlug?: string;
   getSavedChart: GetSavedChart;
-  sessionId: string;
+  subject: string;
+  serverContext: ServerContext | undefined;
   scope: ResolvedProjectScope;
 }): Promise<TextContent> {
   const parsedDuplicate = parseChartDuplicateChanges(input.changes);
@@ -113,8 +119,9 @@ async function previewDuplicateChart(input: {
     sourceId,
     String(proposed.sourceChartUuidOrSlug),
   );
-  const entry = await addPreviewLedgerEntry({
-    sessionId: input.sessionId,
+  const entry = await mintDraftPreviewToken({
+    subject: input.subject,
+    serverContext: input.serverContext,
     projectUuid: input.scope.projectUuid,
     resourceKind: 'chart',
     resourceKey,
@@ -124,13 +131,14 @@ async function previewDuplicateChart(input: {
   });
   return jsonToolResult({
     data: {
-      previewId: entry.previewId,
-      status: entry.status,
-      contentHash: entry.contentHash,
+      previewToken: entry.previewToken,
+      previewId: entry.claims.previewId,
+      status: entry.claims.status,
+      contentHash: entry.claims.contentHash,
       resourceKey,
       resourceAliases,
       operation: 'duplicate',
-      expiresAt: entry.expiresAt,
+      expiresAt: entry.claims.expiresAt,
       diff: shallowDiff(current, proposed),
       current,
     },
@@ -143,7 +151,8 @@ async function previewUpsertChart(input: {
   chartUuidOrSlug?: string;
   slug?: string;
   getSavedChart: GetSavedChart;
-  sessionId: string;
+  subject: string;
+  serverContext: ServerContext | undefined;
   scope: ResolvedProjectScope;
 }): Promise<TextContent> {
   const parsedChanges = parseChartUpsertBody(input.changes);
@@ -175,8 +184,9 @@ async function previewUpsertChart(input: {
     input.chartUuidOrSlug,
     input.slug,
   );
-  const entry = await addPreviewLedgerEntry({
-    sessionId: input.sessionId,
+  const entry = await mintDraftPreviewToken({
+    subject: input.subject,
+    serverContext: input.serverContext,
     projectUuid: input.scope.projectUuid,
     resourceKind: 'chart',
     resourceKey,
@@ -186,14 +196,15 @@ async function previewUpsertChart(input: {
   });
   return jsonToolResult({
     data: {
-      previewId: entry.previewId,
-      status: entry.status,
-      contentHash: entry.contentHash,
+      previewToken: entry.previewToken,
+      previewId: entry.claims.previewId,
+      status: entry.claims.status,
+      contentHash: entry.claims.contentHash,
       resourceKey,
       resourceAliases,
       operation: 'upsert',
       upsertSlug: upsertSlug ?? null,
-      expiresAt: entry.expiresAt,
+      expiresAt: entry.claims.expiresAt,
       diff: shallowDiff(current, proposed),
       current,
     },
@@ -211,7 +222,7 @@ export function registerPreviewChartChanges(
     {
       title: 'Preview chart changes',
       description:
-        'Preview chart-as-code upsert or duplicate ({ sourceChartUuidOrSlug, newSlug, newName? }); issues a single-use previewId',
+        'Preview chart-as-code upsert or duplicate ({ sourceChartUuidOrSlug, newSlug, newName? }); issues a HMAC-signed previewToken',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -230,12 +241,11 @@ export function registerPreviewChartChanges(
       chartUuidOrSlug?: string;
       slug?: string;
       changes: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const getSavedChart: GetSavedChart = async (id) =>
         asRecord(await c.v2.charts.getSavedChart(scope.projectUuid, id));
-      const shared = { getSavedChart, sessionId, scope };
+      const shared = { getSavedChart, subject, serverContext, scope };
       if (isChartDuplicateChanges(args.changes)) {
         return previewDuplicateChart({
           ...shared,
@@ -263,7 +273,7 @@ export function registerPreviewDashboardChanges(
     {
       title: 'Preview dashboard changes',
       description:
-        'Preview dashboard create/update or duplicate ({ newName? }); issues a single-use previewId',
+        'Preview dashboard create/update or duplicate ({ newName? }); issues a HMAC-signed previewToken',
       safety: PREVIEW_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
@@ -277,9 +287,8 @@ export function registerPreviewDashboardChanges(
       projectUuid?: string;
       dashboardUuidOrSlug?: string;
       changes: Record<string, unknown>;
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       const parsedChanges = parseDashboardChangesBody(args.changes);
       if (!parsedChanges.ok) {
         return codedErrorResult(parsedChanges.code, parsedChanges.message);
@@ -304,8 +313,9 @@ export function registerPreviewDashboardChanges(
         baseline?.slug,
         args.dashboardUuidOrSlug,
       );
-      const entry = await addPreviewLedgerEntry({
-        sessionId,
+      const entry = await mintDraftPreviewToken({
+        subject,
+        serverContext,
         projectUuid: scope.projectUuid,
         resourceKind: 'dashboard',
         resourceKey,
@@ -315,13 +325,14 @@ export function registerPreviewDashboardChanges(
       });
       return jsonToolResult({
         data: {
-          previewId: entry.previewId,
-          status: entry.status,
-          contentHash: entry.contentHash,
+          previewToken: entry.previewToken,
+          previewId: entry.claims.previewId,
+          status: entry.claims.status,
+          contentHash: entry.claims.contentHash,
           resourceKey,
           resourceAliases,
           operation: isDuplicate ? 'duplicate' : current ? 'update' : 'create',
-          expiresAt: entry.expiresAt,
+          expiresAt: entry.claims.expiresAt,
           diff: shallowDiff(current, proposed),
           current,
         },
@@ -373,9 +384,8 @@ export function registerPreviewContentMove(
       targetSpaceUuid: string | null;
       contentTypes: MoveContentType[];
       chartSources?: MoveChartSource[];
-    }>(contextProvider, (c) => async (args) => {
+    }>(contextProvider, ({ client: c, subject, serverContext }) => async (args) => {
       const scope = resolveProjectScope({ projectUuid: args.projectUuid });
-      const sessionId = getMcpClientSessionId();
       assertMoveContentLengths(args.itemUuids, args.contentTypes, args.chartSources);
       const resolved = await resolveMoveContentManifest({
         itemUuids: args.itemUuids,
@@ -388,7 +398,7 @@ export function registerPreviewContentMove(
         isNotFound: isNotFoundError,
       });
       if (resolved.kind === 'error') {
-        return codedErrorResult(resolved.error.code, resolved.error.message);
+        return developerCodedErrorResult(resolved.error.code, resolved.error.message);
       }
       const resourceKey = buildMoveContentResourceKey(args.itemUuids);
       const proposed = buildMoveContentProposal({
@@ -398,8 +408,9 @@ export function registerPreviewContentMove(
         chartSources: args.chartSources,
       });
       const baseline = baselineFromMoveContentManifest(resolved.manifest);
-      const entry = await addPreviewLedgerEntry({
-        sessionId,
+      const entry = await mintDraftPreviewToken({
+        subject,
+        serverContext,
         projectUuid: scope.projectUuid,
         resourceKind: 'content-move',
         resourceKey,
@@ -408,11 +419,12 @@ export function registerPreviewContentMove(
       });
       return jsonToolResult({
         data: {
-          previewId: entry.previewId,
-          status: entry.status,
-          contentHash: entry.contentHash,
+          previewToken: entry.previewToken,
+          previewId: entry.claims.previewId,
+          status: entry.claims.status,
+          contentHash: entry.claims.contentHash,
           resourceKey,
-          expiresAt: entry.expiresAt,
+          expiresAt: entry.claims.expiresAt,
           proposed,
           baseline: resolved.manifest,
         },
@@ -421,3 +433,17 @@ export function registerPreviewContentMove(
     }),
   );
 }
+
+// ToolModule exports (profile mounts)
+export const previewChartChangesTool = defineTool(
+  'preview_chart_changes',
+  registerPreviewChartChanges,
+);
+export const previewDashboardChangesTool = defineTool(
+  'preview_dashboard_changes',
+  registerPreviewDashboardChanges,
+);
+export const previewContentMoveTool = defineTool(
+  'preview_content_move',
+  registerPreviewContentMove,
+);

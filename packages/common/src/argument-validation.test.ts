@@ -1,18 +1,12 @@
 import { describe, it, expect } from 'vitest';
 
-import {
-  RESOURCE_ID_KEYS,
-  validateArguments,
-  validateResourceIdsInObject,
-} from './argument-validation';
-
-import type { ArgumentDescriptor } from './argument-validation';
+import { RESOURCE_ID_KEYS, validateResourceIdsInObject } from './argument-validation';
 
 const VALID_UUID = '550e8400-e29b-41d4-a716-446655440000';
 
 describe('argument-validation', () => {
   describe('RESOURCE_ID_KEYS', () => {
-    it('contains all RFC Phase 0 identifier keys', () => {
+    it('contains known resource identifier keys', () => {
       expect([...RESOURCE_ID_KEYS].sort()).toEqual(
         [
           'agentUuid',
@@ -54,106 +48,6 @@ describe('argument-validation', () => {
           'versionUuidA',
           'versionUuidB',
         ].sort(),
-      );
-    });
-  });
-
-  describe('validateArguments', () => {
-    it('validates uuid arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'projectUuid', source: 'option', semanticType: 'uuid', required: true },
-      ];
-      expect(() => validateArguments({ projectUuid: VALID_UUID }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ projectUuid: 'bad-uuid' }, descriptors)).toThrow(
-        'Invalid UUID format',
-      );
-    });
-
-    it('validates slug arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'slug', source: 'option', semanticType: 'slug' },
-      ];
-      expect(() => validateArguments({ slug: 'my-chart' }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ slug: 'bad slug' }, descriptors)).toThrow(
-        'Slug must contain only alphanumeric characters',
-      );
-    });
-
-    it('validates fingerprint arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'fingerprint', source: 'body', semanticType: 'fingerprint' },
-      ];
-      expect(() => validateArguments({ fingerprint: 'abc123' }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ fingerprint: '' }, descriptors)).toThrow(
-        'Fingerprint must be between 1 and 512 characters',
-      );
-    });
-
-    it('throws when required argument is missing', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'projectUuid', source: 'option', semanticType: 'uuid', required: true },
-      ];
-      expect(() => validateArguments({}, descriptors)).toThrow(
-        "Required argument 'projectUuid' is missing",
-      );
-    });
-
-    it('skips optional missing arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'slug', source: 'option', semanticType: 'slug' },
-      ];
-      expect(() => validateArguments({}, descriptors)).not.toThrow();
-    });
-
-    it('validates uuid arrays', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'projectUuid', source: 'body', semanticType: 'uuid' },
-      ];
-      expect(() =>
-        validateArguments({ projectUuid: [VALID_UUID, VALID_UUID] }, descriptors),
-      ).not.toThrow();
-      expect(() =>
-        validateArguments({ projectUuid: [VALID_UUID, 'not-uuid'] }, descriptors),
-      ).toThrow('Invalid UUID format');
-    });
-
-    it('validates free-text with control char rejection only', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'query', source: 'positional', semanticType: 'free-text' },
-      ];
-      expect(() => validateArguments({ query: 'what? growth%' }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ query: 'bad\u0000' }, descriptors)).toThrow(
-        'Input contains invalid control characters',
-      );
-    });
-
-    it('validates json string arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'payload', source: 'body', semanticType: 'json' },
-      ];
-      expect(() => validateArguments({ payload: '{"a":1}' }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ payload: 'not-json' }, descriptors)).toThrow(
-        "Argument 'payload' must be valid JSON",
-      );
-    });
-
-    it('validates boolean arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'enabled', source: 'option', semanticType: 'boolean' },
-      ];
-      expect(() => validateArguments({ enabled: true }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ enabled: 'true' }, descriptors)).toThrow(
-        "Argument 'enabled' must be a boolean",
-      );
-    });
-
-    it('validates number arguments', () => {
-      const descriptors: ArgumentDescriptor[] = [
-        { name: 'limit', source: 'option', semanticType: 'number' },
-      ];
-      expect(() => validateArguments({ limit: 10 }, descriptors)).not.toThrow();
-      expect(() => validateArguments({ limit: Number.NaN }, descriptors)).toThrow(
-        "Argument 'limit' must be a number",
       );
     });
   });

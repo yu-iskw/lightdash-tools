@@ -6,6 +6,8 @@
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
 
+import { normalizeAgentTags } from '../ai-agents/secure-create-defaults.js';
+
 // ─── Shared metadata ─────────────────────────────────────────────────────────
 
 const metadataSchema = z.object({
@@ -44,7 +46,12 @@ const bundleAgentSchema = z.object({
   instruction: z.string().nullable().optional(),
   tags: z.array(z.string()).nullable().optional(),
   enableDataAccess: z.boolean().optional(),
+  enableContentTools: z.boolean().optional(),
+  enableSqlMode: z.boolean().optional(),
+  enableUserContext: z.boolean().optional(),
+  adminOnly: z.boolean().optional(),
   enableSelfImprovement: z.boolean().optional(),
+  spaceAccess: z.array(z.string().uuid()).optional(),
   evaluations: z.array(bundleEvaluationSchema).optional().default([]),
 });
 
@@ -142,7 +149,12 @@ export interface AgentStateSnapshot {
   description: string | null;
   instruction: string | null;
   tags: string[] | null;
+  spaceAccess?: string[];
   enableDataAccess?: boolean;
+  enableContentTools?: boolean;
+  enableSqlMode?: boolean;
+  enableUserContext?: boolean;
+  adminOnly?: boolean;
   enableSelfImprovement?: boolean;
 }
 
@@ -247,13 +259,24 @@ function promptsEqual(
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+const OPTIONAL_AGENT_BOOLEAN_FIELDS = [
+  'enableDataAccess',
+  'enableContentTools',
+  'enableSqlMode',
+  'enableUserContext',
+  'adminOnly',
+  'enableSelfImprovement',
+] as const satisfies ReadonlyArray<keyof AgentStateSnapshot & keyof BundleAgentSpec>;
+
 function agentFieldsToCompare(agent: BundleAgentSpec): Array<keyof AgentStateSnapshot> {
   const fields: Array<keyof AgentStateSnapshot> = ['name', 'description', 'instruction', 'tags'];
-  if (agent.enableDataAccess !== undefined) {
-    fields.push('enableDataAccess');
+  if (agent.spaceAccess !== undefined) {
+    fields.push('spaceAccess');
   }
-  if (agent.enableSelfImprovement !== undefined) {
-    fields.push('enableSelfImprovement');
+  for (const field of OPTIONAL_AGENT_BOOLEAN_FIELDS) {
+    if (agent[field] !== undefined) {
+      fields.push(field);
+    }
   }
   return fields;
 }
@@ -264,10 +287,14 @@ function normalizeAgentBooleanFlag(value: boolean | undefined): boolean {
 }
 
 function normalizeTags(tags: string[] | null | undefined): string[] | null {
-  if (tags == null || tags.length === 0) {
-    return null;
+  return normalizeAgentTags(tags);
+}
+
+function normalizeSpaceAccess(spaceAccess: string[] | undefined): string[] | undefined {
+  if (spaceAccess === undefined) {
+    return undefined;
   }
-  return tags;
+  return [...spaceAccess].sort();
 }
 
 function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot> {
@@ -276,7 +303,14 @@ function pickAgentFields(agent: AgentStateSnapshot): Partial<AgentStateSnapshot>
     description: agent.description,
     instruction: agent.instruction,
     tags: normalizeTags(agent.tags),
+    ...(agent.spaceAccess !== undefined
+      ? { spaceAccess: normalizeSpaceAccess(agent.spaceAccess) }
+      : {}),
     enableDataAccess: normalizeAgentBooleanFlag(agent.enableDataAccess),
+    enableContentTools: normalizeAgentBooleanFlag(agent.enableContentTools),
+    enableSqlMode: normalizeAgentBooleanFlag(agent.enableSqlMode),
+    enableUserContext: normalizeAgentBooleanFlag(agent.enableUserContext),
+    adminOnly: normalizeAgentBooleanFlag(agent.adminOnly),
     enableSelfImprovement: normalizeAgentBooleanFlag(agent.enableSelfImprovement),
   };
 }
@@ -288,7 +322,18 @@ function desiredAgentToSnapshot(agent: BundleAgentSpec, uuid: string): AgentStat
     description: agent.description ?? null,
     instruction: agent.instruction ?? null,
     tags: normalizeTags(agent.tags ?? null),
+    ...(agent.spaceAccess !== undefined
+      ? { spaceAccess: normalizeSpaceAccess(agent.spaceAccess) }
+      : {}),
     ...(agent.enableDataAccess !== undefined ? { enableDataAccess: agent.enableDataAccess } : {}),
+    ...(agent.enableContentTools !== undefined
+      ? { enableContentTools: agent.enableContentTools }
+      : {}),
+    ...(agent.enableSqlMode !== undefined ? { enableSqlMode: agent.enableSqlMode } : {}),
+    ...(agent.enableUserContext !== undefined
+      ? { enableUserContext: agent.enableUserContext }
+      : {}),
+    ...(agent.adminOnly !== undefined ? { adminOnly: agent.adminOnly } : {}),
     ...(agent.enableSelfImprovement !== undefined
       ? { enableSelfImprovement: agent.enableSelfImprovement }
       : {}),

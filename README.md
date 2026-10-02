@@ -1,30 +1,71 @@
 # @lightdash-tools
 
-TypeScript monorepo: Lightdash API client, CLI, and MCP server.
+[![SBOM](https://github.com/yu-iskw/lightdash-tools/actions/workflows/sbom.yml/badge.svg)](https://github.com/yu-iskw/lightdash-tools/actions/workflows/sbom.yml)
 
-## Using the tools
+TypeScript client, CLI, and profile-scoped MCP servers for [Lightdash](https://www.lightdash.com/).
 
-All tools are available as npm packages under the `@lightdash-tools` scope.
+## Choose your tool
 
-- **HTTP client** ([packages/client/README.md](packages/client/README.md)) — Type-safe Lightdash API client with rate limiting, retries, and shared types. Install via [`npm install @lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client). <!-- markdown-link-check-disable-line -->
-- **CLI** ([packages/cli/README.md](packages/cli/README.md)) — Command-line interface for Lightdash. Run directly via [`npx @lightdash-tools/cli`](https://www.npmjs.com/package/@lightdash-tools/cli) or install globally via `npm install -g @lightdash-tools/cli`. <!-- markdown-link-check-disable-line -->
-- **MCP** ([packages/mcp/README.md](packages/mcp/README.md)) — MCP server that exposes Lightdash as tools for AI assistants. Run directly via [`npx @lightdash-tools/mcp`](https://www.npmjs.com/package/@lightdash-tools/mcp). <!-- markdown-link-check-disable-line -->
+All packages are published under the `@lightdash-tools` npm scope.
 
-## AI Safety and Agent-Friendly Features
+- **HTTP client** ([packages/client/README.md](packages/client/README.md)) — Type-safe Lightdash API client with rate limiting, retries, and shared types. [`npm install @lightdash-tools/client`](https://www.npmjs.com/package/@lightdash-tools/client). <!-- markdown-link-check-disable-line -->
+- **CLI** ([packages/cli/README.md](packages/cli/README.md)) — Command-line interface for Lightdash ops. [`npx @lightdash-tools/cli`](https://www.npmjs.com/package/@lightdash-tools/cli) or `npm install -g @lightdash-tools/cli`. <!-- markdown-link-check-disable-line -->
+- **MCP** ([packages/mcp/README.md](packages/mcp/README.md)) — MCP server that exposes Lightdash as tools for AI assistants (eight profiles). [`npx @lightdash-tools/mcp`](https://www.npmjs.com/package/@lightdash-tools/mcp). <!-- markdown-link-check-disable-line -->
 
-**CLI** uses a hierarchical safety stack ([ADR-0005](docs/adr/0005-cli-safety-stack.md)): `LIGHTDASH_TOOLS_SAFETY_MODE` / `--safety-mode` (`read-only` default, `write-idempotent`, `write-destructive`), plus optional dry-run, project allowlist, and audit log.
+## Credentials
 
-**MCP** is persona-first ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)): capability = persona `toolIds`; HTTP may pin via `X-Lightdash-Project`; process safety-mode / allowlist / dry-run are **not** used on MCP.
+Set credentials from the parent process (shell, CI, or MCP client `env`). Create a personal access token in Lightdash under **Settings → Personal Access Tokens**.
 
-**Shared agent-friendly features:**
+| Variable                                | Used by                | Purpose                                                              |
+| :-------------------------------------- | :--------------------- | :------------------------------------------------------------------- |
+| `LIGHTDASH_URL`                         | Client, CLI, MCP       | Lightdash instance URL (e.g. `https://app.lightdash.cloud`)          |
+| `LIGHTDASH_API_KEY`                     | Client, CLI, MCP stdio | Personal access token (PAT)                                          |
+| `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` | CLI + MCP              | Optional comma-separated project UUID ceiling (unset = unrestricted) |
 
-- **Agent-safe surface** — Irrecoverable ops stay off MCP/CLI ([ADR-0004](docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
-- **Input validation** — Known identifier fields only (`projectUuid`, `slug`, …).
-- **Audit log** — Optional `LIGHTDASH_TOOLS_AUDIT_LOG`.
+Prefer env vars over plaintext `.env` files when agents can read the filesystem. Details: [docs/operators/secrets.md](docs/operators/secrets.md).
 
-For agent-specific guidance, see [docs/agent-context/CONTEXT.md](docs/agent-context/CONTEXT.md). For credentials, use env vars from your shell or CI; see [docs/secrets-and-credentials.md](docs/secrets-and-credentials.md).
+## MCP quick start (stdio)
 
-Developing? See [CONTRIBUTING.md](CONTRIBUTING.md). For agent instructions see [AGENTS.md](AGENTS.md). For architectural decisions, see [docs/adr/](docs/adr/).
+Add a server to `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (project). See [Cursor MCP docs](https://cursor.com/docs/mcp).
+
+```json
+{
+  "mcpServers": {
+    "lightdash": {
+      "command": "npx",
+      "args": ["-y", "@lightdash-tools/mcp", "stdio", "--profile", "content-reader"],
+      "env": {
+        "LIGHTDASH_URL": "https://app.lightdash.cloud",
+        "LIGHTDASH_API_KEY": "your_pat"
+      }
+    }
+  }
+}
+```
+
+Pass `stdio --profile <id>` in `args` (required — there is no default). Other profiles and playbooks: [packages/mcp/README.md](packages/mcp/README.md).
+
+## HTTP MCP
+
+For remote Streamable HTTP (POST-only MCP endpoints, no protocol sessions):
+
+```bash
+npx @lightdash-tools/mcp http
+```
+
+Hosted OAuth for Cursor (URL-only client config): [docs/operators/cursor-claude.md](docs/operators/cursor-claude.md). Operator setup: [packages/mcp/README.md](packages/mcp/README.md).
+
+## Safety
+
+- **CLI** — hierarchical safety stack: `LIGHTDASH_TOOLS_SAFETY_MODE` / `--safety-mode` (`read-only` default, `write-idempotent`, `write-destructive`), optional dry-run, shared project allowlist, and audit log ([ADR-0005](docs/adr/0005-cli-safety-stack.md)).
+- **MCP** — capability is the profile tool surface; optional HTTP pin via `X-Lightdash-Project`; shared `LIGHTDASH_TOOLS_ALLOWED_PROJECT_UUIDS` ceiling. MCP ignores CLI `SAFETY_MODE` / `DRY_RUN` ([ADR-0008](docs/adr/0008-mcp-request-scope-and-hardening.md)).
+- **Agent-safe surface** — irrecoverable ops stay off MCP and CLI; use the client for those ([ADR-0004](docs/adr/0004-agent-safe-exposure-mcp-cli-vs-client-only.md)).
+
+Agent-oriented notes: [docs/operators/agent-context.md](docs/operators/agent-context.md).
+
+## Developing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Agent instructions: [AGENTS.md](AGENTS.md). Release notes: [CHANGELOG.md](CHANGELOG.md). ADRs: [docs/adr/](docs/adr/).
 
 ## License
 
