@@ -21,6 +21,7 @@ const binPath = path.join(repoRoot, 'packages/mcp/dist/bin.js');
 
 const INIT_TIMEOUT_MS = 5_000;
 const SEMANTIC_LAYER_TOOL_COUNT = getProfile('semantic-layer').tools.length;
+const CONTENT_DEVELOPER_TOOL_COUNT = getProfile('content-developer').tools.length;
 
 interface JsonRpcMessage {
   jsonrpc?: string;
@@ -308,7 +309,8 @@ describe('stdio process smoke', () => {
       'stdio-process-smoke',
     );
     expect(serverName).toBe('lightdash-mcp-cdev');
-    expect(tools).toHaveLength(26);
+    expect(tools).toHaveLength(CONTENT_DEVELOPER_TOOL_COUNT);
+    expect(tools.some((t) => t.name === 'lightdash_preview_rename')).toBe(true);
     expect(tools.some((t) => t.name === 'lightdash_get_chart_as_code')).toBe(true);
     expect(tools.some((t) => t.name === 'lightdash_preview_dashboard_changes')).toBe(true);
     expect(tools.some((t) => t.name === 'lightdash_move_content')).toBe(true);

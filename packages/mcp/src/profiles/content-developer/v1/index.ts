@@ -28,6 +28,13 @@ import {
   validateDashboardTool,
 } from '../../../tools/project/developer-content.js';
 import { getChartAsCodeTool } from '../../../tools/project/developer-get-chart-as-code.js';
+import {
+  listRenameFieldsTool,
+  previewRenameTool,
+  renameChartTool,
+  renameDashboardFilterTool,
+  renameProjectTool,
+} from '../../../tools/project/developer-rename.js';
 import { getProjectDeveloperTool } from '../../../tools/project/projects.js';
 import {
   getChartTool,
@@ -74,6 +81,11 @@ export const contentDeveloperProfile: ProfileDefinition = {
     removeDashboardTileTool,
     resizeDashboardTileTool,
     moveContentTool,
+    listRenameFieldsTool,
+    previewRenameTool,
+    renameChartTool,
+    renameDashboardFilterTool,
+    renameProjectTool,
   ],
   registerPrompts: registerContentDeveloperPrompts,
   registerResources: registerContentDeveloperPlaybook,

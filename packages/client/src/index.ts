@@ -15,6 +15,7 @@ export { ProjectRoleAssignmentsClient } from './api/v2/project-role-assignments'
 export { AiAgentsClient } from './api/v1/ai-agents';
 export { ProjectAccessClient } from './api/v1/project-access';
 export { ValidationClient } from './api/v1/validation';
+export { RenameClient } from './api/v1/rename';
 export { ValidationClientV2 } from './api/v2/validation';
 export { MetricsClient } from './api/v1/metrics';
 export { SchedulersClient } from './api/v1/schedulers';
