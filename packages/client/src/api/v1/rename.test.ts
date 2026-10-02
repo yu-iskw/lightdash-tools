@@ -17,6 +17,13 @@ describe('RenameClient', () => {
     } as unknown as HttpClient;
   });
 
+  it('listChartFields encodes path segments', async () => {
+    const client = new RenameClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({ fields: {} });
+    await client.listChartFields('p/1', '../c1');
+    expect(mockHttp.get).toHaveBeenCalledWith('/projects/p%2F1/rename/chart/..%2Fc1/fields');
+  });
+
   it('listChartFields should call GET /projects/{projectUuid}/rename/chart/{chartUuid}/fields', async () => {
     const client = new RenameClient(mockHttp);
     const mockResponse = { fields: { orders: ['orders_status'] } };
@@ -47,7 +54,7 @@ describe('RenameClient', () => {
     expect(result).toEqual(mockResponse);
   });
 
-  it('renameChart should POST the chart path and return a body without jobId', async () => {
+  it('renameChart should POST the chart path and return the response body', async () => {
     const client = new RenameClient(mockHttp);
     const body = { type: 'field' as const, from: 'orders_old', to: 'orders_new' };
     const mockResponse = {};
@@ -55,7 +62,6 @@ describe('RenameClient', () => {
     const result = await client.renameChart('p1', 'c1', body);
     expect(mockHttp.post).toHaveBeenCalledWith('/projects/p1/rename/chart/c1', body);
     expect(result).toEqual(mockResponse);
-    expect(result).not.toHaveProperty('jobId');
   });
 
   it('renameDashboardFilter should POST /projects/{projectUuid}/rename/dashboard/{dashboardUuid}', async () => {

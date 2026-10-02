@@ -77,4 +77,4 @@ Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
 ## Recent Learnings
 
-- [2026-10-02]: Content-developer rename (ADR-0036) uses preview kind `rename` and an HMAC `previewToken`, and a field rename's `to` must come from the `list_rename_fields` dropdown. A project field rename needs `model`, and `rename_project` rechecks the uuid lists, then returns `jobId` without polling. Run `lightdash download` after a rename when as-code content lives in git.
+- [2026-10-02]: Content-developer rename (ADR-0036) uses preview kind `rename` and an HMAC `previewToken`. A project field rename previews full ids (`orders_status` with `model` `orders`) and `rename_project` posts the short names, because `POST /rename` looks the field up on the explore base table while `POST /rename/preview` treats those ids as full. `from` is `[a-z0-9_]+` because chart rename compiles it as a regex. The tool returns `jobId` and does not poll.

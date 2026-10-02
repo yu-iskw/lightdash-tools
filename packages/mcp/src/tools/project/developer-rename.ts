@@ -17,14 +17,9 @@ import {
   WRITE_SAFETY,
   registerContentDeveloperTool,
 } from '../../policy/content-developer.js';
-import {
-  PreviewLedgerError,
-  mintDraftPreviewToken,
-  withValidatedPreviewApply,
-} from '../../policy/preview-ledger.js';
+import { mintDraftPreviewToken, withValidatedPreviewApply } from '../../policy/preview-ledger.js';
 import { asRecord } from '../lib/api-shape.js';
 import { projectUuidField } from '../lib/schema-fields.js';
-import { stableStringify } from '../lib/stable-stringify.js';
 import { jsonToolResult } from '../shared.js';
 import { defineTool } from '../types.js';
 
@@ -35,7 +30,10 @@ import {
   assertApplyIsNotDryRun,
   assertListedFieldId,
   assertRenameNamesDiffer,
+  assertRenameToken,
+  projectFieldShortName,
   projectRenameBody,
+  projectRenameJobBody,
   projectRenameResourceKey,
   renameImpactFromChanges,
 } from './rename-instruction.js';
@@ -47,7 +45,7 @@ import type {
   RenameInstruction,
   RenameKind,
 } from './rename-instruction.js';
-import type { PreviewBaseline, RenameImpactBaseline } from '../../policy/preview-ledger.js';
+import type { PreviewBaseline } from '../../policy/preview-ledger.js';
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
 import type { components } from '@lightdash-tools/common';
@@ -83,7 +81,6 @@ type RenameDraft = {
   resourceKey: string;
   baseline: PreviewBaseline | undefined;
   fields?: RenameFields;
-  impact?: RenameImpactBaseline;
 };
 
 function requireTarget(value: string | undefined, message: string): string {
@@ -165,6 +162,13 @@ async function draftProjectRename(
       'A project field rename needs model set to the explore name, plus full field ids',
     );
   }
+  if (args.model != null) {
+    assertRenameToken(args.model, 'model');
+  }
+  if (args.type === 'field' && args.model != null) {
+    projectFieldShortName(args.model, args.from);
+    projectFieldShortName(args.model, args.to);
+  }
   const proposed: ProjectRenameInstruction = {
     scope: 'project',
     type: args.type,
@@ -179,7 +183,6 @@ async function draftProjectRename(
     proposed,
     resourceKey: projectRenameResourceKey(proposed),
     baseline: { renameImpact: impact },
-    impact,
   };
 }
 
@@ -301,7 +304,9 @@ function registerPreviewRename(server: McpServer, contextProvider: McpContextPro
               contentHash: entry.claims.contentHash,
               expiresAt: entry.claims.expiresAt,
               ...(draft.fields == null ? {} : { fields: draft.fields }),
-              ...(draft.impact == null ? {} : { impact: draft.impact }),
+              ...(draft.baseline?.renameImpact == null
+                ? {}
+                : { impact: draft.baseline.renameImpact }),
             },
             context: developerContext(scope),
           });
@@ -364,9 +369,9 @@ function registerRenameChart(server: McpServer, contextProvider: McpContextProvi
         },
         () =>
           client.v1.rename.renameChart(scope.projectUuid, args.chartUuid, {
-            type: args.type,
-            from: args.from,
-            to: args.to,
+            type: proposed.type,
+            from: proposed.from,
+            to: proposed.to,
           }),
       );
       return jsonToolResult({
@@ -433,9 +438,9 @@ function registerRenameDashboardFilter(
         },
         () =>
           client.v1.rename.renameDashboardFilter(scope.projectUuid, args.dashboardUuid, {
-            type: args.type,
-            from: args.from,
-            to: args.to,
+            type: proposed.type,
+            from: proposed.from,
+            to: proposed.to,
           }),
       );
       return jsonToolResult({
@@ -484,6 +489,9 @@ function registerRenameProject(server: McpServer, contextProvider: McpContextPro
         to: args.to,
         model: args.model ?? null,
       };
+      const fresh = renameImpactFromChanges(
+        await client.v1.rename.previewRename(scope.projectUuid, projectRenameBody(proposed, true)),
+      );
       const { jobId } = await withValidatedPreviewApply(
         {
           previewToken: args.previewToken,
@@ -493,22 +501,9 @@ function registerRenameProject(server: McpServer, contextProvider: McpContextPro
           resourceKind: 'rename',
           resourceKey: projectRenameResourceKey(proposed),
           proposed,
+          currentBaseline: { renameImpact: fresh },
         },
-        async (claims) => {
-          const fresh = renameImpactFromChanges(
-            await client.v1.rename.previewRename(
-              scope.projectUuid,
-              projectRenameBody(proposed, true),
-            ),
-          );
-          if (stableStringify(fresh) !== stableStringify(claims.baseline?.renameImpact)) {
-            throw new PreviewLedgerError(
-              'PREVIEW_STALE',
-              `Preview '${claims.previewId}' rename impact changed; re-run preview_rename -> confirm_preview`,
-            );
-          }
-          return client.v1.rename.renameResources(scope.projectUuid, projectRenameBody(proposed));
-        },
+        () => client.v1.rename.renameResources(scope.projectUuid, projectRenameJobBody(proposed)),
       );
       return jsonToolResult({
         data: applied(jobId, PROJECT_NEXT),

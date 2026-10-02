@@ -20,24 +20,22 @@ type RenameResourcesResult = Schemas['ApiJobScheduledResponse']['results'];
  * Does not reject `from === to` locally; the server returns ParameterError.
  */
 export class RenameClient extends BaseApiClient {
-  /** Fields that can replace a missing field on one chart. */
   async listChartFields(projectUuid: string, chartUuid: string): Promise<RenameFieldsResult> {
     return this.http.get<RenameFieldsResult>(
-      `/projects/${projectUuid}/rename/chart/${chartUuid}/fields`,
+      `/projects/${encodeURIComponent(projectUuid)}/rename/chart/${encodeURIComponent(chartUuid)}/fields`,
     );
   }
 
-  /** Fields that can replace a missing dashboard filter target. Optional `table` narrows the list. */
   async listDashboardFields(
     projectUuid: string,
     dashboardUuid: string,
     table?: string,
   ): Promise<RenameFieldsResult> {
-    const path = `/projects/${projectUuid}/rename/dashboard/${dashboardUuid}/fields`;
-    if (table === undefined) {
-      return this.http.get<RenameFieldsResult>(path);
-    }
-    return this.http.get<RenameFieldsResult>(path, { params: { table } });
+    const path = `/projects/${encodeURIComponent(projectUuid)}/rename/dashboard/${encodeURIComponent(dashboardUuid)}/fields`;
+    return this.http.get<RenameFieldsResult>(
+      path,
+      table === undefined ? undefined : { params: { table } },
+    );
   }
 
   /** Project-wide impact list. Pass `dryRun: true` to avoid scheduling a job. */
@@ -45,7 +43,10 @@ export class RenameClient extends BaseApiClient {
     projectUuid: string,
     body: Schemas['ApiRenameBody'],
   ): Promise<RenamePreviewResult> {
-    return this.http.post<RenamePreviewResult>(`/projects/${projectUuid}/rename/preview`, body);
+    return this.http.post<RenamePreviewResult>(
+      `/projects/${encodeURIComponent(projectUuid)}/rename/preview`,
+      body,
+    );
   }
 
   /**
@@ -58,19 +59,18 @@ export class RenameClient extends BaseApiClient {
     body: Schemas['ApiRenameChartBody'],
   ): Promise<RenameChartResult> {
     return this.http.post<RenameChartResult>(
-      `/projects/${projectUuid}/rename/chart/${chartUuid}`,
+      `/projects/${encodeURIComponent(projectUuid)}/rename/chart/${encodeURIComponent(chartUuid)}`,
       body,
     );
   }
 
-  /** Rewrite dashboard filters that target `from`. */
   async renameDashboardFilter(
     projectUuid: string,
     dashboardUuid: string,
     body: Schemas['ApiRenameDashboardBody'],
   ): Promise<RenameDashboardResult> {
     return this.http.post<RenameDashboardResult>(
-      `/projects/${projectUuid}/rename/dashboard/${dashboardUuid}`,
+      `/projects/${encodeURIComponent(projectUuid)}/rename/dashboard/${encodeURIComponent(dashboardUuid)}`,
       body,
     );
   }
@@ -80,6 +80,9 @@ export class RenameClient extends BaseApiClient {
     projectUuid: string,
     body: Schemas['ApiRenameBody'],
   ): Promise<RenameResourcesResult> {
-    return this.http.post<RenameResourcesResult>(`/projects/${projectUuid}/rename`, body);
+    return this.http.post<RenameResourcesResult>(
+      `/projects/${encodeURIComponent(projectUuid)}/rename`,
+      body,
+    );
   }
 }

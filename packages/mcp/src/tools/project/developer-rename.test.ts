@@ -13,7 +13,6 @@ import { createLightdashMcpServer } from '../../server/server.js';
 
 import type { McpContextProvider } from '../../server/request-context.js';
 import type { LightdashClient } from '@lightdash-tools/client';
-import type { CallToolResult } from '@modelcontextprotocol/client';
 import type { McpServer } from '@modelcontextprotocol/server';
 
 const PROJECT = '11111111-1111-4111-8111-111111111111';
@@ -126,10 +125,10 @@ describe('content-developer rename tools', () => {
   let session: { server: McpServer; client: Client };
 
   async function call(tool: string, args: Record<string, unknown>): Promise<ToolCall> {
-    const result = (await session.client.callTool({
+    const result = await session.client.callTool({
       name: `lightdash_${tool}`,
       arguments: { projectUuid: PROJECT, ...args },
-    })) as CallToolResult;
+    });
     const structured = (result.structuredContent ?? {}) as {
       data?: Record<string, unknown>;
       error?: { code: string; message: string };
@@ -206,7 +205,7 @@ describe('content-developer rename tools', () => {
       ...chartRename,
       to: 'customers_missing',
     });
-    expect(preview.error?.code).toBe('RENAME_FIELD_PREFIX');
+    expect(preview.error?.code).toBe('RENAME_FIELD_UNLISTED');
     expect(preview.data.previewToken).toBeUndefined();
     expect(up.fieldLists).toEqual([`chart:${CHART}`]);
   });
@@ -246,6 +245,26 @@ describe('content-developer rename tools', () => {
     });
     expect(preview.error?.code).toBe('RENAME_TARGET');
     expect(up.previews).toEqual([]);
+  });
+
+  it('rejects a project field id that is not prefixed by the explore name', async () => {
+    const preview = await call('preview_rename', {
+      scope: 'project',
+      ...projectRename,
+      from: 'status',
+    });
+    expect(preview.error?.code).toBe('RENAME_TARGET');
+    expect(up.previews).toEqual([]);
+  });
+
+  it('rejects a rename name that would be compiled as a pattern', async () => {
+    const preview = await call('preview_rename', {
+      scope: 'chart',
+      ...chartRename,
+      from: '.*',
+    });
+    expect(preview.error?.code).toBe('RENAME_TARGET');
+    expect(up.fieldLists).toEqual([]);
   });
 
   it('does not post with an unconfirmed draft token', async () => {
@@ -342,7 +361,7 @@ describe('content-developer rename tools', () => {
     expect(up.writes).toEqual([
       {
         endpoint: 'rename',
-        body: { type: 'field', from: 'orders_old', to: 'orders_status', model: 'orders' },
+        body: { type: 'field', from: 'old', to: 'status', model: 'orders' },
       },
     ]);
   });

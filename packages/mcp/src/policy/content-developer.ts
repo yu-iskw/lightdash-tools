@@ -8,11 +8,11 @@
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
 import { playbookTopicUri } from '../profiles/lib/playbook-resources.js';
-import { RenameRejectedError } from '../tools/project/rename-instruction.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
 import { registerToolSafe } from '../tools/shared.js';
 
 import { PreviewLedgerError } from './preview-ledger.js';
+import { RenameRejectedError } from './rename-rejected.js';
 
 import type { ToolHandler, ToolOptions, TextContent, ToolErrorExtras } from '../tools/shared.js';
 import type { ToolAnnotations } from '@lightdash-tools/common';

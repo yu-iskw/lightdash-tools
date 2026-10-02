@@ -108,7 +108,35 @@ function resourceKeyMatches(claims: PreviewTokenClaims, resourceKey: string): bo
   return claims.resourceKey === resourceKey || claims.resourceAliases.includes(resourceKey);
 }
 
-/** Update drift or create-target appearance → PREVIEW_STALE. */
+function sameIds(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  for (const [index, id] of left.entries()) {
+    if (id !== right.at(index)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** True when both impact snapshots list the same uuids. A missing snapshot is stale. */
+export function sameRenameImpact(
+  stored: RenameImpactBaseline | undefined,
+  fresh: RenameImpactBaseline | undefined,
+): boolean {
+  if (stored == null || fresh == null) {
+    return false;
+  }
+  return (
+    sameIds(stored.alerts, fresh.alerts) &&
+    sameIds(stored.charts, fresh.charts) &&
+    sameIds(stored.dashboardSchedulers, fresh.dashboardSchedulers) &&
+    sameIds(stored.dashboards, fresh.dashboards)
+  );
+}
+
+/** Update drift, create-target appearance, or a changed project rename impact → PREVIEW_STALE. */
 function assertBaselineStillValid(
   previewId: string,
   claims: PreviewTokenClaims,
@@ -133,6 +161,17 @@ function assertBaselineStillValid(
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
       `Preview '${previewId}' targeted a non-existent resource that now exists; re-run preview -> confirm`,
+    );
+  }
+  const storedImpact = claims.baseline?.renameImpact;
+  const freshImpact = currentBaseline?.renameImpact;
+  if (
+    (storedImpact != null || freshImpact != null) &&
+    !sameRenameImpact(storedImpact, freshImpact)
+  ) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' rename impact changed; re-run preview_rename -> confirm`,
     );
   }
 }
