@@ -112,12 +112,10 @@ function sameIds(left: readonly string[], right: readonly string[]): boolean {
   if (left.length !== right.length) {
     return false;
   }
-  for (const [index, id] of left.entries()) {
-    if (id !== right.at(index)) {
-      return false;
-    }
-  }
-  return true;
+  return left.every((id, index) => {
+    const [counterpart] = right.slice(index, index + 1);
+    return id === counterpart;
+  });
 }
 
 /** True when both impact snapshots list the same uuids. A missing snapshot is stale. */
