@@ -117,6 +117,13 @@ export const OPERATION_CLIENT_METHOD_MAP = {
   'content-developer.spaces.create': 'v1.spaces.createSpace',
   'content-developer.spaces.update': 'v1.spaces.updateSpace',
   'content-developer.content.move': 'v2.content.bulkMoveContent',
+  'content-developer.rename.fields':
+    'composed:v1.rename.listChartFields+v1.rename.listDashboardFields',
+  'content-developer.rename.preview':
+    'composed:v2.charts.getSavedChart+v1.rename.listChartFields+v2.dashboards.getDashboard+v1.rename.listDashboardFields+v1.rename.previewRename',
+  'content-developer.rename.chart': 'v1.rename.renameChart',
+  'content-developer.rename.dashboard-filter': 'v1.rename.renameDashboardFilter',
+  'content-developer.rename.project': 'composed:v1.rename.previewRename+v1.rename.renameResources',
 
   // content-governance (ADR-0015 / ADR-0017)
   'content-governance.charts.delete': 'v2.charts.deleteSavedChart',

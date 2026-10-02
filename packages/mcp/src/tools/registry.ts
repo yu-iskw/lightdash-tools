@@ -50,6 +50,13 @@ import {
   registerValidateChart,
   registerValidateDashboard,
 } from './project/developer-content.js';
+import {
+  registerListRenameFields,
+  registerPreviewRename,
+  registerRenameChart,
+  registerRenameDashboardFilter,
+  registerRenameProject,
+} from './project/developer-rename.js';
 import { registerGetDashboardPromoteDiff } from './project/get-dashboard-promote-diff.js';
 import {
   registerGetProjectParameters,
@@ -153,6 +160,11 @@ export const toolRegistry = {
   remove_dashboard_tile: { register: registerRemoveDashboardTile },
   resize_dashboard_tile: { register: registerResizeDashboardTile },
   move_content: { register: registerMoveContent },
+  list_rename_fields: { register: registerListRenameFields },
+  preview_rename: { register: registerPreviewRename },
+  rename_chart: { register: registerRenameChart },
+  rename_dashboard_filter: { register: registerRenameDashboardFilter },
+  rename_project: { register: registerRenameProject },
 
   // content-governance (ADR-0015 / ADR-0017)
   delete_chart: { register: registerDeleteChart },

@@ -325,4 +325,62 @@ describe('preview-ledger', () => {
       expect(claimed.resourceKey).toBe('new-slug');
     });
   });
+
+  describe('rename instructions', () => {
+    it('hashes a chart rename instruction and stores kind rename', async () => {
+      const proposed = {
+        scope: 'chart',
+        chartUuid: 'c1',
+        type: 'field',
+        from: 'orders_old',
+        to: 'orders_new',
+        tableName: 'orders',
+      };
+      const baseline = { updatedAt: '2026-10-01T00:00:00.000Z', uuid: 'c1' };
+      const entry = await addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'rename',
+        resourceKey: 'c1',
+        proposed,
+        baseline,
+      });
+      expect(entry.resourceKind).toBe('rename');
+      expect(entry.contentHash).toBe(
+        '8876bf6353ae155ef5d9a40af0594ab0a7228da4d8f849bd1db29fd734955e7b',
+      );
+      expect(entry.contentHash).toBe(hashPreviewContent({ proposed, baseline }));
+    });
+
+    it('hashes a project rename instruction and stores kind rename', async () => {
+      const proposed = {
+        scope: 'project',
+        type: 'field',
+        from: 'old',
+        to: 'new',
+        model: 'orders',
+      };
+      const baseline = {
+        renameImpact: {
+          alerts: [],
+          charts: ['c1'],
+          dashboardSchedulers: [],
+          dashboards: ['d1'],
+        },
+      };
+      const entry = await addPreviewLedgerEntry({
+        sessionId: 's1',
+        projectUuid: 'p1',
+        resourceKind: 'rename',
+        resourceKey: 'project:field:orders:old:new',
+        proposed,
+        baseline,
+      });
+      expect(entry.resourceKind).toBe('rename');
+      expect(entry.contentHash).toBe(
+        'f18086e1f3374492957295031421e0c568364e910c817a331210d357f219b682',
+      );
+      expect(entry.contentHash).toBe(hashPreviewContent({ proposed, baseline }));
+    });
+  });
 });

@@ -23,6 +23,8 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'preview_chart_changes',
   'preview_dashboard_changes',
   'preview_content_move',
+  'list_rename_fields',
+  'preview_rename',
   'validate_chart',
   'validate_dashboard',
   'confirm_preview',
@@ -38,6 +40,9 @@ export const CONTENT_DEVELOPER_TOOL_IDS = [
   'move_dashboard_tile',
   'remove_dashboard_tile',
   'resize_dashboard_tile',
+  'rename_chart',
+  'rename_dashboard_filter',
+  'rename_project',
   'move_content',
 ] as const satisfies readonly ToolId[];
 

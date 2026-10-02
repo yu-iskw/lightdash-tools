@@ -2,7 +2,7 @@
 
 MCP server for Lightdash with **persona-scoped** surfaces: `semantic-layer` (explore/compile), `organization-audit` (read-only org governance), `content-reader` (saved-content discovery + bounded execution), `content-developer` (project-scoped authoring with a hard preview gate), and `content-governance` (elicitation-gated soft-delete). Tools live in a shared registry; each persona selects an explicit `lightdash_*` allowlist, prompts, and playbook. Uses `@lightdash-tools/client` for API access. See [ADR-0006](../../docs/adr/0006-mcp-personas-shared-registry-fixed-paths.md), [ADR-0010](../../docs/adr/0010-mcp-organization-audit-persona-read-only-boundary.md), [ADR-0012](../../docs/adr/0012-mcp-content-reader-persona-saved-content-execution-boundary.md), [ADR-0014](../../docs/adr/0014-mcp-content-developer-persona-mutation-boundary.md), and [ADR-0015](../../docs/adr/0015-mcp-content-governance-persona-elicitation-required-soft-delete-boundary.md).
 
-Irrecoverable admin deletes, permanent content purge, and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is on `content-developer` only (preview → confirm_preview → apply; 25 tools). Soft-delete of charts/dashboards is on `content-governance` only (form elicitation required).
+Irrecoverable admin deletes, permanent content purge, and broad org mutations stay off MCP — use `@lightdash-tools/client` or the CLI. Reversible content authoring is on `content-developer` only (preview → confirm_preview → apply; 30 tools). Soft-delete of charts/dashboards is on `content-governance` only (form elicitation required).
 
 **Response sensitivity** ([ADR-0011](../../docs/adr/0011-mcp-tool-response-sensitivity-classes.md)): `list_projects` / `get_project` return project metadata only (warehouse/dbt connection secrets are never exposed). Organization-audit tools mask emails by default (`includeEmail=true` to reveal) and redact scheduler destinations by default (`revealDestinations=true` to reveal). There is no global `withSensitive` flag.
 
@@ -233,8 +233,9 @@ Project-scoped content authoring ([ADR-0014](../../docs/adr/0014-mcp-content-dev
 - **Dashboards (REST)**: `create_dashboard`, `update_dashboard`, `duplicate_dashboard`
 - **Layout**: `add_dashboard_tile`, `move_dashboard_tile`, `remove_dashboard_tile`, `resize_dashboard_tile`
 - **Spaces**: `list_spaces`, `get_space`, `move_content` (no create/update space; use `preview_content_move` before apply)
+- **Rename**: `list_rename_fields`, `preview_rename`, `rename_chart`, `rename_dashboard_filter`, `rename_project` (`confirm_preview` with `resourceKind` `rename`)
 
-Hard gate (25 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply. Apply is claim → mutate → mark applied (not delete-before-I/O); `contentHash` must match the apply payload. Ephemeral preview ledger defaults to `LIGHTDASH_TOOLS_MCP_STORE=memory`; use `redis` for multi-instance HTTP ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)). No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
+Hard gate (30 tools): every SAFE_WRITE requires preview → `confirm_preview` → apply. Apply is claim → mutate → mark applied (not delete-before-I/O); `contentHash` must match the apply payload. Ephemeral preview ledger defaults to `LIGHTDASH_TOOLS_MCP_STORE=memory`; use `redis` for multi-instance HTTP ([ADR-0016](../../docs/adr/0016-mcp-pluggable-ephemeral-store-for-http-preview-sessions-and-oauth.md)). No warehouse execution, SQL authoring, or hard delete in v1. Same project resolution as content-reader. Prompts and playbook: `lightdash://playbooks/content-developer`.
 
 ### `content-governance` persona
 

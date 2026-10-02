@@ -31,6 +31,11 @@ const BLOCKED_POLICY_CODES = new Set([
   'PREVIEW_NOT_OWNED',
   'PREVIEW_RECONCILIATION_REQUIRED',
   'CHART_SLUG_EXISTS',
+  'RENAME_DRY_RUN',
+  'RENAME_FIELD_PREFIX',
+  'RENAME_SCOPE',
+  'RENAME_TARGET',
+  'RENAME_UNCHANGED',
 ]);
 
 export function codedErrorResult(code: string, message: string): TextContent {

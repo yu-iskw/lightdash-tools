@@ -446,6 +446,112 @@ const op_update_space = defineOperation({
   profiles: [PROFILE_CONTENT_DEVELOPER],
 });
 
+const op_list_rename_fields = defineOperation({
+  id: 'content-developer.rename.fields',
+  summary: 'List fields that can replace a missing chart field or dashboard filter target',
+  http: {
+    method: 'GET',
+    path: `${API_V1}/projects/{projectUuid}/rename/chart/{chartUuid}/fields`,
+  },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'list_rename_fields',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  workflow: [
+    {
+      method: 'GET',
+      path: `${API_V1}/projects/{projectUuid}/rename/dashboard/{dashboardUuid}/fields`,
+      summary: 'Dashboard filter field dropdown, optional table query',
+    },
+  ],
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_preview_rename = defineOperation({
+  id: 'content-developer.rename.preview',
+  summary:
+    'Preview a rename instruction (chart and dashboard scopes store the instruction; project scope calls the rename preview)',
+  http: { method: 'POST', path: `${API_V1}/projects/{projectUuid}/rename/preview` },
+  authorization: { safetyImpact: 'read' },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'preview_rename',
+    annotations: READ_ONLY_DEFAULT,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  workflow: [
+    {
+      method: 'GET',
+      path: `${API_V2}/projects/{projectUuid}/saved/{chartUuid}`,
+      summary: 'Read chart updatedAt for a chart-scoped instruction',
+    },
+    {
+      method: 'GET',
+      path: `${API_V1}/projects/{projectUuid}/rename/chart/{chartUuid}/fields`,
+      summary: 'Chart field dropdown when type is field',
+    },
+    {
+      method: 'GET',
+      path: `${API_V2}/projects/{projectUuid}/dashboards/{dashboardUuidOrSlug}`,
+      summary: 'Read dashboard updatedAt for a dashboard-filter instruction',
+    },
+    {
+      method: 'GET',
+      path: `${API_V1}/projects/{projectUuid}/rename/dashboard/{dashboardUuid}/fields`,
+      summary: 'Dashboard field dropdown when type is field',
+    },
+  ],
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_rename_chart = defineOperation({
+  id: 'content-developer.rename.chart',
+  summary: 'Rename a field or model on one saved chart after preview confirm',
+  http: { method: 'POST', path: `${API_V1}/projects/{projectUuid}/rename/chart/{chartUuid}` },
+  authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'rename_chart',
+    annotations: WRITE_NONDESTRUCTIVE,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_rename_dashboard_filter = defineOperation({
+  id: 'content-developer.rename.dashboard-filter',
+  summary: 'Rename a dashboard filter target after preview confirm',
+  http: {
+    method: 'POST',
+    path: `${API_V1}/projects/{projectUuid}/rename/dashboard/{dashboardUuid}`,
+  },
+  authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'rename_dashboard_filter',
+    annotations: WRITE_NONDESTRUCTIVE,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
+const op_rename_project = defineOperation({
+  id: 'content-developer.rename.project',
+  summary: 'Schedule a project-wide rename after preview confirm and return jobId',
+  http: { method: 'POST', path: `${API_V1}/projects/{projectUuid}/rename` },
+  authorization: { safetyImpact: WRITE_NONDESTRUCTIVE_IMPACT },
+  sensitivity: 'none',
+  mcp: {
+    toolName: 'rename_project',
+    annotations: WRITE_NONDESTRUCTIVE,
+    taskSupport: { exposed: true, taskEligible: false },
+  },
+  profiles: [PROFILE_CONTENT_DEVELOPER],
+});
+
 const op_move_content = defineOperation({
   id: 'content-developer.content.move',
   summary: 'Move one or more charts or dashboards to another space in one call',
@@ -481,5 +587,10 @@ export const CONTENT_DEVELOPER_OPERATIONS: readonly OperationDescriptor[] = [
   op_resize_dashboard_tile,
   op_create_space,
   op_update_space,
+  op_list_rename_fields,
+  op_preview_rename,
+  op_rename_chart,
+  op_rename_dashboard_filter,
+  op_rename_project,
   op_move_content,
 ];

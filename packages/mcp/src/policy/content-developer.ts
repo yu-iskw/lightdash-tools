@@ -7,6 +7,7 @@
 
 import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
 
+import { RenameRejectedError } from '../tools/project/rename-instruction.js';
 import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader-tool-helpers.js';
 import { registerToolSafe } from '../tools/shared.js';
 
@@ -112,9 +113,9 @@ export function registerContentDeveloperTool(
   registerToolSafe(server, shortName, { ...options, annotations }, handler);
 }
 
-/** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */
+/** Map known policy errors to a coded tool result; rethrow anything else. */
 export function developerErrorResult(err: unknown): TextContent {
-  if (err instanceof PreviewLedgerError) {
+  if (err instanceof PreviewLedgerError || err instanceof RenameRejectedError) {
     return codedErrorResult(err.code, err.message);
   }
   return projectScopeErrorResult(err);

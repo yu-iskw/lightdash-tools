@@ -14,17 +14,27 @@ import { LightdashApiError, NetworkError, RateLimitError } from '@lightdash-tool
 
 import { getPreviewStore, setPreviewStoreForTests } from '../store/create-preview-store.js';
 import { InMemoryPreviewStore } from '../store/in-memory-preview-store.js';
-import { hashStableValue } from '../tools/lib/stable-stringify.js';
+import { hashStableValue, stableStringify } from '../tools/lib/stable-stringify.js';
 
-export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
+export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard', 'rename'] as const;
 export type PreviewResourceKind = (typeof PREVIEW_RESOURCE_KINDS)[number];
 export type PreviewStatus = 'applying' | 'draft' | 'reconciliation_required' | 'validated';
+
+/** Uuid lists captured by a project rename preview. Apply re-reads them. */
+export type RenameImpactBaseline = {
+  alerts: readonly string[];
+  charts: readonly string[];
+  dashboardSchedulers: readonly string[];
+  dashboards: readonly string[];
+};
 
 /** Snapshot identity captured when the preview was issued (for update stale detection). */
 export type PreviewBaseline = {
   updatedAt?: string;
   uuid?: string;
   slug?: string;
+  /** Present only for project rename previews. */
+  renameImpact?: RenameImpactBaseline;
 };
 
 export type PreviewLedgerEntry = {
@@ -258,6 +268,17 @@ function assertBaselineStillValid(
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
       `Preview '${previewId}' baseline changed (resource was updated after preview); re-run preview -> confirm`,
+    );
+  }
+  const previewedImpact = entry.baseline?.renameImpact;
+  if (
+    previewedImpact != null &&
+    (currentBaseline?.renameImpact == null ||
+      stableStringify(previewedImpact) !== stableStringify(currentBaseline.renameImpact))
+  ) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' rename impact changed; re-run preview -> confirm`,
     );
   }
   if (

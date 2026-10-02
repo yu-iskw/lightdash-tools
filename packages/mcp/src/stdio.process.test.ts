@@ -347,7 +347,7 @@ describe('stdio process smoke', () => {
     expect(listResponse.error).toBeUndefined();
     const listResult = listResponse.result as { tools?: Array<{ name: string }> };
     expect(Array.isArray(listResult.tools)).toBe(true);
-    expect(listResult.tools!).toHaveLength(25);
+    expect(listResult.tools!).toHaveLength(30);
     expect(listResult.tools!.some((t) => t.name === 'lightdash_preview_dashboard_changes')).toBe(
       true,
     );

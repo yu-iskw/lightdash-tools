@@ -1,0 +1,3 @@
+kind: feat
+body: Add content-developer tools that rename a missing field or model through the Lightdash v1 rename API after confirm_preview.
+time: 2026-10-02T00:00:00Z
