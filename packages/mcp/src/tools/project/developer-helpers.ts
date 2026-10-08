@@ -172,6 +172,7 @@ export function resolveCompareVersionIds(
   return [latest.versionUuid, previous.versionUuid];
 }
 
+/** Preview/apply move types. `space` and `document` are valid ItemPayload values and stay off this surface. */
 export type MoveContentType = 'chart' | 'dashboard' | 'data_app';
 export type MoveChartSource = 'dbt_explore' | 'sql';
 

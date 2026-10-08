@@ -28,6 +28,18 @@ describe('ContentClient', () => {
     expect(result).toEqual(mockResponse);
   });
 
+  it('searchContent passes document filters including personal documents', async () => {
+    const client = new ContentClient(mockHttp);
+    vi.mocked(mockHttp.get).mockResolvedValue({ status: 'ok', results: [] });
+    await client.searchContent({
+      contentTypes: ['document'],
+      includePersonalDocuments: true,
+    });
+    expect(mockHttp.get).toHaveBeenCalledWith('/content', {
+      params: { contentTypes: ['document'], includePersonalDocuments: true },
+    });
+  });
+
   it('searchContent passes exact uuids filter', async () => {
     const client = new ContentClient(mockHttp);
     vi.mocked(mockHttp.get).mockResolvedValue({ status: 'ok', results: [] });

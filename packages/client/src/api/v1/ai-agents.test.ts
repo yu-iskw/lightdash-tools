@@ -28,9 +28,16 @@ describe('AiAgentsClient', () => {
       pageSize: 20,
       sortField: 'createdAt',
       sortDirection: 'desc',
+      createdFrom: 'data_app',
     });
     expect(mockHttp.get).toHaveBeenCalledWith('/aiAgents/admin/threads', {
-      params: { page: 1, pageSize: 20, sortField: 'createdAt', sortDirection: 'desc' },
+      params: {
+        page: 1,
+        pageSize: 20,
+        sortField: 'createdAt',
+        sortDirection: 'desc',
+        createdFrom: 'data_app',
+      },
     });
     expect(result).toEqual(results);
   });

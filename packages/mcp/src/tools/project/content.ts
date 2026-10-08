@@ -52,7 +52,13 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
         projectUuids: z.array(z.string()).optional(),
         spaceUuids: z.array(z.string()).optional(),
         parentSpaceUuid: z.string().optional(),
-        contentTypes: z.array(z.enum(['chart', 'dashboard', 'space'])).optional(),
+        contentTypes: z
+          .array(z.enum(['chart', 'dashboard', 'space', 'data_app', 'document']))
+          .optional(),
+        includePersonalDocuments: z
+          .boolean()
+          .optional()
+          .describe("Include the caller's personal documents. Omitted leaves the server default"),
         search: z.string().optional(),
         sortBy: z.enum(CONTENT_SORT_BY_COLUMNS).optional(),
         sortDirection: z.enum(['asc', 'desc']).optional(),
@@ -67,7 +73,8 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
           projectUuids?: string[];
           spaceUuids?: string[];
           parentSpaceUuid?: string;
-          contentTypes?: Array<'chart' | 'dashboard' | 'space'>;
+          contentTypes?: Array<'chart' | 'dashboard' | 'data_app' | 'document' | 'space'>;
+          includePersonalDocuments?: boolean;
           search?: string;
           sortBy?: LightdashApi.Content.ContentSortByColumns;
           sortDirection?: 'asc' | 'desc';
@@ -85,6 +92,7 @@ export function registerListContent(server: McpServer, contextProvider: McpConte
             spaceUuids: args.spaceUuids,
             parentSpaceUuid: args.parentSpaceUuid,
             contentTypes: args.contentTypes,
+            includePersonalDocuments: args.includePersonalDocuments,
             search: args.search,
             sortBy: args.sortBy,
             sortDirection: args.sortDirection,
