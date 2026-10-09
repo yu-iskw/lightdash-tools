@@ -269,6 +269,7 @@ export namespace LightdashApi {
     export type AiMcpServerAuthType = AiAgentsTypes.AiMcpServerAuthType;
     export type AiMcpCredentialScope = AiAgentsTypes.AiMcpCredentialScope;
     export type AiMcpServerConnectionStatus = AiAgentsTypes.AiMcpServerConnectionStatus;
+    export type AiProjectMcpServer = AiAgentsTypes.AiProjectMcpServer;
     export type AiMcpServer = AiAgentsTypes.AiMcpServer;
     export type AiMcpServerTool = AiAgentsTypes.AiMcpServerTool;
     export type AiAgentMcpServerTool = AiAgentsTypes.AiAgentMcpServerTool;
@@ -448,6 +449,7 @@ export type UpdateMessageFeedbackBody = AiAgents.UpdateMessageFeedbackBody;
 export type AiMcpServerAuthType = AiAgents.AiMcpServerAuthType;
 export type AiMcpCredentialScope = AiAgents.AiMcpCredentialScope;
 export type AiMcpServerConnectionStatus = AiAgents.AiMcpServerConnectionStatus;
+export type AiProjectMcpServer = AiAgents.AiProjectMcpServer;
 export type AiMcpServer = AiAgents.AiMcpServer;
 export type AiMcpServerTool = AiAgents.AiMcpServerTool;
 export type AiAgentMcpServerTool = AiAgents.AiAgentMcpServerTool;

@@ -163,6 +163,7 @@ export namespace V1 {
     export type AiMcpServerAuthType = A.AiMcpServerAuthType;
     export type AiMcpCredentialScope = A.AiMcpCredentialScope;
     export type AiMcpServerConnectionStatus = A.AiMcpServerConnectionStatus;
+    export type AiProjectMcpServer = A.AiProjectMcpServer;
     export type AiMcpServer = A.AiMcpServer;
     export type AiMcpServerTool = A.AiMcpServerTool;
     export type AiAgentMcpServerTool = A.AiAgentMcpServerTool;

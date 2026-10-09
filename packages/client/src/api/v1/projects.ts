@@ -24,7 +24,7 @@ export class ProjectsClient extends BaseApiClient {
     return this.http.get<SpaceQuery[]>(`/projects/${projectUuid}/charts`);
   }
 
-  /** List admin-verified charts and dashboards in a project. */
+  /** List admin-verified charts, dashboards, data apps, and documents in a project. */
   async listVerifiedContent(projectUuid: string): Promise<VerifiedContentListItem[]> {
     return this.http.get<VerifiedContentListItem[]>(
       `/projects/${projectUuid}/content-verification`,

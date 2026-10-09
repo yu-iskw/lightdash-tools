@@ -43,6 +43,7 @@ import type {
   AiArtifact,
   AiMcpServer,
   AiMcpServerTool,
+  AiProjectMcpServer,
   AiModelOption,
   AiRouterRouteRequest,
   AiRouterRouteResponseResult,
@@ -401,7 +402,7 @@ export class AiAgentsClient extends BaseApiClient {
 
   // ─── MCP servers (EE-guarded upstream) ───────────────────────────────────────
 
-  listProjectMcpServers(projectUuid: string): Promise<AiMcpServer[]> {
+  listProjectMcpServers(projectUuid: string): Promise<AiProjectMcpServer[]> {
     return this.mcpServers.listProjectMcpServers(projectUuid);
   }
 

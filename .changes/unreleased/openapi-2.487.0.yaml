@@ -1,0 +1,3 @@
+kind: feat
+body: Pin Lightdash OpenAPI types to release 2.487.0 so content search can include documents and project MCP server lists include attachedAgentCount.
+time: 2026-10-08T15:10:00Z

@@ -2,7 +2,7 @@
  * Content command implementation.
  */
 
-import { READ_ONLY_DEFAULT } from '@lightdash-tools/common';
+import { READ_ONLY_DEFAULT, type LightdashApi } from '@lightdash-tools/common';
 
 import { getClient } from '../utils/client';
 import { wrapAction } from '../utils/safety';
@@ -17,9 +17,12 @@ export function registerContentCommand(program: Command): void {
 
   contentCmd
     .command('search <query>')
-    .description('Search project content (charts, dashboards, spaces)')
+    .description('Search project content (charts, dashboards, spaces, data apps, documents)')
     .option('--projects <uuids...>', 'Filter by project UUIDs')
-    .option('--type <types...>', 'Filter by content types (chart, dashboard, space)')
+    .option(
+      '--type <types...>',
+      'Filter by content types (chart, dashboard, space, data_app, document)',
+    )
     .option('--page <number>', 'Page number', (v) => parseInt(v, 10))
     .option('--page-size <number>', 'Page size', (v) => parseInt(v, 10))
     .action(
@@ -29,7 +32,7 @@ export function registerContentCommand(program: Command): void {
           query: string,
           options: {
             projects?: string[];
-            type?: ('chart' | 'dashboard' | 'space')[];
+            type?: LightdashApi.Content.ContentType[];
             page?: number;
             pageSize?: number;
           },
