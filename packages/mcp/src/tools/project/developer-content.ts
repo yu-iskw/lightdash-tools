@@ -174,7 +174,7 @@ export function registerConfirmPreview(
     {
       title: 'Confirm preview',
       description:
-        'Confirm a previewed create/update/duplicate/tile/content-move payload; resourceKind/resourceKey must match the preview exactly. Required unlock before every write tool.',
+        'Confirm a previewed create/update/duplicate/tile/content-move/rename payload; resourceKind/resourceKey must match the preview exactly. Required unlock before every write tool.',
       safety: VALIDATE_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),

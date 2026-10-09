@@ -212,7 +212,7 @@ Project-scoped discovery, metadata, bounded `run_chart` / `run_dashboard_tile`, 
 
 ### `content-developer`
 
-Author charts (as-code) and dashboards behind preview → `confirm_preview` → apply with HMAC `previewToken`. No warehouse execution or hard delete. Server name: `lightdash-mcp-cdev`.
+Author charts (as-code) and dashboards behind preview → `confirm_preview` → apply with HMAC `previewToken`. No warehouse execution or hard delete. Server name: `lightdash-mcp-cdev`. Five rename tools repair a missing field or model behind the same gate with `resourceKind` `rename`. They are `list_rename_fields`, `preview_rename`, `rename_chart`, `rename_dashboard_filter`, and `rename_project` (ADR-0036).
 
 ### `content-governance`
 
