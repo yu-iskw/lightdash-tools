@@ -496,6 +496,7 @@ describe('moveContentItemFromSummary / moveContentTargetSpaceFromRecord', () => 
 
   it('rejects unsupported content types', () => {
     expect(moveContentItemFromSummary({ uuid: 's1', contentType: 'space' })).toBeNull();
+    expect(moveContentItemFromSummary({ uuid: 'd1', contentType: 'document' })).toBeNull();
   });
 
   it('normalizes null target space and named spaces', () => {

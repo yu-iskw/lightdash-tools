@@ -130,6 +130,7 @@ export type {
   AiMcpServerAuthType,
   AiMcpCredentialScope,
   AiMcpServerConnectionStatus,
+  AiProjectMcpServer,
   AiMcpServer,
   AiMcpServerTool,
   AiAgentMcpServerTool,

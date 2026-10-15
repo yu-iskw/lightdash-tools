@@ -9,14 +9,15 @@ import type {
   AiAgentMcpServerTool,
   AiMcpServer,
   AiMcpServerTool,
+  AiProjectMcpServer,
   CreateProjectMcpServerBody,
   UpdateAgentMcpServerToolsBody,
 } from '@lightdash-tools/common';
 
 export class AiAgentsMcpServersClient extends BaseApiClient {
   /** List MCP servers configured for a project (GET …/mcpServers). */
-  async listProjectMcpServers(projectUuid: string): Promise<AiMcpServer[]> {
-    return this.http.get<AiMcpServer[]>(`/projects/${projectUuid}/aiAgents/mcpServers`);
+  async listProjectMcpServers(projectUuid: string): Promise<AiProjectMcpServer[]> {
+    return this.http.get<AiProjectMcpServer[]>(`/projects/${projectUuid}/aiAgents/mcpServers`);
   }
 
   /** Create a project MCP server (POST …/mcpServers). */

@@ -25,7 +25,7 @@ export namespace AiAgents {
     projectUuids?: string[];
     agentUuids?: string[];
     userUuids?: string[];
-    createdFrom?: 'slack' | 'web_app';
+    createdFrom?: components['schemas']['AiThreadCreatedFrom'];
     humanScore?: number;
     dateFrom?: string;
     dateTo?: string;
@@ -165,7 +165,7 @@ export namespace AiAgents {
   /** Options for cloning a thread from a prompt (POST …/clone/{promptUuid}). */
   export interface CloneThreadBody {
     promptUuid: string;
-    createdFrom?: 'evals' | 'web_app';
+    createdFrom?: components['schemas']['AiClonedThreadCreatedFrom'];
   }
 
   // ─── Knowledge documents ─────────────────────────────────────────────────────
@@ -221,7 +221,9 @@ export namespace AiAgents {
   export type AiMcpCredentialScope = components['schemas']['AiMcpCredentialScope'];
   /** MCP server connection status. */
   export type AiMcpServerConnectionStatus = components['schemas']['AiMcpServerConnectionStatus'];
-  /** Project MCP server record. */
+  /** Project MCP server record returned by GET …/aiAgents/mcpServers (includes attachedAgentCount). */
+  export type AiProjectMcpServer = components['schemas']['AiProjectMcpServer'];
+  /** MCP server record returned by create and per-agent list. */
   export type AiMcpServer = components['schemas']['AiMcpServer'];
   /** MCP tool discovered on a project server. */
   export type AiMcpServerTool = components['schemas']['AiMcpServerTool'];

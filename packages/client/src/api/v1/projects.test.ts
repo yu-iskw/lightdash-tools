@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import { ProjectsClient } from './projects';
+import { ProjectsClient, type VerifiedContentListItem } from './projects';
 
 import type { HttpClient } from '../../http/http-client';
 
@@ -46,21 +46,50 @@ describe('ProjectsClient', () => {
 
   it('listVerifiedContent should call GET /projects/{projectUuid}/content-verification', async () => {
     const client = new ProjectsClient(mockHttp);
-    const items = [
+    const verifiedBy = { userUuid: 'u1', firstName: 'Ada', lastName: 'Lovelace' };
+    const shared = {
+      description: null,
+      spaceUuid: 's1',
+      spaceName: 'Space',
+      views: 10,
+      lastUpdatedAt: null,
+      verifiedAt: '2026-01-01T00:00:00.000Z',
+      verifiedBy,
+    };
+    const items: VerifiedContentListItem[] = [
       {
-        contentType: 'chart' as const,
+        ...shared,
+        contentType: 'chart',
         uuid: 'c1',
         contentUuid: 'c1',
         name: 'Verified chart',
-        description: null,
-        spaceUuid: 's1',
-        spaceName: 'Space',
-        views: 10,
-        lastUpdatedAt: null,
-        verifiedAt: '2026-01-01T00:00:00.000Z',
-        verifiedBy: { userUuid: 'u1', firstName: 'Ada', lastName: 'Lovelace' },
-        chartKind: 'vertical_bar' as const,
+        slug: 'verified-chart',
+        chartKind: 'vertical_bar',
         exploreName: 'orders',
+      },
+      {
+        ...shared,
+        contentType: 'dashboard',
+        uuid: 'd1',
+        contentUuid: 'd1',
+        name: 'Verified dashboard',
+        slug: 'verified-dashboard',
+      },
+      {
+        ...shared,
+        contentType: 'data_app',
+        uuid: 'a1',
+        contentUuid: 'a1',
+        name: 'Verified data app',
+        slug: 'verified-data-app',
+      },
+      {
+        ...shared,
+        contentType: 'document',
+        uuid: 'doc1',
+        contentUuid: 'doc1',
+        name: 'Verified document',
+        slug: 'verified-document',
       },
     ];
     vi.mocked(mockHttp.get).mockResolvedValue(items);

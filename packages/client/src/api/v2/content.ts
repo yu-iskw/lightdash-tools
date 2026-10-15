@@ -13,7 +13,9 @@ export interface SearchContentParams {
   /** Exact content UUID filter (OpenAPI List content `uuids`). */
   uuids?: string[];
   parentSpaceUuid?: string;
-  contentTypes?: ('chart' | 'dashboard' | 'data_app' | 'space')[];
+  contentTypes?: LightdashApi.Content.ContentType[];
+  /** When true, include the caller's personal documents. Omitted leaves the server default. */
+  includePersonalDocuments?: boolean;
   pageSize?: number;
   page?: number;
   search?: string;
@@ -21,7 +23,7 @@ export interface SearchContentParams {
   sortDirection?: 'asc' | 'desc';
 }
 
-/** Body for moving a single content item (chart, dashboard, or space) to another space. */
+/** Body for moving a single content item to another space. */
 export type MoveContentBody = components['schemas']['ApiContentActionBody_ContentActionMove_'];
 
 /** Body for moving multiple content items (charts, dashboards, spaces) to another space. */
@@ -32,7 +34,7 @@ export type BulkMoveContentBody =
 export type PermanentlyDeleteContentBody = components['schemas']['ApiPermanentlyDeleteContentBody'];
 
 export class ContentClient extends BaseApiClient {
-  /** Search project content (charts, dashboards, spaces). */
+  /** Search project content (charts, dashboards, spaces, data apps, and documents). */
   async searchContent(
     params?: SearchContentParams,
   ): Promise<LightdashApi.Content.ApiContentResponse> {

@@ -240,12 +240,19 @@ export function registerSearchContent(
     'search_content',
     {
       title: 'Search content',
-      description: 'Search charts, dashboards, spaces, and data apps in the resolved project',
+      description:
+        'Search charts, dashboards, spaces, data apps, and documents in the resolved project',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),
         query: z.string().optional(),
-        contentTypes: z.array(z.enum(['chart', 'dashboard', 'space', 'data_app'])).optional(),
+        contentTypes: z
+          .array(z.enum(['chart', 'dashboard', 'space', 'data_app', 'document']))
+          .optional(),
+        includePersonalDocuments: z
+          .boolean()
+          .optional()
+          .describe("Include the caller's personal documents. Omitted leaves the server default"),
         spaceUuids: z.array(z.string()).optional(),
         parentSpaceUuid: z.string().optional(),
         sortBy: z.enum(CONTENT_SORT_BY_COLUMNS).optional(),
@@ -261,7 +268,8 @@ export function registerSearchContent(
           async (args: {
             projectUuid?: string;
             query?: string;
-            contentTypes?: Array<'chart' | 'dashboard' | 'data_app' | 'space'>;
+            contentTypes?: Array<'chart' | 'dashboard' | 'data_app' | 'document' | 'space'>;
+            includePersonalDocuments?: boolean;
             spaceUuids?: string[];
             parentSpaceUuid?: string;
             sortBy?: (typeof CONTENT_SORT_BY_COLUMNS)[number];
@@ -277,6 +285,7 @@ export function registerSearchContent(
                 spaceUuids: args.spaceUuids,
                 parentSpaceUuid: args.parentSpaceUuid,
                 contentTypes: args.contentTypes,
+                includePersonalDocuments: args.includePersonalDocuments,
                 search: args.query,
                 sortBy: args.sortBy,
                 sortDirection: args.sortDirection,
@@ -320,7 +329,7 @@ export function registerListVerifiedContent(
     {
       title: 'List verified content',
       description:
-        'List admin-verified charts and dashboards in the resolved project (prefer these as trusted seeds)',
+        'List admin-verified charts, dashboards, data apps, and documents in the resolved project (prefer these as trusted seeds)',
       safety: METADATA_SAFETY,
       inputSchema: {
         projectUuid: projectUuidField().optional(),

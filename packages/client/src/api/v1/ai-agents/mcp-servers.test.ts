@@ -19,11 +19,12 @@ describe('AiAgentsMcpServersClient', () => {
 
   it('listProjectMcpServers should call GET …/mcpServers', async () => {
     const client = new AiAgentsMcpServersClient(mockHttp);
-    const servers = [{ uuid: 'mcp1', name: 'GitHub' }];
+    const servers = [{ uuid: 'mcp1', name: 'GitHub', attachedAgentCount: 2 }];
     vi.mocked(mockHttp.get).mockResolvedValue(servers);
     const result = await client.listProjectMcpServers('proj1');
     expect(mockHttp.get).toHaveBeenCalledWith('/projects/proj1/aiAgents/mcpServers');
     expect(result).toEqual(servers);
+    expect(result[0]?.attachedAgentCount).toBe(2);
   });
 
   it('createProjectMcpServer should call POST …/mcpServers', async () => {
