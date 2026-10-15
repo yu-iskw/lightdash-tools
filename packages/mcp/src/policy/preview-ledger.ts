@@ -15,15 +15,24 @@ import { hashStableValue } from '../tools/lib/stable-stringify.js';
 
 import type { RequestStateCodec, ServerContext } from '@modelcontextprotocol/server';
 
-export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard'] as const;
+export const PREVIEW_RESOURCE_KINDS = ['chart', 'content-move', 'dashboard', 'rename'] as const;
 export type PreviewResourceKind = (typeof PREVIEW_RESOURCE_KINDS)[number];
 export type PreviewStatus = 'draft' | 'validated';
+
+/** Sorted uuid lists from a project rename preview. Apply compares a fresh preview to them. */
+export type RenameImpactBaseline = {
+  alerts: readonly string[];
+  charts: readonly string[];
+  dashboardSchedulers: readonly string[];
+  dashboards: readonly string[];
+};
 
 /** Snapshot identity captured when the preview was issued (for update stale detection). */
 export type PreviewBaseline = {
   updatedAt?: string;
   uuid?: string;
   slug?: string;
+  renameImpact?: RenameImpactBaseline;
 };
 
 /** Compact claims embedded in the HMAC-signed previewToken (no proposed body). */
@@ -99,7 +108,33 @@ function resourceKeyMatches(claims: PreviewTokenClaims, resourceKey: string): bo
   return claims.resourceKey === resourceKey || claims.resourceAliases.includes(resourceKey);
 }
 
-/** Update drift or create-target appearance → PREVIEW_STALE. */
+function sameIds(left: readonly string[], right: readonly string[]): boolean {
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((id, index) => {
+    const [counterpart] = right.slice(index, index + 1);
+    return id === counterpart;
+  });
+}
+
+/** True when both impact snapshots list the same uuids. A missing snapshot is stale. */
+export function sameRenameImpact(
+  stored: RenameImpactBaseline | undefined,
+  fresh: RenameImpactBaseline | undefined,
+): boolean {
+  if (stored == null || fresh == null) {
+    return false;
+  }
+  return (
+    sameIds(stored.alerts, fresh.alerts) &&
+    sameIds(stored.charts, fresh.charts) &&
+    sameIds(stored.dashboardSchedulers, fresh.dashboardSchedulers) &&
+    sameIds(stored.dashboards, fresh.dashboards)
+  );
+}
+
+/** Update drift, create-target appearance, or a changed project rename impact → PREVIEW_STALE. */
 function assertBaselineStillValid(
   previewId: string,
   claims: PreviewTokenClaims,
@@ -124,6 +159,17 @@ function assertBaselineStillValid(
     throw new PreviewLedgerError(
       'PREVIEW_STALE',
       `Preview '${previewId}' targeted a non-existent resource that now exists; re-run preview -> confirm`,
+    );
+  }
+  const storedImpact = claims.baseline?.renameImpact;
+  const freshImpact = currentBaseline?.renameImpact;
+  if (
+    (storedImpact != null || freshImpact != null) &&
+    !sameRenameImpact(storedImpact, freshImpact)
+  ) {
+    throw new PreviewLedgerError(
+      'PREVIEW_STALE',
+      `Preview '${previewId}' rename impact changed; re-run preview_rename -> confirm`,
     );
   }
 }

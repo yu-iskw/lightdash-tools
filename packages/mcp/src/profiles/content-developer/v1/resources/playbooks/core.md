@@ -61,6 +61,9 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 | `create_dashboard` / `update_dashboard` / `duplicate_dashboard`                                  | Dashboard shell then tile updates                                                                                                                        |
 | `add_dashboard_tile` / `move_dashboard_tile` / `remove_dashboard_tile` / `resize_dashboard_tile` | Tile ops; each needs preview of the **full next tiles array**                                                                                            |
 | `move_content`                                                                                   | Relocate into existing spaces                                                                                                                            |
+| `list_rename_fields`                                                                             | Field ids that can replace a missing chart field or dashboard filter target                                                                              |
+| `preview_rename`                                                                                 | Mint draft `previewToken` for a rename instruction                                                                                                       |
+| `rename_chart` / `rename_dashboard_filter` / `rename_project`                                    | Rename writes after confirm. See **Rename a missing field**                                                                                              |
 | `validate_chart` / `validate_dashboard`                                                          | Optional post-apply health (`chartUuid` / dashboard UUID)                                                                                                |
 | `compare_chart_versions` / `compare_dashboard_versions`                                          | Drift / refactor                                                                                                                                         |
 
@@ -96,6 +99,7 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 | Update / tile ops   | `dashboard`            | dashboard UUID (slug is alias)                                           |
 | Duplicate dashboard | `dashboard`            | **source** UUID                                                          |
 | Content move        | `content-move`         | preview's `resourceKey`                                                  |
+| Rename              | `rename`               | chart UUID, dashboard UUID, or the project preview's `resourceKey`       |
 
 **Create-chart gotcha:** omit top-level `slug` on `preview_chart_changes` → preview returns `resourceKey: "new"`, but `create_chart` applies with `resourceKey = args.slug` → binding mismatch. Always pass top-level `slug` (same as `changes.slug`) on create previews.
 
@@ -110,3 +114,14 @@ Record when a budget stopped you. User-requested “one of every chart type” o
 - `create_chart` response: extract UUID from `charts[0].data.uuid` (not a bare chart object).
 - Viz shapes: `lightdash://playbooks/content-developer/chart-types`.
 - PoP: prefer cloned `generationType: periodOverPeriod` metrics; else % of total / rank / windows via `lightdash://playbooks/content-developer/table-calculations`.
+
+## Rename a missing field
+
+Use rename when a chart or a dashboard filter references a field or model that no longer exists. One field rename rewrites both a missing dimension and a missing sort when they share the field id.
+
+1. Call `list_rename_fields` with `target` set to `chart` or `dashboard`. For a field rename, `to` must be an id from that list. The list includes joined tables.
+2. Call `preview_rename` with scope `chart`, `dashboard-filter`, or `project`. A model rename does not load the field list. A project field rename needs `model` set to the explore name and full field ids that start with that name, such as `orders_status` with `model` `orders`. Project scope returns the affected uuid lists as `impact`. `from` and `to` may contain only lowercase letters, digits, and underscores.
+3. Call `confirm_preview` with the draft `previewToken`, `resourceKind: rename`, and the preview `resourceKey`. Apply with the returned validated `previewToken`.
+4. Apply with `rename_chart`, `rename_dashboard_filter`, or `rename_project`. Pass the same target, `type`, `from`, and `to` as the preview, plus `model` for a project rename. Any other value returns `PREVIEW_STALE`.
+5. `rename_project` previews again before it posts. A changed uuid list returns `PREVIEW_STALE`. A matching field list posts the short names (`status`, not `orders_status`) and returns `jobId`. The tool does not poll the job. Pass the same full ids you previewed. The tool strips the explore prefix for the job.
+6. If charts or dashboards as code live in git, run `lightdash download` and commit. A later `lightdash upload` from stale YAML overwrites the rename. Then validate again with `validate_chart` or `validate_dashboard`.

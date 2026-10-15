@@ -74,3 +74,7 @@ When you notice repeated mistakes, recurring explanations, or opportunities for 
 4. **Be Specific & Minimal**: Only add rules or skills that provide clear, non-obvious value.
 
 Use the `/improve-claude-config` skill to orchestrate deeper changes.
+
+## Recent Learnings
+
+- [2026-10-02]: Content-developer rename (ADR-0036) uses preview kind `rename` and an HMAC `previewToken`. A project field rename previews full ids (`orders_status` with `model` `orders`) and `rename_project` posts the short names, because `POST /rename` looks the field up on the explore base table while `POST /rename/preview` treats those ids as full. `from` is `[a-z0-9_]+` because chart rename compiles it as a regex. The tool returns `jobId` and does not poll.

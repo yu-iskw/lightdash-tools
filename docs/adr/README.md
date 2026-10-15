@@ -55,5 +55,6 @@ Vocabulary: living product term is **profile**. The MCP protocol uses Host / Cli
 32. [MCP ai-agent-ops project agent create and update](0033-mcp-ai-agent-ops-project-agent-create-and-update.md)
 33. [MCP ai-agent-ops create preview-token confirmation for non-elicitation hosts](0034-mcp-ai-agent-ops-create-preview-token-confirmation-for-non-elicitation-hosts.md)
 34. [MCP ai-agent-ops agent knowledge document CRUD](0035-mcp-ai-agent-ops-agent-knowledge-document-crud.md)
+35. [MCP content-developer rename instruction](0036-mcp-content-developer-rename-instruction.md)
 
 Number **16** is unused in the binding set (former pluggable Redis/ephemeral store; superseded by 0019).

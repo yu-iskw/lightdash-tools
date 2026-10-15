@@ -13,6 +13,7 @@ import { OrganizationsClient } from './api/v1/organizations';
 import { ProjectAccessClient } from './api/v1/project-access';
 import { ProjectsClient } from './api/v1/projects';
 import { QueryClient } from './api/v1/query';
+import { RenameClient } from './api/v1/rename';
 import { SchedulersClient } from './api/v1/schedulers';
 import { SpacesClient } from './api/v1/spaces';
 import { SqlRunnerClient } from './api/v1/sql-runner';
@@ -50,6 +51,7 @@ export class V1ApiClients {
   readonly projectAccess: ProjectAccessClient;
   readonly explores: ExploresClient;
   readonly validation: ValidationClient;
+  readonly rename: RenameClient;
   readonly metrics: MetricsClient;
   readonly schedulers: SchedulersClient;
   readonly tags: TagsClient;
@@ -69,6 +71,7 @@ export class V1ApiClients {
     this.projectAccess = new ProjectAccessClient(http);
     this.explores = new ExploresClient(http);
     this.validation = new ValidationClient(http);
+    this.rename = new RenameClient(http);
     this.metrics = new MetricsClient(http);
     this.schedulers = new SchedulersClient(http);
     this.tags = new TagsClient(http);

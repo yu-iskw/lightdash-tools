@@ -10,7 +10,7 @@ Amends [6. MCP profiles, shared registry, fixed paths](0006-mcp-profiles-shared-
 
 Related to [8. MCP request scope and hardening](0008-mcp-request-scope-and-hardening.md), [12. MCP content-reader profile](0012-mcp-content-reader-profile-saved-content-execution-boundary.md), [13. Operation catalog SSOT](0013-operation-catalog-as-sole-agent-surface-ssot.md), [19. Stateless MCP without Redis](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
 
-Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md), [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md)
+Amended by [17. MCP content-governance dashboard promote elicitation boundary](0017-mcp-content-governance-dashboard-promote-elicitation-boundary.md), [19. MCP stateless protocol core without Redis ephemeral store](0019-mcp-stateless-protocol-core-without-redis-ephemeral-store.md), [36. MCP content-developer rename instruction](0036-mcp-content-developer-rename-instruction.md)
 
 ## Context
 

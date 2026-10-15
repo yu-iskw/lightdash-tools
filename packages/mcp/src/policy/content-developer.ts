@@ -12,6 +12,7 @@ import { codedErrorResult, projectScopeErrorResult } from '../tools/query/reader
 import { registerToolSafe } from '../tools/shared.js';
 
 import { PreviewLedgerError } from './preview-ledger.js';
+import { RenameRejectedError } from './rename-rejected.js';
 
 import type { ToolHandler, ToolOptions, TextContent, ToolErrorExtras } from '../tools/shared.js';
 import type { ToolAnnotations } from '@lightdash-tools/common';
@@ -127,7 +128,7 @@ const PREVIEW_RECOVERY_EXTRAS: Partial<Record<string, ToolErrorExtras>> = {
 };
 
 function recoveryExtrasForPreviewCode(code: string): ToolErrorExtras | undefined {
-  // eslint-disable-next-line security/detect-object-injection -- keys from PreviewLedgerError codes
+  // eslint-disable-next-line security/detect-object-injection -- keys from PreviewLedgerError and RenameRejectedError codes
   return PREVIEW_RECOVERY_EXTRAS[code];
 }
 
@@ -139,9 +140,12 @@ export function developerCodedErrorResult(code: string, message: string): TextCo
   return codedErrorResult(code, message, recoveryExtrasForPreviewCode(code));
 }
 
-/** Map ProjectScopeError / PreviewLedgerError to a coded tool error result; rethrow anything else. */
+/**
+ * Map ProjectScopeError / PreviewLedgerError / RenameRejectedError to a coded tool error
+ * result; rethrow anything else.
+ */
 export function developerErrorResult(err: unknown): TextContent {
-  if (err instanceof PreviewLedgerError) {
+  if (err instanceof PreviewLedgerError || err instanceof RenameRejectedError) {
     return developerCodedErrorResult(err.code, err.message);
   }
   return projectScopeErrorResult(err);

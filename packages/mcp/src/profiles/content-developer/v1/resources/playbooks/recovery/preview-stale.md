@@ -19,3 +19,4 @@ Tool error `PREVIEW_STALE` — content hash mismatch, baseline `updatedAt` drift
 - Edited proposed fields after preview (hash mismatch).
 - Resource changed under you (`updatedAt` / create appeared).
 - Create-chart preview omitted top-level `slug` → `resourceKey` mismatch at apply.
+- A project rename now affects different charts, dashboards, alerts, or schedulers than `preview_rename` recorded.
