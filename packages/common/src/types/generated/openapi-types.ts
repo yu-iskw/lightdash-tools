@@ -2129,6 +2129,411 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/projects/{projectUuid}/query/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List my query history
+     * @description Lists the requesting user's own query history for a project, newest
+     *     first, with per-trigger and per-window counts.
+     *
+     *     Must stay declared before `getAsyncQueryResults` so the generated
+     *     `/history` route is matched before `/{queryUuid}`.
+     */
+    get: operations['getQueryHistory'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/{queryUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get results
+     * @description Retrieves paginated results from a previously executed async query using its UUID
+     */
+    get: operations['getAsyncQueryResults'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/{queryUuid}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel query
+     * @description Cancels a running async query and discards any partial results
+     */
+    post: operations['cancelAsyncQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/{queryUuid}/calculate-total': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Calculate totals
+     * @description Calculates totals for a previously-executed query, referenced by its queryUuid. Re-runs the source query's MetricQuery against the warehouse so totals are correct for every metric type (count distinct, average, ratio, etc.) — unlike client-side cell summation, which only works for sum/count. The requested `kind` selects which totals to compute.
+     */
+    post: operations['executeAsyncCalculateTotal'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/merge-query': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute merge query
+     * @description Validates and executes a merge as one asynchronous query request.
+     */
+    post: operations['executeAsyncMergeQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/compose-merge-query': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute compose merge query
+     * @description Validates and executes a merge on the compose engine as one asynchronous query request. Unlike Execute merge query, sources may reference existing query results by queryUuid; each referenced query is authorized with the same access checks as fetching its results.
+     */
+    post: operations['executeAsyncComposeMergeQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/metric-query': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute metric query
+     * @description Executes a metric query asynchronously against your data warehouse using dimensions, metrics, filters, and sorts
+     */
+    post: operations['executeAsyncMetricQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/metric-query/estimate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Estimate metric query
+     * @description Estimates the bytes a metric query would process with a free warehouse dry run, without running it. Only BigQuery connections with query estimates enabled return an estimate.
+     */
+    post: operations['estimateAsyncMetricQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/field-values': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Search field values
+     * @description Searches for unique field values asynchronously, returning a query UUID to poll for results
+     */
+    post: operations['executeAsyncFieldValueSearch'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute saved chart
+     * @description Executes a saved chart query asynchronously with optional parameter overrides
+     */
+    post: operations['executeAsyncSavedChartQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/dashboard-chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute dashboard chart
+     * @description Executes a chart within a dashboard context asynchronously with inherited dashboard filters
+     */
+    post: operations['executeAsyncDashboardChartQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/underlying-data': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute underlying data
+     * @description Executes a query to retrieve underlying raw data for drilling down into aggregated values
+     */
+    post: operations['executeAsyncUnderlyingDataQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/sql': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute SQL query
+     * @description Executes a raw SQL query asynchronously against your data warehouse for custom queries
+     */
+    post: operations['executeAsyncSqlQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/sql/estimate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Estimate SQL query
+     * @description Estimates the bytes a SQL runner query would process with a free warehouse dry run, without running it. Only BigQuery connections with query estimates enabled return an estimate.
+     */
+    post: operations['estimateAsyncSqlQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/compose-sql': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute compose SQL query
+     * @description Executes a DuckDB SQL query asynchronously on the pre-aggregate DuckDB engine. Requires run-queries access (interactive viewer and up) and the compose-sql-runner feature flag. The references map exposes other async queries' results as named tables the SQL can select from ({"orders": "queryUuid"} lets the SQL run SELECT * FROM orders); each referenced query is authorized with the same access checks as Get results, so you can reference any query you can already fetch by uuid. References to queries that are still running are waited on — this query executes once every referenced result is ready and fails if a referenced query fails. Direct file access in the SQL is rejected. Returns a queryUuid to poll for results via Get results.
+     */
+    post: operations['executeAsyncComposeSqlQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/python': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute python query
+     * @description Executes python `run(inputs, params)` asynchronously in an isolated sandbox over other async queries' results. Requires run-queries access (interactive viewer and up) and the compose-sql-runner feature flag. The references map exposes other queries' results as pandas DataFrames in `inputs` ({"orders": "queryUuid"} is read as inputs["orders"]); each referenced query is authorized with the same access checks as Get results and still-running references are waited on. The returned DataFrame is validated, capped at `limit` rows and stored as a regular result. The sandbox has no network access and no credentials. Returns a queryUuid to poll for results via Get results.
+     */
+    post: operations['executeAsyncPythonQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/sql-chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute SQL chart
+     * @description Executes a saved SQL chart query asynchronously with optional chart configurations
+     */
+    post: operations['executeAsyncSqlChartQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/dashboard-sql-chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute dashboard SQL chart
+     * @description Executes a SQL chart within a dashboard context asynchronously with inherited filters
+     */
+    post: operations['executeAsyncDashboardSqlChartQuery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/{queryUuid}/download': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Download results
+     * @deprecated
+     * @description Downloads query results in various formats with custom formatting options
+     */
+    post: operations['downloadResults'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/query/{queryUuid}/schedule-download': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Download results
+     * @description Downloads query results in various formats with custom formatting options
+     */
+    post: operations['scheduleDownloadResults'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/projects/{projectUuid}/aiAgents': {
     parameters: {
       query?: never;
@@ -2858,6 +3263,22 @@ export interface paths {
       cookie?: never;
     };
     get: operations['getArtifactVizQuery'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/projects/{projectUuid}/aiAgents/{agentUuid}/artifacts/{artifactUuid}/versions/{versionUuid}/query-results': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getArtifactQueryResults'];
     put?: never;
     post?: never;
     delete?: never;
@@ -4156,6 +4577,22 @@ export interface paths {
      *     load its live results.
      */
     post: operations['refreshAiDeepResearchChart'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/ee/projects/{projectUuid}/ai-deep-research/{aiDeepResearchRunUuid}/queries/{queryUuid}/results': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getDeepResearchChartQueryResults'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -12105,6 +12542,155 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/projects/{projectUuid}/documents/linking-chart': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Documents linking a chart
+     * @description The Documents you can view whose current version links a saved chart or saved SQL chart
+     */
+    get: operations['ListDocumentsLinkingChart'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['RequestApproval'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/requests/{requestUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['ReviewApproval'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/requests/{requestUuid}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['DecideApproval'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/requests/{requestUuid}/completion': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['CompleteApproval'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List agent connections
+     * @description Lists the signed-in person's agent connections and stored approvals.
+     */
+    get: operations['List'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/{grantUuid}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get connection status
+     * @description Reads stored approval and current project and action restrictions.
+     *     An allowed action has current person permission, organisation agent policy
+     *     approval, and support from an agent connection in that project.
+     *     A request can still be refused by a narrower rule: private-space access,
+     *     a protected branch, a second required action (uploads need Deploy and upload),
+     *     or scheduled pre-aggregate refreshes in the project.
+     */
+    get: operations['GetConnectionStatus'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/user/agent-connections/{grantUuid}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke agent connection
+     * @description Revokes the whole connection and returns its stored state.
+     */
+    delete: operations['Revoke'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v2/projects/{projectUuid}/validate': {
     parameters: {
       query?: never;
@@ -12334,351 +12920,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  '/api/v2/projects/{projectUuid}/query/history': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List my query history
-     * @description Lists the requesting user's own query history for a project, newest
-     *     first, with per-trigger and per-window counts.
-     *
-     *     Must stay declared before `getAsyncQueryResults` so the generated
-     *     `/history` route is matched before `/{queryUuid}`.
-     */
-    get: operations['getQueryHistory'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/{queryUuid}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get results
-     * @description Retrieves paginated results from a previously executed async query using its UUID
-     */
-    get: operations['getAsyncQueryResults'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/{queryUuid}/cancel': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel query
-     * @description Cancels a running async query and discards any partial results
-     */
-    post: operations['cancelAsyncQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/{queryUuid}/calculate-total': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Calculate totals
-     * @description Calculates totals for a previously-executed query, referenced by its queryUuid. Re-runs the source query's MetricQuery against the warehouse so totals are correct for every metric type (count distinct, average, ratio, etc.) — unlike client-side cell summation, which only works for sum/count. The requested `kind` selects which totals to compute.
-     */
-    post: operations['executeAsyncCalculateTotal'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/merge-query': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute merge query
-     * @description Validates and executes a merge as one asynchronous query request.
-     */
-    post: operations['executeAsyncMergeQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/compose-merge-query': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute compose merge query
-     * @description Validates and executes a merge on the compose engine as one asynchronous query request. Unlike Execute merge query, sources may reference existing query results by queryUuid; each referenced query is authorized with the same access checks as fetching its results.
-     */
-    post: operations['executeAsyncComposeMergeQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/metric-query': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute metric query
-     * @description Executes a metric query asynchronously against your data warehouse using dimensions, metrics, filters, and sorts
-     */
-    post: operations['executeAsyncMetricQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/field-values': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Search field values
-     * @description Searches for unique field values asynchronously, returning a query UUID to poll for results
-     */
-    post: operations['executeAsyncFieldValueSearch'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/chart': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute saved chart
-     * @description Executes a saved chart query asynchronously with optional parameter overrides
-     */
-    post: operations['executeAsyncSavedChartQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/dashboard-chart': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute dashboard chart
-     * @description Executes a chart within a dashboard context asynchronously with inherited dashboard filters
-     */
-    post: operations['executeAsyncDashboardChartQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/underlying-data': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute underlying data
-     * @description Executes a query to retrieve underlying raw data for drilling down into aggregated values
-     */
-    post: operations['executeAsyncUnderlyingDataQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/sql': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute SQL query
-     * @description Executes a raw SQL query asynchronously against your data warehouse for custom queries
-     */
-    post: operations['executeAsyncSqlQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/compose-sql': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute compose SQL query
-     * @description Executes a DuckDB SQL query asynchronously on the pre-aggregate DuckDB engine. Requires run-queries access (interactive viewer and up) and the compose-sql-runner feature flag. The references map exposes other async queries' results as named tables the SQL can select from ({"orders": "queryUuid"} lets the SQL run SELECT * FROM orders); each referenced query is authorized with the same access checks as Get results, so you can reference any query you can already fetch by uuid. References to queries that are still running are waited on — this query executes once every referenced result is ready and fails if a referenced query fails. Direct file access in the SQL is rejected. Returns a queryUuid to poll for results via Get results.
-     */
-    post: operations['executeAsyncComposeSqlQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/sql-chart': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute SQL chart
-     * @description Executes a saved SQL chart query asynchronously with optional chart configurations
-     */
-    post: operations['executeAsyncSqlChartQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/dashboard-sql-chart': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute dashboard SQL chart
-     * @description Executes a SQL chart within a dashboard context asynchronously with inherited filters
-     */
-    post: operations['executeAsyncDashboardSqlChartQuery'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/{queryUuid}/download': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Download results
-     * @deprecated
-     * @description Downloads query results in various formats with custom formatting options
-     */
-    post: operations['downloadResults'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v2/projects/{projectUuid}/query/{queryUuid}/schedule-download': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Download results
-     * @description Downloads query results in various formats with custom formatting options
-     */
-    post: operations['scheduleDownloadResults'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   '/api/v2/projects/{projectUuid}/saved/{chartUuidOrSlug}': {
     parameters: {
       query?: never;
@@ -12832,6 +13073,90 @@ export interface paths {
     };
     get: operations['getOrganizationAgentIdentitySettings'];
     put: operations['updateOrganizationAgentIdentitySettings'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-identity/{warehouseType}/projects-without-ai-service-account': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getOrganizationAgentIdentityProjectsWithoutAiServiceAccount'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-identity/snowflake/setup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getOrganizationAgentIdentitySnowflakeSetup'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-identity/snowflake/client': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Save Snowflake client
+     * @description Saves the organization's Snowflake agent OAuth client.
+     */
+    put: operations['updateOrganizationSnowflakeAgentClient'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-identity/snowflake/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['verifyOrganizationAgentIdentitySnowflakeSetup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-identity/{warehouseType}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put: operations['updateOrganizationAgentIdentityRule'];
     post?: never;
     delete?: never;
     options?: never;
@@ -13290,6 +13615,38 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v2/projects/{projectUuid}/ai-access/service-account': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getAiServiceAccount'];
+    put: operations['upsertAiServiceAccount'];
+    post?: never;
+    delete: operations['deleteAiServiceAccount'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/projects/{projectUuid}/ai-access/service-account/test': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['testAiServiceAccount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v2/projects/{projectUuid}/ai-access/capabilities': {
     parameters: {
       query?: never;
@@ -13332,6 +13689,38 @@ export interface paths {
     get?: never;
     put?: never;
     post: operations['testMarkerAiAccess'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-permissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get: operations['getAgentCapabilityPolicy'];
+    put: operations['saveAgentCapabilityCeiling'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v2/org/agent-permissions/reset': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post: operations['resetAgentCapabilityPolicy'];
     delete?: never;
     options?: never;
     head?: never;
@@ -14115,6 +14504,8 @@ export interface components {
       sql: string;
     };
     /** @enum {string} */
+    'TableCalculationTemplateType.DIFFERENCE_FROM_PREVIOUS': 'difference_from_previous';
+    /** @enum {string} */
     'TableCalculationTemplateType.PERCENT_CHANGE_FROM_PREVIOUS': 'percent_change_from_previous';
     /** @enum {string} */
     'TableCalculationTemplateType.PERCENT_OF_PREVIOUS_VALUE': 'percent_of_previous_value';
@@ -14160,6 +14551,19 @@ export interface components {
       frameType: components['schemas']['FrameType'];
     };
     TableCalculationTemplate:
+      | {
+          partitionBy?: string[];
+          /** @description Fields to order by for window functions */
+          orderBy: {
+            /** @enum {string|null} */
+            order: 'asc' | 'desc' | null;
+            fieldId: string;
+          }[];
+          /** @description Field ID to apply the template to */
+          fieldId: string;
+          /** @description Type of template calculation */
+          type: components['schemas']['TableCalculationTemplateType.DIFFERENCE_FROM_PREVIOUS'];
+        }
       | {
           partitionBy?: string[];
           /** @description Fields to order by for window functions */
@@ -16925,6 +17329,7 @@ export interface components {
       modelConfig: components['schemas']['AiAgentModelConfig'] | null;
       /** Format: double */
       threadRetentionHours?: number | null;
+      enableSqlAutoApproval?: boolean;
       enableSqlMode?: boolean;
       enableUserContext: boolean;
       enableContentTools: boolean;
@@ -17771,9 +18176,32 @@ export interface components {
       /** @enum {string} */
       source: 'merge';
     };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_SqlChartAsCode.name-or-sql-or-limit-or-config-or-chartKind_': {
+      config: components['schemas']['AllVizChartConfig'];
+      /** Format: double */
+      limit: number;
+      name: string;
+      sql: string;
+      chartKind: components['schemas']['ChartKind'];
+    };
+    /** @description A SQL Runner chart owned by the Document, in its content-as-code shape. */
+    DocumentSqlChart: components['schemas']['Pick_SqlChartAsCode.name-or-sql-or-limit-or-config-or-chartKind_'] & {
+      /** @description The stored identity of `connection`, set by the server; dropped as code. */
+      warehouseConnectionUuid?: string;
+      /** @description The warehouse connection's name; omitted for the project's default connection. */
+      connection?: string;
+      description?: string;
+    };
+    DocumentSqlChartContent: {
+      chart: components['schemas']['DocumentSqlChart'];
+      /** @enum {string} */
+      source: 'sql';
+    };
     DocumentChartContent:
       | components['schemas']['DocumentSemanticChartContent']
-      | components['schemas']['DocumentMergeChartContent'];
+      | components['schemas']['DocumentMergeChartContent']
+      | components['schemas']['DocumentSqlChartContent'];
     /** @description Construct a type with a set of properties K of type T */
     'Record_string.DocumentChartContent_': {
       [key: string]: components['schemas']['DocumentChartContent'];
@@ -17786,6 +18214,11 @@ export interface components {
      *     temporary keys the server replaces with the next free id.
      */
     DocumentContent: {
+      /**
+       * @description Charts saved by a newer release, kept verbatim so saving the Document
+       *     here doesn't lose them. Omitted when there are none.
+       */
+      unsupportedCharts?: components['schemas']['Record_string.unknown_'];
       charts: components['schemas']['DocumentCharts'];
       markdown: string;
     };
@@ -18417,6 +18850,42 @@ export interface components {
      *     See [RFC 4112](https://tools.ietf.org/html/rfc4122)
      */
     UUID: string;
+    ReleaseHighlight: {
+      requestedByYourOrganization: boolean;
+      version: string;
+      url: string;
+      benefit: string;
+      title: string;
+    };
+    ReleaseHighlightsResult:
+      | {
+          /** Format: date-time */
+          generatedAt: string;
+          highlights: components['schemas']['ReleaseHighlight'][];
+          toVersion: string;
+          fromVersion: string;
+          /** @enum {string} */
+          status: 'ready';
+        }
+      | {
+          /** @enum {string} */
+          reason:
+            | 'not_self_hosted'
+            | 'update_check_disabled'
+            | 'up_to_date'
+            | 'ai_not_configured'
+            | 'source_unavailable'
+            | 'no_features'
+            | 'generation_failed'
+            | 'rate_limited';
+          /** @enum {string} */
+          status: 'unavailable';
+        };
+    ApiReleaseHighlights: {
+      results: components['schemas']['ReleaseHighlightsResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
     HomepageCollectionItemRef: {
       uuid: string;
       /** @enum {string} */
@@ -20719,6 +21188,31 @@ export interface components {
       invalidateCache?: boolean;
       dateZoom?: components['schemas']['DateZoom'];
     };
+    AgentSubjectRef: {
+      uuid: string;
+      /** @enum {string} */
+      type: 'user' | 'service_account';
+    };
+    /** @enum {string} */
+    AgentActorSurface:
+      'in_app_agent' | 'mcp' | 'api' | 'slack_agent' | 'cli' | 'data_app' | 'ai_summary';
+    AgentConnectionGrantRef: {
+      /** Format: double */
+      revision: number;
+      grantUuid: string;
+    };
+    AgentActorClaim: {
+      agent_connection_grant?: components['schemas']['AgentConnectionGrantRef'] | null;
+      agent_uuid: string | null;
+      client_id: string | null;
+      surface: components['schemas']['AgentActorSurface'];
+      sub: string;
+    };
+    AgentIdentityClaim: {
+      act: components['schemas']['AgentActorClaim'];
+      subject: components['schemas']['AgentSubjectRef'];
+      sub: string;
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_SpaceSummary.uuid-or-name-or-userAccess_': {
       name: string;
@@ -20778,6 +21272,7 @@ export interface components {
       description: string | null;
       name: string;
       savedSqlUuid: string;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     ApiSqlChart: {
       results: components['schemas']['SqlChart'];
@@ -21634,6 +22129,7 @@ export interface components {
       threadUuid: string;
       /** Format: double */
       version: number;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     /**
      * @description Whether an app analyses on load: its own choice, or the org default.
@@ -21803,9 +22299,15 @@ export interface components {
       connectionSlug: string;
       alias: string;
     };
+    DataAppManifestRegistryProvenance: {
+      url: string;
+      version: string;
+      slug: string;
+    };
     DataAppManifest: {
       scaffoldingVersion?: string;
       downloadedAt: string;
+      registry?: components['schemas']['DataAppManifestRegistryProvenance'];
       access?: components['schemas']['ContentAsCodeDirectAccess'];
       spaceSlug?: string;
       externalConnections?: components['schemas']['DataAppManifestExternalConnection'][];
@@ -22874,8 +23376,884 @@ export interface components {
       originalFilename: string;
       name: string;
     };
+    /** @enum {string} */
+    QueryExecutionContext:
+      | 'dashboardView'
+      | 'autorefreshedDashboard'
+      | 'exploreView'
+      | 'filterAutocomplete'
+      | 'chartView'
+      | 'chartHistory'
+      | 'sqlChartView'
+      | 'sqlRunner'
+      | 'viewUnderlyingData'
+      | 'alert'
+      | 'scheduledDelivery'
+      | 'csvDownload'
+      | 'gsheets'
+      | 'gsheetsAddon'
+      | 'scheduledGsheetsChart'
+      | 'scheduledGsheetsDashboard'
+      | 'scheduledGsheetsSqlChart'
+      | 'scheduledChart'
+      | 'scheduledDashboard'
+      | 'calculateTotal'
+      | 'calculateSubtotal'
+      | 'embed'
+      | 'ai'
+      | 'mcp.run_metric_query'
+      | 'mcp.run_sql'
+      | 'mcp.search_field_values'
+      | 'api'
+      | 'cli'
+      | 'metricsExplorer'
+      | 'preAggregateMaterialization'
+      | 'composeSqlRunner'
+      | 'pythonRunner'
+      | 'multiSourceQuery'
+      | 'dataAppSample'
+      | 'desktop';
+    /**
+     * @description User-facing grouping of `QueryExecutionContext` values by what triggered the
+     *     run: a person acting directly, an app surface loading many queries at once
+     *     (dashboards, embeds, data apps), or a schedule running in the background.
+     * @enum {string}
+     */
+    QueryTrigger: 'interactive' | 'apps' | 'scheduled';
+    /** @enum {string} */
+    QueryLanguage: 'semantic' | 'sql';
+    /** @enum {string} */
+    QueryHistoryStatus:
+      'pending' | 'queued' | 'executing' | 'expired' | 'ready' | 'error' | 'cancelled';
+    CommonExecuteQueryRequestParams: {
+      parameters?: components['schemas']['ParametersValuesMap'];
+      usePreAggregateCache?: boolean;
+      invalidateCache?: boolean;
+      context?: components['schemas']['QueryExecutionContext'];
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_': {
+    'Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__': {
+      metrics: string[];
+      /** Format: double */
+      limit: number;
+      filters: {
+        tableCalculations?: unknown;
+        metrics?: unknown;
+        dimensions?: unknown;
+      };
+      exploreName: string;
+      dimensions: string[];
+      sorts: components['schemas']['SortField'][];
+      tableCalculations: components['schemas']['TableCalculation'][];
+      additionalMetrics?: components['schemas']['AdditionalMetric'][];
+      customDimensions?: components['schemas']['CustomDimension'][];
+      metricOverrides?: components['schemas']['MetricOverrides'];
+      dimensionOverrides?: components['schemas']['DimensionOverrides'];
+      timezone?: string;
+      pivotDimensions?: string[];
+      metadata?: {
+        hasADateDimension: components['schemas']['Pick_CompiledDimension.name-or-label-or-table_'];
+      };
+      dateZoom?: components['schemas']['DateZoom'];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_MetricQueryRequest.csvLimit_': components['schemas']['Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__'];
+    PivotIndexColum: {
+      type: components['schemas']['VizIndexType'];
+      reference: string;
+    };
+    ValuesColumn: {
+      aggregation: components['schemas']['VizAggregationOptions'];
+      reference: string;
+    };
+    GroupByColumn: {
+      reference: string;
+    };
+    SortBy: components['schemas']['VizSortBy'][];
+    PivotConfiguration: {
+      /**
+       * @description Declared order of the pivot-column dimensions (visible `groupByColumns`
+       *     plus hidden `sortOnlyDimensions`) as they appear in the chart's
+       *     `pivotConfig.columns`. `column_ranking` orders columns by this sequence so
+       *     a hidden sort-only dim sorts at its DECLARED position — hiding a dim then
+       *     leaves column order identical to when it was visible, instead of hoisting
+       *     the hidden dim to the front of the ORDER BY. Passthrough (hidden, non-sort)
+       *     dims are excluded since they don't drive sort. When omitted, ordering falls
+       *     back to hoisting sort-only sort targets to the front (legacy behavior).
+       */
+      pivotColumnsOrder?: components['schemas']['GroupByColumn'][];
+      /**
+       * @description Hidden pivot-column dimensions that are NOT sort targets but still need
+       *     their values carried through the SQL pipeline so that other fields'
+       *     `richText` / `image:` templates can reference them via
+       *     `row.<table>.<field>.raw`. They participate in `group_by_query` SELECT
+       *     and GROUP BY (same as sortOnlyDimensions) but do NOT affect
+       *     `column_ranking` ORDER BY (they don't drive sort). Without this bucket
+       *     the dim would be dropped entirely from the query and `row.*.raw`
+       *     references would silently resolve to undefined.
+       */
+      passthroughDimensions?: components['schemas']['GroupByColumn'][];
+      /**
+       * @description Dimensions referenced by ORDER BY but NOT spread into pivot columns.
+       *     Used when a user hides a dim that's part of `pivotConfig.columns` and has
+       *     a sort entry on it: the dim still ranks column order via the GROUP BY /
+       *     ORDER BY pipeline, but it doesn't become a pivot column header level.
+       *     Mirrors `sortOnlyColumns` (which serves the same purpose for metrics).
+       */
+      sortOnlyDimensions?: components['schemas']['GroupByColumn'][];
+      /**
+       * @description Metrics/table calculations needed for sort anchor CTEs but not for display.
+       *     These are merged into valuesColumns for SQL generation in PivotQueryBuilder,
+       *     but excluded from pivotDetails so they don't appear as chart series.
+       */
+      sortOnlyColumns?: components['schemas']['ValuesColumn'][];
+      /**
+       * @description When true, metrics are displayed as rows instead of columns.
+       *     This affects column limit calculation - when metrics are rows,
+       *     we don't need to divide the column limit by the number of metrics.
+       *     Defaults to false for backward compatibility (SQL runner behavior).
+       */
+      metricsAsRows?: boolean;
+      sortBy?: components['schemas']['SortBy'];
+      groupByColumns?: components['schemas']['GroupByColumn'][];
+      valuesColumns: components['schemas']['ValuesColumn'][];
+      indexColumn?:
+        components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
+    };
+    ExecuteAsyncMetricQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      dashboardFilters?: components['schemas']['DashboardFilters'];
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      dateZoom?: components['schemas']['DateZoom'];
+      query: components['schemas']['Omit_MetricQueryRequest.csvLimit_'];
+    };
+    /**
+     * @description One side of a merge: a metric query compiled and run as part of the merge.
+     *     A plain object, not an intersection: TSOA emits an intersection as `allOf`,
+     *     which reads as a changed response contract to the API compatibility check.
+     */
+    MergeQueryMetricSource: {
+      /**
+       * @description Opt in to an intentional one-to-many join: this source's value columns
+       *     repeat on every row the other sources produce for the same key, so the
+       *     others may carry dimensions that are not join keys. Off by default,
+       *     because a repeated metric is counted more than once by any sum over
+       *     the merged rows.
+       */
+      repeatValues?: boolean;
+      metricQuery: components['schemas']['MetricQuery'];
+      /** @description Stable id. Names the CTE, and the table its merged fields belong to. */
+      id: string;
+    };
+    /**
+     * @description A merge whose sources are all metric queries — what AI-built artifacts
+     *     hold and their endpoints return. Response contracts use this so
+     *     `metricQuery` stays required on every returned source, while the
+     *     run/compile requests accept the wider MergeQuerySource union
+     *     (expand-only: requests widen, responses do not).
+     */
+    MetricSourcedMergeQuery: {
+      /** Format: double */
+      limit: number;
+      sorts?: components['schemas']['SortField'][];
+      tableCalculations: components['schemas']['MergeTableCalculation'][];
+      joinType: components['schemas']['MergeJoinType'];
+      joinKey: components['schemas']['MergeJoinKeyPart'][];
+      sources: components['schemas']['MergeQueryMetricSource'][];
+    };
+    /** @description A merge run: the spec that produced it, recorded verbatim. */
+    ExecuteAsyncMergeQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      /**
+       * @description Warehouse-side merges are metric-sourced by construction, so this
+       *     member keeps the strict shape it always had; merges that reference
+       *     existing results record as ExecuteAsyncComposeMergeQueryRequestParams
+       *     instead (expand-only: the echo in query history only gains branches).
+       */
+      mergeQuery: components['schemas']['MetricSourcedMergeQuery'];
+    };
+    /**
+     * @description One side of a merge: an existing query result, referenced by queryUuid and
+     *     joined as the rows it already holds — nothing re-runs. Its structure and
+     *     types resolve at compile time from the stored query metadata. Results are
+     *     creator-scoped and expire; an expired reference is re-submitted as a
+     *     query, not refreshed by handle.
+     */
+    MergeQueryResultSource: {
+      /** @description See MergeQueryMetricSource.repeatValues. */
+      repeatValues?: boolean;
+      queryUuid: string;
+      /** @description Stable id. Names the CTE, and the table its merged fields belong to. */
+      id: string;
+    };
+    MergeQuerySource:
+      | components['schemas']['MergeQueryMetricSource']
+      | components['schemas']['MergeQueryResultSource'];
+    MergeQuery: {
+      /** Format: double */
+      limit: number;
+      /**
+       * @description Sort of the merged result, by merged field id. Legs always run
+       *     unsorted. Optional for compatibility with merges from before it
+       *     existed; absent means join-key order.
+       */
+      sorts?: components['schemas']['SortField'][];
+      /** @description Calculations over the merged result. Applied last, after any pivot. */
+      tableCalculations: components['schemas']['MergeTableCalculation'][];
+      joinType: components['schemas']['MergeJoinType'];
+      joinKey: components['schemas']['MergeJoinKeyPart'][];
+      sources: components['schemas']['MergeQuerySource'][];
+    };
+    /** @description A compose-engine merge run, which may reference existing results. */
+    ExecuteAsyncComposeMergeQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      mergeQuery: components['schemas']['MergeQuery'];
+    };
+    ExecuteAsyncSqlQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      warehouseConnectionUuid?: string | null;
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      /** Format: double */
+      limit?: number;
+      sql: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.UUID_': {
+      [key: string]: string;
+    };
+    ExecuteAsyncComposeSqlQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      /**
+       * @description Results of other async queries exposed to the SQL as tables,
+       *     keyed by table name: {"orders": "<queryUuid>"} lets the SQL run
+       *     SELECT * FROM orders. Each referenced query is authorized with the
+       *     same access checks as fetching its results by uuid; references to
+       *     still-running queries are waited on before this query executes.
+       *
+       *     Typed Record<string, UUID> (not Record<string, string>) on purpose:
+       *     TSOA compiles a string-valued record to an empty object literal and
+       *     validation then strips every key; a ref-aliased value type keeps
+       *     additionalProperties intact (and validates the uuid format).
+       */
+      references?: components['schemas']['Record_string.UUID_'];
+      /** Format: double */
+      limit?: number;
+      sql: string;
+    };
+    /** @description Python `run(inputs, params)` over other async queries' results, executed in a sandbox. */
+    ExecuteAsyncPythonQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      /**
+       * @description Results of other async queries exposed to the code as DataFrames, keyed
+       *     by input name: {"orders": "<queryUuid>"} is read as inputs["orders"].
+       *     Typed Record<string, UUID> for the same TSOA reason as compose SQL.
+       */
+      references: components['schemas']['Record_string.UUID_'];
+      /**
+       * Format: double
+       * @description Maximum rows kept from the returned DataFrame; the rest are dropped and the result marked truncated.
+       */
+      limit?: number;
+      /**
+       * @description Python source defining `run(inputs: dict[str, pandas.DataFrame], params: dict) -> pandas.DataFrame`.
+       *     Each key of `references` is exposed in `inputs` as a DataFrame.
+       */
+      code: string;
+    };
+    ExecuteAsyncSavedChartRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      dashboardFilters?: components['schemas']['DashboardFilters'];
+      filters?: components['schemas']['Filters'];
+      /** @description Overrides the saved chart's native pivot with a caller-derived layout. */
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      pivotResults?: boolean;
+      /** Format: double */
+      limit?: number | null;
+      versionUuid?: string;
+      chartUuid: string;
+    };
+    ExecuteAsyncDashboardChartRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      includeUnpublishedDraft?: boolean;
+      pivotResults?: boolean;
+      /** Format: double */
+      limit?: number | null;
+      dateZoom?: components['schemas']['DateZoom'];
+      dashboardSorts: components['schemas']['SortField'][];
+      dashboardFilters: components['schemas']['DashboardFilters'];
+      dashboardUuid: string;
+      tileUuid: string;
+      chartUuid: string;
+    };
+    ExecuteAsyncUnderlyingDataRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      sorts?: components['schemas']['SortField'][];
+      /** Format: double */
+      limit?: number | null;
+      dateZoom?: components['schemas']['DateZoom'];
+      filters: components['schemas']['Filters'];
+      underlyingDataItemId?: string;
+      underlyingDataSourceQueryUuid: string;
+    };
+    ExecuteAsyncDashboardSqlChartCommonParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      /** Format: double */
+      limit?: number;
+      dashboardSorts: components['schemas']['SortField'][];
+      dashboardFilters: components['schemas']['DashboardFilters'];
+      tileUuid: string;
+      dashboardUuid: string;
+    };
+    ExecuteAsyncDashboardSqlChartByUuidRequestParams: components['schemas']['ExecuteAsyncDashboardSqlChartCommonParams'] & {
+      savedSqlUuid: string;
+    };
+    ExecuteAsyncDashboardSqlChartBySlugRequestParams: components['schemas']['ExecuteAsyncDashboardSqlChartCommonParams'] & {
+      slug: string;
+    };
+    ExecuteAsyncDashboardSqlChartRequestParams:
+      | components['schemas']['ExecuteAsyncDashboardSqlChartByUuidRequestParams']
+      | components['schemas']['ExecuteAsyncDashboardSqlChartBySlugRequestParams'];
+    ExecuteAsyncFieldValueSearchRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      forceRefresh?: boolean;
+      filters?: components['schemas']['AndFilterGroup'];
+      /** Format: double */
+      limit?: number;
+      search: string;
+      fieldId: string;
+      table: string;
+    };
+    DocumentQueryReference: {
+      chartId: string;
+      versionUuid: string;
+      documentUuid: string;
+    };
+    ExecuteAsyncQueryRequestParams: (
+      | components['schemas']['ExecuteAsyncMetricQueryRequestParams']
+      | components['schemas']['ExecuteAsyncMergeQueryRequestParams']
+      | components['schemas']['ExecuteAsyncComposeMergeQueryRequestParams']
+      | components['schemas']['ExecuteAsyncSqlQueryRequestParams']
+      | components['schemas']['ExecuteAsyncComposeSqlQueryRequestParams']
+      | components['schemas']['ExecuteAsyncPythonQueryRequestParams']
+      | components['schemas']['ExecuteAsyncSavedChartRequestParams']
+      | components['schemas']['ExecuteAsyncDashboardChartRequestParams']
+      | components['schemas']['ExecuteAsyncUnderlyingDataRequestParams']
+      | components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams']
+      | components['schemas']['ExecuteAsyncFieldValueSearchRequestParams']
+    ) & {
+      documentSource?: components['schemas']['DocumentQueryReference'];
+    };
+    /**
+     * @description One row of the "My query history" list. Derived fields (trigger, language,
+     *     title, subline) are computed server-side from the persisted query so every
+     *     consumer renders the same anatomy.
+     */
+    QueryHistoryListItem: {
+      /** Format: date-time */
+      erroredAt: string | null;
+      /** Format: date-time */
+      resultsUpdatedAt: string | null;
+      /** Format: date-time */
+      processingStartedAt: string | null;
+      /** Format: date-time */
+      resultsExpiresAt: string | null;
+      /** @description True when this run was served from a previously cached results file. */
+      cacheHit: boolean;
+      /** Format: double */
+      warehouseExecutionTimeMs: number | null;
+      /** Format: double */
+      totalRowCount: number | null;
+      compiledSql: string;
+      dashboardUuid: string | null;
+      dashboardName: string | null;
+      savedSqlUuid: string | null;
+      chartUuid: string | null;
+      chartName: string | null;
+      /** @description The original execute request, replayed verbatim by "Re-run". */
+      requestParameters: components['schemas']['ExecuteAsyncQueryRequestParams'];
+      /** @description Present on semantic runs — lets the client rebuild an Explore URL. */
+      metricQuery: components['schemas']['MetricQuery'] | null;
+      exploreName: string | null;
+      error: string | null;
+      /** @description Semantic: metric/dimension labels. SQL: first line of SQL. Failed: error. */
+      subline: string;
+      /** @description Semantic: explore name. SQL: saved chart name or first CTE/table. */
+      title: string;
+      status: components['schemas']['QueryHistoryStatus'];
+      language: components['schemas']['QueryLanguage'];
+      trigger: components['schemas']['QueryTrigger'];
+      context: components['schemas']['QueryExecutionContext'];
+      projectUuid: string | null;
+      /** Format: date-time */
+      createdAt: string;
+      queryUuid: string;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_QueryTrigger.number_': {
+      /** Format: double */
+      interactive: number;
+      /** Format: double */
+      apps: number;
+      /** Format: double */
+      scheduled: number;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_QueryHistoryWindow.number_': {
+      /** Format: double */
+      lastFewMinutes: number;
+      /** Format: double */
+      lastHour: number;
+      /** Format: double */
+      last24Hours: number;
+      /** Format: double */
+      last7Days: number;
+      /** Format: double */
+      last30Days: number;
+    };
+    QueryHistoryCounts: {
+      /**
+       * Format: double
+       * @description Warehouse time spent in the last 7 days, for the page subtitle.
+       */
+      warehouseTimeMsLast7Days: number;
+      /** Format: double */
+      total: number;
+      /** @description Per-window totals with every filter except `window` applied. */
+      windows: components['schemas']['Record_QueryHistoryWindow.number_'];
+      /** @description Per-trigger totals with every filter except `trigger` applied. */
+      triggers: components['schemas']['Record_QueryTrigger.number_'];
+    };
+    'ApiSuccess__data-QueryHistoryListItem-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number_--counts-QueryHistoryCounts__': {
+      results: {
+        counts: components['schemas']['QueryHistoryCounts'];
+        pagination?: components['schemas']['KnexPaginateArgs'] & {
+          /** Format: double */
+          totalResults: number;
+          /** Format: double */
+          totalPageCount: number;
+        };
+        data: components['schemas']['QueryHistoryListItem'][];
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiQueryHistoryListResponse: components['schemas']['ApiSuccess__data-QueryHistoryListItem-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number_--counts-QueryHistoryCounts__'];
+    /**
+     * @description Time windows for the query history list, newest first. Windows are disjoint:
+     *     "last hour" excludes the last few minutes, and so on. Anything older than 30
+     *     days is out of scope for the page.
+     * @enum {string}
+     */
+    QueryHistoryWindow: 'lastFewMinutes' | 'lastHour' | 'last24Hours' | 'last7Days' | 'last30Days';
+    /** @enum {string} */
+    QueryHistorySortBy: 'createdAt' | 'runtime';
+    ResultsPaginationMetadata_ResultRow_: (components['schemas']['KnexPaginateArgs'] & {
+      /** Format: double */
+      totalResults: number;
+      /** Format: double */
+      totalPageCount: number;
+    }) & {
+      /** Format: double */
+      previousPage?: number;
+      /** Format: double */
+      nextPage?: number;
+    };
+    ResultValue: {
+      formatted: string;
+      raw: unknown;
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string._value-ResultValue__': {
+      [key: string]: {
+        value: components['schemas']['ResultValue'];
+      };
+    };
+    ResultRow: components['schemas']['Record_string._value-ResultValue__'];
+    QueryResultsPerformance: {
+      /** Format: double */
+      queueTimeMs: number | null;
+      /** Format: double */
+      resultsPageExecutionMs: number;
+      /** Format: double */
+      initialQueryExecutionMs: number | null;
+    };
+    /** @enum {string} */
+    PreAggregateExecutionEngine: 'duckdb' | 'project_warehouse';
+    /** @enum {string} */
+    PreAggregateFallbackReason: 'duckdb_execution_error' | 'external_execution_error';
+    QueryResultsPreAggregate: {
+      fallbackReason: components['schemas']['PreAggregateFallbackReason'] | null;
+      execution: components['schemas']['PreAggregateExecutionEngine'];
+    };
+    QueryResultsMetadata: {
+      preAggregate: components['schemas']['QueryResultsPreAggregate'] | null;
+      performance: components['schemas']['QueryResultsPerformance'];
+    };
+    /** @enum {string} */
+    'QueryHistoryStatus.READY': 'ready';
+    PivotValuesColumn: {
+      /** Format: double */
+      columnIndex?: number;
+      pivotValues: {
+        formatted?: string;
+        value: unknown;
+        referenceField: string;
+      }[];
+      aggregation: components['schemas']['VizAggregationOptions'];
+      pivotColumnName: string;
+      referenceField: string;
+    };
+    ReadyQueryResultsPage: components['schemas']['ResultsPaginationMetadata_ResultRow_'] & {
+      pivotDetails: {
+        passthroughDimensions?: components['schemas']['GroupByColumn'][];
+        originalColumns: components['schemas']['ResultColumns'];
+        sortBy?: components['schemas']['SortBy'];
+        groupByColumns?: components['schemas']['GroupByColumn'][];
+        valuesColumns: components['schemas']['PivotValuesColumn'][];
+        indexColumn?:
+          components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
+        /** Format: double */
+        totalColumnCount: number | null;
+      } | null;
+      status: components['schemas']['QueryHistoryStatus.READY'];
+      metadata: components['schemas']['QueryResultsMetadata'];
+      /**
+       * @description Resolved display timezone the query was built with (what execute
+       *     responses return as `resolvedTimezone`); null for SQL queries and when
+       *     timezone support is off. Temporal column formats cannot be rendered
+       *     from the page without it.
+       */
+      resolvedTimezone?: string | null;
+      rows: components['schemas']['ResultRow'][];
+      columns: components['schemas']['ResultColumns'];
+      queryUuid: string;
+    };
+    /** @enum {string} */
+    'QueryHistoryStatus.PENDING': 'pending';
+    /** @enum {string} */
+    'QueryHistoryStatus.QUEUED': 'queued';
+    /** @enum {string} */
+    'QueryHistoryStatus.EXECUTING': 'executing';
+    /** @enum {string} */
+    'QueryHistoryStatus.CANCELLED': 'cancelled';
+    /** @enum {string} */
+    'QueryHistoryStatus.ERROR': 'error';
+    /** @enum {string} */
+    'QueryHistoryStatus.EXPIRED': 'expired';
+    ApiGetAsyncQueryResults:
+      | components['schemas']['ReadyQueryResultsPage']
+      | {
+          queryUuid: string;
+          status:
+            | components['schemas']['QueryHistoryStatus.PENDING']
+            | components['schemas']['QueryHistoryStatus.QUEUED']
+            | components['schemas']['QueryHistoryStatus.EXECUTING']
+            | components['schemas']['QueryHistoryStatus.CANCELLED'];
+        }
+      | {
+          /** Format: date-time */
+          erroredAt?: string | null;
+          error: string | null;
+          queryUuid: string;
+          status:
+            | components['schemas']['QueryHistoryStatus.ERROR']
+            | components['schemas']['QueryHistoryStatus.EXPIRED'];
+        };
+    ApiGetAsyncQueryResultsResponse: {
+      results: components['schemas']['ApiGetAsyncQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    QueryWarning: {
+      tables?: string[];
+      fields?: string[];
+      message: string;
+    };
+    ApiExecuteAsyncMetricQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] & {
+      warnings: components['schemas']['QueryWarning'][];
+      fields: components['schemas']['ItemsMap'];
+      metricQuery: components['schemas']['MetricQuery'];
+    };
+    ApiSuccess_ApiExecuteAsyncMetricQueryResults_: {
+      results: components['schemas']['ApiExecuteAsyncMetricQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /**
+     * @description Kinds of totals derivable from an executed pivot query.
+     * @enum {string}
+     */
+    CalculateTotalKind:
+      'grandTotal' | 'columnTotal' | 'rowTotal' | 'columnSubtotal' | 'rowSubtotal';
+    ExecuteAsyncCalculateTotalRequestParams: {
+      invalidateCache?: boolean;
+      subtotalDimensions?: string[];
+      kind: components['schemas']['CalculateTotalKind'];
+    };
+    /**
+     * @description Where a merged field came from. Carried beside the fields rather than on
+     *     them, so every `Field` consumer downstream sees an ordinary field and only
+     *     the code that needs provenance — drilling into a cell, filtering a source —
+     *     has to know a merge happened.
+     */
+    MergeFieldOrigin:
+      | {
+          sourceFieldId: components['schemas']['FieldId'];
+          sourceId: string;
+          /** @enum {string} */
+          kind: 'source';
+        }
+      | {
+          fieldIdBySourceId: components['schemas']['Record_string.FieldId_'];
+          /** @enum {string} */
+          kind: 'joinKey';
+        }
+      | {
+          /** @enum {string} */
+          kind: 'tableCalculation';
+        };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_FieldId.MergeFieldOrigin_': {
+      [key: string]: components['schemas']['MergeFieldOrigin'];
+    };
+    /** @description Provenance of every merged field, by field id. */
+    MergeFieldOrigins: components['schemas']['Record_FieldId.MergeFieldOrigin_'];
+    ApiExecuteAsyncMergeQueryMetadata: {
+      fieldOrigins: components['schemas']['MergeFieldOrigins'];
+      parameterReferences: string[];
+    };
+    /** @enum {string} */
+    MergeQueryErrorKind:
+      | 'too_few_sources'
+      | 'too_many_sources'
+      | 'duplicate_source_id'
+      | 'reserved_source_id'
+      | 'empty_join_key'
+      | 'join_key_coverage'
+      | 'unknown_source_in_join_key'
+      | 'fan_out'
+      | 'join_key_not_selected'
+      | 'join_key_type_mismatch'
+      | 'join_key_granularity_mismatch'
+      | 'unsupported_table_calculation'
+      | 'duplicate_calculation_name'
+      | 'unresolved_calculation_reference'
+      | 'calculation_formula_too_long'
+      | 'unresolved_column_type'
+      | 'missing_parameters'
+      | 'result_source_unavailable';
+    MergeQueryError: {
+      message: string;
+      fieldIds: components['schemas']['FieldId'][];
+      /** @description The source at fault, or null for errors about the merge as a whole. */
+      sourceId: string | null;
+      kind: components['schemas']['MergeQueryErrorKind'];
+    };
+    ApiExecuteAsyncMergeQueryResults:
+      | (components['schemas']['ApiExecuteAsyncMergeQueryMetadata'] & {
+          query: components['schemas']['ApiExecuteAsyncMetricQueryResults'];
+          /** @enum {string} */
+          outcome: 'started';
+        })
+      | (components['schemas']['ApiExecuteAsyncMergeQueryMetadata'] & {
+          errors: components['schemas']['MergeQueryError'][];
+          /** @enum {string} */
+          outcome: 'refused';
+        });
+    ApiSuccess_ApiExecuteAsyncMergeQueryResults_: {
+      results: components['schemas']['ApiExecuteAsyncMergeQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_ExecuteAsyncMergeQueryRequestParams.Exclude_keyofExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache__': {
+      parameters?: components['schemas']['ParametersValuesMap'];
+      invalidateCache?: boolean;
+      context?: components['schemas']['QueryExecutionContext'];
+      /**
+       * @description Warehouse-side merges are metric-sourced by construction, so this
+       *     member keeps the strict shape it always had; merges that reference
+       *     existing results record as ExecuteAsyncComposeMergeQueryRequestParams
+       *     instead (expand-only: the echo in query history only gains branches).
+       */
+      mergeQuery: components['schemas']['MetricSourcedMergeQuery'];
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_ExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache_': components['schemas']['Pick_ExecuteAsyncMergeQueryRequestParams.Exclude_keyofExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache__'];
+    MergeQueryExecutionMode:
+      | {
+          /** @enum {string} */
+          type: 'interactive';
+        }
+      | {
+          /** Format: double */
+          limit: number | null;
+          /** @enum {string} */
+          type: 'export';
+        };
+    MergeQueryChart: {
+      pivotConfig?: {
+        /** @description Ordered fields to render on the pivot row axis */
+        rows?: string[];
+        /** @description Fields to use as pivot columns */
+        columns: string[];
+      };
+      chartConfig: components['schemas']['ChartConfig'];
+    };
+    /** @description One-call merge execution request. Derived pivot SQL remains server-owned. */
+    ApiExecuteAsyncMergeQueryRequest: components['schemas']['Omit_ExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache_'] & {
+      chart?: components['schemas']['MergeQueryChart'];
+      mode?: components['schemas']['MergeQueryExecutionMode'];
+    };
+    /**
+     * @description Merge execution request for the compose endpoint, which accepts the full
+     *     MergeQuerySource union (including references to existing query results).
+     *     A separate endpoint keeps the original merge-query contract untouched for
+     *     existing clients while compose-only capabilities evolve on their own path.
+     */
+    ApiExecuteAsyncComposeMergeQueryRequest: {
+      chart?: components['schemas']['MergeQueryChart'];
+      mode?: components['schemas']['MergeQueryExecutionMode'];
+      mergeQuery: components['schemas']['MergeQuery'];
+      parameters?: components['schemas']['ParametersValuesMap'];
+      invalidateCache?: boolean;
+      context?: components['schemas']['QueryExecutionContext'];
+    };
+    QueryCostEstimate:
+      | {
+          /** @enum {string} */
+          status: 'unavailable';
+        }
+      | {
+          message: string;
+          /** @enum {string} */
+          status: 'error';
+        }
+      | {
+          requiresConfirmation: boolean;
+          /** Format: double */
+          confirmEstimatedBytesAbove: number | null;
+          /** Format: double */
+          totalBytesProcessed: number;
+          /** @enum {string} */
+          status: 'estimated';
+        };
+    ApiQueryCostEstimateResponse: {
+      results: components['schemas']['QueryCostEstimate'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    EstimateAsyncMetricQueryRequestParams: {
+      usePreAggregateCache?: boolean;
+      parameters?: components['schemas']['ParametersValuesMap'];
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      dateZoom?: components['schemas']['DateZoom'];
+      query: components['schemas']['Omit_MetricQueryRequest.csvLimit_'];
+    };
+    ApiExecuteAsyncFieldValueSearchResults: {
+      labelFieldId: string | null;
+      valueFieldId: string;
+      cacheMetadata: components['schemas']['CacheMetadata'];
+      queryUuid: string;
+    };
+    ApiSuccess_ApiExecuteAsyncFieldValueSearchResults_: {
+      results: components['schemas']['ApiExecuteAsyncFieldValueSearchResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiSuccess_ApiExecuteAsyncDashboardChartQueryResults_: {
+      results: components['schemas']['ApiExecuteAsyncDashboardChartQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiExecuteAsyncSqlQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] &
+      Record<string, never>;
+    ApiSuccess_ApiExecuteAsyncSqlQueryResults_: {
+      results: components['schemas']['ApiExecuteAsyncSqlQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    EstimateAsyncSqlQueryRequestParams: {
+      warehouseConnectionUuid?: string | null;
+      parameters?: components['schemas']['ParametersValuesMap'];
+      /** Format: double */
+      limit?: number;
+      sql: string;
+    };
+    ExecuteAsyncSqlChartByUuidRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      /** Format: double */
+      limit?: number;
+      savedSqlUuid: string;
+    };
+    ExecuteAsyncSqlChartBySlugRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
+      /** Format: double */
+      limit?: number;
+      slug: string;
+    };
+    ExecuteAsyncSqlChartRequestParams:
+      | components['schemas']['ExecuteAsyncSqlChartByUuidRequestParams']
+      | components['schemas']['ExecuteAsyncSqlChartBySlugRequestParams'];
+    ApiSuccess_ApiExecuteAsyncDashboardSqlChartQueryResults_: {
+      results: components['schemas']['ApiExecuteAsyncDashboardSqlChartQueryResults'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiDownloadAsyncQueryResults: {
+      fileUrl: string;
+    };
+    ApiDownloadAsyncQueryResultsAsCsv: {
+      truncated: boolean;
+      fileUrl: string;
+    };
+    ApiDownloadAsyncQueryResultsAsXlsx: {
+      truncated: boolean;
+      fileUrl: string;
+    };
+    'ApiSuccess_ApiDownloadAsyncQueryResults-or-ApiDownloadAsyncQueryResultsAsCsv-or-ApiDownloadAsyncQueryResultsAsXlsx_': {
+      results:
+        | components['schemas']['ApiDownloadAsyncQueryResults']
+        | components['schemas']['ApiDownloadAsyncQueryResultsAsCsv']
+        | components['schemas']['ApiDownloadAsyncQueryResultsAsXlsx'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    PivotConfig: {
+      /**
+       * @description Dimensions (row-index or pivot-column-header) hidden from the rendered
+       *     pivot and from exports. The dimension still participates in the
+       *     underlying query and can drive sort order; it just doesn't render and
+       *     is filtered out of CSV/XLSX. Mirrors `hiddenMetricFieldIds` for the
+       *     dimension side.
+       */
+      hiddenDimensionFieldIds?: string[];
+      rowTotals?: boolean;
+      columnTotals?: boolean;
+      visibleMetricFieldIds?: string[];
+      hiddenMetricFieldIds?: string[];
+      columnOrder?: string[];
+      /** @description Ordered dimension and value field IDs rendered once on the row axis. */
+      rowFieldIds?: string[];
+      metricsAsRows: boolean;
+      pivotDimensions: string[];
+    };
+    /** @enum {string} */
+    DownloadFileType: 'csv' | 'image' | 'jsonl' | 's3_jsonl' | 'xlsx';
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__': {
+      pivotConfig?: components['schemas']['PivotConfig'];
+      type?: components['schemas']['DownloadFileType'];
+      onlyRaw?: boolean;
+      showTableNames?: boolean;
+      customLabels?: components['schemas']['Record_string.string_'];
+      columnOrder?: string[];
+      hiddenFields?: string[];
+      exportPivotedData?: boolean;
+      attachmentDownloadName?: string;
+      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
+      showColumnTotals?: boolean;
+    };
+    /** @description Construct a type with the properties of T except for those in type K. */
+    'Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_': components['schemas']['Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__'];
+    ApiJobScheduledResponse: {
+      results: {
+        jobId: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-userAccessDetails-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_': {
       description: string | null;
       imageUrl: string | null;
       name: string;
@@ -22899,19 +24277,26 @@ export interface components {
       }[];
       instruction: string | null;
       groupAccess: string[];
+      userAccessDetails: {
+        email: string;
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      }[];
       spaceAccess: string[];
       enableDataAccess: boolean;
       enableSelfImprovement: boolean;
       enableContentTools: boolean;
       enableUserContext: boolean;
       enableSqlMode: boolean;
+      enableSqlAutoApproval: boolean;
       adminOnly: boolean;
       modelConfig: components['schemas']['AiAgentModelConfig'] | null;
       providerCredentialUuid: string | null;
       /** Format: double */
       threadRetentionHours: number | null;
     };
-    AiAgentSummary: components['schemas']['Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_'];
+    AiAgentSummary: components['schemas']['Pick_AiAgent.uuid-or-name-or-description-or-integrations-or-tags-or-projectUuid-or-organizationUuid-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-userAccessDetails-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_'];
     ApiAiAgentSummaryResponse: {
       results: components['schemas']['AiAgentSummary'][];
       /** @enum {string} */
@@ -23121,7 +24506,7 @@ export interface components {
       status: 'ok';
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_': {
+    'Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-userAccessDetails-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_': {
       description: string | null;
       imageUrl: string | null;
       name: string;
@@ -23145,19 +24530,26 @@ export interface components {
       }[];
       instruction: string | null;
       groupAccess: string[];
+      userAccessDetails: {
+        email: string;
+        lastName: string;
+        firstName: string;
+        userUuid: string;
+      }[];
       spaceAccess: string[];
       enableDataAccess: boolean;
       enableSelfImprovement: boolean;
       enableContentTools: boolean;
       enableUserContext: boolean;
       enableSqlMode: boolean;
+      enableSqlAutoApproval: boolean;
       adminOnly: boolean;
       modelConfig: components['schemas']['AiAgentModelConfig'] | null;
       providerCredentialUuid: string | null;
       /** Format: double */
       threadRetentionHours: number | null;
     };
-    AiAgent: components['schemas']['Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_'];
+    AiAgent: components['schemas']['Pick_BaseAiAgent.uuid-or-projectUuid-or-organizationUuid-or-integrations-or-tags-or-name-or-description-or-createdAt-or-updatedAt-or-instruction-or-imageUrl-or-imageUrlSource-or-groupAccess-or-userAccess-or-userAccessDetails-or-spaceAccess-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-modelConfig-or-providerCredentialUuid-or-version-or-threadRetentionHours_'];
     ApiAiAgentResponse: {
       results: components['schemas']['AiAgent'];
       /** @enum {string} */
@@ -23257,6 +24649,8 @@ export interface components {
       toolSettings: components['schemas']['AiAgentMcpServerToolUpdate'][];
     };
     AiModelOption: {
+      /** @description Current same-provider model that replaces a deprecated one; null unless it is in this list */
+      supersededBy: string | null;
       deprecated: boolean;
       supportsReasoning: boolean;
       default: boolean;
@@ -23412,6 +24806,7 @@ export interface components {
       modelConfig?: components['schemas']['AiAgentModelConfig'] | null;
       mcpServerUuids?: string[];
       adminOnly?: boolean;
+      enableSqlAutoApproval?: boolean;
       enableSqlMode?: boolean;
       enableUserContext?: boolean;
       enableContentTools?: boolean;
@@ -23446,6 +24841,7 @@ export interface components {
       threadRetentionHours?: number | null;
       providerCredentialUuid?: string | null;
       mcpServerUuids?: string[];
+      enableSqlAutoApproval?: boolean;
       enableSqlMode?: boolean;
       uuid: string;
     };
@@ -23998,6 +25394,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24074,6 +25485,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24148,6 +25574,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24173,6 +25614,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success' | 'not_found';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24276,6 +25732,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24335,6 +25806,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24388,6 +25874,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24404,6 +25905,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 })
@@ -24418,6 +25934,54 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success' | 'rejected' | 'timeout';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
+                  /** @enum {string} */
+                  status: 'error' | 'rejected' | 'timeout';
+                })
+              | ({
+                  artifactVersionUuid?: string;
+                  queryUuid?: string;
+                  /** @enum {string} */
+                  status: 'error' | 'success' | 'rejected' | 'timeout';
+                } & {
+                  /** @enum {string} */
+                  status: 'success';
+                })
+              | ({
+                  artifactVersionUuid?: string;
+                  queryUuid?: string;
+                  /** @enum {string} */
+                  status: 'error' | 'success' | 'rejected' | 'timeout';
+                } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error' | 'rejected' | 'timeout';
                 })
@@ -24462,6 +26026,21 @@ export interface components {
                   /** @enum {string} */
                   status: 'error' | 'success';
                 } & {
+                  refusal?: {
+                    projectUuid?: string | null;
+                    /** Format: double */
+                    policyVersion?: number;
+                    operation?: string;
+                    policyLayer?: string;
+                    capability?: string | null;
+                    connectUrl: string | null;
+                    settingsUrl: string | null;
+                    action: string | null;
+                    message: string;
+                    reason: string;
+                    /** @enum {string} */
+                    code: 'ai_access_refused';
+                  };
                   /** @enum {string} */
                   status: 'error';
                 });
@@ -24871,7 +26450,7 @@ export interface components {
       /**
        * @description Skips the SQL human-approval gate for this stream. Used by the review
        *     remediation workspace so Continue PR turns run frictionlessly. Defaults
-       *     to false — normal chat still asks the user to approve SQL.
+       *     to false; the agent-level `enableSqlAutoApproval` setting also skips the gate.
        */
       autoApproveSql?: boolean;
       /**
@@ -24981,50 +26560,6 @@ export interface components {
       | 'dashboard_v2'
       | 'improve_context'
       | 'propose_change';
-    QueryWarning: {
-      tables?: string[];
-      fields?: string[];
-      message: string;
-    };
-    ApiExecuteAsyncMetricQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] & {
-      warnings: components['schemas']['QueryWarning'][];
-      fields: components['schemas']['ItemsMap'];
-      metricQuery: components['schemas']['MetricQuery'];
-    };
-    /**
-     * @description One side of a merge: a metric query compiled and run as part of the merge.
-     *     A plain object, not an intersection: TSOA emits an intersection as `allOf`,
-     *     which reads as a changed response contract to the API compatibility check.
-     */
-    MergeQueryMetricSource: {
-      /**
-       * @description Opt in to an intentional one-to-many join: this source's value columns
-       *     repeat on every row the other sources produce for the same key, so the
-       *     others may carry dimensions that are not join keys. Off by default,
-       *     because a repeated metric is counted more than once by any sum over
-       *     the merged rows.
-       */
-      repeatValues?: boolean;
-      metricQuery: components['schemas']['MetricQuery'];
-      /** @description Stable id. Names the CTE, and the table its merged fields belong to. */
-      id: string;
-    };
-    /**
-     * @description A merge whose sources are all metric queries — what AI-built artifacts
-     *     hold and their endpoints return. Response contracts use this so
-     *     `metricQuery` stays required on every returned source, while the
-     *     run/compile requests accept the wider MergeQuerySource union
-     *     (expand-only: requests widen, responses do not).
-     */
-    MetricSourcedMergeQuery: {
-      /** Format: double */
-      limit: number;
-      sorts?: components['schemas']['SortField'][];
-      tableCalculations: components['schemas']['MergeTableCalculation'][];
-      joinType: components['schemas']['MergeJoinType'];
-      joinKey: components['schemas']['MergeJoinKeyPart'][];
-      sources: components['schemas']['MergeQueryMetricSource'][];
-    };
     AiVizMetadata: {
       description: string | null;
       title: string | null;
@@ -25040,8 +26575,6 @@ export interface components {
     };
     /** @enum {string} */
     'AiResultType.TABLE_RESULT': 'table';
-    ApiExecuteAsyncSqlQueryResults: components['schemas']['ApiExecuteAsyncQueryResultsCommon'] &
-      Record<string, never>;
     ApiAiAgentSqlArtifactVizQuery: {
       metadata: components['schemas']['AiVizMetadata'];
       /** Format: double */
@@ -25052,9 +26585,29 @@ export interface components {
       /** @enum {string} */
       source: 'sql';
     };
+    /**
+     * @description A name identifying one query within a multi-query submission. Other queries
+     *     reference this query's results by this name, and by default the results are
+     *     exposed to referencing DuckDB SQL as a table of the same name — so node ids
+     *     share the table-name grammar.
+     */
+    QueryNodeId: string;
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_QueryNodeId.string_': {
+      [key: string]: string;
+    };
+    /** @description One run of a composer artifact's pipeline: every node's result from that run. */
+    ApiAiAgentComposerArtifactVizQuery: {
+      metadata: components['schemas']['AiVizMetadata'];
+      nodeQueryUuids: components['schemas']['Record_QueryNodeId.string_'];
+      terminalNodeId: components['schemas']['QueryNodeId'];
+      /** @enum {string} */
+      source: 'composer';
+    };
     ApiAiAgentArtifactVizQuery:
       | components['schemas']['ApiAiAgentThreadMessageVizQuery']
-      | components['schemas']['ApiAiAgentSqlArtifactVizQuery'];
+      | components['schemas']['ApiAiAgentSqlArtifactVizQuery']
+      | components['schemas']['ApiAiAgentComposerArtifactVizQuery'];
     ApiAiAgentArtifactVizQueryResponse: {
       results: components['schemas']['ApiAiAgentArtifactVizQuery'];
       /** @enum {string} */
@@ -25575,6 +27128,18 @@ export interface components {
     'WarehouseTypes.BIGQUERY': 'bigquery';
     /** @enum {string} */
     BigqueryAuthenticationType: 'sso' | 'private_key' | 'adc';
+    BigqueryMaximumBytesBilledByRole: {
+      /** Format: double */
+      viewer?: number;
+      /** Format: double */
+      interactive_viewer?: number;
+      /** Format: double */
+      editor?: number;
+      /** Format: double */
+      developer?: number;
+      /** Format: double */
+      admin?: number;
+    };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateBigqueryCredentials.Exclude_keyofCreateBigqueryCredentials.SensitiveCredentialsFieldNames__': {
       type: components['schemas']['WarehouseTypes.BIGQUERY'];
@@ -25597,6 +27162,21 @@ export interface components {
       location?: string;
       /** Format: double */
       maximumBytesBilled?: number;
+      maximumBytesBilledByRole?: components['schemas']['BigqueryMaximumBytesBilledByRole'];
+      /** Format: double */
+      agentMaximumBytesBilled?: number;
+      /** @description Show a dry-run bytes estimate in the explorer and SQL runner. */
+      estimateQueryBytes?: boolean;
+      /**
+       * Format: double
+       * @description Ask users to confirm before running a query estimated above this.
+       */
+      confirmEstimatedBytesAbove?: number;
+      /**
+       * Format: double
+       * @description Refuse AI agent queries whose dry-run estimate is above this.
+       */
+      agentMaximumEstimatedBytes?: number;
       executionProject?: string;
     };
     /** @description Construct a type with the properties of T except for those in type K. */
@@ -25940,6 +27520,21 @@ export interface components {
       executionProject?: string;
       dataTimezone?: string;
       startOfWeek?: components['schemas']['WeekDay'] | null;
+      /**
+       * Format: double
+       * @description Refuse AI agent queries whose dry-run estimate is above this.
+       */
+      agentMaximumEstimatedBytes?: number;
+      /**
+       * Format: double
+       * @description Ask users to confirm before running a query estimated above this.
+       */
+      confirmEstimatedBytesAbove?: number;
+      /** @description Show a dry-run bytes estimate in the explorer and SQL runner. */
+      estimateQueryBytes?: boolean;
+      /** Format: double */
+      agentMaximumBytesBilled?: number;
+      maximumBytesBilledByRole?: components['schemas']['BigqueryMaximumBytesBilledByRole'];
       /** Format: double */
       maximumBytesBilled?: number;
       location?: string;
@@ -27277,11 +28872,15 @@ export interface components {
     };
     /** @enum {string} */
     MultiCredentialAiProvider: 'bedrock';
+    /** @enum {string} */
+    BedrockInferenceGeography: 'jp' | 'us' | 'eu' | 'apac' | 'global';
     /**
      * @description A named credential as exposed over the API: everything needed to identify
      *     and pick it, never the key itself.
      */
     AiProviderCredential: {
+      /** @description Effective geography — the stored choice or the region's default. */
+      inferenceGeography: components['schemas']['BedrockInferenceGeography'];
       isDefault: boolean;
       apiKeyHint: string;
       allowedModels: string[];
@@ -27326,6 +28925,7 @@ export interface components {
     };
     ApiAiProviderCredentialCreatedResponse: components['schemas']['ApiSuccess__uuid-string__'];
     CreateAiProviderCredential: {
+      inferenceGeography?: components['schemas']['BedrockInferenceGeography'];
       apiKey: string;
       allowedModels: string[];
       region: string;
@@ -27333,6 +28933,7 @@ export interface components {
       provider: components['schemas']['MultiCredentialAiProvider'];
     };
     UpdateAiProviderCredential: {
+      inferenceGeography?: components['schemas']['BedrockInferenceGeography'];
       apiKey?: string;
       allowedModels?: string[];
       region?: string;
@@ -27912,7 +29513,7 @@ export interface components {
     /** @enum {string} */
     AiAgentAdminSortField: 'createdAt' | 'title';
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_AiAgentSummary.uuid-or-name-or-instruction-or-tags-or-integrations-or-modelConfig-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-version_': {
+    'Pick_AiAgentSummary.uuid-or-name-or-instruction-or-tags-or-integrations-or-modelConfig-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-version_': {
       name: string;
       /** Format: double */
       version: number;
@@ -27929,10 +29530,11 @@ export interface components {
       enableContentTools: boolean;
       enableUserContext: boolean;
       enableSqlMode: boolean;
+      enableSqlAutoApproval: boolean;
       adminOnly: boolean;
       modelConfig: components['schemas']['AiAgentModelConfig'] | null;
     };
-    AiAgentThreadDumpAgent: components['schemas']['Pick_AiAgentSummary.uuid-or-name-or-instruction-or-tags-or-integrations-or-modelConfig-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-adminOnly-or-version_'];
+    AiAgentThreadDumpAgent: components['schemas']['Pick_AiAgentSummary.uuid-or-name-or-instruction-or-tags-or-integrations-or-modelConfig-or-enableDataAccess-or-enableSelfImprovement-or-enableContentTools-or-enableUserContext-or-enableSqlMode-or-enableSqlAutoApproval-or-adminOnly-or-version_'];
     /** @description Which skill and version the model was served; a thread reviewer reads this. */
     ServedSkillMetadata: {
       contentHash: string | null;
@@ -29491,13 +31093,6 @@ export interface components {
     ClaimWarehouseConnectCodeRequest: {
       code: string;
     };
-    ApiJobScheduledResponse: {
-      results: {
-        jobId: string;
-      };
-      /** @enum {string} */
-      status: 'ok';
-    };
     /** @enum {string} */
     ValidationTarget: 'apps' | 'charts' | 'dashboards' | 'tables';
     /** @enum {string} */
@@ -29804,6 +31399,30 @@ export interface components {
       results: components['schemas']['UserAllowedOrganization'][];
       /** @enum {string} */
       status: 'ok';
+    };
+    UserWarehouseCredentialsWithAgentStatus: {
+      project: components['schemas']['UserWarehouseCredentialsProject'] | null;
+      credentials:
+        | components['schemas']['Pick_CreateRedshiftCredentials.type-or-user-or-authenticationType-or-assumeRoleArn_']
+        | components['schemas']['Pick_CreatePostgresCredentials-or-CreateTrinoCredentials-or-CreateClickhouseCredentials.type-or-user_']
+        | components['schemas']['Pick_CreateSnowflakeCredentials.type-or-user-or-authenticationType_']
+        | components['schemas']['Pick_CreateBigqueryCredentials.type_']
+        | components['schemas']['Pick_CreateDatabricksCredentials.type_']
+        | components['schemas']['Pick_CreateAthenaCredentials.type-or-accessKeyId_']
+        | components['schemas']['Pick_CreateDuckdbCredentials.type_'];
+      /** Format: date-time */
+      expiresAt: string | null;
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      name: string;
+      userUuid: string;
+      purpose: components['schemas']['UserWarehouseCredentialPurpose'];
+      uuid: string;
+      agentClientCurrent: boolean | null;
+    } & {
+      [key: string]: unknown;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
     'Pick_CreateRedshiftCredentials.type-or-user-or-password_': {
@@ -30305,68 +31924,6 @@ export interface components {
       limit?: number;
       sql: string;
     };
-    PivotIndexColum: {
-      type: components['schemas']['VizIndexType'];
-      reference: string;
-    };
-    ValuesColumn: {
-      aggregation: components['schemas']['VizAggregationOptions'];
-      reference: string;
-    };
-    GroupByColumn: {
-      reference: string;
-    };
-    SortBy: components['schemas']['VizSortBy'][];
-    PivotConfiguration: {
-      /**
-       * @description Declared order of the pivot-column dimensions (visible `groupByColumns`
-       *     plus hidden `sortOnlyDimensions`) as they appear in the chart's
-       *     `pivotConfig.columns`. `column_ranking` orders columns by this sequence so
-       *     a hidden sort-only dim sorts at its DECLARED position — hiding a dim then
-       *     leaves column order identical to when it was visible, instead of hoisting
-       *     the hidden dim to the front of the ORDER BY. Passthrough (hidden, non-sort)
-       *     dims are excluded since they don't drive sort. When omitted, ordering falls
-       *     back to hoisting sort-only sort targets to the front (legacy behavior).
-       */
-      pivotColumnsOrder?: components['schemas']['GroupByColumn'][];
-      /**
-       * @description Hidden pivot-column dimensions that are NOT sort targets but still need
-       *     their values carried through the SQL pipeline so that other fields'
-       *     `richText` / `image:` templates can reference them via
-       *     `row.<table>.<field>.raw`. They participate in `group_by_query` SELECT
-       *     and GROUP BY (same as sortOnlyDimensions) but do NOT affect
-       *     `column_ranking` ORDER BY (they don't drive sort). Without this bucket
-       *     the dim would be dropped entirely from the query and `row.*.raw`
-       *     references would silently resolve to undefined.
-       */
-      passthroughDimensions?: components['schemas']['GroupByColumn'][];
-      /**
-       * @description Dimensions referenced by ORDER BY but NOT spread into pivot columns.
-       *     Used when a user hides a dim that's part of `pivotConfig.columns` and has
-       *     a sort entry on it: the dim still ranks column order via the GROUP BY /
-       *     ORDER BY pipeline, but it doesn't become a pivot column header level.
-       *     Mirrors `sortOnlyColumns` (which serves the same purpose for metrics).
-       */
-      sortOnlyDimensions?: components['schemas']['GroupByColumn'][];
-      /**
-       * @description Metrics/table calculations needed for sort anchor CTEs but not for display.
-       *     These are merged into valuesColumns for SQL generation in PivotQueryBuilder,
-       *     but excluded from pivotDetails so they don't appear as chart series.
-       */
-      sortOnlyColumns?: components['schemas']['ValuesColumn'][];
-      /**
-       * @description When true, metrics are displayed as rows instead of columns.
-       *     This affects column limit calculation - when metrics are rows,
-       *     we don't need to divide the column limit by the number of metrics.
-       *     Defaults to false for backward compatibility (SQL runner behavior).
-       */
-      metricsAsRows?: boolean;
-      sortBy?: components['schemas']['SortBy'];
-      groupByColumns?: components['schemas']['GroupByColumn'][];
-      valuesColumns: components['schemas']['ValuesColumn'][];
-      indexColumn?:
-        components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
-    };
     ApiSqlRunnerPivotQueryPayload: components['schemas']['PivotConfiguration'] & {
       savedSqlUuid?: string;
     };
@@ -30851,6 +32408,17 @@ export interface components {
       appProfilePhotoUrl: string | null;
       notificationChannel: string | null;
     };
+    SlackFeatureAvailability: {
+      missingScopes: string[];
+      available: boolean;
+    };
+    SlackFeatureAvailabilityMap: {
+      aiAgent: components['schemas']['SlackFeatureAvailability'];
+      writebackReactions: components['schemas']['SlackFeatureAvailability'];
+      linkUnfurling: components['schemas']['SlackFeatureAvailability'];
+      customAppProfile: components['schemas']['SlackFeatureAvailability'];
+      scheduledDeliveries: components['schemas']['SlackFeatureAvailability'];
+    };
     SlackSettings: {
       aiAgentsEnabled?: boolean;
       unfurlsEnabled?: boolean;
@@ -30858,6 +32426,7 @@ export interface components {
       aiMultiAgentChannelId?: string;
       aiLinksOnly?: boolean;
       aiRequireOAuth?: boolean;
+      features: components['schemas']['SlackFeatureAvailabilityMap'];
       hasRequiredScopes: boolean;
       aiThreadAccessConsent?: boolean;
       slackChannelProjectMappings?: components['schemas']['SlackChannelProjectMapping'][];
@@ -30997,6 +32566,7 @@ export interface components {
       | 'compactUsageEvents'
       | 'pollEmailWhitelabelVerification'
       | 'cleanWarehouseConnectCodes'
+      | 'cleanAgentConnectionApprovalRequests'
       | 'reconcilePlaygroundBundles'
       | 'backfillDefaultUserSpaces'
       | 'learnSandboxCommand';
@@ -31231,15 +32801,16 @@ export interface components {
       status: 'ok';
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy_': {
+    'Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy-or-agentIdentity_': {
       /** Format: date-time */
       createdAt: string;
       versionUuid: string;
       chartUuid: string;
       createdBy:
         components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName_'] | null;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
-    ChartVersionSummary: components['schemas']['Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy_'];
+    ChartVersionSummary: components['schemas']['Pick_ChartVersion.chartUuid-or-versionUuid-or-createdAt-or-createdBy-or-agentIdentity_'];
     ChartHistory: {
       history: components['schemas']['ChartVersionSummary'][];
     };
@@ -31256,6 +32827,7 @@ export interface components {
       createdAt: string;
       versionUuid: string;
       chartUuid: string;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     ApiGetChartVersionResponse: {
       results: components['schemas']['ChartVersion'];
@@ -31907,28 +33479,6 @@ export interface components {
       sourceId: string;
     };
     /**
-     * @description Where a merged field came from. Carried beside the fields rather than on
-     *     them, so every `Field` consumer downstream sees an ordinary field and only
-     *     the code that needs provenance — drilling into a cell, filtering a source —
-     *     has to know a merge happened.
-     */
-    MergeFieldOrigin:
-      | {
-          sourceFieldId: components['schemas']['FieldId'];
-          sourceId: string;
-          /** @enum {string} */
-          kind: 'source';
-        }
-      | {
-          fieldIdBySourceId: components['schemas']['Record_string.FieldId_'];
-          /** @enum {string} */
-          kind: 'joinKey';
-        }
-      | {
-          /** @enum {string} */
-          kind: 'tableCalculation';
-        };
-    /**
      * @description One column of the composable core, typed accurately enough to build a
      *     virtual view over it: the stable field-id alias, the value's
      *     `DimensionType`, and where it came from. Merged metrics arrive downstream as
@@ -31994,39 +33544,6 @@ export interface components {
       /** @description Column name in the merged result. */
       column: string;
     };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_FieldId.MergeFieldOrigin_': {
-      [key: string]: components['schemas']['MergeFieldOrigin'];
-    };
-    /** @description Provenance of every merged field, by field id. */
-    MergeFieldOrigins: components['schemas']['Record_FieldId.MergeFieldOrigin_'];
-    /** @enum {string} */
-    MergeQueryErrorKind:
-      | 'too_few_sources'
-      | 'too_many_sources'
-      | 'duplicate_source_id'
-      | 'reserved_source_id'
-      | 'empty_join_key'
-      | 'join_key_coverage'
-      | 'unknown_source_in_join_key'
-      | 'fan_out'
-      | 'join_key_not_selected'
-      | 'join_key_type_mismatch'
-      | 'join_key_granularity_mismatch'
-      | 'unsupported_table_calculation'
-      | 'duplicate_calculation_name'
-      | 'unresolved_calculation_reference'
-      | 'calculation_formula_too_long'
-      | 'unresolved_column_type'
-      | 'missing_parameters'
-      | 'result_source_unavailable';
-    MergeQueryError: {
-      message: string;
-      fieldIds: components['schemas']['FieldId'][];
-      /** @description The source at fault, or null for errors about the merge as a whole. */
-      sourceId: string | null;
-      kind: components['schemas']['MergeQueryErrorKind'];
-    };
     /**
      * @description What the compile endpoint returns. `sql` is null exactly when `errors` is
      *     non-empty: a merge that would produce wrong numbers is reported, not run.
@@ -32081,38 +33598,6 @@ export interface components {
       legs: components['schemas']['MergeCompiledLeg'][];
       /** @description The join statement over the `merge_source_N` reference tables. */
       sql: string | null;
-    };
-    /**
-     * @description One side of a merge: an existing query result, referenced by queryUuid and
-     *     joined as the rows it already holds — nothing re-runs. Its structure and
-     *     types resolve at compile time from the stored query metadata. Results are
-     *     creator-scoped and expire; an expired reference is re-submitted as a
-     *     query, not refreshed by handle.
-     */
-    MergeQueryResultSource: {
-      /** @description See MergeQueryMetricSource.repeatValues. */
-      repeatValues?: boolean;
-      queryUuid: string;
-      /** @description Stable id. Names the CTE, and the table its merged fields belong to. */
-      id: string;
-    };
-    MergeQuerySource:
-      | components['schemas']['MergeQueryMetricSource']
-      | components['schemas']['MergeQueryResultSource'];
-    MergeQuery: {
-      /** Format: double */
-      limit: number;
-      /**
-       * @description Sort of the merged result, by merged field id. Legs always run
-       *     unsorted. Optional for compatibility with merges from before it
-       *     existed; absent means join-key order.
-       */
-      sorts?: components['schemas']['SortField'][];
-      /** @description Calculations over the merged result. Applied last, after any pivot. */
-      tableCalculations: components['schemas']['MergeTableCalculation'][];
-      joinType: components['schemas']['MergeJoinType'];
-      joinKey: components['schemas']['MergeJoinKeyPart'][];
-      sources: components['schemas']['MergeQuerySource'][];
     };
     /** @description Body of the compile endpoint: the spec plus the parameter values. */
     CompileMergeQueryRequest: {
@@ -32906,9 +34391,20 @@ export interface components {
      */
     OrganizationSettings: {
       /**
+       * @description Whether images of a running data app, and files, may be captured or
+       *     attached anywhere in the data app builder: prompt-bar screenshots, file
+       *     attachments sent to the coding agent, manual and automatic thumbnails,
+       *     and the Slack build-outcome image. Inherits and is capped by the
+       *     instance-wide `LIGHTDASH_APP_CAPTURES_ENABLED` (the ceiling): an org can
+       *     turn captures off, never back on past the env. `null` inherits it.
+       *     Always resolved to an effective boolean in API responses.
+       */
+      dataAppCapturesEnabled: boolean | null;
+      /**
        * @description Whether a data app version gets a thumbnail captured automatically when
        *     it becomes ready. On unless the org turned it off, so `null` (or no
-       *     stored row) resolves to `true`.
+       *     stored row) resolves to `true`. Always resolved to `false` while
+       *     {@link OrganizationSettings.dataAppCapturesEnabled} is off.
        */
       dataAppAutomaticThumbnailsEnabled: boolean | null;
       /**
@@ -33108,9 +34604,20 @@ export interface components {
       /**
        * @description Whether a data app version gets a thumbnail captured automatically when
        *     it becomes ready. On unless the org turned it off, so `null` (or no
-       *     stored row) resolves to `true`.
+       *     stored row) resolves to `true`. Always resolved to `false` while
+       *     {@link OrganizationSettings.dataAppCapturesEnabled} is off.
        */
       dataAppAutomaticThumbnailsEnabled?: boolean | null;
+      /**
+       * @description Whether images of a running data app, and files, may be captured or
+       *     attached anywhere in the data app builder: prompt-bar screenshots, file
+       *     attachments sent to the coding agent, manual and automatic thumbnails,
+       *     and the Slack build-outcome image. Inherits and is capped by the
+       *     instance-wide `LIGHTDASH_APP_CAPTURES_ENABLED` (the ceiling): an org can
+       *     turn captures off, never back on past the env. `null` inherits it.
+       *     Always resolved to an effective boolean in API responses.
+       */
+      dataAppCapturesEnabled?: boolean | null;
     };
     UpdateOrganizationSettings: components['schemas']['Partial_OrganizationSettings_'];
     /** @enum {string} */
@@ -33223,6 +34730,14 @@ export interface components {
         tlsRequired?: boolean;
         enabled: boolean;
       };
+      /**
+       * @description Effective value of the org's "allow screenshots and attachments in data
+       *     app builds" switch (the org setting capped by the instance env). Returned
+       *     to every org member on the authenticated `GET /org` response so the
+       *     builder can hide the capture affordances for non-admins too; the backend
+       *     enforces it regardless. Absent on older servers — treat as `true`.
+       */
+      dataAppCapturesEnabled?: boolean;
       /** Format: date-time */
       createdAt?: string;
       /** @description The project a user sees when they first log in to the organization */
@@ -33262,6 +34777,14 @@ export interface components {
       createdAt?: string;
       /** @description The active color palette uuid for all projects in the organization */
       colorPaletteUuid?: string;
+      /**
+       * @description Effective value of the org's "allow screenshots and attachments in data
+       *     app builds" switch (the org setting capped by the instance env). Returned
+       *     to every org member on the authenticated `GET /org` response so the
+       *     builder can hide the capture affordances for non-admins too; the backend
+       *     enforces it regardless. Absent on older servers — treat as `true`.
+       */
+      dataAppCapturesEnabled?: boolean;
       /** @description The default color palette for all projects in the organization */
       chartColors?: string[];
       /** @description The default dark color palette for all projects in the organization */
@@ -34035,25 +35558,6 @@ export interface components {
     CustomLabel: {
       [key: string]: string;
     };
-    PivotConfig: {
-      /**
-       * @description Dimensions (row-index or pivot-column-header) hidden from the rendered
-       *     pivot and from exports. The dimension still participates in the
-       *     underlying query and can drive sort order; it just doesn't render and
-       *     is filtered out of CSV/XLSX. Mirrors `hiddenMetricFieldIds` for the
-       *     dimension side.
-       */
-      hiddenDimensionFieldIds?: string[];
-      rowTotals?: boolean;
-      columnTotals?: boolean;
-      visibleMetricFieldIds?: string[];
-      hiddenMetricFieldIds?: string[];
-      columnOrder?: string[];
-      /** @description Ordered dimension and value field IDs rendered once on the row axis. */
-      rowFieldIds?: string[];
-      metricsAsRows: boolean;
-      pivotDimensions: string[];
-    };
     UploadMetricGsheet: {
       parameters?: components['schemas']['ParametersValuesMap'];
       pivotConfig?: components['schemas']['PivotConfig'];
@@ -34612,6 +36116,7 @@ export interface components {
       createdAt: string;
       versionUuid: string;
       dashboardUuid: string;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     DashboardHistory: {
       history: components['schemas']['DashboardVersionSummary'][];
@@ -35233,12 +36738,15 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    ApiSuccess_ApiExecuteAsyncMetricQueryResults_: {
-      results: components['schemas']['ApiExecuteAsyncMetricQueryResults'];
+    'ApiSuccess_ApiExecuteAsyncMetricQueryResults-or-ApiExecuteAsyncSqlQueryResults_': {
+      results:
+        | components['schemas']['ApiExecuteAsyncMetricQueryResults']
+        | components['schemas']['ApiExecuteAsyncSqlQueryResults'];
       /** @enum {string} */
       status: 'ok';
     };
-    ApiDocumentChartQueryResponse: components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
+    /** @description SQL charts answer with SQL results; the others with metric query results. */
+    ApiDocumentChartQueryResponse: components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults-or-ApiExecuteAsyncSqlQueryResults_'];
     ExecuteDocumentChartQueryRequest: {
       versionUuid: string;
     };
@@ -35280,6 +36788,7 @@ export interface components {
       /** Format: double */
       versionNumber: number;
       versionUuid: string;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     Document: components['schemas']['DocumentSummary'] & {
       verification: components['schemas']['ContentVerificationInfo'] | null;
@@ -35333,15 +36842,16 @@ export interface components {
       baseVersionUuid: string;
     };
     /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DocumentVersion.versionUuid-or-versionNumber-or-createdAt_': {
+    'Pick_DocumentVersion.versionUuid-or-versionNumber-or-createdAt-or-agentIdentity_': {
       /** Format: date-time */
       createdAt: string;
       versionUuid: string;
       /** Format: double */
       versionNumber: number;
+      agentIdentity?: components['schemas']['AgentIdentityClaim'] | null;
     };
     /** @description One entry in a Document's immutable version history, newest first. */
-    DocumentVersionSummary: components['schemas']['Pick_DocumentVersion.versionUuid-or-versionNumber-or-createdAt_'] & {
+    DocumentVersionSummary: components['schemas']['Pick_DocumentVersion.versionUuid-or-versionNumber-or-createdAt-or-agentIdentity_'] & {
       /** @description Who saved this version; null when the user was deleted or unknown. */
       createdBy:
         | components['schemas']['Pick_LightdashUser.userUuid-or-firstName-or-lastName-or-avatarUrl-or-avatarGradient_']
@@ -35375,6 +36885,190 @@ export interface components {
       status: 'ok';
     };
     ApiDocumentAsCodeResponse: components['schemas']['ApiSuccess_DocumentAsCode_'];
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_DocumentSummary.documentUuid-or-name-or-slug-or-spaceUuid_': {
+      name: string;
+      slug: string;
+      /** @description Null for a personal Document, visible only to its creator and admins. */
+      spaceUuid: string | null;
+      documentUuid: string;
+    };
+    /** @description A Document whose current version links a saved chart. */
+    DocumentLinkingChart: components['schemas']['Pick_DocumentSummary.documentUuid-or-name-or-slug-or-spaceUuid_'];
+    'ApiSuccess_DocumentLinkingChart-Array_': {
+      results: components['schemas']['DocumentLinkingChart'][];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiDocumentsLinkingChartResponse: components['schemas']['ApiSuccess_DocumentLinkingChart-Array_'];
+    AgentConnectionApprovalResponse: {
+      results: {
+        expiresAt: string;
+        resource: string;
+        issuer: string;
+        authorizationUrl: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    /** @enum {string} */
+    AgentConnectionApprovalErrorCode:
+      | 'authentication_required'
+      | 'agent_identity_disabled'
+      | 'person_required'
+      | 'browser_session_required'
+      | 'approval_forbidden'
+      | 'csrf_failed'
+      | 'invalid_approval_request'
+      | 'too_many_projects'
+      | 'pending_request_limit'
+      | 'agent_connections_unavailable'
+      | 'approval_request_not_found'
+      | 'approval_request_expired'
+      | 'approval_request_consumed'
+      | 'approval_not_decided'
+      | 'approval_selection_changed'
+      | 'internal_error';
+    /** @enum {string} */
+    AgentCapability:
+      | 'read_discover'
+      | 'query'
+      | 'raw_sql'
+      | 'content_write'
+      | 'delete'
+      | 'publish'
+      | 'deploy_upload'
+      | 'dbt_writeback'
+      | 'export'
+      | 'administration'
+      | 'external_tools';
+    AgentConnectionApprovalCapability: {
+      reason: string | null;
+      reasonCode: string | null;
+      /** @enum {string} */
+      visibility: 'offered' | 'hidden' | 'blocked';
+      capability: components['schemas']['AgentCapability'];
+    };
+    AgentConnectionApprovalProject: {
+      capabilities: components['schemas']['AgentConnectionApprovalCapability'][];
+      reason: string | null;
+      selectable: boolean;
+      name: string;
+      projectUuid: string;
+    };
+    AgentConnectionApprovalReview: {
+      /** Format: double */
+      revision: number;
+      nonce: string;
+      projects: components['schemas']['AgentConnectionApprovalProject'][];
+      /** @enum {string} */
+      notice: 'Review only. No connection will be created.';
+      request: {
+        expiresAt: string;
+        /** Format: double */
+        expiresInSeconds: number;
+        clientLabel: string;
+        name: string;
+      };
+    };
+    AgentConnectionApprovalErrorResponse: {
+      error: {
+        review?: components['schemas']['AgentConnectionApprovalReview'];
+        message: string;
+        code: components['schemas']['AgentConnectionApprovalErrorCode'];
+        /** @enum {string} */
+        name: 'AgentConnectionApprovalError';
+        /** Format: double */
+        statusCode: number;
+      };
+      /** @enum {string} */
+      status: 'error';
+    };
+    AgentConnectionApprovalRequest: {
+      resource: string;
+      /** @enum {string} */
+      codeChallengeMethod: 'S256';
+      codeChallenge: string;
+      state: string;
+      redirectUri: string;
+      /** Format: double */
+      expiresInSeconds: number;
+      capabilities: components['schemas']['AgentCapability'][];
+      projects: components['schemas']['UuidOrSlug'][] | null;
+      name: string;
+      /** @enum {string} */
+      clientId: 'lightdash-cli';
+    };
+    AgentConnectionApprovalReviewResponse: {
+      results: components['schemas']['AgentConnectionApprovalReview'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AgentConnectionApprovalDecisionResponse: {
+      results: {
+        completionUrl: string;
+      };
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AgentConnectionApprovalDecision: {
+      capabilities: components['schemas']['AgentCapability'][];
+      projectUuids: components['schemas']['UUID'][];
+      nonce: string;
+      /** Format: double */
+      revision: number;
+      /** @enum {string} */
+      decision: 'approve' | 'deny';
+    };
+    AgentConnectionRecord: {
+      /** Format: date-time */
+      revokedAt: string | null;
+      /** @enum {string} */
+      status: 'active' | 'expired' | 'revoked';
+      /** Format: date-time */
+      lastUsedAt: string | null;
+      /** Format: date-time */
+      expiresAt: string;
+      /** Format: date-time */
+      approvedAt: string;
+      approvedProjects: {
+        approvedCapabilities: components['schemas']['AgentCapability'][];
+        name: string | null;
+        projectUuid: components['schemas']['UUID'];
+      }[];
+      /** @enum {string} */
+      limitsStatus: 'ok' | 'invalid';
+      clientId: string;
+      name: string;
+      grantUuid: components['schemas']['UUID'];
+    };
+    AgentConnectionStatus: components['schemas']['AgentConnectionRecord'] & {
+      effectiveProjects: {
+        capabilities: {
+          /** @enum {string|null} */
+          reason:
+            | 'invalid_grant'
+            | 'not_supported'
+            | 'revoked'
+            | 'expired'
+            | 'agent_identity_disabled'
+            | 'project_access'
+            | 'person_permission'
+            | 'agent_policy'
+            | null;
+          /**
+           * @description Current person permissions and organisation agent policy permit this
+           *     action in this project, and an agent connection supports it.
+           *     A request can still be refused by private-space access, a protected
+           *     branch, a second required action (uploads also need Deploy and upload),
+           *     or scheduled pre-aggregate refreshes in the project.
+           */
+          allowed: boolean;
+          capability: components['schemas']['AgentCapability'];
+        }[];
+        projectUuid: components['schemas']['UUID'];
+      }[];
+    };
     'KnexPaginatedData_ValidationResponse-Array_': {
       pagination?: components['schemas']['KnexPaginateArgs'] & {
         /** Format: double */
@@ -35660,7 +37354,7 @@ export interface components {
      *     above the warehouse client layer.
      * @enum {string}
      */
-    QuerySourceType: 'semanticLayer' | 'sql' | 'duckdb' | 'external';
+    QuerySourceType: 'semanticLayer' | 'sql' | 'duckdb' | 'external' | 'python';
     /** @description Metadata describing a registered source, for source discovery. */
     QuerySourceDefinition: {
       description: string;
@@ -35703,13 +37397,6 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /**
-     * @description A name identifying one query within a multi-query submission. Other queries
-     *     reference this query's results by this name, and by default the results are
-     *     exposed to referencing DuckDB SQL as a table of the same name — so node ids
-     *     share the table-name grammar.
-     */
-    QueryNodeId: string;
     /** @description One submitted query: its (possibly generated) node id and the queryUuid to poll. */
     SourceQuerySubmission: {
       queryUuid: components['schemas']['UUID'];
@@ -35879,6 +37566,42 @@ export interface components {
       nodeId?: components['schemas']['QueryNodeId'];
       sourceType: components['schemas']['QuerySourceType.EXTERNAL'];
     };
+    /** @enum {string} */
+    'QuerySourceType.PYTHON': 'python';
+    /**
+     * @description A python query as a source query: code defining
+     *     `run(inputs: dict[str, pandas.DataFrame], params: dict) -> pandas.DataFrame`.
+     *     References expose other queries' results as DataFrames in `inputs`, keyed
+     *     like DuckDB references expose tables. Referenced queries still running are
+     *     waited on; the query fails if any referenced query fails.
+     */
+    PythonSourceQuery: {
+      /** @description Python queries refuse a pivot; pivot in a referencing duckdb query. */
+      pivotConfiguration?: components['schemas']['PivotConfiguration'];
+      /**
+       * @description Which query results the code reads, in the same two forms as duckdb
+       *     references. Shorthand array: node ids of queries in the same
+       *     submission, each exposed as inputs[nodeId]. Map form for aliasing or
+       *     existing results: {inputName: nodeIdOrQueryUuid}. At least one is
+       *     required.
+       */
+      references:
+        | components['schemas']['QueryNodeId'][]
+        | components['schemas']['Record_QuerySourceTableName.QueryResultReference_'];
+      /**
+       * Format: double
+       * @description Maximum rows kept from the returned DataFrame.
+       */
+      limit?: number;
+      code: string;
+      /** @description One-line note on what this query does, shown under the title. */
+      description?: string;
+      /** @description Plain-language label shown to users instead of the node id. Optional: the public query-sources API accepts and ignores it. */
+      title?: string;
+      /** @description Names this query so other queries in the same submission can reference its results. */
+      nodeId?: components['schemas']['QueryNodeId'];
+      sourceType: components['schemas']['QuerySourceType.PYTHON'];
+    };
     /**
      * @description The tagged union every submit endpoint takes: one shape per source,
      *     discriminated by sourceType. New sources add a member here — this union is
@@ -35888,43 +37611,8 @@ export interface components {
       | components['schemas']['SemanticLayerSourceQuery']
       | components['schemas']['SqlSourceQuery']
       | components['schemas']['DuckdbSourceQuery']
-      | components['schemas']['ExternalSourceQuery'];
-    /** @enum {string} */
-    QueryExecutionContext:
-      | 'dashboardView'
-      | 'autorefreshedDashboard'
-      | 'exploreView'
-      | 'filterAutocomplete'
-      | 'chartView'
-      | 'chartHistory'
-      | 'sqlChartView'
-      | 'sqlRunner'
-      | 'viewUnderlyingData'
-      | 'alert'
-      | 'scheduledDelivery'
-      | 'csvDownload'
-      | 'gsheets'
-      | 'gsheetsAddon'
-      | 'scheduledGsheetsChart'
-      | 'scheduledGsheetsDashboard'
-      | 'scheduledGsheetsSqlChart'
-      | 'scheduledChart'
-      | 'scheduledDashboard'
-      | 'calculateTotal'
-      | 'calculateSubtotal'
-      | 'embed'
-      | 'ai'
-      | 'mcp.run_metric_query'
-      | 'mcp.run_sql'
-      | 'mcp.search_field_values'
-      | 'api'
-      | 'cli'
-      | 'metricsExplorer'
-      | 'preAggregateMaterialization'
-      | 'composeSqlRunner'
-      | 'multiSourceQuery'
-      | 'dataAppSample'
-      | 'desktop';
+      | components['schemas']['ExternalSourceQuery']
+      | components['schemas']['PythonSourceQuery'];
     ExecuteSourceQueriesRequestParams: {
       /** @description Bypass cached results for every query in the submission. */
       invalidateCache?: boolean;
@@ -35943,9 +37631,6 @@ export interface components {
        */
       queries: components['schemas']['SourceQuery'][];
     };
-    /** @enum {string} */
-    QueryHistoryStatus:
-      'pending' | 'queued' | 'executing' | 'expired' | 'ready' | 'error' | 'cancelled';
     /** @description Status of one submitted query, from the standard async query lifecycle. */
     SourceQueryStatus: {
       error: string | null;
@@ -35960,558 +37645,6 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
-    /**
-     * @description User-facing grouping of `QueryExecutionContext` values by what triggered the
-     *     run: a person acting directly, an app surface loading many queries at once
-     *     (dashboards, embeds, data apps), or a schedule running in the background.
-     * @enum {string}
-     */
-    QueryTrigger: 'interactive' | 'apps' | 'scheduled';
-    /** @enum {string} */
-    QueryLanguage: 'semantic' | 'sql';
-    CommonExecuteQueryRequestParams: {
-      parameters?: components['schemas']['ParametersValuesMap'];
-      usePreAggregateCache?: boolean;
-      invalidateCache?: boolean;
-      context?: components['schemas']['QueryExecutionContext'];
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__': {
-      metrics: string[];
-      /** Format: double */
-      limit: number;
-      filters: {
-        tableCalculations?: unknown;
-        metrics?: unknown;
-        dimensions?: unknown;
-      };
-      exploreName: string;
-      dimensions: string[];
-      sorts: components['schemas']['SortField'][];
-      tableCalculations: components['schemas']['TableCalculation'][];
-      additionalMetrics?: components['schemas']['AdditionalMetric'][];
-      customDimensions?: components['schemas']['CustomDimension'][];
-      metricOverrides?: components['schemas']['MetricOverrides'];
-      dimensionOverrides?: components['schemas']['DimensionOverrides'];
-      timezone?: string;
-      pivotDimensions?: string[];
-      metadata?: {
-        hasADateDimension: components['schemas']['Pick_CompiledDimension.name-or-label-or-table_'];
-      };
-      dateZoom?: components['schemas']['DateZoom'];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_MetricQueryRequest.csvLimit_': components['schemas']['Pick_MetricQueryRequest.Exclude_keyofMetricQueryRequest.csvLimit__'];
-    ExecuteAsyncMetricQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      dashboardFilters?: components['schemas']['DashboardFilters'];
-      pivotConfiguration?: components['schemas']['PivotConfiguration'];
-      dateZoom?: components['schemas']['DateZoom'];
-      query: components['schemas']['Omit_MetricQueryRequest.csvLimit_'];
-    };
-    /** @description A merge run: the spec that produced it, recorded verbatim. */
-    ExecuteAsyncMergeQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      pivotConfiguration?: components['schemas']['PivotConfiguration'];
-      /**
-       * @description Warehouse-side merges are metric-sourced by construction, so this
-       *     member keeps the strict shape it always had; merges that reference
-       *     existing results record as ExecuteAsyncComposeMergeQueryRequestParams
-       *     instead (expand-only: the echo in query history only gains branches).
-       */
-      mergeQuery: components['schemas']['MetricSourcedMergeQuery'];
-    };
-    /** @description A compose-engine merge run, which may reference existing results. */
-    ExecuteAsyncComposeMergeQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      pivotConfiguration?: components['schemas']['PivotConfiguration'];
-      mergeQuery: components['schemas']['MergeQuery'];
-    };
-    ExecuteAsyncSqlQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      warehouseConnectionUuid?: string | null;
-      pivotConfiguration?: components['schemas']['PivotConfiguration'];
-      /** Format: double */
-      limit?: number;
-      sql: string;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.UUID_': {
-      [key: string]: string;
-    };
-    ExecuteAsyncComposeSqlQueryRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      /**
-       * @description Results of other async queries exposed to the SQL as tables,
-       *     keyed by table name: {"orders": "<queryUuid>"} lets the SQL run
-       *     SELECT * FROM orders. Each referenced query is authorized with the
-       *     same access checks as fetching its results by uuid; references to
-       *     still-running queries are waited on before this query executes.
-       *
-       *     Typed Record<string, UUID> (not Record<string, string>) on purpose:
-       *     TSOA compiles a string-valued record to an empty object literal and
-       *     validation then strips every key; a ref-aliased value type keeps
-       *     additionalProperties intact (and validates the uuid format).
-       */
-      references?: components['schemas']['Record_string.UUID_'];
-      /** Format: double */
-      limit?: number;
-      sql: string;
-    };
-    ExecuteAsyncSavedChartRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      dashboardFilters?: components['schemas']['DashboardFilters'];
-      filters?: components['schemas']['Filters'];
-      /** @description Overrides the saved chart's native pivot with a caller-derived layout. */
-      pivotConfiguration?: components['schemas']['PivotConfiguration'];
-      pivotResults?: boolean;
-      /** Format: double */
-      limit?: number | null;
-      versionUuid?: string;
-      chartUuid: string;
-    };
-    ExecuteAsyncDashboardChartRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      includeUnpublishedDraft?: boolean;
-      pivotResults?: boolean;
-      /** Format: double */
-      limit?: number | null;
-      dateZoom?: components['schemas']['DateZoom'];
-      dashboardSorts: components['schemas']['SortField'][];
-      dashboardFilters: components['schemas']['DashboardFilters'];
-      dashboardUuid: string;
-      tileUuid: string;
-      chartUuid: string;
-    };
-    ExecuteAsyncUnderlyingDataRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      sorts?: components['schemas']['SortField'][];
-      /** Format: double */
-      limit?: number | null;
-      dateZoom?: components['schemas']['DateZoom'];
-      filters: components['schemas']['Filters'];
-      underlyingDataItemId?: string;
-      underlyingDataSourceQueryUuid: string;
-    };
-    ExecuteAsyncDashboardSqlChartCommonParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      /** Format: double */
-      limit?: number;
-      dashboardSorts: components['schemas']['SortField'][];
-      dashboardFilters: components['schemas']['DashboardFilters'];
-      tileUuid: string;
-      dashboardUuid: string;
-    };
-    ExecuteAsyncDashboardSqlChartByUuidRequestParams: components['schemas']['ExecuteAsyncDashboardSqlChartCommonParams'] & {
-      savedSqlUuid: string;
-    };
-    ExecuteAsyncDashboardSqlChartBySlugRequestParams: components['schemas']['ExecuteAsyncDashboardSqlChartCommonParams'] & {
-      slug: string;
-    };
-    ExecuteAsyncDashboardSqlChartRequestParams:
-      | components['schemas']['ExecuteAsyncDashboardSqlChartByUuidRequestParams']
-      | components['schemas']['ExecuteAsyncDashboardSqlChartBySlugRequestParams'];
-    ExecuteAsyncFieldValueSearchRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      forceRefresh?: boolean;
-      filters?: components['schemas']['AndFilterGroup'];
-      /** Format: double */
-      limit?: number;
-      search: string;
-      fieldId: string;
-      table: string;
-    };
-    DocumentQueryReference: {
-      chartId: string;
-      versionUuid: string;
-      documentUuid: string;
-    };
-    ExecuteAsyncQueryRequestParams: (
-      | components['schemas']['ExecuteAsyncMetricQueryRequestParams']
-      | components['schemas']['ExecuteAsyncMergeQueryRequestParams']
-      | components['schemas']['ExecuteAsyncComposeMergeQueryRequestParams']
-      | components['schemas']['ExecuteAsyncSqlQueryRequestParams']
-      | components['schemas']['ExecuteAsyncComposeSqlQueryRequestParams']
-      | components['schemas']['ExecuteAsyncSavedChartRequestParams']
-      | components['schemas']['ExecuteAsyncDashboardChartRequestParams']
-      | components['schemas']['ExecuteAsyncUnderlyingDataRequestParams']
-      | components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams']
-      | components['schemas']['ExecuteAsyncFieldValueSearchRequestParams']
-    ) & {
-      documentSource?: components['schemas']['DocumentQueryReference'];
-    };
-    /**
-     * @description One row of the "My query history" list. Derived fields (trigger, language,
-     *     title, subline) are computed server-side from the persisted query so every
-     *     consumer renders the same anatomy.
-     */
-    QueryHistoryListItem: {
-      /** Format: date-time */
-      erroredAt: string | null;
-      /** Format: date-time */
-      resultsUpdatedAt: string | null;
-      /** Format: date-time */
-      processingStartedAt: string | null;
-      /** Format: date-time */
-      resultsExpiresAt: string | null;
-      /** @description True when this run was served from a previously cached results file. */
-      cacheHit: boolean;
-      /** Format: double */
-      warehouseExecutionTimeMs: number | null;
-      /** Format: double */
-      totalRowCount: number | null;
-      compiledSql: string;
-      dashboardUuid: string | null;
-      dashboardName: string | null;
-      savedSqlUuid: string | null;
-      chartUuid: string | null;
-      chartName: string | null;
-      /** @description The original execute request, replayed verbatim by "Re-run". */
-      requestParameters: components['schemas']['ExecuteAsyncQueryRequestParams'];
-      /** @description Present on semantic runs — lets the client rebuild an Explore URL. */
-      metricQuery: components['schemas']['MetricQuery'] | null;
-      exploreName: string | null;
-      error: string | null;
-      /** @description Semantic: metric/dimension labels. SQL: first line of SQL. Failed: error. */
-      subline: string;
-      /** @description Semantic: explore name. SQL: saved chart name or first CTE/table. */
-      title: string;
-      status: components['schemas']['QueryHistoryStatus'];
-      language: components['schemas']['QueryLanguage'];
-      trigger: components['schemas']['QueryTrigger'];
-      context: components['schemas']['QueryExecutionContext'];
-      projectUuid: string | null;
-      /** Format: date-time */
-      createdAt: string;
-      queryUuid: string;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_QueryTrigger.number_': {
-      /** Format: double */
-      interactive: number;
-      /** Format: double */
-      apps: number;
-      /** Format: double */
-      scheduled: number;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_QueryHistoryWindow.number_': {
-      /** Format: double */
-      lastFewMinutes: number;
-      /** Format: double */
-      lastHour: number;
-      /** Format: double */
-      last24Hours: number;
-      /** Format: double */
-      last7Days: number;
-      /** Format: double */
-      last30Days: number;
-    };
-    QueryHistoryCounts: {
-      /**
-       * Format: double
-       * @description Warehouse time spent in the last 7 days, for the page subtitle.
-       */
-      warehouseTimeMsLast7Days: number;
-      /** Format: double */
-      total: number;
-      /** @description Per-window totals with every filter except `window` applied. */
-      windows: components['schemas']['Record_QueryHistoryWindow.number_'];
-      /** @description Per-trigger totals with every filter except `trigger` applied. */
-      triggers: components['schemas']['Record_QueryTrigger.number_'];
-    };
-    'ApiSuccess__data-QueryHistoryListItem-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number_--counts-QueryHistoryCounts__': {
-      results: {
-        counts: components['schemas']['QueryHistoryCounts'];
-        pagination?: components['schemas']['KnexPaginateArgs'] & {
-          /** Format: double */
-          totalResults: number;
-          /** Format: double */
-          totalPageCount: number;
-        };
-        data: components['schemas']['QueryHistoryListItem'][];
-      };
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiQueryHistoryListResponse: components['schemas']['ApiSuccess__data-QueryHistoryListItem-Array--pagination_63_-KnexPaginateArgs-and-_totalPageCount-number--totalResults-number_--counts-QueryHistoryCounts__'];
-    /**
-     * @description Time windows for the query history list, newest first. Windows are disjoint:
-     *     "last hour" excludes the last few minutes, and so on. Anything older than 30
-     *     days is out of scope for the page.
-     * @enum {string}
-     */
-    QueryHistoryWindow: 'lastFewMinutes' | 'lastHour' | 'last24Hours' | 'last7Days' | 'last30Days';
-    /** @enum {string} */
-    QueryHistorySortBy: 'createdAt' | 'runtime';
-    ResultsPaginationMetadata_ResultRow_: (components['schemas']['KnexPaginateArgs'] & {
-      /** Format: double */
-      totalResults: number;
-      /** Format: double */
-      totalPageCount: number;
-    }) & {
-      /** Format: double */
-      previousPage?: number;
-      /** Format: double */
-      nextPage?: number;
-    };
-    ResultValue: {
-      formatted: string;
-      raw: unknown;
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string._value-ResultValue__': {
-      [key: string]: {
-        value: components['schemas']['ResultValue'];
-      };
-    };
-    ResultRow: components['schemas']['Record_string._value-ResultValue__'];
-    QueryResultsPerformance: {
-      /** Format: double */
-      queueTimeMs: number | null;
-      /** Format: double */
-      resultsPageExecutionMs: number;
-      /** Format: double */
-      initialQueryExecutionMs: number | null;
-    };
-    /** @enum {string} */
-    PreAggregateExecutionEngine: 'duckdb' | 'project_warehouse';
-    /** @enum {string} */
-    PreAggregateFallbackReason: 'duckdb_execution_error' | 'external_execution_error';
-    QueryResultsPreAggregate: {
-      fallbackReason: components['schemas']['PreAggregateFallbackReason'] | null;
-      execution: components['schemas']['PreAggregateExecutionEngine'];
-    };
-    QueryResultsMetadata: {
-      preAggregate: components['schemas']['QueryResultsPreAggregate'] | null;
-      performance: components['schemas']['QueryResultsPerformance'];
-    };
-    /** @enum {string} */
-    'QueryHistoryStatus.READY': 'ready';
-    PivotValuesColumn: {
-      /** Format: double */
-      columnIndex?: number;
-      pivotValues: {
-        formatted?: string;
-        value: unknown;
-        referenceField: string;
-      }[];
-      aggregation: components['schemas']['VizAggregationOptions'];
-      pivotColumnName: string;
-      referenceField: string;
-    };
-    ReadyQueryResultsPage: components['schemas']['ResultsPaginationMetadata_ResultRow_'] & {
-      pivotDetails: {
-        passthroughDimensions?: components['schemas']['GroupByColumn'][];
-        originalColumns: components['schemas']['ResultColumns'];
-        sortBy?: components['schemas']['SortBy'];
-        groupByColumns?: components['schemas']['GroupByColumn'][];
-        valuesColumns: components['schemas']['PivotValuesColumn'][];
-        indexColumn?:
-          components['schemas']['PivotIndexColum'] | components['schemas']['PivotIndexColum'][];
-        /** Format: double */
-        totalColumnCount: number | null;
-      } | null;
-      status: components['schemas']['QueryHistoryStatus.READY'];
-      metadata: components['schemas']['QueryResultsMetadata'];
-      /**
-       * @description Resolved display timezone the query was built with (what execute
-       *     responses return as `resolvedTimezone`); null for SQL queries and when
-       *     timezone support is off. Temporal column formats cannot be rendered
-       *     from the page without it.
-       */
-      resolvedTimezone?: string | null;
-      rows: components['schemas']['ResultRow'][];
-      columns: components['schemas']['ResultColumns'];
-      queryUuid: string;
-    };
-    /** @enum {string} */
-    'QueryHistoryStatus.PENDING': 'pending';
-    /** @enum {string} */
-    'QueryHistoryStatus.QUEUED': 'queued';
-    /** @enum {string} */
-    'QueryHistoryStatus.EXECUTING': 'executing';
-    /** @enum {string} */
-    'QueryHistoryStatus.CANCELLED': 'cancelled';
-    /** @enum {string} */
-    'QueryHistoryStatus.ERROR': 'error';
-    /** @enum {string} */
-    'QueryHistoryStatus.EXPIRED': 'expired';
-    ApiGetAsyncQueryResults:
-      | components['schemas']['ReadyQueryResultsPage']
-      | {
-          queryUuid: string;
-          status:
-            | components['schemas']['QueryHistoryStatus.PENDING']
-            | components['schemas']['QueryHistoryStatus.QUEUED']
-            | components['schemas']['QueryHistoryStatus.EXECUTING']
-            | components['schemas']['QueryHistoryStatus.CANCELLED'];
-        }
-      | {
-          /** Format: date-time */
-          erroredAt?: string | null;
-          error: string | null;
-          queryUuid: string;
-          status:
-            | components['schemas']['QueryHistoryStatus.ERROR']
-            | components['schemas']['QueryHistoryStatus.EXPIRED'];
-        };
-    ApiGetAsyncQueryResultsResponse: {
-      results: components['schemas']['ApiGetAsyncQueryResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /**
-     * @description Kinds of totals derivable from an executed pivot query.
-     * @enum {string}
-     */
-    CalculateTotalKind:
-      'grandTotal' | 'columnTotal' | 'rowTotal' | 'columnSubtotal' | 'rowSubtotal';
-    ExecuteAsyncCalculateTotalRequestParams: {
-      invalidateCache?: boolean;
-      subtotalDimensions?: string[];
-      kind: components['schemas']['CalculateTotalKind'];
-    };
-    ApiExecuteAsyncMergeQueryMetadata: {
-      fieldOrigins: components['schemas']['MergeFieldOrigins'];
-      parameterReferences: string[];
-    };
-    ApiExecuteAsyncMergeQueryResults:
-      | (components['schemas']['ApiExecuteAsyncMergeQueryMetadata'] & {
-          query: components['schemas']['ApiExecuteAsyncMetricQueryResults'];
-          /** @enum {string} */
-          outcome: 'started';
-        })
-      | (components['schemas']['ApiExecuteAsyncMergeQueryMetadata'] & {
-          errors: components['schemas']['MergeQueryError'][];
-          /** @enum {string} */
-          outcome: 'refused';
-        });
-    ApiSuccess_ApiExecuteAsyncMergeQueryResults_: {
-      results: components['schemas']['ApiExecuteAsyncMergeQueryResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_ExecuteAsyncMergeQueryRequestParams.Exclude_keyofExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache__': {
-      parameters?: components['schemas']['ParametersValuesMap'];
-      invalidateCache?: boolean;
-      context?: components['schemas']['QueryExecutionContext'];
-      /**
-       * @description Warehouse-side merges are metric-sourced by construction, so this
-       *     member keeps the strict shape it always had; merges that reference
-       *     existing results record as ExecuteAsyncComposeMergeQueryRequestParams
-       *     instead (expand-only: the echo in query history only gains branches).
-       */
-      mergeQuery: components['schemas']['MetricSourcedMergeQuery'];
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_ExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache_': components['schemas']['Pick_ExecuteAsyncMergeQueryRequestParams.Exclude_keyofExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache__'];
-    MergeQueryExecutionMode:
-      | {
-          /** @enum {string} */
-          type: 'interactive';
-        }
-      | {
-          /** Format: double */
-          limit: number | null;
-          /** @enum {string} */
-          type: 'export';
-        };
-    MergeQueryChart: {
-      pivotConfig?: {
-        /** @description Ordered fields to render on the pivot row axis */
-        rows?: string[];
-        /** @description Fields to use as pivot columns */
-        columns: string[];
-      };
-      chartConfig: components['schemas']['ChartConfig'];
-    };
-    /** @description One-call merge execution request. Derived pivot SQL remains server-owned. */
-    ApiExecuteAsyncMergeQueryRequest: components['schemas']['Omit_ExecuteAsyncMergeQueryRequestParams.pivotConfiguration-or-usePreAggregateCache_'] & {
-      chart?: components['schemas']['MergeQueryChart'];
-      mode?: components['schemas']['MergeQueryExecutionMode'];
-    };
-    /**
-     * @description Merge execution request for the compose endpoint, which accepts the full
-     *     MergeQuerySource union (including references to existing query results).
-     *     A separate endpoint keeps the original merge-query contract untouched for
-     *     existing clients while compose-only capabilities evolve on their own path.
-     */
-    ApiExecuteAsyncComposeMergeQueryRequest: {
-      chart?: components['schemas']['MergeQueryChart'];
-      mode?: components['schemas']['MergeQueryExecutionMode'];
-      mergeQuery: components['schemas']['MergeQuery'];
-      parameters?: components['schemas']['ParametersValuesMap'];
-      invalidateCache?: boolean;
-      context?: components['schemas']['QueryExecutionContext'];
-    };
-    ApiExecuteAsyncFieldValueSearchResults: {
-      labelFieldId: string | null;
-      valueFieldId: string;
-      cacheMetadata: components['schemas']['CacheMetadata'];
-      queryUuid: string;
-    };
-    ApiSuccess_ApiExecuteAsyncFieldValueSearchResults_: {
-      results: components['schemas']['ApiExecuteAsyncFieldValueSearchResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiSuccess_ApiExecuteAsyncDashboardChartQueryResults_: {
-      results: components['schemas']['ApiExecuteAsyncDashboardChartQueryResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiSuccess_ApiExecuteAsyncSqlQueryResults_: {
-      results: components['schemas']['ApiExecuteAsyncSqlQueryResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ExecuteAsyncSqlChartByUuidRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      /** Format: double */
-      limit?: number;
-      savedSqlUuid: string;
-    };
-    ExecuteAsyncSqlChartBySlugRequestParams: components['schemas']['CommonExecuteQueryRequestParams'] & {
-      /** Format: double */
-      limit?: number;
-      slug: string;
-    };
-    ExecuteAsyncSqlChartRequestParams:
-      | components['schemas']['ExecuteAsyncSqlChartByUuidRequestParams']
-      | components['schemas']['ExecuteAsyncSqlChartBySlugRequestParams'];
-    ApiSuccess_ApiExecuteAsyncDashboardSqlChartQueryResults_: {
-      results: components['schemas']['ApiExecuteAsyncDashboardSqlChartQueryResults'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    ApiDownloadAsyncQueryResults: {
-      fileUrl: string;
-    };
-    ApiDownloadAsyncQueryResultsAsCsv: {
-      truncated: boolean;
-      fileUrl: string;
-    };
-    ApiDownloadAsyncQueryResultsAsXlsx: {
-      truncated: boolean;
-      fileUrl: string;
-    };
-    'ApiSuccess_ApiDownloadAsyncQueryResults-or-ApiDownloadAsyncQueryResultsAsCsv-or-ApiDownloadAsyncQueryResultsAsXlsx_': {
-      results:
-        | components['schemas']['ApiDownloadAsyncQueryResults']
-        | components['schemas']['ApiDownloadAsyncQueryResultsAsCsv']
-        | components['schemas']['ApiDownloadAsyncQueryResultsAsXlsx'];
-      /** @enum {string} */
-      status: 'ok';
-    };
-    /** @enum {string} */
-    DownloadFileType: 'csv' | 'image' | 'jsonl' | 's3_jsonl' | 'xlsx';
-    /** @description From T, pick a set of properties whose keys are in the union K */
-    'Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__': {
-      pivotConfig?: components['schemas']['PivotConfig'];
-      type?: components['schemas']['DownloadFileType'];
-      onlyRaw?: boolean;
-      showTableNames?: boolean;
-      customLabels?: components['schemas']['Record_string.string_'];
-      columnOrder?: string[];
-      hiddenFields?: string[];
-      exportPivotedData?: boolean;
-      attachmentDownloadName?: string;
-      conditionalFormattings?: components['schemas']['ConditionalFormattingConfig'][];
-      showColumnTotals?: boolean;
-    };
-    /** @description Construct a type with the properties of T except for those in type K. */
-    'Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_': components['schemas']['Pick_DownloadAsyncQueryResultsRequestParams.Exclude_keyofDownloadAsyncQueryResultsRequestParams.queryUuid__'];
     ApiSavedChartResponse: {
       results: components['schemas']['SavedChart'];
       /** @enum {string} */
@@ -36593,13 +37726,101 @@ export interface components {
       /** @enum {string} */
       status: 'ok';
     };
+    /** @enum {string} */
+    AiIdentitySource: 'marked_person' | 'agent_sign_in' | 'ai_service_account';
+    OrganizationAgentIdentityRule: {
+      projectsMissingAiServiceAccount:
+        | {
+            name: string;
+            projectUuid: string;
+          }[]
+        | null;
+      source: components['schemas']['AiIdentitySource'];
+      warehouseType: components['schemas']['WarehouseTypes'];
+    };
+    OrganizationAgentIdentityOverview: {
+      rules: components['schemas']['OrganizationAgentIdentityRule'][];
+      requireVerifiedAgentSessions: boolean;
+      snowflakeConfigured: boolean;
+    };
+    ApiOrganizationAgentIdentityOverviewResponse: {
+      results: components['schemas']['OrganizationAgentIdentityOverview'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AgentIdentityProjectWithoutAiServiceAccount: {
+      projectUuid: string;
+      name: string;
+    } & {
+      [key: string]: unknown;
+    };
+    ApiOrganizationAgentIdentityProjectsWithoutAiServiceAccountResponse: {
+      /** @enum {string} */
+      status: 'ok';
+      results: components['schemas']['AgentIdentityProjectWithoutAiServiceAccount'][];
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    SnowflakeAgentClientSource: 'organization';
+    OrganizationAgentIdentitySnowflakeSetup: {
+      configured: boolean;
+      missingSettings: string[];
+      integrationSql: string;
+      redirectUri: string;
+      client: {
+        /** Format: date-time */
+        updatedAt: string | null;
+        hasClientSecret: boolean;
+        clientId: string | null;
+        accountUrl: string | null;
+        source: components['schemas']['SnowflakeAgentClientSource'] | null;
+      };
+    };
+    ApiOrganizationAgentIdentitySnowflakeSetupResponse: {
+      results: components['schemas']['OrganizationAgentIdentitySnowflakeSetup'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiUpdateOrganizationSnowflakeAgentClientResponse: {
+      results: components['schemas']['OrganizationAgentIdentitySnowflakeSetup'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    UpdateOrganizationSnowflakeAgentClient: {
+      clientSecret: string;
+      clientId: string;
+      accountUrl: string;
+    };
+    OrganizationAgentIdentitySnowflakeVerify: {
+      checks: {
+        detail: string;
+        required: boolean;
+        /** @enum {string} */
+        status: 'passed' | 'failed' | 'not_checked';
+        label: string;
+        /** @enum {string} */
+        id: 'oauth_client' | 'authorize_endpoint' | 'agent_session';
+      }[];
+      passed: boolean;
+      /** Format: date-time */
+      checkedAt: string;
+    };
+    ApiOrganizationAgentIdentitySnowflakeVerifyResponse: {
+      results: components['schemas']['OrganizationAgentIdentitySnowflakeVerify'];
+      /** @enum {string} */
+      status: 'ok';
+    };
     OrganizationAgentIdentitySettings: {
       requireVerifiedAgentSessions: boolean;
     };
-    ApiOrganizationAgentIdentitySettingsResponse: {
-      results: components['schemas']['OrganizationAgentIdentitySettings'];
+    ApiOrganizationAgentIdentityRuleResponse: {
+      results: components['schemas']['OrganizationAgentIdentityRule'];
       /** @enum {string} */
       status: 'ok';
+    };
+    UpdateOrganizationAgentIdentityRule: {
+      source: components['schemas']['AiIdentitySource'];
     };
     FeatureFlag: {
       enabled: boolean;
@@ -37134,6 +38355,173 @@ export interface components {
     };
     /** @enum {string} */
     CatalogSortField: 'name' | 'label' | 'chartUsage' | 'tableLabel' | 'owner';
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_string.string-or-null_': {
+      [key: string]: string | null;
+    };
+    AiServiceAccountTestResult: {
+      /** Format: date-time */
+      checkedAt: string;
+      message: string;
+      observed: components['schemas']['Record_string.string-or-null_'];
+      principal: string | null;
+      ok: boolean;
+    };
+    AiServiceAccountParent: {
+      credentialsReadable: boolean;
+      projectUuid: string;
+      projectName: string | null;
+      identityUuid: string;
+      principal: string | null;
+      verification?: components['schemas']['AiServiceAccountTestResult'] | null;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    WarehouseServiceAuthMethod:
+      | 'password'
+      | 'private_key'
+      | 'oauth_m2m'
+      | 'iam'
+      | 'access_key'
+      | 'iam_role'
+      | 'web_identity'
+      | 'token';
+    AiServiceAccountSlot: {
+      /** Format: date-time */
+      updatedAt: string;
+      /** Format: date-time */
+      createdAt: string;
+      credentialSubjectUserUuid: string | null;
+      updatedByUserUuid: string | null;
+      createdByUserUuid: string | null;
+      method: components['schemas']['WarehouseServiceAuthMethod'];
+      warehouseType: components['schemas']['WarehouseTypes'];
+      /** @enum {string} */
+      scope: 'connection';
+      /** @enum {string} */
+      kind: 'ai_service_account';
+      warehouseConnectionUuid: string | null;
+      projectUuid: string;
+      identityUuid: string;
+      uuid: string;
+    };
+    ApiAiServiceAccountStatusResponse: {
+      results: components['schemas']['AiServiceAccountSlot'] | null;
+      /** @enum {string} */
+      status: 'ok';
+      parent: components['schemas']['AiServiceAccountParent'] | null;
+      credentialsReadable: boolean;
+      verification?: components['schemas']['AiServiceAccountTestResult'] | null;
+    } & {
+      [key: string]: unknown;
+    };
+    ApiAiServiceAccountSaveResponse: {
+      results: components['schemas']['AiServiceAccountSlot'] | null;
+      /** @enum {string} */
+      status: 'ok';
+      verification?: components['schemas']['AiServiceAccountTestResult'] | null;
+    } & {
+      [key: string]: unknown;
+    };
+    TrinoAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.TRINO'];
+      user: string;
+      password: string;
+    } & {
+      [key: string]: unknown;
+    };
+    ClickhouseAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.CLICKHOUSE'];
+      user: string;
+      password: string;
+    } & {
+      [key: string]: unknown;
+    };
+    RedshiftAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.REDSHIFT'];
+      user: string;
+      password: string;
+    } & {
+      [key: string]: unknown;
+    };
+    PostgresAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.POSTGRES'];
+      user: string;
+      password: string;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'AthenaAuthenticationType.ACCESS_KEY': 'access_key';
+    AthenaAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.ATHENA'];
+      authenticationType: components['schemas']['AthenaAuthenticationType.ACCESS_KEY'];
+      accessKeyId: string;
+      secretAccessKey: string;
+      sessionToken?: string;
+      workGroup: string;
+      s3StagingDir: string;
+      s3DataDir?: string;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'BigqueryAuthenticationType.PRIVATE_KEY': 'private_key';
+    BigqueryAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.BIGQUERY'];
+      authenticationType: components['schemas']['BigqueryAuthenticationType.PRIVATE_KEY'];
+      keyfileContents?: {
+        [key: string]: string;
+      };
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'DatabricksAuthenticationType.OAUTH_M2M': 'oauth_m2m';
+    DatabricksAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.DATABRICKS'];
+      authenticationType: components['schemas']['DatabricksAuthenticationType.OAUTH_M2M'];
+      oauthClientId: string;
+      oauthClientSecret: string;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @enum {string} */
+    'SnowflakeAuthenticationType.PRIVATE_KEY': 'private_key';
+    SnowflakeAiServiceAccountCredentialInput: {
+      type: components['schemas']['WarehouseTypes.SNOWFLAKE'];
+      authenticationType: components['schemas']['SnowflakeAuthenticationType.PRIVATE_KEY'];
+      user: string;
+      role: string;
+      warehouse: string;
+      privateKey?: string;
+      privateKeyPass?: string | null;
+    } & {
+      [key: string]: unknown;
+    };
+    AiServiceAccountCredentialInput:
+      | components['schemas']['TrinoAiServiceAccountCredentialInput']
+      | components['schemas']['ClickhouseAiServiceAccountCredentialInput']
+      | components['schemas']['RedshiftAiServiceAccountCredentialInput']
+      | components['schemas']['PostgresAiServiceAccountCredentialInput']
+      | components['schemas']['AthenaAiServiceAccountCredentialInput']
+      | components['schemas']['BigqueryAiServiceAccountCredentialInput']
+      | components['schemas']['DatabricksAiServiceAccountCredentialInput']
+      | components['schemas']['SnowflakeAiServiceAccountCredentialInput'];
+    ApiAiServiceAccountSlotResponse: {
+      results: components['schemas']['AiServiceAccountSlot'] | null;
+      /** @enum {string} */
+      status: 'ok';
+    };
+    ApiAiServiceAccountTestResponse: {
+      results: components['schemas']['AiServiceAccountTestResult'];
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AiServiceAccountTestRequest: {
+      credentials: components['schemas']['AiServiceAccountCredentialInput'] | null;
+    };
     /** @enum {string} */
     AiAgentMarkerLevel: 'verified_session' | 'request_bound' | 'identify_only' | 'none';
     AiAgentMarker: {
@@ -37156,36 +38544,87 @@ export interface components {
     };
     /** @enum {string} */
     AiAccessRefusalReason:
+      | 'agent_access_disabled'
+      | 'agent_capability_denied'
+      | 'agent_project_denied'
+      | 'agent_raw_sql_unconfirmed'
+      | 'agent_operation_unmapped'
+      | 'agent_actor_unverified'
+      | 'agent_setting_denied'
+      | 'agent_user_not_allowed'
+      | 'agent_grant_denied'
+      | 'agent_grant_revoked'
+      | 'agent_channel_denied'
+      | 'agent_human_permission_denied'
       | 'result_not_agent_produced'
       | 'principal_failed'
+      | 'ai_service_account_missing'
+      | 'ai_service_account_invalid'
       | 'needs_sign_in'
       | 'sign_in_expired'
       | 'warehouse_not_supported'
       | 'service_account'
       | 'embed_not_supported';
+    /** @description Exclude null and undefined from T */
+    'NonNullable_AiAccessRefusal-at-policyLayer_': (
+      'org_ceiling' | 'project_scope' | 'organization_setting' | 'warehouse_identity' | 'unmapped'
+    ) &
+      Record<string, never>;
+    PolicyLayer: components['schemas']['NonNullable_AiAccessRefusal-at-policyLayer_'];
+    AgentPermissionBlocker: {
+      settingsUrl: string | null;
+      message: string;
+      policyLayer: components['schemas']['PolicyLayer'] | null;
+      capability: components['schemas']['AgentCapability'] | null;
+      reason: components['schemas']['AiAccessRefusalReason'];
+      /** @enum {string} */
+      status: 'refused' | 'setup_needed';
+      checkId: string;
+    };
     /** @enum {string} */
     AiAccessRefusalAction: 'sign_in' | 'ask_admin';
     AiAccessRefusal: {
-      connectUrl: string | null;
-      settingsUrl: string | null;
-      action: components['schemas']['AiAccessRefusalAction'] | null;
-      message: string;
-      reason: components['schemas']['AiAccessRefusalReason'];
+      requiredCapabilities?: components['schemas']['AgentCapability'][];
+      blockers?: components['schemas']['AgentPermissionBlocker'][];
+      blockersComplete?: boolean;
+      explanationUrl?: string;
       /** @enum {string} */
       code: 'ai_access_refused';
+      reason: components['schemas']['AiAccessRefusalReason'];
+      message: string;
+      action: components['schemas']['AiAccessRefusalAction'] | null;
+      settingsUrl: string | null;
+      connectUrl: string | null;
+      capability?: components['schemas']['AgentCapability'] | null;
+      /** @enum {string} */
+      policyLayer?:
+        | 'org_ceiling'
+        | 'project_scope'
+        | 'organization_setting'
+        | 'warehouse_identity'
+        | 'unmapped';
+      operation?: string;
+      /** Format: double */
+      policyVersion?: number;
+      projectUuid?: string | null;
+    } & {
+      [key: string]: unknown;
     };
     AiAccessForUser: {
+      principalName: string | null;
       /** Format: date-time */
       expiresAt: string | null;
       refusal: components['schemas']['AiAccessRefusal'] | null;
       /** @enum {string|null} */
-      principalKind: 'person' | null;
+      principalKind: 'person' | 'service_account' | null;
       enabled: boolean;
       warehouseConnectionUuid: string | null;
       projectUuid: string;
       marker: components['schemas']['AiAgentMarker'] | null;
       /** @enum {string|null} */
-      identity: 'marked_person' | 'connected_person' | null;
+      source: 'marked_person' | 'agent_sign_in' | 'ai_service_account' | null;
+      /** @enum {string|null} */
+      identity: 'marked_person' | 'ai_service_account' | 'connected_person' | null;
       /** @enum {string|null} */
       requirementSource: 'organization' | null;
     };
@@ -37193,10 +38632,6 @@ export interface components {
       results: components['schemas']['AiAccessForUser'];
       /** @enum {string} */
       status: 'ok';
-    };
-    /** @description Construct a type with a set of properties K of type T */
-    'Record_string.string-or-null_': {
-      [key: string]: string | null;
     };
     AiMarkerTestResult: {
       /** Format: date-time */
@@ -37210,6 +38645,76 @@ export interface components {
       results: components['schemas']['AiMarkerTestResult'];
       /** @enum {string} */
       status: 'ok';
+    };
+    /** @description Construct a type with a set of properties K of type T */
+    'Record_OrganizationMemberRole.AgentCapability-Array_': {
+      member: components['schemas']['AgentCapability'][];
+      viewer: components['schemas']['AgentCapability'][];
+      interactive_viewer: components['schemas']['AgentCapability'][];
+      editor: components['schemas']['AgentCapability'][];
+      developer: components['schemas']['AgentCapability'][];
+      admin: components['schemas']['AgentCapability'][];
+    };
+    AgentSystemRoleMatrix: components['schemas']['Record_OrganizationMemberRole.AgentCapability-Array_'];
+    AgentCapabilityPolicyOverview: {
+      /** @enum {string} */
+      mode: 'legacy' | 'managed';
+      /** Format: double */
+      version: number;
+      allowedCapabilities: components['schemas']['AgentCapability'][] | null;
+      allowedGroupUuids: string[] | null;
+      systemRoleMatrix: components['schemas']['AgentSystemRoleMatrix'];
+      defaults: components['schemas']['AgentSystemRoleMatrix'];
+      groupsAvailable: boolean;
+    } & {
+      [key: string]: unknown;
+    };
+    /** @description From T, pick a set of properties whose keys are in the union K */
+    'Pick_AgentPolicyResponse.Exclude_keyofAgentPolicyResponse.results__': {
+      /** @enum {string} */
+      status: 'ok';
+    };
+    AgentPolicyOverviewResponse: {
+      /** @enum {string} */
+      status: 'ok';
+      results: components['schemas']['AgentCapabilityPolicyOverview'];
+    } & {
+      [key: string]: unknown;
+    };
+    AgentCapabilityPolicy: {
+      /** @enum {string} */
+      mode: 'legacy' | 'managed';
+      /** Format: double */
+      version: number;
+      allowedCapabilities: components['schemas']['AgentCapability'][] | null;
+      allowedGroupUuids: string[] | null;
+      systemRoleMatrix: components['schemas']['AgentSystemRoleMatrix'];
+    } & {
+      [key: string]: unknown;
+    };
+    AgentPolicyResponse: {
+      /** @enum {string} */
+      status: 'ok';
+      results: components['schemas']['AgentCapabilityPolicy'];
+    } & {
+      [key: string]: unknown;
+    };
+    AgentCapabilityCeiling: {
+      systemRoleMatrix: components['schemas']['AgentSystemRoleMatrix'];
+      /** Format: double */
+      version?: number;
+      /** @enum {string} */
+      mode?: 'legacy' | 'managed';
+      allowedCapabilities?: components['schemas']['AgentCapability'][] | null;
+      allowedGroupUuids?: string[] | null;
+    } & {
+      [key: string]: unknown;
+    };
+    ResetPolicyRequest: {
+      /** Format: double */
+      version?: number;
+    } & {
+      [key: string]: unknown;
     };
   };
   responses: never;
@@ -39189,6 +40694,8 @@ export interface operations {
       query?: {
         slugs?: string[];
         offset?: number;
+        /** @description The newest Document schema version the client reads. An older version is refused with an upgrade message. */
+        schemaVersion?: number;
       };
       header?: never;
       path: {
@@ -41907,6 +43414,726 @@ export interface operations {
       };
     };
   };
+  getQueryHistory: {
+    parameters: {
+      query?: {
+        /** @description Page number for pagination (starts at 1) */
+        page?: number;
+        /** @description Number of results per page (default: 25, max: 100) */
+        pageSize?: number;
+        /** @description Filter by what triggered the run */
+        trigger?: components['schemas']['QueryTrigger'];
+        /** @description Filter by query language */
+        language?: components['schemas']['QueryLanguage'];
+        /** @description Filter by one or more statuses */
+        status?: components['schemas']['QueryHistoryStatus'][];
+        /** @description Matches explore name, chart/dashboard name, fields and SQL */
+        search?: string;
+        /** @description Restrict rows to one disjoint time window */
+        window?: components['schemas']['QueryHistoryWindow'];
+        /** @description Sort order; runtime flattens the windows into one sorted list */
+        sortBy?: components['schemas']['QueryHistorySortBy'];
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiQueryHistoryListResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAsyncQueryResults: {
+    parameters: {
+      query?: {
+        /** @description Page number for pagination (starts at 1) */
+        page?: number;
+        /** @description Number of results per page (default: 500, max: 5000) */
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        /** @description The UUID of the async query to retrieve results for */
+        queryUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGetAsyncQueryResultsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  cancelAsyncQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        /** @description The UUID of the async query to cancel */
+        queryUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccessEmpty'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncCalculateTotal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        /** @description The UUID of the previously-executed query to compute totals from */
+        queryUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncCalculateTotalRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncMergeQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiExecuteAsyncMergeQueryRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMergeQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncComposeMergeQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ApiExecuteAsyncComposeMergeQueryRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMergeQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncMetricQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  estimateAsyncMetricQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EstimateAsyncMetricQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiQueryCostEstimateResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncFieldValueSearch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncFieldValueSearchRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncFieldValueSearchResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncSavedChartQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncSavedChartRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncDashboardChartQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncDashboardChartRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncDashboardChartQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncUnderlyingDataQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncUnderlyingDataRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncSqlQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncSqlQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  estimateAsyncSqlQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EstimateAsyncSqlQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiQueryCostEstimateResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncComposeSqlQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncComposeSqlQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncPythonQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncPythonQueryRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncSqlChartQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncSqlChartRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  executeAsyncDashboardSqlChartQuery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncDashboardSqlChartQueryResults_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  downloadResults: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        /** @description The UUID of the completed async query to download */
+        queryUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiSuccess_ApiDownloadAsyncQueryResults-or-ApiDownloadAsyncQueryResultsAsCsv-or-ApiDownloadAsyncQueryResultsAsXlsx_'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  scheduleDownloadResults: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        projectUuid: string;
+        /** @description The UUID of the completed async query to download */
+        queryUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiJobScheduledResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   listAgents: {
     parameters: {
       query?: never;
@@ -43813,6 +46040,45 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiAgentArtifactVizQueryResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getArtifactQueryResults: {
+    parameters: {
+      query: {
+        queryUuid: string;
+        cached?: boolean;
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: string;
+        agentUuid: string;
+        artifactUuid: string;
+        versionUuid: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGetAsyncQueryResultsResponse'];
         };
       };
       /** @description Error */
@@ -47153,6 +49419,42 @@ export interface operations {
       };
     };
   };
+  getDeepResearchChartQueryResults: {
+    parameters: {
+      query?: {
+        page?: number;
+        pageSize?: number;
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+        aiDeepResearchRunUuid: components['schemas']['UUID'];
+        queryUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiGetAsyncQueryResultsResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getAiDeepResearchChart: {
     parameters: {
       query?: never;
@@ -49546,7 +51848,7 @@ export interface operations {
         };
         content: {
           'application/json': {
-            results: components['schemas']['UserWarehouseCredentials'][];
+            results: components['schemas']['UserWarehouseCredentialsWithAgentStatus'][];
             /** @enum {string} */
             status: 'ok';
           };
@@ -56468,6 +58770,10 @@ export interface operations {
         /** @description filter users who can view this project */
         projectUuid?: string;
         googleOidcOnly?: boolean;
+        /** @description column to sort by (name sorts by full name, falling back to email) */
+        sortBy?: 'name';
+        /** @description sort direction (asc or desc) */
+        sortDirection?: 'asc' | 'desc';
       };
       header?: never;
       path?: never;
@@ -56837,6 +59143,10 @@ export interface operations {
         /** @description number of members to include */
         includeMembers?: number;
         searchQuery?: string;
+        /** @description column to sort by */
+        sortBy?: 'name';
+        /** @description sort direction (asc or desc) */
+        sortDirection?: 'asc' | 'desc';
       };
       header?: never;
       path?: never;
@@ -62786,6 +65096,282 @@ export interface operations {
       };
     };
   };
+  ListDocumentsLinkingChart: {
+    parameters: {
+      query?: {
+        /** @description The saved chart; pass this or savedSqlUuid */
+        savedChartUuid?: components['schemas']['UUID'];
+        /** @description The saved SQL chart; pass this or savedChartUuid */
+        savedSqlUuid?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiDocumentsLinkingChartResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  RequestApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentConnectionApprovalRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['AgentConnectionApprovalResponse']
+            | components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+      /** @description Approval request error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+    };
+  };
+  ReviewApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        requestUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['AgentConnectionApprovalReviewResponse']
+            | components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+      /** @description Approval request error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+    };
+  };
+  DecideApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        requestUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentConnectionApprovalDecision'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            | components['schemas']['AgentConnectionApprovalDecisionResponse']
+            | components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+      /** @description Approval request error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+    };
+  };
+  CompleteApproval: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        requestUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Return to client */
+      302: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json':
+            unknown | components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+      /** @description Approval request error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConnectionApprovalErrorResponse'];
+        };
+      };
+    };
+  };
+  List: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            results: components['schemas']['AgentConnectionRecord'][];
+            /** @enum {string} */
+            status: 'ok';
+          };
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  GetConnectionStatus: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        grantUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            results: components['schemas']['AgentConnectionStatus'];
+            /** @enum {string} */
+            status: 'ok';
+          };
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  Revoke: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        grantUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            results: components['schemas']['AgentConnectionRecord'];
+            /** @enum {string} */
+            status: 'ok';
+          };
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   ListValidationResults: {
     parameters: {
       query?: {
@@ -63197,621 +65783,6 @@ export interface operations {
       };
     };
   };
-  getQueryHistory: {
-    parameters: {
-      query?: {
-        /** @description Page number for pagination (starts at 1) */
-        page?: number;
-        /** @description Number of results per page (default: 25, max: 100) */
-        pageSize?: number;
-        /** @description Filter by what triggered the run */
-        trigger?: components['schemas']['QueryTrigger'];
-        /** @description Filter by query language */
-        language?: components['schemas']['QueryLanguage'];
-        /** @description Filter by one or more statuses */
-        status?: components['schemas']['QueryHistoryStatus'][];
-        /** @description Matches explore name, chart/dashboard name, fields and SQL */
-        search?: string;
-        /** @description Restrict rows to one disjoint time window */
-        window?: components['schemas']['QueryHistoryWindow'];
-        /** @description Sort order; runtime flattens the windows into one sorted list */
-        sortBy?: components['schemas']['QueryHistorySortBy'];
-      };
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiQueryHistoryListResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  getAsyncQueryResults: {
-    parameters: {
-      query?: {
-        /** @description Page number for pagination (starts at 1) */
-        page?: number;
-        /** @description Number of results per page (default: 500, max: 5000) */
-        pageSize?: number;
-      };
-      header?: never;
-      path: {
-        projectUuid: string;
-        /** @description The UUID of the async query to retrieve results for */
-        queryUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiGetAsyncQueryResultsResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  cancelAsyncQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        /** @description The UUID of the async query to cancel */
-        queryUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccessEmpty'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncCalculateTotal: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        /** @description The UUID of the previously-executed query to compute totals from */
-        queryUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncCalculateTotalRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncMergeQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: components['schemas']['UUID'];
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ApiExecuteAsyncMergeQueryRequest'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMergeQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncComposeMergeQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: components['schemas']['UUID'];
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ApiExecuteAsyncComposeMergeQueryRequest'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMergeQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncMetricQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncMetricQueryRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncFieldValueSearch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncFieldValueSearchRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncFieldValueSearchResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncSavedChartQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncSavedChartRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncDashboardChartQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncDashboardChartRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncDashboardChartQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncUnderlyingDataQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncUnderlyingDataRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncMetricQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncSqlQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncSqlQueryRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncComposeSqlQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncComposeSqlQueryRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncSqlChartQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncSqlChartRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncSqlQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  executeAsyncDashboardSqlChartQuery: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ExecuteAsyncDashboardSqlChartRequestParams'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiExecuteAsyncDashboardSqlChartQueryResults_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  downloadResults: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        /** @description The UUID of the completed async query to download */
-        queryUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiSuccess_ApiDownloadAsyncQueryResults-or-ApiDownloadAsyncQueryResultsAsCsv-or-ApiDownloadAsyncQueryResultsAsXlsx_'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
-  scheduleDownloadResults: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        projectUuid: string;
-        /** @description The UUID of the completed async query to download */
-        queryUuid: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['Omit_DownloadAsyncQueryResultsRequestParams.queryUuid_'];
-      };
-    };
-    responses: {
-      /** @description Success */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiJobScheduledResponse'];
-        };
-      };
-      /** @description Error */
-      default: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['ApiErrorPayload'];
-        };
-      };
-    };
-  };
   getProjectSavedChart: {
     parameters: {
       query?: {
@@ -64200,7 +66171,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['ApiOrganizationAgentIdentitySettingsResponse'];
+          'application/json': components['schemas']['ApiOrganizationAgentIdentityOverviewResponse'];
         };
       };
       /** @description Error */
@@ -64233,7 +66204,164 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          'application/json': components['schemas']['ApiOrganizationAgentIdentitySettingsResponse'];
+          'application/json': components['schemas']['ApiOrganizationAgentIdentityOverviewResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getOrganizationAgentIdentityProjectsWithoutAiServiceAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouseType: components['schemas']['WarehouseTypes'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationAgentIdentityProjectsWithoutAiServiceAccountResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getOrganizationAgentIdentitySnowflakeSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationAgentIdentitySnowflakeSetupResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateOrganizationSnowflakeAgentClient: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateOrganizationSnowflakeAgentClient'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiUpdateOrganizationSnowflakeAgentClientResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  verifyOrganizationAgentIdentitySnowflakeSetup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationAgentIdentitySnowflakeVerifyResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  updateOrganizationAgentIdentityRule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouseType: components['schemas']['WarehouseTypes'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateOrganizationAgentIdentityRule'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiOrganizationAgentIdentityRuleResponse'];
         };
       };
       /** @description Error */
@@ -65204,6 +67332,146 @@ export interface operations {
       };
     };
   };
+  getAiServiceAccount: {
+    parameters: {
+      query?: {
+        connection?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiServiceAccountStatusResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  upsertAiServiceAccount: {
+    parameters: {
+      query?: {
+        connection?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiServiceAccountCredentialInput'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiServiceAccountSaveResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  deleteAiServiceAccount: {
+    parameters: {
+      query?: {
+        connection?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiServiceAccountSlotResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  testAiServiceAccount: {
+    parameters: {
+      query?: {
+        connection?: components['schemas']['UUID'];
+      };
+      header?: never;
+      path: {
+        projectUuid: components['schemas']['UUID'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiServiceAccountTestRequest'];
+      };
+    };
+    responses: {
+      /** @description Success */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiAiServiceAccountTestResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
   getCapabilitiesAiAccess: {
     parameters: {
       query?: {
@@ -65290,6 +67558,101 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['ApiAiMarkerTestResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  getAgentCapabilityPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentPolicyOverviewResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  saveAgentCapabilityCeiling: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AgentCapabilityCeiling'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentPolicyResponse'];
+        };
+      };
+      /** @description Error */
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiErrorPayload'];
+        };
+      };
+    };
+  };
+  resetAgentCapabilityPolicy: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ResetPolicyRequest'];
+      };
+    };
+    responses: {
+      /** @description Ok */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentPolicyResponse'];
         };
       };
       /** @description Error */

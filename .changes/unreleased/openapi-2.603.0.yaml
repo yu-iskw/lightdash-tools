@@ -1,0 +1,3 @@
+kind: feat
+body: Pin Lightdash OpenAPI types to release 2.603.0 so generated client types include agent identity, query cost estimates, and python query contracts.
+time: 2026-10-17T23:40:00Z
