@@ -7,7 +7,7 @@ Deploy `@lightdash-tools/mcp` on Google Cloud Run with the OAuth broker. OAuth m
 Build from the monorepo root (prefer `packages/mcp/Dockerfile`). Example:
 
 ```dockerfile
-FROM node:24-slim
+FROM node:24.22.1-slim
 
 WORKDIR /app
 
