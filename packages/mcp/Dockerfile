@@ -4,7 +4,7 @@
 #   docker build -f packages/mcp/Dockerfile \
 #     -t lightdash-mcp:local .
 
-FROM node:24-slim AS base
+FROM node:24.22.1-slim AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable
@@ -24,7 +24,7 @@ RUN pnpm --filter @lightdash-tools/mcp... build
 # --legacy: monorepo does not use inject-workspace-packages (pnpm v10+ deploy default).
 RUN pnpm --filter @lightdash-tools/mcp deploy --prod --legacy /out
 
-FROM node:24-slim AS runtime
+FROM node:24.22.1-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 RUN groupadd --gid 1001 mcp \
