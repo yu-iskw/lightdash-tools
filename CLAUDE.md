@@ -1,12 +1,12 @@
-# TypeScript Monorepo - Claude Code Memory
+# CLAUDE.md
 
-For full shared agent instructions (setup, build, test, code style, git workflow, architecture, and gotchas), see `AGENTS.md`.
+@AGENTS.md
 
-## Shared Project Instructions
+<!-- AGENTS.md is canonical for every coding agent. Put only Claude Code–specific notes below. -->
 
-Use `AGENTS.md` as the canonical project and cross-platform agent guide.
+## Claude Code
 
-## Parallel Task Execution
+### Parallel Task Execution
 
 For large tasks that can benefit from concurrent work:
 
@@ -16,51 +16,9 @@ For large tasks that can benefit from concurrent work:
 
 This decomposes tasks into independent subtasks with file ownership, executes them in parallel, and verifies results.
 
-## Available Agents
+### Configuration Self-Improvement
 
-| Agent                    | Purpose                                      |
-| ------------------------ | -------------------------------------------- |
-| `project-manager`        | Unified project management (changelog, ADR). |
-| `verifier`               | Run build → lint → test cycle                |
-| `code-reviewer`          | Review code for quality and security         |
-| `parallel-executor`      | Orchestrate parallel task execution          |
-| `parallel-tasks-planner` | Plan task decomposition                      |
-| `task-worker`            | Execute isolated subtasks                    |
-
-## Available Skills
-
-| Skill                          | Purpose                                                                                        |
-| :----------------------------- | :--------------------------------------------------------------------------------------------- |
-| `build-and-fix`                | Build the project and automatically fix build errors, compilation failures, or type mismatches |
-| `clean-project`                | Perform a "hard reset" of the development environment (clean node_modules, lockfiles, etc.)    |
-| `fix-issue`                    | Fix a GitHub issue end-to-end (view, branch, fix, test, PR)                                    |
-| `improve-claude-config`        | Self-improvement skill for evolving Claude Code configuration                                  |
-| `initialize-project`           | Initialize a new project from the template (rename packages, update metadata)                  |
-| `lint-and-fix`                 | Run linters and fix violations, formatting errors, or style mismatches using Trunk             |
-| `manage-adr`                   | Manage Architecture Decision Records (init, create, list, link ADRs in `docs/adr`)             |
-| `manage-changelog`             | Manage changelogs with Changie (init, add fragments, batch releases, merge into CHANGELOG.md)  |
-| `node-upgrade`                 | Safely upgrade Node.js dependencies in pnpm workspaces                                         |
-| `security-vulnerability-audit` | Audit security vulnerabilities using Trunk (Trivy and OSV-scanner)                             |
-| `setup-dev-env`                | Set up the development environment (Node.js, pnpm, Trunk)                                      |
-| `test-and-fix`                 | Run unit tests and automatically fix failures, regression bugs, or test mismatches             |
-| `problem-solving`              | Systematic issue analysis and report generation (global skill)                                 |
-
-## Decision Documentation Hierarchy
-
-This project follows a strict documentation hierarchy for technical decisions:
-
-- **ADR** (`docs/adr`): The **Why**. High-level architecture, strategy, and trade-offs.
-- **Code** (`packages/*`): The **What**. Implementation. Detailed design and specs go in design docs, README, or code.
-
-Refer to [.claude/skills/manage-adr/references/adr-granularity.md](.claude/skills/manage-adr/references/adr-granularity.md) for ADR granularity guidance.
-
-## Configuration Self-Improvement
-
-This project supports Claude Code self-improvement. **At the end of every task where something non-obvious was learned, you MUST update `CLAUDE.md` (Recent Learnings) and/or `AGENTS.md` (Common Gotchas).** See `AGENTS.md → Self-Documentation Protocol` for the full rules; a short summary:
-
-- Discoveries that apply to all AI tools → `AGENTS.md` → **Common Gotchas**
-- Claude Code-specific findings → `CLAUDE.md` → **Recent Learnings** (format: `- [YYYY-MM-DD]: ...`)
-- When in doubt, update both.
+This project supports Claude Code self-improvement. **At the end of every task where something non-obvious was learned, you MUST update `AGENTS.md` (Common Gotchas) for shared findings and/or `CLAUDE.md` (Recent Learnings below) for Claude-only findings.** See `AGENTS.md` → Self-Documentation Protocol for the full rules.
 
 When you notice repeated mistakes, recurring explanations, or opportunities for automation, also consider deeper improvements:
 
@@ -75,6 +33,6 @@ When you notice repeated mistakes, recurring explanations, or opportunities for 
 
 Use the `/improve-claude-config` skill to orchestrate deeper changes.
 
-## Recent Learnings
+### Recent Learnings
 
 - [2026-10-02]: Content-developer rename (ADR-0036) uses preview kind `rename` and an HMAC `previewToken`. A project field rename previews full ids (`orders_status` with `model` `orders`) and `rename_project` posts the short names, because `POST /rename` looks the field up on the explore base table while `POST /rename/preview` treats those ids as full. `from` is `[a-z0-9_]+` because chart rename compiles it as a regex. The tool returns `jobId` and does not poll.

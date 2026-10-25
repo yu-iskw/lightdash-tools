@@ -6,9 +6,21 @@ This repository is a production-ready TypeScript monorepo template.
 It uses pnpm workspaces, Node.js (see `.node-version`), Trunk, Vitest, and GitHub Actions.
 Use this file as the shared quick reference for Cursor, Claude Code, Codex, and Gemini CLI.
 
+## When documentation and code disagree
+
+When a repository's documentation and its existing code disagree, follow the conventions used in the existing code, and in your final reply point out each inconsistency you found between the documentation and the code.
+
+"Documentation" includes this file, `CLAUDE.md`, editor rules, READMEs, `docs/`, ADRs, RFCs, and code comments. Treat what they say about the code as claims to check against the code, not as facts.
+
+- **Documented target state wins only when it is explicit.** Follow the documentation instead of the code only when the documentation says the code is legacy or a migration is in progress. For example: a "migration in progress", "legacy", or "deprecated" marker, `@deprecated` on the code you would copy, or an ADR/RFC with status _Accepted_ that is not superseded and is newer than the code it replaces. Ignore ADRs/RFCs that are _Proposed_, _Rejected_, _Deprecated_, or _Superseded_. Follow the superseding one.
+- **When you can't tell which is current,** compare recency (`git log -1 --format=%cs -- <doc>` vs the code paths). Prefer the newer source, and say that you did. If the choice changes behavior and is still unclear, ask before proceeding.
+- **Scope.** Apply the convention you choose to the code you are writing or changing. Don't rewrite working code, and don't edit documentation just to make the two agree, unless the task asks for it.
+- **Process and safety rules still apply.** Commands to run, quality gates, review/merge rules, and security constraints in this file are not descriptions of the code. Follow them.
+- **Report.** In your final reply (and in the PR description, if you open one), list each inconsistency: the document and section, what the code actually does, which one you followed, and why.
+
 ## Self-Documentation Protocol
 
-**Every AI agent working in this repository MUST update `AGENTS.md` and/or `CLAUDE.md` at the end of any task where something non-obvious was learned.** This creates shared memory that improves every future session.
+**Every AI agent working in this repository MUST update `AGENTS.md` at the end of any task where something non-obvious was learned.** Claude Code-specific notes go in `CLAUDE.md` under `## Claude Code` → **Recent Learnings** (see the shim import). This creates shared memory that improves every future session.
 
 ### When to update
 
@@ -22,16 +34,16 @@ Update whenever you discover any of the following during a task:
 
 ### What to update
 
-| Learning type                                        | File to update | Section              |
-| :--------------------------------------------------- | :------------- | :------------------- |
-| Environment/tool/pattern issues affecting all agents | `AGENTS.md`    | **Common Gotchas**   |
-| Claude Code-specific observations                    | `CLAUDE.md`    | **Recent Learnings** |
-| Broadly applicable to all agents and tools           | Both files     | Both sections        |
+| Learning type                                        | File to update | Section                                       |
+| :--------------------------------------------------- | :------------- | :-------------------------------------------- |
+| Environment/tool/pattern issues affecting all agents | `AGENTS.md`    | **Common Gotchas**                            |
+| Broadly applicable to all agents and tools           | `AGENTS.md`    | **Common Gotchas**                            |
+| Claude Code-specific observations                    | `CLAUDE.md`    | **Recent Learnings** (under `## Claude Code`) |
 
 ### Format rules
 
 - `AGENTS.md` → Common Gotchas: concise bullet (`- **Topic:** explanation in 1–3 sentences.`). Keep the section ≤30 lines — replace an obsolete bullet rather than append forever. Profile/ADR depth belongs in `docs/adr` and `docs/profiles`, not here.
-- `CLAUDE.md` → Recent Learnings: dated entry (`- [YYYY-MM-DD]: explanation in 1–3 sentences.`)
+- `CLAUDE.md` → Recent Learnings only: dated entry (`- [YYYY-MM-DD]: explanation in 1–3 sentences.`) under `## Claude Code`. Do not grow the shim with shared guidance; add that here instead.
 - Commit doc updates together with the fix, or in a separate `docs:` commit.
 
 ## Setup Commands
@@ -131,19 +143,29 @@ We maintain a clear hierarchy for documenting decisions:
 
 ## Key Skills
 
-| Skill                     | Purpose                                                       |
-| :------------------------ | :------------------------------------------------------------ |
-| `manage-adr`              | Manage ADRs in `docs/adr` (`adr-tools` required).             |
-| `manage-changelog`        | Manage changelog workflows with Changie (`changie` required). |
-| `build-and-fix`           | Build the repo and resolve build/type errors quickly.         |
-| `lint-and-fix`            | Run linting/formatting checks and fix violations.             |
-| `fix-issue`               | Handle a GitHub issue end-to-end.                             |
-| `setup-dev-env`           | Prepare local Node.js, pnpm, and Trunk tooling.               |
-| `test-and-fix`            | Run tests and fix regressions or failing cases.               |
-| `manage-package-versions` | Consistently manage package versions across the monorepo.     |
-| `problem-solving`         | Run structured issue analysis and reporting.                  |
+| Skill                          | Purpose                                                                        |
+| :----------------------------- | :----------------------------------------------------------------------------- |
+| `manage-adr`                   | Manage ADRs in `docs/adr` (`adr-tools` required).                              |
+| `manage-changelog`             | Manage changelog workflows with Changie (`changie` required).                  |
+| `build-and-fix`                | Build the repo and resolve build/type errors quickly.                          |
+| `clean-project`                | Hard-reset the dev environment (node_modules, lockfiles, etc.).                |
+| `develop-mcp-server-ts`        | Standardized workflow for building MCP server TypeScript packages.             |
+| `fix-issue`                    | Handle a GitHub issue end-to-end.                                              |
+| `gen-mcp-tool`                 | Scaffold a new Lightdash MCP tool.                                             |
+| `generate-openapi-types`       | Generate or refresh TypeScript types from OpenAPI.                             |
+| `improve-claude-config`        | Self-improvement for Claude Code configuration in this repo.                   |
+| `initialize-project`           | Initialize a new project from the template (rename packages, update metadata). |
+| `lightdash-api-discovery`      | Discover and understand Lightdash API surfaces.                                |
+| `lint-and-fix`                 | Run linting/formatting checks and fix violations.                              |
+| `manage-package-versions`      | Consistently manage package versions across the monorepo.                      |
+| `node-upgrade`                 | Safely upgrade Node.js dependencies in pnpm workspaces.                        |
+| `security-vulnerability-audit` | Audit security vulnerabilities using Trunk (Trivy and OSV-scanner).            |
+| `setup-dev-env`                | Prepare local Node.js, pnpm, and Trunk tooling.                                |
+| `sync-openapi-types`           | Regenerate the Lightdash OpenAPI types pin and generated output.               |
+| `test-and-fix`                 | Run tests and fix regressions or failing cases.                                |
+| `problem-solving`              | Run structured issue analysis and reporting (global skill).                    |
 
-Additional specialized skills are documented in `CLAUDE.md`.
+Additional skills may live under `.claude/skills/`; prefer the table above for repo-local workflows.
 
 ## Common Gotchas
 
