@@ -40,6 +40,7 @@ minimumReleaseAgeExclude:
   - hono@4.12.34
   - brace-expansion@5.0.12
   - browserslist@4.28.7
+  - zod@4.6.7
 
 overrides:
   form-data: '>=4.0.6'
@@ -58,3 +59,4 @@ overrides:
   source-map-js: 1.2.2
   browserslist: 4.28.7
   '@hono/node-server': '>=2.0.12'
+  zod: 4.6.7
