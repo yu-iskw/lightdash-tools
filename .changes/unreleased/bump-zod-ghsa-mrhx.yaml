@@ -1,0 +1,2 @@
+kind: fix
+body: Bump zod to 4.6.7 (direct deps and pnpm override) so the SBOM High/Critical gate clears GHSA-mrhx-c7xc-m3w5.
