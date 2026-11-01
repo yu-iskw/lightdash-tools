@@ -108,7 +108,7 @@ importers:
         version: link:../common
       axios:
         specifier: 1.20.0
-        version: 1.20.0(supports-color@10.2.2)
+        version: 1.20.0
       bottleneck:
         specifier: ^2.19.5
         version: 2.19.5
@@ -2826,7 +2826,7 @@ snapshots:
 
   acorn@8.18.0: {}
 
-  agent-base@6.0.2(supports-color@10.2.2):
+  agent-base@6.0.2:
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
@@ -2855,11 +2855,11 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  axios@1.20.0(supports-color@10.2.2):
+  axios@1.20.0:
     dependencies:
       follow-redirects: 1.16.2
       form-data: 4.0.6
-      https-proxy-agent: 5.0.1(supports-color@10.2.2)
+      https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
@@ -3257,9 +3257,9 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
-  https-proxy-agent@5.0.1(supports-color@10.2.2):
+  https-proxy-agent@5.0.1:
     dependencies:
-      agent-base: 6.0.2(supports-color@10.2.2)
+      agent-base: 6.0.2
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
